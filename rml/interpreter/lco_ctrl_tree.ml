@@ -25,7 +25,7 @@ module Rml_interpreter: Lco_interpreter.S =
 	  mutable value: 'b;
 	  mutable pre_status: int;
 	  mutable pre_value: 'b;
-	  mutable default: (unit -> 'b);
+	  mutable default: 'b;
 	  combine: ('a -> 'b -> 'b);
 	  wa : step list ref;
 	  wp : step list ref; }
@@ -167,23 +167,22 @@ module Rml_interpreter: Lco_interpreter.S =
 	value = [];
 	pre_status = absent; 
 	pre_value = [];
-	default = (fun () -> []);
+	default = [];
 	combine = (fun x y -> x :: y);
 	wa = ref [];
 	wp = ref []; } 
 
     let new_evt_combine default combine =
-      let v = default() in
       { status = absent; 
-	value = v;
+	value = default;
 	pre_status = absent; 
-	pre_value = v;
+	pre_value = default;
 	default = default;
 	combine = combine;
 	wa = ref [];
 	wp = ref []; } 
 
-    let eoi = new_evt_combine (fun () -> ()) (fun () () -> ())
+    let eoi = new_evt_combine () (fun () () -> ())
 
 (**************************************************)
 (* sched                                          *)
@@ -211,9 +210,7 @@ module Rml_interpreter: Lco_interpreter.S =
       then
 	evt.pre_value
       else
-	if (evt.status = !instant-1)
-	then evt.value
-	else evt.default ()
+	evt.value
  
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal = new_evt
@@ -261,12 +258,9 @@ module Rml_interpreter: Lco_interpreter.S =
       if evt.status <> !instant 
       then 
 	(evt.pre_status <- evt.status;
-	 if evt.pre_status = !instant-1 then
-	   evt.pre_value <- evt.value
-	 else
-	   evt.pre_value <- evt.default();
+	 evt.pre_value <- evt.value;
 	 evt.status <- !instant;
-	 evt.value <- evt.combine (e()) (evt.default());
+	 evt.value <- evt.combine (e()) evt.default;
 	 wakeUp evt;
 	 f_k())
       else
@@ -358,7 +352,7 @@ module Rml_interpreter: Lco_interpreter.S =
 	    let x =
 	      if evt.status = !instant
 	      then evt.value
-	      else evt.default()
+	      else evt.default
 	    in
 	    let f_body = p x f_k ctrl in
 	    ctrl.next <- f_body :: ctrl.next;
@@ -559,7 +553,7 @@ let loop p =
       fun f_k ctrl ->
 	let f_signal =
 	  fun () ->
-	    let evt = new_evt_combine default (comb()) in
+	    let evt = new_evt_combine (default()) (comb()) in
 	    let f = p evt f_k ctrl in
 	    f ()
 	in f_signal

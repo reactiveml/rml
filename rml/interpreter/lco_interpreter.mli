@@ -25,8 +25,7 @@ module type S =
     val rml_pre_value: (unit -> ('a, 'b) event) -> 'b
 
     val rml_global_signal: unit -> ('a, 'a list) event
-    val rml_global_signal_combine: 
-	(unit -> 'b) -> ('a -> 'b -> 'b) -> ('a, 'b) event 
+    val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event 
 
     val rml_nothing: proc
     val rml_compute: (unit -> 'a) -> proc

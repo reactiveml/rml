@@ -9,7 +9,7 @@
 (* $Id$ *)
 
 (* version of the compiler *)
-let version = "1.02"
+let version = "1.02+1"
 
 exception Error
 

@@ -100,11 +100,19 @@ type ('a, 'b) cell =
       mutable cell_fired: int;
 *)
 
+
+let make_info origine cell =
+  { origine = origine;
+    status = cell.cell_status; 
+    info = (); 
+  }
+(*
 let make_info origine cell =
   { origine = origine;
     status = cell.cell_status; 
     info = cell.cell_ext; 
   }
+*)
 (*
     state = state;
     fired = 0;
@@ -152,7 +160,8 @@ let color_of_fire_state c =
   | Fire_fire -> Graphics.rgb 255 0 0
   | Fire_tree -> Graphics.rgb 0 255 0
 
-let draw_cell = draw_cell_gen color_of_fire_state
+let draw_cell = draw_cell_gen color_of_status
+(*let draw_cell = draw_cell_gen color_of_fire_state*)
 
 (**************************************************************************)
 (* neighborhood functions                                                 *)
@@ -221,8 +230,8 @@ let get_moore_neighbors_circular cell cell_array =
     (Left, cell_array.((x-1) mod maxx).(y mod maxy)) :: !neighbors;
   !neighbors
 
-let get_neighbors = ref get_von_neumann_neighbors
-(*let get_neighbors = ref get_moore_neighbors_circular*)
+(*let get_neighbors = ref get_von_neumann_neighbors*)
+let get_neighbors = ref get_moore_neighbors
 
 
 (**************************************************************************)
@@ -265,7 +274,7 @@ let fredkin cell =
     (fun info -> if info.status <> Status_Quiescent then incr cpt)
     cell.cell_active_neighborhood;
   cell.cell_status <- 
-    if (!cpt mod 2) = 1 then Status_Wall else Status_Quiescent
+    if (!cpt mod 2) = 1 then Status_Active else Status_Quiescent
 
 let game_of_life cell =
   let cpt = ref 0 in
@@ -274,7 +283,7 @@ let game_of_life cell =
     cell.cell_active_neighborhood;
   cell.cell_status <- 
     if cell.cell_status = Status_Quiescent && !cpt = 3 
-    then Status_Wall 
+    then Status_Active 
     else
       if cell.cell_status <> Status_Quiescent && !cpt <> 2 && !cpt <> 3
       then Status_Quiescent
@@ -318,7 +327,7 @@ let srl_behavior cell =
 	  cell.cell_ext.srl_state <- PSRL_none;
 *)
 
-let cell_behavior = ref fire_behavior
+let cell_behavior = ref fredkin
 
 (**************************************************************************)
 (* cellular automaton                                                     *)
@@ -350,7 +359,7 @@ let get_status_fire i j =
     else
       Status_Quiescent, Fire_empty
 
-let get_status = ref get_status_fire
+let get_status = ref get_status_center
 
 let process cellular_automaton_start get_status cell_behavior cell_array =
   let rec process aux i j =
