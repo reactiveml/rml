@@ -1,0 +1,36 @@
+open Moteur;;
+
+let pas  = 0.0010;;
+
+(* Processus Ligne *)
+
+let rec proc_ligne x y=
+(*     let f x = 100. *. (x *. x) in *)
+(*     let f x = 500. *. x *. x *. (sin (x *. x)) in  *)
+  let f x = x in 
+(*     let f x = x *. x in  *)
+(*     let f x = 10. *. (log x) in  *)
+  let r = ref 0. in
+  process {out p} ->
+    loop
+      r := !r +. pas;
+      emit p (rot !r (f x),rot !r (f y)); 
+      pause;
+    end;;
+
+
+
+
+
+
+
+(* Creer les differentes ligne *)
+
+let rec process creer_ligne min max pas {out p} =
+  run (proc_ligne (min /. 25. ) ((min +. pas) /. 25. ) ) {p=p}
+  ||
+  if (min +. pas) < max then
+    run (creer_ligne (min +. pas) max pas) {p=p}
+  else
+    nothing;;
+

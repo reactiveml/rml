@@ -1,0 +1,10 @@
+lco_ctrl_tree_debug.cmo: lco_interpreter.cmi 
+lco_ctrl_tree_debug.cmx: lco_interpreter.cmi 
+lco_ctrl_tree.cmo: lco_interpreter.cmi 
+lco_ctrl_tree.cmx: lco_interpreter.cmi 
+lco_ctrl_tree.old.cmo: lco_interpreter.cmi 
+lco_ctrl_tree.old.cmx: lco_interpreter.cmi 
+lk_rewrite_debug.cmo: lk_interpreter.cmi 
+lk_rewrite_debug.cmx: lk_interpreter.cmi 
+lk_rewrite.cmo: lk_interpreter.cmi 
+lk_rewrite.cmx: lk_interpreter.cmi 

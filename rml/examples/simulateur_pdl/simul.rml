@@ -1,0 +1,168 @@
+open Global
+open Draw  
+
+let get_neighbors n1 others =
+  let filter n2 =
+    let d2 = distance2 n1.node_pos n2.hello_pos in
+    d2 < !coverage_range2 
+  in
+  List.filter filter others
+
+
+let process node pos_init mvt_kind make_msg draw =
+  let self = new_node pos_init mvt_kind in
+  loop
+    self.node_date <- self.node_date + 1;
+    Move.move self;
+
+    let info = make_info_hello self in
+    emit draw info;
+    let (i,j) as local_area, neighbor_areas = 
+      Area.get_areas self.node_pos.x self.node_pos.y in
+    emit !hello_array.(i).(j) info;
+    pause;
+
+    let all = 
+      List.fold_left 
+	(fun infos (i,j) -> 
+	  List.rev_append (pre ?(!hello_array.(i).(j))) infos)
+	[] (local_area::neighbor_areas)
+    in
+    let neighbors = get_neighbors self all in
+    self.node_neighbors <- neighbors;
+
+    Pos_tbl.update self.node_pos_tbl_ler neighbors self.node_date;
+    Pos_tbl.update self.node_pos_tbl_pdl neighbors self.node_date;
+
+    pause; 
+
+    (* Routage *)
+    let msg = make_msg self in
+    List.iter 
+      (fun (dest_id, len) -> 
+	Routage.route LER self dest_id len;
+	Routage.route PDL self dest_id len) 
+      msg;
+
+    if !with_stat then Stat.node_stat self;
+
+    pause;
+    
+  end
+
+
+let rec process make_nodes n draw =
+  if n > 0 then
+    let pos = make_pos (Random.int !max_x) (Random.int !max_y) in
+    run (node pos (Mvt_random_waypoint (ref pos)) Msg.make draw)
+    ||
+    run (make_nodes (n-1) draw)
+
+
+
+let configure () = 
+  let doc = ""
+  and doc_D = "<density> densité par zone de couverture"
+  and doc_n = "<nb> nombre de noeuds dans la topologie"
+  and doc_t = "<surface> taille de la topologie"
+  and doc_couv = "<r> rayon de couverture" 
+  and doc_o = 
+    "<pref> calcul des stats (<pref> est lepréfixe des fichiers de sortie)"
+  and doc_msg_proba = "<p> probabilité d'émission d'un message"
+  and doc_msg_len = "<n> longueur max d'un message"
+  and doc_pdl_proba = "<n> probabilité d'insertion d'une info de pdl"
+  and doc_pdl_forecast = "<n> distance de prevision"
+  and doc_nox = " sans mode graphique"
+  and doc_node = "<n> numero du noeud observé"
+  and errmsg = "Options are:"
+  in
+  Arg.parse
+    [ ("-n", Arg.Set_int nb_node, doc_n);
+      ("-t", Arg.Float set_size, doc_t);
+      ("-couv", Arg.Int set_coverage_range, doc_couv);
+      ("-D", Arg.Float set_density, doc_D);
+      ("-msg_proba", Arg.Set_float msg_proba, doc_msg_proba);
+      ("-msg_len", Arg.Set_int msg_len, doc_msg_len);
+      ("-pdl_proba", Arg.Set_float pdl_proba, doc_pdl_proba);
+      ("-pdl_forecast", Arg.Set_int pdl_forecast, doc_pdl_forecast);
+      ("-o", Arg.String set_prefix, doc_o);
+      ("-nox", Arg.Clear with_graphics, doc_nox); 
+      ("-node", Arg.Set_int main_node, doc_node);
+    ]
+    (fun s -> raise (Invalid_argument s))
+    errmsg
+
+let process main =
+(*  Random.init 4012; *)
+  Random.self_init ();
+  configure();
+  init();
+  run Area.make_areas;
+  signal draw, suspend in
+  control
+    run (make_nodes !nb_node draw)
+  with suspend
+  ||
+  (if !with_graphics then
+    run (draw_simul draw suspend))
+  ||
+  (if !with_stat then
+    let stat = 
+      Stat.instant_stat
+	(open_out (!prefix^"overhead"))
+	(open_out (!prefix^"route_len"))
+	(open_out (!prefix^"anchor"))
+	(open_out (!prefix^"age_nb_ler")) 
+	(open_out (!prefix^"age_nb_pdl"))
+    in
+    loop 
+      pause;
+      pause;
+      pause;
+      stat ();
+    end)
+(*
+  ||
+  let cpt = ref 0 in
+  let gc_ch = open_out "gc_stat" in
+  output_string gc_ch "\n------------------------------------\n";
+  output_string gc_ch ("---- instant = "^(string_of_int !cpt)^"\n");
+  let tm = Unix.localtime(Unix.gettimeofday()) in
+  output_string gc_ch ("date = "^
+		       (string_of_int (tm.Unix.tm_year+1900))^" year "^
+		       (string_of_int tm.Unix.tm_yday)^" day "^
+		       (string_of_int (tm.Unix.tm_hour))^" h "^
+		       (string_of_int (tm.Unix.tm_min))^" min "^
+		       (string_of_int (tm.Unix.tm_sec))^" sec\n" );
+  output_string gc_ch ("proc time = "^(string_of_float (Sys.time()))^"\n");
+  Gc.print_stat gc_ch;
+  flush gc_ch;
+  loop
+    incr cpt;
+    let gc_stat = Gc.stat () in
+    if gc_stat.Gc.heap_words >= 20000000 then 
+      (output_string gc_ch "************************************\n";
+       output_string gc_ch ((string_of_int !cpt)^" : compact\n");
+       output_string gc_ch "************************************\n";
+       flush gc_ch;
+       Gc.compact());
+    if !cpt mod 1500 = 0 then
+      begin
+	output_string gc_ch "\n------------------------------------\n";
+	output_string gc_ch ("---- instant = "^(string_of_int !cpt)^"\n");
+	let tm = Unix.localtime(Unix.gettimeofday()) in
+	output_string gc_ch ("date = "^
+			     (string_of_int (tm.Unix.tm_year+1900))^" year "^
+			     (string_of_int tm.Unix.tm_yday)^" day "^
+			     (string_of_int (tm.Unix.tm_hour))^" h "^
+			     (string_of_int (tm.Unix.tm_min))^" min "^
+			     (string_of_int (tm.Unix.tm_sec))^" sec\n" );
+	output_string gc_ch ("proc time = "^
+			     (string_of_float (Sys.time()))^"\n");
+	Gc.print_stat gc_ch;
+	flush gc_ch;
+      end;
+    pause;
+  end
+*)
+

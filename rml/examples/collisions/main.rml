@@ -1,0 +1,68 @@
+open Moteur;;
+open Balle;;
+open Random;;
+
+
+(*  Interaction avec l'utilisateur *)
+
+(******************************************************)
+(* click de souris                                    *)
+(******************************************************)
+
+let rec process evenement_souris {in click} =
+   await click(pos) in
+   run evenement_souris  {click=click};;
+ 
+
+
+
+
+let rec process mouse_drag rotx roty {in r_dep} =
+   await r_dep(p) in
+   run (mouse_drag rotx roty) {r_dep=r_dep};;
+
+
+(***************************************************)
+(* Frappe du clavier                               *)
+(***************************************************)
+
+let rec process evenement_clavier {in key_push} =
+   await key_push(key) in
+   run evenement_clavier {key_push=key_push};;
+(************************************************)
+
+
+
+
+
+
+
+
+
+
+(******************************************************)
+(* machine systeme []                                 *)
+(******************************************************)
+let process systeme {} =
+  signal p in 
+(* combine {x=0.;y=0.;z=0.} with (fun x y -> x) in*)
+  signal click in
+  signal key_push in
+  signal a_move in
+  run fenetre           {a_click=click;a_move=a_move;p=p;key_push=key_push}
+  ||
+  run evenement_clavier {key_push=key_push}
+  ||
+  run evenement_souris  {click=click}
+  ||
+  run (mouse_drag 0. 0.) {r_dep=a_move}
+  ||
+  run creer_scene {p=p};;
+
+
+Random.self_init();;
+
+
+(****************************************************************************)
+let main = systeme;; 
+

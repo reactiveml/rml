@@ -1,0 +1,19 @@
+                              ReactiveML
+
+                  http://www-spi.lip6.fr/~mandel/rml/
+
+
+. Installation:
+  ------------- 
+
+To install ReactiveML in /usr/local:
+
+  make install
+
+
+To install ReactiveML in $PREFIX:
+
+  make PREFIX=$PREFIX install
+
+and you'll have to give to the compiler the path of the library by setting 
+the RMLLIB environment variable to $PREFIX/lib/rml.

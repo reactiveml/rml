@@ -1,0 +1,81 @@
+open Moteur;;
+
+let pas  = 0.0010;;
+
+let rot r x = 
+  let rx = r *. x in
+  { x = x *. cos(rx);
+    y = x *. sin(rx); }
+
+
+(* Processus Ligne *)
+let rec proc_ligne x y=
+(*     let f x = 100. *. (x *. x) in *)
+(*     let f x = 500. *. x *. x *. (sin (x *. x)) in  *)
+  let f x = x in 
+(*     let f x = x *. x in  *)
+(*     let f x = 10. *. (log x) in  *)
+  let r = ref 0. in
+  process  p ->
+    loop
+      r := !r +. pas;
+      emit p (rot !r (f x),rot !r (f y)); 
+      pause;
+    end
+
+(* Creer les differentes ligne *)
+(*
+let rec process creer_ligne id min max pas {in kill; out p} =
+  print_int id;
+  print_newline();
+  (signal t in
+  do 
+    run (proc_ligne (min /. 25. ) ((min +. pas) /. 25. ) ) {p=p}
+    ||
+    loop
+      await one kill(n) in
+      if n = id then emit t
+    end
+  until t)
+  ||
+  if true(*(min +. pas) < max*) then
+    (pause;
+     run (creer_ligne (id+1) (min +. pas) max pas {p=p; kill=kill}) )
+*)
+
+let rec process creer_ligne id min max pas p =
+  if id mod 10 = 0 then 
+    (print_int id;
+     print_newline(););
+  run (proc_ligne (min /. 25. ) ((min +. pas) /. 25. ) p)
+  ||
+  if true (*(min +. pas) < max*)  then
+    (pause;
+     run (creer_ligne (id+1) (min +. pas) max pas p))
+
+(*
+let process main {} =
+  signal p in
+  signal key_push in
+  signal kill in
+  run fenetre {p=p; key_push=key_push}
+  ||
+  run (creer_ligne 1 ( 0.) 4000. 1.5) {p=p; kill=kill}
+  ||
+  await key_push;
+  control
+    let cpt = ref 1 in
+    loop
+      emit kill !cpt;
+      incr cpt;
+      pause
+    end
+  with key_push
+*)
+
+let process main =
+  signal p in
+  signal key_push in
+  run (fenetre key_push p)
+  ||
+  run (creer_ligne 1 ( 0.) 4000. 1.5 p)

@@ -1,0 +1,56 @@
+open Moteur;;
+open Pacman;;
+
+
+(*  Interaction avec l'utilisateur *)
+
+(******************************************************)
+(* click de souris                                    *)
+(******************************************************)
+
+let rec process evenement_souris click =
+   await click(pos) in
+   run (evenement_souris click);;
+ 
+
+
+
+
+let rec process mouse_drag rotx roty r_dep =
+   await r_dep(p) in
+   run (mouse_drag rotx roty r_dep);;
+
+
+(***************************************************)
+(* Frappe du clavier                               *)
+(***************************************************)
+
+let rec process evenement_clavier key_push =
+   await key_push(key) in
+   run (evenement_clavier key_push);;
+(************************************************)
+
+
+
+(******************************************************)
+(* machine systeme []                                 *)
+(******************************************************)
+let process systeme =
+  signal p in
+  signal affichage in
+  signal scene in
+  signal click in
+  signal key_push in
+  signal a_move in
+  signal pos default {xi=0;yi=0} gather (fun x y -> x) in
+     run (fenetre 500 550 click a_move key_push pos p)
+(*  ||*)
+(*  run evenement_clavier {key_push=key_push}*)
+  ||
+  run (evenement_souris click)
+  ||
+  run (mouse_drag 0. 0. a_move)
+  ||
+  run (creer_scene 0.05 p pos key_push);;
+
+(****************************************************************************)

@@ -1,0 +1,89 @@
+open Moteur;;
+open Misc;;
+open Convenient;;
+open Fantome;;
+
+let nbvie = 5;;
+
+(* Le processus qui gere le score *)
+
+let txt_affiche s i = s ^ (string_of_int i) ;;
+
+let process score p fini mangep =
+  let my_score = ref 0 in
+  let emplacement = {xi=10;yi=520} in
+  let efface_texte = My_fill_rect(emplacement,{xi=100;yi=20},Graphics.black) in
+  (* Met le texte de depart *) 
+  emit p 
+    [efface_texte;
+     My_texte(txt_affiche "Score : " !my_score,Graphics.red,emplacement)];
+  loop (* incremente le score a chaque reception de mangep *)
+    await mangep;
+    my_score := !my_score + 1;
+    if !my_score = donne_nb_point () then
+      (pause;
+       emit fini (1);
+       pause);
+    emit p 
+      [efface_texte;
+       My_texte(txt_affiche "Score : " !my_score,Graphics.red,emplacement)];
+  end;;
+
+(* Le processus qui gere les vies *)
+
+let process vie coll fini p =
+  let vie = ref nbvie in
+  let emplacement = {xi=10;yi=500} in (* endroit ou le texte est affiche *)
+  let efface_texte = My_fill_rect(emplacement,{xi=100;yi=20},Graphics.black) in
+  emit p [My_texte(txt_affiche "Vie : " !vie,Graphics.red,emplacement)];
+  loop
+    await immediate coll;
+    vie := !vie - 1;
+    emit p 
+      [efface_texte;
+       My_texte(txt_affiche "Vie : " !vie,Graphics.red,emplacement)];
+    if !vie = 0 then
+      (pause;emit fini (-1)); (* pour etre sur que l'affichage est bien effectue *)
+    pause;	  
+  end;;
+
+(* Le processus qui gere les vies *)
+
+let process monstre_tue mt p =
+  let nbmt = ref 0 in
+  let emplacement = {xi=110;yi=500} in (* endroit ou le texte est affiche *)
+  let efface_texte = My_fill_rect(emplacement,{xi=100;yi=20},Graphics.black) in
+  emit p 
+    [My_texte(txt_affiche "Monstre tues : " !nbmt,Graphics.red,emplacement)];
+  loop
+    await immediate mt;
+    nbmt := !nbmt + 1;
+    emit p 
+      [efface_texte;
+       My_texte(txt_affiche "Monstre tues : " !nbmt,Graphics.red,emplacement)];
+    pause;	  
+  end;;
+
+   
+(**************************************)
+
+(* Le processus qui affiche le niveau sur l'ecran  *)
+
+let process charge_table_to_X p =
+  emit p [My_fill_rect({xi=0;yi=500},{xi=520;yi=90},Graphics.black)];
+  let i = ref 0 in
+  let j = ref 0 in
+  i := 0;
+  while !i <= (max_x-1) do
+    j := 0;
+    while !j <= (max_y-1) do
+      let img = get_brique {xi= !i;yi= !j} in
+      emit p [My_image(img, {xi= !i*20;yi= !j*20})];
+      j := !j + 1;
+    done;
+    i := !i + 1;
+  done;;
+
+let charge_graphique () =
+  charge_table_from_file "level.pac";;
+

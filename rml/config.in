@@ -1,0 +1,98 @@
+# -*- makefile -*-
+
+# remaining hard coded variables
+# location of the Reactive-ML web site
+WEB_DIR = http://www-spi.lip6.fr/~mandel/rml
+
+# autoconf variables
+srcdir      = @srcdir@
+top_srcdir  = @top_srcdir@
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = `echo @bindir@`
+infodir     = `echo @infodir@`
+mandir      = `echo @mandir@`
+libdir      = `echo @libdir@`
+
+# programs used 
+MAKE	 = @MAKE@
+CPP	 = @CPP@
+INSTALL  = @INSTALL@
+OCAMLC   = @OCAMLC@
+OCAMLOPT = @OCAMLOPT@
+OCAMLDEP = @OCAMLDEP@
+OCAMLLEX = @OCAMLLEX@
+OCAMLYACC = @OCAMLYACC@
+OCAMLCP  = @OCAMLCP@
+
+OCAMLWEB = @OCAMLWEB@
+LATEX	 = @LATEX@
+PDFLATEX = @PDFLATEX@
+DVIPS    = @DVIPS@
+HEVEA	 = @HEVEA@ @LATEXDIR@
+HACHA	 = @HACHA@
+
+EMACSDIR = "@EMACSDIR@"
+
+TARGET   = byte
+
+OCAMLFLAGS =
+OCAMLOPTFLAGS = 
+CPPFLAGS = -P -x c
+OCAMLDEPFLAGS = -slash
+
+LIBDIR = $(libdir)/rml
+
+TRUE_OCAMLC = $(OCAMLC)
+RMLC = rmlc.$(TARGET)
+
+# common rules
+world: all
+
+opt: $(BIN).opt
+$(BIN).opt: $(OBJ_OPT)
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(INCLUDES) $(OBJ_OPT) -o $(BIN).opt
+	ln -sf rmlc.opt rmlc
+
+byte: $(BIN).byte
+$(BIN).byte: $(OBJ)
+	$(OCAMLC) $(OCAMLFLAGS) $(INCLUDES) $(OBJ) -o $(BIN).byte
+	ln -sf rmlc.byte rmlc
+
+install.opt: opt
+	$(INSTALL) -d $(bindir)
+	$(INSTALL) $(BIN).opt $(bindir)/$(BIN).opt
+
+install.byte: byte
+	$(INSTALL) -d $(bindir)
+	$(INSTALL) $(BIN).byte $(bindir)/$(BIN)
+
+
+debug: OCAMLFLAGS += -g
+debug: byte
+
+bprof: OCAMLFLAGS += -g -p a
+bprof: OCAMLC := $(OCAMLCP)
+bprof: byte
+
+oprof: OCAMLOPTFLAGS += -p
+oprof: opt
+
+# implicit rules
+.SUFFIXES : .mli .ml .cmi .cmo .cmx .mll .rmli .rzi
+
+.ml.cmo:
+	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) $<
+
+.mli.cmi:
+	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) $<
+
+.rmli.rzi:
+	$(RMLC) -c $<
+
+.ml.cmx:
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $(INCLUDES) $<
+
+.mll.ml:
+	$(OCAMLLEX) $<
+

@@ -1,0 +1,111 @@
+open Moteur;;
+open Rubik;;
+
+
+(*  Interaction avec l'utilisateur *)
+
+(******************************************************)
+(* click de souris                                    *)
+(******************************************************)
+
+let rec process evenement_souris {in click} =
+  await click (pos) in
+  let current_click = List.hd pos in
+  (
+       nothing
+(*     emit mvt (Random.int 3,(Random.int 3, if (Random.int 2) = 0 then -1. else 1.));  *)
+(*        run evenement_souris     (click,p,mvt) *)
+  )
+;;
+
+
+
+let rec process mouse_drag rotx roty {out send;in r_dep  } =
+     await r_dep (p) in
+     let p = List.hd p in
+     let rotx = mod_float (rotx +. (p.x /. 10.)) 6.28 in
+     let roty = mod_float (roty +. (p.y /. 10.)) 6.28 in
+     emit send (rotx,roty);
+     pause;
+     run (mouse_drag rotx roty) {send=send;r_dep=r_dep};;
+
+
+(***************************************************)
+(* Frappe du clavier                               *)
+(***************************************************)
+
+let rec process evenement_clavier {in key_push,mvt_suiv;out mvt} =
+       
+      loop 
+       present key_push  then
+         (  await key_push (key) in
+            let key = List.hd key in
+            let rot =(match key with 
+                       | 'q' -> (0,(0, 1.) )
+                       | 'Q' -> (0,(0,-1.) )
+                       | 'w' -> (1,(0, 1.) )
+                       | 'W' -> (1,(0,-1.) )
+                       | 'e' -> (2,(0, 1.) )
+                       | 'E' -> (2,(0,-1.) )
+
+                       | 'a' -> (0,(1, 1.) )
+                       | 'A' -> (0,(1,-1.) )
+                       | 's' -> (1,(1, 1.) )
+                       | 'S' -> (1,(1,-1.) )
+                       | 'd' -> (2,(1, 1.) )
+                       | 'D' -> (2,(1,-1.) )
+
+                       | 'z' -> (0,(2, 1.) )
+                       | 'Z' -> (0,(2,-1.) )
+                       | 'x' -> (1,(2, 1.) )
+                       | 'X' -> (1,(2,-1.) )
+                       | 'c' -> (2,(2, 1.) )
+                       | 'C' -> (2,(2,-1.) )
+                       | _   -> (3,(2, 1.) )
+                      ) in
+               if fst rot = 3 then
+                emit mvt (3,(0, 1.))
+               else
+               (emit mvt (rot);
+                await immediate mvt_suiv ;
+               )
+       )
+       else
+           emit mvt (3,(0,1.));
+      end;;
+(************************************************)
+
+
+
+
+
+
+
+
+
+
+(******************************************************)
+(* machine systeme []                                 *)
+(******************************************************)
+let process systeme {} =
+  signal p in
+  signal r in  (* pour la rotation du cube *)
+  signal mvt in
+  signal mvt_suiv in
+  signal click in
+  signal key_push in
+  signal a_move in
+  run fenetre           {click=click;a_move=a_move;p=p;key_push=key_push;r=r}
+  ||
+  run evenement_clavier {key_push=key_push;mvt=mvt;mvt_suiv=mvt_suiv}
+  ||
+  run evenement_souris  {click=click}
+  ||
+  run (mouse_drag 0. 0.) {send=r;r_dep=a_move}
+  ||
+  run creer_rubik {p=p;mvt=mvt;mvt_suiv=mvt_suiv};;
+
+
+Random.self_init ();;
+
+(****************************************************************************)

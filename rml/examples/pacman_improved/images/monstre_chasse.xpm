@@ -1,0 +1,32 @@
+/* XPM */
+static char *monstre_chasse[] = {
+/* width height ncolors chars_per_pixel */
+"20 20 5 1",
+/* colors */
+"  c #2194FF",
+". c #FAFFFF",
+"X c #FF0000",
+"o c none",
+"O c #0000FF",
+/* pixels */
+"oooooooooooooooooooo",
+"oooooo        oooooo",
+"oooo            oooo",
+"ooo              ooo",
+"oo                oo",
+"o                  o",
+"o    ..      ..    o",
+"o   .OO.    .OO.   o",
+"o   .OO.    .OO.   o",
+"o   .OO.    .OO.   o",
+"o    ..      ..    o",
+"o                  o",
+"o                  o",
+"o   X   X   X   X  o",
+"o  XXX XXX XXX XX  o",
+"o XX XXX XXX XXX   o",
+"o                  o",
+"o      o     o     o",
+"oo    ooo   ooo   oo",
+"ooo  ooooo ooooo ooo"
+};

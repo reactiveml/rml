@@ -1,0 +1,91 @@
+Installation procedure for Reactive-ML:
+
+. Requirement:
+  ----------- 
+
+You'll need Objective Caml >= 3.05 in order to build Reactive-ML
+from source. You can get it from http://caml.inria.fr/.
+
+. Quick installation:
+  ------------------ 
+
+The simplest way to install Reactive-ML is to type
+
+./configure 
+make 
+make install
+
+in the Reactive-ML main directory. However, look at the output of 
+configure to make sure that default installation directories suit your
+configuration.
+
+. Customizing the installation:
+  ----------------------------
+
+You can pass options to configure in order to customize the
+installation, type
+
+./configure --help 
+
+to get the full list of options. The most important ones are the 
+following:
+
+	--prefix=<dir>  sets the root directory for the installation
+			default is /usr/local
+
+	--libdir=<dir>  set the installation directory for Reactive-ML
+			libraries
+			default: $(PREFIX)/lib/
+
+	--with-emacs-dir=<dir>  sets the directory where you want to
+			install the Reactive-ML emacs mode. When
+			not set configure tries to find a suitable
+			directory.
+
+. Other informations:
+  ------------------
+
+Other make target which can be usefull:
+
+      - in the root directory:
+
+        make byte  compiles everything to bytecode (default).
+
+	make opt   compiles everything to opt.
+
+	make install.byte  installs the bytecode version.
+
+	make install.opt   installs the opt version.
+
+	make binary-distrib  makes a file rml-VERSION.TARGET.tar.gz
+		containing a full Reactive-ML binary distribution,
+		ready for installation.
+		TARGET is either opt or byte. Default is opt, you 
+		can bet the bytecode version with
+		make binary-distrib.byte
+
+        make doc   tries to generate documentation from the sources
+	         using ocamlweb. This is not really
+	         supported. Documentation is produced in the doc/
+	         subdirectory. 
+		 
+	make html  same as above but feeds the output of ocamlweb into
+		hevea. Produced documentation is in doc/.
+
+      - in the compiler/ directory 
+
+        make byte  produces a bytecode version of the compiler in
+	        rmlc.byte 
+		
+	make opt   produces an opt version of the compiler in
+		rmlc.opt
+
+	make debug  produces a compiler with debugging informations
+		(make clean may be required in order to get new
+		version of all the files).
+
+	make bprof  produces a compiler with informations for the
+		bytecode profiler.
+
+	make oprof  produces a compiler with informations for the opt
+		profiler. 

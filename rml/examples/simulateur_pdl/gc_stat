@@ -1,0 +1,40 @@
+
+------------------------------------
+---- instant = 0
+date = 2004 year 249 day 14 h 4 min 47 sec
+proc time = 0.02
+minor_words: 288837
+promoted_words: 81536
+major_words: 582548
+minor_collections: 1000
+major_collections: 14
+heap_words: 614400
+heap_chunks: 10
+top_heap_words: 614400
+live_words: 570648
+live_blocks: 18653
+free_words: 43751
+free_blocks: 1367
+largest_free: 29010
+fragments: 1
+compactions: 0
+
+------------------------------------
+---- instant = 1500
+date = 2004 year 249 day 14 h 5 min 43 sec
+proc time = 56.3
+minor_words: 704430362
+promoted_words: 104042481
+major_words: 160081848
+minor_collections: 22488
+major_collections: 160
+heap_words: 9523200
+heap_chunks: 155
+top_heap_words: 9523200
+live_words: 4871338
+live_blocks: 1182045
+free_words: 4646345
+free_blocks: 199220
+largest_free: 28670
+fragments: 5517
+compactions: 0

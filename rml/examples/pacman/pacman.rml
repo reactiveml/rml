@@ -1,0 +1,271 @@
+open Moteur;;
+open Misc;;
+open Convenient;;
+open Fantome;;
+open Affichage;;
+
+
+let coord_to_pos {xi=x;yi=y} = {xi=x/20;yi=y/20};;
+let pos_to_coord {xi=x;yi=y} = {xi=x*20;yi=y*20};;
+let mul_coord a {xi=xx;yi=yy} = {xi=a*xx;yi=a*yy};;
+let add_coord {xi=xx1;yi=yy1}
+              {xi=xx2;yi=yy2} = {xi=xx1+xx2;yi=yy1+yy2};;
+
+
+(* Le processus pacman *)
+
+let posdep = {xi=5;yi=5};; (* position de depart *) 
+let nbtourinv = 60;; (* nombre de tour ou le pacman est invincible *)
+
+let process pacman_clavier key_push new_move pacman_pos new_pos fin =
+  loop
+    while not (pre new_pos) do 
+    do
+      loop
+	emit pacman_pos (List.hd (pre ?pacman_pos));
+	pause;
+      end
+    until key_push;
+      let key = List.hd (pre ?key_push) in
+      (match cmd_clavier key with
+      | Quit   -> emit fin (-2)
+      | No_cmd -> emit pacman_pos (List.hd (pre ?pacman_pos))
+      | Dir x  -> 
+	  let (peut_bouger,npos) = 
+	    est_possible (List.hd (pre ?pacman_pos)) x false 
+	  in
+	  if peut_bouger then
+ 	    (emit pacman_pos (npos);
+	     emit new_pos
+            )
+	  else
+	    emit pacman_pos (List.hd (pre ?pacman_pos))
+      );
+      pause;
+    done; 
+    do
+      loop
+        emit pacman_pos (List.hd (pre ?pacman_pos));
+	pause
+      end
+    until new_move;
+  end;; 
+
+
+let process pacman_affichage pacman_pos new_pos affichage new_move nbclignote =
+  loop
+    await new_pos;
+    let anc_pos = List.hd (pre ?pacman_pos) in
+    pause;
+    emit affichage [ My_image(get_brique anc_pos, pos_to_coord anc_pos)];
+  end
+  ||
+  loop
+    (*** Affiche le pacman au bon endroit tant que  
+     *** le joueur ne le fait pas deplacer          *)
+    do
+      loop
+	emit affichage [My_image(joueur, pos_to_coord (List.hd (pre ?pacman_pos)))];
+	pause;
+	await immediate one nbclignote (n) in
+	let pos = List.hd (pre ?pacman_pos) in
+	emit affichage [My_image(
+			(if n = 0 then
+			  joueur
+			else
+			  (get_brique pos)),
+	                pos_to_coord pos)];
+	pause;
+      end
+    until new_pos;
+    (************)
+    (* Fait le Bouger *)
+    let npos = List.hd (pre ?pacman_pos) in
+    (** Fait des trucs **)
+    
+    (* On peut prendre en compte un nouveau mouvement *)
+    emit new_move;
+  end;;
+
+(* Met a jour le compteur de tour d'invincibilite *)
+let process pacman_invincible invincible nb_inv new_pos bouge_fant =
+  let decremente n = if n <= 0 then 0 else n - 1 in
+  loop
+    (* --------------- *)
+    do
+      loop
+	do
+          loop
+	    if pre bouge_fant then
+	      let nb = decremente (List.hd (pre ?nb_inv)) in  
+	      emit nb_inv (nb);
+	    else
+	      emit nb_inv (List.hd (pre ?nb_inv));
+	    pause;
+          end;
+	until bouge_fant;
+	let nb = List.hd (pre ?nb_inv) in
+	emit nb_inv (if nb <= 0 then 0 else nb - 1);
+	pause;
+      end 
+    until new_pos;
+    (* --------------- *)
+    if pre invincible then
+      emit nb_inv (nbtourinv)
+    else
+      if (pre bouge_fant) then 
+	let nb = decremente (List.hd (pre ?nb_inv)) in  
+        emit nb_inv (nb)
+      else
+        emit nb_inv (List.hd (pre ?nb_inv));
+    pause;
+    (* --------------- *)
+  end;;
+
+
+let process pacman_collision coll nb_inv nbclignote lostlive =
+  (* Attend une collision *)
+  loop
+    await coll;
+    await immediate one nb_inv (nb) in
+    await immediate one nbclignote (n) in
+    if n = 0 && nb = 0 then
+      emit lostlive;
+  end;;
+
+let process pacman_after_live lostlive nbclignote =
+  loop
+    do
+      loop
+	let nb = List.hd (pre ?nbclignote) in
+	emit nbclignote (if nb <= 0 then 0 else nb -1);
+	pause;
+      end;
+    until lostlive;
+    emit nbclignote (100);
+    pause;
+  end;;
+
+let process pacman_mange pacman_pos new_pos mangep invincible =
+  (* Fait manger les points au pacman *)
+  pause;
+  await immediate one pacman_pos (pos) in
+  if est_un_point pos then
+    (supprime_point pos;
+     emit mangep
+    );
+  loop
+    await immediate new_pos;
+    await immediate one pacman_pos (pos) in
+    if est_un_gros_point pos then
+      (emit invincible;
+       supprime_point pos;
+       emit mangep;
+      )
+    else if est_un_point pos then
+      (supprime_point pos;
+       emit mangep
+      );
+    pause;
+  end;;
+
+
+let process pacman affichage key_push mangep mypos new_aff fin
+                   nb_inv lostlive
+		   coll new_pos pacman_pos bouge_fant =
+  signal invincible in (* Met en marche l'invincibilite *)
+  signal new_move in (* Attente une nouvelle frappe de clavier *)
+  signal nbclignote default [0] gather fun x y -> [x] in
+  let current_pos = ref posdep in (* position courante *)
+  run (pacman_mange pacman_pos new_pos mangep invincible)
+  ||
+  run (pacman_collision coll nb_inv nbclignote lostlive)
+  ||
+  run (pacman_after_live lostlive nbclignote)
+  ||
+  loop
+    signal prepacman_pos default [posdep] gather fun x y -> [x] in
+    do
+      loop
+        run (pacman_clavier key_push new_move pacman_pos new_pos fin)
+        ||
+        run (pacman_affichage pacman_pos new_pos affichage new_move nbclignote)
+        ||
+        run (pacman_invincible invincible nb_inv new_pos bouge_fant)
+        ||
+	loop
+	  emit prepacman_pos (List.hd (pre ?pacman_pos));
+	  pause;
+	end;
+      end
+    until lostlive;
+    (* Avant de le remettre au debut, il faut l'effacer de sa position *)
+    let p_pos = List.hd (pre ?prepacman_pos) in
+    emit affichage [My_image(get_brique p_pos, pos_to_coord p_pos)];
+    
+    pause;
+  end;;
+
+
+let process creer_scene v p pos key_push =
+  signal mangep default () gather fun x y -> () in
+  signal fin    default 0 gather fun x y -> x in
+  signal jpos in
+  signal lostlive in
+  signal mt default 0 gather fun a b -> b + 1 in
+  signal coll default () gather fun a b -> () in
+  signal new_aff default () gather fun x y -> x in
+  signal nb_inv default [0] gather fun x y -> [x] in
+  signal bouge_fant in
+  signal pacman_pos default [posdep] gather fun x y -> [x] in
+  signal new_pacman_pos in (* Obtient la nouvelle position *)
+  charge_graphique ();
+  run (charge_table_to_X p);
+  pause;
+  do
+    (*  Les differents protagonistes : (fantome.rml, pacman.rml) *)
+    run (fantome 
+	   monstreRouge p bouge_fant mt coll nb_inv new_pacman_pos pacman_pos)
+    ||   
+    run (fantome 
+	   monstreVert p bouge_fant mt coll nb_inv new_pacman_pos pacman_pos)
+    ||   
+    run (fantome 
+	   monstreBleu p bouge_fant mt coll nb_inv new_pacman_pos pacman_pos)
+    ||   
+    run (fantome 
+	   monstreViolet p bouge_fant mt coll nb_inv new_pacman_pos pacman_pos)
+    ||   
+    run (pacman 
+	   p key_push mangep jpos new_aff fin nb_inv lostlive coll
+	   new_pacman_pos pacman_pos bouge_fant)
+    ||
+    (*  Les affichages  :  ( affichage.rml )  *) 
+    run (score p fin mangep)
+    ||
+    run (monstre_tue mt p)
+    ||
+    run (vie lostlive fin p)
+    ||
+    loop
+      emit bouge_fant;
+      pause;
+      pause;
+      pause;
+      pause;
+    end
+  until fin;
+  if pre ?fin = -1 then
+    (* perdu *)
+    emit p [My_texte("Vous avez perdu!!",Graphics.red,{xi=220;yi=520})]    
+      
+  else if pre ?fin = -2 then
+    (* Abandon *)
+    emit p [My_texte("Vous avez abandonne X-( !!!",Graphics.red,{xi=220;yi=520})]
+  else
+    (* Gagne *)
+    emit p [My_texte("Vous avez gagne!!",Graphics.red,{xi=220;yi=520})];
+  print_string "Jeu fini.";
+  print_newline ();;
+     
+

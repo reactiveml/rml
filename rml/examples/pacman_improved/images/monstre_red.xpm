@@ -1,0 +1,32 @@
+/* XPM */
+static char *monstre_red[] = {
+/* width height ncolors chars_per_pixel */
+"20 20 5 1",
+/* colors */
+"  c #000000",
+". c #FF0000",
+"X c none",
+"o c #FDFAFF",
+"O c #0000FF",
+/* pixels */
+"XXXXXXXXXXXXXXXXXXXX",
+"XXXXXX........XXXXXX",
+"XXXX............XXXX",
+"XXX.    ...    ..XXX",
+"XX.  oo  .  oo  ..XX",
+"X.. oooo . oooo ...X",
+"X.. OOoo . OOoo ...X",
+"X.. OOoo . OOoo ...X",
+"X.. OOoo . OOoo ...X",
+"X.. oooo . oooo ...X",
+"X..  oo  .  oo  ...X",
+"X...    ...    ....X",
+"X..................X",
+"X..................X",
+"X..................X",
+"X..................X",
+"X..................X",
+"X......X.....X.....X",
+"XX....XXX...XXX...XX",
+"XXX..XXXXX.XXXXX.XXX"
+};

@@ -1,0 +1,32 @@
+/* XPM */
+static char *monstre_bleu[] = {
+/* width height ncolors chars_per_pixel */
+"20 20 5 1",
+/* colors */
+"  c #000000",
+". c #F8FFFA",
+"X c #2A69FF",
+"o c none",
+"O c #0000FF",
+/* pixels */
+"oooooooooooooooooooo",
+"ooooooXXXXXXXXoooooo",
+"ooooXXXXXXXXXXXXoooo",
+"oooO    XXX    XXooo",
+"ooX  ..  X  ..  XXoo",
+"oXX .... X .... XXXo",
+"oXX OO.. X OO.. XXXo",
+"oXX OO.. X OO.. XXXo",
+"oXX OO.. X OO.. XXXo",
+"oXX .... X .... XXXo",
+"oXX  ..  X  ..  XXXo",
+"oXXX    XXX    XXXXo",
+"oXXXXXXXXXXXXXXXXXXo",
+"oXXXXXXXXXXXXXXXXXXo",
+"oXXXXXXXXXXXXXXXXXXo",
+"oXXXXXXXXXXXXXXXXXXo",
+"oXXXXXXXXXXXXXXXXXXo",
+"oXXXXXXoXXXXXoXXXXXo",
+"ooXXXXoooXXXoooXXXoo",
+"oooXXoooooXoooooXooo"
+};

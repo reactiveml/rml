@@ -1,0 +1,75 @@
+open Moteur;;
+
+
+(* effectue la rotation d'une face *)
+
+let tourne_face rotfunc (lp,pos,color) =
+      (Array.map rotfunc lp, rotfunc pos,color);;
+
+(* effectue la rotation d'un cube *)
+
+let tourne_cube rotfunc (lf,pos) =
+      (Array.map (tourne_face rotfunc) lf, rotfunc pos);;
+
+
+(* Creer le cube de taille size qui se trouve en position pos *)
+
+let creer_cube size pos (c1,c2,c3,c4,c5,c6) =
+    let pn = size /. 2. in
+    let mn = -. pn in
+  (
+  [|
+(*  Face 1 ( devant )  *)
+    ([|{x = mn; y = pn; z = pn};
+       {x = pn; y = pn; z = pn};
+       {x = pn; y = mn; z = pn};
+       {x = mn; y = mn; z = pn}|],
+       {x = 0.; y = 0.; z = pn} ,c1) (* norm *)
+    ;
+(*  Face 2 ( droit )  *)
+    ([|{x = pn; y = pn; z = pn};
+       {x = pn; y = pn; z = mn};
+       {x = pn; y = mn; z = mn};
+       {x = pn; y = mn; z = pn}|],
+       {x = pn; y = 0.; z = 0.} ,c2) (* norm *)
+    ;
+(*  Face 3 ( haut )  *)
+    ([|{x = mn; y = pn; z = mn};
+       {x = pn; y = pn; z = mn};
+       {x = pn; y = pn; z = pn};
+       {x = mn; y = pn; z = pn}|],
+       {x = 0.; y = pn; z = 0.} ,c3) (* norm *)
+    ;
+(*  Face 4 ( gauche )  *)
+    ([|{x = mn; y = pn; z = mn};
+       {x = mn; y = pn; z = pn};
+       {x = mn; y = mn; z = pn};
+       {x = mn; y = mn; z = mn}|],
+       {x = mn; y = 0.; z = 0.} ,c4) (* norm *)
+    ;
+(*  Face 5 ( derriere )  *)
+    ([|{x = pn; y = pn; z = mn};
+       {x = mn; y = pn; z = mn};
+       {x = mn; y = mn; z = mn};
+       {x = pn; y = mn; z = mn}|],
+       {x = 0.; y = 0.; z = mn} ,c5) (* norm *)
+    ;
+(*  Face 5 ( bas )  *)
+    ([|{x = mn; y = mn; z = pn};
+       {x = pn; y = mn; z = pn};
+       {x = pn; y = mn; z = mn};
+       {x = mn; y = mn; z = mn}|],
+       {x = 0.; y = mn; z = 0.} ,c6) (* norm *)
+    |]
+    ), pos;;
+
+let proc_cube ((lf,pos) as current) = 
+      let deg = ref 0. in
+      process {out p} ->
+      loop
+          let new_cube = tourne_cube (rotation_deg !deg 0) current in 
+          emit p (new_cube);
+          pause;
+          deg := !deg +. 0.1;
+      end;;
+

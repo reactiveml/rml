@@ -1,0 +1,345 @@
+type coord = 
+    {mutable x:float;
+     mutable y:float}
+;;
+type boid =
+    {id : int;
+     pos : coord;
+     v : coord;
+     acc : coord;}
+;;
+(* constantes *)
+let coef_sep = 5.0;;
+let coef_cohes = 1.1;;
+let coef_alig = 1.1;;
+let vision_sep2 = 100.0;;
+let vision_cohes2 = 2000.0;;
+let vision_alig2 = 1000.0;;
+let vmax = 1000.0;;
+let dt = 0.1;;
+let bounds = (5.,405.,5.,405.);;
+
+(* fonctions aux *)
+let random_pos() =
+  {x = Random.float 200.0 +. 100.0;
+   y = Random.float 200.0 +. 100.0;}
+;;
+let get_mouse_pos() =
+  let status = Graphics.wait_next_event [Graphics.Poll] in
+  {x = float_of_int (status.Graphics.mouse_x);
+   y = float_of_int (status.Graphics.mouse_y);}
+;;
+
+
+let distance2 pos1 pos2 =
+  ((pos2.x -. pos1.x)*.(pos2.x -. pos1.x))+.
+    ((pos2.y -. pos1.y)*.(pos2.y -. pos1.y))
+;;
+
+let get_key() =
+  Graphics.read_key()
+;;  
+
+let draw_bounds (min_x,max_x,min_y,max_y) =
+  let (min_x,max_x,min_y,max_y) = (int_of_float min_x,
+				   int_of_float max_x,
+				   int_of_float min_y,
+				   int_of_float max_y)
+  in
+  Graphics.moveto min_x min_y;
+  Graphics.lineto min_x max_y;
+  Graphics.lineto max_x max_y;
+  Graphics.lineto max_x min_y;
+  Graphics.lineto min_x min_y
+;;
+
+let maj_aff all =
+  Graphics.clear_graph();
+  draw_bounds bounds;
+  List.iter 
+    (fun b -> 
+(*      Graphics.fill_circle *)
+      Graphics.draw_circle 
+	(int_of_float b.pos.x)
+	(int_of_float b.pos.y)
+	2)
+    all;
+  Graphics.synchronize()
+;;
+
+
+(********************************)
+(* separation                   *)
+(********************************)
+let separation = 
+  let sum_f f b1 (b2,dist2) =
+    if (dist2 < epsilon_float) or (dist2 > vision_sep2) then
+      ()
+    else (
+      f.x <- f.x -. (b2.pos.x -. b1.pos.x)/.dist2;
+      f.y <- f.y -. (b2.pos.y -. b1.pos.y)/.dist2;
+     )
+  in
+  fun f b all ->
+    f.x <- 0.0;
+    f.y <- 0.0;
+    List.iter (sum_f f b) all
+;;
+(********************************)
+(* cohesion                     *)
+(********************************)
+let cohesion = 
+  let sum_f cpt f b1 (b2,dist2) =
+    if (dist2 < epsilon_float) or (dist2 > vision_cohes2) then
+      ()
+    else (
+      cpt := !cpt + 1;
+      f.x <- f.x +. b2.pos.x;
+      f.y <- f.y +. b2.pos.y;
+     )
+  in
+  fun f b all ->
+    let cpt = ref 0 in
+    f.x <- 0.0;
+    f.y <- 0.0;
+    List.iter (sum_f cpt f b) all;
+    if !cpt <> 0 then (
+      f.x <- (f.x /. (float_of_int !cpt)) -. b.pos.x;
+      f.y <- (f.y /. (float_of_int !cpt)) -. b.pos.y;
+    ) else (
+      f.x <- 0.0;
+      f.y <- 0.0
+     )
+;;
+(********************************)
+(* alignment                    *)
+(********************************)
+let alignment =   
+  let sum_f cpt f b1 (b2,dist2) =
+    if (dist2 < epsilon_float) or (dist2 > vision_alig2) then
+      ()
+    else (
+      let norme = b2.v.x *. b2.v.x +. b2.v.y *. b2.v.y in
+      if (norme <> 0.0) then (
+	cpt := !cpt + 1;
+	f.x <- f.x +. b2.v.x /. norme;
+	f.y <- f.y +. b2.v.y /. norme;)
+     )
+  in
+  fun f b all ->
+    let cpt = ref 0 in
+    f.x <- 0.0;
+    f.y <- 0.0;
+    List.iter (sum_f cpt f b) all;
+    if !cpt <> 0 then (
+      f.x <- (f.x /. (float_of_int !cpt));
+      f.y <- (f.y /. (float_of_int !cpt));
+    ) else (
+      f.x <- 0.0;
+      f.y <- 0.0
+     )
+;;
+
+(********************************)
+(* check_bounds                 *)
+(********************************)
+let check_bounds (min_x, max_x, min_y, max_y) b =
+  if b.pos.x < min_x then (
+    b.pos.x <- min_x;
+    b.v.x <- abs_float b.v.x);
+  if b.pos.x > max_x then (
+    b.pos.x <- max_x;
+    b.v.x <- 0.0 -. (abs_float b.v.x));
+  if b.pos.y < min_y then (
+    b.pos.y <- min_y;
+    b.v.y <- abs_float b.v.y);
+  if b.pos.y > max_y then (
+    b.pos.y <- max_y;
+    b.v.y <- 0.0 -. (abs_float b.v.y));
+;;
+(********************************)
+(* set_acc                      *)
+(********************************)
+let set_acc b f_sep f_cohes f_alig =
+  b.acc.x <- 
+    f_sep.x *. coef_sep +. f_cohes.x *. coef_cohes +. f_alig.x *. coef_alig;
+  b.acc.y <- 
+    f_sep.y *. coef_sep +. f_cohes.y *. coef_cohes +. f_alig.y *. coef_alig
+;;
+(********************************)
+(* set_v                        *)
+(********************************)
+let set_v b =
+  let vx = b.acc.x *. dt +. b.v.x in
+  let vy = b.acc.y *. dt +. b.v.y in
+  let v = vx *. vx +. vy *. vy in
+  b.v.x <-
+    begin
+      if v < vmax then vx else (vx /. v) *. vmax
+    end;
+  b.v.y <-
+    begin
+      if v < vmax then vy else (vy /. v) *. vmax
+    end
+;;
+(********************************)
+(* set_pos                      *)
+(********************************)
+let set_pos b =
+  b.pos.x <- b.v.x *. dt +. b.pos.x;
+  b.pos.y <- b.v.y *. dt +. b.pos.y
+;;
+
+(******************************************************)
+(* machine fenetre cpt [new_boid,kill_boid,p]              *)
+(******************************************************)
+let process fenetre cpt new_boid kill_boid p  =
+(*----------------------------------------------------*)
+(* machine read_click cpt [new_boid]                  *)
+(*----------------------------------------------------*)
+  let process read_click new_boid =
+    let click = ref false in
+    let pre_click =  ref false in
+    let pos = ref {x = 0.0; y = 0.0;} in
+    loop 
+      click := Graphics.button_down();
+      (if !click && not !pre_click
+      then (
+        pos := get_mouse_pos();
+        emit new_boid (!pos); 
+(*        cpt := !cpt + 1; *)
+	print_string ("new_boid "^(string_of_int (!cpt + 1)));
+	print_newline())
+      else
+        nothing);
+      pre_click := !click;
+      pause
+    end
+  in
+(*----------------------------------------------------*)
+(* machine read_key [kill_boid]                            *)
+(*----------------------------------------------------*)
+  let process read_key kill_boid =
+    let cpt = ref 0 in
+    loop 
+      if Graphics.key_pressed()
+      then 
+	let c = get_key() in
+       	(print_string ("key_pressed = ");
+         print_char c;
+	 print_newline();
+	 if c = 'k' then (
+	   emit kill_boid (!cpt); 
+	   print_string "emit kill ";
+	   print_int !cpt;
+	   print_newline();
+	   incr cpt)
+	 else nothing;
+	)
+      else nothing;
+      pause
+    end
+  in
+(*----------------------------------------------------*)
+    Graphics.open_graph "";
+    Graphics.auto_synchronize false;
+    draw_bounds bounds;
+    loop
+      await p (all) in 
+      maj_aff all;
+(*
+      pause;
+      pause;
+*)
+    end
+    ||
+    run (read_click new_boid)
+    ||
+    run (read_key kill_boid)
+;;
+
+(******************************************************)
+(* machine boid id pos_init [p,kill_boid]                  *)
+(******************************************************)
+let process boid id pos_init p kill_boid =
+  signal kill_me in
+    do 
+      let me = 
+	{id = id;
+	 pos = pos_init;
+	 v = {x = 0.0; y = 0.0};
+	 acc = {x = 0.0; y = 0.0};}
+      in
+      let f_sep = {x=0.0;y=0.0} in
+      let f_cohes = {x=0.0;y=0.0} in 
+      let f_alig = {x=0.0;y=0.0} in 
+      let dep = {x=0.0;y=0.0} in 
+      loop 
+	emit p (me);
+        await p (all) in
+        let all = List.rev_map (fun b -> b, (distance2 me.pos b.pos)) all in
+        (separation f_sep me all
+         ||
+	 cohesion f_cohes me all
+	 ||
+	 alignment f_alig me all);
+        set_acc me f_sep f_cohes f_alig;
+        set_v me;
+        set_pos me;
+	check_bounds bounds me
+      end
+      ||
+      loop
+	await kill_boid (n) in
+        if List.mem me.id n then 
+	  emit kill_me
+      end
+    until kill_me
+;;
+
+(******************************************************)
+(* machine add [new_boid,p,kill_boid]                 *)
+(******************************************************)
+let rec process add cpt new_boid p kill_boid =
+  await new_boid (pos) in
+  cpt := !cpt + 1;
+  run (boid !cpt (List.hd pos) p kill_boid)
+  ||
+  run (add cpt new_boid p kill_boid)
+;;
+
+(******************************************************)
+(* machine boids n [p,kill_boid]                      *)
+(******************************************************)
+let rec process boids n p kill_boid =
+  if n < 1 then
+    nothing
+  else
+    (run (boids (n-1) p kill_boid)  
+     ||
+     run (boid n (random_pos()) p kill_boid))
+;;
+
+(******************************************************)
+(* machine systeme n cpt                              *)
+(******************************************************)
+let process systeme n cpt =
+  signal p in 
+  signal new_boid in 
+  signal kill_boid in
+  run (add cpt new_boid p kill_boid)
+  ||
+  run (fenetre cpt new_boid kill_boid p)
+  ||
+  run (boids n p kill_boid)
+;;
+
+(****************************************************************************)
+let usage = "Usage: "^(Sys.argv.(0))^" [nb boids]"
+;;
+let process main =
+  let x = Random.self_init() in
+  let cpt = ref 0 in
+  Arg.parse [] (fun n -> cpt := int_of_string n) usage;
+  run (systeme (!cpt) cpt)
+;;

@@ -1,0 +1,2522 @@
+Profile plat:
+
+Chaque échantillon dénombre 0.01 seconds.
+  %    cumulatif   auto              auto     total           
+temps   seconds   seconds   appels  s/appel  s/appel  nom     
+ 26.40    162.43   162.43    14144     0.01     0.01  mark_slice
+ 11.46    232.96    70.53 66744789     0.00     0.00  caml_fl_allocate
+  7.49    279.07    46.10    28738     0.00     0.00  sweep_slice
+  6.86    321.29    42.22 27993718     0.00     0.00  camlPos_tbl__set_90
+  5.76    356.71    35.42  8739929     0.00     0.00  camlList__rev_append_75
+  4.89    386.78    30.08 92039177     0.00     0.00  camlRoutage__fun_250
+  3.84    410.38    23.60 37087002     0.00     0.00  camlRoutage__code_begin
+  2.70    426.97    16.59    42882     0.00     0.00  caml_oldify_mopup
+  2.66    443.33    16.36 170627402     0.00     0.00  caml_apply2
+  2.36    457.88    14.55 66007713     0.00     0.00  caml_fl_merge_block
+  2.20    471.40    13.52 66744570     0.00     0.00  allocate_block
+  2.18    484.84    13.44 69118180     0.00     0.00  caml_oldify_one
+  2.00    497.12    12.29  5389610     0.00     0.00  camlList__fold_left_102
+  1.99    509.36    12.24 46733666     0.00     0.00  camlSimul____val_ml_4_90
+  1.45    518.30     8.94 66744570     0.00     0.00  caml_alloc_shr
+  1.25    526.02     7.72 39746753     0.00     0.00  caml_modify
+  1.14    533.05     7.03   166849     0.00     0.00  caml_make_vect
+  1.12    539.95     6.90 21699326     0.00     0.00  camlStat__code_begin
+  0.96    545.86     5.91   499951     0.00     0.00  camlRoutage__routage_140
+  0.89    551.32     5.45  6781639     0.00     0.00  camlRandom__bits_94
+  0.83    556.43     5.11 28363471     0.00     0.00  compare_val
+  0.71    560.82     4.39 82920500     0.00     0.00  caml_initialize
+  0.70    565.13     4.32   500000     0.00     0.00  camlList__find_231
+  0.46    567.96     2.83 28666071     0.00     0.00  caml_c_call
+  0.43    570.59     2.63       15     0.18     0.18  caml_adjust_gc_speed
+  0.35    572.77     2.18    85764     0.00     0.00  caml_empty_minor_heap
+  0.32    574.74     1.97   500096     0.00     0.00  camlGlobal__make_packet_218
+  0.31    576.65     1.91  9083060     0.00     0.00  caml_darken
+  0.30    578.51     1.86        1     1.86     3.76  caml_startup__code_begin
+  0.29    580.32     1.81                             caml_ext_table_free
+  0.25    581.87     1.55 27993718     0.00     0.00  caml_greaterthan
+  0.25    583.40     1.53   500000     0.00     0.00  camlArea__get_areas_96
+  0.23    584.80     1.41                             camlLco_ctrl_tree__sched_162
+  0.21    586.12     1.32                             caml_allocation_color
+  0.20    587.37     1.25                             caml_fl_reset
+  0.20    588.61     1.24 21701760     0.00     0.00  camlPos_tbl__code_begin
+  0.18    589.71     1.11                             camlLco_ctrl_tree__f_def_349
+  0.18    590.79     1.08  1840533     0.00     0.00  camlSimul__fun_575
+  0.17    591.83     1.04    42882     0.00     0.00  caml_oldify_local_roots
+  0.15    592.77     0.94  1925907     0.00     0.00  camlRandom__rawfloat_131
+  0.15    593.71     0.94  1508000     0.00     0.00  camlList__iter_98
+  0.15    594.63     0.93  7503507     0.00     0.00  caml_curry4
+  0.15    595.55     0.92        1     0.92     0.92  caml_set_minor_heap_size
+  0.14    596.42     0.87  7753554     0.00     0.00  caml_curry4_1
+  0.14    597.26     0.84  7753554     0.00     0.00  caml_curry4_2
+  0.12    598.00     0.74   500000     0.00     0.00  camlMove__random_waypoint_114
+  0.12    598.73     0.74  1925907     0.00     0.00  camlRoutage__insert_pdl_87
+  0.12    599.45     0.72  7753554     0.00     0.00  caml_curry4_3
+  0.10    600.09     0.65  2752077     0.00     0.00  caml_apply3
+  0.09    600.67     0.58                             camlLco_ctrl_tree__rml_seq_295
+  0.09    601.24     0.57   500096     0.00     0.00  camlStat__packet_stat_146
+  0.09    601.80     0.56   500000     0.00     0.00  camlSimul__fun_581
+  0.09    602.35     0.56   163841     0.00     0.00  camlRoutage__fun_242
+  0.09    602.90     0.55   249998     0.00     0.00  camlGlobal__make_pdl_info_forecast_229
+  0.08    603.40     0.50                             camlLco_ctrl_tree__f_compute_181
+  0.08    603.88     0.48  1003918     0.00     0.00  camlRandom__intaux_97
+  0.07    604.34     0.46  2503088     0.00     0.00  caml_curry3_1
+  0.07    604.79     0.45   500000     0.00     0.00  camlSimul__fun_433
+  0.07    605.21     0.42        1     0.42     0.42  camlSimul__fun_706
+  0.07    605.61     0.40  2503088     0.00     0.00  caml_curry3_2
+  0.06    605.98     0.37                             compare_resize_stack
+  0.06    606.34     0.36   500096     0.00     0.00  camlRoutage__route_164
+  0.05    606.67     0.34                             camlLco_ctrl_tree__fun_912
+  0.05    606.98     0.31   500000     0.00     0.00  camlSimul__fun_591
+  0.05    607.28     0.30       20     0.02     0.02  caml_allocN
+  0.05    607.57     0.30                             camlSimul__code_end
+  0.05    607.85     0.28   500000     0.00     0.00  camlSimul__fun_532
+  0.04    608.11     0.26  2503088     0.00     0.00  caml_curry3
+  0.04    608.36     0.25   500000     0.00     0.00  camlSimul__fun_444
+  0.04    608.60     0.24    42882     0.00     0.01  caml_major_collection_slice
+  0.04    608.83     0.23                             camlLco_ctrl_tree__step_emit_186
+  0.04    609.06     0.23                             camlLco_ctrl_tree__rml_pre_value_168
+  0.04    609.28     0.22                             camlLco_ctrl_tree__rml_def_344
+  0.04    609.50     0.22  1840533     0.00     0.00  camlSimul__fun_573
+  0.03    609.69     0.20                             camlPos_tbl__get_87
+  0.03    609.87     0.18   500000     0.00     0.00  camlStat__node_stat_127
+  0.03    610.04     0.18                             camlLco_ctrl_tree__f_pause_185
+  0.03    610.21     0.17                             camlRandom__copy_91
+  0.03    610.38     0.17                             camlLco_ctrl_tree__f_emit_val_196
+  0.03    610.54     0.16   163841     0.00     0.00  camlRoutage____val_ml_17_120
+  0.03    610.69     0.16   489942     0.00     0.00  camlRoutage__routage_success_108
+  0.02    610.84     0.15                             camlArea__code_end
+  0.02    610.97     0.14  1000000     0.00     0.00  camlPos_tbl__update_96
+  0.02    611.11     0.14   500096     0.00     0.00  camlList__length_aux_57
+  0.02    611.24     0.13                             camlLco_ctrl_tree__rml_emit_val_191
+  0.02    611.37     0.13                             camlLco_ctrl_tree__rml_compute_177
+  0.02    611.50     0.13                             camlPos_tbl__code_end
+  0.02    611.63     0.13   500000     0.00     0.00  camlSimul__fun_529
+  0.02    611.75     0.13   500000     0.00     0.00  camlSimul__fun_567
+  0.02    611.87     0.12   500000     0.00     0.00  camlMove__move_87
+  0.02    611.99     0.12   500000     0.00     0.00  camlSimul__fun_577
+  0.02    612.11     0.12   182454     0.00     0.00  caml_lessequal
+  0.02    612.23     0.12   500000     0.00     0.00  camlSimul__fun_439
+  0.02    612.34     0.12                             camlLco_ctrl_tree__rml_pause_182
+  0.02    612.45     0.11   500000     0.00     0.00  camlSimul__fun_585
+  0.02    612.55     0.10   500000     0.00     0.00  camlMsg__make_87
+  0.02    612.65     0.10   500000     0.00     0.00  camlSimul__fun_589
+  0.02    612.75     0.10      219     0.00     0.00  caml_add_to_heap
+  0.01    612.84     0.09   500000     0.00     0.00  camlSimul__fun_593
+  0.01    612.92     0.09   500000     0.00     0.00  camlSimul__fun_571
+  0.01    613.01     0.09   500000     0.00     0.00  camlSimul__get_neighbors_87
+  0.01    613.09     0.08   500000     0.00     0.00  camlSimul__fun_583
+  0.01    613.17     0.08   489942     0.00     0.00  camlStat__packet_success_stat_153
+  0.01    613.25     0.08                             camlList__nth_69
+  0.01    613.32     0.08   500000     0.00     0.00  camlSimul__fun_587
+  0.01    613.39     0.07   500000     0.00     0.00  camlList__find_all_229
+  0.01    613.46     0.07    43901     0.00     0.00  parse_format
+  0.01    613.53     0.07                             camlLco_ctrl_tree__rml_present$27_287
+  0.01    613.60     0.07   163841     0.00     0.00  camlRoutage__search_best_age_112
+  0.01    613.67     0.07   500000     0.00     0.00  camlSimul__fun_436
+  0.01    613.73     0.06   250048     0.00     0.00  camlSimul__fun_595
+  0.01    613.79     0.06                             camlLco_ctrl_tree__rml_signal_combine_335
+  0.01    613.84     0.06   500000     0.00     0.00  camlSimul__fun_569
+  0.01    613.90     0.06   500000     0.00     0.00  camlSimul__fun_526
+  0.01    613.95     0.06   452776     0.00     0.00  camlStat__fun_237
+  0.01    614.00     0.05  1003918     0.00     0.00  camlRandom__int_102
+  0.01    614.05     0.05   500000     0.00     0.00  camlSimul__fun_579
+  0.01    614.10     0.05   500000     0.00     0.00  caml_tuplify4
+  0.01    614.15     0.05        4     0.01     0.01  realloc_gray_vals
+  0.01    614.20     0.05                             camlRandom__fun_197
+  0.01    614.25     0.05   500000     0.00     0.00  camlSimul__fun_523
+  0.01    614.29     0.05   500008     0.00     0.00  caml_curry2
+  0.01    614.33     0.04   500096     0.00     0.00  camlStat__compute_anchor_137
+  0.01    614.37     0.04   250048     0.00     0.00  caml_tuplify2
+  0.01    614.41     0.04                             camlLco_ctrl_tree__fun_770
+  0.01    614.45     0.04    24893     0.00     0.00  camlPervasives__output_string_214
+  0.01    614.48     0.04                             camlLco_ctrl_tree__f_par_316
+  0.01    614.52     0.04   500006     0.00     0.00  caml_curry2_1
+  0.00    614.55     0.03    20893     0.00     0.00  camlPervasives__$40_166
+  0.00    614.58     0.03    10154     0.00     0.00  camlStat__packet_fail_stat_155
+  0.00    614.61     0.03      221     0.00     0.00  caml_do_roots
+  0.00    614.64     0.03                             camlLco_ctrl_tree__rml_pre_status_165
+  0.00    614.67     0.03                             caml_bitvect_test
+  0.00    614.69     0.03   182418     0.00     0.00  camlPervasives__min_49
+  0.00    614.72     0.03                             camlLco_ctrl_tree__rml_nothing_173
+  0.00    614.74     0.02   500000     0.00     0.00  camlSimul__fun_597
+  0.00    614.76     0.02   187299     0.00     0.00  caml_greaterequal
+  0.00    614.78     0.02   129616     0.00     0.00  caml_blit_string
+  0.00    614.80     0.02    43905     0.00     0.00  caml_copy_string
+  0.00    614.82     0.02    42882     0.00     0.01  caml_minor_collection
+  0.00    614.84     0.02    10539     0.00     0.00  camlStat__fun_233
+  0.00    614.86     0.02        1     0.02     0.02  init_frame_descriptors
+  0.00    614.88     0.02                             camlLco_ctrl_tree__f_nothing_176
+  0.00    614.90     0.02                             camlLco_ctrl_tree__wakeUp_151
+  0.00    614.92     0.02                             camlList__rev_map_91
+  0.00    614.93     0.02   250048     0.00     0.00  camlGlobal__make_pdl_packet_234
+  0.00    614.95     0.02   187299     0.00     0.00  camlPervasives__max_52
+  0.00    614.96     0.02    64808     0.00     0.00  camlPervasives__$5e_135
+  0.00    614.98     0.02        1     0.02     0.02  camlSimul__fun_696
+  0.00    614.99     0.02                             camlLco_ctrl_tree__f_signal_341
+  0.00    615.01     0.02                             camlLco_ctrl_tree__fun_773
+  0.00    615.02     0.02                             camlStd_exit__code_end
+  0.00    615.03     0.01   387466     0.00     0.00  caml_gc_message
+  0.00    615.04     0.01   108828     0.00     0.00  caml_alloc_string
+  0.00    615.05     0.01    64809     0.00     0.00  caml_create_string
+  0.00    615.06     0.01    43906     0.00     0.00  caml_string_length
+  0.00    615.07     0.01    42882     0.00     0.00  caml_final_do_calls
+  0.00    615.08     0.01    41873     0.00     0.01  caml_call_gc
+  0.00    615.09     0.01    24893     0.00     0.00  caml_ml_output
+  0.00    615.10     0.01      500     0.00     0.00  camlSimul__fun_685
+  0.00    615.11     0.01      500     0.00     0.00  caml_apply5
+  0.00    615.12     0.01      220     0.00     0.00  caml_compact_heap_maybe
+  0.00    615.13     0.01      219     0.00     0.00  expand_heap
+  0.00    615.14     0.01                             camlArea__get_area_87
+  0.00    615.15     0.01                             camlList__find_225
+  0.00    615.16     0.01                             camlPervasives__invalid_arg_39
+  0.00    615.17     0.01                             camlRoutage__code_end
+  0.00    615.18     0.01                             caml_alloc_tuple
+  0.00    615.19     0.01                             caml_final_do_weak_roots
+  0.00    615.20     0.01                             caml_ml_flush_partial
+  0.00    615.21     0.01                             caml_startup
+  0.00    615.22     0.01    43901     0.00     0.00  camlPervasives__string_of_int_153
+  0.00    615.22     0.01    20893     0.00     0.00  caml_tuplify3
+  0.00    615.23     0.01    10354     0.00     0.00  camlStat__fun_230
+  0.00    615.23     0.01     2000     0.00     0.00  camlStat__distance_age_110
+  0.00    615.24     0.01        1     0.01     1.23  camlPervasives__flush_all_208
+  0.00    615.24     0.01                             camlGlobal__make_pdl_info_226
+  0.00    615.25     0.01                             camlList__rmap2_f_127
+  0.00    615.25     0.01                             camlList__sort_295
+  0.00    615.26     0.01                             camlPervasives__bool_of_string_152
+  0.00    615.26     0.01                             camlPervasives__lnot_75
+  0.00    615.26     0.00   166856     0.00     0.00  caml_check_urgent_gc
+  0.00    615.26     0.00    85764     0.00     0.00  caml_final_empty_young
+  0.00    615.26     0.00    43901     0.00     0.00  caml_format_int
+  0.00    615.26     0.00    42882     0.00     0.00  caml_final_do_young_roots
+  0.00    615.26     0.00    41873     0.00     0.01  caml_garbage_collection
+  0.00    615.26     0.00    24893     0.00     0.00  caml_putblock
+  0.00    615.26     0.00    10154     0.00     0.00  camlRoutage__routage_fail_110
+  0.00    615.26     0.00     2007     0.00     0.00  caml_flush
+  0.00    615.26     0.00     2007     0.00     0.00  caml_flush_partial
+  0.00    615.26     0.00     2007     0.00     0.00  caml_ml_flush
+  0.00    615.26     0.00     2005     0.00     0.00  caml_enter_blocking_section
+  0.00    615.26     0.00     2005     0.00     0.00  caml_leave_blocking_section
+  0.00    615.26     0.00     2000     0.00     0.00  camlStat____val_ml_23_115
+  0.00    615.26     0.00     2000     0.00     0.00  camlStat__fun_226
+  0.00    615.26     0.00     2000     0.00     0.00  do_write
+  0.00    615.26     0.00     1032     0.00     0.00  caml_apply4
+  0.00    615.26     0.00      502     0.00     0.00  caml_curry5
+  0.00    615.26     0.00      502     0.00     0.00  caml_curry5_1
+  0.00    615.26     0.00      502     0.00     0.00  caml_curry5_2
+  0.00    615.26     0.00      502     0.00     0.00  caml_curry5_3
+  0.00    615.26     0.00      502     0.00     0.00  caml_curry5_4
+  0.00    615.26     0.00      501     0.00     0.00  camlSimul__fun_646
+  0.00    615.26     0.00      501     0.00     0.00  camlSimul__make_nodes_167
+  0.00    615.26     0.00      500     0.00     0.00  camlGlobal__new_node_215
+  0.00    615.26     0.00      500     0.00     0.00  camlSimul__fun_261
+  0.00    615.26     0.00      500     0.00     0.00  camlSimul__fun_264
+  0.00    615.26     0.00      500     0.00     0.00  camlSimul__fun_649
+  0.00    615.26     0.00      500     0.00     0.00  camlSimul__fun_652
+  0.00    615.26     0.00      500     0.00     0.00  camlSimul__fun_673
+  0.00    615.26     0.00      500     0.00     0.00  camlSimul__fun_676
+  0.00    615.26     0.00      500     0.00     0.00  camlSimul__fun_688
+  0.00    615.26     0.00      500     0.00     0.00  camlSimul__node_99
+  0.00    615.26     0.00      500     0.00     0.00  caml_curry6
+  0.00    615.26     0.00      500     0.00     0.00  caml_curry6_1
+  0.00    615.26     0.00      500     0.00     0.00  caml_curry6_2
+  0.00    615.26     0.00      500     0.00     0.00  caml_curry6_3
+  0.00    615.26     0.00      500     0.00     0.00  caml_curry6_4
+  0.00    615.26     0.00      500     0.00     0.00  caml_curry6_5
+  0.00    615.26     0.00      222     0.00     0.00  caml_fl_init_merge
+  0.00    615.26     0.00      221     0.00     0.00  alloc_to_do
+  0.00    615.26     0.00      221     0.00     0.00  caml_darken_all_roots
+  0.00    615.26     0.00      221     0.00     0.00  caml_do_local_roots
+  0.00    615.26     0.00      221     0.00     0.00  caml_final_do_strong_roots
+  0.00    615.26     0.00      221     0.00     0.00  caml_final_update
+  0.00    615.26     0.00      221     0.00     0.00  start_cycle
+  0.00    615.26     0.00      220     0.00     0.00  caml_aligned_malloc
+  0.00    615.26     0.00      220     0.00     0.00  caml_alloc_for_heap
+  0.00    615.26     0.00      220     0.00     0.00  clip_heap_chunk_size
+  0.00    615.26     0.00      219     0.00     0.00  caml_fl_add_block
+  0.00    615.26     0.00      219     0.00     0.00  caml_round_heap_chunk_size
+  0.00    615.26     0.00      110     0.00     0.00  camlDigest__code_begin
+  0.00    615.26     0.00      110     0.00     0.00  camlRandom__extract_73
+  0.00    615.26     0.00      110     0.00     0.00  caml_MD5Final
+  0.00    615.26     0.00      110     0.00     0.00  caml_MD5Init
+  0.00    615.26     0.00      110     0.00     0.00  caml_MD5Transform
+  0.00    615.26     0.00      110     0.00     0.00  caml_MD5Update
+  0.00    615.26     0.00      110     0.00     0.00  caml_md5_string
+  0.00    615.26     0.00       25     0.00     0.00  camlArea__code_begin
+  0.00    615.26     0.00       25     0.00     0.00  camlArea__fun_173
+  0.00    615.26     0.00       25     0.00     0.00  camlArea__fun_183
+  0.00    615.26     0.00       25     0.00     0.00  caml_stat_alloc
+  0.00    615.26     0.00       17     0.00     0.00  caml_alloc_small
+  0.00    615.26     0.00       15     0.00     0.18  caml_alloc_channel
+  0.00    615.26     0.00       15     0.00     0.18  caml_alloc_custom
+  0.00    615.26     0.00        8     0.00     0.00  caml_open_descriptor_in
+  0.00    615.26     0.00        7     0.00     0.18  caml_ml_open_descriptor_out
+  0.00    615.26     0.00        7     0.00     0.00  caml_open_descriptor_out
+  0.00    615.26     0.00        6     0.00     0.00  caml_copy_double
+  0.00    615.26     0.00        6     0.00     0.00  caml_int64_float_of_bits
+  0.00    615.26     0.00        5     0.00     0.00  camlArea__fun_167
+  0.00    615.26     0.00        5     0.00     0.00  camlArea__fun_169
+  0.00    615.26     0.00        5     0.00     0.00  camlArea__fun_171
+  0.00    615.26     0.00        5     0.00     0.00  camlPervasives__open_out_202
+  0.00    615.26     0.00        5     0.00     0.18  camlPervasives__open_out_gen_198
+  0.00    615.26     0.00        5     0.00     0.00  caml_convert_flag_list
+  0.00    615.26     0.00        5     0.00     0.00  caml_stat_free
+  0.00    615.26     0.00        5     0.00     0.00  caml_sys_open
+  0.00    615.26     0.00        3     0.00     0.00  caml_register_custom_operations
+  0.00    615.26     0.00        3     0.00     0.00  caml_register_global_root
+  0.00    615.26     0.00        3     0.00     0.00  caml_register_named_value
+  0.00    615.26     0.00        3     0.00     0.00  caml_string_equal
+  0.00    615.26     0.00        3     0.00     0.00  caml_string_notequal
+  0.00    615.26     0.00        3     0.00     0.00  caml_urge_major_slice
+  0.00    615.26     0.00        3     0.00     0.00  hash_value_name
+  0.00    615.26     0.00        3     0.00     0.00  random_level
+  0.00    615.26     0.00        2     0.00     0.00  camlArray__make_matrix_69
+  0.00    615.26     0.00        2     0.00     0.00  camlCallback__register_exception_61
+  0.00    615.26     0.00        2     0.00     0.00  caml_alloc1
+  0.00    615.26     0.00        2     0.00     0.00  caml_alloc2
+  0.00    615.26     0.00        2     0.00     0.00  minmax_table
+  0.00    615.26     0.00        2     0.00     0.00  norm_heapincr
+  0.00    615.26     0.00        1     0.00     0.00  camlArea__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlArea__fun_163
+  0.00    615.26     0.00        1     0.00     0.00  camlArea__fun_165
+  0.00    615.26     0.00        1     0.00     0.00  camlArea__make_areas_108
+  0.00    615.26     0.00        1     0.00     0.02  camlArg__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlArg__parse_189
+  0.00    615.26     0.00        1     0.00     0.00  camlArg__parse_argv_143
+  0.00    615.26     0.00        1     0.00     0.00  camlArray__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlBuffer__create_66
+  0.00    615.26     0.00        1     0.00     0.00  camlBuffer__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlCallback__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlChar__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlDigest__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlDraw__entry
+  0.00    615.26     0.00        1     0.00     0.03  camlGlobal__entry
+  0.00    615.26     0.00        1     0.00     0.88  camlGlobal__init_204
+  0.00    615.26     0.00        1     0.00     0.00  camlHashtbl__create_78
+  0.00    615.26     0.00        1     0.00     0.00  camlHashtbl__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlInt32__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlInt64__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlList__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlMove__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlMsg__entry
+  0.00    615.26     0.00        1     0.00     0.02  camlNativeint__entry
+  0.00    615.26     0.00        1     0.00     0.54  camlPervasives__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlPervasives__iter_209
+  0.00    615.26     0.00        1     0.00     0.00  camlPervasives__loop_161
+  0.00    615.26     0.00        1     0.00     0.00  camlPervasives__string_of_float_163
+  0.00    615.26     0.00        1     0.00     0.00  camlPervasives__valid_float_lexem_158
+  0.00    615.26     0.00        1     0.00     0.00  camlPos_tbl__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlPrintf__entry
+  0.00    615.26     0.00        1     0.00     0.06  camlRandom__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlRandom__full_init_67
+  0.00    615.26     0.00        1     0.00     0.00  camlRandom__init_158
+  0.00    615.26     0.00        1     0.00     0.00  camlRoutage__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlSimul__configure_185
+  0.00    615.26     0.00        1     0.00     0.00  camlSimul__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlSimul__fun_698
+  0.00    615.26     0.00        1     0.00     0.00  camlSimul__fun_700
+  0.00    615.26     0.00        1     0.00     0.00  camlSimul__fun_702
+  0.00    615.26     0.00        1     0.00     0.00  camlSimul__fun_704
+  0.00    615.26     0.00        1     0.00     0.00  camlSimul__fun_709
+  0.00    615.26     0.00        1     0.00     0.00  camlSimul__main_200
+  0.00    615.26     0.00        1     0.00     0.02  camlStat__entry
+  0.00    615.26     0.00        1     0.00     1.23  camlStd_exit__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlString__entry
+  0.00    615.26     0.00        1     0.00     0.00  camlSys__entry
+  0.00    615.26     0.00        1     0.00     0.00  caml_alloc
+  0.00    615.26     0.00        1     0.00     0.00  caml_alloc3
+  0.00    615.26     0.00        1     0.00     0.00  caml_alloc_array
+  0.00    615.26     0.00        1     0.00     0.00  caml_copy_string_array
+  0.00    615.26     0.00        1     0.00     0.00  caml_executable_name
+  0.00    615.26     0.00        1     0.00     0.00  caml_format_float
+  0.00    615.26     0.00        1     0.00     0.00  caml_init_custom_operations
+  0.00    615.26     0.00        1     0.00     0.92  caml_init_gc
+  0.00    615.26     0.00        1     0.00     0.00  caml_init_ieee_floats
+  0.00    615.26     0.00        1     0.00     0.00  caml_init_major_heap
+  0.00    615.26     0.00        1     0.00     0.00  caml_init_signals
+  0.00    615.26     0.00        1     0.00     4.68  caml_main
+  0.00    615.26     0.00        1     0.00     0.00  caml_make_free_blocks
+  0.00    615.26     0.00        1     0.00     0.18  caml_ml_open_descriptor_in
+  0.00    615.26     0.00        1     0.00     1.23  caml_ml_out_channels_list
+  0.00    615.26     0.00        1     0.00     0.00  caml_obj_dup
+  0.00    615.26     0.00        1     0.00     3.76  caml_start_program
+  0.00    615.26     0.00        1     0.00     0.00  caml_sys_exit
+  0.00    615.26     0.00        1     0.00     0.00  caml_sys_get_argv
+  0.00    615.26     0.00        1     0.00     0.00  caml_sys_get_config
+  0.00    615.26     0.00        1     0.00     0.00  caml_sys_init
+  0.00    615.26     0.00        1     0.00     0.00  init_atoms
+  0.00    615.26     0.00        1     0.00     0.00  norm_minsize
+  0.00    615.26     0.00        1     0.00     0.00  norm_pfree
+  0.00    615.26     0.00        1     0.00     0.00  norm_pmax
+  0.00    615.26     0.00        1     0.00     0.00  parse_camlrunparam
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+		     Appel de graphe (les explications suivent)
+
+
+granularité: chaque échantillonnage couvre 2 octet(s) pour 0.00% of 615.26 secondes
+
+index % temp    auto  rejetons    appelé     nom
+                                                 <spontanés>
+[1]     76.3    0.50  469.07                 camlLco_ctrl_tree__f_compute_181 [1]
+                0.93  459.84 1500000/1508000     camlList__iter_98 [2]
+                0.18    2.66  500000/500000      camlStat__node_stat_127 [63]
+                0.14    1.44 1000000/1000000     camlPos_tbl__update_96 [79]
+                0.00    0.88       1/1           camlGlobal__init_204 [98]
+                0.74    0.00  500000/500000      camlMove__random_waypoint_114 [101]
+                0.09    0.64  500000/500000      camlSimul__fun_593 [102]
+                0.12    0.48  500000/500000      camlMove__move_87 [108]
+                0.45    0.00  500000/500000      camlSimul__fun_433 [113]
+                0.08    0.12  500000/500000      camlSimul__fun_583 [124]
+                0.11    0.00  500000/500000      camlSimul__fun_585 [142]
+                0.08    0.00  500000/500000      camlSimul__fun_587 [151]
+                0.07    0.00  500000/500000      camlSimul__fun_436 [157]
+                0.02    0.00  500000/500000      camlSimul__fun_597 [183]
+                0.02    0.00       1/1           camlSimul__fun_696 [193]
+                0.00    0.00       1/1           camlRandom__full_init_67 [226]
+                0.00    0.00      25/25          camlArea__code_begin [239]
+                0.00    0.00       1/1           camlArg__parse_189 [251]
+                0.00    0.00       1/1           camlSimul__fun_700 [348]
+                0.00    0.00       1/1           camlSimul__configure_185 [346]
+                0.00    0.00       1/1           camlSimul__fun_698 [347]
+                0.00    0.00       1/1           camlRandom__init_158 [344]
+-----------------------------------------------
+                0.00    0.61    2000/1508000     camlStat__node_stat_127 [63]
+                0.00    0.92    3000/1508000     camlLco_ctrl_tree__exec_539 [94]
+                0.00    0.92    3000/1508000     camlLco_ctrl_tree__wakeUpAll_129 [95]
+                0.93  459.84 1500000/1508000     camlLco_ctrl_tree__f_compute_181 [1]
+[2]     75.3    0.94  462.30 1508000         camlList__iter_98 [2]
+                0.06  202.19  250048/250048      camlSimul__fun_595 [9]
+                2.96  167.25  249998/499951      camlRoutage__routage_140 [7]
+               32.73   23.54 21701760/27993718     camlPos_tbl__set_90 [20]
+                0.29   16.87  250048/500096      camlStat__packet_stat_146 [24]
+                0.18   14.54  250048/500096      camlRoutage__route_164 [28]
+                1.24    0.00 21701760/21701760     camlPos_tbl__code_begin [88]
+                0.02    0.11   10539/10539       camlStat__fun_233 [135]
+                0.01    0.10   10354/10354       camlStat__fun_230 [141]
+                0.08    0.00  246067/489942      camlRoutage__routage_success_108 [129]
+                0.04    0.00  246067/489942      camlStat__packet_success_stat_153 [148]
+                0.04    0.00  250048/250048      caml_tuplify2 [173]
+                0.03    0.01   20893/24893       camlPervasives__output_string_214 [168]
+                0.01    0.00    3981/10154       camlStat__packet_fail_stat_155 [178]
+                0.01    0.00   20893/20893       caml_tuplify3 [212]
+                0.00    0.00    3981/10154       camlRoutage__routage_fail_110 [262]
+-----------------------------------------------
+                0.01    0.19    3000/5389610     camlLco_ctrl_tree__fun_753 [123]
+                0.05    1.50   23454/5389610     camlStat____val_ml_23_115 [75]
+                0.54   15.14  236953/5389610     camlRoutage____val_ml_17_120 [33]
+                1.14   31.95  500000/5389610     camlSimul__fun_571 [25]
+                1.14   31.96  500096/5389610     camlStat__packet_stat_146 [24]
+                9.41  263.67 4126107/5389610     camlRoutage__routage_140 [7]
+[3]     58.0   12.29  344.42 5389610         camlList__fold_left_102 [3]
+               23.60  118.04 37087002/37087002     camlRoutage__code_begin [12]
+               30.08   68.05 92039177/92039177     camlRoutage__fun_250 [16]
+                7.46   32.53 1840533/8739929     camlList__rev_append_75 [10]
+               14.68   18.49 153118814/170627402     caml_apply2 [23]
+                6.90   21.89 21699326/21699326     camlStat__code_begin [29]
+                0.22    1.97 1840533/1840533     camlSimul__fun_573 [70]
+                0.06    0.45  452776/452776      camlStat__fun_237 [111]
+-----------------------------------------------
+                0.00    0.02       3/42882       caml_check_urgent_gc [182]
+                0.00    0.05       6/42882       caml_alloc_string [160]
+                0.00    8.15    1000/42882       caml_make_vect [32]
+                0.02  341.34   41873/42882       caml_garbage_collection [6]
+[4]     56.8    0.02  349.56   42882         caml_minor_collection [4]
+                0.24  223.17   42882/42882       caml_major_collection_slice [8]
+                2.18  123.96   85764/85764       caml_empty_minor_heap [13]
+                0.01    0.00   42882/42882       caml_final_do_calls [197]
+-----------------------------------------------
+                0.00    0.01       1/41873       camlLco_ctrl_tree__fun_753 [123]
+                0.00    0.07       8/41873       camlPervasives__$40_166 [145]
+                0.00    0.14      17/41873       camlStat____val_ml_23_115 [75]
+                0.00    0.31      38/41873       camlRoutage__route_164 [28]
+                0.00    0.34      42/41873       camlMsg__make_87 [76]
+                0.00    0.35      43/41873       camlStat__packet_stat_146 [24]
+                0.00    0.36      44/41873       camlMove__move_87 [108]
+                0.00    0.38      47/41873       camlSimul__fun_571 [25]
+                0.00    0.45      55/41873       camlStat__fun_237 [111]
+                0.00    0.55      68/41873       camlGlobal__make_pdl_info_forecast_229 [81]
+                0.00    0.56      69/41873       camlSimul__get_neighbors_87 [71]
+                0.00    0.59      72/41873       caml_curry2 [107]
+                0.00    0.59      72/41873       camlSimul__fun_439 [104]
+                0.00    0.63      77/41873       camlList__find_all_229 [105]
+                0.00    0.64      78/41873       camlLco_ctrl_tree__fun_770 [106]
+                0.00    0.64      79/41873       camlSimul__fun_593 [102]
+                0.00    0.68      83/41873       camlRoutage__code_begin [12]
+                0.00    0.68      83/41873       camlSimul__fun_529 [46]
+                0.00    0.72      88/41873       camlRoutage__search_best_age_112 [31]
+                0.00    1.08     133/41873       camlRoutage____val_ml_17_120 [33]
+                0.00    1.12     137/41873       camlLco_ctrl_tree__f_pause_185 [78]
+                0.00    1.23     151/41873       camlSimul__fun_591 [58]
+                0.00    1.23     151/41873       camlSimul__fun_577 [82]
+                0.00    1.28     157/41873       camlGlobal__make_packet_218 [62]
+                0.00    1.44     177/41873       camlPos_tbl__update_96 [79]
+                0.00    1.69     207/41873       camlRandom__rawfloat_131 [43]
+                0.00    1.73     212/41873       camlRoutage__insert_pdl_87 [37]
+                0.00    1.97     242/41873       camlSimul__fun_573 [70]
+                0.00    2.10     257/41873       camlLco_ctrl_tree__rml_emit_val_191 [69]
+                0.00    2.16     265/41873       camlLco_ctrl_tree__rml_pause_182 [68]
+                0.00    2.23     274/41873       camlSimul__fun_444 [53]
+                0.00    2.43     298/41873       camlSimul__fun_532 [47]
+                0.00    2.79     342/41873       camlSimul__fun_581 [42]
+                0.00    2.83     347/41873       camlArea__get_areas_96 [52]
+                0.00    3.09     379/41873       caml_curry3 [60]
+                0.00    3.12     383/41873       camlLco_ctrl_tree__rml_compute_177 [61]
+                0.00    3.23     396/41873       caml_curry3_1 [57]
+                0.00    3.55     436/41873       camlLco_ctrl_tree__rml_def_344 [54]
+                0.00    7.92     971/41873       camlList__find_231 [30]
+                0.00    9.29    1140/41873       caml_curry4 [40]
+                0.00    9.55    1172/41873       caml_curry4_2 [39]
+                0.00   10.00    1227/41873       caml_curry4_1 [38]
+                0.00   15.72    1928/41873       camlPos_tbl__set_90 [20]
+                0.00   17.37    2131/41873       camlRoutage__routage_140 [7]
+                0.00   68.05    8347/41873       camlRoutage__fun_250 [16]
+                0.00  154.48   18949/41873       camlList__rev_append_75 [10]
+[5]     55.5    0.01  341.36   41873         caml_call_gc [5]
+                0.00  341.36   41873/41873       caml_garbage_collection [6]
+-----------------------------------------------
+                0.00  341.36   41873/41873       caml_call_gc [5]
+[6]     55.5    0.00  341.36   41873         caml_garbage_collection [6]
+                0.02  341.34   41873/42882       caml_minor_collection [4]
+-----------------------------------------------
+                2.95  167.22  249953/499951      camlSimul__fun_595 [9]
+                2.96  167.25  249998/499951      camlList__iter_98 [2]
+[7]     55.3    5.91  334.48  499951         camlRoutage__routage_140 [7]
+                9.41  263.67 4126107/5389610     camlList__fold_left_102 [3]
+                0.00   17.37    2131/41873       caml_call_gc [5]
+                9.49    6.83 6291958/27993718     camlPos_tbl__set_90 [20]
+                0.74   10.45 1925907/1925907     camlRoutage__insert_pdl_87 [37]
+                0.03    8.15   66054/163841      camlRoutage__search_best_age_112 [31]
+                0.06    6.76   66054/163841      camlRoutage____val_ml_17_120 [33]
+                1.05    0.26 5389465/39746753     caml_modify [41]
+                0.22    0.00   66054/163841      camlRoutage__fun_242 [109]
+-----------------------------------------------
+                0.24  223.17   42882/42882       caml_minor_collection [4]
+[8]     36.3    0.24  223.17   42882         caml_major_collection_slice [8]
+              162.43    0.00   14144/14144       mark_slice [11]
+               46.10   14.55   28738/28738       sweep_slice [21]
+                0.00    0.07     221/221         start_cycle [153]
+                0.01    0.00     220/220         caml_compact_heap_maybe [198]
+                0.01    0.00  257292/387466      caml_gc_message [199]
+-----------------------------------------------
+                0.06  202.19  250048/250048      camlList__iter_98 [2]
+[9]     32.9    0.06  202.19  250048         camlSimul__fun_595 [9]
+                2.95  167.22  249953/499951      camlRoutage__routage_140 [7]
+                0.29   16.87  250048/500096      camlStat__packet_stat_146 [24]
+                0.18   14.54  250048/500096      camlRoutage__route_164 [28]
+                0.08    0.00  243875/489942      camlRoutage__routage_success_108 [129]
+                0.04    0.00  243875/489942      camlStat__packet_success_stat_153 [148]
+                0.02    0.00    6173/10154       camlStat__packet_fail_stat_155 [178]
+                0.00    0.00    6173/10154       camlRoutage__routage_fail_110 [262]
+-----------------------------------------------
+                0.01    0.05    3000/8739929     camlLco_ctrl_tree__next_to_current_149 [156]
+                0.24    1.03   58000/8739929     camlLco_ctrl_tree__wakeUp_151 [85]
+                2.03    8.84  500000/8739929     camlSimul__fun_579 [22]
+                4.04   17.61  996534/8739929     camlStat__code_begin [29]
+                7.46   32.53 1840533/8739929     camlList__fold_left_102 [3]
+               21.65   94.42 5341862/8739929     camlRoutage__code_begin [12]
+[10]    30.9   35.42  154.48 8739929         camlList__rev_append_75 [10]
+                0.00  154.48   18949/41873       caml_call_gc [5]
+-----------------------------------------------
+              162.43    0.00   14144/14144       caml_major_collection_slice [8]
+[11]    26.4  162.43    0.00   14144         mark_slice [11]
+                0.00    0.00   14144/387466      caml_gc_message [199]
+                0.00    0.00     221/221         caml_final_update [287]
+                0.00    0.00     221/222         caml_fl_init_merge [284]
+-----------------------------------------------
+               23.60  118.04 37087002/37087002     camlList__fold_left_102 [3]
+[12]    23.0   23.60  118.04 37087002         camlRoutage__code_begin [12]
+               21.65   94.42 5341862/8739929     camlList__rev_append_75 [10]
+                1.04    0.26 5341862/39746753     caml_modify [41]
+                0.00    0.68      83/41873       caml_call_gc [5]
+-----------------------------------------------
+                2.18  123.96   85764/85764       caml_minor_collection [4]
+[13]    20.5    2.18  123.96   85764         caml_empty_minor_heap [13]
+               16.59   70.17   42882/42882       caml_oldify_mopup [18]
+                4.51   31.20 23217829/69118180     caml_oldify_one [15]
+                1.04    0.45   42882/42882       caml_oldify_local_roots [80]
+                0.00    0.00   85764/387466      caml_gc_message [199]
+                0.00    0.00   85764/85764       caml_final_empty_young [259]
+-----------------------------------------------
+                                                 <spontanés>
+[14]    17.7    1.11  107.82                 camlLco_ctrl_tree__f_def_349 [14]
+                0.05   37.35  500000/500000      camlSimul__fun_579 [22]
+                0.09   33.47  500000/500000      camlSimul__fun_571 [25]
+                0.59   28.18 2501500/2752076     caml_apply3 <cycle 1> [27]
+                0.13    5.04  500000/500000      camlSimul__fun_529 [46]
+                0.10    1.77  500000/500000      camlSimul__fun_589 [73]
+                0.12    0.59  500000/500000      camlSimul__fun_439 [104]
+                0.23    0.00 2501000/7753554     caml_curry4_3 [103]
+                0.00    0.12     500/500         camlSimul__fun_261 [139]
+                0.00    0.00     500/500         camlSimul__fun_673 [224]
+                0.00    0.00     500/500         camlSimul__fun_649 [223]
+                0.00    0.00     500/2503088     caml_curry3_2 [116]
+-----------------------------------------------
+                0.05    0.37  278973/69118180     caml_oldify_local_roots [80]
+                4.51   31.20 23217829/69118180     caml_empty_minor_heap [13]
+                8.87   61.30 45621378/69118180     caml_oldify_mopup [18]
+[15]    17.3   13.44   92.87 69118180         caml_oldify_one [15]
+                8.92   83.95 66577714/66744570     caml_alloc_shr [17]
+-----------------------------------------------
+               30.08   68.05 92039177/92039177     camlList__fold_left_102 [3]
+[16]    15.9   30.08   68.05 92039177         camlRoutage__fun_250 [16]
+                0.00   68.05    8347/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.00    0.00      15/66744570     caml_alloc_custom [66]
+                0.02    0.21  166841/66744570     caml_make_vect [32]
+                8.92   83.95 66577714/66744570     caml_oldify_one [15]
+[17]    15.1    8.94   84.16 66744570         caml_alloc_shr [17]
+               70.53   13.52 66744789/66744789     caml_fl_allocate [19]
+                0.01    0.10     219/219         expand_heap [140]
+                0.00    0.00     219/219         caml_fl_add_block [291]
+-----------------------------------------------
+               16.59   70.17   42882/42882       caml_empty_minor_heap [13]
+[18]    14.1   16.59   70.17   42882         caml_oldify_mopup [18]
+                8.87   61.30 45621378/69118180     caml_oldify_one [15]
+-----------------------------------------------
+               70.53   13.52 66744789/66744789     caml_alloc_shr [17]
+[19]    13.7   70.53   13.52 66744789         caml_fl_allocate [19]
+               13.52    0.00 66744570/66744570     allocate_block [35]
+-----------------------------------------------
+                9.49    6.83 6291958/27993718     camlRoutage__routage_140 [7]
+               32.73   23.54 21701760/27993718     camlList__iter_98 [2]
+[20]    11.8   42.22   30.37 27993718         camlPos_tbl__set_90 [20]
+                0.00   15.72    1928/41873       caml_call_gc [5]
+                1.55    5.04 27993718/27993718     caml_greaterthan [44]
+                4.24    1.06 21819274/39746753     caml_modify [41]
+                2.76    0.00 27993718/28666071     caml_c_call [64]
+-----------------------------------------------
+               46.10   14.55   28738/28738       caml_major_collection_slice [8]
+[21]     9.9   46.10   14.55   28738         sweep_slice [21]
+               14.55    0.00 66007712/66007713     caml_fl_merge_block [34]
+                0.00    0.00   28738/387466      caml_gc_message [199]
+-----------------------------------------------
+                0.05   37.35  500000/500000      camlLco_ctrl_tree__f_def_349 [14]
+[22]     6.1    0.05   37.35  500000         camlSimul__fun_579 [22]
+                4.32   20.16  500000/500000      camlList__find_231 [30]
+                2.03    8.84  500000/8739929     camlList__rev_append_75 [10]
+                0.09    1.89  500000/500000      camlSimul__get_neighbors_87 [71]
+                0.04    0.00  500000/500006      caml_curry2_1 [175]
+-----------------------------------------------
+                0.00    0.00       1/170627402     camlSimul__entry [257]
+                0.00    0.00       3/170627402     camlSimul__main_200 [237]
+                0.00    0.00      12/170627402     camlLco_ctrl_tree__f_for_init_473 [238]
+                0.00    0.00      54/170627402     camlLco_ctrl_tree__code_begin [234]
+                0.00    0.00     500/170627402     caml_curry6_5 [222]
+                0.00    0.00     500/170627402     camlLco_ctrl_tree__rml_loop_322 [229]
+                0.00    0.00     501/170627402     caml_apply4 [112]
+                0.00    0.00     501/170627402     camlSimul__make_nodes_167 [221]
+                0.00    0.00    1002/170627402     camlLco_ctrl_tree__rml_par_307 [227]
+                0.00    0.00    1004/170627402     camlLco_ctrl_tree__rml_if_445 [230]
+                0.00    0.00    1500/170627402     camlSimul__fun_264 [218]
+                0.05    0.06  500000/170627402     camlSimul__fun_591 [58]
+                0.10    0.12 1000000/170627402     camlSimul__fun_444 [53]
+                0.10    0.12 1000000/170627402     camlLco_ctrl_tree__step_emit_186 [100]
+                0.14    0.18 1500000/170627402     camlSimul__fun_532 [47]
+                0.19    0.24 2000000/170627402     camlSimul__fun_581 [42]
+                0.24    0.30 2501002/170627402     caml_apply3 <cycle 1> [27]
+                0.86    1.09 9002008/170627402     camlLco_ctrl_tree__rml_seq_295 [59]
+               14.68   18.49 153118814/170627402     camlList__fold_left_102 [3]
+[23]     6.0   16.36   20.61 170627402         caml_apply2 [23]
+                0.93    9.29 7503506/7503507     caml_curry4 [40]
+                0.54    6.16 5002004/7753554     caml_curry4_2 [39]
+                0.46    3.23 2502007/2503088     caml_curry3_1 [57]
+                0.00    0.00     531/2503088     caml_curry3 [60]
+                0.00    0.00       1/502         caml_curry5_3 [273]
+-----------------------------------------------
+                0.29   16.87  250048/500096      camlSimul__fun_595 [9]
+                0.29   16.87  250048/500096      camlList__iter_98 [2]
+[24]     5.6    0.57   33.74  500096         camlStat__packet_stat_146 [24]
+                1.14   31.96  500096/5389610     camlList__fold_left_102 [3]
+                0.00    0.35      43/41873       caml_call_gc [5]
+                0.14    0.00  500096/500096      camlList__length_aux_57 [132]
+                0.10    0.02  500096/39746753     caml_modify [41]
+                0.04    0.00  500096/500096      camlStat__compute_anchor_137 [172]
+-----------------------------------------------
+                0.09   33.47  500000/500000      camlLco_ctrl_tree__f_def_349 [14]
+[25]     5.5    0.09   33.47  500000         camlSimul__fun_571 [25]
+                1.14   31.95  500000/5389610     camlList__fold_left_102 [3]
+                0.00    0.38      47/41873       caml_call_gc [5]
+-----------------------------------------------
+[26]     5.1    0.65   31.00 2752076+2       <cycle 1 en entier> [26]
+                0.65   31.00 2752077             caml_apply3 <cycle 1> [27]
+-----------------------------------------------
+                                   1             camlSimul__fun_704 <cycle 1> [241]
+                0.00    0.00       1/2752076     camlLco_ctrl_tree__rml_exec_n_534 [236]
+                0.00    0.00      26/2752076     camlLco_ctrl_tree__f_signal_332 [228]
+                0.00    0.01     501/2752076     caml_apply4 [112]
+                0.06    2.82  250048/2752076     camlRoutage__route_164 [28]
+                0.59   28.18 2501500/2752076     camlLco_ctrl_tree__f_def_349 [14]
+[27]     5.1    0.65   31.00 2752077         caml_apply3 <cycle 1> [27]
+                0.56    8.03  500000/500000      camlSimul__fun_581 [42]
+                0.28    4.86  500000/500000      camlSimul__fun_532 [47]
+                0.25    3.85  500000/500000      camlSimul__fun_444 [53]
+                0.31    3.55 2751050/7753554     caml_curry4_1 [38]
+                0.30    3.39 2751050/7753554     caml_curry4_2 [39]
+                0.31    3.38  500000/500000      camlSimul__fun_591 [58]
+                0.12    1.23  500000/500000      camlSimul__fun_577 [82]
+                0.24    0.30 2501002/170627402     caml_apply2 [23]
+                0.05    0.00  500000/500000      caml_tuplify4 [167]
+                0.00    0.00     500/500         camlSimul__fun_264 [218]
+                0.00    0.00     500/500         camlSimul__fun_676 [219]
+                0.00    0.00     525/2503088     caml_curry3_1 [57]
+                0.00    0.00     525/2503088     caml_curry3 [60]
+                0.00    0.00       1/1           camlSimul__main_200 [237]
+                0.00    0.00     502/502         caml_curry5 [270]
+                0.00    0.00     502/502         caml_curry5_1 [271]
+                0.00    0.00     500/500         camlSimul__fun_652 [276]
+                0.00    0.00      25/25          camlArea__fun_183 [299]
+                                   1             camlSimul__fun_704 <cycle 1> [241]
+-----------------------------------------------
+                0.18   14.54  250048/500096      camlSimul__fun_595 [9]
+                0.18   14.54  250048/500096      camlList__iter_98 [2]
+[28]     4.8    0.36   29.08  500096         camlRoutage__route_164 [28]
+                0.04   12.06   97787/163841      camlRoutage__search_best_age_112 [31]
+                0.10   10.01   97787/163841      camlRoutage____val_ml_17_120 [33]
+                1.97    1.28  500096/500096      camlGlobal__make_packet_218 [62]
+                0.06    2.82  250048/2752076     caml_apply3 <cycle 1> [27]
+                0.33    0.00   97787/163841      camlRoutage__fun_242 [109]
+                0.00    0.31      38/41873       caml_call_gc [5]
+                0.06    0.01  293071/39746753     caml_modify [41]
+                0.02    0.00  250048/7753554     caml_curry4_3 [103]
+                0.02    0.00  250048/250048      camlGlobal__make_pdl_packet_234 [192]
+-----------------------------------------------
+                6.90   21.89 21699326/21699326     camlList__fold_left_102 [3]
+[29]     4.7    6.90   21.89 21699326         camlStat__code_begin [29]
+                4.04   17.61  996534/8739929     camlList__rev_append_75 [10]
+                0.19    0.05  996534/39746753     caml_modify [41]
+-----------------------------------------------
+                4.32   20.16  500000/500000      camlSimul__fun_579 [22]
+[30]     4.0    4.32   20.16  500000         camlList__find_231 [30]
+               12.24    0.00 46733666/46733666     camlSimul____val_ml_4_90 [36]
+                0.00    7.92     971/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.03    8.15   66054/163841      camlRoutage__routage_140 [7]
+                0.04   12.06   97787/163841      camlRoutage__route_164 [28]
+[31]     3.3    0.07   20.21  163841         camlRoutage__search_best_age_112 [31]
+                6.90   12.57  163841/166849      caml_make_vect [32]
+                0.00    0.72      88/41873       caml_call_gc [5]
+                0.02    0.00  163841/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.00    0.00       1/166849      camlHashtbl__create_78 [231]
+                0.00    0.00       7/166849      camlArray__make_matrix_69 [220]
+                0.04    0.08    1000/166849      camlGlobal__new_node_215 [138]
+                0.08    0.15    2000/166849      camlStat__distance_age_110 [122]
+                6.90   12.57  163841/166849      camlRoutage__search_best_age_112 [31]
+[32]     3.2    7.03   12.80  166849         caml_make_vect [32]
+                0.00    8.15    1000/42882       caml_minor_collection [4]
+                4.39    0.00 82920500/82920500     caml_initialize [51]
+                0.02    0.21  166841/66744570     caml_alloc_shr [17]
+                0.00    0.02  166841/166856      caml_check_urgent_gc [182]
+                0.00    0.00       7/17          caml_alloc_small [301]
+-----------------------------------------------
+                               73112             camlRoutage____val_ml_17_120 [33]
+                0.06    6.76   66054/163841      camlRoutage__routage_140 [7]
+                0.10   10.01   97787/163841      camlRoutage__route_164 [28]
+[33]     2.8    0.16   16.77  163841+73112   camlRoutage____val_ml_17_120 [33]
+                0.54   15.14  236953/5389610     camlList__fold_left_102 [3]
+                0.00    1.08     133/41873       caml_call_gc [5]
+                               73112             camlRoutage____val_ml_17_120 [33]
+-----------------------------------------------
+                0.00    0.00       1/66007713     caml_make_free_blocks [256]
+               14.55    0.00 66007712/66007713     sweep_slice [21]
+[34]     2.4   14.55    0.00 66007713         caml_fl_merge_block [34]
+-----------------------------------------------
+               13.52    0.00 66744570/66744570     caml_fl_allocate [19]
+[35]     2.2   13.52    0.00 66744570         allocate_block [35]
+-----------------------------------------------
+               12.24    0.00 46733666/46733666     camlList__find_231 [30]
+[36]     2.0   12.24    0.00 46733666         camlSimul____val_ml_4_90 [36]
+-----------------------------------------------
+                0.74   10.45 1925907/1925907     camlRoutage__routage_140 [7]
+[37]     1.8    0.74   10.45 1925907         camlRoutage__insert_pdl_87 [37]
+                0.94    6.33 1925907/1925907     camlRandom__rawfloat_131 [43]
+                0.00    1.73     212/41873       caml_call_gc [5]
+                0.55    0.84  249998/249998      camlGlobal__make_pdl_info_forecast_229 [81]
+                0.05    0.01  249998/39746753     caml_modify [41]
+-----------------------------------------------
+                0.00    0.00       3/7753554     camlSimul__main_200 [237]
+                0.00    0.00     500/7753554     caml_curry6_5 [222]
+                0.00    0.00     501/7753554     camlSimul__make_nodes_167 [221]
+                0.00    0.00    1500/7753554     camlSimul__fun_264 [218]
+                0.06    0.65  500000/7753554     camlSimul__fun_591 [58]
+                0.11    1.29 1000000/7753554     camlSimul__fun_444 [53]
+                0.17    1.94 1500000/7753554     camlSimul__fun_532 [47]
+                0.22    2.58 2000000/7753554     camlSimul__fun_581 [42]
+                0.31    3.55 2751050/7753554     caml_apply3 <cycle 1> [27]
+[38]     1.8    0.87   10.00 7753554         caml_curry4_1 [38]
+                0.00   10.00    1227/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.00    0.00     500/7753554     caml_apply4 [112]
+                0.30    3.39 2751050/7753554     caml_apply3 <cycle 1> [27]
+                0.54    6.16 5002004/7753554     caml_apply2 [23]
+[39]     1.7    0.84    9.55 7753554         caml_curry4_2 [39]
+                0.00    9.55    1172/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.00    0.00       1/7503507     camlGlobal__entry [176]
+                0.93    9.29 7503506/7503507     caml_apply2 [23]
+[40]     1.7    0.93    9.29 7503507         caml_curry4 [40]
+                0.00    9.29    1140/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.00    0.00       1/39746753     camlLco_ctrl_tree__rml_exec_n_534 [236]
+                0.00    0.00       1/39746753     caml_alloc_array [243]
+                0.00    0.00       5/39746753     camlArray__make_matrix_69 [220]
+                0.00    0.00       7/39746753     camlGlobal__init_204 [98]
+                0.00    0.00      25/39746753     camlArea__code_begin [239]
+                0.00    0.00     500/39746753     camlLco_ctrl_tree__rml_loop_322 [229]
+                0.00    0.00     501/39746753     camlLco_ctrl_tree__f_par_316 [174]
+                0.00    0.00    1411/39746753     camlMove__random_waypoint_114 [101]
+                0.00    0.00    3000/39746753     camlLco_ctrl_tree__wakeUpAll_129 [95]
+                0.00    0.00    3000/39746753     camlLco_ctrl_tree__fun_753 [123]
+                0.00    0.00    6000/39746753     camlLco_ctrl_tree__next_to_current_149 [156]
+                0.02    0.01  116000/39746753     camlLco_ctrl_tree__wakeUp_151 [85]
+                0.05    0.01  249998/39746753     camlRoutage__insert_pdl_87 [37]
+                0.06    0.01  293071/39746753     camlRoutage__route_164 [28]
+                0.10    0.02  500000/39746753     camlSimul__fun_583 [124]
+                0.10    0.02  500000/39746753     camlMove__move_87 [108]
+                0.10    0.02  500096/39746753     camlStat__packet_stat_146 [24]
+                0.19    0.05  996534/39746753     camlStat__code_begin [29]
+                0.20    0.05 1026000/39746753     camlLco_ctrl_tree__step_emit_186 [100]
+                0.29    0.07 1500000/39746753     camlLco_ctrl_tree__f_pause_185 [78]
+                0.29    0.07 1500002/39746753     camlLco_ctrl_tree__sched_162 [77]
+                1.04    0.26 5341862/39746753     camlRoutage__code_begin [12]
+                1.05    0.26 5389465/39746753     camlRoutage__routage_140 [7]
+                4.24    1.06 21819274/39746753     camlPos_tbl__set_90 [20]
+[41]     1.6    7.72    1.92 39746753         caml_modify [41]
+                1.87    0.05 8906287/9083060     caml_darken [72]
+-----------------------------------------------
+                0.56    8.03  500000/500000      caml_apply3 <cycle 1> [27]
+[42]     1.4    0.56    8.03  500000         camlSimul__fun_581 [42]
+                0.22    2.58 2000000/7753554     caml_curry4_1 [38]
+                0.00    2.79     342/41873       caml_call_gc [5]
+                0.16    1.85 1500000/2503088     caml_curry3 [60]
+                0.19    0.24 2000000/170627402     caml_apply2 [23]
+-----------------------------------------------
+                0.94    6.33 1925907/1925907     camlRoutage__insert_pdl_87 [37]
+[43]     1.2    0.94    6.33 1925907         camlRandom__rawfloat_131 [43]
+                4.64    0.00 5777721/6781639     camlRandom__bits_94 [45]
+                0.00    1.69     207/41873       caml_call_gc [5]
+-----------------------------------------------
+                1.55    5.04 27993718/27993718     camlPos_tbl__set_90 [20]
+[44]     1.1    1.55    5.04 27993718         caml_greaterthan [44]
+                5.04    0.00 27993718/28363471     compare_val [48]
+-----------------------------------------------
+                0.81    0.00 1003918/6781639     camlRandom__intaux_97 [86]
+                4.64    0.00 5777721/6781639     camlRandom__rawfloat_131 [43]
+[45]     0.9    5.45    0.00 6781639         camlRandom__bits_94 [45]
+-----------------------------------------------
+                0.13    5.04  500000/500000      camlLco_ctrl_tree__f_def_349 [14]
+[46]     0.8    0.13    5.04  500000         camlSimul__fun_529 [46]
+                1.53    2.83  500000/500000      camlArea__get_areas_96 [52]
+                0.00    0.68      83/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.28    4.86  500000/500000      caml_apply3 <cycle 1> [27]
+[47]     0.8    0.28    4.86  500000         camlSimul__fun_532 [47]
+                0.00    2.43     298/41873       caml_call_gc [5]
+                0.17    1.94 1500000/7753554     caml_curry4_1 [38]
+                0.14    0.18 1500000/170627402     caml_apply2 [23]
+-----------------------------------------------
+                0.03    0.00  182454/28363471     caml_lessequal [130]
+                0.03    0.00  187299/28363471     caml_greaterequal [163]
+                5.04    0.00 27993718/28363471     caml_greaterthan [44]
+[48]     0.8    5.11    0.00 28363471         compare_val [48]
+-----------------------------------------------
+                0.00    4.68       1/1           main [50]
+[49]     0.8    0.00    4.68       1         caml_main [49]
+                0.00    3.76       1/1           caml_start_program [55]
+                0.00    0.92       1/1           caml_init_gc [96]
+                0.00    0.00       1/1           caml_init_ieee_floats [356]
+                0.00    0.00       1/1           caml_init_custom_operations [355]
+                0.00    0.00       1/1           parse_camlrunparam [365]
+                0.00    0.00       1/1           init_atoms [361]
+                0.00    0.00       1/1           caml_init_signals [357]
+                0.00    0.00       1/1           caml_executable_name [354]
+                0.00    0.00       1/1           caml_sys_init [360]
+-----------------------------------------------
+                                                 <spontanés>
+[50]     0.8    0.00    4.68                 main [50]
+                0.00    4.68       1/1           caml_main [49]
+                0.00    0.00       1/1           caml_sys_exit [359]
+-----------------------------------------------
+                4.39    0.00 82920500/82920500     caml_make_vect [32]
+[51]     0.7    4.39    0.00 82920500         caml_initialize [51]
+-----------------------------------------------
+                1.53    2.83  500000/500000      camlSimul__fun_529 [46]
+[52]     0.7    1.53    2.83  500000         camlArea__get_areas_96 [52]
+                0.00    2.83     347/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.25    3.85  500000/500000      caml_apply3 <cycle 1> [27]
+[53]     0.7    0.25    3.85  500000         camlSimul__fun_444 [53]
+                0.00    2.23     274/41873       caml_call_gc [5]
+                0.11    1.29 1000000/7753554     caml_curry4_1 [38]
+                0.10    0.12 1000000/170627402     caml_apply2 [23]
+-----------------------------------------------
+                                                 <spontanés>
+[54]     0.6    0.22    3.55                 camlLco_ctrl_tree__rml_def_344 [54]
+                0.00    3.55     436/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.00    3.76       1/1           caml_main [49]
+[55]     0.6    0.00    3.76       1         caml_start_program [55]
+                1.86    1.91       1/1           caml_startup__code_begin [56]
+-----------------------------------------------
+                1.86    1.91       1/1           caml_start_program [55]
+[56]     0.6    1.86    1.91       1         caml_startup__code_begin [56]
+                0.00    1.23       1/1           camlStd_exit__entry [89]
+                0.00    0.54       1/1           camlPervasives__entry [110]
+                0.00    0.06       1/1           camlRandom__entry [158]
+                0.00    0.03       1/1           camlGlobal__entry [176]
+                0.00    0.02       1/1           camlNativeint__entry [190]
+                0.00    0.02       1/1           camlArg__entry [189]
+                0.00    0.02       1/1           camlStat__entry [191]
+                0.00    0.00       1/1           camlSys__entry [240]
+                0.00    0.00       1/1           camlSimul__entry [257]
+                0.00    0.00       1/1           camlArray__entry [328]
+                0.00    0.00       1/1           camlList__entry [337]
+                0.00    0.00       1/1           camlChar__entry [331]
+                0.00    0.00       1/1           camlString__entry [351]
+                0.00    0.00       1/1           camlHashtbl__entry [334]
+                0.00    0.00       1/1           camlInt32__entry [335]
+                0.00    0.00       1/1           camlInt64__entry [336]
+                0.00    0.00       1/1           camlBuffer__entry [329]
+                0.00    0.00       1/1           camlPrintf__entry [343]
+                0.00    0.00       1/1           camlDigest__entry [332]
+                0.00    0.00       1/1           camlCallback__entry [330]
+                0.00    0.00       1/1           camlDraw__entry [333]
+                0.00    0.00       1/1           camlPos_tbl__entry [342]
+                0.00    0.00       1/1           camlArea__entry [324]
+                0.00    0.00       1/1           camlMove__entry [338]
+                0.00    0.00       1/1           camlMsg__entry [339]
+                0.00    0.00       1/1           camlRoutage__entry [345]
+-----------------------------------------------
+                0.00    0.00       6/2503088     camlLco_ctrl_tree__f_for_init_473 [238]
+                0.00    0.00      24/2503088     camlLco_ctrl_tree__code_begin [234]
+                0.00    0.00     525/2503088     caml_apply3 <cycle 1> [27]
+                0.00    0.00     526/2503088     caml_apply4 [112]
+                0.46    3.23 2502007/2503088     caml_apply2 [23]
+[57]     0.6    0.46    3.23 2503088         caml_curry3_1 [57]
+                0.00    3.23     396/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.31    3.38  500000/500000      caml_apply3 <cycle 1> [27]
+[58]     0.6    0.31    3.38  500000         camlSimul__fun_591 [58]
+                0.10    1.23 1000000/2503088     caml_curry3 [60]
+                0.00    1.23     151/41873       caml_call_gc [5]
+                0.06    0.65  500000/7753554     caml_curry4_1 [38]
+                0.05    0.06  500000/170627402     caml_apply2 [23]
+-----------------------------------------------
+                                                 <spontanés>
+[59]     0.6    0.58    2.81                 camlLco_ctrl_tree__rml_seq_295 [59]
+                0.86    1.09 9002008/170627402     caml_apply2 [23]
+                0.46    0.00 5001003/7753554     caml_curry4_3 [103]
+                0.40    0.00 2501005/2503088     caml_curry3_2 [116]
+-----------------------------------------------
+                0.00    0.00       2/2503088     camlSimul__fun_704 <cycle 1> [241]
+                0.00    0.00       5/2503088     camlSimul__main_200 [237]
+                0.00    0.00      25/2503088     caml_apply4 [112]
+                0.00    0.00     525/2503088     caml_apply3 <cycle 1> [27]
+                0.00    0.00     531/2503088     caml_apply2 [23]
+                0.00    0.00    1000/2503088     camlSimul__fun_676 [219]
+                0.00    0.00    1000/2503088     camlSimul__fun_264 [218]
+                0.10    1.23 1000000/2503088     camlSimul__fun_591 [58]
+                0.16    1.85 1500000/2503088     camlSimul__fun_581 [42]
+[60]     0.5    0.26    3.09 2503088         caml_curry3 [60]
+                0.00    3.09     379/41873       caml_call_gc [5]
+-----------------------------------------------
+                                                 <spontanés>
+[61]     0.5    0.13    3.12                 camlLco_ctrl_tree__rml_compute_177 [61]
+                0.00    3.12     383/41873       caml_call_gc [5]
+-----------------------------------------------
+                1.97    1.28  500096/500096      camlRoutage__route_164 [28]
+[62]     0.5    1.97    1.28  500096         camlGlobal__make_packet_218 [62]
+                0.00    1.28     157/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.18    2.66  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[63]     0.5    0.18    2.66  500000         camlStat__node_stat_127 [63]
+                0.00    1.79    2000/2000        camlStat____val_ml_23_115 [75]
+                0.00    0.61    2000/1508000     camlList__iter_98 [2]
+                0.01    0.24    2000/2000        camlStat__distance_age_110 [122]
+                0.01    0.00    4000/24893       camlPervasives__output_string_214 [168]
+                0.00    0.01    2000/43901       camlPervasives__string_of_int_153 [133]
+                0.00    0.00    2000/64808       camlPervasives__$5e_135 [147]
+                0.00    0.00    2000/28666071     caml_c_call [64]
+                0.00    0.00    2000/2000        camlStat__fun_226 [268]
+                0.00    0.00    2000/2007        caml_ml_flush [265]
+-----------------------------------------------
+                0.00    0.00       1/28666071     camlPervasives__string_of_float_163 [246]
+                0.00    0.00       1/28666071     camlPervasives__flush_all_208 [90]
+                0.00    0.00       1/28666071     camlHashtbl__create_78 [231]
+                0.00    0.00       1/28666071     camlBuffer__create_66 [253]
+                0.00    0.00       1/28666071     camlRandom__entry [158]
+                0.00    0.00       2/28666071     camlSys__entry [240]
+                0.00    0.00       2/28666071     camlCallback__register_exception_61 [258]
+                0.00    0.00       4/28666071     camlUnix__entry [177]
+                0.00    0.00       7/28666071     camlPervasives__iter_209 [254]
+                0.00    0.00       7/28666071     camlArray__make_matrix_69 [220]
+                0.00    0.00      10/28666071     camlPervasives__open_out_gen_198 [99]
+                0.00    0.00      10/28666071     camlPervasives__entry [110]
+                0.00    0.00      36/28666071     camlLco_ctrl_tree__fun_1059 [235]
+                0.00    0.00     110/28666071     camlDigest__code_begin [232]
+                0.00    0.00    1000/28666071     camlGlobal__new_node_215 [138]
+                0.00    0.00    2000/28666071     camlStat__distance_age_110 [122]
+                0.00    0.00    2000/28666071     camlStat__node_stat_127 [63]
+                0.00    0.00   24893/28666071     camlPervasives__output_string_214 [168]
+                0.00    0.00   43901/28666071     camlPervasives__string_of_int_153 [133]
+                0.01    0.00   64808/28666071     camlPervasives__$5e_135 [147]
+                0.02    0.00  163841/28666071     camlRoutage__search_best_age_112 [31]
+                0.02    0.00  182418/28666071     camlPervasives__min_49 [125]
+                0.02    0.00  187299/28666071     camlPervasives__max_52 [146]
+                2.76    0.00 27993718/28666071     camlPos_tbl__set_90 [20]
+[64]     0.5    2.83    0.00 28666071         caml_c_call [64]
+-----------------------------------------------
+                0.00    0.18       1/15          caml_ml_open_descriptor_in [127]
+                0.00    1.23       7/15          caml_ml_open_descriptor_out [91]
+                0.00    1.23       7/15          caml_ml_out_channels_list [92]
+[65]     0.4    0.00    2.63      15         caml_alloc_channel [65]
+                0.00    2.63      15/15          caml_alloc_custom [66]
+-----------------------------------------------
+                0.00    2.63      15/15          caml_alloc_channel [65]
+[66]     0.4    0.00    2.63      15         caml_alloc_custom [66]
+                2.63    0.00      15/15          caml_adjust_gc_speed [67]
+                0.00    0.00      15/66744570     caml_alloc_shr [17]
+                0.00    0.00      15/166856      caml_check_urgent_gc [182]
+-----------------------------------------------
+                2.63    0.00      15/15          caml_alloc_custom [66]
+[67]     0.4    2.63    0.00      15         caml_adjust_gc_speed [67]
+                0.00    0.00       3/3           caml_urge_major_slice [317]
+-----------------------------------------------
+                                                 <spontanés>
+[68]     0.4    0.12    2.16                 camlLco_ctrl_tree__rml_pause_182 [68]
+                0.00    2.16     265/41873       caml_call_gc [5]
+-----------------------------------------------
+                                                 <spontanés>
+[69]     0.4    0.13    2.10                 camlLco_ctrl_tree__rml_emit_val_191 [69]
+                0.00    2.10     257/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.22    1.97 1840533/1840533     camlList__fold_left_102 [3]
+[70]     0.4    0.22    1.97 1840533         camlSimul__fun_573 [70]
+                0.00    1.97     242/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.09    1.89  500000/500000      camlSimul__fun_579 [22]
+[71]     0.3    0.09    1.89  500000         camlSimul__get_neighbors_87 [71]
+                0.07    0.63  500000/500000      camlList__find_all_229 [105]
+                0.05    0.59  500000/500008      caml_curry2 [107]
+                0.00    0.56      69/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.00    0.00    3067/9083060     caml_do_local_roots [225]
+                0.04    0.00  173706/9083060     caml_do_roots [155]
+                1.87    0.05 8906287/9083060     caml_modify [41]
+[72]     0.3    1.91    0.05 9083060         caml_darken [72]
+                0.05    0.00       4/4           realloc_gray_vals [164]
+-----------------------------------------------
+                0.10    1.77  500000/500000      camlLco_ctrl_tree__f_def_349 [14]
+[73]     0.3    0.10    1.77  500000         camlSimul__fun_589 [73]
+                0.10    1.67  500000/500000      camlMsg__make_87 [76]
+-----------------------------------------------
+                                                 <spontanés>
+[74]     0.3    1.81    0.00                 caml_ext_table_free [74]
+-----------------------------------------------
+                0.00    1.79    2000/2000        camlStat__node_stat_127 [63]
+[75]     0.3    0.00    1.79    2000         camlStat____val_ml_23_115 [75]
+                0.05    1.50   23454/5389610     camlList__fold_left_102 [3]
+                0.00    0.14      17/41873       caml_call_gc [5]
+                0.03    0.07   20893/20893       camlPervasives__$40_166 [145]
+-----------------------------------------------
+                0.10    1.67  500000/500000      camlSimul__fun_589 [73]
+[76]     0.3    0.10    1.67  500000         camlMsg__make_87 [76]
+                0.48    0.80 1000096/1003918     camlRandom__intaux_97 [86]
+                0.00    0.34      42/41873       caml_call_gc [5]
+                0.05    0.00 1000096/1003918     camlRandom__int_102 [166]
+-----------------------------------------------
+                                                 <spontanés>
+[77]     0.3    1.41    0.36                 camlLco_ctrl_tree__sched_162 [77]
+                0.29    0.07 1500002/39746753     caml_modify [41]
+-----------------------------------------------
+                                                 <spontanés>
+[78]     0.3    0.18    1.48                 camlLco_ctrl_tree__f_pause_185 [78]
+                0.00    1.12     137/41873       caml_call_gc [5]
+                0.29    0.07 1500000/39746753     caml_modify [41]
+-----------------------------------------------
+                0.14    1.44 1000000/1000000     camlLco_ctrl_tree__f_compute_181 [1]
+[79]     0.3    0.14    1.44 1000000         camlPos_tbl__update_96 [79]
+                0.00    1.44     177/41873       caml_call_gc [5]
+-----------------------------------------------
+                1.04    0.45   42882/42882       caml_empty_minor_heap [13]
+[80]     0.2    1.04    0.45   42882         caml_oldify_local_roots [80]
+                0.05    0.37  278973/69118180     caml_oldify_one [15]
+                0.02    0.00       1/1           init_frame_descriptors [185]
+                0.00    0.00   42882/42882       caml_final_do_young_roots [260]
+-----------------------------------------------
+                0.55    0.84  249998/249998      camlRoutage__insert_pdl_87 [37]
+[81]     0.2    0.55    0.84  249998         camlGlobal__make_pdl_info_forecast_229 [81]
+                0.00    0.55      68/41873       caml_call_gc [5]
+                0.03    0.17  182417/182418      camlPervasives__min_49 [125]
+                0.02    0.07  187297/187299      camlPervasives__max_52 [146]
+-----------------------------------------------
+                0.12    1.23  500000/500000      caml_apply3 <cycle 1> [27]
+[82]     0.2    0.12    1.23  500000         camlSimul__fun_577 [82]
+                0.00    1.23     151/41873       caml_call_gc [5]
+-----------------------------------------------
+                                                 <spontanés>
+[83]     0.2    1.32    0.00                 caml_allocation_color [83]
+-----------------------------------------------
+                                                 <spontanés>
+[84]     0.2    0.23    1.08                 camlLco_ctrl_tree__rml_pre_value_168 [84]
+                1.08    0.00 1840533/1840533     camlSimul__fun_575 [93]
+-----------------------------------------------
+                                                 <spontanés>
+[85]     0.2    0.02    1.29                 camlLco_ctrl_tree__wakeUp_151 [85]
+                0.24    1.03   58000/8739929     camlList__rev_append_75 [10]
+                0.02    0.01  116000/39746753     caml_modify [41]
+-----------------------------------------------
+                0.00    0.00     500/1003918     camlSimul__fun_673 [224]
+                0.00    0.00     500/1003918     camlSimul__fun_649 [223]
+                0.00    0.00    2822/1003918     camlMove__random_waypoint_114 [101]
+                0.48    0.80 1000096/1003918     camlMsg__make_87 [76]
+[86]     0.2    0.48    0.81 1003918         camlRandom__intaux_97 [86]
+                0.81    0.00 1003918/6781639     camlRandom__bits_94 [45]
+-----------------------------------------------
+                                                 <spontanés>
+[87]     0.2    1.25    0.00                 caml_fl_reset [87]
+-----------------------------------------------
+                1.24    0.00 21701760/21701760     camlList__iter_98 [2]
+[88]     0.2    1.24    0.00 21701760         camlPos_tbl__code_begin [88]
+-----------------------------------------------
+                0.00    1.23       1/1           caml_startup__code_begin [56]
+[89]     0.2    0.00    1.23       1         camlStd_exit__entry [89]
+                0.01    1.23       1/1           camlPervasives__flush_all_208 [90]
+                0.00    0.00       1/1           camlPervasives__iter_209 [254]
+-----------------------------------------------
+                0.01    1.23       1/1           camlStd_exit__entry [89]
+[90]     0.2    0.01    1.23       1         camlPervasives__flush_all_208 [90]
+                0.00    1.23       1/1           caml_ml_out_channels_list [92]
+                0.00    0.00       1/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.00    0.35       2/7           camlPervasives__entry [110]
+                0.00    0.88       5/7           camlPervasives__open_out_gen_198 [99]
+[91]     0.2    0.00    1.23       7         caml_ml_open_descriptor_out [91]
+                0.00    1.23       7/15          caml_alloc_channel [65]
+                0.00    0.00       7/7           caml_open_descriptor_out [303]
+-----------------------------------------------
+                0.00    1.23       1/1           camlPervasives__flush_all_208 [90]
+[92]     0.2    0.00    1.23       1         caml_ml_out_channels_list [92]
+                0.00    1.23       7/15          caml_alloc_channel [65]
+                0.00    0.00       7/17          caml_alloc_small [301]
+-----------------------------------------------
+                1.08    0.00 1840533/1840533     camlLco_ctrl_tree__rml_pre_value_168 [84]
+[93]     0.2    1.08    0.00 1840533         camlSimul__fun_575 [93]
+-----------------------------------------------
+                                                 <spontanés>
+[94]     0.2    0.00    0.93                 camlLco_ctrl_tree__exec_539 [94]
+                0.00    0.92    3000/1508000     camlList__iter_98 [2]
+                0.00    0.01      30/1032        caml_apply4 [112]
+                0.00    0.00      30/2503088     caml_curry3_2 [116]
+-----------------------------------------------
+                                                 <spontanés>
+[95]     0.1    0.00    0.92                 camlLco_ctrl_tree__wakeUpAll_129 [95]
+                0.00    0.92    3000/1508000     camlList__iter_98 [2]
+                0.00    0.00    3000/39746753     caml_modify [41]
+-----------------------------------------------
+                0.00    0.92       1/1           caml_main [49]
+[96]     0.1    0.00    0.92       1         caml_init_gc [96]
+                0.92    0.00       1/1           caml_set_minor_heap_size [97]
+                0.00    0.00       1/1           caml_init_major_heap [255]
+                0.00    0.00       5/387466      caml_gc_message [199]
+                0.00    0.00       2/2           norm_heapincr [323]
+                0.00    0.00       1/1           norm_minsize [362]
+                0.00    0.00       1/1           norm_pfree [363]
+                0.00    0.00       1/1           norm_pmax [364]
+-----------------------------------------------
+                0.92    0.00       1/1           caml_init_gc [96]
+[97]     0.1    0.92    0.00       1         caml_set_minor_heap_size [97]
+                0.00    0.00       2/25          caml_stat_alloc [300]
+-----------------------------------------------
+                0.00    0.88       1/1           camlLco_ctrl_tree__f_compute_181 [1]
+[98]     0.1    0.00    0.88       1         camlGlobal__init_204 [98]
+                0.00    0.88       5/5           camlPervasives__open_out_gen_198 [99]
+                0.00    0.00       1/2           camlArray__make_matrix_69 [220]
+                0.00    0.00      19/64808       camlPervasives__$5e_135 [147]
+                0.00    0.00       5/43901       camlPervasives__string_of_int_153 [133]
+                0.00    0.00       7/39746753     caml_modify [41]
+                0.00    0.00       1/1           camlPervasives__string_of_float_163 [246]
+                0.00    0.00       5/5           camlPervasives__open_out_202 [309]
+                0.00    0.00       1/1           camlPervasives__loop_161 [340]
+                0.00    0.00       1/1           camlPervasives__valid_float_lexem_158 [341]
+-----------------------------------------------
+                0.00    0.88       5/5           camlGlobal__init_204 [98]
+[99]     0.1    0.00    0.88       5         camlPervasives__open_out_gen_198 [99]
+                0.00    0.88       5/7           caml_ml_open_descriptor_out [91]
+                0.00    0.00       5/5           caml_sys_open [245]
+                0.00    0.00      10/28666071     caml_c_call [64]
+-----------------------------------------------
+                                                 <spontanés>
+[100]    0.1    0.23    0.58                 camlLco_ctrl_tree__step_emit_186 [100]
+                0.20    0.05 1026000/39746753     caml_modify [41]
+                0.10    0.12 1000000/170627402     caml_apply2 [23]
+                0.06    0.00  500000/500000      camlSimul__fun_569 [161]
+                0.06    0.00  500000/500000      camlSimul__fun_526 [162]
+-----------------------------------------------
+                0.74    0.00  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[101]    0.1    0.74    0.00  500000         camlMove__random_waypoint_114 [101]
+                0.00    0.00    2822/1003918     camlRandom__intaux_97 [86]
+                0.00    0.00    1411/39746753     caml_modify [41]
+                0.00    0.00    2822/1003918     camlRandom__int_102 [166]
+-----------------------------------------------
+                0.09    0.64  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[102]    0.1    0.09    0.64  500000         camlSimul__fun_593 [102]
+                0.00    0.64      79/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.00    0.00       1/7753554     camlLco_ctrl_tree__f_signal_332 [228]
+                0.00    0.00       1/7753554     camlLco_ctrl_tree__rml_exec_n_534 [236]
+                0.00    0.00     500/7753554     camlLco_ctrl_tree__f_run_362 [114]
+                0.00    0.00     500/7753554     camlLco_ctrl_tree__rml_loop_322 [229]
+                0.00    0.00     501/7753554     camlLco_ctrl_tree__rml_if_445 [230]
+                0.02    0.00  250048/7753554     camlRoutage__route_164 [28]
+                0.23    0.00 2501000/7753554     camlLco_ctrl_tree__f_def_349 [14]
+                0.46    0.00 5001003/7753554     camlLco_ctrl_tree__rml_seq_295 [59]
+[103]    0.1    0.72    0.00 7753554         caml_curry4_3 [103]
+-----------------------------------------------
+                0.12    0.59  500000/500000      camlLco_ctrl_tree__f_def_349 [14]
+[104]    0.1    0.12    0.59  500000         camlSimul__fun_439 [104]
+                0.00    0.59      72/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.07    0.63  500000/500000      camlSimul__get_neighbors_87 [71]
+[105]    0.1    0.07    0.63  500000         camlList__find_all_229 [105]
+                0.00    0.63      77/41873       caml_call_gc [5]
+-----------------------------------------------
+                                                 <spontanés>
+[106]    0.1    0.04    0.64                 camlLco_ctrl_tree__fun_770 [106]
+                0.00    0.64      78/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.00    0.00       2/500008      camlGraphics__entry [188]
+                0.00    0.00       6/500008      caml_apply4 [112]
+                0.05    0.59  500000/500008      camlSimul__get_neighbors_87 [71]
+[107]    0.1    0.05    0.59  500008         caml_curry2 [107]
+                0.00    0.59      72/41873       caml_call_gc [5]
+-----------------------------------------------
+                0.12    0.48  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[108]    0.1    0.12    0.48  500000         camlMove__move_87 [108]
+                0.00    0.36      44/41873       caml_call_gc [5]
+                0.10    0.02  500000/39746753     caml_modify [41]
+-----------------------------------------------
+                0.22    0.00   66054/163841      camlRoutage__routage_140 [7]
+                0.33    0.00   97787/163841      camlRoutage__route_164 [28]
+[109]    0.1    0.56    0.00  163841         camlRoutage__fun_242 [109]
+-----------------------------------------------
+                0.00    0.54       1/1           caml_startup__code_begin [56]
+[110]    0.1    0.00    0.54       1         camlPervasives__entry [110]
+                0.00    0.35       2/7           caml_ml_open_descriptor_out [91]
+                0.00    0.18       1/1           caml_ml_open_descriptor_in [127]
+                0.02    0.00       1/20          caml_allocN [120]
+                0.00    0.00      10/28666071     caml_c_call [64]
+                0.00    0.00       6/6           caml_int64_float_of_bits [305]
+                0.00    0.00       1/2           caml_alloc1 [320]
+                0.00    0.00       1/3           caml_register_named_value [314]
+-----------------------------------------------
+                0.06    0.45  452776/452776      camlList__fold_left_102 [3]
+[111]    0.1    0.06    0.45  452776         camlStat__fun_237 [111]
+                0.00    0.45      55/41873       caml_call_gc [5]
+-----------------------------------------------
+                                   6             caml_apply4 [112]
+                0.00    0.01      30/1032        camlLco_ctrl_tree__exec_539 [94]
+                0.00    0.44    1002/1032        camlLco_ctrl_tree__f_run_362 [114]
+[112]    0.1    0.00    0.45    1032+6       caml_apply4 [112]
+                0.42    0.00       1/1           camlSimul__fun_706 [115]
+                0.01    0.00     500/500         caml_apply5 [203]
+                0.01    0.00     500/500         camlSimul__fun_685 [202]
+                0.00    0.01     501/2752076     caml_apply3 <cycle 1> [27]
+                0.00    0.00     501/501         camlSimul__make_nodes_167 [221]
+                0.00    0.00     500/500         caml_curry6_5 [222]
+                0.00    0.00     526/2503088     caml_curry3_1 [57]
+                0.00    0.00     500/7753554     caml_curry4_2 [39]
+                0.00    0.00     501/170627402     caml_apply2 [23]
+                0.00    0.00     526/2503088     caml_curry3_2 [116]
+                0.00    0.00      25/2503088     caml_curry3 [60]
+                0.00    0.00       6/500008      caml_curry2 [107]
+                0.00    0.00       5/500006      caml_curry2_1 [175]
+                0.00    0.00     501/502         caml_curry5_2 [272]
+                0.00    0.00     501/502         caml_curry5_3 [273]
+                0.00    0.00     500/500         camlSimul__fun_688 [277]
+                0.00    0.00     500/500         caml_curry6_4 [283]
+                0.00    0.00      25/25          camlArea__fun_173 [298]
+                0.00    0.00       5/5           camlArea__fun_167 [306]
+                0.00    0.00       1/1           camlSimul__fun_702 [349]
+                0.00    0.00       1/1           camlArea__make_areas_108 [327]
+                                   6             caml_apply4 [112]
+-----------------------------------------------
+                0.45    0.00  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[113]    0.1    0.45    0.00  500000         camlSimul__fun_433 [113]
+-----------------------------------------------
+                                                 <spontanés>
+[114]    0.1    0.00    0.44                 camlLco_ctrl_tree__f_run_362 [114]
+                0.00    0.44    1002/1032        caml_apply4 [112]
+                0.00    0.00     500/7753554     caml_curry4_3 [103]
+                0.00    0.00       1/500006      caml_curry2_1 [175]
+                0.00    0.00     501/502         caml_curry5_4 [274]
+-----------------------------------------------
+                0.42    0.00       1/1           caml_apply4 [112]
+[115]    0.1    0.42    0.00       1         camlSimul__fun_706 [115]
+-----------------------------------------------
+                0.00    0.00       1/2503088     camlLco_ctrl_tree__rml_if_445 [230]
+                0.00    0.00      25/2503088     camlLco_ctrl_tree__f_signal_332 [228]
+                0.00    0.00      30/2503088     camlLco_ctrl_tree__exec_539 [94]
+                0.00    0.00     500/2503088     camlLco_ctrl_tree__f_def_349 [14]
+                0.00    0.00     526/2503088     caml_apply4 [112]
+                0.00    0.00    1001/2503088     camlLco_ctrl_tree__rml_par_307 [227]
+                0.40    0.00 2501005/2503088     camlLco_ctrl_tree__rml_seq_295 [59]
+[116]    0.1    0.40    0.00 2503088         caml_curry3_2 [116]
+-----------------------------------------------
+                                                 <spontanés>
+[117]    0.1    0.37    0.00                 compare_resize_stack [117]
+-----------------------------------------------
+                                                 <spontanés>
+[118]    0.1    0.17    0.17                 camlLco_ctrl_tree__f_emit_val_196 [118]
+                0.13    0.00  500000/500000      camlSimul__fun_567 [136]
+                0.05    0.00  500000/500000      camlSimul__fun_523 [170]
+-----------------------------------------------
+                                                 <spontanés>
+[119]    0.1    0.34    0.00                 camlLco_ctrl_tree__fun_912 [119]
+-----------------------------------------------
+                0.02    0.00       1/20          camlStat__entry [191]
+                0.02    0.00       1/20          camlGraphics__entry [188]
+                0.02    0.00       1/20          camlPervasives__entry [110]
+                0.02    0.00       1/20          camlNativeint__entry [190]
+                0.02    0.00       1/20          camlArg__entry [189]
+                0.03    0.00       2/20          camlGlobal__entry [176]
+                0.03    0.00       2/20          camlUnix__entry [177]
+                0.06    0.00       4/20          camlRandom__entry [158]
+                0.11    0.00       7/20          camlLco_ctrl_tree__entry [143]
+[120]    0.0    0.30    0.00      20         caml_allocN [120]
+-----------------------------------------------
+                                                 <spontanés>
+[121]    0.0    0.30    0.00                 camlSimul__code_end [121]
+-----------------------------------------------
+                0.01    0.24    2000/2000        camlStat__node_stat_127 [63]
+[122]    0.0    0.01    0.24    2000         camlStat__distance_age_110 [122]
+                0.08    0.15    2000/166849      caml_make_vect [32]
+                0.00    0.00    2000/28666071     caml_c_call [64]
+-----------------------------------------------
+                                                 <spontanés>
+[123]    0.0    0.00    0.21                 camlLco_ctrl_tree__fun_753 [123]
+                0.01    0.19    3000/5389610     camlList__fold_left_102 [3]
+                0.00    0.01       1/41873       caml_call_gc [5]
+                0.00    0.00    3000/39746753     caml_modify [41]
+-----------------------------------------------
+                0.08    0.12  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[124]    0.0    0.08    0.12  500000         camlSimul__fun_583 [124]
+                0.10    0.02  500000/39746753     caml_modify [41]
+-----------------------------------------------
+                0.00    0.00       1/182418      camlHashtbl__create_78 [231]
+                0.03    0.17  182417/182418      camlGlobal__make_pdl_info_forecast_229 [81]
+[125]    0.0    0.03    0.17  182418         camlPervasives__min_49 [125]
+                0.12    0.03  182418/182454      caml_lessequal [130]
+                0.02    0.00  182418/28666071     caml_c_call [64]
+-----------------------------------------------
+                                                 <spontanés>
+[126]    0.0    0.20    0.00                 camlPos_tbl__get_87 [126]
+-----------------------------------------------
+                0.00    0.18       1/1           camlPervasives__entry [110]
+[127]    0.0    0.00    0.18       1         caml_ml_open_descriptor_in [127]
+                0.00    0.18       1/15          caml_alloc_channel [65]
+                0.00    0.00       1/8           caml_open_descriptor_in [302]
+-----------------------------------------------
+                                                 <spontanés>
+[128]    0.0    0.17    0.00                 camlRandom__copy_91 [128]
+-----------------------------------------------
+                0.08    0.00  243875/489942      camlSimul__fun_595 [9]
+                0.08    0.00  246067/489942      camlList__iter_98 [2]
+[129]    0.0    0.16    0.00  489942         camlRoutage__routage_success_108 [129]
+-----------------------------------------------
+                0.00    0.00      36/182454      camlLco_ctrl_tree__fun_1059 [235]
+                0.12    0.03  182418/182454      camlPervasives__min_49 [125]
+[130]    0.0    0.12    0.03  182454         caml_lessequal [130]
+                0.03    0.00  182454/28363471     compare_val [48]
+-----------------------------------------------
+                                                 <spontanés>
+[131]    0.0    0.15    0.00                 camlArea__code_end [131]
+-----------------------------------------------
+                0.14    0.00  500096/500096      camlStat__packet_stat_146 [24]
+[132]    0.0    0.14    0.00  500096         camlList__length_aux_57 [132]
+-----------------------------------------------
+                0.00    0.00       5/43901       camlGlobal__init_204 [98]
+                0.00    0.00     110/43901       camlRandom__full_init_67 [226]
+                0.00    0.01    2000/43901       camlStat__node_stat_127 [63]
+                0.00    0.06   20708/43901       camlStat__fun_230 [141]
+                0.00    0.06   21078/43901       camlStat__fun_233 [135]
+[133]    0.0    0.01    0.13   43901         camlPervasives__string_of_int_153 [133]
+                0.00    0.12   43901/43901       caml_format_int [137]
+                0.00    0.00   43901/28666071     caml_c_call [64]
+-----------------------------------------------
+                                                 <spontanés>
+[134]    0.0    0.13    0.00                 camlPos_tbl__code_end [134]
+-----------------------------------------------
+                0.02    0.11   10539/10539       camlList__iter_98 [2]
+[135]    0.0    0.02    0.11   10539         camlStat__fun_233 [135]
+                0.00    0.06   21078/43901       camlPervasives__string_of_int_153 [133]
+                0.01    0.03   31617/64808       camlPervasives__$5e_135 [147]
+-----------------------------------------------
+                0.13    0.00  500000/500000      camlLco_ctrl_tree__f_emit_val_196 [118]
+[136]    0.0    0.13    0.00  500000         camlSimul__fun_567 [136]
+-----------------------------------------------
+                0.00    0.12   43901/43901       camlPervasives__string_of_int_153 [133]
+[137]    0.0    0.00    0.12   43901         caml_format_int [137]
+                0.07    0.01   43901/43901       parse_format [150]
+                0.02    0.02   43901/43905       caml_copy_string [171]
+-----------------------------------------------
+                0.00    0.12     500/500         camlSimul__fun_261 [139]
+[138]    0.0    0.00    0.12     500         camlGlobal__new_node_215 [138]
+                0.04    0.08    1000/166849      caml_make_vect [32]
+                0.00    0.00    1000/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.00    0.12     500/500         camlLco_ctrl_tree__f_def_349 [14]
+[139]    0.0    0.00    0.12     500         camlSimul__fun_261 [139]
+                0.00    0.12     500/500         camlGlobal__new_node_215 [138]
+-----------------------------------------------
+                0.01    0.10     219/219         caml_alloc_shr [17]
+[140]    0.0    0.01    0.10     219         expand_heap [140]
+                0.10    0.00     219/219         caml_add_to_heap [144]
+                0.00    0.00     219/387466      caml_gc_message [199]
+                0.00    0.00     219/219         caml_round_heap_chunk_size [292]
+                0.00    0.00     219/220         caml_alloc_for_heap [289]
+-----------------------------------------------
+                0.01    0.10   10354/10354       camlList__iter_98 [2]
+[141]    0.0    0.01    0.10   10354         camlStat__fun_230 [141]
+                0.00    0.06   20708/43901       camlPervasives__string_of_int_153 [133]
+                0.01    0.03   31062/64808       camlPervasives__$5e_135 [147]
+-----------------------------------------------
+                0.11    0.00  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[142]    0.0    0.11    0.00  500000         camlSimul__fun_585 [142]
+-----------------------------------------------
+                                                 <spontanés>
+[143]    0.0    0.00    0.11                 camlLco_ctrl_tree__entry [143]
+                0.11    0.00       7/20          caml_allocN [120]
+-----------------------------------------------
+                0.10    0.00     219/219         expand_heap [140]
+[144]    0.0    0.10    0.00     219         caml_add_to_heap [144]
+                0.00    0.00     219/387466      caml_gc_message [199]
+-----------------------------------------------
+                               99631             camlPervasives__$40_166 [145]
+                0.03    0.07   20893/20893       camlStat____val_ml_23_115 [75]
+[145]    0.0    0.03    0.07   20893+99631   camlPervasives__$40_166 [145]
+                0.00    0.07       8/41873       caml_call_gc [5]
+                               99631             camlPervasives__$40_166 [145]
+-----------------------------------------------
+                0.00    0.00       1/187299      camlHashtbl__create_78 [231]
+                0.00    0.00       1/187299      camlRandom__full_init_67 [226]
+                0.02    0.07  187297/187299      camlGlobal__make_pdl_info_forecast_229 [81]
+[146]    0.0    0.02    0.07  187299         camlPervasives__max_52 [146]
+                0.02    0.03  187299/187299      caml_greaterequal [163]
+                0.02    0.00  187299/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.00    0.00      19/64808       camlGlobal__init_204 [98]
+                0.00    0.00     110/64808       camlRandom__full_init_67 [226]
+                0.00    0.00    2000/64808       camlStat__node_stat_127 [63]
+                0.01    0.03   31062/64808       camlStat__fun_230 [141]
+                0.01    0.03   31617/64808       camlStat__fun_233 [135]
+[147]    0.0    0.02    0.07   64808         camlPervasives__$5e_135 [147]
+                0.01    0.04   64808/64809       caml_create_string [169]
+                0.02    0.00  129616/129616      caml_blit_string [184]
+                0.01    0.00   64808/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.04    0.00  243875/489942      camlSimul__fun_595 [9]
+                0.04    0.00  246067/489942      camlList__iter_98 [2]
+[148]    0.0    0.08    0.00  489942         camlStat__packet_success_stat_153 [148]
+-----------------------------------------------
+                                                 <spontanés>
+[149]    0.0    0.08    0.00                 camlList__nth_69 [149]
+-----------------------------------------------
+                0.07    0.01   43901/43901       caml_format_int [137]
+[150]    0.0    0.07    0.01   43901         parse_format [150]
+                0.01    0.00   43901/43906       caml_string_length [200]
+-----------------------------------------------
+                0.08    0.00  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[151]    0.0    0.08    0.00  500000         camlSimul__fun_587 [151]
+-----------------------------------------------
+                                                 <spontanés>
+[152]    0.0    0.07    0.00                 camlLco_ctrl_tree__rml_present$27_287 [152]
+-----------------------------------------------
+                0.00    0.07     221/221         caml_major_collection_slice [8]
+[153]    0.0    0.00    0.07     221         start_cycle [153]
+                0.00    0.07     221/221         caml_darken_all_roots [154]
+                0.00    0.00     221/387466      caml_gc_message [199]
+-----------------------------------------------
+                0.00    0.07     221/221         start_cycle [153]
+[154]    0.0    0.00    0.07     221         caml_darken_all_roots [154]
+                0.03    0.04     221/221         caml_do_roots [155]
+-----------------------------------------------
+                0.03    0.04     221/221         caml_darken_all_roots [154]
+[155]    0.0    0.03    0.04     221         caml_do_roots [155]
+                0.04    0.00  173706/9083060     caml_darken [72]
+                0.00    0.00     221/221         caml_do_local_roots [225]
+                0.00    0.00     221/221         caml_final_do_strong_roots [286]
+-----------------------------------------------
+                                                 <spontanés>
+[156]    0.0    0.00    0.07                 camlLco_ctrl_tree__next_to_current_149 [156]
+                0.01    0.05    3000/8739929     camlList__rev_append_75 [10]
+                0.00    0.00    6000/39746753     caml_modify [41]
+-----------------------------------------------
+                0.07    0.00  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[157]    0.0    0.07    0.00  500000         camlSimul__fun_436 [157]
+-----------------------------------------------
+                0.00    0.06       1/1           caml_startup__code_begin [56]
+[158]    0.0    0.00    0.06       1         camlRandom__entry [158]
+                0.06    0.00       4/20          caml_allocN [120]
+                0.00    0.00       1/28666071     caml_c_call [64]
+                0.00    0.00       1/1           caml_obj_dup [358]
+-----------------------------------------------
+                                                 <spontanés>
+[159]    0.0    0.06    0.00                 camlLco_ctrl_tree__rml_signal_combine_335 [159]
+-----------------------------------------------
+                0.00    0.00       2/108828      alloc_inet_addr [248]
+                0.00    0.00       2/108828      alloc_inet6_addr [247]
+                0.00    0.00     110/108828      caml_md5_string [233]
+                0.00    0.02   43905/108828      caml_copy_string [171]
+                0.01    0.03   64809/108828      caml_create_string [169]
+[160]    0.0    0.01    0.05  108828         caml_alloc_string [160]
+                0.00    0.05       6/42882       caml_minor_collection [4]
+-----------------------------------------------
+                0.06    0.00  500000/500000      camlLco_ctrl_tree__step_emit_186 [100]
+[161]    0.0    0.06    0.00  500000         camlSimul__fun_569 [161]
+-----------------------------------------------
+                0.06    0.00  500000/500000      camlLco_ctrl_tree__step_emit_186 [100]
+[162]    0.0    0.06    0.00  500000         camlSimul__fun_526 [162]
+-----------------------------------------------
+                0.02    0.03  187299/187299      camlPervasives__max_52 [146]
+[163]    0.0    0.02    0.03  187299         caml_greaterequal [163]
+                0.03    0.00  187299/28363471     compare_val [48]
+-----------------------------------------------
+                0.05    0.00       4/4           caml_darken [72]
+[164]    0.0    0.05    0.00       4         realloc_gray_vals [164]
+                0.00    0.00       4/387466      caml_gc_message [199]
+-----------------------------------------------
+                                                 <spontanés>
+[165]    0.0    0.05    0.00                 camlRandom__fun_197 [165]
+-----------------------------------------------
+                0.00    0.00     500/1003918     camlSimul__fun_673 [224]
+                0.00    0.00     500/1003918     camlSimul__fun_649 [223]
+                0.00    0.00    2822/1003918     camlMove__random_waypoint_114 [101]
+                0.05    0.00 1000096/1003918     camlMsg__make_87 [76]
+[166]    0.0    0.05    0.00 1003918         camlRandom__int_102 [166]
+-----------------------------------------------
+                0.05    0.00  500000/500000      caml_apply3 <cycle 1> [27]
+[167]    0.0    0.05    0.00  500000         caml_tuplify4 [167]
+-----------------------------------------------
+                0.01    0.00    4000/24893       camlStat__node_stat_127 [63]
+                0.03    0.01   20893/24893       camlList__iter_98 [2]
+[168]    0.0    0.04    0.01   24893         camlPervasives__output_string_214 [168]
+                0.01    0.00   24893/24893       caml_ml_output [201]
+                0.00    0.00   24893/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.00    0.00       1/64809       camlBuffer__create_66 [253]
+                0.01    0.04   64808/64809       camlPervasives__$5e_135 [147]
+[169]    0.0    0.01    0.04   64809         caml_create_string [169]
+                0.01    0.03   64809/108828      caml_alloc_string [160]
+-----------------------------------------------
+                0.05    0.00  500000/500000      camlLco_ctrl_tree__f_emit_val_196 [118]
+[170]    0.0    0.05    0.00  500000         camlSimul__fun_523 [170]
+-----------------------------------------------
+                0.00    0.00       1/43905       caml_alloc_array [243]
+                0.00    0.00       1/43905       caml_format_float [249]
+                0.00    0.00       1/43905       caml_sys_get_argv [242]
+                0.00    0.00       1/43905       caml_sys_get_config [250]
+                0.02    0.02   43901/43905       caml_format_int [137]
+[171]    0.0    0.02    0.02   43905         caml_copy_string [171]
+                0.00    0.02   43905/108828      caml_alloc_string [160]
+-----------------------------------------------
+                0.04    0.00  500096/500096      camlStat__packet_stat_146 [24]
+[172]    0.0    0.04    0.00  500096         camlStat__compute_anchor_137 [172]
+-----------------------------------------------
+                0.04    0.00  250048/250048      camlList__iter_98 [2]
+[173]    0.0    0.04    0.00  250048         caml_tuplify2 [173]
+-----------------------------------------------
+                                                 <spontanés>
+[174]    0.0    0.04    0.00                 camlLco_ctrl_tree__f_par_316 [174]
+                0.00    0.00     501/39746753     caml_modify [41]
+-----------------------------------------------
+                0.00    0.00       1/500006      camlLco_ctrl_tree__f_run_362 [114]
+                0.00    0.00       5/500006      caml_apply4 [112]
+                0.04    0.00  500000/500006      camlSimul__fun_579 [22]
+[175]    0.0    0.04    0.00  500006         caml_curry2_1 [175]
+-----------------------------------------------
+                0.00    0.03       1/1           caml_startup__code_begin [56]
+[176]    0.0    0.00    0.03       1         camlGlobal__entry [176]
+                0.03    0.00       2/20          caml_allocN [120]
+                0.00    0.00       1/2           camlArray__make_matrix_69 [220]
+                0.00    0.00       1/7503507     caml_curry4 [40]
+-----------------------------------------------
+                                                 <spontanés>
+[177]    0.0    0.00    0.03                 camlUnix__entry [177]
+                0.03    0.00       2/20          caml_allocN [120]
+                0.00    0.00       1/1           camlHashtbl__create_78 [231]
+                0.00    0.00       4/28666071     caml_c_call [64]
+                0.00    0.00       1/2           camlCallback__register_exception_61 [258]
+-----------------------------------------------
+                0.01    0.00    3981/10154       camlList__iter_98 [2]
+                0.02    0.00    6173/10154       camlSimul__fun_595 [9]
+[178]    0.0    0.03    0.00   10154         camlStat__packet_fail_stat_155 [178]
+-----------------------------------------------
+                                                 <spontanés>
+[179]    0.0    0.03    0.00                 camlLco_ctrl_tree__rml_pre_status_165 [179]
+-----------------------------------------------
+                                                 <spontanés>
+[180]    0.0    0.03    0.00                 caml_bitvect_test [180]
+-----------------------------------------------
+                                                 <spontanés>
+[181]    0.0    0.03    0.00                 camlLco_ctrl_tree__rml_nothing_173 [181]
+-----------------------------------------------
+                0.00    0.00      15/166856      caml_alloc_custom [66]
+                0.00    0.02  166841/166856      caml_make_vect [32]
+[182]    0.0    0.00    0.02  166856         caml_check_urgent_gc [182]
+                0.00    0.02       3/42882       caml_minor_collection [4]
+-----------------------------------------------
+                0.02    0.00  500000/500000      camlLco_ctrl_tree__f_compute_181 [1]
+[183]    0.0    0.02    0.00  500000         camlSimul__fun_597 [183]
+-----------------------------------------------
+                0.02    0.00  129616/129616      camlPervasives__$5e_135 [147]
+[184]    0.0    0.02    0.00  129616         caml_blit_string [184]
+-----------------------------------------------
+                0.02    0.00       1/1           caml_oldify_local_roots [80]
+[185]    0.0    0.02    0.00       1         init_frame_descriptors [185]
+                0.00    0.00       1/25          caml_stat_alloc [300]
+-----------------------------------------------
+                                                 <spontanés>
+[186]    0.0    0.02    0.00                 camlLco_ctrl_tree__f_nothing_176 [186]
+-----------------------------------------------
+                                                 <spontanés>
+[187]    0.0    0.02    0.00                 camlList__rev_map_91 [187]
+-----------------------------------------------
+                                                 <spontanés>
+[188]    0.0    0.00    0.02                 camlGraphics__entry [188]
+                0.02    0.00       1/20          caml_allocN [120]
+                0.00    0.00       2/500008      caml_curry2 [107]
+                0.00    0.00       1/2           camlCallback__register_exception_61 [258]
+                0.00    0.00       3/3           caml_string_notequal [316]
+                0.00    0.00       2/2           caml_alloc2 [321]
+-----------------------------------------------
+                0.00    0.02       1/1           caml_startup__code_begin [56]
+[189]    0.0    0.00    0.02       1         camlArg__entry [189]
+                0.02    0.00       1/20          caml_allocN [120]
+-----------------------------------------------
+                0.00    0.02       1/1           caml_startup__code_begin [56]
+[190]    0.0    0.00    0.02       1         camlNativeint__entry [190]
+                0.02    0.00       1/20          caml_allocN [120]
+-----------------------------------------------
+                0.00    0.02       1/1           caml_startup__code_begin [56]
+[191]    0.0    0.00    0.02       1         camlStat__entry [191]
+                0.02    0.00       1/20          caml_allocN [120]
+-----------------------------------------------
+                0.02    0.00  250048/250048      camlRoutage__route_164 [28]
+[192]    0.0    0.02    0.00  250048         camlGlobal__make_pdl_packet_234 [192]
+-----------------------------------------------
+                0.02    0.00       1/1           camlLco_ctrl_tree__f_compute_181 [1]
+[193]    0.0    0.02    0.00       1         camlSimul__fun_696 [193]
+-----------------------------------------------
+                                                 <spontanés>
+[194]    0.0    0.02    0.00                 camlLco_ctrl_tree__f_signal_341 [194]
+-----------------------------------------------
+                                                 <spontanés>
+[195]    0.0    0.02    0.00                 camlLco_ctrl_tree__fun_773 [195]
+-----------------------------------------------
+                                                 <spontanés>
+[196]    0.0    0.02    0.00                 camlStd_exit__code_end [196]
+-----------------------------------------------
+                0.01    0.00   42882/42882       caml_minor_collection [4]
+[197]    0.0    0.01    0.00   42882         caml_final_do_calls [197]
+                0.00    0.00     442/387466      caml_gc_message [199]
+-----------------------------------------------
+                0.01    0.00     220/220         caml_major_collection_slice [8]
+[198]    0.0    0.01    0.00     220         caml_compact_heap_maybe [198]
+                0.00    0.00     418/387466      caml_gc_message [199]
+-----------------------------------------------
+                0.00    0.00       4/387466      realloc_gray_vals [164]
+                0.00    0.00       5/387466      caml_init_gc [96]
+                0.00    0.00     219/387466      caml_add_to_heap [144]
+                0.00    0.00     219/387466      expand_heap [140]
+                0.00    0.00     221/387466      start_cycle [153]
+                0.00    0.00     418/387466      caml_compact_heap_maybe [198]
+                0.00    0.00     442/387466      caml_final_do_calls [197]
+                0.00    0.00   14144/387466      mark_slice [11]
+                0.00    0.00   28738/387466      sweep_slice [21]
+                0.00    0.00   85764/387466      caml_empty_minor_heap [13]
+                0.01    0.00  257292/387466      caml_major_collection_slice [8]
+[199]    0.0    0.01    0.00  387466         caml_gc_message [199]
+-----------------------------------------------
+                0.00    0.00       5/43906       caml_sys_open [245]
+                0.01    0.00   43901/43906       parse_format [150]
+[200]    0.0    0.01    0.00   43906         caml_string_length [200]
+-----------------------------------------------
+                0.01    0.00   24893/24893       camlPervasives__output_string_214 [168]
+[201]    0.0    0.01    0.00   24893         caml_ml_output [201]
+                0.00    0.00   24893/24893       caml_putblock [261]
+-----------------------------------------------
+                0.01    0.00     500/500         caml_apply4 [112]
+[202]    0.0    0.01    0.00     500         camlSimul__fun_685 [202]
+-----------------------------------------------
+                0.01    0.00     500/500         caml_apply4 [112]
+[203]    0.0    0.01    0.00     500         caml_apply5 [203]
+                0.00    0.00     500/500         caml_curry6 [279]
+                0.00    0.00     500/500         caml_curry6_1 [280]
+                0.00    0.00     500/500         caml_curry6_2 [281]
+                0.00    0.00     500/500         caml_curry6_3 [282]
+-----------------------------------------------
+                                                 <spontanés>
+[204]    0.0    0.01    0.00                 camlArea__get_area_87 [204]
+-----------------------------------------------
+                                                 <spontanés>
+[205]    0.0    0.01    0.00                 camlList__find_225 [205]
+-----------------------------------------------
+                                                 <spontanés>
+[206]    0.0    0.01    0.00                 camlPervasives__invalid_arg_39 [206]
+-----------------------------------------------
+                                                 <spontanés>
+[207]    0.0    0.01    0.00                 camlRoutage__code_end [207]
+-----------------------------------------------
+                                                 <spontanés>
+[208]    0.0    0.01    0.00                 caml_alloc_tuple [208]
+-----------------------------------------------
+                                                 <spontanés>
+[209]    0.0    0.01    0.00                 caml_final_do_weak_roots [209]
+-----------------------------------------------
+                                                 <spontanés>
+[210]    0.0    0.01    0.00                 caml_ml_flush_partial [210]
+-----------------------------------------------
+                                                 <spontanés>
+[211]    0.0    0.01    0.00                 caml_startup [211]
+-----------------------------------------------
+                0.01    0.00   20893/20893       camlList__iter_98 [2]
+[212]    0.0    0.01    0.00   20893         caml_tuplify3 [212]
+-----------------------------------------------
+                                                 <spontanés>
+[213]    0.0    0.01    0.00                 camlGlobal__make_pdl_info_226 [213]
+-----------------------------------------------
+                                                 <spontanés>
+[214]    0.0    0.01    0.00                 camlList__rmap2_f_127 [214]
+-----------------------------------------------
+                                                 <spontanés>
+[215]    0.0    0.01    0.00                 camlList__sort_295 [215]
+-----------------------------------------------
+                                                 <spontanés>
+[216]    0.0    0.01    0.00                 camlPervasives__bool_of_string_152 [216]
+-----------------------------------------------
+                                                 <spontanés>
+[217]    0.0    0.01    0.00                 camlPervasives__lnot_75 [217]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply3 <cycle 1> [27]
+[218]    0.0    0.00    0.00     500         camlSimul__fun_264 [218]
+                0.00    0.00    1500/7753554     caml_curry4_1 [38]
+                0.00    0.00    1000/2503088     caml_curry3 [60]
+                0.00    0.00    1500/170627402     caml_apply2 [23]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply3 <cycle 1> [27]
+[219]    0.0    0.00    0.00     500         camlSimul__fun_676 [219]
+                0.00    0.00    1000/2503088     caml_curry3 [60]
+-----------------------------------------------
+                0.00    0.00       1/2           camlGlobal__init_204 [98]
+                0.00    0.00       1/2           camlGlobal__entry [176]
+[220]    0.0    0.00    0.00       2         camlArray__make_matrix_69 [220]
+                0.00    0.00       7/166849      caml_make_vect [32]
+                0.00    0.00       5/39746753     caml_modify [41]
+                0.00    0.00       7/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.00    0.00     501/501         caml_apply4 [112]
+[221]    0.0    0.00    0.00     501         camlSimul__make_nodes_167 [221]
+                0.00    0.00     501/7753554     caml_curry4_1 [38]
+                0.00    0.00     501/170627402     caml_apply2 [23]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply4 [112]
+[222]    0.0    0.00    0.00     500         caml_curry6_5 [222]
+                0.00    0.00     500/7753554     caml_curry4_1 [38]
+                0.00    0.00     500/170627402     caml_apply2 [23]
+                0.00    0.00     500/500         camlSimul__node_99 [278]
+-----------------------------------------------
+                0.00    0.00     500/500         camlLco_ctrl_tree__f_def_349 [14]
+[223]    0.0    0.00    0.00     500         camlSimul__fun_649 [223]
+                0.00    0.00     500/1003918     camlRandom__intaux_97 [86]
+                0.00    0.00     500/1003918     camlRandom__int_102 [166]
+-----------------------------------------------
+                0.00    0.00     500/500         camlLco_ctrl_tree__f_def_349 [14]
+[224]    0.0    0.00    0.00     500         camlSimul__fun_673 [224]
+                0.00    0.00     500/1003918     camlRandom__intaux_97 [86]
+                0.00    0.00     500/1003918     camlRandom__int_102 [166]
+-----------------------------------------------
+                0.00    0.00     221/221         caml_do_roots [155]
+[225]    0.0    0.00    0.00     221         caml_do_local_roots [225]
+                0.00    0.00    3067/9083060     caml_darken [72]
+-----------------------------------------------
+                0.00    0.00       1/1           camlLco_ctrl_tree__f_compute_181 [1]
+[226]    0.0    0.00    0.00       1         camlRandom__full_init_67 [226]
+                0.00    0.00     110/43901       camlPervasives__string_of_int_153 [133]
+                0.00    0.00     110/64808       camlPervasives__$5e_135 [147]
+                0.00    0.00     110/110         camlDigest__code_begin [232]
+                0.00    0.00       1/187299      camlPervasives__max_52 [146]
+                0.00    0.00     110/110         camlRandom__extract_73 [293]
+-----------------------------------------------
+                                                 <spontanés>
+[227]    0.0    0.00    0.00                 camlLco_ctrl_tree__rml_par_307 [227]
+                0.00    0.00    1002/170627402     caml_apply2 [23]
+                0.00    0.00    1001/2503088     caml_curry3_2 [116]
+                0.00    0.00       1/502         caml_curry5_4 [274]
+-----------------------------------------------
+                                                 <spontanés>
+[228]    0.0    0.00    0.00                 camlLco_ctrl_tree__f_signal_332 [228]
+                0.00    0.00      26/2752076     caml_apply3 <cycle 1> [27]
+                0.00    0.00      25/2503088     caml_curry3_2 [116]
+                0.00    0.00       1/7753554     caml_curry4_3 [103]
+-----------------------------------------------
+                                                 <spontanés>
+[229]    0.0    0.00    0.00                 camlLco_ctrl_tree__rml_loop_322 [229]
+                0.00    0.00     500/39746753     caml_modify [41]
+                0.00    0.00     500/170627402     caml_apply2 [23]
+                0.00    0.00     500/7753554     caml_curry4_3 [103]
+-----------------------------------------------
+                                                 <spontanés>
+[230]    0.0    0.00    0.00                 camlLco_ctrl_tree__rml_if_445 [230]
+                0.00    0.00    1004/170627402     caml_apply2 [23]
+                0.00    0.00     501/7753554     caml_curry4_3 [103]
+                0.00    0.00       1/2503088     caml_curry3_2 [116]
+-----------------------------------------------
+                0.00    0.00       1/1           camlUnix__entry [177]
+[231]    0.0    0.00    0.00       1         camlHashtbl__create_78 [231]
+                0.00    0.00       1/166849      caml_make_vect [32]
+                0.00    0.00       1/182418      camlPervasives__min_49 [125]
+                0.00    0.00       1/187299      camlPervasives__max_52 [146]
+                0.00    0.00       1/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.00    0.00     110/110         camlRandom__full_init_67 [226]
+[232]    0.0    0.00    0.00     110         camlDigest__code_begin [232]
+                0.00    0.00     110/110         caml_md5_string [233]
+                0.00    0.00     110/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.00    0.00     110/110         camlDigest__code_begin [232]
+[233]    0.0    0.00    0.00     110         caml_md5_string [233]
+                0.00    0.00     110/108828      caml_alloc_string [160]
+                0.00    0.00     110/110         caml_MD5Init [295]
+                0.00    0.00     110/110         caml_MD5Update [297]
+                0.00    0.00     110/110         caml_MD5Final [294]
+-----------------------------------------------
+                                                 <spontanés>
+[234]    0.0    0.00    0.00                 camlLco_ctrl_tree__code_begin [234]
+                0.00    0.00      24/2503088     caml_curry3_1 [57]
+                0.00    0.00      54/170627402     caml_apply2 [23]
+-----------------------------------------------
+                                                 <spontanés>
+[235]    0.0    0.00    0.00                 camlLco_ctrl_tree__fun_1059 [235]
+                0.00    0.00      36/182454      caml_lessequal [130]
+                0.00    0.00      36/28666071     caml_c_call [64]
+-----------------------------------------------
+                                                 <spontanés>
+[236]    0.0    0.00    0.00                 camlLco_ctrl_tree__rml_exec_n_534 [236]
+                0.00    0.00       1/2752076     caml_apply3 <cycle 1> [27]
+                0.00    0.00       1/39746753     caml_modify [41]
+                0.00    0.00       1/7753554     caml_curry4_3 [103]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_apply3 <cycle 1> [27]
+[237]    0.0    0.00    0.00       1         camlSimul__main_200 [237]
+                0.00    0.00       5/2503088     caml_curry3 [60]
+                0.00    0.00       3/7753554     caml_curry4_1 [38]
+                0.00    0.00       3/170627402     caml_apply2 [23]
+-----------------------------------------------
+                                                 <spontanés>
+[238]    0.0    0.00    0.00                 camlLco_ctrl_tree__f_for_init_473 [238]
+                0.00    0.00       6/2503088     caml_curry3_1 [57]
+                0.00    0.00      12/170627402     caml_apply2 [23]
+                0.00    0.00       5/5           camlArea__fun_169 [307]
+                0.00    0.00       5/5           camlArea__fun_171 [308]
+                0.00    0.00       1/1           camlArea__fun_163 [325]
+                0.00    0.00       1/1           camlArea__fun_165 [326]
+-----------------------------------------------
+                0.00    0.00      25/25          camlLco_ctrl_tree__f_compute_181 [1]
+[239]    0.0    0.00    0.00      25         camlArea__code_begin [239]
+                0.00    0.00      25/39746753     caml_modify [41]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[240]    0.0    0.00    0.00       1         camlSys__entry [240]
+                0.00    0.00       1/1           caml_sys_get_argv [242]
+                0.00    0.00       1/1           caml_sys_get_config [250]
+                0.00    0.00       2/28666071     caml_c_call [64]
+                0.00    0.00       1/1           caml_alloc3 [353]
+-----------------------------------------------
+                                   1             caml_apply3 <cycle 1> [27]
+[241]    0.0    0.00    0.00       1         camlSimul__fun_704 <cycle 1> [241]
+                0.00    0.00       2/2503088     caml_curry3 [60]
+                0.00    0.00       1/502         caml_curry5_2 [272]
+                                   1             caml_apply3 <cycle 1> [27]
+-----------------------------------------------
+                0.00    0.00       1/1           camlSys__entry [240]
+[242]    0.0    0.00    0.00       1         caml_sys_get_argv [242]
+                0.00    0.00       1/1           caml_copy_string_array [244]
+                0.00    0.00       1/43905       caml_copy_string [171]
+                0.00    0.00       1/17          caml_alloc_small [301]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_copy_string_array [244]
+[243]    0.0    0.00    0.00       1         caml_alloc_array [243]
+                0.00    0.00       1/43905       caml_copy_string [171]
+                0.00    0.00       1/39746753     caml_modify [41]
+                0.00    0.00       1/1           caml_alloc [352]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_sys_get_argv [242]
+[244]    0.0    0.00    0.00       1         caml_copy_string_array [244]
+                0.00    0.00       1/1           caml_alloc_array [243]
+-----------------------------------------------
+                0.00    0.00       5/5           camlPervasives__open_out_gen_198 [99]
+[245]    0.0    0.00    0.00       5         caml_sys_open [245]
+                0.00    0.00       5/43906       caml_string_length [200]
+                0.00    0.00       5/25          caml_stat_alloc [300]
+                0.00    0.00       5/2005        caml_enter_blocking_section [266]
+                0.00    0.00       5/5           caml_convert_flag_list [310]
+                0.00    0.00       5/2005        caml_leave_blocking_section [267]
+                0.00    0.00       5/5           caml_stat_free [311]
+-----------------------------------------------
+                0.00    0.00       1/1           camlGlobal__init_204 [98]
+[246]    0.0    0.00    0.00       1         camlPervasives__string_of_float_163 [246]
+                0.00    0.00       1/1           caml_format_float [249]
+                0.00    0.00       1/28666071     caml_c_call [64]
+-----------------------------------------------
+                                                 <spontanés>
+[247]    0.0    0.00    0.00                 alloc_inet6_addr [247]
+                0.00    0.00       2/108828      caml_alloc_string [160]
+-----------------------------------------------
+                                                 <spontanés>
+[248]    0.0    0.00    0.00                 alloc_inet_addr [248]
+                0.00    0.00       2/108828      caml_alloc_string [160]
+-----------------------------------------------
+                0.00    0.00       1/1           camlPervasives__string_of_float_163 [246]
+[249]    0.0    0.00    0.00       1         caml_format_float [249]
+                0.00    0.00       1/43905       caml_copy_string [171]
+-----------------------------------------------
+                0.00    0.00       1/1           camlSys__entry [240]
+[250]    0.0    0.00    0.00       1         caml_sys_get_config [250]
+                0.00    0.00       1/43905       caml_copy_string [171]
+                0.00    0.00       1/17          caml_alloc_small [301]
+-----------------------------------------------
+                0.00    0.00       1/1           camlLco_ctrl_tree__f_compute_181 [1]
+[251]    0.0    0.00    0.00       1         camlArg__parse_189 [251]
+                0.00    0.00       1/1           camlArg__parse_argv_143 [252]
+-----------------------------------------------
+                0.00    0.00       1/1           camlArg__parse_189 [251]
+[252]    0.0    0.00    0.00       1         camlArg__parse_argv_143 [252]
+                0.00    0.00       1/1           camlBuffer__create_66 [253]
+-----------------------------------------------
+                0.00    0.00       1/1           camlArg__parse_argv_143 [252]
+[253]    0.0    0.00    0.00       1         camlBuffer__create_66 [253]
+                0.00    0.00       1/64809       caml_create_string [169]
+                0.00    0.00       1/28666071     caml_c_call [64]
+-----------------------------------------------
+                0.00    0.00       1/1           camlStd_exit__entry [89]
+[254]    0.0    0.00    0.00       1         camlPervasives__iter_209 [254]
+                0.00    0.00       7/28666071     caml_c_call [64]
+                0.00    0.00       7/2007        caml_ml_flush [265]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_init_gc [96]
+[255]    0.0    0.00    0.00       1         caml_init_major_heap [255]
+                0.00    0.00       1/1           caml_make_free_blocks [256]
+                0.00    0.00       1/220         clip_heap_chunk_size [290]
+                0.00    0.00       1/220         caml_alloc_for_heap [289]
+                0.00    0.00       1/222         caml_fl_init_merge [284]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_init_major_heap [255]
+[256]    0.0    0.00    0.00       1         caml_make_free_blocks [256]
+                0.00    0.00       1/66007713     caml_fl_merge_block [34]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[257]    0.0    0.00    0.00       1         camlSimul__entry [257]
+                0.00    0.00       1/170627402     caml_apply2 [23]
+-----------------------------------------------
+                0.00    0.00       1/2           camlGraphics__entry [188]
+                0.00    0.00       1/2           camlUnix__entry [177]
+[258]    0.0    0.00    0.00       2         camlCallback__register_exception_61 [258]
+                0.00    0.00       2/28666071     caml_c_call [64]
+                0.00    0.00       2/3           caml_register_named_value [314]
+-----------------------------------------------
+                0.00    0.00   85764/85764       caml_empty_minor_heap [13]
+[259]    0.0    0.00    0.00   85764         caml_final_empty_young [259]
+-----------------------------------------------
+                0.00    0.00   42882/42882       caml_oldify_local_roots [80]
+[260]    0.0    0.00    0.00   42882         caml_final_do_young_roots [260]
+-----------------------------------------------
+                0.00    0.00   24893/24893       caml_ml_output [201]
+[261]    0.0    0.00    0.00   24893         caml_putblock [261]
+-----------------------------------------------
+                0.00    0.00    3981/10154       camlList__iter_98 [2]
+                0.00    0.00    6173/10154       camlSimul__fun_595 [9]
+[262]    0.0    0.00    0.00   10154         camlRoutage__routage_fail_110 [262]
+-----------------------------------------------
+                0.00    0.00    2007/2007        caml_ml_flush [265]
+[263]    0.0    0.00    0.00    2007         caml_flush [263]
+                0.00    0.00    2007/2007        caml_flush_partial [264]
+-----------------------------------------------
+                0.00    0.00    2007/2007        caml_flush [263]
+[264]    0.0    0.00    0.00    2007         caml_flush_partial [264]
+                0.00    0.00    2000/2000        do_write [269]
+-----------------------------------------------
+                0.00    0.00       7/2007        camlPervasives__iter_209 [254]
+                0.00    0.00    2000/2007        camlStat__node_stat_127 [63]
+[265]    0.0    0.00    0.00    2007         caml_ml_flush [265]
+                0.00    0.00    2007/2007        caml_flush [263]
+-----------------------------------------------
+                0.00    0.00       5/2005        caml_sys_open [245]
+                0.00    0.00    2000/2005        do_write [269]
+[266]    0.0    0.00    0.00    2005         caml_enter_blocking_section [266]
+-----------------------------------------------
+                0.00    0.00       5/2005        caml_sys_open [245]
+                0.00    0.00    2000/2005        do_write [269]
+[267]    0.0    0.00    0.00    2005         caml_leave_blocking_section [267]
+-----------------------------------------------
+                0.00    0.00    2000/2000        camlStat__node_stat_127 [63]
+[268]    0.0    0.00    0.00    2000         camlStat__fun_226 [268]
+-----------------------------------------------
+                0.00    0.00    2000/2000        caml_flush_partial [264]
+[269]    0.0    0.00    0.00    2000         do_write [269]
+                0.00    0.00    2000/2005        caml_enter_blocking_section [266]
+                0.00    0.00    2000/2005        caml_leave_blocking_section [267]
+-----------------------------------------------
+                0.00    0.00     502/502         caml_apply3 <cycle 1> [27]
+[270]    0.0    0.00    0.00     502         caml_curry5 [270]
+-----------------------------------------------
+                0.00    0.00     502/502         caml_apply3 <cycle 1> [27]
+[271]    0.0    0.00    0.00     502         caml_curry5_1 [271]
+-----------------------------------------------
+                0.00    0.00       1/502         camlSimul__fun_704 <cycle 1> [241]
+                0.00    0.00     501/502         caml_apply4 [112]
+[272]    0.0    0.00    0.00     502         caml_curry5_2 [272]
+-----------------------------------------------
+                0.00    0.00       1/502         caml_apply2 [23]
+                0.00    0.00     501/502         caml_apply4 [112]
+[273]    0.0    0.00    0.00     502         caml_curry5_3 [273]
+-----------------------------------------------
+                0.00    0.00       1/502         camlLco_ctrl_tree__rml_par_307 [227]
+                0.00    0.00     501/502         camlLco_ctrl_tree__f_run_362 [114]
+[274]    0.0    0.00    0.00     502         caml_curry5_4 [274]
+-----------------------------------------------
+                0.00    0.00     501/501         camlLco_ctrl_tree__f_if_453 [619]
+[275]    0.0    0.00    0.00     501         camlSimul__fun_646 [275]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply3 <cycle 1> [27]
+[276]    0.0    0.00    0.00     500         camlSimul__fun_652 [276]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply4 [112]
+[277]    0.0    0.00    0.00     500         camlSimul__fun_688 [277]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_curry6_5 [222]
+[278]    0.0    0.00    0.00     500         camlSimul__node_99 [278]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply5 [203]
+[279]    0.0    0.00    0.00     500         caml_curry6 [279]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply5 [203]
+[280]    0.0    0.00    0.00     500         caml_curry6_1 [280]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply5 [203]
+[281]    0.0    0.00    0.00     500         caml_curry6_2 [281]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply5 [203]
+[282]    0.0    0.00    0.00     500         caml_curry6_3 [282]
+-----------------------------------------------
+                0.00    0.00     500/500         caml_apply4 [112]
+[283]    0.0    0.00    0.00     500         caml_curry6_4 [283]
+-----------------------------------------------
+                0.00    0.00       1/222         caml_init_major_heap [255]
+                0.00    0.00     221/222         mark_slice [11]
+[284]    0.0    0.00    0.00     222         caml_fl_init_merge [284]
+-----------------------------------------------
+                0.00    0.00     221/221         caml_final_update [287]
+[285]    0.0    0.00    0.00     221         alloc_to_do [285]
+-----------------------------------------------
+                0.00    0.00     221/221         caml_do_roots [155]
+[286]    0.0    0.00    0.00     221         caml_final_do_strong_roots [286]
+-----------------------------------------------
+                0.00    0.00     221/221         mark_slice [11]
+[287]    0.0    0.00    0.00     221         caml_final_update [287]
+                0.00    0.00     221/221         alloc_to_do [285]
+-----------------------------------------------
+                0.00    0.00     220/220         caml_alloc_for_heap [289]
+[288]    0.0    0.00    0.00     220         caml_aligned_malloc [288]
+-----------------------------------------------
+                0.00    0.00       1/220         caml_init_major_heap [255]
+                0.00    0.00     219/220         expand_heap [140]
+[289]    0.0    0.00    0.00     220         caml_alloc_for_heap [289]
+                0.00    0.00     220/220         caml_aligned_malloc [288]
+-----------------------------------------------
+                0.00    0.00       1/220         caml_init_major_heap [255]
+                0.00    0.00     219/220         caml_round_heap_chunk_size [292]
+[290]    0.0    0.00    0.00     220         clip_heap_chunk_size [290]
+-----------------------------------------------
+                0.00    0.00     219/219         caml_alloc_shr [17]
+[291]    0.0    0.00    0.00     219         caml_fl_add_block [291]
+-----------------------------------------------
+                0.00    0.00     219/219         expand_heap [140]
+[292]    0.0    0.00    0.00     219         caml_round_heap_chunk_size [292]
+                0.00    0.00     219/220         clip_heap_chunk_size [290]
+-----------------------------------------------
+                0.00    0.00     110/110         camlRandom__full_init_67 [226]
+[293]    0.0    0.00    0.00     110         camlRandom__extract_73 [293]
+-----------------------------------------------
+                0.00    0.00     110/110         caml_md5_string [233]
+[294]    0.0    0.00    0.00     110         caml_MD5Final [294]
+                0.00    0.00     110/110         caml_MD5Transform [296]
+-----------------------------------------------
+                0.00    0.00     110/110         caml_md5_string [233]
+[295]    0.0    0.00    0.00     110         caml_MD5Init [295]
+-----------------------------------------------
+                0.00    0.00     110/110         caml_MD5Final [294]
+[296]    0.0    0.00    0.00     110         caml_MD5Transform [296]
+-----------------------------------------------
+                0.00    0.00     110/110         caml_md5_string [233]
+[297]    0.0    0.00    0.00     110         caml_MD5Update [297]
+-----------------------------------------------
+                0.00    0.00      25/25          caml_apply4 [112]
+[298]    0.0    0.00    0.00      25         camlArea__fun_173 [298]
+-----------------------------------------------
+                0.00    0.00      25/25          caml_apply3 <cycle 1> [27]
+[299]    0.0    0.00    0.00      25         camlArea__fun_183 [299]
+-----------------------------------------------
+                0.00    0.00       1/25          init_frame_descriptors [185]
+                0.00    0.00       2/25          caml_set_minor_heap_size [97]
+                0.00    0.00       3/25          caml_register_global_root [313]
+                0.00    0.00       3/25          caml_register_named_value [314]
+                0.00    0.00       3/25          caml_register_custom_operations [312]
+                0.00    0.00       5/25          caml_sys_open [245]
+                0.00    0.00       8/25          caml_open_descriptor_in [302]
+[300]    0.0    0.00    0.00      25         caml_stat_alloc [300]
+-----------------------------------------------
+                0.00    0.00       1/17          caml_sys_get_argv [242]
+                0.00    0.00       1/17          caml_sys_get_config [250]
+                0.00    0.00       1/17          caml_obj_dup [358]
+                0.00    0.00       7/17          caml_make_vect [32]
+                0.00    0.00       7/17          caml_ml_out_channels_list [92]
+[301]    0.0    0.00    0.00      17         caml_alloc_small [301]
+-----------------------------------------------
+                0.00    0.00       1/8           caml_ml_open_descriptor_in [127]
+                0.00    0.00       7/8           caml_open_descriptor_out [303]
+[302]    0.0    0.00    0.00       8         caml_open_descriptor_in [302]
+                0.00    0.00       8/25          caml_stat_alloc [300]
+-----------------------------------------------
+                0.00    0.00       7/7           caml_ml_open_descriptor_out [91]
+[303]    0.0    0.00    0.00       7         caml_open_descriptor_out [303]
+                0.00    0.00       7/8           caml_open_descriptor_in [302]
+-----------------------------------------------
+                0.00    0.00       6/6           caml_int64_float_of_bits [305]
+[304]    0.0    0.00    0.00       6         caml_copy_double [304]
+-----------------------------------------------
+                0.00    0.00       6/6           camlPervasives__entry [110]
+[305]    0.0    0.00    0.00       6         caml_int64_float_of_bits [305]
+                0.00    0.00       6/6           caml_copy_double [304]
+-----------------------------------------------
+                0.00    0.00       5/5           caml_apply4 [112]
+[306]    0.0    0.00    0.00       5         camlArea__fun_167 [306]
+-----------------------------------------------
+                0.00    0.00       5/5           camlLco_ctrl_tree__f_for_init_473 [238]
+[307]    0.0    0.00    0.00       5         camlArea__fun_169 [307]
+-----------------------------------------------
+                0.00    0.00       5/5           camlLco_ctrl_tree__f_for_init_473 [238]
+[308]    0.0    0.00    0.00       5         camlArea__fun_171 [308]
+-----------------------------------------------
+                0.00    0.00       5/5           camlGlobal__init_204 [98]
+[309]    0.0    0.00    0.00       5         camlPervasives__open_out_202 [309]
+-----------------------------------------------
+                0.00    0.00       5/5           caml_sys_open [245]
+[310]    0.0    0.00    0.00       5         caml_convert_flag_list [310]
+-----------------------------------------------
+                0.00    0.00       5/5           caml_sys_open [245]
+[311]    0.0    0.00    0.00       5         caml_stat_free [311]
+-----------------------------------------------
+                0.00    0.00       3/3           caml_init_custom_operations [355]
+[312]    0.0    0.00    0.00       3         caml_register_custom_operations [312]
+                0.00    0.00       3/25          caml_stat_alloc [300]
+-----------------------------------------------
+                0.00    0.00       3/3           caml_register_named_value [314]
+[313]    0.0    0.00    0.00       3         caml_register_global_root [313]
+                0.00    0.00       3/3           random_level [319]
+                0.00    0.00       3/25          caml_stat_alloc [300]
+-----------------------------------------------
+                0.00    0.00       1/3           camlPervasives__entry [110]
+                0.00    0.00       2/3           camlCallback__register_exception_61 [258]
+[314]    0.0    0.00    0.00       3         caml_register_named_value [314]
+                0.00    0.00       3/3           hash_value_name [318]
+                0.00    0.00       3/25          caml_stat_alloc [300]
+                0.00    0.00       3/3           caml_register_global_root [313]
+-----------------------------------------------
+                0.00    0.00       3/3           caml_string_notequal [316]
+[315]    0.0    0.00    0.00       3         caml_string_equal [315]
+-----------------------------------------------
+                0.00    0.00       3/3           camlGraphics__entry [188]
+[316]    0.0    0.00    0.00       3         caml_string_notequal [316]
+                0.00    0.00       3/3           caml_string_equal [315]
+-----------------------------------------------
+                0.00    0.00       3/3           caml_adjust_gc_speed [67]
+[317]    0.0    0.00    0.00       3         caml_urge_major_slice [317]
+-----------------------------------------------
+                0.00    0.00       3/3           caml_register_named_value [314]
+[318]    0.0    0.00    0.00       3         hash_value_name [318]
+-----------------------------------------------
+                0.00    0.00       3/3           caml_register_global_root [313]
+[319]    0.0    0.00    0.00       3         random_level [319]
+-----------------------------------------------
+                0.00    0.00       1/2           camlPervasives__entry [110]
+                0.00    0.00       1/2           camlArray__entry [328]
+[320]    0.0    0.00    0.00       2         caml_alloc1 [320]
+-----------------------------------------------
+                0.00    0.00       2/2           camlGraphics__entry [188]
+[321]    0.0    0.00    0.00       2         caml_alloc2 [321]
+-----------------------------------------------
+                0.00    0.00       2/2           init_atoms [361]
+[322]    0.0    0.00    0.00       2         minmax_table [322]
+-----------------------------------------------
+                0.00    0.00       2/2           caml_init_gc [96]
+[323]    0.0    0.00    0.00       2         norm_heapincr [323]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[324]    0.0    0.00    0.00       1         camlArea__entry [324]
+-----------------------------------------------
+                0.00    0.00       1/1           camlLco_ctrl_tree__f_for_init_473 [238]
+[325]    0.0    0.00    0.00       1         camlArea__fun_163 [325]
+-----------------------------------------------
+                0.00    0.00       1/1           camlLco_ctrl_tree__f_for_init_473 [238]
+[326]    0.0    0.00    0.00       1         camlArea__fun_165 [326]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_apply4 [112]
+[327]    0.0    0.00    0.00       1         camlArea__make_areas_108 [327]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[328]    0.0    0.00    0.00       1         camlArray__entry [328]
+                0.00    0.00       1/2           caml_alloc1 [320]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[329]    0.0    0.00    0.00       1         camlBuffer__entry [329]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[330]    0.0    0.00    0.00       1         camlCallback__entry [330]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[331]    0.0    0.00    0.00       1         camlChar__entry [331]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[332]    0.0    0.00    0.00       1         camlDigest__entry [332]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[333]    0.0    0.00    0.00       1         camlDraw__entry [333]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[334]    0.0    0.00    0.00       1         camlHashtbl__entry [334]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[335]    0.0    0.00    0.00       1         camlInt32__entry [335]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[336]    0.0    0.00    0.00       1         camlInt64__entry [336]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[337]    0.0    0.00    0.00       1         camlList__entry [337]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[338]    0.0    0.00    0.00       1         camlMove__entry [338]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[339]    0.0    0.00    0.00       1         camlMsg__entry [339]
+-----------------------------------------------
+                0.00    0.00       1/1           camlGlobal__init_204 [98]
+[340]    0.0    0.00    0.00       1         camlPervasives__loop_161 [340]
+-----------------------------------------------
+                0.00    0.00       1/1           camlGlobal__init_204 [98]
+[341]    0.0    0.00    0.00       1         camlPervasives__valid_float_lexem_158 [341]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[342]    0.0    0.00    0.00       1         camlPos_tbl__entry [342]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[343]    0.0    0.00    0.00       1         camlPrintf__entry [343]
+-----------------------------------------------
+                0.00    0.00       1/1           camlLco_ctrl_tree__f_compute_181 [1]
+[344]    0.0    0.00    0.00       1         camlRandom__init_158 [344]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[345]    0.0    0.00    0.00       1         camlRoutage__entry [345]
+-----------------------------------------------
+                0.00    0.00       1/1           camlLco_ctrl_tree__f_compute_181 [1]
+[346]    0.0    0.00    0.00       1         camlSimul__configure_185 [346]
+-----------------------------------------------
+                0.00    0.00       1/1           camlLco_ctrl_tree__f_compute_181 [1]
+[347]    0.0    0.00    0.00       1         camlSimul__fun_698 [347]
+-----------------------------------------------
+                0.00    0.00       1/1           camlLco_ctrl_tree__f_compute_181 [1]
+[348]    0.0    0.00    0.00       1         camlSimul__fun_700 [348]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_apply4 [112]
+[349]    0.0    0.00    0.00       1         camlSimul__fun_702 [349]
+-----------------------------------------------
+                0.00    0.00       1/1           camlLco_ctrl_tree__f_if_453 [619]
+[350]    0.0    0.00    0.00       1         camlSimul__fun_709 [350]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_startup__code_begin [56]
+[351]    0.0    0.00    0.00       1         camlString__entry [351]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_alloc_array [243]
+[352]    0.0    0.00    0.00       1         caml_alloc [352]
+-----------------------------------------------
+                0.00    0.00       1/1           camlSys__entry [240]
+[353]    0.0    0.00    0.00       1         caml_alloc3 [353]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_main [49]
+[354]    0.0    0.00    0.00       1         caml_executable_name [354]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_main [49]
+[355]    0.0    0.00    0.00       1         caml_init_custom_operations [355]
+                0.00    0.00       3/3           caml_register_custom_operations [312]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_main [49]
+[356]    0.0    0.00    0.00       1         caml_init_ieee_floats [356]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_main [49]
+[357]    0.0    0.00    0.00       1         caml_init_signals [357]
+-----------------------------------------------
+                0.00    0.00       1/1           camlRandom__entry [158]
+[358]    0.0    0.00    0.00       1         caml_obj_dup [358]
+                0.00    0.00       1/17          caml_alloc_small [301]
+-----------------------------------------------
+                0.00    0.00       1/1           main [50]
+[359]    0.0    0.00    0.00       1         caml_sys_exit [359]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_main [49]
+[360]    0.0    0.00    0.00       1         caml_sys_init [360]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_main [49]
+[361]    0.0    0.00    0.00       1         init_atoms [361]
+                0.00    0.00       2/2           minmax_table [322]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_init_gc [96]
+[362]    0.0    0.00    0.00       1         norm_minsize [362]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_init_gc [96]
+[363]    0.0    0.00    0.00       1         norm_pfree [363]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_init_gc [96]
+[364]    0.0    0.00    0.00       1         norm_pmax [364]
+-----------------------------------------------
+                0.00    0.00       1/1           caml_main [49]
+[365]    0.0    0.00    0.00       1         parse_camlrunparam [365]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+
+Index par nom de fonction
+
+ [285] alloc_to_do           [207] camlRoutage__code_end  [40] caml_curry4
+  [35] allocate_block        [345] camlRoutage__entry     [38] caml_curry4_1
+ [239] camlArea__code_begin  [109] camlRoutage__fun_242   [39] caml_curry4_2
+ [131] camlArea__code_end     [16] camlRoutage__fun_250  [103] caml_curry4_3
+ [324] camlArea__entry        [37] camlRoutage__insert_pdl_87 [270] caml_curry5
+ [325] camlArea__fun_163       [7] camlRoutage__routage_140 [271] caml_curry5_1
+ [326] camlArea__fun_165     [262] camlRoutage__routage_fail_110 [272] caml_curry5_2
+ [306] camlArea__fun_167     [129] camlRoutage__routage_success_108 [273] caml_curry5_3
+ [307] camlArea__fun_169      [28] camlRoutage__route_164 [274] caml_curry5_4
+ [308] camlArea__fun_171      [31] camlRoutage__search_best_age_112 [279] caml_curry6
+ [298] camlArea__fun_173      [36] camlSimul____val_ml_4_90 [280] caml_curry6_1
+ [299] camlArea__fun_183     [121] camlSimul__code_end   [281] caml_curry6_2
+ [204] camlArea__get_area_87 [346] camlSimul__configure_185 [282] caml_curry6_3
+  [52] camlArea__get_areas_96 [257] camlSimul__entry     [283] caml_curry6_4
+ [327] camlArea__make_areas_108 [139] camlSimul__fun_261 [222] caml_curry6_5
+ [189] camlArg__entry        [218] camlSimul__fun_264     [72] caml_darken
+ [251] camlArg__parse_189    [113] camlSimul__fun_433    [154] caml_darken_all_roots
+ [252] camlArg__parse_argv_143 [157] camlSimul__fun_436  [225] caml_do_local_roots
+ [328] camlArray__entry      [104] camlSimul__fun_439    [155] caml_do_roots
+ [220] camlArray__make_matrix_69 [53] camlSimul__fun_444  [13] caml_empty_minor_heap
+ [253] camlBuffer__create_66 [170] camlSimul__fun_523    [266] caml_enter_blocking_section
+ [329] camlBuffer__entry     [162] camlSimul__fun_526    [354] caml_executable_name
+ [330] camlCallback__entry    [46] camlSimul__fun_529     [74] caml_ext_table_free
+ [258] camlCallback__register_exception_61 [47] camlSimul__fun_532 [197] caml_final_do_calls
+ [331] camlChar__entry       [136] camlSimul__fun_567    [286] caml_final_do_strong_roots
+ [232] camlDigest__code_begin [161] camlSimul__fun_569   [209] caml_final_do_weak_roots
+ [332] camlDigest__entry      [25] camlSimul__fun_571    [260] caml_final_do_young_roots
+ [333] camlDraw__entry        [70] camlSimul__fun_573    [259] caml_final_empty_young
+ [176] camlGlobal__entry      [93] camlSimul__fun_575    [287] caml_final_update
+  [98] camlGlobal__init_204   [82] camlSimul__fun_577    [291] caml_fl_add_block
+  [62] camlGlobal__make_packet_218 [22] camlSimul__fun_579 [19] caml_fl_allocate
+ [213] camlGlobal__make_pdl_info_226 [42] camlSimul__fun_581 [284] caml_fl_init_merge
+  [81] camlGlobal__make_pdl_info_forecast_229 [124] camlSimul__fun_583 [34] caml_fl_merge_block
+ [192] camlGlobal__make_pdl_packet_234 [142] camlSimul__fun_585 [87] caml_fl_reset
+ [138] camlGlobal__new_node_215 [151] camlSimul__fun_587 [263] caml_flush
+ [231] camlHashtbl__create_78 [73] camlSimul__fun_589    [264] caml_flush_partial
+ [334] camlHashtbl__entry     [58] camlSimul__fun_591    [249] caml_format_float
+ [335] camlInt32__entry      [102] camlSimul__fun_593    [137] caml_format_int
+ [336] camlInt64__entry        [9] camlSimul__fun_595      [6] caml_garbage_collection
+   [1] camlLco_ctrl_tree__f_compute_181 [183] camlSimul__fun_597 [199] caml_gc_message
+  [14] camlLco_ctrl_tree__f_def_349 [275] camlSimul__fun_646 [163] caml_greaterequal
+ [118] camlLco_ctrl_tree__f_emit_val_196 [223] camlSimul__fun_649 [44] caml_greaterthan
+ [186] camlLco_ctrl_tree__f_nothing_176 [276] camlSimul__fun_652 [355] caml_init_custom_operations
+ [174] camlLco_ctrl_tree__f_par_316 [224] camlSimul__fun_673 [96] caml_init_gc
+  [78] camlLco_ctrl_tree__f_pause_185 [219] camlSimul__fun_676 [356] caml_init_ieee_floats
+ [194] camlLco_ctrl_tree__f_signal_341 [202] camlSimul__fun_685 [255] caml_init_major_heap
+ [106] camlLco_ctrl_tree__fun_770 [277] camlSimul__fun_688 [357] caml_init_signals
+ [195] camlLco_ctrl_tree__fun_773 [193] camlSimul__fun_696 [51] caml_initialize
+ [119] camlLco_ctrl_tree__fun_912 [347] camlSimul__fun_698 [305] caml_int64_float_of_bits
+  [61] camlLco_ctrl_tree__rml_compute_177 [348] camlSimul__fun_700 [267] caml_leave_blocking_section
+  [54] camlLco_ctrl_tree__rml_def_344 [349] camlSimul__fun_702 [130] caml_lessequal
+  [69] camlLco_ctrl_tree__rml_emit_val_191 [241] camlSimul__fun_704 [49] caml_main
+ [181] camlLco_ctrl_tree__rml_nothing_173 [115] camlSimul__fun_706 [8] caml_major_collection_slice
+  [68] camlLco_ctrl_tree__rml_pause_182 [350] camlSimul__fun_709 [256] caml_make_free_blocks
+ [179] camlLco_ctrl_tree__rml_pre_status_165 [71] camlSimul__get_neighbors_87 [32] caml_make_vect
+  [84] camlLco_ctrl_tree__rml_pre_value_168 [237] camlSimul__main_200 [233] caml_md5_string
+ [152] camlLco_ctrl_tree__rml_present$27_287 [221] camlSimul__make_nodes_167 [4] caml_minor_collection
+  [59] camlLco_ctrl_tree__rml_seq_295 [278] camlSimul__node_99 [265] caml_ml_flush
+ [159] camlLco_ctrl_tree__rml_signal_combine_335 [75] camlStat____val_ml_23_115 [210] caml_ml_flush_partial
+  [77] camlLco_ctrl_tree__sched_162 [29] camlStat__code_begin [127] caml_ml_open_descriptor_in
+ [100] camlLco_ctrl_tree__step_emit_186 [172] camlStat__compute_anchor_137 [91] caml_ml_open_descriptor_out
+  [85] camlLco_ctrl_tree__wakeUp_151 [122] camlStat__distance_age_110 [92] caml_ml_out_channels_list
+ [337] camlList__entry       [191] camlStat__entry       [201] caml_ml_output
+ [205] camlList__find_225    [268] camlStat__fun_226      [41] caml_modify
+  [30] camlList__find_231    [141] camlStat__fun_230     [358] caml_obj_dup
+ [105] camlList__find_all_229 [135] camlStat__fun_233     [80] caml_oldify_local_roots
+   [3] camlList__fold_left_102 [111] camlStat__fun_237    [18] caml_oldify_mopup
+   [2] camlList__iter_98      [63] camlStat__node_stat_127 [15] caml_oldify_one
+ [132] camlList__length_aux_57 [178] camlStat__packet_fail_stat_155 [302] caml_open_descriptor_in
+ [149] camlList__nth_69       [24] camlStat__packet_stat_146 [303] caml_open_descriptor_out
+  [10] camlList__rev_append_75 [148] camlStat__packet_success_stat_153 [261] caml_putblock
+ [187] camlList__rev_map_91  [196] camlStd_exit__code_end [312] caml_register_custom_operations
+ [214] camlList__rmap2_f_127  [89] camlStd_exit__entry   [313] caml_register_global_root
+ [215] camlList__sort_295    [351] camlString__entry     [314] caml_register_named_value
+ [338] camlMove__entry       [240] camlSys__entry        [292] caml_round_heap_chunk_size
+ [108] camlMove__move_87     [294] caml_MD5Final          [97] caml_set_minor_heap_size
+ [101] camlMove__random_waypoint_114 [295] caml_MD5Init   [55] caml_start_program
+ [339] camlMsg__entry        [296] caml_MD5Transform     [211] caml_startup
+  [76] camlMsg__make_87      [297] caml_MD5Update         [56] caml_startup__code_begin
+ [190] camlNativeint__entry  [144] caml_add_to_heap      [300] caml_stat_alloc
+ [145] camlPervasives__$40_166 [67] caml_adjust_gc_speed [311] caml_stat_free
+ [147] camlPervasives__$5e_135 [288] caml_aligned_malloc [315] caml_string_equal
+ [216] camlPervasives__bool_of_string_152 [352] caml_alloc [200] caml_string_length
+ [110] camlPervasives__entry [320] caml_alloc1           [316] caml_string_notequal
+  [90] camlPervasives__flush_all_208 [321] caml_alloc2   [359] caml_sys_exit
+ [206] camlPervasives__invalid_arg_39 [353] caml_alloc3  [242] caml_sys_get_argv
+ [254] camlPervasives__iter_209 [120] caml_allocN        [250] caml_sys_get_config
+ [217] camlPervasives__lnot_75 [243] caml_alloc_array    [360] caml_sys_init
+ [340] camlPervasives__loop_161 [65] caml_alloc_channel  [245] caml_sys_open
+ [146] camlPervasives__max_52 [66] caml_alloc_custom     [173] caml_tuplify2
+ [125] camlPervasives__min_49 [289] caml_alloc_for_heap  [212] caml_tuplify3
+ [309] camlPervasives__open_out_202 [17] caml_alloc_shr  [167] caml_tuplify4
+  [99] camlPervasives__open_out_gen_198 [301] caml_alloc_small [317] caml_urge_major_slice
+ [168] camlPervasives__output_string_214 [160] caml_alloc_string [290] clip_heap_chunk_size
+ [246] camlPervasives__string_of_float_163 [208] caml_alloc_tuple [117] compare_resize_stack
+ [133] camlPervasives__string_of_int_153 [83] caml_allocation_color [48] compare_val
+ [341] camlPervasives__valid_float_lexem_158 [23] caml_apply2 [269] do_write
+  [88] camlPos_tbl__code_begin [27] caml_apply3          [140] expand_heap
+ [134] camlPos_tbl__code_end [112] caml_apply4           [318] hash_value_name
+ [342] camlPos_tbl__entry    [203] caml_apply5           [361] init_atoms
+ [126] camlPos_tbl__get_87   [180] caml_bitvect_test     [185] init_frame_descriptors
+  [20] camlPos_tbl__set_90   [184] caml_blit_string       [11] mark_slice
+  [79] camlPos_tbl__update_96 [64] caml_c_call           [322] minmax_table
+ [343] camlPrintf__entry       [5] caml_call_gc          [323] norm_heapincr
+  [45] camlRandom__bits_94   [182] caml_check_urgent_gc  [362] norm_minsize
+ [128] camlRandom__copy_91   [198] caml_compact_heap_maybe [363] norm_pfree
+ [158] camlRandom__entry     [310] caml_convert_flag_list [364] norm_pmax
+ [293] camlRandom__extract_73 [304] caml_copy_double     [365] parse_camlrunparam
+ [226] camlRandom__full_init_67 [171] caml_copy_string   [150] parse_format
+ [165] camlRandom__fun_197   [244] caml_copy_string_array [319] random_level
+ [344] camlRandom__init_158  [169] caml_create_string    [164] realloc_gray_vals
+ [166] camlRandom__int_102   [107] caml_curry2           [153] start_cycle
+  [86] camlRandom__intaux_97 [175] caml_curry2_1          [21] sweep_slice
+  [43] camlRandom__rawfloat_131 [60] caml_curry3          [26] <cycle 1>
+  [33] camlRoutage____val_ml_17_120 [57] caml_curry3_1
+  [12] camlRoutage__code_begin [116] caml_curry3_2

@@ -1,0 +1,159 @@
+
+(**)
+type point =
+{
+	x : float;
+        y : float;
+        z : float;
+};;
+
+(**)
+
+
+let scalar   c1 c2 = c1.x *. c2.x +.
+                     c1.y *. c2.y +.
+                     c1.z *. c2.z;;
+
+let deter2d  c1 c2 = c1.x *. c2.y -.
+                     c2.x *. c1.y;;
+
+let mul_coef c1 c  = {x = c1.x *. c;
+                      y = c1.y *. c;
+                      z = c1.z *. c;
+                     };;
+
+
+
+let add_vect c1 c2 ={x = c1.x +. c2.x;
+                     y = c1.y +. c2.y;
+                     z = c1.z +. c2.z;
+                    };;
+
+
+let sous_vect c1 c2 ={x = c1.x -. c2.x;
+                      y = c1.y -. c2.y;
+                      z = c1.z -. c2.z;
+                     };;
+
+let distance x y = let x1 = (y.x -. x.x) and
+                       x2 = (y.y -. x.y) and
+                       x3 = (y.z -. x.z) in
+                     x1 *. x1 +. x2 *. x2 +. x3 *. x3;;  
+
+let norme x = sqrt (x.x *. x.x +.
+                    x.y *. x.y +.
+                    x.z *. x.z );;
+
+let vect_norm x y = let dir = sous_vect y x in
+                        mul_coef dir (1. /. (norme dir));;
+
+let print_coord c = print_char  '(';
+                    print_float c.x;
+                    print_char  ',';
+                    print_float c.y;
+                    print_char  ',';
+                    print_float c.z;
+                    print_char  ')';;
+
+
+
+(**)
+
+let get_mouse_pos() =
+  let status = Graphics.wait_next_event [Graphics.Poll] in
+  let max_x_2 = (Graphics.size_x()) / 2 in
+  let max_y_2 = (Graphics.size_y()) / 2 in
+  {x = float_of_int (status.Graphics.mouse_x - max_x_2);
+   y = float_of_int (status.Graphics.mouse_y - max_y_2);
+   z = 0.0;};;
+
+let get_key() = Graphics.read_key();;
+
+let color_of_int = function
+  | 0 -> Graphics.rgb   0   0   0  (* noir *)
+  | 1 -> Graphics.rgb   0   0 192 (* blue *)
+  | 2 -> Graphics.rgb   0 204   0   (* green *)
+  | 3 -> Graphics.rgb 100 250 250  (*  white *)
+  | 4 -> Graphics.rgb 150   0   0  (* bordeau *) 
+  | 5 -> Graphics.rgb 255  89  65  (*  63   0   (* rose orange *)  *)
+  | 6 -> Graphics.rgb 255 240   0  (* yellow *)
+  | _ -> Graphics.rgb 128 128   0;;
+
+
+let maj_aff all =
+  let max_x_2 = (Graphics.size_x()) / 2 in
+  let max_y_2 = (Graphics.size_y()) / 2 in
+  Graphics.clear_graph ();
+  List.iter (function ((_,pos),c) ->
+                    Graphics.set_color (color_of_int c);
+                    Graphics.fill_circle (int_of_float pos.x + max_x_2)
+                                         (int_of_float pos.y)
+                                         10
+            )
+            all;
+    Graphics.moveto (max_x_2 - 300) 445;
+    Graphics.lineto (max_x_2 + 295) 445;
+    Graphics.lineto (max_x_2 + 295) 0;
+    Graphics.lineto (max_x_2 - 300) 0;
+    Graphics.lineto (max_x_2 - 300) 445;
+(*  Graphics.moveto:  int -> int -> unit*)
+(*  Graphics.lineto:  int -> int -> unit*)
+
+
+(*
+let left = -100.;;
+let right = 75.;;
+let top = 200.;;
+let bottom = 0.;;
+*)
+
+(*********************************************************)
+
+  Graphics.synchronize();;
+
+(******************************************************)
+let fenetre =
+(*----------------------------------------------------*)
+(* machine read_click [new_planete]                   *)
+(*----------------------------------------------------*)
+     let rec process read_click button_p pos_p {out a_click;out a_move} =
+      let button = Graphics.button_down() in 
+      let pos    = get_mouse_pos () in
+      (
+       if button_p then
+           if (not button) then
+              emit a_click pos
+           else 
+              emit a_move ((* coord_m pos_p*) pos) 
+       else
+              emit a_move {x=0.;y=0.;z=0.};
+      );
+      pause;
+      run (read_click button pos) {a_click=a_click;a_move=a_move}
+  in
+
+(*-----------------------------------------------------*)
+(* machine read_key []                                 *)
+(*-----------------------------------------------------*)
+  let process read_key {out key_push} =
+    loop 
+      if Graphics.key_pressed() then
+         emit key_push (get_key ()) 
+      else 
+         nothing;
+      pause
+    end
+  in
+  process {out a_click;out a_move;in p;out key_push} ->
+(*----------------------------------------------------*)
+    Graphics.open_graph "";
+    Graphics.auto_synchronize false;
+    loop
+      await p(all) in
+      maj_aff all;
+    end
+    ||
+    run (read_click false (get_mouse_pos ())) {a_click = a_click;a_move = a_move}
+    ||
+    run read_key {key_push=key_push};;
+

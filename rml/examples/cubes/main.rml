@@ -1,0 +1,46 @@
+open Cubes;;
+open Moteur;;
+
+let rec process evenement_souris {out p;out click} =
+     await click (pos) in
+     (
+      let current_click = List.hd pos in
+      let cube = creer_cube 40. current_click (1,2,3,4,5,6) in
+      run (proc_cube cube) {p=p}
+     )
+     ||
+     run evenement_souris {click=click;p=p};;
+
+let rec process evenement_clavier {out key_push} =
+     loop 
+      await key_push (key) in
+      let key = List.hd key in
+      let key_code = int_of_char key in
+
+      print_string "key_pressed = ";
+      print_char key;
+      print_char ' ';
+      print_int key_code;
+      print_newline ();
+     end;;
+
+(******************************************************)
+(* machine systeme []                                 *)
+(******************************************************)
+
+let process systeme {} =
+    signal p in
+    signal click in
+    signal key_push in
+      run fenetre {click=click;p=p;key_push=key_push}
+      ||
+      run evenement_clavier {key_push=key_push}
+      ||
+      run evenement_souris {click=click;p=p};;
+
+
+
+let _ = Random.self_init (())  ;; 
+
+
+(****************************************************************************)

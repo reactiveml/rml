@@ -1,0 +1,215 @@
+
+type coord = {
+    x : float;
+    y : float;
+    z : float;
+  }
+;;
+
+
+(********************************************)
+(********************************************)
+(*** Fonctions de manipulation de points  ***)
+(********************************************)
+(********************************************)
+
+(* additionne deux points *)
+let coord_p p1 p2 = {x = p1.x +. p2.x;
+                     y = p1.y +. p2.y;
+                     z = p1.z +. p2.z};;
+
+
+
+(* soustrait deux points *)
+let coord_m p1 p2 = {x = p1.x -. p2.x;
+                     y = p1.y -. p2.y;
+                     z = p1.z -. p2.z};;
+
+(* produit scalaire *)
+
+let scalar p1 p2 = (p1.x *. p2.x) +. (p1.y *. p2.y) +. (p1.z *. p2.z);;
+
+(* projecte un point sur l'ecran et rend le couple correspondant *)
+
+let dist_oeil = 400.;;
+let prof_z = 50.;;
+
+let project p max_x_2 max_y_2 = 
+	(int_of_float ((p.x *. dist_oeil) /. (dist_oeil +. prof_z -. p.z)) + max_x_2) ,
+	(int_of_float ((p.y *. dist_oeil) /. (dist_oeil +. prof_z -. p.z)) + max_y_2);;
+
+
+(* effectue la rotation de 90 deg selon l'axe *)
+let rotation_axe sens axe = 
+                   if axe = 0 then
+                         function p -> {x =              p.x;y = -. (sens *. p.z);z = sens *. p.y}
+                   else
+                      if axe = 1 then
+                         function p -> {x = -. (sens *. p.z);y =   p.y           ;z = sens *. p.x}
+                      else
+                       if axe = 2 then
+                         function p -> {x = -. (sens *. p.y);y = sens *. p.x     ;z = p.z}
+                       else
+                           function p -> p;;
+
+
+(* effectue la rotation selon un degre suivant un axe *)
+let rotation_deg deg axe = 
+                   let cs = (cos deg) and sn = (sin deg) in
+                   if axe = 0 then
+                         function p -> {x = p.x;
+                                        y = (p.y*.cs) -. (p.z*.sn);
+                                        z = (p.z*.cs) +. (p.y*.sn)}
+                   else
+                      if axe = 1 then
+                         function p -> {x = (p.x*.cs) -. (p.z*.sn);
+                                        y = p.y;
+                                        z = (p.z*.cs) +. (p.x*.sn)}
+                      else
+                       if axe = 2 then
+                         function p -> {x = (p.x*.cs) -. (p.y*.sn);
+                                        y = (p.y*.cs) +. (p.x*.sn);
+                                        z = p.z}
+                       else
+                           function p -> p;;
+
+(* Effectue la rotation selon l'axe x puis l'axe y *)
+
+let rotation_xy deg1 deg2 =
+                 let cs1 = cos deg1 and sn1 = sin deg1 and
+                     cs2 = cos deg2 and sn2 = sin deg2 in
+                         function p -> {x = p.x *. cs1       -. p.y *. sn1 *. sn2 -. p.z *. sn1 *. cs2;
+                                        y =                     p.y *. cs2        -. p.z *. sn2       ;
+                                        z = p.x *. sn1       +. p.y *. sn2 *. cs1 +. p.z *. cs1 *. cs2;
+                                       };; 
+(*                           function p -> {x = p.x *. cs                          -. p.z *. sn;
+                                        y = -. (p.x *. sn *. sn) +. p.y *. cs    -. p.z *. sn *. cs;
+                                        z = p.x *. cs *. sn +. p.y *. sn +. p.z *. cs *. cs};;
+*)
+ 
+ 
+
+
+
+
+(********************************************)
+(********************************************)
+(*** Fonction graphique                   ***)
+(********************************************)
+(********************************************)
+
+
+
+
+
+(* effectue la rotation d'une face *)
+
+let tourne_face rotfunc (lp,pos,color) =
+      (Array.map rotfunc lp, rotfunc pos,color);;
+
+(* effectue la rotation d'un cube *)
+
+let tourne_cube rotfunc (lf,pos) =
+      (Array.map (tourne_face rotfunc) lf, rotfunc pos);;
+
+
+let get_mouse_pos() =
+  let status = Graphics.wait_next_event [Graphics.Poll] in
+  let max_x_2 = (Graphics.size_x()) / 2 in
+  let max_y_2 = (Graphics.size_y()) / 2 in
+  {x = float_of_int (status.Graphics.mouse_x - max_x_2);
+   y = float_of_int (status.Graphics.mouse_y - max_y_2);
+   z = 0.0;};;
+
+let get_key() = Graphics.read_key();;
+
+let color_of_int = function
+  | 0 -> Graphics.rgb   0   0   0  (* noir *)
+  | 1 -> Graphics.rgb   0   0 192 (* blue *)
+  | 2 -> Graphics.rgb   0 204   0   (* green *)
+  | 3 -> Graphics.rgb 250 250 250  (*  white *)
+  | 4 -> Graphics.rgb 150   0   0  (* bordeau *) 
+  | 5 -> Graphics.rgb 255  89  65  (*  63   0   (* rose orange *)  *)
+  | 6 -> Graphics.rgb 255 240   0  (* yellow *)
+  | _ -> Graphics.rgb 128 128   0;;
+
+
+
+let maj_aff =
+  let isvisible norm vect =
+          scalar norm vect < 0. in 
+  function all -> function rotx -> function roty ->
+  let max_x_2 = (Graphics.size_x()) / 2 in
+  let max_y_2 = (Graphics.size_y()) / 2 in
+  let affiche_cube (lf,pos) rot_cube =
+          Array.iter
+               (fun (lp,norm,color) ->
+                    if color != 0  then 
+                       let norm = rot_cube norm in
+                       if (isvisible norm 
+                                     (coord_p  (coord_p norm (rot_cube pos) )  {x=0.;y=0.;z= -. (dist_oeil +. prof_z)})
+                          ) then
+                       ( let pointarray = (Array.map (function x -> project (rot_cube (coord_p x pos)) max_x_2 max_y_2  ) lp) in
+                          Graphics.set_color (color_of_int (color mod 7));
+                          Graphics.fill_poly pointarray;
+                          Graphics.set_color (color_of_int 0);
+                          Graphics.draw_poly pointarray;
+                       )
+                    else
+                       ();
+               )
+               lf in
+  Graphics.clear_graph();
+(*  Graphics.set_color Graphics.blue;*)
+  List.iter (function e -> affiche_cube e (rotation_xy rotx roty)) all;
+  Graphics.synchronize()
+;;
+
+(******************************************************)
+let fenetre =
+(*----------------------------------------------------*)
+(* machine read_click [new_planete]                   *)
+(*----------------------------------------------------*)
+     let rec process read_click button_p pos_p {out a_click,a_move} =
+      let button = Graphics.button_down() in 
+      let pos    = get_mouse_pos () in
+      (if button_p then
+          (if not button then
+              emit a_click (pos)
+           else
+              emit a_move (coord_m pos_p pos)
+          )
+       else
+              emit a_move ({x=0.;y=0.;z=0.})
+      );
+      pause;
+      run (read_click button pos) {a_click = a_click;a_move=a_move}
+  in
+
+(*-----------------------------------------------------*)
+(* machine read_key []                                 *)
+(*-----------------------------------------------------*)
+  let process read_key {out key_push} =
+    loop 
+      if Graphics.key_pressed() then
+         emit key_push (get_key ()) 
+      else 
+         nothing;
+      pause
+    end
+  in
+  process {out click,a_move,key_push;in p,r} ->
+(*----------------------------------------------------*)
+    Graphics.open_graph "";
+    Graphics.auto_synchronize false;
+    loop
+      await p (all) in
+      await r (rot) in
+      let rot = List.hd rot in
+      maj_aff all (fst rot) (snd rot);
+    end
+    ||
+    run (read_click false (get_mouse_pos ())) {a_click=click;a_move=a_move}
+    ||
+    run read_key {key_push=key_push};;
+

@@ -1,0 +1,124 @@
+
+type coord =
+{
+    x : float;
+    y : float;
+    z : float;
+};;
+
+
+(********************************************)
+(********************************************)
+(*** Fonctions de manipulation de points  ***)
+(********************************************)
+(********************************************)
+
+
+let rot r x = let rx = r *. x in
+                {x = x *. cos(rx);
+                 y = x *. sin(rx);
+                 z = 0.};;
+
+
+let dist_oeil = 400.;;
+let prof_z = 50.;;
+
+let project p max_x_2 max_y_2 =
+        (int_of_float ((p.x *. dist_oeil) /. (dist_oeil +. prof_z -. p.z)) + max_x_2) ,
+        (int_of_float ((p.y *. dist_oeil) /. (dist_oeil +. prof_z -. p.z)) + max_y_2);;
+
+
+(********************************************)
+(********************************************)
+(*** Fonction graphique                   ***)
+(********************************************)
+(********************************************)
+
+
+
+
+
+let get_mouse_pos() =
+  let status = Graphics.wait_next_event [Graphics.Poll] in
+  let max_x_2 = (Graphics.size_x()) / 2 in
+  let max_y_2 = (Graphics.size_y()) / 2 in
+  {x = float_of_int (status.Graphics.mouse_x - max_x_2);
+   y = float_of_int (status.Graphics.mouse_y - max_y_2);
+   z = 0.0;};;
+
+let get_key() = Graphics.read_key();;
+
+let color_of_int = function
+  | 0 -> Graphics.rgb   0   0   0  (* noir *)
+  | 1 -> Graphics.rgb   0   0 192 (* blue *)
+  | 2 -> Graphics.rgb   0 204   0   (* green *)
+  | 3 -> Graphics.rgb 250 250 250  (*  white *)
+  | 4 -> Graphics.rgb 150   0   0  (* bordeau *) 
+  | 5 -> Graphics.rgb 255  89  65  (*  63   0   (* rose orange *)  *)
+  | 6 -> Graphics.rgb 255 240   0  (* yellow *)
+  | _ -> Graphics.rgb 128 128   0;;
+
+
+
+let maj_aff =
+  function all ->
+  let max_x_2 = (Graphics.size_x()) / 2 in
+  let max_y_2 = (Graphics.size_y()) / 2 in
+  let affiche_ligne (p1,p2) =
+            (let pp1 = project p1 max_x_2 max_y_2 and
+                pp2 = project p2 max_x_2 max_y_2 in
+                  Graphics.moveto (fst pp1) (snd pp1);
+                  Graphics.lineto (fst pp2) (snd pp2);
+            ) in
+  Graphics.clear_graph();
+  List.iter affiche_ligne all;
+  Graphics.synchronize()
+;;
+
+(******************************************************)
+let fenetre =
+(*----------------------------------------------------*)
+(* machine read_click [new_planete]                   *)
+(*----------------------------------------------------*)
+     let rec process read_click button_p pos_p {out a_click} =
+      let button = Graphics.button_down() in 
+      let pos    = get_mouse_pos () in
+      (
+       if button_p then
+           if not button then
+              emit a_click (pos)
+           else
+              nothing 
+       else
+              nothing
+      );
+      pause;
+      run (read_click button pos) {a_click=a_click}
+  in
+
+(*-----------------------------------------------------*)
+(* machine read_key []                                 *)
+(*-----------------------------------------------------*)
+  let process read_key {out key_push} =
+    loop 
+      if Graphics.key_pressed() then
+         emit key_push (get_key ()) 
+      else 
+         nothing;
+      pause
+    end
+  in
+  process {out click,key_push;in p} ->
+(*----------------------------------------------------*)
+    Graphics.open_graph "";
+    Graphics.auto_synchronize false;
+    Graphics.set_color (color_of_int 0);
+    loop
+      await p (all) in
+      maj_aff all;
+    end
+    ||
+    run (read_click false (get_mouse_pos ())) {a_click=click}
+    ||
+    run read_key {key_push=key_push};;
+

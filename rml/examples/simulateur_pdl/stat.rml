@@ -1,0 +1,256 @@
+open Global
+
+
+(* global values *)
+let instant = ref 0
+
+let ler_packet_cpt = ref 0
+let ler_packet_fail_cpt = ref 0
+let ler_packet_success_cpt = ref 0
+let pdl_packet_cpt = ref 0
+let pdl_packet_fail_cpt = ref 0
+let pdl_packet_success_cpt = ref 0
+
+let ler_overhead = ref 0.0
+let pdl_overhead = ref 0.0
+
+let ler_route_len = ref 0
+let pdl_route_len = ref 0
+
+let ler_nb_anchor = ref 0
+let ler_nb_ask = ref 0
+let ler_search_level = ref 0
+let pdl_nb_anchor = ref 0
+let pdl_nb_ask = ref 0
+let pdl_search_level = ref 0
+
+let ler_age_nb_list = ref []
+let pdl_age_nb_list = ref []
+
+let distance_age_nb kind src_node =
+  let level = ref 0 in
+  let visited = Array.make !nb_node false in
+  visited.(src_node.node_id) <- true;
+  let rec aux neighbors acc =
+    incr level;
+    let next_neighbors = ref [] in
+    let cpt = ref 0 in
+    let sum =
+      List.fold_left
+	(fun sum info ->
+	  if visited.(info.hello_id) then
+	    sum
+	  else
+	    begin
+	      let n = info.hello_node in
+	      let pos_tbl = 
+		match kind with
+		| LER -> n.node_pos_tbl_ler 
+		| PDL -> n.node_pos_tbl_pdl
+	      in
+	      visited.(info.hello_id) <- true;
+	      next_neighbors :=
+		List.rev_append n.node_neighbors !next_neighbors;
+	      let _, date = pos_tbl.(src_node.node_id) in
+	      if date = no_info then
+		sum
+	      else
+		(incr cpt;
+		 (n.node_date-date) + sum)
+	    end)
+	0
+	neighbors
+    in
+    let res = 
+      if !cpt <> 0 then
+	acc @ [(!level, sum / !cpt, !cpt)]
+      else
+	acc
+    in
+    if (!next_neighbors <> []) then
+      aux !next_neighbors res
+    else
+      res
+  in 
+  fun () ->
+    aux src_node.node_neighbors []
+
+
+let node_stat n =
+  (* dist age stat *)
+  if n.node_id = !main_node then
+    (ler_age_nb_list := distance_age_nb LER n ();
+     pdl_age_nb_list := distance_age_nb PDL n ())
+  else 
+    ()
+
+let compute_anchor p =
+  List.fold_left 
+    (fun (anchor_cpt, level_cpt, ask_cpt) 
+	(anchor, info_node_opt, level, nb_ask) ->
+	  (anchor_cpt + 1, level_cpt + level, ask_cpt + nb_ask))
+    (0,0,0)
+    p.packet_anchors
+
+let packet_stat p = 
+  let nb_anchor, level_sum, nb_ask = compute_anchor p in
+  begin
+    match p.packet_header with
+    | H_LER ->
+	incr ler_packet_cpt;
+	ler_route_len := !ler_route_len + List.length p.packet_route;
+	ler_overhead := !ler_overhead +. (float_of_int p.packet_overhead);
+	ler_nb_anchor := !ler_nb_anchor + nb_anchor;
+	ler_nb_ask := !ler_nb_ask + nb_ask;
+	ler_search_level := !ler_search_level + level_sum;
+    | H_PDL info_opt ->
+	incr pdl_packet_cpt;
+	pdl_route_len := !pdl_route_len + List.length p.packet_route;
+	pdl_nb_anchor := !pdl_nb_anchor + nb_anchor;
+	pdl_nb_ask := !pdl_nb_ask + nb_ask;
+	pdl_search_level := !pdl_search_level + level_sum;
+	match info_opt with
+	| None ->
+	    pdl_overhead := !pdl_overhead +. (float_of_int p.packet_overhead);
+	| Some info ->
+	    pdl_overhead := 
+	      !pdl_overhead +. 
+		(float_of_int (p.packet_overhead + info.pdl_overhead));
+  end
+
+let packet_success_stat p =
+  begin
+    match p.packet_header with
+    | H_LER ->
+	incr ler_packet_success_cpt;
+    | H_PDL _ ->
+	incr pdl_packet_success_cpt;
+  end;
+  packet_stat p
+
+let packet_fail_stat p =
+  begin
+    match p.packet_header with
+    | H_LER ->
+	incr ler_packet_fail_cpt;
+    | H_PDL _ ->
+	incr pdl_packet_fail_cpt;
+  end;
+  packet_stat p
+
+let reset () =
+  ler_packet_cpt := 0;
+  ler_packet_fail_cpt := 0;
+  ler_packet_success_cpt := 0;
+  pdl_packet_cpt := 0;
+  pdl_packet_fail_cpt := 0;
+  pdl_packet_success_cpt := 0;
+  ler_route_len := 0;
+  pdl_route_len := 0;
+  ler_nb_anchor := 0;
+  ler_nb_ask := 0;
+  ler_search_level := 0;
+  pdl_nb_anchor := 0;
+  pdl_nb_ask := 0;
+  pdl_search_level := 0;
+  ler_age_nb_list := [];
+  pdl_age_nb_list := []
+
+
+let output_overhead overhead_ch =
+  output_string overhead_ch
+    ((string_of_int !instant)^"\t"^
+     (string_of_float !ler_overhead)^"\t"^
+     (string_of_float !pdl_overhead)^"\t"^
+     (string_of_float (!pdl_overhead -. !ler_overhead))^"\t"^
+     (string_of_float (!pdl_overhead /. !ler_overhead))^"\n");
+  flush overhead_ch
+
+let output_route_len route_len_ch =
+  let ler_moy = 
+    (float_of_int !ler_route_len) /. (float_of_int !ler_packet_cpt)
+  in
+  let pdl_moy = 
+    (float_of_int !pdl_route_len) /. (float_of_int !pdl_packet_cpt)
+  in
+  output_string route_len_ch
+    ((string_of_int !instant)^"\t"^
+     (string_of_float ler_moy)^"\t"^
+     (string_of_float pdl_moy)^"\n");
+  flush route_len_ch
+
+let output_anchor anchor_ch =
+  let ler_nb_anchor_moy = 
+    (float_of_int !ler_nb_anchor) /. (float_of_int !ler_packet_cpt)
+  in
+(*
+  let ler_nb_ask_moy = 
+    (float_of_int !ler_nb_ask) /. (float_of_int !ler_nb_anchor)
+  in
+  let ler_level_moy = 
+    (float_of_int !ler_search_level) /. (float_of_int !ler_nb_anchor)
+  in
+*)
+  let pdl_nb_anchor_moy = 
+    (float_of_int !pdl_nb_anchor) /. (float_of_int !pdl_packet_cpt)
+  in
+(*
+  let pdl_nb_ask_moy = 
+    (float_of_int !pdl_nb_ask) /. (float_of_int !pdl_nb_anchor)
+  in
+  let pdl_level_moy = 
+    (float_of_int !pdl_search_level) /. (float_of_int !pdl_nb_anchor)
+  in
+*)
+  output_string anchor_ch
+    ((string_of_int !instant)^"\t"^
+     (string_of_float (pdl_nb_anchor_moy /. ler_nb_anchor_moy))^"\t"^
+     (string_of_float 
+	((float_of_int !pdl_nb_ask)/.(float_of_int !ler_nb_ask)))^"\t"^
+     (string_of_float 
+	((float_of_int !pdl_search_level)/.(float_of_int !ler_search_level)))^
+     "\n");
+  flush anchor_ch
+
+let output_age_nb ch l =
+  output_string ch ((string_of_int !instant)^"\t");
+  List.iter
+    (fun (dist, age, nb) ->
+      output_string ch
+	((string_of_int age)^"\t"^
+	 (string_of_int nb)^"\t"))
+    l;
+  output_string ch "\n";
+  flush ch
+
+let instant_stat 
+    overhead_ch 
+    route_len_ch 
+    anchor_ch 
+    age_nb_ler_ch age_nb_pdl_ch =
+  fun () ->
+    incr instant;
+
+(*
+    print_string ("instant = "^(string_of_int !instant));
+    print_newline();
+
+
+    print_string ("ler_overhead = "^
+		  (string_of_int !ler_overhead));
+    print_newline ();
+    print_string ("pdl_overhead = "^
+		  (string_of_int !pdl_overhead));
+    print_newline ();
+*)
+
+    output_overhead overhead_ch;
+    output_route_len route_len_ch;
+    output_anchor anchor_ch;
+    output_age_nb age_nb_ler_ch !ler_age_nb_list;
+    output_age_nb age_nb_pdl_ch !pdl_age_nb_list;
+
+    reset()
+
+
+

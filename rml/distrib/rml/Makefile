@@ -1,0 +1,23 @@
+# Makefile for Reactive-ML
+# Taken from Lucid-synchrone
+# Organization : SPI team, LIP6 laboratory, University Paris 6 
+
+#
+# Installing binary distribution
+#
+
+# you can modify the default installation path, but you'll have to
+# give the compiler the path to the library, either by using the
+# -stdlib flag of the compiler or by setting the RMLLIB environment 
+# variable.
+
+PREFIX = /usr/local
+
+# No further modification should be needed
+
+install:
+	cp -r bin lib $(PREFIX)
+
+uninstall:
+	rm -rf $(PREFIX)/bin/rmlc $(PREFIX)/lib/rml
+

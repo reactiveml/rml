@@ -1,0 +1,270 @@
+
+type coord = {
+    x : float;
+    y : float;
+    z : float;
+  }
+;;
+
+type planete = {
+    id : int;
+    masse : float;
+    pos : coord;
+    v : coord;
+  }
+;;
+
+
+(* constantes *)
+let g = 6.67 (*10^-11*)
+;;
+let dt = 0.1
+;;
+
+(* --------------------------------------------------------------------- *)
+(* fonctions aux *)
+let v_init() =
+  {x = (Random.float 100.0) -. 50.0;
+   y = (Random.float 100.0) -. 50.0;
+   z = (Random.float 100.0) -. 50.0;}
+;;
+
+let new_pos x y =
+  let max_x_2 = (Graphics.size_x()) / 2 in
+  let max_y_2 = (Graphics.size_y()) / 2 in
+  {x = float_of_int (x - max_x_2);
+   y = float_of_int (y - max_y_2);
+   z = (Random.float 200.0) -. 100.0;}
+;;
+
+let color_of_int = function
+  | 0 -> Graphics.yellow
+  | 1 -> Graphics.blue
+  | 2 -> Graphics.green
+  | 3 -> Graphics.red
+  | 4 -> Graphics.cyan
+  | 5 -> Graphics.black
+  | 6 -> Graphics.magenta
+  | _ -> Graphics.black
+;;
+(* --------------------------------------------------------------------- *)
+
+(* fonction de maj *)
+let compute_pos =
+  let distance2 pos1 pos2 =
+    (pos2.x -. pos1.x)*.(pos2.x -. pos1.x)
+      +. (pos2.y -. pos1.y)*.(pos2.y -. pos1.y)
+      +. (pos2.z -. pos1.z)*.(pos2.z -. pos1.z)
+  in
+  let force p1 p2 =
+    let d2 = distance2 p1.pos p2.pos in
+    let d = sqrt d2 in
+    if (d <> 0.0) then 
+      let  f12 = g *. (p1.masse *. p2.masse) /. d2 in
+      (f12 *. (p2.pos.x -. p1.pos.x) /. d,
+       f12 *. (p2.pos.y -. p1.pos.y) /. d,
+       f12 *. (p2.pos.z -. p1.pos.z) /. d)
+    else
+      (0.0, 0.0, 0.0)
+  in
+  fun me all ->
+    let fx, fy, fz = 
+      (List.fold_left 
+	 (fun (fx,fy,fz) p -> 
+	   let x,y,z = force me p in
+	   (fx +. x), 
+	   (fy +. y), 
+	   (fz +. z)) 
+	 (0.0, 0.0, 0.0) 
+	 all)
+    in
+    let v = {x = (me).v.x +. fx *. dt;
+	     y = (me).v.y +. fy *. dt;
+	     z = (me).v.z +. fz *. dt;}
+    in
+    let pos = {x = (me).pos.x +. v.x *. dt;
+	       y = (me).pos.y +. v.y *. dt;
+	       z = (me).pos.z +. v.z *. dt;}
+    in
+    {id = (me).id;
+     masse = (me).masse;
+     pos = pos;
+     v = v;}
+;;
+
+let maj_aff all =
+  Graphics.clear_graph();
+(*  Graphics.set_color Graphics.blue;*)
+  let max_x_2 = (Graphics.size_x()) / 2 in
+  let max_y_2 = (Graphics.size_y()) / 2 in
+  List.iter 
+    (fun p -> 
+      Graphics.set_color (color_of_int (p.id mod 7));
+      Graphics.fill_circle 
+	(int_of_float p.pos.x + max_x_2)
+	(int_of_float p.pos.y  + max_y_2)
+	(*3*)
+	( if (p.pos.z < 5000.0) & (p.pos.z > -5000.0)
+	then 5+(int_of_float p.pos.z / 50) else 1))
+    all
+;;
+
+(****************************************************************************)
+(******************************************************)
+(* machine planete masse pos_init v_init [p]          *)
+(******************************************************)
+let process planete id masse pos_init v_init p =
+  let me = ref {id = id; masse = masse; pos = pos_init; v = v_init} in
+  loop 
+    emit p !me;
+    await p (all) in
+    me := compute_pos !me all
+  end
+;;
+(******************************************************)
+(* machine soleil masse pos_init [p]                  *)
+(******************************************************)
+let process soleil id masse pos_init p =
+  let me = {id = id; masse = masse; pos = pos_init; v = {x=0.0;y=0.0;z=0.0}} in
+  loop 
+    emit p (me);
+    pause
+  end
+;;
+
+(******************************************************)
+(* machine fenetre [new_planete,p]                    *)
+(******************************************************)
+let fenetre = process new_planete p kill_sun kill suspend ->
+(*----------------------------------------------------*)
+(* machine read_click [new_planete]                   *)
+(*----------------------------------------------------*)
+  let process read_click = 
+    signal click in
+    run (Rml_graphics.read_click click)
+    ||
+    loop 
+      present click then
+         pause
+      else
+        await immediate one click(x,y) in
+        emit new_planete (new_pos x y);
+        pause
+    end
+  in
+(*----------------------------------------------------*)
+(* machine read_key []                                *)
+(*----------------------------------------------------*)
+  let process read_key = 
+    signal key in
+    run (Rml_graphics.read_key key)
+    ||
+    loop 
+      await immediate one key(c) in
+      print_string ("key_pressed = ");print_char c;print_newline();
+      begin
+	match c with
+	| 's' -> emit kill_sun
+	| 'k' -> emit kill
+	| 'p' -> emit suspend
+	| _ -> nothing
+      end;
+      pause
+    end
+  in
+(*----------------------------------------------------*)
+  signal aff in
+    Graphics.open_graph "";
+    Graphics.auto_synchronize false;
+    loop
+      await p (all) in 
+      maj_aff all;
+      Graphics.synchronize();
+
+      pause;
+      pause;
+
+    end
+    ||
+    run read_click 
+    ||
+    run read_key 
+;;
+
+(******************************************************)
+(* machine add [new_planete,p]                       *)
+(******************************************************)
+(*
+let rec process add id new_planete kill p =
+  await one new_planete (pos) in
+  ((signal t in
+    do
+      run (planete id 1.0 pos (v_init()) p)
+      ||
+      loop
+        await one kill(n) in
+        if n = id then emit t;
+        pause
+      end
+    until t)
+  ||
+   run (add (id+1) new_planete kill p))
+;;
+*)
+let rec process add_aux id new_planete kill kill_new p =
+  await new_planete (pos) in
+  do
+    run (planete id 1.0 (List.hd pos) (v_init()) p)
+  until kill_new
+  ||
+  signal new_kill_new in
+  run (add_aux (id+1) new_planete kill new_kill_new p)
+  ||
+  (await new_planete || await immediate kill_new); 
+  await kill; 
+  emit new_kill_new
+
+let process add id new_planete kill p =
+  run (add_aux id new_planete kill kill p)
+
+(******************************************************)
+(* machine systeme []                                 *)
+(******************************************************)
+let process systeme =
+  signal p in
+  signal new_planete in
+  signal kill_sun in
+  signal kill in
+  signal suspend in
+  signal active in
+  run (fenetre new_planete p kill_sun kill suspend)
+  ||
+  control
+    do
+      run (soleil 0 30000.0 {x=0.0;y=0.0;z=0.0} p)
+    until kill_sun
+    ||
+    run (planete 1 1.0
+	   {x = 0.0; y = -. 200.0; z = 0.0} 
+	   {x = 30.0; y = 0.0; z = 0.0}
+           p)
+    ||
+    run (planete 2 1.0
+	   {x = 0.0; y = 200.0; z = 0.0} 
+           {x = -. 30.0; y = 0.0; z = 0.0}
+	   p)
+    ||
+    run (planete 3 1.0
+	   {x = 200.0; y = 0.0; z = 0.0} 
+	   {x = 0.0; y = 0.0; z = 30.0}
+	   p)
+    ||
+    run (add 4 new_planete kill p)
+  with suspend
+;;
+
+(****************************************************************************)
+let _ = Random.self_init() 
+;;
+let main = systeme
+;;

@@ -1,0 +1,62 @@
+open Global
+
+let random node = 
+  node.node_pos <- translate node.node_pos (Random.int 8) 1
+
+let same_dir n dir =
+  let p = Random.int 100 in
+  if p < 80 then 
+    ();
+  if 80 <= p & p < 85 then 
+    dir := (!dir + 1) mod 8;
+  if 85 <= p & p < 90 then 
+    dir := (!dir + 7) mod 8;
+  if 90 <= p & p < 92 then 
+    dir := (!dir + 2) mod 8;
+  if 92 <= p & p < 94 then 
+    dir := (!dir + 6) mod 8;
+  if 94 <= p & p < 96 then 
+    dir := (!dir + 3) mod 8;
+  if 96 <= p & p < 98 then 
+    dir := (!dir + 5) mod 8;
+  if 98 <= p & p < 100 then 
+    dir := (!dir + 4) mod 8;
+  n.node_pos <- translate n.node_pos !dir 1
+
+
+let random_waypoint n dest =
+  if (n.node_pos.x = !dest.x) & (n.node_pos.y = !dest.y) then
+    dest := make_pos (Random.int !max_x) (Random.int !max_y);
+  
+  if n.node_pos.x < !dest.x then
+    if n.node_pos.y < !dest.y then
+      n.node_pos <- translate n.node_pos 1 1
+    else
+      if n.node_pos.y > !dest.y then
+	n.node_pos <- translate n.node_pos 3 1
+      else 
+	n.node_pos <- translate n.node_pos 2 1
+  else 
+    if n.node_pos.x > !dest.x then
+      if n.node_pos.y < !dest.y then
+	n.node_pos <- translate n.node_pos 7 1
+      else
+	if n.node_pos.y > !dest.y then
+	  n.node_pos <- translate n.node_pos 5 1
+	else
+	  n.node_pos <- translate n.node_pos 6 1
+    else
+      if n.node_pos.y < !dest.y then
+	n.node_pos <- translate n.node_pos 0 1
+      else
+	if n.node_pos.y > !dest.y then
+	  n.node_pos <- translate n.node_pos 4 1
+
+let no_move n = ()
+
+let move n =
+  match n.node_mvt_kind with
+  | Mvt_random -> random n
+  | Mvt_same_dir dir -> same_dir n dir
+  | Mvt_random_waypoint pos -> random_waypoint n pos
+  | Mvt_no_move -> no_move n

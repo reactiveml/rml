@@ -1,0 +1,58 @@
+open Moteur;;
+open Spirale;;
+
+(******************************************************)
+(* click de souris                                    *)
+(******************************************************)
+
+let rec process evenement_souris {in click} =
+  await click (pos) in
+  let current_click = List.hd pos in
+       nothing;;
+
+
+
+let rec process mouse_drag rotx roty  {out r_dep} =
+                  pause;;
+
+(***************************************************)
+(* Frappe du clavier                               *)
+(***************************************************)
+
+let rec process evenement_clavier {out key_push} =
+          pause;;
+(************************************************)
+
+
+
+
+
+
+
+
+
+
+(******************************************************)
+(* machine systeme []                                 *)
+(******************************************************)
+let process systeme {} =
+  signal p in
+  signal click in
+  signal key_push in
+  signal a_move in
+  run fenetre           {click=click;p=p;key_push=key_push}
+  ||
+  run evenement_clavier {key_push=key_push}
+  ||
+  run evenement_souris  {click=click}
+  ||
+  run (mouse_drag 0. 0.) {r_dep=a_move}
+  ||
+  run (creer_ligne ( 0.) 4000. 1.5) {p=p};;
+
+
+
+Random.self_init ();;
+
+(****************************************************************************)
+

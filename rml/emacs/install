@@ -1,0 +1,11 @@
+Add the following lines to your .emacs file:
+
+(setq load-path (cons "~/.emacs-mode/rml-mode/" load-path))
+(setq auto-mode-alist
+      (cons '("\\.rml[i]?$" . rml-mode) auto-mode-alist))
+(autoload 'rml-mode "rml" "Major mode for editing Rml code." t)
+(if window-system (require 'rml-font))
+
+
+Add in your path the address of the directory where Reactive-ML is installed
+
