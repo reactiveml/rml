@@ -474,6 +474,29 @@ let rec type_of_expression env expr =
 	in
 	ty
 
+  | Rexpr_emit (s) -> 
+      let ty_s = type_of_expression env s in
+      let ty, _ = 
+	try 
+	  filter_event ty_s
+	with Unify ->
+	  non_event_err s
+      in
+      unify_emit expr.expr_loc type_unit ty;
+      type_unit
+
+  | Rexpr_emit_val (s,e) ->
+      let ty_s = type_of_expression env s in
+      let ty, _ = 
+	try 
+	  filter_event ty_s
+	with Unify ->
+	  non_event_err s
+      in
+      let ty_e = type_of_expression env e in
+      unify_emit e.expr_loc ty ty_e;
+      type_unit
+
   in
   expr.expr_type <- t;
   Stypes.record (Stypes.Ti_expr expr);
@@ -570,15 +593,25 @@ and type_process env proc =
       let ty_e = type_of_expression env e in 
       unify_run e.expr_loc ty_e (process ())
 
-  | Rproc_until (s,p) ->
+  | Rproc_until (s,p,patt_proc_opt) ->
       let ty_s = type_of_expression env s in
-      let _ = 
+      let ty_emit, ty_get = 
 	try 
 	  filter_event ty_s
 	with Unify ->
 	  non_event_err s
       in
-      type_process env p
+      type_process env p;
+      opt_iter
+	(fun (patt,proc) ->
+	  let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+	  let new_env =
+	    List.fold_left 
+	      (fun env (x, ty) -> Env.add x (forall [] ty) env) 
+	      env loc_env 
+	  in
+	  type_process new_env proc)
+	patt_proc_opt
 
   | Rproc_when (s,p) ->
       let ty_s = type_of_expression env s in

@@ -3,7 +3,7 @@ OCAMLOPT = ocamlopt
 CAMLDEP = ocamldep
 CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
-RMLC = ../../compiler/rmlc.byte
+RMLC = rmlc
 INTERPRETERDIR=`$(RMLC) -where`
 
 SAMPLING = 0.02

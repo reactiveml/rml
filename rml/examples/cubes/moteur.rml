@@ -6,7 +6,7 @@ type coord =
  z : float;
 };; 
 
-
+type axe = X | Y | Z | No
 
 (********************************************)
 (********************************************)
@@ -19,12 +19,14 @@ let coord_p p1 p2 = {x = p1.x +. p2.x;
                      y = p1.y +. p2.y;
                      z = p1.z +. p2.z};;
 
-
+let (+..) = coord_p;;
 
 (* soustrait deux points *)
 let coord_m p1 p2 = {x = p1.x -. p2.x;
                      y = p1.y -. p2.y;
                      z = p1.z -. p2.z};;
+
+let (-..) = coord_m;;
 
 (* produit scalaire *)
 
@@ -45,38 +47,39 @@ let project p max_x_2 max_y_2 =
 (* effectue la rotation de 90 deg selon l'axe *)
 
 let rotation_axe sens axe =
-   if axe = 0 then (* X *)
-      function p -> {x =              p.x;y = -. (sens *. p.z);z = sens *. p.y}
-
-   else if axe = 1 then (* Y *)
-      function p -> {x = -. (sens *. p.z);y =   p.y           ;z = sens *. p.x}
-
-   else if axe = 2 then (* Z *)
-      function p -> {x = -. (sens *. p.y);y = sens *. p.x     ;z = p.z}
-
-   else        (* pas de rotation *)
-      function p -> p;;
+   match axe with
+   | X ->(function p -> {x = p.x;
+	                 y = -. (sens *. p.z);
+			 z = sens *. p.y}
+	 )
+   | Y ->(function p -> {x = -. (sens *. p.z);
+	                 y = p.y ;
+			 z = sens *. p.x}
+	 )
+   | Z ->(function p -> {x = -. (sens *. p.y);
+	                 y = sens *. p.x ;
+			 z = p.z}
+	 )
+   | No ->(function p -> p);;
 
 
 (* effectue la rotation selon un degre suivant un axe *)
 let rotation_deg deg axe =
-        let cs = (cos deg) and sn = (sin deg) in
-        if axe = 0 then
-              function p -> {x = p.x;
-                             y = (p.y*.cs) -. (p.z*.sn);
-                             z = (p.z*.cs) +. (p.y*.sn)}
-        else
-              if axe = 1 then
-                     function p -> {x = (p.x*.cs) -. (p.z*.sn);
-                                    y = p.y;
-                                    z = (p.z*.cs) +. (p.x*.sn)}
-              else
-                  if axe = 2 then
-                     function p -> {x = (p.x*.cs) -. (p.y*.sn);
-                                    y = (p.y*.cs) +. (p.x*.sn);
-                                    z = p.z}
-                  else
-                     function p -> p;;
+      let cs = (cos deg) and sn = (sin deg) in
+      match axe with
+      | X ->(function p -> {x = p.x;
+                            y = (p.y*.cs) -. (p.z*.sn);
+                            z = (p.z*.cs) +. (p.y*.sn)}
+            )
+      | Y ->(function p -> {x = (p.x*.cs) -. (p.z*.sn);
+                            y = p.y;
+                            z = (p.z*.cs) +. (p.x*.sn)}
+            )
+      | Z ->(function p -> {x = (p.x*.cs) -. (p.y*.sn);
+                            y = (p.y*.cs) +. (p.x*.sn);
+                            z = p.z}
+            )
+      | No ->(function p -> p);;
 
 
 
@@ -114,8 +117,9 @@ let color_of_int = function
 
 
 let maj_aff =
-  let isvisible norm vect =
-          scalar norm vect < 0. in
+  let faceisvisible normal pos =
+     let pos_real = normal +.. pos -.. {x= 0. ;y= 0. ;z= dist_oeil +. prof_z} in
+         scalar normal pos_real < 0. in
   function all ->
   let max_x_2 = (Graphics.size_x()) / 2 in
   let max_y_2 = (Graphics.size_y()) / 2 in
@@ -123,9 +127,7 @@ let maj_aff =
           Array.iter
                (fun (lp,norm,color) ->
                     if color != 0  then
-                       if (isvisible norm
-                                     (coord_p  (coord_p norm pos )  {x=0.;y=0.;z= -. (dist_oeil +. prof_z)})
-                          ) then
+                       if faceisvisible norm pos then
                        ( let pointarray = (Array.map (function x -> project (coord_p x pos) max_x_2 max_y_2  ) lp) in
                           Graphics.set_color (color_of_int (color mod 7));
                           Graphics.fill_poly pointarray;
@@ -133,9 +135,7 @@ let maj_aff =
                           Graphics.moveto (fst pointarray.(0)) (snd pointarray.(0));
                           Array.iter (function (x,y) -> Graphics.lineto x y) pointarray;
                           (function (x,y) -> Graphics.lineto x y)  pointarray.(0);
-                       )
-                    else
-                       ();
+                       );
                )
                lf in
   Graphics.clear_graph();
@@ -147,10 +147,7 @@ let maj_aff =
 
 (******************************************************)
 let fenetre =
-(*----------------------------------------------------*)
-(* machine read_click [a_click]                       *)
-(*----------------------------------------------------*)
-     let rec process read_click button_p pos_p  {out a_click} =
+     let rec process read_click button_p pos_p a_click =
       let button = Graphics.button_down() in
       let pos    = get_mouse_pos () in
       (if button_p && not button && not (pos.z = 1.) then
@@ -159,31 +156,30 @@ let fenetre =
               nothing;
       );
       pause;
-      run (read_click button pos) {a_click=a_click}
+      run (read_click button pos a_click)
   in
 
-(*-----------------------------------------------------*)
-(* machine read_key []                                 *)
-(*-----------------------------------------------------*)
-  let process read_key {out key_push} =
+  let process read_key clavier =
     loop
       if Graphics.key_pressed() then
-         emit key_push (get_key ())
+         emit clavier (get_key ())
       else
          nothing;
       pause
     end
   in
-  process {out click,key_push;in p} ->
-(*----------------------------------------------------*)
-    Graphics.open_graph "";
-    Graphics.auto_synchronize false;
-    loop
-      await p (all) in
-      maj_aff all (* (fst rot) (snd rot) *) ;
-    end
-    ||
-    run (read_click false (get_mouse_pos ())) {a_click=click}
-    ||
-    run read_key {key_push=key_push};;
 
+  fun clic clavier graph ->
+    process 
+      begin
+	Graphics.open_graph "";
+	Graphics.auto_synchronize false;
+	loop
+	  await graph (all) in
+	  maj_aff all (* (fst rot) (snd rot) *) ;
+	end
+	||
+	run (read_click false (get_mouse_pos ()) clic)
+	||
+	run (read_key clavier)
+      end

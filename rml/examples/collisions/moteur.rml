@@ -1,5 +1,4 @@
 
-(**)
 type point =
 {
 	x : float;
@@ -7,7 +6,6 @@ type point =
         z : float;
 };;
 
-(**)
 
 
 let scalar   c1 c2 = c1.x *. c2.x +.
@@ -57,17 +55,6 @@ let print_coord c = print_char  '(';
 
 
 
-(**)
-
-let get_mouse_pos() =
-  let status = Graphics.wait_next_event [Graphics.Poll] in
-  let max_x_2 = (Graphics.size_x()) / 2 in
-  let max_y_2 = (Graphics.size_y()) / 2 in
-  {x = float_of_int (status.Graphics.mouse_x - max_x_2);
-   y = float_of_int (status.Graphics.mouse_y - max_y_2);
-   z = 0.0;};;
-
-let get_key() = Graphics.read_key();;
 
 let color_of_int = function
   | 0 -> Graphics.rgb   0   0   0  (* noir *)
@@ -90,16 +77,14 @@ let maj_aff all =
                                          (int_of_float pos.y)
                                          10
             )
-            all;
+            all
+(*;
     Graphics.moveto (max_x_2 - 300) 445;
     Graphics.lineto (max_x_2 + 295) 445;
     Graphics.lineto (max_x_2 + 295) 0;
     Graphics.lineto (max_x_2 - 300) 0;
-    Graphics.lineto (max_x_2 - 300) 445;
-(*  Graphics.moveto:  int -> int -> unit*)
-(*  Graphics.lineto:  int -> int -> unit*)
-
-
+    Graphics.lineto (max_x_2 - 300) 445;;
+*)
 (*
 let left = -100.;;
 let right = 75.;;
@@ -109,51 +94,15 @@ let bottom = 0.;;
 
 (*********************************************************)
 
-  Graphics.synchronize();;
 
 (******************************************************)
-let fenetre =
-(*----------------------------------------------------*)
-(* machine read_click [new_planete]                   *)
-(*----------------------------------------------------*)
-     let rec process read_click button_p pos_p {out a_click;out a_move} =
-      let button = Graphics.button_down() in 
-      let pos    = get_mouse_pos () in
-      (
-       if button_p then
-           if (not button) then
-              emit a_click pos
-           else 
-              emit a_move ((* coord_m pos_p*) pos) 
-       else
-              emit a_move {x=0.;y=0.;z=0.};
-      );
-      pause;
-      run (read_click button pos) {a_click=a_click;a_move=a_move}
-  in
-
-(*-----------------------------------------------------*)
-(* machine read_key []                                 *)
-(*-----------------------------------------------------*)
-  let process read_key {out key_push} =
-    loop 
-      if Graphics.key_pressed() then
-         emit key_push (get_key ()) 
-      else 
-         nothing;
-      pause
-    end
-  in
-  process {out a_click;out a_move;in p;out key_push} ->
+let process fenetre graph = 
 (*----------------------------------------------------*)
     Graphics.open_graph "";
     Graphics.auto_synchronize false;
     loop
-      await p(all) in
+      await graph (all) in
       maj_aff all;
+      Graphics.synchronize();
     end
-    ||
-    run (read_click false (get_mouse_pos ())) {a_click = a_click;a_move = a_move}
-    ||
-    run read_key {key_push=key_push};;
 

@@ -60,7 +60,9 @@ and expression_desc =
 	(expression * expression) option * expression
   | Pexpr_process of expression
   | Pexpr_run of expression 
-  | Pexpr_until of expression * expression (* signal * body *)
+  | Pexpr_until of 
+      expression * expression * (pattern * expression) option 
+  (* signal      * body       * handler *)
   | Pexpr_when of expression * expression
   | Pexpr_control of expression * expression
   | Pexpr_get of expression 

@@ -15,5 +15,5 @@ To install ReactiveML in $PREFIX:
 
   make PREFIX=$PREFIX install
 
-and you'll have to give to the compiler the path of the library by setting 
-the RMLLIB environment variable to $PREFIX/lib/rml.
+
+To install the emacs mode, follow the instructions in ./emacs/INSTALL.

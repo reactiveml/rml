@@ -1,17 +1,13 @@
 CAMLC = ocamlc
 OCAMLOPT = ocamlopt
-CAMLDEP = ocamldep
-CAMLLEX = ocamllex
-CAMLYACC = ocamlyacc
-RMLC = ../../compiler/rmlc
+RMLC = rmlc
 INTERPRETER=interpreter
-INTERPRETERPATH=../../interpreter
-INTERPRETERTYPE=ctrl_tree
-RMLCOPTS= -I ../../stdlib
-# INTERPRETERTYPE=rewrite
+INTERPRETERPATH=`$(RMLC) -where`
 
+RMLCOPTS=
 
 #  Ne pas modifier apres (et pendant) cette ligne 
+
 
 OBJS = moteur.cmo \
        rubik.cmo \
@@ -25,7 +21,7 @@ EXEC    = rubik
 EXECOPT = rubik.opt
 
 
-all: byte opt
+all: byte
 
 
 byte: $(EXEC)
@@ -42,7 +38,7 @@ $(EXECOPT): $(OBJSOPT)
 	$(OCAMLOPT) -o $(EXECOPT) -I $(INTERPRETERPATH) unix.cmxa graphics.cmxa rml_interpreter.cmxa $(OBJSOPT) -cclib -lunix 
 
 main.ml:main.rml
-	$(RMLC) $(RMLCOPTS) -s systeme -runtime $(INTERPRETERTYPE) $<
+	$(RMLC) -s main $(RMLCOPTS)  $<
 
 
 rubik.cmo: rubik.ml moteur.cmi
@@ -81,10 +77,10 @@ realclean : cleanall
 	$(OCAMLOPT) -c $<
 
 .rml.ml:
-	$(RMLC) $(RMLCOPTS) -runtime $(INTERPRETERTYPE) $<
+	$(RMLC) $(RMLCOPTS)  $<
 
 .ml.cmo:
-	$(CAMLC) -c -I ../../interpreter $<
+	$(CAMLC) -c -I $(INTERPRETERPATH) $<
 
 .ml.cmi:
 	$(CAMLC) -c $<

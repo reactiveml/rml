@@ -294,7 +294,7 @@ let process boid id pos_init p kill_boid =
         if List.mem me.id n then 
 	  emit kill_me
       end
-    until kill_me
+    until kill_me done
 ;;
 
 (******************************************************)

@@ -23,6 +23,8 @@ module type S =
 	  
     val rml_pre_status: (unit -> ('a, 'b) event) -> bool
     val rml_pre_value: (unit -> ('a, 'b) event) -> 'b
+    val rml_expr_emit: (unit -> (unit, 'b) event) -> unit 
+    val rml_expr_emit_val: (unit -> ('a, 'b) event) -> (unit -> 'a) -> unit
 
     val rml_global_signal: unit -> ('a, 'a list) event
     val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event 
@@ -55,6 +57,8 @@ module type S =
     val rml_match: (unit -> 'a) -> ('a -> proc) -> proc
     val rml_run: (unit -> unit ->proc) -> proc
     val rml_until: (unit -> ('a, 'b) event) -> proc -> proc
+    val rml_until_handler: 
+	(unit -> ('a, 'b) event) -> proc -> ('b -> proc) -> proc
     val rml_control: (unit -> ('a, 'b) event) -> proc -> proc
     val rml_when: (unit -> ('a, 'b) event) -> proc -> proc
     val rml_if: (unit -> bool) -> proc -> proc -> proc

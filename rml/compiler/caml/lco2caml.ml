@@ -232,6 +232,16 @@ let rec translate_ml e =
 	Cexpr_apply
 	  (make_instruction ("rml_pre_"^kind),
 	   [embed_ml s])
+    | Coexpr_emit (s) ->
+	Cexpr_apply
+	  (make_instruction "rml_expr_emit",
+	   [embed_ml s;])
+    | Coexpr_emit_val (s, e) ->
+	Cexpr_apply
+	  (make_instruction "rml_expr_emit_val",
+	   [embed_ml s;
+	    embed_ml e;])
+
   in
   make_expr cexpr e.coexpr_loc
 
@@ -337,11 +347,19 @@ and translate_proc e =
 	  (make_instruction "rml_run",
 	   [embed_ml expr;])
 
-    | Coproc_until (s, k) ->
+    | Coproc_until (s, k, None) ->
 	Cexpr_apply
 	  (make_instruction "rml_until",
 	   [embed_ml s;
 	    translate_proc k])
+    | Coproc_until (s, k, Some(patt, kh)) ->
+	Cexpr_apply
+	  (make_instruction "rml_until_handler",
+	   [embed_ml s;
+	    translate_proc k;
+	    make_expr
+	      (Cexpr_function [translate_pattern patt, translate_proc kh])
+	      Location.none;])
 
     | Coproc_when (s, k) ->
 	Cexpr_apply
@@ -445,8 +463,8 @@ let translate_impl_item info_chan item =
 			   make_expr
 			     (Cexpr_apply
 				(make_instruction "rml_global_signal_combine",
-				 [embed_ml e1;
-				  embed_ml e2;]))
+				 [translate_ml e1;
+				  translate_ml e2;]))
 			     Location.none)
 		     l)
     | Coimpl_type l ->

@@ -279,6 +279,17 @@ let rec translate_ml e =
 	  (make_instruction ("rml_pre_"^kind),
 	   [embed_ml s])
 
+    | Kexpr_emit (s) ->
+	Cexpr_apply
+	  (make_instruction "rml_expr_emit",
+	   [embed_ml s])
+
+    | Kexpr_emit_val (s, e) ->
+	Cexpr_apply
+	  (make_instruction "rml_expr_emit_val",
+	   [embed_ml s;
+	    embed_ml e])
+
   in
   make_expr cexpr e.kexpr_loc
 
@@ -399,11 +410,21 @@ and translate_proc e =
 	   [embed_ml expr;
 	    translate_proc k])
 
-    | Kproc_until (s, k1, k2) ->
+    | Kproc_until (s, k1, None, k2) ->
 	Cexpr_apply
 	  (make_instruction "rml_until",
 	   [embed_ml s;
 	    translate_proc k1;
+	    translate_proc k2])
+
+    | Kproc_until (s, k1, Some (patt,kh), k2) ->
+	Cexpr_apply
+	  (make_instruction "rml_until_handler",
+	   [embed_ml s;
+	    translate_proc k1;
+	    make_expr
+	      (Cexpr_function [translate_pattern patt, translate_proc kh])
+	      Location.none;
 	    translate_proc k2])
 
     | Kproc_when (s, k1, k2) ->

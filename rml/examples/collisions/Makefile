@@ -1,15 +1,12 @@
 CAMLC = ocamlc
 OCAMLOPT = ocamlopt
-CAMLDEP = ocamldep
-CAMLLEX = ocamllex
-CAMLYACC = ocamlyacc
-RMLC = ../../compiler/rmlc
+RMLC = rmlc
 INTERPRETER=rml_interpreter
-INTERPRETERDIR=../../interpreter
+INTERPRETERDIR=`$(RMLC) -where`
 
 
 # Options :
-RMLOPTS = -I ../../stdlib
+RMLOPTS =
 OCAMLOPTS = -I $(INTERPRETERDIR) 
 
 
@@ -20,13 +17,14 @@ OBJS = moteur.cmo \
        main.cmo
 
 OBJSOPT = moteur.cmx \
+          calcul.cmx \
           balle.cmx \
           main.cmx
 
 MLINTER = balle.ml moteur.ml main.ml calcul.ml
 
 EXEC    = balle
-EXECOPT = balleopt
+EXECOPT = $(EXEC).opt
 
 
 LIBS = unix.cma graphics.cma $(INTERPRETERDIR)/$(INTERPRETER).cma
@@ -35,7 +33,9 @@ LIBSOPT = unix.cmxa graphics.cmxa $(INTERPRETERDIR)/$(INTERPRETER).cmxa
 
 
 
-all: $(EXEC)
+all: byte opt
+
+byte: $(EXEC)
 
 
 opt: $(EXECOPT)
@@ -45,8 +45,10 @@ clean :
 	rm -f $(MLINTER)
 	rm -f *.rzi
 
-cleanall : clean
-	rm -f $(EXEC) $(EXECOPT)
+realclean: cleanall
+
+cleanall: clean
+	rm -f rubik.ml moteur.ml main.ml interpreter.cmi $(EXEC) $(EXECOPT)
 
 $(EXEC): $(OBJS)
 	$(CAMLC) -o $(EXEC) $(LIBS) $(OBJS) 
@@ -72,17 +74,16 @@ main.cmo: main.ml moteur.cmi balle.cmi
 main.cmx: main.ml moteur.cmx balle.cmx
 
 main.ml:main.rml
-	echo opts = $(RMLOPTS)
-	$(RMLC) $(RMLOPTS) -s main $<
+	$(RMLC) -s main $<
 
 
 moteur.cmi moteur.cmo: moteur.ml
 	$(CAMLC)  -I $(INTERPRETERDIR) -c $<
 
-
+balle.cmx: balle.ml calcul.cmx
 
 # Regles implicites :
-
+.PHONY: clean cleanall all opt byte realclean
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .rml .rzi
 
 

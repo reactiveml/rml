@@ -67,9 +67,9 @@
    (cons (concat
           "\\<\\(a\\(nd\\|s\\|wait\\)\\|c\\(onstraint\\|lass\\)"
           "\\|default\\|ex\\(ception\\|ternal\\)\\|fun\\(ct\\(ion\\|or\\)\\)?"
-          "\\|gather\\|i\\(n\\(herit\\|itializer\\|out\\)?\\|mmediate\\)\\|let"
+          "\\|gather\\|i\\(n\\(herit\\|itializer\\)?\\|mmediate\\)\\|let"
           "\\|m\\(ethod\\|utable\\|odule\\)"
-          "\\|o\\(f\\|ne\\|ut\\)\\|p\\(arser\\|rivate\\|rocess\\)\\|rec\\|signal\\|type"
+          "\\|o\\(f\\|ne\\)\\|p\\(arser\\|rivate\\|rocess\\)\\|rec\\|signal\\|type"
           "\\|v\\(al\\|irtual\\)\\)\\>")
          'font-lock-type-face)
 ;builtin

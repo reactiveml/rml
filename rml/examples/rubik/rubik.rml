@@ -6,90 +6,41 @@ let pas  = pis2 /. 20.;;
 
 (* Processus Cube *)
 
+type cube_tourne = | Axe of Moteur.axe
+                   | Nomvt;;
 
 (* A chaque instant, emet le cube (tourné ou non) sur le signal p *)
 
 (*  quand un mouvement est terminé, envoie le signal mvt_suiv
     après une pause  *)
 
-let rec proc_cube ((lf,pos) as current_cube) =
+let rec process proc_cube current_cube tourne graph mvt_suiv =
      let deg = ref 0. in
-     process {in tourne; out p,mvt_suiv} ->
-
-       await tourne (rot) in
-       let paire = List.hd rot in
-       let axe   = fst paire in 
-       let sens  = snd paire in
-       if axe = 5 then  (* pas de mouvement *)
-        (emit p current_cube;
-         run (proc_cube current_cube) {tourne=tourne;p=p;mvt_suiv=mvt_suiv}
-        )
-       else
-        (deg := 0.;
-         loop
-           deg := ! deg +. pas; 
-           let new_cube = if axe = 4 then (* le cube ne tourne pas *)
-                             current_cube (* pas de rotation *)
-                          else
-                             tourne_cube ( if !deg >= pis2 then
-                                                 rotation_axe sens           axe
-                                           else
-                                                 rotation_deg (!deg *. sens) axe
-                                         )
-                                         current_cube (* une rotation *)  in
-           emit p (new_cube); 
-           if !deg >= pis2 then
-              (pause;
-               emit mvt_suiv;
-               run (proc_cube new_cube) {tourne=tourne;p=p;mvt_suiv=mvt_suiv}
-              )
-           else
-              pause;
-          end;
-	 ) ;; 
-
-
-
-
-(*
-let rec proc_cube (lf,pos) =
-     let deg = ref 0. in
-     process (tourne,p,mvt_suiv) ->
-       await tourne (rot) in
-       let paire = List.hd rot in
-       let axe = fst paire in 
-       let sens = snd paire in
-       if axe = 5 then  (* pas de mouvement *)
-              emit p (lf,pos);
-              run (proc_cube (lf,pos)) (tourne,p,mvt_suiv)
-       else
-         deg := 0.;
-         loop
-           deg := ! deg +. pas; 
-           let new_cube = if axe = 4 then (* le cube ne tourne pas *)
-                             (lf,pos) (* pas de rotation *)
-                          else
-                             tourne_cube ( if !deg >= pis2 then
-                                                 rotation_axe sens           axe
-                                           else
-                                                 rotation_deg (!deg *. sens) axe
-                                         )
-                                         (lf,pos) (* une rotation *)  in
-              emit p (new_cube); 
-              if !deg >= pis2 then
-                    (pause;
-                     emit mvt_suiv;
-                     run (proc_cube new_cube) (tourne,p,mvt_suiv)
-                    )
-              else
-                     pause;
-          end;;
-
-
-*)
-
-
-
+       await one tourne (axe,sens) in
+       match axe with
+       | Nomvt -> emit graph current_cube;
+	           run (proc_cube current_cube tourne graph mvt_suiv)
+       | Axe axe -> deg := 0.;
+                    while !deg < pis2
+		    do
+                      deg := ! deg +. pas;
+                      let new_cube = if axe = No then
+                                        current_cube
+                                     else
+                                        tourne_cube (rotation_deg (!deg *. sens) axe)
+                      current_cube in
+                      emit graph (new_cube);
+                      pause;
+                    done; 
+		    let new_cube = if axe = No then
+		                     current_cube
+                                   else
+                                     tourne_cube (rotation_axe sens axe)
+                                                  current_cube in
+                    emit graph (new_cube);
+                    pause;
+                    emit mvt_suiv;
+                    run (proc_cube new_cube tourne graph mvt_suiv);;
 
 (* Creer le cube de taille size qui se trouve en position pos *)
 
@@ -117,7 +68,7 @@ let creer_cube size pos (c1,c2,c3,c4,c5,c6) =
     ([|{x = pn; y = pn; z = mn}; {x = mn; y = pn; z = mn}; {x = mn; y = mn; z = mn}; {x = pn; y = mn; z = mn}|],
                       {x = 0.; y = 0.; z = mn} ,c5) (* norm *)
     ;
-(*  Face 5 ( bas )  *)              
+(*  Face 6 ( bas )  *)              
     ([|{x = mn; y = mn; z = pn}; {x = pn; y = mn; z = pn}; {x = pn; y = mn; z = mn}; {x = mn; y = mn; z = mn}|],
                       {x = 0.; y = mn; z = 0.} ,c6) (* norm *)
                 |]
@@ -139,190 +90,154 @@ let cube_color (x,y,z) =
    
 
 
-(* tableau des emplacement des cubes *)
+(* tableau des emplacement des cubes sur le rubik's Cube *)
 
-let l_c = ref (Array.of_list []);;
-
-
-
-let rec creer_l_c n l = if n < 0 then
-                            l_c := Array.of_list l
-                        else
-                            creer_l_c (n-1) (n::l);;
+signal s0,s1,s2,s3,s4,s5,s6,s7,s8,
+       s9,s10,s11,s12,s13,s14,s15,
+       s16,s17,s18,s19,s20,s21,s22,
+       s23,s24,s25,s26;;
 
 
+let l_c = [| s0;s1;s2;s3;s4;s5;s6;s7;s8;
+             s9;s10;s11;s12;s13;s14;s15;
+             s16;s17;s18;s19;s20;s21;s22;
+             s23;s24;s25;s26 |];;
 
-(* Fonction instantané *)
 
-let rubik_tourne lfirst rot = process 
-    {out s0 ,s1 ,s2 ,s3 ,s4 ,s5 ,s6 ,
-     s7 ,s8 ,s9 ,s10,s11,s12,s13,
-     s14,s15,s16,s17,s18,s19,s20,
-     s21,s22,s23,s24,s25,s26} ->
-    let l = List.map (function x -> Array.get !l_c x) lfirst in
-    let mvt_nop = if fst rot = 5 then (5,1.) else (4,1.) in
-    ( if List.mem 0  l then emit s0  (rot) else emit s0  (mvt_nop) );
-    ( if List.mem 1  l then emit s1  (rot) else emit s1  (mvt_nop) );
-    ( if List.mem 2  l then emit s2  (rot) else emit s2  (mvt_nop) );
-    ( if List.mem 3  l then emit s3  (rot) else emit s3  (mvt_nop) );
-    ( if List.mem 4  l then emit s4  (rot) else emit s4  (mvt_nop) );
-    ( if List.mem 5  l then emit s5  (rot) else emit s5  (mvt_nop) );
-    ( if List.mem 6  l then emit s6  (rot) else emit s6  (mvt_nop) );
-    ( if List.mem 7  l then emit s7  (rot) else emit s7  (mvt_nop) );
-    ( if List.mem 8  l then emit s8  (rot) else emit s8  (mvt_nop) );
-    ( if List.mem 9  l then emit s9  (rot) else emit s9  (mvt_nop) );
-    ( if List.mem 10 l then emit s10 (rot) else emit s10 (mvt_nop) );
-    ( if List.mem 11 l then emit s11 (rot) else emit s11 (mvt_nop) );
-    ( if List.mem 12 l then emit s12 (rot) else emit s12 (mvt_nop) );
-    ( if List.mem 13 l then emit s13 (rot) else emit s13 (mvt_nop) );
-    ( if List.mem 14 l then emit s14 (rot) else emit s14 (mvt_nop) );
-    ( if List.mem 15 l then emit s15 (rot) else emit s15 (mvt_nop) );
-    ( if List.mem 16 l then emit s16 (rot) else emit s16 (mvt_nop) );
-    ( if List.mem 17 l then emit s17 (rot) else emit s17 (mvt_nop) );
-    ( if List.mem 18 l then emit s18 (rot) else emit s18 (mvt_nop) );
-    ( if List.mem 19 l then emit s19 (rot) else emit s19 (mvt_nop) );
-    ( if List.mem 20 l then emit s20 (rot) else emit s20 (mvt_nop) );
-    ( if List.mem 21 l then emit s21 (rot) else emit s21 (mvt_nop) );
-    ( if List.mem 22 l then emit s22 (rot) else emit s22 (mvt_nop) );
-    ( if List.mem 23 l then emit s23 (rot) else emit s23 (mvt_nop) );
-    ( if List.mem 24 l then emit s24 (rot) else emit s24 (mvt_nop) );
-    ( if List.mem 25 l then emit s25 (rot) else emit s25 (mvt_nop) );
-    ( if List.mem 26 l then emit s26 (rot) else emit s26 (mvt_nop) );
 
-    if l != [] then
-    let a = Array.get !l_c (List.nth lfirst 0) in
-    let b = Array.get !l_c (List.nth lfirst 4) in
-    if snd rot = -1. then
-      (Array.set !l_c (List.nth lfirst 0) (Array.get !l_c (List.nth lfirst 3));
-       Array.set !l_c (List.nth lfirst 3) (Array.get !l_c (List.nth lfirst 2));
-       Array.set !l_c (List.nth lfirst 2) (Array.get !l_c (List.nth lfirst 1));
-       Array.set !l_c (List.nth lfirst 1) a;
-       Array.set !l_c (List.nth lfirst 4) (Array.get !l_c (List.nth lfirst 7));
-       Array.set !l_c (List.nth lfirst 7) (Array.get !l_c (List.nth lfirst 6));
-       Array.set !l_c (List.nth lfirst 6) (Array.get !l_c (List.nth lfirst 5));
-       Array.set !l_c (List.nth lfirst 5) b;
+(*let rec creer_l_c n l = if n < 0 then*)
+(*                            l_c := Array.of_list l*)
+(*                        else*)
+(*                            creer_l_c (n-1) (n::l);;*)
+
+
+
+(* Fonction instantanée *)
+
+let process rubik_tourne lfirst rot =
+(*    let l = List.map (function x -> Array.get !l_c x) lfirst in*)
+    let mvt_nop = if fst rot = Nomvt then (Nomvt,1.) else (Axe No,1.) in
+    (* Demande aux cubes de bouger *)
+    for i = 0 to 26
+    do
+       if List.mem i lfirst then
+           emit l_c.(i) (rot)
+       else
+           emit l_c.(i) (mvt_nop)
+    done;
+    (* Effectue la permutation lie au mouvement
+        (il s'agit de la position logique, les
+	 cubes seront a cette endroit a la
+	 fin du mouvement) *)
+    if not (lfirst = []) then
+      let a = Array.get l_c (List.nth lfirst 0) in
+      let b = Array.get l_c (List.nth lfirst 4) in
+      if snd rot = -1. then
+      (Array.set l_c (List.nth lfirst 0) (Array.get l_c (List.nth lfirst 3));
+       Array.set l_c (List.nth lfirst 3) (Array.get l_c (List.nth lfirst 2));
+       Array.set l_c (List.nth lfirst 2) (Array.get l_c (List.nth lfirst 1));
+       Array.set l_c (List.nth lfirst 1) a;
+       Array.set l_c (List.nth lfirst 4) (Array.get l_c (List.nth lfirst 7));
+       Array.set l_c (List.nth lfirst 7) (Array.get l_c (List.nth lfirst 6));
+       Array.set l_c (List.nth lfirst 6) (Array.get l_c (List.nth lfirst 5));
+       Array.set l_c (List.nth lfirst 5) b;
       )
-    else
-      (Array.set !l_c (List.nth lfirst 0) (Array.get !l_c (List.nth lfirst 1));
-       Array.set !l_c (List.nth lfirst 1) (Array.get !l_c (List.nth lfirst 2));
-       Array.set !l_c (List.nth lfirst 2) (Array.get !l_c (List.nth lfirst 3));
-       Array.set !l_c (List.nth lfirst 3) a;
-       Array.set !l_c (List.nth lfirst 4) (Array.get !l_c (List.nth lfirst 5));
-       Array.set !l_c (List.nth lfirst 5) (Array.get !l_c (List.nth lfirst 6));
-       Array.set !l_c (List.nth lfirst 6) (Array.get !l_c (List.nth lfirst 7));
-       Array.set !l_c (List.nth lfirst 7) b;
-      )
-    else
-       nothing;;
+      else
+      (Array.set l_c (List.nth lfirst 0) (Array.get l_c (List.nth lfirst 1));
+       Array.set l_c (List.nth lfirst 1) (Array.get l_c (List.nth lfirst 2));
+       Array.set l_c (List.nth lfirst 2) (Array.get l_c (List.nth lfirst 3));
+       Array.set l_c (List.nth lfirst 3) a;
+       Array.set l_c (List.nth lfirst 4) (Array.get l_c (List.nth lfirst 5));
+       Array.set l_c (List.nth lfirst 5) (Array.get l_c (List.nth lfirst 6));
+       Array.set l_c (List.nth lfirst 6) (Array.get l_c (List.nth lfirst 7));
+       Array.set l_c (List.nth lfirst 7) b;
+      );;
 
 
-(* Reçoit un mouvement (sur mvt) à effectuer et effectue la permutation *)
+(* Reçoit un mouvement (sur mvt) à effectuer repercute l'ordre
+   sur les cubes (rubik_tourne) *)
 
-let process fait_bouger 
-            {out s0 , s1 ,s2 ,s3 ,s4 ,s5 ,s6 ,
-                 s7 , s8 ,s9 ,s10,s11,s12,s13,
-                 s14, s15,s16,s17,s18,s19,s20,
-                 s21, s22,s23,s24,s25,s26;
-	     in mvt} =
+let process fait_bouger mvt =
         loop
-            await mvt (mouvement) in
-            let mouvement = List.hd mouvement in
+            await one mvt (mouvement) in
             let axe = fst  mouvement in
             let num = fst (snd mouvement) in
             let sens = snd (snd mouvement) in
-           (if axe = 1 then
-               let decal = 9 * num in
-                run (rubik_tourne [0 + decal;2 + decal;8 + decal;6 + decal;1 + decal;5 + decal;7 + decal;3 + decal;4 + decal]  
-                             (axe,sens) ) 
-                             {s0=s0;s1=s1;s2=s2;s3=s3;s4=s4;s5=s5;s6=s6;s7=s7;s8=s8;
-			      s9=s9;s10=s10;s11=s11;s12=s12;s13=s13;s14=s14;s15=s15;s16=s16;s17=s17;
-			      s18=s18;s19=s19;s20=s20;s21=s21;s22=s22;s23=s23;s24=s24;s25=s25;s26=s26} 
-            else if axe = 0 then
-                run (rubik_tourne [0 + num;6 + num;24 + num;18 + num;   3   + num;15 + num;21 + num;9 + num;12 + num]  
-                             (axe,sens) )
-                             {s0=s0;s1=s1;s2=s2;s3=s3;s4=s4;s5=s5;s6=s6;s7=s7;s8=s8;
-			      s9=s9;s10=s10;s11=s11;s12=s12;s13=s13;s14=s14;s15=s15;s16=s16;s17=s17;
-			      s18=s18;s19=s19;s20=s20;s21=s21;s22=s22;s23=s23;s24=s24;s25=s25;s26=s26} 
-            else if axe = 2 then
-                let decal =  3 * num in
-                run (rubik_tourne [0 + decal;2 + decal;20 + decal;18 + decal;1 + decal;11 + decal;19+ decal;9 + decal;10 + decal]  
-                             (axe,sens) )
-                             {s0=s0;s1=s1;s2=s2;s3=s3;s4=s4;s5=s5;s6=s6;s7=s7;s8=s8;
-			      s9=s9;s10=s10;s11=s11;s12=s12;s13=s13;s14=s14;s15=s15;s16=s16;s17=s17;
-			      s18=s18;s19=s19;s20=s20;s21=s21;s22=s22;s23=s23;s24=s24;s25=s25;s26=s26}
-	    else	      
-                run (rubik_tourne []  (5,1.) )
-                             {s0=s0;s1=s1;s2=s2;s3=s3;s4=s4;s5=s5;s6=s6;s7=s7;s8=s8;
-			      s9=s9;s10=s10;s11=s11;s12=s12;s13=s13;s14=s14;s15=s15;s16=s16;s17=s17;
-			      s18=s18;s19=s19;s20=s20;s21=s21;s22=s22;s23=s23;s24=s24;s25=s25;s26=s26} 
-           )
+	    match axe with
+            | Y -> let decal = 9 * num in
+                   run (rubik_tourne [0 + decal;2 + decal;8 + decal;
+                                      6 + decal;1 + decal;5 + decal;
+                                      7 + decal;3 + decal;4 + decal]  
+                                     (Axe axe,sens) )
+            | X -> run (rubik_tourne [ 0 + num;6 + num;24 + num;
+                                      18 + num;3 + num;15 + num;
+                                      21 + num;9 + num;12 + num]  
+                                     (Axe axe,sens) )
+            | Z -> let decal =  3 * num in
+                   run (rubik_tourne [ 0 + decal;2 + decal;20 + decal;
+                                      18 + decal;1 + decal;11 + decal;
+                                      19 + decal;9 + decal;10 + decal]  
+                                     (Axe axe,sens) )
+            | No -> run (rubik_tourne []  (Nomvt,1.) )
         end;;
 
-let process creer_rubik {out p,mvt_suiv;
-                         in mvt} =
-  signal s0 ,s1 ,s2 ,s3 ,s4 ,s5 ,s6 ,s7 ,s8  in 
-  signal s9 ,s10,s11,s12,s13,s14,s15,s16,s17 in
-  signal s18,s19,s20,s21,s22,s23,s24,s25,s26 in
-
-      let a = creer_l_c 26 [] in
-      run (proc_cube (creer_cube 40. {x= -40.;y=  40.;z=  40.} (cube_color (0,0,0)) )) {tourne=s0;p=p;mvt_suiv=mvt_suiv}
+let process creer_rubik graph mvt_suiv mvt =
+      run (proc_cube (creer_cube 40. {x= -40.;y=  40.;z=  40.} (cube_color (0,0,0)) ) s0 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=   0.;y=  40.;z=  40.} (cube_color (1,0,0)) )) {tourne=s1;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=   0.;y=  40.;z=  40.} (cube_color (1,0,0)) ) s1 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=  40.;y=  40.;z=  40.} (cube_color (2,0,0)) )) {tourne=s2;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=  40.;y=  40.;z=  40.} (cube_color (2,0,0)) ) s2 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x= -40.;y=  40.;z=   0.} (cube_color (0,0,1)) )) {tourne=s3;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x= -40.;y=  40.;z=   0.} (cube_color (0,0,1)) ) s3 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=   0.;y=  40.;z=   0.} (cube_color (1,0,1)) )) {tourne=s4;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=   0.;y=  40.;z=   0.} (cube_color (1,0,1)) ) s4 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=  40.;y=  40.;z=   0.} (cube_color (2,0,1)) )) {tourne=s5;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=  40.;y=  40.;z=   0.} (cube_color (2,0,1)) ) s5 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x= -40.;y=  40.;z= -40.} (cube_color (0,0,2)) )) {tourne=s6;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x= -40.;y=  40.;z= -40.} (cube_color (0,0,2)) ) s6 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=   0.;y=  40.;z= -40.} (cube_color (1,0,2)) )) {tourne=s7;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=   0.;y=  40.;z= -40.} (cube_color (1,0,2)) ) s7 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=  40.;y=  40.;z= -40.} (cube_color (2,0,2)) )) {tourne=s8;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=  40.;y=  40.;z= -40.} (cube_color (2,0,2)) ) s8 graph mvt_suiv)
       ||
 
-      run (proc_cube (creer_cube 40. {x= -40.;y=   0.;z=  40.} (cube_color (0,1,0)) )) {tourne=s9 ;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x= -40.;y=   0.;z=  40.} (cube_color (0,1,0)) ) s9 graph  mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=   0.;y=   0.;z=  40.} (cube_color (1,1,0)) )) {tourne=s10;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=   0.;y=   0.;z=  40.} (cube_color (1,1,0)) ) s10 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=  40.;y=   0.;z=  40.} (cube_color (2,1,0)) )) {tourne=s11;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=  40.;y=   0.;z=  40.} (cube_color (2,1,0)) ) s11 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x= -40.;y=   0.;z=   0.} (cube_color (0,1,1)) )) {tourne=s12;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x= -40.;y=   0.;z=   0.} (cube_color (0,1,1)) ) s12 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=   0.;y=   0.;z=   0.} (cube_color (1,1,1)) )) {tourne=s13;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=   0.;y=   0.;z=   0.} (cube_color (1,1,1)) ) s13 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=  40.;y=   0.;z=   0.} (cube_color (2,1,1)) )) {tourne=s14;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=  40.;y=   0.;z=   0.} (cube_color (2,1,1)) ) s14 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x= -40.;y=   0.;z= -40.} (cube_color (0,1,2)) )) {tourne=s15;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x= -40.;y=   0.;z= -40.} (cube_color (0,1,2)) ) s15 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=   0.;y=   0.;z= -40.} (cube_color (1,1,2)) )) {tourne=s16;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=   0.;y=   0.;z= -40.} (cube_color (1,1,2)) ) s16 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=  40.;y=   0.;z= -40.} (cube_color (2,1,2)) )) {tourne=s17;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=  40.;y=   0.;z= -40.} (cube_color (2,1,2)) ) s17 graph mvt_suiv)
       ||
 
-      run (proc_cube (creer_cube 40. {x= -40.;y= -40.;z=  40.} (cube_color (0,2,0)) )) {tourne=s18;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x= -40.;y= -40.;z=  40.} (cube_color (0,2,0)) ) s18 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=   0.;y= -40.;z=  40.} (cube_color (1,2,0)) )) {tourne=s19;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=   0.;y= -40.;z=  40.} (cube_color (1,2,0)) ) s19 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=  40.;y= -40.;z=  40.} (cube_color (2,2,0)) )) {tourne=s20;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=  40.;y= -40.;z=  40.} (cube_color (2,2,0)) ) s20 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x= -40.;y= -40.;z=   0.} (cube_color (0,2,1)) )) {tourne=s21;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x= -40.;y= -40.;z=   0.} (cube_color (0,2,1)) ) s21 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=   0.;y= -40.;z=   0.} (cube_color (1,2,1)) )) {tourne=s22;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=   0.;y= -40.;z=   0.} (cube_color (1,2,1)) ) s22 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=  40.;y= -40.;z=   0.} (cube_color (2,2,1)) )) {tourne=s23;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=  40.;y= -40.;z=   0.} (cube_color (2,2,1)) ) s23 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x= -40.;y= -40.;z= -40.} (cube_color (0,2,2)) )) {tourne=s24;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x= -40.;y= -40.;z= -40.} (cube_color (0,2,2)) ) s24 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=   0.;y= -40.;z= -40.} (cube_color (1,2,2)) )) {tourne=s25;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=   0.;y= -40.;z= -40.} (cube_color (1,2,2)) ) s25 graph mvt_suiv)
       ||
-      run (proc_cube (creer_cube 40. {x=  40.;y= -40.;z= -40.} (cube_color (2,2,2)) )) {tourne=s26;p=p;mvt_suiv=mvt_suiv}
+      run (proc_cube (creer_cube 40. {x=  40.;y= -40.;z= -40.} (cube_color (2,2,2)) ) s26 graph mvt_suiv)
       ||
-      run fait_bouger {s0 =s0 ;s1 =s1 ;s2 =s2 ;s3 =s3 ;s4 =s4 ;s5 =s5 ;s6 =s6 ;s7 =s7 ;s8 =s8 ;
-		       s9 =s9 ;s10=s10;s11=s11;s12=s12;s13=s13;s14=s14;s15=s15;s16=s16;s17=s17;
-		       s18=s18;s19=s19;s20=s20;s21=s21;s22=s22;s23=s23;s24=s24;s25=s25;s26=s26;mvt=mvt};;
+      run (fait_bouger mvt);;
 
 

@@ -30,7 +30,12 @@ let string_of_kind = function
   | Internal -> "loc"
 
 let unique_name i = 
-(*  i.name ^ *)"__" ^ (string_of_kind i.kind) ^ "_" ^ (string_of_int i.id)
+  match String.get i.name 0 with
+  | '=' | '<' | '>' | '@' | '^' | '|' | '&' | '+' | '-' | '*' | '/' | '$' | '%'
+  | '!' | '?' | '~' -> 
+      "__" ^ (string_of_kind i.kind) ^ "_" ^ (string_of_int i.id)
+  | _ ->
+      i.name ^ "__" ^ (string_of_kind i.kind) ^ "_" ^ (string_of_int i.id)
 
 (* generating names *)
 class name_generator =

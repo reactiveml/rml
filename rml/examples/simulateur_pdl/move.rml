@@ -24,9 +24,14 @@ let same_dir n dir =
   n.node_pos <- translate n.node_pos !dir 1
 
 
-let random_waypoint n dest =
+let random_waypoint r n dest =
   if (n.node_pos.x = !dest.x) & (n.node_pos.y = !dest.y) then
-    dest := make_pos (Random.int !max_x) (Random.int !max_y);
+    (let x = n.node_pos.x + Random.int (2*r) - r in
+    let y = n.node_pos.y + Random.int (2*r) - r in
+    dest := 
+      make_pos 
+	(if x < 0 then 0 else if x >= !max_x then !max_x - 1 else x)
+	(if y < 0 then 0 else if y >= !max_y then !max_y - 1 else y));
   
   if n.node_pos.x < !dest.x then
     if n.node_pos.y < !dest.y then
@@ -52,11 +57,13 @@ let random_waypoint n dest =
 	if n.node_pos.y > !dest.y then
 	  n.node_pos <- translate n.node_pos 4 1
 
+
+
 let no_move n = ()
 
 let move n =
   match n.node_mvt_kind with
   | Mvt_random -> random n
   | Mvt_same_dir dir -> same_dir n dir
-  | Mvt_random_waypoint pos -> random_waypoint n pos
+  | Mvt_random_waypoint pos -> random_waypoint 200 n pos
   | Mvt_no_move -> no_move n

@@ -12,21 +12,21 @@ let process main {} =
 
 *)
 
-let rec process fibo n {out res} = 
+let rec process fibo n res = 
   pause; 
   if n < 2 then
     emit res 1
   else 
     (signal res1, res2 in 
-    run (fibo (n-1)) {res=res1};
+    run (fibo (n-1) res1);
     await immediate one res1 (f1) in
-    run (fibo (n-2)) {res=res2};
+    run (fibo (n-2) res2);
     await immediate one res2 (f2) in
     emit res(f1+f2))
 
-let process main {} =
+let process main =
   signal s in
-  run (fibo 35) {res=s};
+  run (fibo 35 s);
   await immediate one s (n) in
   print_int n;
   print_newline()

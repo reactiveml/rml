@@ -55,6 +55,18 @@ let mkimpl d =
 let mkintf d =
   { pintf_desc = d; pintf_loc = symbol_rloc() }
 
+let rec mkexpr_until body sig_patt_expr_opt_list =
+  match sig_patt_expr_opt_list with
+  | [] -> raise Parse_error
+  | [(s, patt_expr_opt)] ->
+      mkexpr (Pexpr_until (s,
+			   body,
+			   (patt_expr_opt)))
+  | (s, patt_expr_opt) :: list ->
+      mkexpr (Pexpr_until (s,
+			   mkexpr_until body list,
+			   (patt_expr_opt)))
+	
 let reloc_patt x = { x with ppatt_loc = symbol_rloc () };;
 let reloc_expr x = { x with pexpr_loc = symbol_rloc () };;
 
@@ -517,8 +529,8 @@ expr:
       { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, Some($4, $6), $8)) }
-  | DO par_expr UNTIL simple_expr
-      { mkexpr(Pexpr_until($4, $2)) }
+  | DO par_expr UNTIL opt_bar until_cases DONE
+      { mkexpr_until $2 (List.rev $5) }
   | DO par_expr WHEN simple_expr
       { mkexpr(Pexpr_when($4, $2)) }
   | CONTROL par_expr WITH simple_expr
@@ -655,9 +667,12 @@ fun_def:
       { ghexpr(Pexpr_function([$1, $2])) }
 ;
 proc_def:
+    simple_expr                                 { mkexpr(Pexpr_process $1) }
+/*
     MINUSGREATER par_expr                       { mkexpr(Pexpr_process $2) }
   | simple_pattern proc_def
       { ghexpr(Pexpr_function([$1, $2])) }
+*/
 ;
 match_action:
     MINUSGREATER par_expr                       { $2 }
@@ -684,6 +699,20 @@ expr_semi_list:
 type_constraint:
     COLON core_type                             { $2 }
   | COLON error                                 { syntax_error() }
+;
+
+until_cases:
+    simple_expr                                 { [$1, None] }
+  | until_handlers                              { $1 } 
+;
+until_handlers:
+    simple_expr LPAREN pattern RPAREN MINUSGREATER par_expr
+                                              { [$1, Some($3, $6)] }
+  | simple_expr MINUSGREATER par_expr
+                                              { [$1, 
+						 Some(mkpatt(Ppatt_any), $3)] }
+  | until_handlers BAR simple_expr LPAREN pattern RPAREN MINUSGREATER par_expr
+                                              { ($3, Some($5, $8)) :: $1 }
 ;
 
 /* Patterns */

@@ -434,8 +434,15 @@ let rec translate_ml env e =
     | Pexpr_pre (flag, expr) ->
 	Rexpr_pre (flag, translate_ml env expr)
 
+    | Pexpr_emit s -> 
+	Rexpr_emit (translate_ml env s)
+
+    | Pexpr_emit_val (s,expr) ->
+	Rexpr_emit_val (translate_ml env s,
+			translate_ml env expr)
+
     | _ -> 
-	raise (Internal (e.pexpr_loc,"Parse2rml.translate_ml: non ML expr"))
+	raise (Internal (e.pexpr_loc,"Parse2reac.translate_ml: non ML expr"))
 
   in
   make_expr rexpr e.pexpr_loc
@@ -524,9 +531,12 @@ and translate_proc env e =
 	  | Pexpr_run (expr) ->
 	      Rproc_run (translate_ml env expr)
 
-	  | Pexpr_until (s, expr) ->
+	  | Pexpr_until (s, expr, patt_expr_opt) ->
 	      Rproc_until (translate_ml env s,
-			   translate_proc env expr)
+			   translate_proc env expr,
+			   opt_map 
+			     (translate_proc_patt_expr env) 
+			     patt_expr_opt)
 
 	  | Pexpr_when (s, expr) ->
 	      Rproc_when (translate_ml env s,
@@ -555,7 +565,7 @@ and translate_proc env e =
 			       translate_proc new_env expr)
 
 	  | _ -> raise (Internal (e.pexpr_loc,
-				  "Parse2rml.translate_proc: non proc expr"))
+				  "Parse2reac.translate_proc: non proc expr"))
 	end
 
   in
@@ -650,15 +660,15 @@ and translate_ml_match =
     List.map (tr_patt_expr env) patt_expr_list
 
 (* Translation of match in a PROCESS context *)
+and translate_proc_patt_expr env (patt,expr)=
+  let vars, rpatt = translate_pattern false Process patt in
+  let env = add_varpatt env vars in
+  let rproc = translate_proc env expr in
+  (rpatt, rproc)
+
 and translate_proc_match =
-  let tr_patt_expr env (patt,expr)=
-    let vars, rpatt = translate_pattern false Process patt in
-    let env = add_varpatt env vars in
-    let rproc = translate_proc env expr in
-    (rpatt, rproc)
-  in 
   fun env patt_expr_list ->
-    List.map (tr_patt_expr env) patt_expr_list
+    List.map (translate_proc_patt_expr env) patt_expr_list
 
 (* Translation of record *)
 and translate_ml_record env lab_expr_list =

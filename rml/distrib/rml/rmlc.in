@@ -1,0 +1,5 @@
+#!/bin/sh
+
+RMLLIB=PREFIX/lib/rml
+export RMLLIB
+exec OCAMLRUN PREFIX/bin/rmlc.byte $@

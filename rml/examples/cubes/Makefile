@@ -1,24 +1,21 @@
 OCAMLC = ocamlc
 OCAMLOPT = ocamlopt
-CAMLDEP = ocamldep
-CAMLLEX = ocamllex
-CAMLYACC = ocamlyacc
-RMLC = ../../compiler/rmlc
+RMLC = rmlc
 INTERPRETER=interpreter
-INTERPRETERPATH=../../interpreter
-RMLCOPTS= -I ../../stdlib
+INTERPRETERPATH=`$(RMLC) -where`
+
 
 OBJS = moteur.cmo \
-       cubes.cmo \
+       cube.cmo \
        main.cmo
 
 OBJSOPT = moteur.cmx \
-       cubes.cmx \
+       cube.cmx \
        main.cmx
 
 
-EXEC = cubes
-EXECOPT = cubes.opt
+EXEC = cube
+EXECOPT = cube.opt
 
 
 all: byte opt
@@ -34,24 +31,25 @@ $(EXECOPT): $(OBJSOPT)
 	$(OCAMLOPT) -o $(EXECOPT) -I $(INTERPRETERPATH) unix.cmxa graphics.cmxa rml_interpreter.cmxa $(OBJSOPT) 
 
 
-cubes.cmo: cubes.ml moteur.cmi
+cube.cmo: cube.ml moteur.cmi
 
 main.cmo: main.ml moteur.cmi
 
 moteur.cmo: moteur.ml
 
 
-cubes.cmx: cubes.ml moteur.cmx
+cube.cmx: cube.ml moteur.cmx
 
 main.cmx: main.ml moteur.cmx
 
 moteur.cmx: moteur.ml
 
+
 main.ml: main.rml
-	$(RMLC) $(RMLCOPTS) -s systeme $<
+	$(RMLC) -s main $<
 
 clean:
-	rm -f *.cmi *.cmo *.cmx cubes.ml moteur.ml main.ml *.rzi *.o
+	rm -f *.cmi *.cmo *.cmx cube.ml moteur.ml main.ml *.rzi *.o
 
 cleanall:clean
 	rm -f $(EXEC) $(EXECOPT)
@@ -68,7 +66,7 @@ realclean:cleanall
 
 
 .rml.ml:
-	$(RMLC) $(RMLCOPTS) $<
+	$(RMLC) $<
 
 .ml.cmo:
 	$(OCAMLC) -c -I $(INTERPRETERPATH) $<

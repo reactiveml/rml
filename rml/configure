@@ -763,7 +763,7 @@ if test "$bad_version" = "1"; then
    { echo "configure: error: Ocaml >= 3.05 needed." 1>&2; exit 1; }
 fi
 
-OCAMLLIB=`$OCAMLC -v | tail -1 | cut -f 4 -d " "`
+OCAMLLIB=`$OCAMLC -v | tail -n 1 | cut -f 4 -d " "`
 echo "ocaml library path is $OCAMLLIB"
 
 # then we look for ocamlopt; if not present, we issue a warning

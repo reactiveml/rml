@@ -305,9 +305,6 @@ have rml-electric-indent on, which see.")
         (not (fboundp 'buffer-substring-no-properties)))
     (require 'rml-compat))
 
-(defvar rml-shell-active nil
-  "Non nil when a subshell is running.")
-
 (defvar running-xemacs  (string-match "XEmacs" emacs-version)
   "Non-nil if we are running in the XEmacs environment.")
 
@@ -356,18 +353,13 @@ have rml-electric-indent on, which see.")
   (define-key rml-mode-map "\C-cs" 'rml-insert-signal-form)
   (define-key rml-mode-map "\C-ct" 'rml-insert-try-form)
   (define-key rml-mode-map "\C-cw" 'rml-insert-while-form)
-  (define-key rml-mode-map "\C-c`" 'rml-goto-phrase-error)
   (define-key rml-mode-map "\C-c\C-a" 'rml-find-alternate-file)
   (define-key rml-mode-map "\C-c\C-c" 'compile)
-  (define-key rml-mode-map "\C-c\C-e" 'rml-eval-phrase)
   (define-key rml-mode-map "\C-c\C-\[" 'rml-backward-to-less-indent)
   (define-key rml-mode-map "\C-c\C-\]" 'rml-forward-to-less-indent)
   (define-key rml-mode-map "\C-c\C-q" 'rml-indent-phrase)
-  (define-key rml-mode-map "\C-c\C-r" 'rml-eval-region)
-  (define-key rml-mode-map "\C-c\C-s" 'rml-show-subshell)
   (define-key rml-mode-map "\M-\C-h" 'rml-mark-phrase)
   (define-key rml-mode-map "\M-\C-q" 'rml-indent-phrase)
-  (define-key rml-mode-map "\M-\C-x" 'rml-eval-phrase)
 
   (if running-xemacs nil ; if not running xemacs
     (let ((map (make-sparse-keymap "Reactive-ML"))
@@ -391,7 +383,6 @@ have rml-electric-indent on, which see.")
       (define-key map [separator-types] '("---"))
 
       ;; others
-      (define-key map [run-rml] '("Start subshell..." . run-rml))
       (define-key map [compile] '("Compile..." . compile))
       (define-key map [switch-view]
         '("Switch view" . rml-find-alternate-file))
@@ -399,10 +390,6 @@ have rml-electric-indent on, which see.")
       (define-key map [forms] (cons "Forms" forms))
       (define-key map [show-imenu] '("Show index" . rml-show-imenu))
       (put 'rml-show-imenu 'menu-enable '(not rml-imenu-shown))
-      (define-key map [show-subshell] '("Show subshell" . rml-show-subshell))
-      (put 'rml-show-subshell 'menu-enable 'rml-shell-active)
-      (define-key map [eval-phrase] '("Eval phrase" . rml-eval-phrase))
-      (put 'rml-eval-phrase 'menu-enable 'rml-shell-active)
       (define-key map [indent-phrase] '("Indent phrase" . rml-indent-phrase))
       (define-key forms [while]
         '("while .. do .. done" . rml-insert-while-form))
@@ -425,9 +412,6 @@ have rml-electric-indent on, which see.")
   (if running-xemacs
       '("Reactive-ML"
         [ "Indent phrase" rml-indent-phrase :keys "C-M-q" ]
-        [ "Eval phrase" rml-eval-phrase
-          :active rml-shell-active :keys "C-M-x" ]
-        [ "Show subshell" rml-show-subshell rml-shell-active ]
         ("Forms"
          [ "while .. do .. done" rml-insert-while-form t]
          [ "control .. with .." rml-insert-control-form t ]
@@ -446,7 +430,6 @@ have rml-electric-indent on, which see.")
         "---"
         [ "Switch view" rml-find-alternate-file t ]
         [ "Compile..." compile t ]
-        [ "Start subshell..." run-rml t ]
         "---"
         [ "Show type at point" rml-types-show-type t ]
         "---"
@@ -525,16 +508,15 @@ have rml-electric-indent on, which see.")
 
 (defconst rml-imenu-search-regexp
   (concat "\\<in\\>\\|"
-          "^[ \t]*\\(await\\|let\\|signal\\|class\\|type\\|m\\(odule\\|ethod\\)"
+          "^[ \t]*\\(await immediate\\|await\\|class\\|let process"
+	  "\\|let\\|signal\\|type\\|m\\(odule\\|ethod\\)"
           "\\|functor\\|and\\|val\\)[ \t]+"
           "\\(\\('[a-zA-Z0-9]+\\|([^)]+)"
           "\\|mutable\\|private\\|rec\\|type\\)[ \t]+\\)?"
           "\\([a-zA-Z][a-zA-Z0-9_']*\\)"))
 
 ;;; The major mode
-(eval-when-compile
-  (if (and (boundp 'running-xemacs) running-xemacs) nil
-    (require 'imenu)))
+
 
 ;;
 (defvar rml-mode-hook nil
@@ -636,58 +618,6 @@ have rml-electric-indent on, which see.")
           (rml-match-string 1 name)
           (if (string= "rml" (rml-match-string 2 name)) ".rmli" ".rml"))))))
 
-;;; subshell support
-
-(defun rml-eval-region (start end)
-  "Send the current region to the inferior Rml process."
-  (interactive"r")
-  (require 'inf-rml)
-  (inferior-rml-eval-region start end))
-
-;; old version ---to be deleted later
-; 
-; (defun rml-eval-phrase ()
-;   "Send the current Rml phrase to the inferior Rml process."
-;   (interactive)
-;   (save-excursion
-;     (let ((bounds (rml-mark-phrase)))
-;     (inferior-rml-eval-region (car bounds) (cdr bounds)))))
-
-(defun rml-eval-phrase (arg &optional min max)
-  "Send the phrase containing the point to the RML process.
-With prefix-arg send as many phrases as its numeric value, 
-If an error occurs during evalutaion, stop at this phrase and
-repport the error. 
-
-Return nil if noerror and position of error if any.
-
-If arg's numeric value is zero or negative, evaluate the current phrase
-or as many as prefix arg, ignoring evaluation errors. 
-This allows to jump other erroneous phrases. 
-
-Optional arguments min max defines a region within which the phrase
-should lies."
-  (interactive "p")
-  (require 'inf-rml)
-  (inferior-rml-eval-phrase arg min max))
-
-(defun rml-eval-buffer (arg)
-  "Evaluate the buffer from the beginning to the phrase under the point.
-With prefix arg, evaluate past the whole buffer, no stopping at
-the current point."
-  (interactive "p")
-  (let ((here (point)) err)
-    (goto-char (point-min))
-    (setq err
-          (rml-eval-phrase 500 (point-min) (if arg (point-max) here)))
-    (if err (set-mark err))
-    (goto-char here)))
-
-(defun rml-show-subshell ()
-  (interactive)
-  (require 'inf-rml)
-  (inferior-rml-show-subshell))
-
 
 ;;; Imenu support
 (defun rml-show-imenu ()
@@ -698,10 +628,10 @@ the current point."
   (setq rml-imenu-shown t))
 
 (defun rml-prev-index-position-function ()
-  (let (found data)
+  (let (found found2 data pos)
     (while (and (setq found
                       (re-search-backward rml-imenu-search-regexp nil 'move))
-                (progn (setq data (match-data)) t)
+		(progn (setq data (match-data)) t)
                 (or (rml-in-literal-p)
                     (rml-in-comment-p)
                     (if (looking-at "in") (rml-find-in-match)))))
@@ -931,14 +861,6 @@ whole string."
     (if string (substring string begin end)
       (buffer-substring-no-properties begin end))))
 
-;; itz Thu Sep 24 19:02:42 PDT 1998 this is to have some level of
-;; comfort when sending phrases to the toplevel and getting errors.
-(defun rml-goto-phrase-error ()
-  "Find the error location in current Rml phrase."
-  (interactive)
-  (require 'inf-rml)
-  (let ((bounds (save-excursion (rml-mark-phrase))))
-    (inferior-rml-goto-error (car bounds) (cdr bounds))))
 
 ;;; Phrases
 
@@ -1383,9 +1305,17 @@ the line where the governing keyword occurs.")
 (defun rml-find-done-match ()
   (let ((unbalanced 1) (kwop t))
     (while (and (not (= 0 unbalanced)) kwop)
-      (setq kwop (rml-find-kwop "\\<\\(done\\|for\\|while\\)\\>"))
+      (setq kwop (rml-find-kwop "\\<\\(do\\(ne\\)?\\|for\\|while\\)\\>"))
       (cond
        ((not kwop))
+       ((string= kwop "do")
+	(let ((beg (point)) (prec (rml-find-done-match)))
+	  (if (not (string= prec "for"))
+	      (progn  
+		(goto-char beg)  ;rml-find-done-match a modifie la pos
+		(setq unbalanced (1- unbalanced)))
+	    (setq kwop prec)
+	    (setq unbalanced (1- unbalanced)))))
        ((string= kwop "done") (setq unbalanced (1+ unbalanced)))
        (t (setq unbalanced (1- unbalanced)))))
     kwop))
@@ -1439,7 +1369,12 @@ the line where the governing keyword occurs.")
        ((not kwop))
        ((string= kwop "when") (rml-find-when-match))
        ((string= kwop "until") (setq unbalanced (1+ unbalanced)))
-       (t (setq unbalanced (1- unbalanced)))))
+ ;      (t (setq unbalanced (1- unbalanced)))))
+       (t (let ((beg (point)) (prec (rml-find-done-match)))
+	    (if (not (string= prec "for"))
+		(progn  (goto-char beg)  ;rml-find-done-match a modifie la pos
+			(setq unbalanced (1- unbalanced)))
+	      )))))
     kwop))
 
 (defun rml-find-when-match ()
@@ -1450,8 +1385,14 @@ the line where the governing keyword occurs.")
        ((not kwop))
        ((string= kwop "until") (rml-find-until-match))
        ((string= kwop "when") (setq unbalanced (1+ unbalanced)))
-       (t (setq unbalanced (1- unbalanced)))))
-    kwop))
+       ;(t (setq unbalanced (1- unbalanced)))))
+       (t (let ((beg (point)) (prec (rml-find-done-match)))
+	    (if (not (string= prec "for"))
+		(progn  (goto-char beg)  ;rml-find-done-match a modifie la pos
+		       (setq unbalanced (1- unbalanced)))
+	      )))))
+
+   kwop))
 
 (defun rml-find-with-match ()
   (let ((unbalanced 1) (kwop t))
@@ -1512,7 +1453,7 @@ the line where the governing keyword occurs.")
   (let ((done nil) (kwop)
         (re (concat
              "\\<\\(try\\|match\\|with\\|function\\|parser\\|type"
-             "\\|e\\(nd\\|lse\\)\\|done\\|then\\|in\\)\\>"
+             "\\|e\\(nd\\|lse\\)\\|done\\|then\\|until\\|when\\|in\\)\\>"
              "\\|[^[|]|\\|[])}]")))
     (while (not done)
       (setq kwop (rml-find-kwop re))
@@ -1531,6 +1472,12 @@ the line where the governing keyword occurs.")
         (if (re-search-backward "\\<with\\>" (- (point) 5) t)
             (setq kwop (rml-find-with-match)))
         (setq done t))
+       ((string= kwop "until")
+	(setq kwop (rml-find-until-match))
+	(setq done t))
+       ((string= kwop "when")
+	(setq kwop (rml-find-when-match))
+	(setq done t))
        ((string= kwop "done") (rml-find-done-match))
        ((string= kwop "end") (rml-find-end-match))
        ((string= kwop "then") (rml-find-then-match))
@@ -2191,8 +2138,6 @@ with prefix arg, indent that many phrases starting with the current phrase."
     (push-mark)
     (beginning-of-line 1)
     (backward-char 4)))
-
-(autoload 'run-rml "inf-rml" "Run an inferior Rml process." t)
 
 (autoload 'rml-types-show-type "rml-types"
   "Show the type of expression or pattern at point." t)

@@ -50,6 +50,8 @@ and expression_desc =
   | Kexpr_seq of expression * expression
   | Kexpr_process of process
   | Kexpr_pre of pre_kind * expression
+  | Kexpr_emit of expression 
+  | Kexpr_emit_val of expression * expression 
 
 (* Process expressions *)
 and process =
@@ -75,7 +77,7 @@ and process_desc =
 	(expression * expression) option * process
   | Kproc_def of (pattern * expression) * process
   | Kproc_run of expression * process
-  | Kproc_until of expression * process * process
+  | Kproc_until of expression * process * (pattern * process) option * process
   | Kproc_when of expression * process * process
   | Kproc_control of expression * process * process
   | Kproc_get of expression * pattern * process

@@ -1,0 +1,24 @@
+(*************************************************************************)
+(*                              Reactive ML                              *)
+(*                                                                       *)
+(*  Fichier : misc_pp.mlp                                                *)
+(*  Date de creation : 17/09/2004                                        *)
+(*  Auteur : Louis Mandel                                                *)
+(*************************************************************************)
+
+(* $Id$ *)
+
+(* Preprocessor for misc.ml *)
+
+open Pcaml;;
+
+let stdlib =
+  let stdlib_ch = open_in "stdlib" in
+  input_line stdlib_ch
+
+EXTEND
+  expr: LEVEL "simple"
+    [[ UIDENT "STDLIB" -> <:expr< $str:stdlib$ >> ]];
+  patt: LEVEL "simple"
+    [[ UIDENT "STDLIB" -> <:patt< $str:stdlib$ >> ]];
+END;;

@@ -37,7 +37,12 @@ module Rml_interpreter: Lco_interpreter.S =
 	  mutable cond: (unit -> bool);
 	  mutable fils: contol_tree list;
 	  mutable next: next; }
-    and contol_type = Top | Kill of step | Susp | When of step ref
+    and contol_type = 
+	Top 
+      | Kill of step 
+      | Kill_handler of (unit -> step)
+      | Susp 
+      | When of step ref
 
     and step = unit -> unit
     and next = step list
@@ -75,7 +80,8 @@ module Rml_interpreter: Lco_interpreter.S =
       p.active <- true;
       p.susp <- false;
       p.next <- [];
-      List.iter set_kill p.fils
+      List.iter set_kill p.fils;
+      p.fils <- []
 	
 (* calculer le nouvel etat de l'arbre de control *)
     let eval_control =
@@ -87,6 +93,21 @@ module Rml_interpreter: Lco_interpreter.S =
 	      if p.cond() 
 	      then 
 		(pere.next <- f_k :: pere.next;
+		 set_kill p;
+		 false)
+	      else
+		(p.fils <-
+		  List.fold_left 
+		    (fun acc node -> 
+		      if eval p node 
+		      then node :: acc
+		      else acc) 
+		    [] p.fils;
+		 true)
+	  | Kill_handler handler -> 
+	      if p.cond() 
+	      then 
+		(pere.next <- (handler()) :: pere.next;
 		 set_kill p;
 		 false)
 	      else
@@ -126,7 +147,9 @@ module Rml_interpreter: Lco_interpreter.S =
 		       else acc) 
 		     [] p.fils;
 		 true)
-	else false
+	else 
+	  (set_kill p;
+	   false)
       in
       fun () ->
 	top.fils <-
@@ -293,6 +316,20 @@ module Rml_interpreter: Lco_interpreter.S =
     let rml_emit expr_evt = rml_emit_val expr_evt (fun() -> ())
     let rml_emit' evt = rml_emit_val' evt (fun() -> ())
 
+    let rml_expr_emit_val expr_evt e =
+      let evt = expr_evt () in
+      if evt.status <> !instant 
+      then 
+	(evt.pre_status <- evt.status;
+	 evt.pre_value <- evt.value;
+	 evt.status <- !instant;
+	 evt.value <- evt.combine (e()) evt.default;
+	 wakeUp evt)
+      else
+	evt.value <- evt.combine (e()) evt.value
+      
+    let rml_expr_emit expr_evt =
+      rml_expr_emit_val expr_evt (fun() -> ())
 
 (**************************************)
 (* await_immediate                    *)
@@ -627,6 +664,7 @@ let loop p =
 	in
 	let end_until =
 	  fun () ->
+	    set_kill new_ctrl;
 	    new_ctrl.active <- false;
 	    f_k ()
 	in
@@ -649,6 +687,88 @@ let loop p =
 	in
 	let end_until =
 	  fun () ->
+	    set_kill new_ctrl;
+	    new_ctrl.active <- false;
+	    f_k ()
+	in
+	let f = p end_until new_ctrl in
+	step_until f_k ctrl evt f new_ctrl
+
+(**************************************)
+(* until handler                      *)
+(**************************************)
+
+    let step_until_handler f_k ctrl evt f new_ctrl =
+      new_ctrl.cond <- (fun () -> evt.status = !instant);
+      let f_until =
+	fun () ->
+	  if new_ctrl.active
+	  then 
+	    (ctrl.fils <- new_ctrl :: ctrl.fils)
+	  else
+	    (new_ctrl.active <- true;
+	     new_ctrl.susp <- false;
+	     new_ctrl.next <- []);
+	  f()
+      in f_until
+	
+    let rml_until_handler expr_evt p p_handler =
+      fun f_k ctrl ->
+	let evt = ref (Obj.magic()) in
+	let handler =
+	  fun () ->
+	    let x =
+	      if !evt.status = !instant
+	      then !evt.value
+	      else raise RML
+	    in
+	    let f_handler = p_handler x f_k ctrl in
+	    f_handler
+	in
+	let new_ctrl = 
+	  { kind = Kill_handler handler;
+	    active = true;
+	    susp = false;
+	    fils = [];
+	    cond = (fun () -> false);
+	    next = [] }
+	in
+	let end_until =
+	  fun () ->
+	    set_kill new_ctrl;
+	    new_ctrl.active <- false;
+	    f_k ()
+	in
+	let f = p end_until new_ctrl in
+	let f_until =
+	  fun () ->
+	    evt := expr_evt ();
+	    step_until f_k ctrl !evt f new_ctrl ()
+	in f_until
+
+    let rml_until_handler' evt p p_handler =
+      fun f_k ctrl ->
+	let handler =
+	  fun () ->
+	    let x =
+	      if evt.status = !instant
+	      then evt.value
+	      else raise RML
+	    in
+	    let f_handler = p_handler x f_k ctrl in
+	    f_handler
+	in
+	let new_ctrl = 
+	  { kind = Kill_handler f_k;
+	    active = true;
+	    susp = false;
+	    fils = [];
+	    cond = (fun () -> false);
+	    next = [] }
+	in
+	let end_until =
+	  fun () ->
+	    set_kill new_ctrl;
 	    new_ctrl.active <- false;
 	    f_k ()
 	in
@@ -685,6 +805,7 @@ let loop p =
 	in
 	let end_control =
 	  fun () ->
+	    set_kill new_ctrl;
 	    new_ctrl.active <- false;
 	    f_k ()
 	in
@@ -707,6 +828,7 @@ let loop p =
 	in
 	let end_control =
 	  fun () ->
+	    set_kill new_ctrl;
 	    new_ctrl.active <- false;
 	    f_k ()
 	in
@@ -775,6 +897,7 @@ let loop p =
 	in
 	let end_when =
 	  fun () ->
+	    set_kill new_ctrl;
 	    new_ctrl.active <- false;
 	    f_k ()
 	in
@@ -799,6 +922,7 @@ let loop p =
 	in
 	let end_when =
 	  fun () ->
+	    set_kill new_ctrl;
 	    new_ctrl.active <- false;
 	    f_k ()
 	in
@@ -954,7 +1078,10 @@ let loop p =
 	exec ()
       in
       current := [f];
-      exec ()
+      try 
+	exec ()
+      with
+      | End -> ()
 
 (**************************************************)
 (* rml_exec_n                                     *)
@@ -984,7 +1111,10 @@ let loop p =
 	  ()
       in
       current := [f];
-      exec ()
+      try
+	exec ()
+      with
+      | End -> ()
 
 (**************************************************)
 (* rml_exec_sampling                              *)
@@ -1035,7 +1165,10 @@ let loop p =
 	exec ()
       in
       current := [f];
-      exec ()
+      try
+	exec ()
+      with
+      | End -> ()
 
 (**************************************************)
 (* rml_exec_n_sampling                            *)
@@ -1092,7 +1225,9 @@ let loop p =
 	  ()
       in
       current := [f];
-      exec ()
-
+      try
+	exec ()
+      with
+      | End -> ()
 
   end (* Module Rml_interpreter *)

@@ -1,0 +1,49 @@
+
+let process dbclick n click simple double =
+  signal fin in
+  loop
+    await click (pos) in
+    do
+      for i = 1 to n do
+	pause
+      done;
+      emit fin;
+      pause
+    until
+    | fin -> emit simple (List.hd pos)
+    | click (pos) -> emit double (List.hd pos)
+    done;
+  end
+
+let print_pos (x,y) =
+  print_string ("("^(string_of_int x)^", "^(string_of_int y)^")")
+
+let process main =
+  signal click, simple, double in
+  run (dbclick 3 click simple double)
+  ||
+  loop
+    await one simple(pos) in
+    print_string "simple = ";
+    print_pos pos;
+    print_newline();
+  end
+  ||
+  loop
+    await one double(pos) in
+    print_string "double = ";
+    print_pos pos;
+    print_newline();
+  end
+  ||
+  pause;
+  emit click (1,1);
+  pause;
+  pause;
+  pause;
+  pause;
+  pause;
+  pause;
+  pause;
+  pause;
+  emit click (2,2);

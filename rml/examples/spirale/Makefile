@@ -1,26 +1,17 @@
 OCAMLC = ocamlc
 OCAMLOPT = ocamlopt
-RMLC = ../../compiler/rmlc
+RMLC = rmlc
 INTERPRETER = interpreter
-INTERPRETERPATH=../../interpreter
-INTERPRETERTYPE=ctrl_tree
-RMLCOPTS= -I ../../stdlib
+INTERPRETERPATH=`$(RMLC) -where`
+RMLCOPTS=
 
 
 #  Ne pas modifier apres (et pendant) cette ligne
 
-ifeq ($(INTERPRETERTYPE),ctrl_tree)
-INTERTYPE = lco_ctrl_tree
-else
-INTERTYPE = lk_rewrite
-endif
-
-OBJS = moteur.cmo \
-       spirale.cmo \
+OBJS = spirale.cmo \
 
 
-OBJSOPT = moteur.cmx \
-       spirale.cmx \
+OBJSOPT = spirale.cmx \
 
 EXEC = spirale
 EXECOPT = spirale.opt
@@ -36,44 +27,37 @@ opt: $(EXECOPT)
 
 
 $(EXEC): $(OBJS)
-	$(OCAMLC) -o $(EXEC) -I $(INTERPRETERPATH) unix.cma graphics.cma $(INTERTYPE).cmo $(OBJS) 
+	$(OCAMLC) -o $(EXEC) -I $(INTERPRETERPATH) unix.cma graphics.cma rml_interpreter.cma $(OBJS) 
 
 
 
 $(EXECOPT): $(OBJSOPT)
-	$(OCAMLOPT) -o $(EXECOPT) -I $(INTERPRETERPATH) unix.cmxa graphics.cmxa $(INTERTYPE).cmx $(OBJSOPT)  -cclib -lunix
+	$(OCAMLOPT) -o $(EXECOPT) -I $(INTERPRETERPATH) unix.cmxa graphics.cmxa rml_interpreter.cmxa $(OBJSOPT)  -cclib -lunix
 
-spirale.cmo: spirale.ml moteur.cmi
+spirale.cmo: spirale.ml 
 
-moteur.cmo: moteur.ml
-
-
-spirale.cmx: spirale.ml moteur.cmi
-
-moteur.cmx: moteur.ml
+spirale.cmx: spirale.ml 
 
 
 spirale.ml: spirale.rml
-	$(RMLC) $(RMLCOPTS) -s main -runtime $(INTERPRETERTYPE) $<
-
-moteur.ml: moteur.rml
+	$(RMLC) $(RMLCOPTS) -s main $<
 
 
 
 clean:
-	rm -f *.cmi *.cmo *.cmx spirale.ml moteur.ml *.o *.rzi
+	rm -f *.cmi *.cmo *.cmx spirale.ml *.o *.rzi
 
 cleanall: clean
 	rm -f $(EXEC) $(EXECOPT)
 
 realclean: cleanall
 
-.PHONY: clean cleanall realclean all byte opt $(EXEC) $(EXECOPT)
+.PHONY: clean cleanall realclean all byte opt
 .SUFFIXES:
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .rml
 
 .rml.ml:
-	$(RMLC) $(RMLCOPTS) -runtime $(INTERPRETERTYPE) $<
+	$(RMLC) $(RMLCOPTS) $<
 
 .ml.cmo:
 	$(OCAMLC) -I $(INTERPRETERPATH) -c $<

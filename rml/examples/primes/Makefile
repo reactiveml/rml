@@ -1,6 +1,8 @@
 # File to compile
-FILE=prime-init
+#FILE=prime-init
 #FILE=prime-when
+#FILE=prime-val
+FILE=prime-kahn
 
 # Reactive ML compiler
 RMLC=rmlc

@@ -1,0 +1,8 @@
+open Position
+
+type t
+val no_info : int
+val make : int -> t
+val get : t -> int -> position * int
+val set : t -> int -> position -> int -> unit
+val update : t -> int -> position -> int -> unit

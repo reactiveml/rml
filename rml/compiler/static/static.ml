@@ -136,10 +136,8 @@ let rec static_expr ctx e =
 
     | Pexpr_when_match (e1,e2) ->
 	let typ1 = static_expr ML e1 in
-	let typ2 = static_expr ML e2 in
-	if unify typ1 typ2 = Static
-	then Static
-	else expr_wrong_static_err e
+	let typ2 = static_expr Process e2 in
+	unify typ1 typ2
 
     | Pexpr_while (e1,e2) ->
 	let typ1 = static_expr ML e1 in
@@ -169,23 +167,23 @@ let rec static_expr ctx e =
 	else expr_wrong_static_err e
 
     | Pexpr_emit s ->
-	if ctx = Process
+	if static_expr ML s = Static
 	then 
-	  if static_expr ML s = Static
-	  then Dynamic
-	  else expr_wrong_static_err s
-	else expr_wrong_static_err e
+	  if ctx = Process
+	  then Dynamic 
+	  else Static
+	else expr_wrong_static_err s
 
     | Pexpr_emit_val (s, e1) ->
-	if ctx = Process
-	then 
-	  if static_expr ML s = Static
-	  then
-	    if static_expr ML e1 = Static
+	if static_expr ML s = Static
+	then
+	  if static_expr ML e1 = Static
+	  then 
+	    if ctx = Process
 	    then Dynamic
-	    else expr_wrong_static_err e1
-	  else expr_wrong_static_err s
-	else expr_wrong_static_err e
+	    else Static
+	  else expr_wrong_static_err e1
+	else expr_wrong_static_err s
 
     | Pexpr_loop e1 ->
 	if ctx = Process
@@ -241,12 +239,15 @@ let rec static_expr ctx e =
 	then Dynamic
 	else expr_wrong_static_err e
 
-    | Pexpr_until (s, p) ->
+    | Pexpr_until (s, p, p_e_opt) ->
 	if ctx = Process
 	then 
 	  if static_expr ML s = Static
 	  then 
 	    let typ1 = static_expr Process p in
+	    let typ2_opt = 
+	      Misc.opt_map (fun (_,e) -> static_expr Process e) p_e_opt 
+	    in
 	    Dynamic
 	  else expr_wrong_static_err s
 	else

@@ -1,0 +1,36 @@
+open Icobj;;
+open Behavior;;
+open Rml_Graphics;;
+
+let pronothing = process {} -> nothing;;
+
+let process creer_scene  {} =
+  signal newicobj in
+   run (workspace 500 500) {newicobj=newicobj}
+(*   ||
+   pause;
+   let a = looping pcosclone in 
+   emit newicobj ((a,true),behav_nothing,{xi=100;yi=100}) *)
+   ||
+   let ajouticobj = process {in insig} ->(await immediate one insig (i) in
+                                          emit newicobj i
+					 ) in
+   pause;
+   emit newicobj ((pbuilderclone,true),(pbuildernoclone ajouticobj),{xi=100;yi=400})
+(*   ||
+   pause;
+   let a = looping (sequence (sequence awaitclick (parallelise psinclone pcosclone) ) (sequence awaitclick pcosclone)) in 
+   emit newicobj ((a,true),behav_nothing,{xi=200;yi=300}) *)
+   ||
+   pause;
+   emit newicobj ((psinclone,false),psinnoclone,{xi=450;yi=450})
+   ||
+   pause;
+   emit newicobj ((pcosclone,false),pcosnoclone,{xi=400;yi=450})
+   ||
+   pause;
+   emit newicobj ((ploopclone,false),ploopnoclone,{xi=25;yi=400})
+   ||
+   pause;
+   emit newicobj ((ptrashclone,false),ptrashnoclone,{xi=450;yi=25});;
+

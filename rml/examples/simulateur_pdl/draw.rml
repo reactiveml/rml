@@ -12,10 +12,15 @@ let draw_route p =
   in
   begin
     match p.packet_route with
-    | n :: _ -> Graphics.moveto n.node_pos.x n.node_pos.y
+    | n :: _ -> 
+	Graphics.moveto n.node_pos.x n.node_pos.y;
+	if n.node_id = p.packet_dest_id then
+	  set_color c1
+	else
+	  set_color c3
     | _ -> ()
   end;
-  set_color c1;
+(*  set_color c1;*)
   List.iter
     (fun n ->
       Graphics.lineto n.node_pos.x n.node_pos.y;)
@@ -68,8 +73,8 @@ let draw_info kind n =
 	    Graphics.set_color Graphics.black;
   
   Graphics.moveto n.hello_pos.x n.hello_pos.y;
-  Graphics.draw_string (string_of_int n.hello_id);
-(*  Graphics.draw_circle n.hello_pos.x n.hello_pos.y 1;*)
+(*  Graphics.draw_string (string_of_int n.hello_id);*)
+  Graphics.draw_circle n.hello_pos.x n.hello_pos.y 1;
   Graphics.set_color Graphics.black;
   if n.hello_id = !main_node then
     (Graphics.draw_circle n.hello_pos.x n.hello_pos.y !coverage_range;
@@ -175,6 +180,8 @@ let search_closer (x,y) all =
 let process draw_simul draw suspend =
    Graphics.open_graph (" "^(string_of_int !max_x)^"x"^(string_of_int !max_y));
 (*  Graphics.open_graph "";*)
+  Graphics.set_window_title 
+    ("Simulation of "^(string_of_int !nb_node)^" nodes");
   Graphics.auto_synchronize false;
 
   let with_neighborhood = ref false in

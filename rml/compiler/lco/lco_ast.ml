@@ -49,6 +49,8 @@ and expression_desc =
   | Coexpr_seq of expression * expression
   | Coexpr_process of process
   | Coexpr_pre of pre_kind * expression
+  | Coexpr_emit of expression
+  | Coexpr_emit_val of expression * expression
 
 (* Process expressions *)
 and process =
@@ -71,7 +73,7 @@ and process_desc =
 	* (expression * expression) option * process
   | Coproc_def of (pattern * expression) * process
   | Coproc_run of expression 
-  | Coproc_until of expression * process
+  | Coproc_until of expression * process * (pattern * process) option
   | Coproc_when of expression * process
   | Coproc_control of expression * process
   | Coproc_get of expression * pattern * process

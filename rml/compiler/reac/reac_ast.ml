@@ -52,6 +52,9 @@ and expression_desc =
   | Rexpr_seq of expression * expression
   | Rexpr_process of process
   | Rexpr_pre of pre_kind * expression
+  | Rexpr_emit of expression
+  | Rexpr_emit_val of expression * expression
+
 
 (* Process expressions *)
 and process =
@@ -74,7 +77,7 @@ and process_desc =
 	* (expression * expression) option * process
   | Rproc_def of (pattern * expression) * process
   | Rproc_run of expression 
-  | Rproc_until of expression * process
+  | Rproc_until of expression * process * (pattern * process) option
   | Rproc_when of expression * process
   | Rproc_control of expression * process
   | Rproc_get of expression * pattern * process

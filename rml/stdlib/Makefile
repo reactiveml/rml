@@ -16,6 +16,7 @@ CIBLE= rml_pervasives.rzi \
        hashtbl.rzi \
        list.rzi \
        obj.rzi \
+       queue.rzi \
        random.rzi \
        string.rzi \
        sys.rzi \

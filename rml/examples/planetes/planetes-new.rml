@@ -135,7 +135,7 @@ let process soleil id masse pos_init p =
 (******************************************************)
 (* machine fenetre [new_planete,p]                    *)
 (******************************************************)
-let fenetre = process new_planete p kill_sun kill suspend ->
+let process fenetre new_planete p kill_sun kill suspend =
 (*----------------------------------------------------*)
 (* machine read_click [new_planete]                   *)
 (*----------------------------------------------------*)
@@ -206,7 +206,7 @@ let rec process add id new_planete kill p =
         if n = id then emit t;
         pause
       end
-    until t)
+    until t done)
   ||
    run (add (id+1) new_planete kill p))
 ;;
@@ -215,7 +215,7 @@ let rec process add_aux id new_planete kill kill_new p =
   await new_planete (pos) in
   do
     run (planete id 1.0 (List.hd pos) (v_init()) p)
-  until kill_new
+  until kill_new done
   ||
   signal new_kill_new in
   run (add_aux (id+1) new_planete kill new_kill_new p)
@@ -242,7 +242,7 @@ let process systeme =
   control
     do
       run (soleil 0 30000.0 {x=0.0;y=0.0;z=0.0} p)
-    until kill_sun
+    until kill_sun done
     ||
     run (planete 1 1.0
 	   {x = 0.0; y = -. 200.0; z = 0.0} 

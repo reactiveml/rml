@@ -36,15 +36,6 @@ $(FILE).opt: $(FILE).cmx
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FILE).opt unix.cmxa graphics.cmxa -I `$(RMLC) -where` rml_interpreter.cmxa $(FILE).cmx 
 
 
-caml_cellular_automata.cmo: caml_cellular_automata.ml
-caml_cellular_automata: caml_cellular_automata.cmo 
-	$(OCAMLC) $(OCAMLFLAGS) -o caml_cellular_automata unix.cma graphics.cma caml_cellular_automata.cmo 
-
-caml_cellular_automata.cmx: caml_cellular_automata.ml
-caml_cellular_automata.opt: caml_cellular_automata.cmx 
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o caml_cellular_automata.opt unix.cmxa graphics.cmxa caml_cellular_automata.cmx 
-
-
 # implicit rules
 .SUFFIXES: .rml .mli .ml .cmi .cmo .cmx .o .rzi
 
@@ -70,6 +61,4 @@ caml_cellular_automata.opt: caml_cellular_automata.cmx
 clean :
 	rm -f *.cm* *.o *.annot *.rannot *.rzi \
 		$(FILE).ml $(FILE) $(FILE).opt \
-		caml_cellular_automata caml_cellular_automata.opt \
-		cellular_automata_par.ml cellular_automata_par \
-		cellular_automata_par.opt *~ 
+		 *~ 

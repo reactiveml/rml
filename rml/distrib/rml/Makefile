@@ -12,12 +12,15 @@
 # variable.
 
 PREFIX = /usr/local
+OCAMLRUN = ocamlrun
 
 # No further modification should be needed
 
 install:
+	sed -e s,PREFIX,$(PREFIX),g -e s,OCAMLRUN,$(OCAMLRUN),g rmlc.in > bin/rmlc
+	chmod a+x bin/rmlc
 	cp -r bin lib $(PREFIX)
 
 uninstall:
-	rm -rf $(PREFIX)/bin/rmlc $(PREFIX)/lib/rml
+	rm -rf $(PREFIX)/bin/rmlc $(PREFIX)/bin/rmlc.byte $(PREFIX)/lib/rml
 

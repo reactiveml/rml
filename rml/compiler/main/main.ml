@@ -132,13 +132,24 @@ and doc_number_of_instant = "<n> Executes the main process <n> instants"
 and doc_sampling = "<rate> Sets the sampling rate to <rate> seconds"
 and doc_verbose = "Print types"
 and doc_save_types = "Save type information in <filename>.rannot"
-and doc_runtime =
+and doc_runtime = "(undocumented)"
+(*
 "<interpreter> select the runtime according to <interpreter>:\n\
         \t rewrite\n\
         \t rewrite_debug\n\
         \t ctrl_tree"
+*)
 and doc_dparse = "(undocumented)"
-and errmsg = "Options are:"
+and errmsg = 
+"\nrmlc - The Reactive ML Compiler
+Usage: rmlc [options] -s <process> <file>.rml
+  <process> : name of the main process
+  <file>.rml : file containing the source of <process>
+  Ouputs the file <file>.ml.
+  This file should compile with:
+  ocamlc -I `rmlc -where` unix.cma rml_interpreter.cma <obj_files> <file>.ml
+
+Options are:"
 
 (* the main function: parse the command line *)
 let main () =

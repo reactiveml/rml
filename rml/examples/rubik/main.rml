@@ -8,70 +8,56 @@ open Rubik;;
 (* click de souris                                    *)
 (******************************************************)
 
-let rec process evenement_souris {in click} =
-  await click (pos) in
-  let current_click = List.hd pos in
-  (
-       nothing
-(*     emit mvt (Random.int 3,(Random.int 3, if (Random.int 2) = 0 then -1. else 1.));  *)
-(*        run evenement_souris     (click,p,mvt) *)
-  )
-;;
-
-
-
-let rec process mouse_drag rotx roty {out send;in r_dep  } =
-     await r_dep (p) in
-     let p = List.hd p in
+let rec process mouse_drag rotx roty rot_rubik r_dep =
+     await one r_dep (p) in
      let rotx = mod_float (rotx +. (p.x /. 10.)) 6.28 in
      let roty = mod_float (roty +. (p.y /. 10.)) 6.28 in
-     emit send (rotx,roty);
+     emit rot_rubik (rotx,roty);
      pause;
-     run (mouse_drag rotx roty) {send=send;r_dep=r_dep};;
+     run (mouse_drag rotx roty rot_rubik r_dep);;
 
 
 (***************************************************)
 (* Frappe du clavier                               *)
 (***************************************************)
 
-let rec process evenement_clavier {in key_push,mvt_suiv;out mvt} =
-       
+let rec process evenement_clavier key_push mvt_suiv mvt =
       loop 
        present key_push  then
-         (  await key_push (key) in
-            let key = List.hd key in
+         (await immediate one key_push (key) in
+	  pause;
             let rot =(match key with 
-                       | 'q' -> (0,(0, 1.) )
-                       | 'Q' -> (0,(0,-1.) )
-                       | 'w' -> (1,(0, 1.) )
-                       | 'W' -> (1,(0,-1.) )
-                       | 'e' -> (2,(0, 1.) )
-                       | 'E' -> (2,(0,-1.) )
+                       | 'q' -> (X,(0, 1.) )
+                       | 'Q' -> (X,(0,-1.) )
+                       | 'w' -> (Y,(0, 1.) )
+                       | 'W' -> (Y,(0,-1.) )
+                       | 'e' -> (Z,(0, 1.) )
+                       | 'E' -> (Z,(0,-1.) )
 
-                       | 'a' -> (0,(1, 1.) )
-                       | 'A' -> (0,(1,-1.) )
-                       | 's' -> (1,(1, 1.) )
-                       | 'S' -> (1,(1,-1.) )
-                       | 'd' -> (2,(1, 1.) )
-                       | 'D' -> (2,(1,-1.) )
+                       | 'a' -> (X,(1, 1.) )
+                       | 'A' -> (X,(1,-1.) )
+                       | 's' -> (Y,(1, 1.) )
+                       | 'S' -> (Y,(1,-1.) )
+                       | 'd' -> (Z,(1, 1.) )
+                       | 'D' -> (Z,(1,-1.) )
 
-                       | 'z' -> (0,(2, 1.) )
-                       | 'Z' -> (0,(2,-1.) )
-                       | 'x' -> (1,(2, 1.) )
-                       | 'X' -> (1,(2,-1.) )
-                       | 'c' -> (2,(2, 1.) )
-                       | 'C' -> (2,(2,-1.) )
-                       | _   -> (3,(2, 1.) )
+                       | 'z' -> (X,(2, 1.) )
+                       | 'Z' -> (X,(2,-1.) )
+                       | 'x' -> (Y,(2, 1.) )
+                       | 'X' -> (Y,(2,-1.) )
+                       | 'c' -> (Z,(2, 1.) )
+                       | 'C' -> (Z,(2,-1.) )
+                       | _   -> (No,(0, 1.) )
                       ) in
-               if fst rot = 3 then
-                emit mvt (3,(0, 1.))
+               if fst rot = No then
+                 emit mvt (No,(0, 1.))
                else
                (emit mvt (rot);
                 await immediate mvt_suiv ;
                )
        )
        else
-           emit mvt (3,(0,1.));
+           emit mvt (No,(0,1.));
       end;;
 (************************************************)
 
@@ -87,23 +73,21 @@ let rec process evenement_clavier {in key_push,mvt_suiv;out mvt} =
 (******************************************************)
 (* machine systeme []                                 *)
 (******************************************************)
-let process systeme {} =
-  signal p in
-  signal r in  (* pour la rotation du cube *)
-  signal mvt in
-  signal mvt_suiv in
+let process main =
+  signal graph in
+  signal rot_rubik in  (* pour la rotation du Rubik's Cube *)
+  signal mvt in        (* mouvement a faire *)
+  signal mvt_suiv in (* Present quand on a fini un mouvement *)
   signal click in
-  signal key_push in
+  signal clavier in
   signal a_move in
-  run fenetre           {click=click;a_move=a_move;p=p;key_push=key_push;r=r}
+  run (fenetre click clavier graph a_move rot_rubik)
   ||
-  run evenement_clavier {key_push=key_push;mvt=mvt;mvt_suiv=mvt_suiv}
+  run (evenement_clavier clavier mvt_suiv mvt)
   ||
-  run evenement_souris  {click=click}
+  run (mouse_drag 0. 0. rot_rubik a_move)
   ||
-  run (mouse_drag 0. 0.) {send=r;r_dep=a_move}
-  ||
-  run creer_rubik {p=p;mvt=mvt;mvt_suiv=mvt_suiv};;
+  run (creer_rubik graph mvt_suiv mvt);;
 
 
 Random.self_init ();;

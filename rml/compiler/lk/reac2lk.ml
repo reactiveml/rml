@@ -223,6 +223,11 @@ let rec translate_ml e =
     | Rexpr_pre (flag,s) ->
 	Kexpr_pre (flag, translate_ml s)
 
+    | Rexpr_emit s -> Kexpr_emit (translate_ml s)
+
+    | Rexpr_emit_val (s, e) -> 
+	Kexpr_emit_val (translate_ml s, translate_ml e)
+
   in
   make_expr kexpr e.expr_loc
 
@@ -282,8 +287,25 @@ and translate_proc k p =
     | Rproc_run (expr) ->
 	Kproc_run (translate_ml expr, k)
 
-    | Rproc_until (s, proc) ->
-	Kproc_until (translate_ml s, translate_proc (make_term()) proc, k)
+    | Rproc_until (s, proc, patt_proc_opt) ->
+	let k_id = Ident.create gen_k "k" Ident.Internal in
+	let k_var = make_proc (Kproc_var k_id) Location.none in
+	Kproc_apply
+	  (make_proc
+	     (Kproc_abs
+		(k_id,
+		 make_proc
+		   (Kproc_until (translate_ml s, 
+				 translate_proc (make_term()) proc, 
+				 opt_map 
+				   (fun (patt, proc) -> 
+				     translate_pattern patt,
+				     translate_proc k_var proc)
+				   patt_proc_opt,
+				 k_var))
+		   Location.none))
+	     Location.none,
+	   k)
 
     | Rproc_when (s, proc) ->
 	Kproc_when (translate_ml s, translate_proc (make_term()) proc, k)

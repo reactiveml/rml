@@ -1,14 +1,11 @@
 CAMLC = ocamlc
 OCAMLOPT = ocamlopt
-CAMLDEP = ocamldep
-CAMLLEX = ocamllex
-CAMLYACC = ocamlyacc
-RMLC = ../../compiler/rmlc
-INTERPRETERPATH=../../interpreter
+RMLC = rmlc
+INTERPRETERPATH=`$(RMLC) -where`
 
 SAMPLING = 0.02
 
-RMLCOPTS = -I ../../stdlib
+RMLCOPTS =
 
 
 OBJS = moteur.cmo \
@@ -68,7 +65,7 @@ main.ml:main.rml
 
 # Regles implicites :
 
-.SUFFIXES: .ml .mli .cmo .cmi .cmx .mll .mly .rml .o
+.SUFFIXES: .ml .mli .cmo .cmi .cmx .rml .o
 
 
 .rml.ml:
@@ -83,23 +80,5 @@ main.ml:main.rml
 .ml.cmx:
 	$(OCAMLOPT) -c -I $(INTERPRETERPATH) $<
 
-.mll.cmx:
-	$(CAMLLEX) $<
-	$(CAMLOPT) -c $*.ml
-
-.mly.cmx:
-	$(CAMLYACC) $<
-	$(OCAMLOPT) -c $*.mli
-	$(OCAMLOPT) -c $*.ml
-
-.mly.cmi:
-	$(CAMLYACC) $<
-	$(CAMLC) -c $*.mli
-
-.mll.ml:
-	$(CAMLLEX) $<
-
-.mly.ml:
-	$(CAMLYACC) $<
 
 

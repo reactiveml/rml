@@ -1,0 +1,18 @@
+                        ReactiveML emacs mode
+
+                  http://www-spi.lip6.fr/~mandel/rml/
+
+
+. Installation:
+  ------------- 
+
+Put the .el files in your path, and add the following lines to 
+your .emacs file:
+
+(setq auto-mode-alist
+      (cons '("\\.rml[i]?$" . rml-mode) auto-mode-alist))
+(autoload 'rml-mode "rml" "Major mode for editing Rml code." t)
+(if window-system (require 'rml-font))
+
+
+

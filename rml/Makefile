@@ -74,29 +74,39 @@ source-distrib:
 binary-distrib: binary-distrib.opt
 
 binary-distrib.opt: clean-distrib
+	touch config
+	make realclean
 	./configure 
 	(cd compiler; touch .depend; make depend; make opt)
 	(cd stdlib; make all)
 	(cd interpreter; make all)
 	(cd distrib/rml/; \
 	 mkdir bin lib lib/rml; \
-	 cp ../../compiler/rmlc.opt bin/rmlc ; \
+	 cp ../../compiler/rmlc.opt bin/rmlc.opt ; \
 	 cp ../../stdlib/*.{rzi,rmli} lib/rml; \
 	 cp ../../interpreter/{*.{cma,cmxa,a,cmi}} lib/rml; \
+	 cp -r ../../emacs .; \
+	 cp ../Makefile.opt Makefile; \
+	 cp ../rmlc.in.opt rmlc.in; \
          cd ..; \
 	 tar --exclude=CVS -zcvf rml-`../compiler/rmlc -version`.opt.tar.gz rml; \
          mv rml-`../compiler/rmlc -version`.opt.tar.gz ..)
 
 binary-distrib.byte: clean-distrib
+	touch config
+	make realclean
 	./configure 
 	(cd compiler; touch .depend; make depend; make byte)
 	(cd stdlib; make all)
 	(cd interpreter; make all)
 	(cd distrib/rml/; \
 	 mkdir bin lib lib/rml; \
-	 cp ../../compiler/rmlc.byte bin/rmlc ; \
+	 cp ../../compiler/rmlc.byte bin/rmlc.byte ; \
 	 cp ../../stdlib/*.{rzi,rmli} lib/rml; \
 	 cp ../../interpreter/{*.{cma,cmxa,a,cmi}} lib/rml; \
+	 cp -r ../../emacs .; \
+	 cp ../Makefile.byte Makefile; \
+	 cp ../rmlc.in.byte rmlc.in; \
          cd ..; tar --exclude=CVS -zcvf rml-`../compiler/rmlc -version`.byte.tar.gz rml; \
          mv rml-`../compiler/rmlc -version`.byte.tar.gz ..)
 

@@ -8,6 +8,7 @@ GLOBAL = asttypes.mli \
 	global/ident.ml \
 	global/initialization.ml \
 	global/misc.ml \
+	global/misc_pp.mlp \
 	global/modules.ml \
 	global/symbol_table.ml \
 	global/warnings.ml \
@@ -114,7 +115,7 @@ clean:
 
 realclean: clean
 	rm -f $(BIN).byte $(BIN).opt $(GENSOURCES) parsing/parser.output
-	rm -f rmlc
+	rm -f rmlc stdlib
 
 # utilities
 depend: $(GENSOURCES)
@@ -132,11 +133,18 @@ parsing/parser.mli parsing/parser.ml: parsing/parser.mly
 	$(OCAMLYACC) -v parsing/parser.mly
 lexer.cmx: parser.cmi
 
-global/misc.cmo: parsing/location.cmi 
+global/misc.cmo: parsing/location.cmi global/misc_pp.cmo stdlib
 global/misc.cmo: OCAMLC := $(TRUE_OCAMLC)
 global/misc.cmo: OCAMLFLAGS := \
-		-pp "$(CPP) $(CPPFLAGS) -DSTDLIB=\\\"$(LIBDIR)\\\""
+		-pp "camlp4o ./global/misc_pp.cmo" 
+global/misc.cmx: parsing/location.cmi global/misc_pp.cmo stdlib
 global/misc.cmx: OCAMLOPTFLAGS := \
-		-pp "$(CPP) $(CPPFLAGS) -DSTDLIB=\\\"$(LIBDIR)\\\""
+		-pp "camlp4o ./global/misc_pp.cmo" 
+
+global/misc_pp.cmo: global/misc_pp.mlp
+	$(OCAMLC) -pp "camlp4o pa_extend.cmo q_MLast.cmo -impl" -I +camlp4 -c -impl global/misc_pp.mlp
+
+stdlib: global/misc.ml
+	echo $(LIBDIR) > stdlib
 
 include .depend

@@ -1,0 +1,72 @@
+open Rml_Graphics;;
+
+type coord =
+{
+	x: float;
+	y: float;
+	z: float;
+}
+
+
+
+
+let coord_to_point {x=xx;y=yy;z=zz} =
+   {xi=int_of_float xx;yi=int_of_float yy};;
+
+let coord_null = {x=0.;y=0.;z=0.};;
+
+
+let coord_add {x=x1;y=y1;z=z1}  
+              {x=x2;y=y2;z=z2} = 
+	      {x= x1 +. x2;
+	       y= y1 +. y2;
+	       z= z1 +. z2
+	      };;
+
+let coord_sub {x=x1;y=y1;z=z1}  
+              {x=x2;y=y2;z=z2} = 
+	      {x= x1 -. x2;
+	       y= y1 -. y2;
+	       z= z1 -. z2
+	      };;
+
+let coord_mul c {x=xx;y=yy;z=zz}  
+               = 
+	      {x= xx *. c;
+	       y= yy *. c;
+	       z= zz *. c
+	      };;
+
+let coord_scalar {x=x1;y=y1;z=z1}  
+                 {x=x2;y=y2;z=z2} = 
+       x1 *. x2 +. y1 *. y2 +. z1 *. z2;;
+
+let coord_norme v =
+       sqrt (coord_scalar v v);;
+       
+let coord_dist p1 p2 =
+       coord_norme (coord_sub p2 p1);;
+
+let coord_get_vect_norm p1 p2 =
+       let dir = coord_sub p2 p1 in
+          coord_mul (1. /. (coord_norme dir)) dir;;
+       
+let add_vect = coord_add;;  
+let sous_vect = coord_sub;;  
+let mul_coef a b = coord_mul b a;;  
+let scalar = coord_scalar;;
+let distance = coord_dist;;
+let vect_norm = coord_get_vect_norm;;
+let norme = coord_norme;;
+
+
+let print_coord {x=xx;y=yy;z=zz} =
+  print_char '(';
+  print_float xx;
+  print_char ',';
+  print_float yy;
+  print_char ',';
+  print_float zz;
+  print_char ')';
+
+

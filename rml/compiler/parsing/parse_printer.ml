@@ -282,10 +282,11 @@ let rec expression i ppf x =
   | Pexpr_run (e) ->
       line i ppf "Pexpr_run\n";
       expression i ppf e;
-  | Pexpr_until (s,e) ->
+  | Pexpr_until (s,e, patt_expr_opt) ->
       line i ppf "Pexpr_until\n";
       expression i ppf s;
       expression i ppf e;
+      option i pattern_x_expression_case ppf patt_expr_opt
   | Pexpr_when (s,e) ->
       line i ppf "Pexpr_when\n";
       expression i ppf s;

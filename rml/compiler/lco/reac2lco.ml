@@ -214,6 +214,10 @@ let rec translate_ml e =
     | Rexpr_pre (flag,s) ->
 	Coexpr_pre (flag, translate_ml s)  
 
+    | Rexpr_emit s -> Coexpr_emit (translate_ml s)
+
+    | Rexpr_emit_val (s, e) -> 
+	Coexpr_emit_val (translate_ml s, translate_ml e)
   in
   make_expr coexpr e.expr_loc
 
@@ -269,8 +273,13 @@ and translate_proc p =
     | Rproc_run (expr) ->
 	Coproc_run (translate_ml expr)
 
-    | Rproc_until (s, proc) ->
-	Coproc_until (translate_ml s, translate_proc proc)
+    | Rproc_until (s, proc, patt_proc_opt) ->
+	Coproc_until (translate_ml s, 
+		      translate_proc proc,
+		      opt_map 
+			(fun (patt, proc) -> 
+			  translate_pattern patt, translate_proc proc)
+			patt_proc_opt)
 
     | Rproc_when (s, proc) ->
 	Coproc_when (translate_ml s, translate_proc proc)

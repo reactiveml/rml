@@ -1,0 +1,16 @@
+
+type atticobj = Bla | Blabla
+
+
+type behavior =
+    process{inout getatt: (unit , unit list) event ;
+            inout icoatt: (atticobj , atticobj list) event ;
+            inout a_click: (unit , unit list) event ; (* activation *)
+            inout getlist: (unit , unit list) event; (* obtenir la liste des icobjs *)
+	    inout listico: (icobj , icobj list) event;
+	   } and
+     icobj = {att : atticobj;
+              scope : process {};
+	      cloneable : behavior;
+	      nocloneable : behavior}
+	      

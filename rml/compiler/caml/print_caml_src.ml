@@ -441,10 +441,20 @@ and print_pattern pri pat =
 and print_patt_expr print_sep (pat, expr) =
   open_box 2;
   print_pattern 0 pat;
-  print_sep ();
-  print 1 expr;
-  close_box ();
-  print_space ()
+  match expr.cexpr_desc with
+  | Cexpr_when(e1,e2) ->
+      print_string "when";
+      print_space ();
+      print 1 e1;
+      print_sep ();
+      print 1 e2;
+      close_box ();
+      print_space ()
+  | _ -> 
+      print_sep ();
+      print 1 expr;
+      close_box ();
+      print_space ()
 
 let print_impl_item item =
   match item.cimpl_desc with

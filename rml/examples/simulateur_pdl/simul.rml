@@ -25,7 +25,10 @@ let process node pos_init mvt_kind make_msg draw =
     let all = 
       List.fold_left 
 	(fun infos (i,j) -> 
-	  List.rev_append (pre ?(!hello_array.(i).(j))) infos)
+	  if pre (!hello_array.(i).(j)) then
+	    List.rev_append (pre ?(!hello_array.(i).(j))) infos
+	  else
+	    infos)
 	[] (local_area::neighbor_areas)
     in
     let neighbors = get_neighbors self all in
@@ -93,8 +96,8 @@ let configure () =
     errmsg
 
 let process main =
-(*  Random.init 4012; *)
-  Random.self_init ();
+  Random.init 1; 
+(*  Random.self_init ();*)
   configure();
   init();
   run Area.make_areas;

@@ -19,7 +19,7 @@ let routage_success p =
 
 let routage_fail p = 
   if !with_graphics then
-    if p.packet_dest_id = !main_node then
+    if p.packet_src_id = !main_node then
       Draw.draw_route p;
   if !with_stat then
     Stat.packet_fail_stat p

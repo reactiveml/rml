@@ -117,7 +117,7 @@ let set_density d =
   let taille = float_of_int (!max_x * !max_y) in
   let portee =
     int_of_float 
-      (sqrt(d *. taille /. (2.0 *. 3.14 *. float_of_int(!nb_node))))
+      (sqrt(d *. taille /. (3.14 *. float_of_int(!nb_node))))
   in
   set_coverage_range portee
 
@@ -177,15 +177,15 @@ let translate pos dir speed =
   let x = pos.x in
   let y = pos.y in
   match dir with
-  | 0 -> make_pos x (min (y+speed) !max_y)
+  | 0 -> make_pos x (min (y+speed) (!max_y-1))
   | 1 -> 
       make_pos 
-	(min (x+speed) !max_x) 
-	(min (y+speed) !max_y)
-  | 2 -> make_pos (min (x+speed) !max_x) y
+	(min (x+speed) (!max_x-1)) 
+	(min (y+speed) (!max_y-1))
+  | 2 -> make_pos (min (x+speed) (!max_x-1)) y
   | 3 -> 
       make_pos 
-	(min (x+speed) !max_x) 
+	(min (x+speed) (!max_x-1)) 
 	(max (y-speed) 0)
   | 4 -> make_pos x (max (y-speed) 0)
   | 5 -> 
@@ -196,7 +196,7 @@ let translate pos dir speed =
   | 7 -> 
       make_pos 
 	(max (x-speed) 0)
-	(min (y+speed) !max_y) 
+	(min (y+speed) (!max_y-1)) 
   | _ -> pos
 	
 

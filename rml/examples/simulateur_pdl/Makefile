@@ -2,10 +2,9 @@
 FILE=simul
 
 # Reactive ML compiler
-RMLC=../../compiler/rmlc -dtypes
+RMLC=rmlc
 N=-1
 SAMPLING=-1.0
-RUNTIME=ctrl_tree
 RMLFLAGS=
 MAIN=main
 
@@ -51,7 +50,7 @@ routage.cmx: routage.ml draw.cmx stat.cmx
 stat.ml stat.rzi: stat.rml global.rzi
 
 simul.ml simul.rzi: simul.rml global.rzi pos_tbl.rzi area.rzi move.rzi msg.rzi routage.rzi draw.rzi stat.rzi
-	$(RMLC) $(RMLFLAGS) -n $(N) -runtime $(RUNTIME) -sampling $(SAMPLING) -s $(MAIN) $<
+	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) -s $(MAIN) $<
 
 simul.cmo: simul.ml global.cmo pos_tbl.cmo area.cmo move.cmo msg.cmo routage.cmo draw.cmo stat.cmo
 simul: simul.cmo global.cmo pos_tbl.cmo area.cmo move.cmo msg.cmo routage.cmo draw.cmo stat.cmo
@@ -65,9 +64,9 @@ simul.opt: simul.cmx global.cmx pos_tbl.cmx area.cmx move.cmx msg.cmx routage.cm
 .SUFFIXES: .rml .mli .ml .cmi .cmo .cmx .o .rzi
 
 .rml.rzi:
-	$(RMLC) $(RMLFLAGS) -runtime $(RUNTIME) $<
+	$(RMLC) $(RMLFLAGS) $<
 .rml.ml:
-	$(RMLC) $(RMLFLAGS) -runtime $(RUNTIME) $<
+	$(RMLC) $(RMLFLAGS) $<
 
 .ml.cmo:
 	$(OCAMLC) $(OCAMLFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<

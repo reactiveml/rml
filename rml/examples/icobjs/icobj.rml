@@ -1,0 +1,434 @@
+open Rml_Graphics;;
+
+type appareance=
+ | App_Image of Misc.t 
+ | App_text of string
+ | App_none;;
+
+type atticobj =
+{
+  mutable pos   : pos;
+  mutable couleur : color;
+  mutable appar : appareance;
+  mutable haut  : int;
+  mutable larg  : int;
+  mutable date  : int;
+  destructible  : bool; 
+  detruit       : process;
+  mutable txt   : string
+}
+
+
+type behavior =
+(* getatt  *) (unit , unit list) event *
+(* icoatt  *) (atticobj , atticobj list) event *
+(* a_click *) (unit , unit list) event *
+(* clavier *) (char, char list) event *
+(* getlist *) (unit , unit list) event *
+(* listico *) (icobj list, icobj list list) event -> process
+ 
+and
+     icobj = {attrib : atticobj;
+              activate : (unit, unit list) event;
+	      clavier  : (char, char list) event -> process;
+	      getcloneable : (behavior,behavior list) event -> process;
+              getnocloneable : (behavior,behavior list) event -> process;
+	     }
+
+
+let att_set_image att i =
+  let larg,haut = image_size i in
+  att.appar <- App_Image i;
+  att.larg <- larg;
+  att.haut <- haut;;
+  
+let att_set_texte att t =
+  let larg,haut = text_size t in
+  att.appar <- App_text t;
+  att.larg <- larg;
+  att.haut <- haut;;
+
+let att_set_annot att t =
+  att.txt <- t;;
+
+let att_set_date att d =
+  att.date <- d;;
+
+
+(* Permet de generer des nombre different *)
+(* Utilise pour mettre les icobj les un au dessus des autres *)
+let get_newdate =
+  let a = ref  0 in
+  fun () -> a := !a + 1;!a;;
+
+
+let process sustain s =
+ loop
+    if (pre s) then
+        emit s (List.hd (pre?s));
+    pause;
+ end;;
+
+
+
+
+let process icobj clonbehav runclonbehav noclonbehav mpos candestroy
+                  step
+                  dograph graph
+                  activate clavier
+                  getclonebehav clonebehav
+                  getnoclonebehav noclonebehav
+                  getatt icoatt
+                  getlist listico =
+  signal detruit in
+  let attrib = {pos = mpos;
+                couleur = black;
+		appar = App_text "pas d'apparance";
+		haut = snd (text_size "pas d'apparance");
+		larg = fst (text_size "pas d'apparance");
+		date = get_newdate ();
+		detruit = process (emit detruit); 
+	        destructible = candestroy;
+		txt = "";
+               }  in
+
+  
+  let process affiche =
+    loop
+      await dograph;
+      if attrib.appar != App_none then
+       (let obj = match attrib.appar with
+                  | App_Image i -> Image (i,attrib.pos)
+                  | App_text s  -> Texte (s,attrib.couleur,attrib.pos)
+                  | App_none    -> failwith "Erreur" in
+        let lobj = if attrib.txt != "" then
+                     [Texte (attrib.txt,
+		             black,
+			     {xi=attrib.pos.xi + attrib.larg + 3;
+			      yi=attrib.pos.yi}) ]
+		   else []   in
+        emit graph (attrib.date,obj :: lobj)
+       );
+    end
+        in
+  do 
+    (* L'affichage *)
+    do  
+      run affiche 
+    when dograph
+    ||
+    (* Met en marche les comportements *)
+    do
+      if runclonbehav then
+        run (clonbehav (getatt,icoatt,activate,clavier,getlist,listico));
+      ||
+      run (noclonbehav (getatt,icoatt,activate,clavier,getlist,listico));
+    when step
+    ||
+    (* fait cadrer activate et clavier sur step *)
+    loop
+      do
+       run (sustain activate)
+       ||
+       run (sustain clavier)
+      until step done;
+      pause;
+    end
+    ||
+    (* Accesseur de la partie cloneable de l'icobj *)
+    loop
+      await getclonebehav;
+      emit clonebehav clonbehav;
+    end
+    ||
+    (* Accesseur de la partie non-cloneable de l'icobj *)
+    loop
+      await getnoclonebehav;
+      emit noclonebehav noclonbehav;
+    end
+    ||
+    (* Permet d'obtenir les attributs d'un icobj *)
+    loop
+      await immediate getatt;
+      emit icoatt (attrib);
+      pause;
+    end
+  until detruit done;;
+
+
+
+
+(* Obtient les proprietes d'un icobj en fonction de sa position
+   dans la fenetre *)
+
+let geticobj l p =
+  let isin att = p.xi >= att.pos.xi &&
+                 p.xi <= (att.pos.xi + att.larg) &&
+                 p.yi >= att.pos.yi &&
+                 p.yi <= (att.pos.yi + att.haut) in
+  let rec cherche l = match l with 
+                      | [] -> []
+                      | e::l -> let att = e.attrib in
+				if isin att then
+				   e::(cherche l)
+				else
+				   cherche l in
+       cherche !l
+
+(* Obtient tous les icobjs qui sur la surface de l'icobj (att) *)
+
+let geticobj_under l att =
+  let ison iatt = att.pos.xi <= (iatt.pos.xi + iatt.larg) &&
+                  att.pos.xi + att.larg >=  iatt.pos.xi &&
+		  att.pos.yi <= (iatt.pos.yi + iatt.haut) &&
+		  att.pos.yi + att.haut >= iatt.pos.yi in
+  let rec cherche lc lt =
+                 match lc with
+		 | [] -> lt
+		 | e::l -> let eatt = e.attrib in
+			   if ison eatt then
+			      cherche l (e::lt)
+			   else
+			      cherche l lt in
+	  cherche l [];;
+
+(************************************************)
+
+
+
+(* Selectionne un icobj (en lui faisant afficher un cadre autour
+   de lui )  *) 
+
+let process selected_object attribs
+                            dograph graph
+                            clavier
+                            a_move =
+     let att = attribs.attrib and
+         activate = attribs.activate in
+     att.date <- get_newdate (); (* met lee au dessus *)
+     loop
+      do
+       do
+        loop
+          let pos = att.pos in
+          emit graph (max_int,
+	              [Drawrect({xi=pos.xi-1;yi=pos.yi-1},
+		                {xi=att.larg+2;yi=att.haut+2},
+				red)]);
+          pause;
+        end;
+       when dograph;
+      until a_move done;
+      let depl = List.hd (pre ?a_move) in
+      let n_pos = {xi= att.pos.xi + depl.xi;
+                   yi= att.pos.yi + depl.yi } in
+      att.pos <- n_pos;
+     end 
+     ||
+     loop
+       run (attribs.clavier clavier)
+     end;;
+
+
+
+
+(* Processus qui se charge de rajouter une liste d'icobjs sur le workspace *)
+let rec process addicobj l newatt dograph graph step getlist listico =
+  match l with
+  | [] -> nothing 
+  | (candestroy,(cloneable,shouldrun),nocloneable,pos)::r ->
+            (* Ajoute l'icobj dans le workspace *)
+             signal activate,icoatt,getclonebehav,getnoclonebehav,getatt in
+	     signal clavier in
+	     signal clonebehav,noclonebehav in
+	     run (icobj cloneable shouldrun nocloneable pos candestroy
+			step
+			dograph graph
+			activate clavier
+                        getclonebehav clonebehav
+                        getnoclonebehav noclonebehav
+                        getatt icoatt
+                        getlist listico)
+             ||
+	     emit getatt;
+	     await immediate one icoatt (mesatt) in
+	     (* Pour faire le lien entre le clavier et l'icobj :
+	         (il ne faut surtout pas que ce lien soit eternel) *)
+	     let pclavier insig = 
+	       process 
+		 (await immediate one insig (c) in 
+		 emit clavier (c);pause)  
+	     in
+	     (* Les accesseur des comportements *)
+             let process getcloneable outsig = 
+	                           emit getclonebehav;
+	                           await immediate one clonebehav (behav) in
+                                   emit outsig behav in
+             let process getnocloneable outsig =
+	                           emit getnoclonebehav;
+	                           await immediate one noclonebehav (behav) in
+                                   emit outsig behav in
+             (*********************)
+             emit newatt {attrib=mesatt;activate=activate;getcloneable=getcloneable;clavier=pclavier;
+	               getnocloneable=getnocloneable};
+	     ||
+	     (* Fait de meme pour les suivants *)
+	     run (addicobj r newatt dograph graph step getlist listico);;
+
+
+
+
+
+(* Est ce que e est un Icobj destructible dans la liste l *)
+
+let is_in e l =
+   let rec aux l = match l with
+    | [] -> false
+    | e2::r -> if e2 == e then
+                     e.attrib.destructible
+	       else
+	             aux r in
+   aux l;;
+
+
+
+(* Detruit la liste d'icobj l  et renvoie anc oté des Icobjs 
+   detruit*)
+let rec process detruit_icobj anc l sig_newlist =
+   match anc with
+   | []   -> emit sig_newlist [];
+   | e::r -> if (is_in e l) then
+             (run e.attrib.detruit;
+	      run (detruit_icobj r l sig_newlist)
+	     )
+	     else
+             (signal inter in
+	      run (detruit_icobj r l inter);
+	      await immediate one inter (l) in
+	      emit sig_newlist (e::l)
+	     );;
+
+
+
+(* Attend qu'un ou plusieurs icobj rentre dans le workspace et
+   les ajoutent *)
+
+let rec process gere_addicobj newicobj newatt
+                              dograph graph
+                              step
+                              getlist listico =
+      await newicobj (l) in
+      run (addicobj l  newatt dograph graph step getlist listico);
+      ||
+      run (gere_addicobj newicobj newatt dograph graph step getlist listico);;
+
+
+let trie_et_affiche l =
+    let n_l = List.sort (fun (x,_) (y,_) ->  x - y) l in
+    affiche_list (List.map (fun (x,y) -> y) n_l);;
+
+
+let get_high_icobj l =
+  let rec aux l m =
+     match l with
+     | [] -> m
+     | e::r -> if e.attrib.date > m.attrib.date then
+                    aux r e
+	       else
+	            aux r m in
+   if l = [] then
+       raise Not_found
+   else
+       aux (List.tl l) (List.hd l);;
+
+
+let process workspace width height newicobj delicobj =
+  signal graph,a_click in 
+  signal step,click,doubleclick in
+  signal a_move,key_push,mpos in
+  signal getclonebehav in
+  signal ds in
+  signal getlisticobj in
+  signal listico in
+  signal dograph in
+  signal icoatt in
+  signal nouv_icobj in
+  signal mouse_down in
+  let listicobj = ref [] in
+  run (fenetre trie_et_affiche width height 10 click doubleclick
+                                               a_move key_push mpos graph
+                                               mouse_down)
+  ||
+  (* Permet de détruire les Icobjs *)
+  signal msig in
+  loop
+    await delicobj (l) in
+    (* Le reste de la boucle est instantanée *)
+    run (detruit_icobj !listicobj l msig);
+    await immediate one msig (ml) in
+    listicobj := ml
+  end 
+  ||
+  (* Processus qui ajoute un icobj au workspace *)
+  (signal newatt in
+   run (gere_addicobj newicobj newatt dograph graph step getlisticobj listico)
+   ||
+   loop
+     await newatt (att) in
+     listicobj := att @ !listicobj;
+   end
+  )
+  (**********************************************)
+  ||
+  (* Selection des icobjs *)
+  await mouse_down;
+  pause;
+  loop
+    let pos = List.hd (pre ?mouse_down) in
+    let objsproperties = geticobj listicobj pos in
+    if objsproperties = [] then
+    (await immediate mouse_down;
+     pause
+    ) 
+    else
+      do
+        run (selected_object (get_high_icobj objsproperties)
+	                     dograph graph key_push a_move)
+      until mouse_down done;
+  end
+  (* *********************** *)
+  ||
+  (* Effectue l'affichage ainsi que le deroulement des comportements *)
+  loop
+      pause;
+      pause;
+      pause;
+      emit step;
+  end
+  ||
+  loop
+      emit dograph;
+      pause; 
+      pause;
+  end
+  (* ***************************************** *)
+  ||
+  (* Pour qu'un icobj puisse savoir ou se trouve les autres *)
+  loop
+     await getlisticobj;
+     emit listico !listicobj;
+  end
+  (* ***************************************** *)
+  ||
+  (* Attend un double-click de souris, et le active le bon icobj *)
+  loop
+    await immediate one doubleclick (pos) in
+    let l = geticobj listicobj pos in
+    if not (l = []) then
+    (let myicobj = get_high_icobj l in
+       emit myicobj.activate;
+    );
+    pause;
+  end;;
+
+
