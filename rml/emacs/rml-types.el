@@ -10,7 +10,7 @@
 ;(*                                                                     *)
 ;(***********************************************************************)
 
-;(* $Id: rml-types.el,v 1.2 2005/03/14 10:00:56 mandel Exp $ *)
+;(* $Id: rml-types.el,v 1.26 2003/10/11 00:00:14 doligez Exp $ *)
 
 ; An emacs-lisp complement to the "-dtypes" option of rmlc and rmlopt.
 

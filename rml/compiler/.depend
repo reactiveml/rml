@@ -41,18 +41,6 @@ parsing/parser.cmx: parsing/syntaxerr.cmx parsing/parse_ident.cmx \
     global/asttypes.cmi parsing/parser.cmi 
 parsing/syntaxerr.cmo: parsing/location.cmo 
 parsing/syntaxerr.cmx: parsing/location.cmx 
-external/external.cmo: parsing/parse_ast.cmo external/lucky.cmo 
-external/external.cmx: parsing/parse_ast.cmx external/lucky.cmx 
-external/lucky_errors.cmo: parsing/parse_ast.cmo global/misc.cmo \
-    parsing/location.cmo 
-external/lucky_errors.cmx: parsing/parse_ast.cmx global/misc.cmx \
-    parsing/location.cmx 
-external/lucky.cmo: parsing/parse_ident.cmo parsing/parse_ast.cmo \
-    external/lucky_errors.cmo parsing/location.cmo static/def_static.cmi \
-    global/asttypes.cmi 
-external/lucky.cmx: parsing/parse_ident.cmx parsing/parse_ast.cmx \
-    external/lucky_errors.cmx parsing/location.cmx static/def_static.cmi \
-    global/asttypes.cmi 
 static/static_errors.cmo: parsing/parse_ast.cmo global/misc.cmo \
     parsing/location.cmo 
 static/static_errors.cmx: parsing/parse_ast.cmx global/misc.cmx \
@@ -157,14 +145,14 @@ main/compiler.cmo: typing/typing.cmo typing/stypes.cmo static/static.cmo \
     parsing/parse.cmo global/modules.cmo global/misc.cmo parsing/location.cmo \
     caml/lk2caml.cmo caml/lco2caml.cmo global/initialization.cmo \
     global/ident.cmo global/global_ident.cmo global/global.cmo \
-    external/external.cmo main/errors.cmo 
+    main/errors.cmo 
 main/compiler.cmx: typing/typing.cmx typing/stypes.cmx static/static.cmx \
     lk/reac2lk.cmx lco/reac2lco.cmx caml/print_caml_src.cmx \
     parsing/parse_printer.cmx parsing/parse_ident.cmx reac/parse2reac.cmx \
     parsing/parse.cmx global/modules.cmx global/misc.cmx parsing/location.cmx \
     caml/lk2caml.cmx caml/lco2caml.cmx global/initialization.cmx \
     global/ident.cmx global/global_ident.cmx global/global.cmx \
-    external/external.cmx main/errors.cmx 
+    main/errors.cmx 
 main/errors.cmo: global/warnings.cmo parsing/syntaxerr.cmo global/misc.cmo \
     parsing/location.cmo parsing/lexer.cmo 
 main/errors.cmx: global/warnings.cmx parsing/syntaxerr.cmx global/misc.cmx \

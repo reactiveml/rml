@@ -7,7 +7,7 @@
 (*  Remarque : Taken from Lucid Synchrone                                *)
 (*************************************************************************)
 
-(* $Id: typing.ml,v 1.3 2005/03/14 09:58:54 mandel Exp $ *)
+(* $Id: typing.ml,v 1.2 2005/02/04 09:53:44 mandel Exp $ *)
 
 (* The type synthesizer *)
 
@@ -496,27 +496,6 @@ let rec type_of_expression env expr =
       let ty_e = type_of_expression env e in
       unify_emit e.expr_loc ty ty_e;
       type_unit
-
-  | Rexpr_signal ((s,te_opt), combine_opt, e) ->
-      let ty_emit = new_var() in
-      let ty_get = new_var() in 
-      let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in
-      opt_iter 
-	(fun te -> 
-	  unify_event s (instance (full_type_of_type_expression te)) ty_s) 
-	te_opt;
-      begin
-	match combine_opt with
-	| None ->
-	    unify_event s 
-	      (constr_notabbrev event_ident 
-		 [ty_emit; (constr_notabbrev list_ident [ty_emit])])
-	      ty_s
-	| Some (default,comb) ->
-	    type_expect env default ty_get;
-	    type_expect env comb (arrow ty_emit (arrow ty_get ty_get))
-      end;
-      type_of_expression (Env.add s (forall [] ty_s) env) e
 
   in
   expr.expr_type <- t;

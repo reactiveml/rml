@@ -341,14 +341,20 @@ let get_status_fire i j =
     else
       Status_Quiescent, Fire_empty
 
+
 let process cellular_automaton_start 
     draw_cell get_neighbors get_status cell_behavior cell_array =
-  for i = 0 to !maxx - 1 dopar
-    for j = 0 to !maxy - 1 dopar
-      run (cell draw_cell get_neighbors cell_behavior
-	     i j (get_status i j) cell_array)
-    done
-  done
+  let rec process aux i j =
+    if i < !maxx then
+      if j < !maxy then
+	(run (cell draw_cell get_neighbors cell_behavior
+		i j (get_status i j) cell_array)
+	 ||
+	 run (aux i (j+1)))
+      else
+	run (aux (i+1) 0)
+  in
+  run (aux 0 0)
 
 
 (**************************************************************************)
@@ -368,9 +374,7 @@ let configure () =
   Arg.parse
     [ ("-zoom", Arg.Set_int zoom, doc_zoom);
       ("-width", Arg.Set_int maxx, doc_width);
-      ("-w", Arg.Set_int maxx, doc_width);
       ("-height", Arg.Set_int maxy, doc_height);
-      ("-h", Arg.Set_int maxy, doc_height);
       ("-b", Arg.Set_string behavior, doc_behavior);
     ]
     (fun s -> raise (Invalid_argument s))
@@ -428,3 +432,24 @@ let process main =
     pause;
   end
 
+
+
+(*
+let process main {} =
+  let cell_array = cellular_automaton_create() in
+  cellular_automaton_init cell_array 0 0; 
+  Graphics.open_graph "";
+  Graphics.auto_synchronize false;
+  signal kill in
+  do
+    run (cellular_automaton_start cell_array 0 0) {};
+  until kill done
+  ||
+  loop 
+    Graphics.synchronize (); 
+    pause;
+  end
+  ||
+  for i = 1 to 17 do pause done;
+  emit kill
+*)

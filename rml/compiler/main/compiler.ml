@@ -7,7 +7,7 @@
 (*  Remarque : Taken from Lucid Synchron                                 *)
 (*************************************************************************)
 
-(* $Id: compiler.ml,v 1.3 2005/03/29 10:15:36 mandel Exp $ *)
+(* $Id: compiler.ml,v 1.2 2005/02/04 09:53:43 mandel Exp $ *)
 
 open Misc
 open Errors
@@ -123,9 +123,6 @@ let compile_implementation module_name filename =
     (* parsing of the file *)
     let decl_list = Parse.implementation lexbuf in
     
-    (* expend externals *)
-    let decl_list = List.map External.expend decl_list in
-
     (* front-end *)
     let intermediate_code = compile_implementation_front_end info_chan itf 
 	decl_list in

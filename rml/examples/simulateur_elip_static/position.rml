@@ -1,8 +1,0 @@
-type position =
-    { x: int;
-      y: int; }
-
-let distance2 pos1 pos2 = 
-  (pos2.x - pos1.x) * (pos2.x - pos1.x) + 
-    (pos2.y - pos1.y) * (pos2.y - pos1.y) 
- 

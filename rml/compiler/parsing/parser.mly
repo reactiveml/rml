@@ -18,7 +18,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: parser.mly,v 1.2 2005/03/29 10:15:36 mandel Exp $ */
+/* $Id: parser.mly,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ */
 
 /* The parser definition */
 
@@ -412,13 +412,6 @@ structure_item:
       { mkimpl(Pimpl_exn_rebind(mksimple $2 2, $4)) }
   | OPEN UIDENT
       { mkimpl(Pimpl_open $2) }
-  | EXTERNAL DOT LIDENT LIDENT lucky_declarations lucky_declarations 
-      EQUAL lucky_files
-      { match $3 with 
-        | "luc" -> 
-	    mkimpl(Pimpl_lucky(mksimple $4 4, List.rev $5, List.rev $6, $8)) 
-	| _ -> raise (Syntaxerr.Error(Syntaxerr.Other (rhs_loc 1)))
-      }
 ;
 
 /* interface */
@@ -1027,40 +1020,5 @@ opt_semi:
 subtractive:
   | MINUS                                       { "-" }
   | MINUSDOT                                    { "-." }
-;
-
-/* Lucky */
-
-lucky_declarations:
-    LBRACE RBRACE                               { [] }
-  | LBRACE lucky_declarations2 opt_semi RBRACE  { $2 }
-;
-lucky_declarations2:
-    lucky_declaration                           { [$1] }
-  | lucky_declarations2 SEMI lucky_declaration  { $3 :: $1 }
-;
-lucky_declaration:
-    lucky_label COLON core_type                 { ($1, $3) }
-;
-lucky_label:
-    LIDENT                                      { mksimple $1 1 }
-  | UIDENT                                      { mksimple $1 1 }
-;
-/* string list */
-lucky_files:
-  | LBRACKET string_semi_list opt_semi RBRACKET
-      { List.rev $2 }
-  | LBRACKET string_semi_list opt_semi error
-      { unclosed "[" 1 "]" 4 }
-;
-string_semi_list:
-    constant                                   
-      { match $1 with
-        | Const_string s -> [s]
-	| _ -> syntax_error() }
-  | string_semi_list SEMI constant
-      { match $3 with 
-        | Const_string s -> s :: $1
-	| _ -> syntax_error() }
 ;
 %%

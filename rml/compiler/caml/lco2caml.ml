@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id: lco2caml.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *)
+(* $Id: lco2caml.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *)
 
 (* The translation of Lco to Caml *)
 
@@ -241,27 +241,6 @@ let rec translate_ml e =
 	  (make_instruction "rml_expr_emit_val",
 	   [embed_ml s;
 	    embed_ml e;])
-    | Coexpr_signal (s, None, e) ->
-	Cexpr_let (Nonrecursive,
-		   [pattern_of_signal s,
-		    make_expr
-		      (Cexpr_apply
-			 (make_instruction "rml_global_signal",
-			  [make_expr 
-			     (Cexpr_constant Const_unit)
-			     Location.none]))
-		      Location.none],
-		   translate_ml e)
-    | Coexpr_signal (s, Some(e1,e2), e) ->
-	Cexpr_let (Nonrecursive,
-		   [pattern_of_signal s,
-		    make_expr
-		      (Cexpr_apply
-			 (make_instruction "rml_global_signal_combine",
-			  [translate_ml e1;
-			   translate_ml e2;]))
-		      Location.none],
-		   translate_ml e)
 
   in
   make_expr cexpr e.coexpr_loc

@@ -90,8 +90,8 @@ let get_new_id =
     !cpt
 
 
-let make_node id pos =
-  {  id = id;
+let make_node pos =
+  {  id = get_new_id();
      date = 0;
      pos_tbl_le = Pos_tbl.make nb_nodes; 
      pos_tbl_elip = Pos_tbl.make nb_nodes; 

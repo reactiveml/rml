@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id: reac2lk.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *)
+(* $Id: reac2lk.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *)
 
 (* The translation of Reac to Lk *)
 
@@ -227,12 +227,6 @@ let rec translate_ml e =
 
     | Rexpr_emit_val (s, e) -> 
 	Kexpr_emit_val (translate_ml s, translate_ml e)
-
-    | Rexpr_signal ((s,typ), comb, proc) ->
-	Kexpr_signal ((s, opt_map translate_te typ),
-		      opt_map 
-			(fun (e1,e2) -> translate_ml e1, translate_ml e2) comb,
-		      translate_ml proc)
 
   in
   make_expr kexpr e.expr_loc

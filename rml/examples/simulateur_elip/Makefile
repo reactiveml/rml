@@ -3,9 +3,6 @@ SAMPLING=-1
 
 all: simul simul.opt
 
-link:
-	- ln -s pos_tbl_array_dynamic.rml pos_tbl.ml
-
 rml:
 	rmlc init.rml
 	rmlc position.rml
@@ -18,10 +15,9 @@ rml:
 	rmlc msg.rml
 	rmlc routing.rml
 	rmlc node.rml
-	rmlc dynamic.rml
 	rmlc -s main -n $(N) -sampling $(SAMPLING) simul.rml
 
-cmo: rml link
+cmo: rml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) init.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) position.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) pos_tbl.mli
@@ -34,7 +30,6 @@ cmo: rml link
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) msg.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) routing.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) node.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) dynamic.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) simul.ml
 
 cmx: rml
@@ -50,7 +45,6 @@ cmx: rml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) msg.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) routing.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) node.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) dynamic.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) simul.ml
 
 simul: cmo
@@ -68,7 +62,6 @@ simul: cmo
 		msg.cmo \
 		routing.cmo \
 		node.cmo \
-		dynamic.cmo \
 		simul.cmo 
 
 simul.opt: cmx
@@ -86,7 +79,6 @@ simul.opt: cmx
 		msg.cmx \
 		routing.cmx \
 		node.cmx \
-		dynamic.cmx \
 		simul.cmx 
 
 clean:
@@ -102,10 +94,9 @@ clean:
 	msg.ml \
 	routing.ml \
 	node.ml \
-	dynamic.ml \
 	simul.ml 
 
 cleanall: clean
-	rm -f simul simul.opt pos_tbl.ml *~
+	rm -f simul simul.opt *~
 
 realclean: cleanall

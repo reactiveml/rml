@@ -3,7 +3,6 @@ include ../config
 OBJ=	lk_rewrite.cmo \
 	lk_rewrite_debug.cmo \
 	lco_ctrl_tree.cmo \
-	lco_rewrite.cmo \
 
 #	lco_ctrl_tree_debug.cmo \
 
@@ -55,9 +54,6 @@ lk_rewrite.cmx: OCAMLOPTFLAGS := -rectypes
 
 lk_rewrite_debug.cmo: OCAMLFLAGS := -rectypes
 lk_rewrite_debug.cmx: OCAMLOPTFLAGS := -rectypes
-
-lco_rewrite.cmo: OCAMLFLAGS := -rectypes
-lco_rewrite.cmx: OCAMLOPTFLAGS := -rectypes
 
 include .depend
 

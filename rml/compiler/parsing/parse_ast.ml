@@ -7,7 +7,7 @@
 (*  Remarque : inspired by CamlLight                                     *)
 (*************************************************************************)
 
-(* $Id: parse_ast.ml,v 1.2 2005/03/29 10:15:36 mandel Exp $ *)
+(* $Id: parse_ast.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (* The abstract syntax for the parsed language *)
 
@@ -123,11 +123,6 @@ and impl_desc =
   | Pimpl_exn of simple_ident * type_expression option
   | Pimpl_exn_rebind of simple_ident * ident
   | Pimpl_open of string
-  | Pimpl_lucky of 
-      simple_ident * 
-	(simple_ident * type_expression) list * (* inputs: (id * ty) *)
-	(simple_ident * type_expression) list * (* outputs: (id * ty) *)
-	string list (* files *)
 
 (* Signature *)
 type interface = intf_item list
