@@ -545,6 +545,11 @@ and type_process env proc =
       type_expect env e2 type_int;
       type_process (Env.add i (forall [] type_int) env) p
 
+  | Rproc_fordopar(i,e1,e2,flag,p) ->
+      type_expect env e1 type_int;
+      type_expect env e2 type_int;
+      type_process (Env.add i (forall [] type_int) env) p
+
   | Rproc_seq (p1,p2) ->
       type_process env p1;
       type_process env p2

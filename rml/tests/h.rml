@@ -1,0 +1,46 @@
+
+type t1 = C1 of t2 | C2
+and t2 = K1 of t1 | K2
+
+let f x = x + 1
+
+exception E;;
+exception E1 of int;;
+exception E2 of bool list;;
+exception E3 = E2;;
+
+let a = 
+  try f 0 with
+  | E -> 1
+  | E1 x -> x
+  | E3 l -> List.length l
+  | E2 l -> List.length l
+
+exception A;;
+exception B = A;;
+
+try raise B with
+| A -> 0
+| B -> 1
+
+let id x = x
+
+let ab = (id true, id 0)
+
+let f = let x = ref 0 in fun y -> x;;
+
+let process p1 {inout s} =
+(*  let x = s in emit x *)
+  emit s
+
+let process p2 x {} =
+  signal s combine 0 with (+) in
+  run x {a = s}
+
+let process polymorphe x {} = id x
+
+let process p3 {} =
+  signal k in
+  run p1 {s = k};
+  emit k;
+  let k<x> in x 

@@ -1,0 +1,167 @@
+open Global
+open Graphics
+
+
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+let print_anchor n r =
+  print_string "^^^^^^^^^^^^^^^^^^^^^^^^^";
+  print_newline();
+  print_node n;
+  print_string ("r = "^(string_of_int r));
+  print_newline();
+  print_string "vvvvvvvvvvvvvvvvvvvvvvvvv";
+  print_newline()
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+
+
+let draw_route p =
+  let c1, c2, c3, dr =
+    match p.packet_header with
+    | H_LER -> (red, red, magenta, 2)
+    | H_PDL _ -> (blue, blue, cyan, 1)
+  in
+  begin
+    match p.packet_route with
+    | n :: _ -> Graphics.moveto n.node_pos.x n.node_pos.y
+    | _ -> ()
+  end;
+  set_color c1;
+  List.iter
+    (fun n ->
+      Graphics.lineto n.node_pos.x n.node_pos.y;)
+    p.packet_route;
+  List.iter
+    (function 
+      | (src, Some info, lvl, _) ->
+	  let r = 
+	    int_of_float
+	      (sqrt 
+		 (float_of_int 
+		    (distance2 
+		       src.node_pos.x src.node_pos.y
+		       info.node_pos.x info.node_pos.y)))
+	  in
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+(*
+if p.packet_header <> H_LER then
+  ( print_string "-------------------------------";
+    print_newline();
+    print_anchor src r;);
+*)
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+	  set_color c2;
+	  Graphics.draw_circle
+	    src.node_pos.x src.node_pos.y (r+dr)
+      | (src, None, level, _) ->
+	  let r =
+	    level * !dist_couv
+	  in
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+(*
+if p.packet_header <> H_LER then
+  ( print_string "-------------------------------";
+    print_newline();
+    print_anchor src r;);
+*)
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+	  set_color c3;
+	  Graphics.draw_circle
+	    src.node_pos.x src.node_pos.y (r+dr))
+    p.packet_anchors
+
+
+
+let draw_info n =
+(*
+  if n.hello_id = main_node then
+    (Graphics.set_color Graphics.red;
+     Graphics.moveto n.hello_pos.x n.hello_pos.y;
+     Graphics.draw_string (string_of_int n.hello_id);
+     Graphics.set_color Graphics.black)
+  else
+(*
+    Graphics.draw_circle n.hello_pos.x n.hello_pos.y 1
+*)
+    (Graphics.moveto n.hello_pos.x n.hello_pos.y;
+     Graphics.draw_string (string_of_int n.hello_id))
+*)
+  let _, date = n.hello_node.node_pos_tbl_pdl.(!main_node) in
+  if date = no_info then
+    Graphics.set_color Graphics.yellow
+  else
+    if n.hello_node.node_date - date < 0 then
+      Graphics.set_color Graphics.blue
+    else
+      if n.hello_node.node_date - date < 50 then
+	Graphics.set_color Graphics.red
+      else
+	if n.hello_node.node_date - date < 100 then
+	  Graphics.set_color Graphics.magenta
+	else
+	  if n.hello_node.node_date - date < 150 then
+	    Graphics.set_color Graphics.cyan
+	  else
+	    Graphics.set_color Graphics.black;
+  
+  Graphics.moveto n.hello_pos.x n.hello_pos.y;
+  Graphics.draw_string (string_of_int n.hello_id);
+  Graphics.set_color Graphics.black;
+  if n.hello_id = !main_node then
+    Graphics.draw_circle n.hello_pos.x n.hello_pos.y !dist_couv
+
+
+let draw_info_ascii n =
+  Graphics.set_color Graphics.black;
+  let _, date = n.hello_node.node_pos_tbl_pdl.(!main_node) in
+  Graphics.moveto n.hello_pos.x n.hello_pos.y;
+  if date = no_info then
+    Graphics.draw_string "."
+  else
+    if n.hello_node.node_date - date < 0 then
+      Graphics.draw_string "#"
+    else
+      if n.hello_node.node_date - date < 50 then
+	Graphics.draw_string "@"
+      else
+	if n.hello_node.node_date - date < 100 then
+	  Graphics.draw_string "*"
+	else
+	  if n.hello_node.node_date - date < 150 then
+	    Graphics.draw_string "+"
+	  else
+	    Graphics.draw_string "-";
+  if n.hello_id = !main_node then
+    Graphics.draw_circle n.hello_pos.x n.hello_pos.y !dist_couv
+
+
+let draw_neighborhood self =
+  Graphics.set_color Graphics.green;
+  List.iter
+    (fun info ->
+      Graphics.moveto self.hello_pos.x self.hello_pos.y;
+      Graphics.lineto info.hello_pos.x info.hello_pos.y)
+    self.hello_node.node_neighbors;
+  Graphics.set_color Graphics.black
+
+
+let process draw_simul draw =
+   Graphics.open_graph (" "^(string_of_int !maxx)^"x"^(string_of_int !maxy));
+(*  Graphics.open_graph "";*)
+  Graphics.auto_synchronize false;
+  loop
+    await draw (all) in 
+    Graphics.clear_graph();
+    List.iter draw_info all;
+(*    List.iter draw_neighborhood all;*)
+    Graphics.synchronize();
+    pause;
+    Graphics.synchronize();
+
+
+    for i = 1 to 30 do 
+      pause;
+    done
+
+
+  end
+    

@@ -238,6 +238,12 @@ let rec expression i ppf x =
       expression i ppf e1;
       expression i ppf e2;
       expression i ppf e3;
+  | Pexpr_fordopar (s, e1, e2, df, e3) ->
+      line i ppf "Pexpr_fordopar \"%a\" %a\n" 
+	fmt_simple s fmt_direction_flag df;
+      expression i ppf e1;
+      expression i ppf e2;
+      expression i ppf e3;
   | Pexpr_constraint (e, te) ->
       line i ppf "Pexpr_constraint\n";
       expression i ppf e;

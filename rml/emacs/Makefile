@@ -1,5 +1,5 @@
 # files to install
-FILES=	install \
+FILES=	INSTALL \
 	rml.el \
 	rml-font.el  \
 	rml-process-acc.el  \

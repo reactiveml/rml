@@ -1,0 +1,338 @@
+(********************************************************************)
+(* Constantes                                                       *)
+(********************************************************************)
+let maxx = 400
+let maxy = 400
+
+let neighbors = 4
+
+
+(********************************************************************)
+(* Status                                                       *)
+(********************************************************************)
+
+type status_t =
+  | Status_Top
+  | Status_Right 
+  | Status_Bottom
+  | Status_Left
+  | Status_Quiescent
+  | Status_Wall
+  | Status_None
+
+let color_of_status s =
+  match s with 
+  | Status_Top -> Graphics.blue
+  | Status_Right -> Graphics.blue
+  | Status_Bottom -> Graphics.blue
+  | Status_Left -> Graphics.blue
+  | Status_Quiescent -> Graphics.red
+  | Status_Wall -> Graphics.green
+  | Status_None -> Graphics.black
+ 
+
+
+type state_t = 
+  | State_Basic
+  | State_Collide
+  | State_Barrier
+  | State_Grow_gene
+  | State_Ckl_gene
+  | State_Invclk_gene
+  | State_Translator
+  | State_Sprout
+  | State_Pre_waiter
+  | State_Waiter
+  | State_Stop
+  | State_Erase
+
+
+(********************************************************************)
+(* Direction                                                        *)
+(********************************************************************)
+type dir_t =
+  | Up
+  | Down
+  | Left
+  | Right
+  | Up_Left
+  | Up_Right
+  | Down_Left
+  | Down_Right
+ 
+let opposite dir =
+  match dir with
+  | Up -> Down
+  | Down -> Up
+  | Left -> Right
+  | Right -> Left
+  | Up_Left -> Down_Right
+  | Up_Right -> Down_Left
+  | Down_Left -> Up_Right
+  | Down_Right -> Up_Left
+
+(********************************************************************)
+(* Info                                                             *)
+(********************************************************************)
+
+type info_t =
+    { origine: dir_t;
+      status: status_t;
+      state: state_t;
+      fired: int;
+      new_status: status_t; 
+      new_state: state_t; }
+      
+let make_info origine status state =
+  { origine = origine;
+    status = status;
+    state = state;
+    fired = 0;
+    new_status = Status_None;
+    new_state = State_Basic; }
+    
+    
+(**************************************************************************)
+(* neighborhood                                                           *)
+(**************************************************************************)
+    
+type neighborhood_t = info_t list
+      
+      
+(**************************************************************************)
+(* cell                                                                   *)
+(**************************************************************************)
+      
+type cell_t =
+    { cell_x: int;
+      cell_y: int;
+      mutable cell_activation: (info_t -> process);
+      mutable cell_status: status_t;
+      mutable cell_state: state_t;
+      mutable cell_fired: int;
+      mutable cell_neighborhood: neighborhood_t; }
+      
+let new_cell x y status state =
+  { cell_x = x;
+    cell_y = y;
+    cell_activation = (fun info -> process nothing); 
+    cell_status = status;
+    cell_state = state;
+    cell_fired = 0;
+    cell_neighborhood = []; }
+    
+let draw_cell c =
+  Graphics.set_color (color_of_status c.cell_status);
+  Graphics.plot c.cell_x c.cell_y
+
+
+(**************************************************************************)
+(* neighborhood functions                                                 *)
+(**************************************************************************)
+let get_von_neumann_neighbors cell cell_array =
+  let x = cell.cell_x in
+  let y = cell.cell_y in
+  let neighbors = ref [] in
+  if 0 <= x-1 then neighbors := (Left, cell_array.(x-1).(y)) :: !neighbors;
+  if x+1 < maxx then neighbors := (Right, cell_array.(x+1).(y)) :: !neighbors;
+  if 0 <= y-1 then neighbors := (Down, cell_array.(x).(y-1)) :: !neighbors;
+  if y+1 < maxy then neighbors := (Up, cell_array.(x).(y+1)) :: !neighbors;
+  !neighbors
+
+let get_von_neumann_neighbors_circular cell cell_array =
+  let x = cell.cell_x + maxx in
+  let y = cell.cell_y + maxy in
+  let neighbors = ref [] in
+  neighbors := (Left, cell_array.((x-1) mod maxx).(y)) :: !neighbors;
+  neighbors := (Right, cell_array.((x+1) mod maxx).(y)) :: !neighbors;
+  neighbors := (Down, cell_array.(x).((y-1) mod maxy)) :: !neighbors;
+  neighbors := (Up, cell_array.(x).((y+1) mod maxy)) :: !neighbors;
+  !neighbors
+
+let get_moore_neighbors cell cell_array =
+  let x = cell.cell_x in
+  let y = cell.cell_y in
+  let neighbors = ref [] in
+  if 0 <= x-1 && y+1 < maxy then 
+    neighbors := (Up_Left, cell_array.(x-1).(y+1)) :: !neighbors;
+  if y+1 < maxy then 
+    neighbors := (Up, cell_array.(x).(y+1)) :: !neighbors;
+  if x+1 < maxx && y+1 < maxy then 
+    neighbors := (Up_Right, cell_array.(x+1).(y+1)) :: !neighbors;
+  if x+1 < maxx then 
+    neighbors := (Right, cell_array.(x+1).(y)) :: !neighbors;
+  if x+1 < maxx && 0 <= y-1 then 
+    neighbors := (Down_Right, cell_array.(x+1).(y-1)) :: !neighbors;
+  if 0 <= y-1 then 
+    neighbors := (Down, cell_array.(x).(y-1)) :: !neighbors;
+  if 0 <= x-1 && 0 <= y-1 then 
+    neighbors := (Down_Left, cell_array.(x-1).(y-1)) :: !neighbors;
+  if 0 <= x-1 then 
+    neighbors := (Left, cell_array.(x-1).(y)) :: !neighbors;
+  !neighbors
+
+let get_moore_neighbors_circular cell cell_array =
+  let x = cell.cell_x + maxx in
+  let y = cell.cell_y + maxy in
+  let neighbors = ref [] in
+  neighbors := 
+    (Up_Left, cell_array.((x-1) mod maxx).((y+1) mod maxy)) :: !neighbors;
+  neighbors := 
+    (Up, cell_array.(x mod maxx).((y+1) mod maxy)) :: !neighbors;
+  neighbors := 
+    (Up_Right, cell_array.((x+1) mod maxx).((y+1) mod maxy)) :: !neighbors;
+  neighbors := 
+    (Right, cell_array.((x+1) mod maxx).(y mod maxy)) :: !neighbors;
+  neighbors := 
+    (Down_Right, cell_array.((x+1) mod maxx).((y-1) mod maxy)) :: !neighbors;
+  neighbors := 
+    (Down, cell_array.(x mod maxx).((y-1) mod maxy)) :: !neighbors;
+  neighbors := 
+    (Down_Left, cell_array.((x-1) mod maxx).((y-1) mod maxy)) :: !neighbors;
+  neighbors := 
+    (Left, cell_array.((x-1) mod maxx).(y mod maxy)) :: !neighbors;
+  !neighbors
+
+let get_neighbors = get_von_neumann_neighbors
+(*let get_neighbors = get_moore_neighbors_circular*)
+
+
+(**************************************************************************)
+(* cell process                                                           *)
+(**************************************************************************)
+
+let rec process activate_neighborhood self neighbors =
+  match neighbors with
+  | [] -> nothing
+  | (dir, Some cell) :: neighbors ->
+      let info = 
+	make_info (opposite dir) self.cell_status self.cell_state 
+      in
+      run (cell.cell_activation info);
+      run (activate_neighborhood self neighbors)
+  | (dir, None) :: neighbors ->
+      print_string "Warning: activation of a dead cell";
+      print_newline();
+      run (activate_neighborhood self neighbors)
+
+let process cell self cell_behavior cell_array =
+  signal activation in
+  self.cell_activation <- (fun info -> process (emit activation info));
+  draw_cell self;
+  pause;
+  loop
+    if self.cell_status <> Status_Quiescent 
+    then run (activate_neighborhood self (get_neighbors self cell_array))
+    else await immediate activation;
+    let activation <neighbors> in
+    self.cell_neighborhood <- neighbors;
+    cell_behavior self;
+    draw_cell self
+  end
+
+
+(**************************************************************************)
+(* cell behaviors                                                         *)
+(**************************************************************************)
+
+let fredkin cell = 
+  let cpt = ref 0 in
+  List.iter 
+    (fun info -> if info.status <> Status_Quiescent then incr cpt)
+    cell.cell_neighborhood;
+  cell.cell_status <- 
+    if (!cpt mod 2) = 1 then Status_Wall else Status_Quiescent
+
+let game_of_life cell =
+  let cpt = ref 0 in
+  List.iter 
+    (fun info -> if info.status <> Status_Quiescent then incr cpt)
+    cell.cell_neighborhood;
+  cell.cell_status <- 
+    if cell.cell_status = Status_Quiescent && !cpt = 3 
+    then Status_Wall 
+    else
+      if cell.cell_status <> Status_Quiescent && !cpt <> 2 && !cpt <> 3
+      then Status_Quiescent
+      else cell.cell_status 
+
+
+(**************************************************************************)
+(* cellular automaton                                                     *)
+(**************************************************************************)
+let cellular_automaton_create () =
+  Array.make_matrix maxx maxy None
+
+let rec cellular_automaton_init cell_array i j =
+  if i < maxx then
+    if j < maxy then
+      let status = 
+(*	if i = 0 or i = maxx/2 or i = (maxx-1) or j = 0 or j = (maxy-1)  *)
+(*	if i = maxx/2 *)
+	if i = maxx/2 && j = maxy/2  
+	then Status_Wall 
+	else Status_Quiescent
+      in
+      cell_array.(i).(j) <- Some (new_cell i j status State_Basic);
+      cellular_automaton_init cell_array i (j+1)
+    else
+      cellular_automaton_init cell_array (i+1) 0
+  else
+    ()
+
+let opt_val x =
+  match x with
+  | Some v -> v
+  | None -> failwith "Pb : cellular_automaton_start"
+
+let rec process cellular_automaton_start cell_array i j =
+  if i < maxx then
+    if j < maxy then
+      (run (cell (opt_val cell_array.(i).(j)) 
+	      fredkin 
+	      (*game_of_life *)
+	      cell_array)
+       ||
+       run (cellular_automaton_start cell_array i (j+1)))
+    else
+      run (cellular_automaton_start cell_array (i+1) 0)
+  else
+    nothing
+
+
+(**************************************************************************)
+(* main                                                                   *)
+(**************************************************************************)
+let process main =
+  let cell_array = cellular_automaton_create() in
+  cellular_automaton_init cell_array 0 0; 
+  Graphics.open_graph (" "^(string_of_int maxx)^"x"^(string_of_int maxy));
+  Graphics.auto_synchronize false;
+  run (cellular_automaton_start cell_array 0 0);
+  ||
+  loop 
+    Graphics.synchronize (); 
+    pause;
+  end
+
+
+
+(*
+let process main {} =
+  let cell_array = cellular_automaton_create() in
+  cellular_automaton_init cell_array 0 0; 
+  Graphics.open_graph "";
+  Graphics.auto_synchronize false;
+  signal kill in
+  do
+    run (cellular_automaton_start cell_array 0 0) {};
+  until kill
+  ||
+  loop 
+    Graphics.synchronize (); 
+    pause;
+  end
+  ||
+  for i = 1 to 17 do pause done;
+  emit kill
+*)

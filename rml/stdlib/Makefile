@@ -7,20 +7,42 @@ RMLC := ../compiler/rmlc
 
 #RMLC:=../compiler/rmlc.byte
 
-CIBLE= rml_pervasives.rzi \
-       arg.rzi \
-       array.rzi \
-       char.rzi \
-       gc.rzi \
-       graphics.rzi \
-       hashtbl.rzi \
-       list.rzi \
-       obj.rzi \
-       queue.rzi \
-       random.rzi \
-       string.rzi \
-       sys.rzi \
-       unix.rzi
+SRC= rml_pervasives.rmli \
+	arg.rmli \
+	array.rmli \
+	buffer.rmli \
+	callback.rmli \
+	char.rmli \
+	complex.rmli \
+	digest.rmli \
+	filename.rmli \
+	format.rmli \
+	gc.rmli \
+	stream.rmli \
+	genlex.rmli \
+	graphics.rmli \
+	hashtbl.rmli \
+	int32.rmli \
+	nativeint.rmli \
+	int64.rmli \
+	lazy.rmli \
+	lexing.rmli \
+	list.rmli \
+	marshal.rmli \
+	obj.rmli \
+	parsing.rmli \
+	printexc.rmli \
+	printf.rmli \
+	queue.rmli \
+	random.rmli \
+	sort.rmli \
+	stack.rmli \
+	string.rmli \
+	sys.rmli \
+	unix.rmli \
+	weak.rmli \
+
+CIBLE= $(SRC:.rmli=.rzi)
 
 all:  $(CIBLE)
 

@@ -70,6 +70,8 @@ and process_desc =
   | Kproc_while of expression * process * process
   | Kproc_for of 
       ident * expression * expression * direction_flag * process *process
+  | Kproc_fordopar of 
+      ident * expression * expression * direction_flag * process *process
   | Kproc_par of process * process * process
   | Kproc_merge of process * process * process
   | Kproc_signal of 

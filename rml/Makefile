@@ -51,7 +51,8 @@ realclean: clean-distrib
 	(cd interpreter; make realclean)
 	(cd man; make realclean)
 	(cd doc; make realclean)
-	rm -rf config.cache config.status config.log config
+	rm -rf config.cache config.status config.log config \
+		distrib/rml/rmlc.in distrib/rml/Makefile
 
 
 # Making binary distribution 
@@ -65,7 +66,9 @@ source-distrib:
 	cp configure configure.in config.in Makefile install-sh INSTALL \
 		distrib/rml-v1.02-$(DATE)
 	mkdir -p distrib/rml-v1.02-$(DATE)/distrib
-	cp -r distrib/rml distrib/rml-v1.02-$(DATE)/distrib
+	cp -r distrib/rml distrib/Makefile.byte distrib/Makefile.opt \
+		distrib/rmlc.in.byte distrib/rmlc.in.opt \
+		distrib/rml-v1.02-$(DATE)/distrib
 	(cd distrib; \
 	 tar --exclude=CVS -czvf rml-v1.02-$(DATE).tar.gz rml-v1.02-$(DATE); \
 	 rm -rf rml-v1.02-$(DATE); \

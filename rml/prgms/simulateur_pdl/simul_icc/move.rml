@@ -1,0 +1,78 @@
+open Global
+
+let move n dir = 
+  let x = n.node_pos.x in
+  let y = n.node_pos.y in
+  match dir with
+  | 0 -> 
+      if y < !maxy-1 then n.node_pos <- make_pos x (y + 1) 
+  | 1 -> 
+      if x < !maxx-1 && y < !maxy-1 then 
+	n.node_pos <- make_pos (x + 1) (y + 1) 
+  | 2 -> 
+      if x < !maxx-1 then n.node_pos <- make_pos (x + 1) y 
+  | 3 -> 
+      if x < !maxx-1 && 0 < y then n.node_pos <- make_pos (x + 1) (y - 1)
+  | 4 -> 
+      if 0 < y then n.node_pos <- make_pos x (y - 1) 
+  | 5 -> 
+      if 0 < x && 0 < y then n.node_pos <- make_pos (x - 1) (y - 1)
+  | 6 -> 
+      if 0 < x then n.node_pos <- make_pos (x - 1) y
+  | 7 -> 
+      if 0 < x && y < !maxy-1 then n.node_pos <- make_pos (x - 1) (y + 1)
+  | _ -> ()
+	
+let random node = 
+  move node (Random.int 8) 
+
+let same_dir node =
+  let p = Random.int 100 in
+  if p < 80 then 
+    ();
+  if 80 <= p & p < 85 then 
+    node.node_last_dir <- (node.node_last_dir + 1) mod 8;
+  if 85 <= p & p < 90 then 
+    node.node_last_dir <- (node.node_last_dir + 7) mod 8;
+  if 90 <= p & p < 92 then 
+    node.node_last_dir <- (node.node_last_dir + 2) mod 8;
+  if 92 <= p & p < 94 then 
+    node.node_last_dir <- (node.node_last_dir + 6) mod 8;
+  if 94 <= p & p < 96 then 
+    node.node_last_dir <- (node.node_last_dir + 3) mod 8;
+  if 96 <= p & p < 98 then 
+    node.node_last_dir <- (node.node_last_dir + 5) mod 8;
+  if 98 <= p & p < 100 then 
+    node.node_last_dir <- (node.node_last_dir + 4) mod 8;
+  move node node.node_last_dir
+
+
+let random_waypoint n =
+  if (n.node_pos.x = n.node_dest.x) & (n.node_pos.y = n.node_dest.y) then
+    n.node_dest <- make_pos (Random.int !maxx) (Random.int !maxy);
+  
+  if n.node_pos.x < n.node_dest.x then
+    if n.node_pos.y < n.node_dest.y then
+      move n 1
+    else
+      if n.node_pos.y > n.node_dest.y then
+	move n 3 
+      else 
+	move n 2
+  else 
+    if n.node_pos.x > n.node_dest.x then
+      if n.node_pos.y < n.node_dest.y then
+	move n 7
+      else
+	if n.node_pos.y > n.node_dest.y then
+	  move n 5
+	else
+	  move n 6
+    else
+      if n.node_pos.y < n.node_dest.y then
+	move n 0
+      else
+	if n.node_pos.y > n.node_dest.y then
+	  move n 4
+
+let no_move node = ()

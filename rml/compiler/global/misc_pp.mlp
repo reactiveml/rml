@@ -14,11 +14,25 @@ open Pcaml;;
 
 let stdlib =
   let stdlib_ch = open_in "stdlib" in
-  input_line stdlib_ch
+  let s = input_line stdlib_ch in
+  close_in stdlib_ch;
+  s
+
+let version =
+  let version_ch = open_in "version" in
+  let s = input_line version_ch in
+  close_in version_ch;
+  s
+
 
 EXTEND
   expr: LEVEL "simple"
     [[ UIDENT "STDLIB" -> <:expr< $str:stdlib$ >> ]];
   patt: LEVEL "simple"
     [[ UIDENT "STDLIB" -> <:patt< $str:stdlib$ >> ]];
+
+  expr: LEVEL "simple"
+    [[ UIDENT "VERSION" -> <:expr< $str:version$ >> ]];
+  patt: LEVEL "simple"
+    [[ UIDENT "VERSION" -> <:patt< $str:version$ >> ]];
 END;;

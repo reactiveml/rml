@@ -47,6 +47,8 @@ and expression_desc =
   | Pexpr_while of expression * expression
   | Pexpr_for of 
       simple_ident * expression * expression * direction_flag * expression
+  | Pexpr_fordopar of 
+      simple_ident * expression * expression * direction_flag * expression
   | Pexpr_seq of expression * expression
   | Pexpr_nothing
   | Pexpr_pause

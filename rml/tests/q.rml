@@ -1,0 +1,13 @@
+let process p {} =
+  signal s default 0 gather (+) in
+  emit s 1;
+  pause;
+  (*pause;*)
+  if pre s then 
+    (print_int (pre ?s);
+     print_newline ())
+  else
+    (print_string "abs : ";
+     print_int (pre ?s);
+     print_newline ())
+    

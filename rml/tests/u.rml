@@ -1,0 +1,5 @@
+type t = {a:(int -> process{})}
+
+let v1 = fun x -> process {} -> nothing
+let v2 = {a= (fun x -> process {} -> nothing);}
+

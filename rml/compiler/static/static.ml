@@ -151,6 +151,18 @@ let rec static_expr ctx e =
 	then static_expr ctx e3
 	else expr_wrong_static_err e
 
+    | Pexpr_fordopar (_, e1, e2, _, e3) ->
+	if ctx = Process
+	then
+	  let typ1 = static_expr ML e1 in
+	  let typ2 = static_expr ML e2 in
+	  if unify typ1 typ2 = Static
+	  then 
+	    let typ = static_expr Process e3 in
+	    Dynamic
+	  else expr_wrong_static_err e
+	else expr_wrong_static_err e
+
     | Pexpr_seq (e1,e2) ->
 	let typ1 = static_expr ctx e1 in
 	let typ2 = static_expr ctx e2 in

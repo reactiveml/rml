@@ -261,6 +261,14 @@ and translate_proc k p =
 		  translate_proc (make_term()) proc,
 		  k)
 
+    | Rproc_fordopar (i, e1, e2, flag, proc) ->
+	Kproc_fordopar(i,
+		       translate_ml e1,
+		       translate_ml e2,
+		       flag,
+		       translate_proc (make_term()) proc,
+		       k)
+
     | Rproc_seq (p1, p2) ->
 	(translate_proc (translate_proc k p2) p1).kproc_desc
 

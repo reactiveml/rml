@@ -49,6 +49,8 @@ module type S =
     val rml_while: (unit -> bool) -> proc -> proc
     val rml_for: 
 	(unit -> int) -> (unit -> int) -> bool -> (int -> proc) -> proc 
+    val rml_fordopar: 
+	(unit -> int) -> (unit -> int) -> bool -> (int -> proc) -> proc 
     val rml_signal: (('a, 'a list) event -> proc) -> proc 
     val rml_signal_combine: 
 	(unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->

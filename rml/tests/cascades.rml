@@ -1,0 +1,90 @@
+let process init_array a =
+  for i = 0 to Array.length a - 1 do
+    signal s default () gather fun () () -> () in
+    a.(i) <- s
+  done
+
+
+(* Comme dans la these de Christian *)
+let process directe_v1 num s =
+  loop
+    emit s.(0);
+    begin
+      for i = 0 to num-2 dopar
+        await immediate s.(i); 
+	emit s.(i+1)
+      done
+      ||
+      await immediate s.(num-1)
+    end;
+    pause
+  end
+
+(* Avec le loop dans le for *)
+let process directe_v2 num s =
+  loop
+    emit s.(0);
+    pause
+  end
+  ||
+  for i = 0 to num-2 dopar
+    loop
+      await immediate s.(i); 
+      emit s.(i+1);
+      pause
+    end
+  done
+  ||
+  loop
+    await immediate s.(num-1);
+    pause
+  end
+
+(* Comme dans la these de Christian *)
+let process inverse_v1 num s =
+  loop
+    emit s.(0);
+    begin
+      await immediate s.(num-1);
+      ||
+      for i = num-2 downto 0 dopar
+        await immediate s.(i); 
+	emit s.(i+1)
+      done
+    end;
+    pause
+  end
+
+(* Avec le loop dans le for *)
+let process inverse_v2 num s =
+  loop
+    emit s.(0);
+    pause
+  end
+  ||
+  for i = num-2 downto 0 dopar
+    loop
+      await immediate s.(i); 
+      emit s.(i+1);
+      pause
+    end
+  done
+  ||
+  loop
+    await immediate s.(num-1);
+    pause
+  end
+
+let process main =
+  let nb_instant = 1000 in
+  let num = 100000 in
+  let s = Array.make num (Obj.magic()) in
+  run (init_array s);
+  run (directe_v2 num s)
+  ||
+  let t1 = Sys.time() in
+  for i = 1 to nb_instant do pause done;
+  let t2 = Sys.time() in
+  print_float (t2 -. t1);
+  print_newline();
+  exit 0

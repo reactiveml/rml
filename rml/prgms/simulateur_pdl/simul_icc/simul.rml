@@ -1,0 +1,154 @@
+open Global
+open Draw  
+
+let get_neighbors n1 others =
+  let filter n2 =
+    let d2 = 
+      distance2 n1.node_pos.x n1.node_pos.y 
+	n2.hello_pos.x n2.hello_pos.y 
+    in
+    d2 < !dist_couv2 
+  in
+  List.filter filter others
+
+
+let process node x_init y_init move make_msg draw =
+  let self = new_node x_init y_init in
+  loop
+    self.node_date <- self.node_date + 1;
+    move self;
+
+    let info = make_info_hello self in
+    emit draw info;
+    let (i,j) as local_area, neighbor_areas = 
+      Area.get_areas self.node_pos.x self.node_pos.y in
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+(*
+    if self.node_id = main_node then 
+      begin
+	print_string "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
+	print_newline ();
+	print_node self;
+	List.iter 
+	  (fun (i,j) ->
+	    print_string ("node.neighbor_areas ("^(string_of_int i)^", "
+		          ^(string_of_int j)^")");
+	    print_newline())
+	  (local_area::neighbor_areas);
+	print_string "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv";
+	print_newline();
+      end;
+*)
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+    emit !hello_array.(i).(j) info;
+    pause;
+
+    let all = 
+      List.fold_left 
+	(fun infos (i,j) -> 
+	  List.rev_append (pre ?(!hello_array.(i).(j))) infos)
+	[] (local_area::neighbor_areas)
+    in
+    let neighbors = get_neighbors self all in
+    self.node_neighbors <- neighbors;
+
+    Pos_tbl.update self.node_pos_tbl_ler neighbors self.node_date;
+    Pos_tbl.update self.node_pos_tbl_pdl neighbors self.node_date;
+
+    pause; 
+
+    (* Routage *)
+    let msg = make_msg self in
+    List.iter 
+      (fun (dest_id, len) -> 
+	Routage.route LER self dest_id len;
+	Routage.route PDL self dest_id len) 
+      msg;
+
+    Stat.node_stat self;
+
+    pause;
+    
+  end
+
+
+let rec process make_nodes n draw =
+  if n > 0 then
+    let x = Random.int !maxx in
+    let y = Random.int !maxy in
+    run (node x y Move.random_waypoint Msg.make draw)
+    ||
+    run (make_nodes (n-1) draw)
+
+
+
+let configure () = 
+  let doc = ""
+  and doc_D = "<density> densité par zone de couverture"
+  and doc_n = "<nb> nombre de noeuds dans la topologie"
+  and doc_t = "<surface> taille de la topologie"
+  and doc_couv = "<r> rayon de couverture" 
+  and doc_o = 
+    "<pref> calcul des stats (<pref> est lepréfixe des fichiers de sortie)"
+  and doc_msg_proba = "<p> probabilité d'émission d'un message"
+  and doc_msg_len = "<n> longueur max d'un message"
+  and doc_pdl_proba = "<n> probabilité d'insertion d'une info de pdl"
+  and doc_pdl_forecast = "<n> distance de prevision"
+  and doc_nox = " sans mode graphique"
+  and doc_node = "<n> numero du noeud observé"
+  and errmsg = "Options are:"
+  in
+  Arg.parse
+    [ ("-n", Arg.Set_int nb_node, doc_n);
+      ("-t", Arg.Float set_size, doc_t);
+      ("-couv", Arg.Int set_couv, doc_couv);
+      ("-D", Arg.Float set_density, doc_D);
+      ("-msg_proba", Arg.Set_int msg_proba, doc_msg_proba);
+      ("-msg_len", Arg.Set_int msg_len, doc_msg_len);
+      ("-pdl_proba", Arg.Set_float pdl_proba, doc_pdl_proba);
+      ("-pdl_forecast", Arg.Set_int pdl_forecast, doc_pdl_forecast);
+      ("-o", Arg.String set_prefix, doc_o);
+      ("-nox", Arg.Clear with_graphics, doc_nox); 
+      ("-node", Arg.Set_int main_node, doc_node);
+    ]
+    (fun s -> raise (Invalid_argument s))
+    errmsg
+
+let process main =
+  Random.init 1; 
+(*  Random.self_init ();*)
+  configure();
+  init();
+  run Area.make_areas;
+  signal draw in
+  run (make_nodes !nb_node draw)
+  ||
+  (if !with_graphics then
+    run (draw_simul draw))
+(*
+  ||
+  loop 
+    pause;
+    pause;
+    pause;
+    Stat.instant_stat ();
+  end    
+*)
+(* 
+  ||
+  let cpt = ref 0 in
+  loop
+    incr cpt;
+    if !cpt mod 10 = 0 then
+      begin
+	print_string "------------------------------------";
+	print_newline();
+	print_string ("---- instant = "^(string_of_int !cpt));
+	Gc.print_stat stdout;
+	print_newline();
+
+      end;
+    pause;
+  end
+*)
+

@@ -1,0 +1,26 @@
+let process p {} = 
+  signal s in
+  loop
+    do
+      (print_string "1\n"
+       ||
+       loop
+	 print_string "2\n";
+	 pause;
+       end);
+      print_string "3\n";
+    until s;
+    print_string "4\n";
+  end
+  ||
+  loop
+    for i = 0 to 5 do 
+      print_string "i = ";
+      print_int i;
+      print_newline();
+      pause
+    done;
+    print_string "avant emit s\n";
+    emit s;
+    print_string "apres emit s\n";
+  end

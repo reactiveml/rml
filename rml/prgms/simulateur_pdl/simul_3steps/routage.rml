@@ -1,0 +1,282 @@
+open Global
+  
+  
+let search_best_age kind src_node dest age_limit =
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+  let cpt = ref 0 in
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+  let visited = Array.make nb_node false in
+  visited.(src_node.node_id) <- true;
+  let rec aux neighbors =
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+    incr cpt;
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+    let next_neighbors = ref [] in
+    let best =
+      List.fold_left
+	(fun best info ->
+	  if visited.(info.hello_id) then
+	    best
+	  else
+	  begin
+	    let n = info.hello_node in
+	    let pos_tbl = 
+	      match kind with
+	      | LER -> n.node_pos_tbl_ler 
+	      | PDL -> n.node_pos_tbl_pdl
+	    in
+	    visited.(info.hello_id) <- true;
+	    next_neighbors :=
+	      List.rev_append n.node_neighbors !next_neighbors;
+	    match best with
+	    | None ->
+		let (x,y,age) = pos_tbl.(dest) in
+		if age <> no_info & (n.node_age - age) <= age_limit then
+		  Some (info, (x, y, (n.node_age - age)))
+		else
+		  best
+	    | Some (_,(_,_,best_age)) ->
+		let (x,y,age) = pos_tbl.(dest) in
+		if (n.node_age - age) < best_age then
+		  Some (info, (x, y, (n.node_age - age)))
+		else
+		  best
+	  end)
+	None
+	neighbors
+    in
+    if (best = None) & (!next_neighbors <> []) then
+      aux !next_neighbors
+    else
+      match best with
+      | None -> None
+      | Some (info, res) -> 
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+
+	  let r = 
+	    int_of_float
+	      (sqrt 
+		 (float_of_int 
+		    (distance2 
+		       src_node.node_posx src_node.node_posy
+		       info.hello_posx info.hello_posy)))
+	  in
+	  Graphics.draw_circle
+	    src_node.node_posx src_node.node_posy r;
+
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+	  Some res
+  in 
+  fun neighbors ->
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+(*
+    print_string ("search_best_age ("^(string_of_int !cpt)^")");
+    print_newline();
+*)
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+    aux neighbors
+
+
+(* *********************************************************************** *)
+(* Routage process                                                         *)
+(* *********************************************************************** *)
+(*
+let rec process routage node neighbors =
+  match node.node_packets with
+  | [] -> nothing
+  | p :: packets ->
+      node.node_packets <- packets;
+      
+      (* maj de pos_tbl *)
+      Pos_tbl.set node.node_pos_tbl 
+	p.packet_id_pdl 
+	p.packet_posx_pdl p.packet_posy_pdl (node.node_age+p.packet_age_pdl);
+      
+      
+      if node.node_id = p.packet_id_destination then
+	run (routage node neighbors)
+      else 
+	(* recherche du node voisin le plus proche de la dest *)
+	let d2 = 
+	  distance2 
+	    node.node_posx node.node_posy 
+	    p.packet_posx_dest p.packet_posy_dest
+	in
+	let _, node_min =
+          List.fold_left 
+	    (fun (d2min, node_min) info ->
+	      if info.hello_id = p.packet_id_destination then
+	        (-1, node)
+	      else
+		let d2 = 
+		  distance2 
+		    info.hello_posx info.hello_posy 
+		    p.packet_posx_dest p.packet_posy_dest
+		in
+		if d2 < d2min then
+		  (d2,node)
+		else 
+		  (d2min, node_min))
+	    (d2, node)
+	    neighbors
+        in
+
+      if node.node_id = node_min.node_id then
+	if p.packet_age_pos_dest = 0 then
+	  (* routage fail *)
+	  run (routage node neighbors)
+	else
+	  match 
+	    search_best_age node.node_id 
+	      p.packet_id_destination (p.packet_age_pos_dest/2) neighbors
+	  with
+	  | Some (posx,posy,age) ->
+	      p.packet_posx_dest <- posx;
+	      p.packet_posy_dest <- posy;
+	      p.packet_age_pos_dest <- age;
+	      node.node_packets <- p::packets;
+	      run (routage node neighbors)
+	  | None -> 
+              (* routage fail *)
+	      run (routage node neighbors)
+      else
+	(emit node_min.node_channel p;
+	 run (routage node neighbors))
+*)
+
+(* *********************************************************************** *)
+(* Routage function                                                         *)
+(* *********************************************************************** *)
+
+let rec routage kind self p =
+
+  if p.packet_id_source = main_node then
+    Graphics.lineto self.node_posx self.node_posy;
+
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+(*
+  print_string "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
+  print_newline();
+  print_string ("routage "^(string_of_kind kind)^" : "^
+		(string_of_int self.node_id)^" -> "^
+		(string_of_int p.packet_id_destination));
+  print_newline();
+  print_packet p;
+  print_newline();
+*)
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+  
+  let pos_tbl = 
+    match kind with
+    | LER -> self.node_pos_tbl_ler 
+    | PDL -> self.node_pos_tbl_pdl
+  in
+
+  (* maj de pos_tbl_pdl *)
+  if kind = PDL then
+    begin
+      Pos_tbl.set pos_tbl 
+	p.packet_id_pdl 
+	p.packet_posx_pdl p.packet_posy_pdl (self.node_age+p.packet_age_pdl);
+    end;
+     
+  Pos_tbl.set pos_tbl 
+    p.packet_id_destination 
+    p.packet_posx_dest p.packet_posy_dest 
+    (self.node_age-p.packet_age_pos_dest);
+
+  if self.node_id = p.packet_id_destination then
+    (* routage success *)
+    ()
+  else 
+    (* recherche du node voisin le plus proche de la dest *)
+    let d2 = 
+      distance2 
+	self.node_posx self.node_posy 
+	p.packet_posx_dest p.packet_posy_dest
+    in
+    let d2_min, best_info =
+      List.fold_left 
+	(fun (d2min, info_min) info ->
+	  if info.hello_id = p.packet_id_destination then
+	    (-1, info)
+	  else
+	    let d2 = 
+	      distance2 
+		info.hello_posx info.hello_posy 
+		p.packet_posx_dest p.packet_posy_dest
+	    in
+	    if d2 < d2min then
+	      (d2,info)
+	    else 
+	      (d2min, info_min))
+	(d2, make_info_hello self)
+	self.node_neighbors
+    in
+
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+(*
+  if p.packet_id_source = main_node then
+    begin
+      print_string "self = ";
+      print_newline ();
+      print_node self;
+      print_string ("d2 = "^ (string_of_int d2));
+      print_newline();
+      print_string "best = ";
+      print_newline ();
+      print_hello_info best_info;
+      print_string ("d2_min = "^ (string_of_int d2_min));
+      print_newline();
+    end;
+*)
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+
+    if self.node_id = best_info.hello_id then
+      if p.packet_age_pos_dest = 0 then
+	(* routage fail *)
+	()
+      else
+	match 
+	  search_best_age kind
+	    self
+	    p.packet_id_destination (p.packet_age_pos_dest/2) 
+	    self.node_neighbors
+	with
+	| Some (posx,posy,age) ->
+
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+(*
+	    print_string ("routage: best = Some (_,_,"^
+			  (string_of_int age)^")");
+	    print_newline();
+*)
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+
+	    p.packet_posx_dest <- posx;
+	    p.packet_posy_dest <- posy;
+	    p.packet_age_pos_dest <- age;
+	    pos_tbl.(p.packet_id_destination) <- 
+	      (posx, posy, self.node_age-age);
+	    routage kind self p
+	| None -> 
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+(*
+	    print_string ("routage: best = None");
+	    print_newline();
+*)
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+
+            (* routage fail *)
+	    ()
+    else
+      (
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+(*
+       print_string ("routage: new best");
+       print_newline();
+*)
+(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+       routage kind best_info.hello_node p
+      )
+

@@ -1,0 +1,6 @@
+(* 06/07/2004 *)
+(* Pb avec def locale des op infix *)
+
+let process p {} =
+  let (+) x y = x + y in
+  1+2

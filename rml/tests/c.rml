@@ -1,0 +1,17 @@
+let maj_aff x = ()
+    
+
+let fenetre = process {out new_planete; in p} ->
+  let process read_key {} =
+    loop
+      emit new_planete;
+      pause
+    end
+  in
+  loop
+    nothing
+  end
+    ||
+    run read_key {}
+;;
+

@@ -248,6 +248,13 @@ and translate_proc p =
 		   flag,
 		   translate_proc proc)
 
+    | Rproc_fordopar (i, e1, e2, flag, proc) ->
+	Coproc_fordopar(i,
+			translate_ml e1,
+			translate_ml e2,
+			flag,
+			translate_proc proc)
+
     | Rproc_seq (p1, p2) ->
 	Coproc_seq(translate_proc p1, translate_proc p2)
 

@@ -366,6 +366,21 @@ and translate_proc e =
 	      Location.none;
 	    translate_proc k2])
 
+   | Kproc_fordopar (i, e1, e2, flag, k1, k2) ->
+	Cexpr_apply
+	  (make_instruction "rml_fordopar",
+	   [embed_ml e1;
+	    embed_ml e2;
+	    make_expr 
+	      (Cexpr_constant (Const_bool (flag = Upto))) Location.none;
+	    make_expr
+	      (Cexpr_function [make_patt 
+				 (Cpatt_var (Cvarpatt_local i))
+				 Location.none, 
+			       translate_proc k1])
+	      Location.none;
+	    translate_proc k2])
+
     | Kproc_par (k1, k2, k3) ->
 	Cexpr_apply
 	  (make_instruction "rml_par",

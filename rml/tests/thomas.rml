@@ -1,0 +1,21 @@
+let process main_machine {} =
+
+      signal a, b, c in
+
+      let process first_machine {} =
+        do
+          loop
+              emit a; pause
+          end
+        until b;
+        emit c
+      in
+
+      let process second_machine {} =
+        emit b
+      in
+
+      run first_machine {}
+      ||
+      run second_machine {}
+

@@ -1,0 +1,43 @@
+(* 10/12/2004 *)
+(* Bug dans le do-until avec handler.                       *)
+(* La compilation n'est pas bonne, on ne peut pas traduire  *)
+(*   do                                                     *)
+(*     e                                                    *)
+(*   until                                                  *)
+(*   | s1 (x) -> e1                                         *)
+(*   | s2 (x) -> e2                                         *)
+(*   done                                                   *)
+(* en                                                       *)
+(*   do                                                     *)
+(*     do                                                   *)
+(*       e                                                  *)
+(*     until s2 (x) -> e2 done                              *)
+(*   until s1 (x) -> e1 done                                *)
+(* car e2 peut etre preempte par s1 !                       *)
+
+let process p s1 s2 =
+  do 
+    pause;
+    print_string "1";
+    print_newline()
+  until
+  | s1 (x) -> 
+      pause;
+      pause;
+      print_string "2";
+      print_newline()
+  | s2 (x) -> 
+      pause;
+      pause;
+      print_string "3";
+      print_newline()
+  done
+
+
+let process main =
+  signal s1, s2 in
+  run (p s1 s2)
+  ||
+  emit s2;
+  pause;
+  emit s1

@@ -300,6 +300,20 @@ and translate_proc e =
 			       translate_proc k])
 	      Location.none;])
 
+    | Coproc_fordopar (i, e1, e2, flag, k) ->
+	Cexpr_apply
+	  (make_instruction "rml_fordopar",
+	   [embed_ml e1;
+	    embed_ml e2;
+	    make_expr 
+	      (Cexpr_constant (Const_bool (flag = Upto))) Location.none;
+	    make_expr
+	      (Cexpr_function [make_patt 
+				 (Cpatt_var (Cvarpatt_local i))
+				 Location.none, 
+			       translate_proc k])
+	      Location.none;])
+
     | Coproc_seq (k1, k2) ->
 	Cexpr_apply
 	  (make_instruction "rml_seq",

@@ -1,0 +1,166 @@
+(* ---------------------------- *)
+(* Types                        *)
+(* ---------------------------- *)
+type routage_kind = LER | PDL
+
+type pos_tbl = (int * int * int) array (* (posx * posy * age) array *)
+
+type node = 
+    {  node_id: int;
+       mutable node_age: int;
+       mutable node_posx: int;
+       mutable node_posy: int;
+       mutable node_last_direction: int;
+       mutable node_destx: int;
+       mutable node_desty: int;
+       node_pos_tbl_ler: pos_tbl;
+       node_pos_tbl_pdl: pos_tbl;
+       mutable node_channel: (packet, packet list) event;
+       mutable node_packets: packet list; 
+       mutable node_neighbors: info_hello list;
+   }
+
+and packet =
+    { packet_id_source: int;
+      packet_id_destination: int;
+      mutable packet_posx_dest: int;
+      mutable packet_posy_dest: int;
+      mutable packet_age_pos_dest: int;
+      mutable packet_id_pdl: int;
+      mutable packet_posx_pdl: int;
+      mutable packet_posy_pdl: int;
+      mutable packet_age_pdl: int;
+   }
+
+and info_hello =
+    { hello_id: int;
+      hello_posx: int;
+      hello_posy: int; 
+      hello_node: node;
+    }
+
+(* ---------------------------- *)
+(* Constantes                   *)
+(* ---------------------------- *)
+let dist_couv = 100
+let dist_couv2 = dist_couv * dist_couv
+let nb_node = 500
+
+(* taille de l'espace de simulation *)
+let maxx = 1000
+let maxy = 1000
+
+(* taille d'une area *)
+let size_x = 200
+let size_y = 200
+
+let nb_area_x = 
+  if maxx mod size_x = 0 then maxx / size_x else (maxx / size_x) + 1
+let nb_area_y =
+  if maxy mod size_y = 0 then maxy / size_y else (maxy / size_y) + 1
+
+let no_info = -10000
+let main_node = 1
+
+signal tmp: (info_hello, info_hello list) event
+let hello_array =
+  Array.make_matrix nb_area_x nb_area_y tmp
+(*    ((Obj.magic()): (info_hello, info_hello list) event)*)
+
+(* ---------------------------- *)
+(* Misc                         *)
+(* ---------------------------- *) 
+let distance2 x1 y1 x2 y2 = 
+  (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) 
+
+let get_new_id =
+  let cpt = ref (-1) in
+  fun () ->
+    incr cpt;
+    !cpt
+      
+let new_node x y =
+  {  node_id = get_new_id();
+     node_channel = Obj.magic();
+     node_packets = [];
+     node_age = 0;
+     node_posx = x;
+     node_posy = y;
+     node_destx = x;
+     node_desty = y;
+     node_last_direction = 0; 
+     node_pos_tbl_ler = Array.make nb_node (0,0,no_info);
+     node_pos_tbl_pdl = Array.make nb_node (0,0,no_info);
+     node_neighbors = [];
+   }
+    
+let make_packet kind src_node dest pdl_node =
+  let dest_posx, dest_posy, dest_age = 
+    match kind with
+    | LER -> src_node.node_pos_tbl_ler.(dest) 
+    | PDL -> src_node.node_pos_tbl_pdl.(dest) 
+  in
+  { packet_id_source = src_node.node_id;
+    packet_id_destination = dest;
+    packet_posx_dest = dest_posx;
+    packet_posy_dest = dest_posy;
+    packet_age_pos_dest = src_node.node_age - dest_age;
+    packet_id_pdl = pdl_node.node_id;
+    packet_posx_pdl = pdl_node.node_posx;
+    packet_posy_pdl = pdl_node.node_posy;
+    packet_age_pdl = 0;
+   }
+
+let make_info_hello node =
+  { hello_id = node.node_id; 
+    hello_posx = node.node_posx;
+    hello_posy = node.node_posy; 
+    hello_node = node; }    
+
+let print_node n =
+  begin
+    print_string ("id : "^(string_of_int n.node_id));
+    print_newline ();
+    print_string ("age : "^(string_of_int n.node_age));
+    print_newline ();
+    print_string ("posx : "^(string_of_int n.node_posx));
+    print_newline ();
+    print_string ("posy : "^(string_of_int n.node_posy));
+    print_newline ();
+(*
+   for i = 0 to  nb_node-1 do
+     let (posx,posy,age) = n.node_pos_tbl_pdl.(i) in
+       print_string "\t";
+       print_int i;
+    print_string " : (";
+    print_int posx;
+    print_string ", ";
+    print_int posy;
+    print_string ", ";
+    print_int age;
+    print_string ")";
+    print_newline();
+  done
+*)
+  end
+
+let print_packet p =
+  print_string ("src_id : "^(string_of_int p.packet_id_source));
+  print_newline();
+  print_string ("dest_id : "^(string_of_int p.packet_id_destination)^
+		" = ("^
+		(string_of_int p.packet_posx_dest)^", "^
+		(string_of_int p.packet_posy_dest)^")");
+  print_newline()
+
+      
+let print_hello_info i =
+  print_string ("hello_id :"^(string_of_int i.hello_id));
+  print_newline();
+  print_string ("hello_pos = ("^
+		(string_of_int i.hello_posx)^", "^
+		(string_of_int i.hello_posy)^")");
+  print_newline()
+let string_of_kind = function
+  | LER -> "LER"
+  | PDL -> "PDL"

@@ -1,0 +1,84 @@
+<html>
+<head>
+<title></title>
+<meta name="GENERATOR" content="rml2html">
+</head>
+<body>
+
+
+<pre>
+<font color="cc9900">open</font> <font color="0033cc">Area</font>
+<font color="cc9900">open</font> <font color="0033cc">Global</font>
+
+
+<font color="green">let</font> update_pos_tbl self neighbors =
+  List.iter 
+    (fun node -&gt;
+      Pos_tbl.set self.pos_tbl_ler node.id node.pos self.date;
+      Pos_tbl.set self.pos_tbl_pdl node.id node.pos self.date)
+    neighbors
+
+<font color="990000">(*
+<font color="green">let</font> get_neighbors n1 others =
+<font color="green">let</font> filter n2 =
+    distance2 n1.pos n2.pos &lt; coverage_range2 
+<font color="green">in</font>
+  List.filter filter others
+*)</font>
+<font color="990000">(*
+<font color="green">let</font> get_neighbors n1 others =
+<font color="green">let</font> filter res n2 =
+<font color="77aaaa">if</font> distance2 n1.pos n2.pos &lt; coverage_range2 <font color="77aaaa">then</font>
+      n2 :: res
+<font color="77aaaa">else</font>
+      res
+<font color="green">in</font>
+  List.fold_left filter [] others
+*)</font>
+
+<font color="green">let</font> get_neighbors =
+<font color="green">let</font> <font color="green">rec</font> get_neighbors n1 others acc =
+<font color="77aaaa">match</font> others <font color="77aaaa">with</font>
+<font color="77aaaa">|</font> [] -&gt; acc
+<font color="77aaaa">|</font> n2::tl -&gt;
+<font color="77aaaa">if</font> distance2 n1.pos n2.pos &lt; coverage_range2 <font color="77aaaa">then</font>
+	  get_neighbors n1 tl (n2 :: acc)
+<font color="77aaaa">else</font>
+	  get_neighbors n1 tl acc
+<font color="green">in</font>
+<font color="green">fun</font> n1 others -&gt;
+    get_neighbors n1 others []
+
+<font color="green">let</font> <font color="green">process</font> node pos_init move make_msg draw =
+<font color="green">let</font> self = make_node pos_init <font color="green">in</font>
+<font color="990099">loop</font>
+    self.date &lt;- self.date + 1;
+    self.pos &lt;- move self.pos;
+<font color="magenta">emit</font> draw self;
+
+<font color="990000">(* <font color="0033cc">Neighborhood</font> discovering *)</font>
+<font color="green">let</font> (i,j) <font color="green">as</font> local_area, neighbor_areas =
+      get_areas self.pos.x self.pos.y 
+<font color="green">in</font>
+    List.iter 
+(fun (i,j) -&gt; <font color="magenta">emit</font> hello_array.(i).(j) self)
+      (local_area::neighbor_areas);
+<font color="green">await</font> hello_array.(i).(j) (all) <font color="green">in</font>
+    self.neighbors &lt;- get_neighbors self all;
+
+    update_pos_tbl self self.neighbors;
+
+<font color="990000">(* <font color="0033cc">Routing</font> *)</font>
+    pause;
+
+    List.iter 
+      (fun dest_id -&gt; 
+Routage.route <font color="0033cc">LER</font> self dest_id;
+Routage.route <font color="0033cc">PDL</font> self dest_id)
+      (make_msg self);
+
+    pause;
+<font color="990099">end</font>
+</pre>
+</body>
+</html>

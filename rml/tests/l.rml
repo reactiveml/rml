@@ -1,0 +1,13 @@
+let process p {} =
+  signal s1 combine process {} -> nothing with fun x y -> x in
+  loop
+    signal s2 in
+    emit s1 (process{} -> emit s2);
+    pause
+    ||
+    await s2;
+    print_string "----------- s2 -------------\n";
+  end
+  ||
+  let s1 <p> in
+  run p {}

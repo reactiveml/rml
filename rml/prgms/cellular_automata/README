@@ -1,0 +1,4 @@
+caml_cellular_automata.ml : en Caml pur avec 2 boucles for.
+cellular_automata.rml : en rml
+cellular_automata_par.rml : en rml avec decomposition sur 2 bandes et
+synchro de scheduler.

@@ -1,0 +1,5 @@
+(* 08/06/2004 *)
+(* Pb dans les definitions globales *)
+(* The variable y is bound several times in this pattern. *)
+
+let x, y = 1, 2

@@ -196,6 +196,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token DEFAULT             /* "default" */
 %token DO                  /* "do" */
 %token DONE                /* "done" */
+%token DOPAR               /* "dopar" */
 %token DOT                 /* "." */
 %token DOTDOT              /* ".." */
 %token DOWNTO              /* "downto" */
@@ -328,7 +329,7 @@ The precedences must be listed from low to high.
 %nonassoc BARBAR BARGRATER              /* below SEMI e; e || e*/
 %nonassoc below_SEMI
 %nonassoc SEMI                          /* below EQUAL ({lbl=...; lbl=...}) */
-%nonassoc LET SIGNAL DO                 /* above SEMI ( ...; let ... in ...) */
+%nonassoc LET SIGNAL DO DOPAR           /* above SEMI ( ...; let ... in ...) */
 %nonassoc below_WITH
 %nonassoc FUNCTION WITH                 /* below BAR  (match ... with ...) */
 %nonassoc AND             /* above WITH (module rec A: SIG with ... and ...) */
@@ -472,6 +473,8 @@ expr:
       { mkexpr(Pexpr_while($2, $4)) }
   | FOR val_ident EQUAL par_expr direction_flag par_expr DO par_expr DONE
       { mkexpr(Pexpr_for($2, $4, $6, $5, $8)) }
+  | FOR val_ident EQUAL par_expr direction_flag par_expr DOPAR par_expr DONE
+      { mkexpr(Pexpr_fordopar($2, $4, $6, $5, $8)) }
   | expr COLONCOLON expr
       { mkexpr(Pexpr_construct(mkident (Pident "::") 2,
                                Some(ghexpr(Pexpr_tuple[$1;$3])))) }

@@ -1,0 +1,9 @@
+let process p {} =
+  signal s combine [] with fun x y -> x::y in
+  emit s 1
+
+(*
+let process p {} =
+  signal s combine None with fun x y -> Some y in
+  emit s 'a'
+*)

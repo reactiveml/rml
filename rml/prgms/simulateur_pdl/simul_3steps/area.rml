@@ -1,0 +1,30 @@
+open Global
+  
+let get_area posx posy = 
+  posx / size_x, posy / size_y 
+    
+let get_areas posx posy = 
+  let neighbor_areas = ref [] in
+  let center_i = posx / size_x in
+  let center_j = posy / size_y in
+  let left = (posx - dist_couv) / size_x in
+  let right = (posx + dist_couv) / size_x in
+  let up = (posy + dist_couv) / size_y in
+  let down = (posy - dist_couv) / size_y in
+  for i = left to right do
+    if 0 <= i && i < nb_area_x then
+      for j = down to up do
+	if 0 <= j && j < nb_area_y then
+	  if not (i = center_i && j = center_j) then
+	    neighbor_areas := (i,j) :: !neighbor_areas
+      done
+  done;
+  (center_i, center_j), !neighbor_areas
+    
+let process make_areas =
+  for i = 0 to nb_area_x-1 do
+    for j = 0 to nb_area_y-1 do
+      signal msg_hello in
+      hello_array.(i).(j) <- msg_hello
+    done
+  done

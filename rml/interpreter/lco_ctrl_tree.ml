@@ -992,6 +992,63 @@ let loop p =
 	f_for_init
 
 
+(**************************************)
+(* for_dopar                          *)
+(**************************************)
+    let join_n cpt =
+      fun f_k ctrl ->
+	let f_join_n =
+	  fun() ->
+	    decr cpt;
+	    if !cpt = 0 then
+	      f_k()
+	    else
+	      sched()
+	in f_join_n
+
+    let rml_fordopar e1 e2 dir p =
+      let (incr, cmp) = if dir then incr, (<=) else decr, (>=) in
+      fun f_k ctrl ->
+	let cpt = ref 0 in
+	let j = join_n cpt f_k ctrl in
+	let f_fordopar =
+	  fun () ->
+	    if dir then
+	      begin
+		let min = e1() in
+		let max = e2() in
+		cpt := max - min + 1;
+		if !cpt <= 0 then
+		  f_k()
+		else
+		  begin
+		    for i = max downto min do
+		      let f = p i j ctrl in
+		      current := f :: !current
+		    done;
+		    sched()
+		  end
+	      end
+	    else
+	      begin
+		let max = e1() in
+		let min = e2() in
+		cpt := max - min + 1;
+		if !cpt <= 0 then
+		  f_k()
+		else
+		  begin
+		    for i = min to max do
+		      let f = p i j ctrl in
+		      current := f :: !current
+		    done;
+		    sched()
+		  end
+	      end
+	in
+	f_fordopar
+	    
+
 (* ------------------------------------------------------------------------ *)
 (**************************************)
 (* await                              *)
@@ -1028,7 +1085,7 @@ let loop p =
 	rml_pause (rml_await_immediate_one' evt p f_k ctrl) ctrl
 
 (* ------------------------------------------------------------------------ *)
-    
+(*    
     let join_n cpt =
       fun f_k ctrl ->
 	let f_join_n =
@@ -1039,7 +1096,7 @@ let loop p =
 	    else
 	      sched()
 	in f_join_n
-
+*)
     let rml_par_n p_list =
       fun f_k ctrl ->
 	let nb = List.length p_list in

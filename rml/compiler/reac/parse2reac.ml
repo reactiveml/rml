@@ -496,6 +496,15 @@ and translate_proc env e =
 			flag,
 			translate_proc env e3)
 
+	  | Pexpr_fordopar (i, e1, e2, flag, e3) ->
+	      let id = Ident.create gen_var i.psimple_id Ident.Val_RML in
+	      let env = Env.add i.psimple_id id env in
+	      Rproc_fordopar(id,
+			     translate_ml env e1,
+			     translate_ml env e2,
+			     flag,
+			     translate_proc env e3)
+
 	  | Pexpr_seq (e1, e2) ->
 	      Rproc_seq(translate_proc env e1,
 			translate_proc env e2)

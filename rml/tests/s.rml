@@ -1,0 +1,19 @@
+(*
+let f = let r = ref 0 in fun x -> x
+
+type t = {x:int}
+
+let a = f {x=1}
+*)
+
+let process p {} =
+    signal s in 
+  loop 
+    control
+(*
+      print_string "coucou";
+      print_newline();
+*)
+      pause
+    with s
+  end

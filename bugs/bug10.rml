@@ -1,0 +1,11 @@
+(* 04/08/2004 *)
+(* probleme d'affichage des erreurs de typagedes fonctions rec *)
+
+let rec f x = 
+  if x = 0 then
+    0
+  else 
+    f true
+
+
+

@@ -69,6 +69,8 @@ and process_desc =
   | Rproc_loop of process
   | Rproc_while of expression * process
   | Rproc_for of ident * expression * expression * direction_flag * process
+  | Rproc_fordopar of 
+      ident * expression * expression * direction_flag * process
   | Rproc_seq of process * process
   | Rproc_par of process * process
   | Rproc_merge of process * process

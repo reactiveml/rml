@@ -1,0 +1,14 @@
+let f x = x + 1
+
+let process p { out s } =
+  let cpt = ref 0 in
+  loop
+    await s;
+    cpt := f !cpt;
+    print_int !cpt;
+    print_newline();
+    pause
+  end
+
+let process p2 {in s1, s2; in s3; out s4; inout s5} = 
+  run p {s=s4}

@@ -1,0 +1,11 @@
+let process p {} =
+  let cpt = ref 0 in
+  loop
+    let x,y = 1,true
+    and z = !cpt in
+    pause;
+    if y then
+      (print_int (x+z);
+       print_newline());
+    cpt := !cpt + 1
+  end

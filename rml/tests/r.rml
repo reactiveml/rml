@@ -1,0 +1,3 @@
+let process p1 {inout s} = nothing
+
+let process p2 {inout s'} = run p1 {s=s'} 

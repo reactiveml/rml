@@ -65,6 +65,8 @@ and process_desc =
   | Coproc_loop of process
   | Coproc_while of expression * process
   | Coproc_for of ident * expression * expression * direction_flag * process
+  | Coproc_fordopar of 
+      ident * expression * expression * direction_flag * process
   | Coproc_seq of process * process
   | Coproc_par of process * process
   | Coproc_merge of process * process
