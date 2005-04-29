@@ -7,7 +7,7 @@
 (*  Remarque : Taken from Lucid Synchron                                 *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: main.ml,v 1.2 2005/04/30 16:49:15 mandel Exp $ *)
 
 open Misc
 open Modules
@@ -99,21 +99,25 @@ let set_save_types () =
 let set_runtime s =
   match s with
   | "rewrite" ->
-      set_interpreter_intf "Lk_interpreter";
-      set_interpreter_impl "Lk_rewrite";
-      set_translation Lk
+      set_interpreter_intf "Lco_interpreter";
+      set_interpreter_impl "Lco_rewrite";
+      set_translation Lco
+(*
   | "rewrite_debug" ->
       set_interpreter_intf "Lk_interpreter";
       set_interpreter_impl "Lk_rewrite_debug";
       set_translation Lk
+*)
   | "ctrl_tree" -> 
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Lco_ctrl_tree";
       set_translation Lco
+(*
   | "ctrl_tree_debug" -> 
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Lco_ctrl_tree_debug";
       set_translation Lco
+*)
   | _ -> raise (Arg.Bad ("don't know what to do with " ^ s))
 
 (* sets the display of the parse code *)

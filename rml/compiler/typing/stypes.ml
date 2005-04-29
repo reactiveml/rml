@@ -18,7 +18,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *) 
+(* $Id: stypes.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *) 
 
 
 (* Recording and dumping (partial) type information *)

@@ -1,1 +1,0 @@
-let rec f n = n * (f (n-1))

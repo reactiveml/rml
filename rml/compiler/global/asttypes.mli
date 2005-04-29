@@ -7,7 +7,7 @@
 (*  Remarque : inspired by OCaml                                         *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: asttypes.mli,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *)
 
 
 (* Types used in the a.s.t. *)

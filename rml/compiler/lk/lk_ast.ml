@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: lk_ast.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *)
 
 (* The abstract syntax for the continuation language *)
 
@@ -52,6 +52,9 @@ and expression_desc =
   | Kexpr_pre of pre_kind * expression
   | Kexpr_emit of expression 
   | Kexpr_emit_val of expression * expression 
+  | Kexpr_signal of 
+      (ident * type_expression option) * 
+	(expression * expression) option * expression
 
 (* Process expressions *)
 and process =

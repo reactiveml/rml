@@ -23,8 +23,8 @@ let get_neighbors =
   fun n1 others ->
     get_neighbors n1 others []
 
-let process node pos_init move make_msg =
-  let self = make_node pos_init in
+let process node id pos_init move make_msg =
+  let self = make_node id pos_init in
   loop
     self.date <- self.date + 1;
 

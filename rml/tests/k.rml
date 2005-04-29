@@ -1,8 +1,0 @@
-type t = C of int 
-
-let process p {} =
-  let (x, C y) as c = 1, C 2 and z = 3 in
-  pause;
-  x + y + z, c
-
-    

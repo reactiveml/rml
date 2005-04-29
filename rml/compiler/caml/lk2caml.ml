@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: lk2caml.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *)
 
 (* The translation of Lk to Caml *)
 
@@ -289,6 +289,29 @@ let rec translate_ml e =
 	  (make_instruction "rml_expr_emit_val",
 	   [embed_ml s;
 	    embed_ml e])
+
+
+    | Kexpr_signal (s, None, e) ->
+	Cexpr_let (Nonrecursive,
+		   [pattern_of_signal s,
+		    make_expr
+		      (Cexpr_apply
+			 (make_instruction "rml_global_signal",
+			  [make_expr 
+			     (Cexpr_constant Const_unit)
+			     Location.none]))
+		      Location.none],
+		   embed_ml e)
+    | Kexpr_signal (s, Some(e1,e2), e) ->
+	Cexpr_let (Nonrecursive,
+		   [pattern_of_signal s,
+		    make_expr
+		      (Cexpr_apply
+			 (make_instruction "rml_global_signal_combine",
+			  [embed_ml e1;
+			   embed_ml e2;]))
+		      Location.none],
+		   embed_ml e)
 
   in
   make_expr cexpr e.kexpr_loc

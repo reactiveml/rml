@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: obj.mli,v 1.25 2002/01/23 17:51:41 doligez Exp $ *)
+(* $Id: obj.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (** Operations on internal representations of values.
 

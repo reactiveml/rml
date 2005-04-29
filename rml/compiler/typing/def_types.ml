@@ -7,7 +7,7 @@
 (*  Remarque : inspired by Lucid Synchrone                               *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: def_types.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (* The abstract syntax for the types *)
 

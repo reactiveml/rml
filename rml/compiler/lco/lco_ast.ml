@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id$ *) 
+(* $Id: lco_ast.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *) 
 
 (* The abstract syntax for the Lco language *)
 
@@ -51,6 +51,9 @@ and expression_desc =
   | Coexpr_pre of pre_kind * expression
   | Coexpr_emit of expression
   | Coexpr_emit_val of expression * expression
+  | Coexpr_signal of 
+      (ident * type_expression option) 
+	* (expression * expression) option * expression
 
 (* Process expressions *)
 and process =

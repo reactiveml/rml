@@ -1,0 +1,6951 @@
+"behavior.rml" 6 36 40 "behavior.rml" 6 36 42
+type(
+  float  
+)
+"behavior.rml" 6 36 45 "behavior.rml" 6 36 52
+type(
+  float  
+)
+"behavior.rml" 14 159 171 "behavior.rml" 14 159 182
+type(
+  ('a -> process) -> ('a -> process) -> 'a -> process  
+)
+"behavior.rml" 14 159 183 "behavior.rml" 14 159 185
+type(
+  'a -> process  
+)
+"behavior.rml" 14 159 186 "behavior.rml" 14 159 188
+type(
+  'a -> process  
+)
+"behavior.rml" 14 159 189 "behavior.rml" 14 159 196
+type(
+  'a  
+)
+"behavior.rml" 15 199 218 "behavior.rml" 15 199 220
+type(
+  'a -> process  
+)
+"behavior.rml" 15 199 221 "behavior.rml" 15 199 228
+type(
+  'a  
+)
+"behavior.rml" 15 199 217 "behavior.rml" 15 199 229
+type(
+  process  
+)
+"behavior.rml" 17 247 266 "behavior.rml" 17 247 268
+type(
+  'a -> process  
+)
+"behavior.rml" 17 247 269 "behavior.rml" 17 247 276
+type(
+  'a  
+)
+"behavior.rml" 17 247 265 "behavior.rml" 17 247 277
+type(
+  process  
+)
+"behavior.rml" 19 279 291 "behavior.rml" 19 279 299
+type(
+  ('a -> process) -> ('a -> process) -> 'a -> process  
+)
+"behavior.rml" 19 279 300 "behavior.rml" 19 279 302
+type(
+  'a -> process  
+)
+"behavior.rml" 19 279 303 "behavior.rml" 19 279 305
+type(
+  'a -> process  
+)
+"behavior.rml" 19 279 306 "behavior.rml" 19 279 313
+type(
+  'a  
+)
+"behavior.rml" 20 316 335 "behavior.rml" 20 316 337
+type(
+  'a -> process  
+)
+"behavior.rml" 20 316 338 "behavior.rml" 20 316 345
+type(
+  'a  
+)
+"behavior.rml" 20 316 334 "behavior.rml" 20 316 346
+type(
+  process  
+)
+"behavior.rml" 21 348 367 "behavior.rml" 21 348 369
+type(
+  'a -> process  
+)
+"behavior.rml" 21 348 370 "behavior.rml" 21 348 377
+type(
+  'a  
+)
+"behavior.rml" 21 348 366 "behavior.rml" 21 348 378
+type(
+  process  
+)
+"behavior.rml" 23 389 401 "behavior.rml" 23 389 408
+type(
+  ('a -> process) -> 'a -> process  
+)
+"behavior.rml" 23 389 409 "behavior.rml" 23 389 410
+type(
+  'a -> process  
+)
+"behavior.rml" 23 389 411 "behavior.rml" 23 389 418
+type(
+  'a  
+)
+"behavior.rml" 25 433 446 "behavior.rml" 25 433 447
+type(
+  'a -> process  
+)
+"behavior.rml" 25 433 448 "behavior.rml" 25 433 455
+type(
+  'a  
+)
+"behavior.rml" 25 433 445 "behavior.rml" 25 433 456
+type(
+  process  
+)
+"behavior.rml" 30 495 507 "behavior.rml" 30 495 515
+type(
+  int -> ('a -> process) -> 'a -> process  
+)
+"behavior.rml" 30 495 516 "behavior.rml" 30 495 517
+type(
+  int  
+)
+"behavior.rml" 30 495 518 "behavior.rml" 30 495 519
+type(
+  'a -> process  
+)
+"behavior.rml" 30 495 520 "behavior.rml" 30 495 527
+type(
+  'a  
+)
+"behavior.rml" 31 531 559 "behavior.rml" 31 531 560
+type(
+  int  
+)
+"behavior.rml" 31 531 564 "behavior.rml" 31 531 565
+type(
+  int  
+)
+"behavior.rml" 32 569 582 "behavior.rml" 32 569 583
+type(
+  'a -> process  
+)
+"behavior.rml" 32 569 584 "behavior.rml" 32 569 591
+type(
+  'a  
+)
+"behavior.rml" 32 569 581 "behavior.rml" 32 569 592
+type(
+  process  
+)
+"behavior.rml" 37 646 658 "behavior.rml" 37 646 665
+type(
+  ('a -> process) -> ('b , 'c) event -> 'a -> process  
+)
+"behavior.rml" 37 646 666 "behavior.rml" 37 646 670
+type(
+  'a -> process  
+)
+"behavior.rml" 37 646 671 "behavior.rml" 37 646 683
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 37 646 684 "behavior.rml" 37 646 691
+type(
+  'a  
+)
+"behavior.rml" 39 703 716 "behavior.rml" 39 703 720
+type(
+  'a -> process  
+)
+"behavior.rml" 39 703 721 "behavior.rml" 39 703 728
+type(
+  'a  
+)
+"behavior.rml" 39 703 715 "behavior.rml" 39 703 729
+type(
+  process  
+)
+"behavior.rml" 40 731 743 "behavior.rml" 40 731 755
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 42 764 777 "behavior.rml" 42 764 786
+type(
+  ('a -> process) -> ('b , 'c) event -> 'a -> process  
+)
+"behavior.rml" 42 764 787 "behavior.rml" 42 764 791
+type(
+  'a -> process  
+)
+"behavior.rml" 42 764 792 "behavior.rml" 42 764 803
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 42 764 804 "behavior.rml" 42 764 811
+type(
+  'a  
+)
+"behavior.rml" 44 829 842 "behavior.rml" 44 829 846
+type(
+  'a -> process  
+)
+"behavior.rml" 44 829 847 "behavior.rml" 44 829 854
+type(
+  'a  
+)
+"behavior.rml" 44 829 841 "behavior.rml" 44 829 855
+type(
+  process  
+)
+"behavior.rml" 45 857 868 "behavior.rml" 45 857 879
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 50 920 932 "behavior.rml" 50 920 942
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e -> process  
+)
+"behavior.rml" 50 920 944 "behavior.rml" 50 920 950
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 50 920 951 "behavior.rml" 50 920 957
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 50 920 958 "behavior.rml" 50 920 959
+type(
+  'a  
+)
+"behavior.rml" 50 920 960 "behavior.rml" 50 920 961
+type(
+  'a  
+)
+"behavior.rml" 50 920 962 "behavior.rml" 50 920 963
+type(
+  'a  
+)
+"behavior.rml" 50 920 964 "behavior.rml" 50 920 965
+type(
+  'a  
+)
+"behavior.rml" 50 920 943 "behavior.rml" 50 920 966
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 51 969 976 "behavior.rml" 51 969 982
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 52 984 1006 "behavior.rml" 52 984 1012
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 52 984 1014 "behavior.rml" 52 984 1017
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 53 1022 1032 "behavior.rml" 53 1022 1033
+type(
+  int  
+)
+"behavior.rml" 53 1022 1037 "behavior.rml" 53 1022 1039
+type(
+  int  
+)
+"behavior.rml" 55 1045 1049 "behavior.rml" 55 1045 1052
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 55 1045 1064 "behavior.rml" 55 1045 1067
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 55 1045 1064 "behavior.rml" 55 1045 1071
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 55 1045 1064 "behavior.rml" 55 1045 1074
+type(
+  int  
+)
+"behavior.rml" 55 1045 1075 "behavior.rml" 55 1045 1076
+type(
+  int -> int -> int  
+)
+"behavior.rml" 55 1045 1077 "behavior.rml" 55 1045 1078
+type(
+  int  
+)
+"behavior.rml" 55 1045 1064 "behavior.rml" 55 1045 1078
+type(
+  int  
+)
+"behavior.rml" 55 1045 1082 "behavior.rml" 55 1045 1085
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 55 1045 1082 "behavior.rml" 55 1045 1089
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 55 1045 1082 "behavior.rml" 55 1045 1092
+type(
+  int  
+)
+"behavior.rml" 55 1045 1060 "behavior.rml" 55 1045 1093
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 55 1045 1049 "behavior.rml" 55 1045 1093
+type(
+  unit  
+)
+"behavior.rml" 59 1116 1128 "behavior.rml" 59 1116 1140
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f -> process  
+)
+"behavior.rml" 59 1116 1142 "behavior.rml" 59 1116 1148
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 59 1116 1149 "behavior.rml" 59 1116 1155
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 59 1116 1156 "behavior.rml" 59 1116 1163
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 59 1116 1164 "behavior.rml" 59 1116 1165
+type(
+  'a  
+)
+"behavior.rml" 59 1116 1166 "behavior.rml" 59 1116 1167
+type(
+  'a  
+)
+"behavior.rml" 59 1116 1168 "behavior.rml" 59 1116 1169
+type(
+  'a  
+)
+"behavior.rml" 59 1116 1141 "behavior.rml" 59 1116 1170
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 60 1173 1180 "behavior.rml" 60 1173 1186
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 61 1188 1210 "behavior.rml" 61 1188 1216
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 61 1188 1218 "behavior.rml" 61 1188 1221
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 62 1226 1232 "behavior.rml" 62 1226 1238
+type(
+  Misc.t  
+)
+"behavior.rml" 62 1226 1241 "behavior.rml" 62 1226 1251
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 62 1226 1252 "behavior.rml" 62 1226 1269
+type(
+  string  
+)
+"behavior.rml" 62 1226 1270 "behavior.rml" 62 1226 1272
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 62 1226 1241 "behavior.rml" 62 1226 1272
+type(
+  Misc.t  
+)
+"behavior.rml" 63 1276 1278 "behavior.rml" 63 1276 1291
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 63 1276 1292 "behavior.rml" 63 1276 1295
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 63 1276 1296 "behavior.rml" 63 1276 1302
+type(
+  Misc.t  
+)
+"behavior.rml" 63 1276 1278 "behavior.rml" 63 1276 1302
+type(
+  unit  
+)
+"behavior.rml" 65 1311 1321 "behavior.rml" 65 1311 1328
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 66 1330 1342 "behavior.rml" 66 1330 1343
+type(
+  int  
+)
+"behavior.rml" 66 1330 1347 "behavior.rml" 66 1330 1349
+type(
+  int  
+)
+"behavior.rml" 68 1357 1363 "behavior.rml" 68 1357 1366
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 68 1357 1378 "behavior.rml" 68 1357 1381
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 68 1357 1378 "behavior.rml" 68 1357 1385
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 68 1357 1378 "behavior.rml" 68 1357 1388
+type(
+  int  
+)
+"behavior.rml" 68 1357 1389 "behavior.rml" 68 1357 1390
+type(
+  int -> int -> int  
+)
+"behavior.rml" 68 1357 1391 "behavior.rml" 68 1357 1392
+type(
+  int  
+)
+"behavior.rml" 68 1357 1378 "behavior.rml" 68 1357 1392
+type(
+  int  
+)
+"behavior.rml" 68 1357 1396 "behavior.rml" 68 1357 1399
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 68 1357 1396 "behavior.rml" 68 1357 1403
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 68 1357 1396 "behavior.rml" 68 1357 1406
+type(
+  int  
+)
+"behavior.rml" 68 1357 1374 "behavior.rml" 68 1357 1407
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 68 1357 1363 "behavior.rml" 68 1357 1407
+type(
+  unit  
+)
+"behavior.rml" 74 1442 1454 "behavior.rml" 74 1442 1465
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e -> process  
+)
+"behavior.rml" 74 1442 1467 "behavior.rml" 74 1442 1473
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 74 1442 1474 "behavior.rml" 74 1442 1480
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 74 1442 1481 "behavior.rml" 74 1442 1482
+type(
+  'a  
+)
+"behavior.rml" 74 1442 1483 "behavior.rml" 74 1442 1484
+type(
+  'a  
+)
+"behavior.rml" 74 1442 1485 "behavior.rml" 74 1442 1486
+type(
+  'a  
+)
+"behavior.rml" 74 1442 1487 "behavior.rml" 74 1442 1488
+type(
+  'a  
+)
+"behavior.rml" 74 1442 1466 "behavior.rml" 74 1442 1489
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 75 1492 1499 "behavior.rml" 75 1492 1505
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 76 1507 1529 "behavior.rml" 76 1507 1535
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 76 1507 1537 "behavior.rml" 76 1507 1540
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 77 1545 1555 "behavior.rml" 77 1545 1556
+type(
+  int  
+)
+"behavior.rml" 77 1545 1560 "behavior.rml" 77 1545 1562
+type(
+  int  
+)
+"behavior.rml" 79 1568 1572 "behavior.rml" 79 1568 1575
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 79 1568 1587 "behavior.rml" 79 1568 1590
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 79 1568 1587 "behavior.rml" 79 1568 1594
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 79 1568 1587 "behavior.rml" 79 1568 1597
+type(
+  int  
+)
+"behavior.rml" 79 1568 1598 "behavior.rml" 79 1568 1599
+type(
+  int -> int -> int  
+)
+"behavior.rml" 79 1568 1600 "behavior.rml" 79 1568 1601
+type(
+  int  
+)
+"behavior.rml" 79 1568 1587 "behavior.rml" 79 1568 1601
+type(
+  int  
+)
+"behavior.rml" 79 1568 1605 "behavior.rml" 79 1568 1608
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 79 1568 1605 "behavior.rml" 79 1568 1612
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 79 1568 1605 "behavior.rml" 79 1568 1615
+type(
+  int  
+)
+"behavior.rml" 79 1568 1583 "behavior.rml" 79 1568 1616
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 79 1568 1572 "behavior.rml" 79 1568 1616
+type(
+  unit  
+)
+"behavior.rml" 83 1639 1651 "behavior.rml" 83 1639 1664
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f -> process  
+)
+"behavior.rml" 83 1639 1666 "behavior.rml" 83 1639 1672
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 83 1639 1673 "behavior.rml" 83 1639 1679
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 83 1639 1680 "behavior.rml" 83 1639 1687
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 83 1639 1688 "behavior.rml" 83 1639 1689
+type(
+  'a  
+)
+"behavior.rml" 83 1639 1690 "behavior.rml" 83 1639 1691
+type(
+  'a  
+)
+"behavior.rml" 83 1639 1692 "behavior.rml" 83 1639 1693
+type(
+  'a  
+)
+"behavior.rml" 83 1639 1665 "behavior.rml" 83 1639 1694
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 84 1697 1704 "behavior.rml" 84 1697 1710
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 85 1712 1734 "behavior.rml" 85 1712 1740
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 85 1712 1742 "behavior.rml" 85 1712 1745
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 86 1750 1756 "behavior.rml" 86 1750 1763
+type(
+  Misc.t  
+)
+"behavior.rml" 86 1750 1766 "behavior.rml" 86 1750 1776
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 86 1750 1777 "behavior.rml" 86 1750 1795
+type(
+  string  
+)
+"behavior.rml" 86 1750 1796 "behavior.rml" 86 1750 1798
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 86 1750 1766 "behavior.rml" 86 1750 1798
+type(
+  Misc.t  
+)
+"behavior.rml" 87 1802 1804 "behavior.rml" 87 1802 1817
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 87 1802 1818 "behavior.rml" 87 1802 1821
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 87 1802 1822 "behavior.rml" 87 1802 1829
+type(
+  Misc.t  
+)
+"behavior.rml" 87 1802 1804 "behavior.rml" 87 1802 1829
+type(
+  unit  
+)
+"behavior.rml" 89 1838 1848 "behavior.rml" 89 1838 1855
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 90 1857 1869 "behavior.rml" 90 1857 1870
+type(
+  int  
+)
+"behavior.rml" 90 1857 1874 "behavior.rml" 90 1857 1876
+type(
+  int  
+)
+"behavior.rml" 92 1884 1890 "behavior.rml" 92 1884 1893
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 92 1884 1905 "behavior.rml" 92 1884 1908
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 92 1884 1905 "behavior.rml" 92 1884 1912
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 92 1884 1905 "behavior.rml" 92 1884 1915
+type(
+  int  
+)
+"behavior.rml" 92 1884 1916 "behavior.rml" 92 1884 1917
+type(
+  int -> int -> int  
+)
+"behavior.rml" 92 1884 1918 "behavior.rml" 92 1884 1919
+type(
+  int  
+)
+"behavior.rml" 92 1884 1905 "behavior.rml" 92 1884 1919
+type(
+  int  
+)
+"behavior.rml" 92 1884 1923 "behavior.rml" 92 1884 1926
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 92 1884 1923 "behavior.rml" 92 1884 1930
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 92 1884 1923 "behavior.rml" 92 1884 1933
+type(
+  int  
+)
+"behavior.rml" 92 1884 1901 "behavior.rml" 92 1884 1934
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 92 1884 1890 "behavior.rml" 92 1884 1934
+type(
+  unit  
+)
+"behavior.rml" 98 1969 1981 "behavior.rml" 98 1969 1989
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e -> process  
+)
+"behavior.rml" 98 1969 1991 "behavior.rml" 98 1969 1997
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 98 1969 1998 "behavior.rml" 98 1969 2004
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 98 1969 2005 "behavior.rml" 98 1969 2006
+type(
+  'a  
+)
+"behavior.rml" 98 1969 2007 "behavior.rml" 98 1969 2008
+type(
+  'a  
+)
+"behavior.rml" 98 1969 2009 "behavior.rml" 98 1969 2010
+type(
+  'a  
+)
+"behavior.rml" 98 1969 2011 "behavior.rml" 98 1969 2012
+type(
+  'a  
+)
+"behavior.rml" 98 1969 1990 "behavior.rml" 98 1969 2013
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 99 2016 2023 "behavior.rml" 99 2016 2029
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 100 2031 2053 "behavior.rml" 100 2031 2059
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 100 2031 2061 "behavior.rml" 100 2031 2064
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 101 2069 2079 "behavior.rml" 101 2069 2080
+type(
+  int  
+)
+"behavior.rml" 101 2069 2084 "behavior.rml" 101 2069 2086
+type(
+  int  
+)
+"behavior.rml" 103 2092 2096 "behavior.rml" 103 2092 2099
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 103 2092 2111 "behavior.rml" 103 2092 2114
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 103 2092 2111 "behavior.rml" 103 2092 2118
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 103 2092 2111 "behavior.rml" 103 2092 2121
+type(
+  int  
+)
+"behavior.rml" 103 2092 2125 "behavior.rml" 103 2092 2128
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 103 2092 2125 "behavior.rml" 103 2092 2132
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 103 2092 2125 "behavior.rml" 103 2092 2135
+type(
+  int  
+)
+"behavior.rml" 103 2092 2136 "behavior.rml" 103 2092 2137
+type(
+  int -> int -> int  
+)
+"behavior.rml" 103 2092 2138 "behavior.rml" 103 2092 2139
+type(
+  int  
+)
+"behavior.rml" 103 2092 2125 "behavior.rml" 103 2092 2139
+type(
+  int  
+)
+"behavior.rml" 103 2092 2107 "behavior.rml" 103 2092 2140
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 103 2092 2096 "behavior.rml" 103 2092 2140
+type(
+  unit  
+)
+"behavior.rml" 107 2163 2175 "behavior.rml" 107 2163 2185
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f -> process  
+)
+"behavior.rml" 107 2163 2187 "behavior.rml" 107 2163 2193
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 107 2163 2194 "behavior.rml" 107 2163 2200
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 107 2163 2201 "behavior.rml" 107 2163 2208
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 107 2163 2209 "behavior.rml" 107 2163 2210
+type(
+  'a  
+)
+"behavior.rml" 107 2163 2211 "behavior.rml" 107 2163 2212
+type(
+  'a  
+)
+"behavior.rml" 107 2163 2213 "behavior.rml" 107 2163 2214
+type(
+  'a  
+)
+"behavior.rml" 107 2163 2186 "behavior.rml" 107 2163 2215
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 108 2218 2225 "behavior.rml" 108 2218 2231
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 109 2233 2255 "behavior.rml" 109 2233 2261
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 109 2233 2263 "behavior.rml" 109 2233 2266
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 110 2271 2277 "behavior.rml" 110 2271 2284
+type(
+  Misc.t  
+)
+"behavior.rml" 110 2271 2287 "behavior.rml" 110 2271 2297
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 110 2271 2298 "behavior.rml" 110 2271 2313
+type(
+  string  
+)
+"behavior.rml" 110 2271 2314 "behavior.rml" 110 2271 2316
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 110 2271 2287 "behavior.rml" 110 2271 2316
+type(
+  Misc.t  
+)
+"behavior.rml" 111 2320 2322 "behavior.rml" 111 2320 2335
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 111 2320 2336 "behavior.rml" 111 2320 2339
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 111 2320 2340 "behavior.rml" 111 2320 2347
+type(
+  Misc.t  
+)
+"behavior.rml" 111 2320 2322 "behavior.rml" 111 2320 2347
+type(
+  unit  
+)
+"behavior.rml" 113 2356 2366 "behavior.rml" 113 2356 2373
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 114 2375 2387 "behavior.rml" 114 2375 2388
+type(
+  int  
+)
+"behavior.rml" 114 2375 2392 "behavior.rml" 114 2375 2394
+type(
+  int  
+)
+"behavior.rml" 116 2402 2408 "behavior.rml" 116 2402 2411
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 116 2402 2423 "behavior.rml" 116 2402 2426
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 116 2402 2423 "behavior.rml" 116 2402 2430
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 116 2402 2423 "behavior.rml" 116 2402 2433
+type(
+  int  
+)
+"behavior.rml" 116 2402 2437 "behavior.rml" 116 2402 2440
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 116 2402 2437 "behavior.rml" 116 2402 2444
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 116 2402 2437 "behavior.rml" 116 2402 2447
+type(
+  int  
+)
+"behavior.rml" 116 2402 2448 "behavior.rml" 116 2402 2449
+type(
+  int -> int -> int  
+)
+"behavior.rml" 116 2402 2450 "behavior.rml" 116 2402 2451
+type(
+  int  
+)
+"behavior.rml" 116 2402 2437 "behavior.rml" 116 2402 2451
+type(
+  int  
+)
+"behavior.rml" 116 2402 2419 "behavior.rml" 116 2402 2452
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 116 2402 2408 "behavior.rml" 116 2402 2452
+type(
+  unit  
+)
+"behavior.rml" 122 2486 2498 "behavior.rml" 122 2486 2508
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e -> process  
+)
+"behavior.rml" 122 2486 2510 "behavior.rml" 122 2486 2516
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 122 2486 2517 "behavior.rml" 122 2486 2523
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 122 2486 2524 "behavior.rml" 122 2486 2525
+type(
+  'a  
+)
+"behavior.rml" 122 2486 2526 "behavior.rml" 122 2486 2527
+type(
+  'a  
+)
+"behavior.rml" 122 2486 2528 "behavior.rml" 122 2486 2529
+type(
+  'a  
+)
+"behavior.rml" 122 2486 2530 "behavior.rml" 122 2486 2531
+type(
+  'a  
+)
+"behavior.rml" 122 2486 2509 "behavior.rml" 122 2486 2532
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 123 2535 2542 "behavior.rml" 123 2535 2548
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 124 2550 2572 "behavior.rml" 124 2550 2578
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 124 2550 2580 "behavior.rml" 124 2550 2583
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 125 2588 2598 "behavior.rml" 125 2588 2599
+type(
+  int  
+)
+"behavior.rml" 125 2588 2603 "behavior.rml" 125 2588 2605
+type(
+  int  
+)
+"behavior.rml" 127 2611 2615 "behavior.rml" 127 2611 2618
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 127 2611 2630 "behavior.rml" 127 2611 2633
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 127 2611 2630 "behavior.rml" 127 2611 2637
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 127 2611 2630 "behavior.rml" 127 2611 2640
+type(
+  int  
+)
+"behavior.rml" 127 2611 2644 "behavior.rml" 127 2611 2647
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 127 2611 2644 "behavior.rml" 127 2611 2651
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 127 2611 2644 "behavior.rml" 127 2611 2654
+type(
+  int  
+)
+"behavior.rml" 127 2611 2655 "behavior.rml" 127 2611 2656
+type(
+  int -> int -> int  
+)
+"behavior.rml" 127 2611 2657 "behavior.rml" 127 2611 2658
+type(
+  int  
+)
+"behavior.rml" 127 2611 2644 "behavior.rml" 127 2611 2658
+type(
+  int  
+)
+"behavior.rml" 127 2611 2626 "behavior.rml" 127 2611 2659
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 127 2611 2615 "behavior.rml" 127 2611 2659
+type(
+  unit  
+)
+"behavior.rml" 131 2682 2694 "behavior.rml" 131 2682 2706
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f -> process  
+)
+"behavior.rml" 131 2682 2708 "behavior.rml" 131 2682 2714
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 131 2682 2715 "behavior.rml" 131 2682 2721
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 131 2682 2722 "behavior.rml" 131 2682 2729
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 131 2682 2730 "behavior.rml" 131 2682 2731
+type(
+  'a  
+)
+"behavior.rml" 131 2682 2732 "behavior.rml" 131 2682 2733
+type(
+  'a  
+)
+"behavior.rml" 131 2682 2734 "behavior.rml" 131 2682 2735
+type(
+  'a  
+)
+"behavior.rml" 131 2682 2707 "behavior.rml" 131 2682 2736
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 132 2739 2746 "behavior.rml" 132 2739 2752
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 133 2754 2776 "behavior.rml" 133 2754 2782
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 133 2754 2784 "behavior.rml" 133 2754 2787
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 134 2792 2798 "behavior.rml" 134 2792 2805
+type(
+  Misc.t  
+)
+"behavior.rml" 134 2792 2808 "behavior.rml" 134 2792 2818
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 134 2792 2819 "behavior.rml" 134 2792 2836
+type(
+  string  
+)
+"behavior.rml" 134 2792 2837 "behavior.rml" 134 2792 2839
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 134 2792 2808 "behavior.rml" 134 2792 2839
+type(
+  Misc.t  
+)
+"behavior.rml" 135 2843 2845 "behavior.rml" 135 2843 2858
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 135 2843 2859 "behavior.rml" 135 2843 2862
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 135 2843 2863 "behavior.rml" 135 2843 2870
+type(
+  Misc.t  
+)
+"behavior.rml" 135 2843 2845 "behavior.rml" 135 2843 2870
+type(
+  unit  
+)
+"behavior.rml" 137 2879 2889 "behavior.rml" 137 2879 2896
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 138 2898 2910 "behavior.rml" 138 2898 2911
+type(
+  int  
+)
+"behavior.rml" 138 2898 2915 "behavior.rml" 138 2898 2917
+type(
+  int  
+)
+"behavior.rml" 140 2925 2931 "behavior.rml" 140 2925 2934
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 140 2925 2946 "behavior.rml" 140 2925 2949
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 140 2925 2946 "behavior.rml" 140 2925 2953
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 140 2925 2946 "behavior.rml" 140 2925 2956
+type(
+  int  
+)
+"behavior.rml" 140 2925 2960 "behavior.rml" 140 2925 2963
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 140 2925 2960 "behavior.rml" 140 2925 2967
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 140 2925 2960 "behavior.rml" 140 2925 2970
+type(
+  int  
+)
+"behavior.rml" 140 2925 2971 "behavior.rml" 140 2925 2972
+type(
+  int -> int -> int  
+)
+"behavior.rml" 140 2925 2973 "behavior.rml" 140 2925 2974
+type(
+  int  
+)
+"behavior.rml" 140 2925 2960 "behavior.rml" 140 2925 2974
+type(
+  int  
+)
+"behavior.rml" 140 2925 2942 "behavior.rml" 140 2925 2975
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 140 2925 2931 "behavior.rml" 140 2925 2975
+type(
+  unit  
+)
+"behavior.rml" 152 3095 3107 "behavior.rml" 152 3095 3116
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e -> process  
+)
+"behavior.rml" 152 3095 3118 "behavior.rml" 152 3095 3124
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 152 3095 3125 "behavior.rml" 152 3095 3131
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 152 3095 3132 "behavior.rml" 152 3095 3133
+type(
+  'a  
+)
+"behavior.rml" 152 3095 3134 "behavior.rml" 152 3095 3135
+type(
+  'a  
+)
+"behavior.rml" 152 3095 3136 "behavior.rml" 152 3095 3137
+type(
+  'a  
+)
+"behavior.rml" 152 3095 3138 "behavior.rml" 152 3095 3139
+type(
+  'a  
+)
+"behavior.rml" 152 3095 3117 "behavior.rml" 152 3095 3140
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 153 3143 3149 "behavior.rml" 153 3143 3154
+type(
+  float ref  
+)
+"behavior.rml" 153 3143 3157 "behavior.rml" 153 3143 3160
+type(
+  float -> float ref  
+)
+"behavior.rml" 153 3143 3161 "behavior.rml" 153 3143 3164
+type(
+  float  
+)
+"behavior.rml" 153 3143 3157 "behavior.rml" 153 3143 3164
+type(
+  float ref  
+)
+"behavior.rml" 154 3168 3175 "behavior.rml" 154 3168 3181
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 155 3183 3205 "behavior.rml" 155 3183 3211
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 155 3183 3213 "behavior.rml" 155 3183 3216
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 156 3221 3229 "behavior.rml" 156 3221 3230
+type(
+  float ref -> float  
+)
+"behavior.rml" 156 3221 3230 "behavior.rml" 156 3221 3235
+type(
+  float ref  
+)
+"behavior.rml" 156 3221 3229 "behavior.rml" 156 3221 3235
+type(
+  float  
+)
+"behavior.rml" 156 3221 3236 "behavior.rml" 156 3221 3237
+type(
+  float -> float -> bool  
+)
+"behavior.rml" 156 3221 3238 "behavior.rml" 156 3221 3240
+type(
+  float  
+)
+"behavior.rml" 156 3221 3241 "behavior.rml" 156 3221 3243
+type(
+  float -> float -> float  
+)
+"behavior.rml" 156 3221 3244 "behavior.rml" 156 3221 3246
+type(
+  float  
+)
+"behavior.rml" 156 3221 3238 "behavior.rml" 156 3221 3246
+type(
+  float  
+)
+"behavior.rml" 156 3221 3229 "behavior.rml" 156 3221 3246
+type(
+  bool  
+)
+"behavior.rml" 157 3250 3254 "behavior.rml" 157 3250 3257
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 157 3250 3271 "behavior.rml" 157 3250 3274
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 157 3250 3271 "behavior.rml" 157 3250 3278
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 157 3250 3271 "behavior.rml" 157 3250 3281
+type(
+  int  
+)
+"behavior.rml" 157 3250 3282 "behavior.rml" 157 3250 3283
+type(
+  int -> int -> int  
+)
+"behavior.rml" 157 3250 3285 "behavior.rml" 157 3250 3297
+type(
+  float -> int  
+)
+"behavior.rml" 157 3250 3299 "behavior.rml" 157 3250 3302
+type(
+  float  
+)
+"behavior.rml" 157 3250 3303 "behavior.rml" 157 3250 3305
+type(
+  float -> float -> float  
+)
+"behavior.rml" 157 3250 3306 "behavior.rml" 157 3250 3309
+type(
+  float -> float  
+)
+"behavior.rml" 157 3250 3310 "behavior.rml" 157 3250 3311
+type(
+  float ref -> float  
+)
+"behavior.rml" 157 3250 3311 "behavior.rml" 157 3250 3316
+type(
+  float ref  
+)
+"behavior.rml" 157 3250 3310 "behavior.rml" 157 3250 3316
+type(
+  float  
+)
+"behavior.rml" 157 3250 3305 "behavior.rml" 157 3250 3317
+type(
+  float  
+)
+"behavior.rml" 157 3250 3298 "behavior.rml" 157 3250 3318
+type(
+  float  
+)
+"behavior.rml" 157 3250 3284 "behavior.rml" 157 3250 3319
+type(
+  int  
+)
+"behavior.rml" 157 3250 3271 "behavior.rml" 157 3250 3319
+type(
+  int  
+)
+"behavior.rml" 158 3321 3342 "behavior.rml" 158 3321 3345
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 158 3321 3342 "behavior.rml" 158 3321 3349
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 158 3321 3342 "behavior.rml" 158 3321 3352
+type(
+  int  
+)
+"behavior.rml" 157 3250 3265 "behavior.rml" 158 3321 3353
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 157 3250 3254 "behavior.rml" 158 3321 3353
+type(
+  unit  
+)
+"behavior.rml" 159 3355 3359 "behavior.rml" 159 3355 3364
+type(
+  float ref  
+)
+"behavior.rml" 159 3355 3365 "behavior.rml" 159 3355 3367
+type(
+  float ref -> float -> unit  
+)
+"behavior.rml" 159 3355 3369 "behavior.rml" 159 3355 3370
+type(
+  float ref -> float  
+)
+"behavior.rml" 159 3355 3370 "behavior.rml" 159 3355 3375
+type(
+  float ref  
+)
+"behavior.rml" 159 3355 3369 "behavior.rml" 159 3355 3375
+type(
+  float  
+)
+"behavior.rml" 159 3355 3376 "behavior.rml" 159 3355 3378
+type(
+  float -> float -> float  
+)
+"behavior.rml" 159 3355 3381 "behavior.rml" 159 3355 3383
+type(
+  float  
+)
+"behavior.rml" 159 3355 3384 "behavior.rml" 159 3355 3386
+type(
+  float -> float -> float  
+)
+"behavior.rml" 159 3355 3386 "behavior.rml" 159 3355 3388
+type(
+  float  
+)
+"behavior.rml" 159 3355 3379 "behavior.rml" 159 3355 3389
+type(
+  float  
+)
+"behavior.rml" 159 3355 3390 "behavior.rml" 159 3355 3392
+type(
+  float -> float -> float  
+)
+"behavior.rml" 159 3355 3393 "behavior.rml" 159 3355 3396
+type(
+  float  
+)
+"behavior.rml" 159 3355 3379 "behavior.rml" 159 3355 3396
+type(
+  float  
+)
+"behavior.rml" 159 3355 3368 "behavior.rml" 159 3355 3397
+type(
+  float  
+)
+"behavior.rml" 159 3355 3359 "behavior.rml" 159 3355 3397
+type(
+  unit  
+)
+"behavior.rml" 164 3422 3434 "behavior.rml" 164 3422 3445
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f -> process  
+)
+"behavior.rml" 164 3422 3448 "behavior.rml" 164 3422 3454
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 164 3422 3455 "behavior.rml" 164 3422 3461
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 164 3422 3462 "behavior.rml" 164 3422 3469
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 164 3422 3470 "behavior.rml" 164 3422 3471
+type(
+  'a  
+)
+"behavior.rml" 164 3422 3472 "behavior.rml" 164 3422 3473
+type(
+  'a  
+)
+"behavior.rml" 164 3422 3474 "behavior.rml" 164 3422 3475
+type(
+  'a  
+)
+"behavior.rml" 164 3422 3447 "behavior.rml" 164 3422 3476
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 164 3422 3446 "behavior.rml" 164 3422 3489
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 165 3492 3499 "behavior.rml" 165 3492 3505
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 166 3507 3529 "behavior.rml" 166 3507 3535
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 166 3507 3537 "behavior.rml" 166 3507 3540
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 167 3545 3547 "behavior.rml" 167 3545 3560
+type(
+  Icobj.atticobj -> string -> unit  
+)
+"behavior.rml" 167 3545 3561 "behavior.rml" 167 3545 3564
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 167 3545 3565 "behavior.rml" 167 3545 3572
+type(
+  string  
+)
+"behavior.rml" 167 3545 3547 "behavior.rml" 167 3545 3572
+type(
+  unit  
+)
+"behavior.rml" 169 3581 3592 "behavior.rml" 169 3581 3599
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 170 3601 3611 "behavior.rml" 170 3601 3620
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f -> process  
+)
+"behavior.rml" 170 3601 3621 "behavior.rml" 170 3601 3628
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 170 3601 3610 "behavior.rml" 170 3601 3629
+type(
+  process  
+)
+"behavior.rml" 179 3694 3706 "behavior.rml" 179 3694 3715
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e -> process  
+)
+"behavior.rml" 179 3694 3717 "behavior.rml" 179 3694 3723
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 179 3694 3724 "behavior.rml" 179 3694 3730
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 179 3694 3731 "behavior.rml" 179 3694 3732
+type(
+  'a  
+)
+"behavior.rml" 179 3694 3733 "behavior.rml" 179 3694 3734
+type(
+  'a  
+)
+"behavior.rml" 179 3694 3735 "behavior.rml" 179 3694 3736
+type(
+  'a  
+)
+"behavior.rml" 179 3694 3737 "behavior.rml" 179 3694 3738
+type(
+  'a  
+)
+"behavior.rml" 179 3694 3716 "behavior.rml" 179 3694 3739
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 180 3742 3748 "behavior.rml" 180 3742 3753
+type(
+  float ref  
+)
+"behavior.rml" 180 3742 3756 "behavior.rml" 180 3742 3759
+type(
+  float -> float ref  
+)
+"behavior.rml" 180 3742 3760 "behavior.rml" 180 3742 3763
+type(
+  float  
+)
+"behavior.rml" 180 3742 3756 "behavior.rml" 180 3742 3763
+type(
+  float ref  
+)
+"behavior.rml" 181 3767 3774 "behavior.rml" 181 3767 3780
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 182 3782 3804 "behavior.rml" 182 3782 3810
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 182 3782 3812 "behavior.rml" 182 3782 3815
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 183 3820 3828 "behavior.rml" 183 3820 3829
+type(
+  float ref -> float  
+)
+"behavior.rml" 183 3820 3829 "behavior.rml" 183 3820 3834
+type(
+  float ref  
+)
+"behavior.rml" 183 3820 3828 "behavior.rml" 183 3820 3834
+type(
+  float  
+)
+"behavior.rml" 183 3820 3835 "behavior.rml" 183 3820 3836
+type(
+  float -> float -> bool  
+)
+"behavior.rml" 183 3820 3837 "behavior.rml" 183 3820 3839
+type(
+  float  
+)
+"behavior.rml" 183 3820 3840 "behavior.rml" 183 3820 3842
+type(
+  float -> float -> float  
+)
+"behavior.rml" 183 3820 3843 "behavior.rml" 183 3820 3845
+type(
+  float  
+)
+"behavior.rml" 183 3820 3837 "behavior.rml" 183 3820 3845
+type(
+  float  
+)
+"behavior.rml" 183 3820 3828 "behavior.rml" 183 3820 3845
+type(
+  bool  
+)
+"behavior.rml" 184 3849 3853 "behavior.rml" 184 3849 3856
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 184 3849 3870 "behavior.rml" 184 3849 3873
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 184 3849 3870 "behavior.rml" 184 3849 3877
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 184 3849 3870 "behavior.rml" 184 3849 3880
+type(
+  int  
+)
+"behavior.rml" 184 3849 3881 "behavior.rml" 184 3849 3882
+type(
+  int -> int -> int  
+)
+"behavior.rml" 184 3849 3884 "behavior.rml" 184 3849 3896
+type(
+  float -> int  
+)
+"behavior.rml" 184 3849 3898 "behavior.rml" 184 3849 3901
+type(
+  float  
+)
+"behavior.rml" 184 3849 3902 "behavior.rml" 184 3849 3904
+type(
+  float -> float -> float  
+)
+"behavior.rml" 184 3849 3905 "behavior.rml" 184 3849 3908
+type(
+  float -> float  
+)
+"behavior.rml" 184 3849 3909 "behavior.rml" 184 3849 3910
+type(
+  float ref -> float  
+)
+"behavior.rml" 184 3849 3910 "behavior.rml" 184 3849 3915
+type(
+  float ref  
+)
+"behavior.rml" 184 3849 3909 "behavior.rml" 184 3849 3915
+type(
+  float  
+)
+"behavior.rml" 184 3849 3904 "behavior.rml" 184 3849 3916
+type(
+  float  
+)
+"behavior.rml" 184 3849 3897 "behavior.rml" 184 3849 3917
+type(
+  float  
+)
+"behavior.rml" 184 3849 3883 "behavior.rml" 184 3849 3918
+type(
+  int  
+)
+"behavior.rml" 184 3849 3870 "behavior.rml" 184 3849 3918
+type(
+  int  
+)
+"behavior.rml" 185 3920 3941 "behavior.rml" 185 3920 3944
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 185 3920 3941 "behavior.rml" 185 3920 3948
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 185 3920 3941 "behavior.rml" 185 3920 3951
+type(
+  int  
+)
+"behavior.rml" 184 3849 3864 "behavior.rml" 185 3920 3952
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 184 3849 3853 "behavior.rml" 185 3920 3952
+type(
+  unit  
+)
+"behavior.rml" 186 3954 3958 "behavior.rml" 186 3954 3963
+type(
+  float ref  
+)
+"behavior.rml" 186 3954 3964 "behavior.rml" 186 3954 3966
+type(
+  float ref -> float -> unit  
+)
+"behavior.rml" 186 3954 3968 "behavior.rml" 186 3954 3969
+type(
+  float ref -> float  
+)
+"behavior.rml" 186 3954 3969 "behavior.rml" 186 3954 3974
+type(
+  float ref  
+)
+"behavior.rml" 186 3954 3968 "behavior.rml" 186 3954 3974
+type(
+  float  
+)
+"behavior.rml" 186 3954 3975 "behavior.rml" 186 3954 3977
+type(
+  float -> float -> float  
+)
+"behavior.rml" 186 3954 3980 "behavior.rml" 186 3954 3982
+type(
+  float  
+)
+"behavior.rml" 186 3954 3983 "behavior.rml" 186 3954 3985
+type(
+  float -> float -> float  
+)
+"behavior.rml" 186 3954 3986 "behavior.rml" 186 3954 3988
+type(
+  float  
+)
+"behavior.rml" 186 3954 3978 "behavior.rml" 186 3954 3989
+type(
+  float  
+)
+"behavior.rml" 186 3954 3990 "behavior.rml" 186 3954 3992
+type(
+  float -> float -> float  
+)
+"behavior.rml" 186 3954 3993 "behavior.rml" 186 3954 3996
+type(
+  float  
+)
+"behavior.rml" 186 3954 3978 "behavior.rml" 186 3954 3996
+type(
+  float  
+)
+"behavior.rml" 186 3954 3967 "behavior.rml" 186 3954 3997
+type(
+  float  
+)
+"behavior.rml" 186 3954 3958 "behavior.rml" 186 3954 3997
+type(
+  unit  
+)
+"behavior.rml" 190 4021 4033 "behavior.rml" 190 4021 4044
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f -> process  
+)
+"behavior.rml" 190 4021 4048 "behavior.rml" 190 4021 4054
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 190 4021 4055 "behavior.rml" 190 4021 4061
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 190 4021 4062 "behavior.rml" 190 4021 4069
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 190 4021 4070 "behavior.rml" 190 4021 4071
+type(
+  'a  
+)
+"behavior.rml" 190 4021 4072 "behavior.rml" 190 4021 4073
+type(
+  'a  
+)
+"behavior.rml" 190 4021 4074 "behavior.rml" 190 4021 4075
+type(
+  'a  
+)
+"behavior.rml" 190 4021 4047 "behavior.rml" 190 4021 4076
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 190 4021 4046 "behavior.rml" 190 4021 4089
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 191 4092 4099 "behavior.rml" 191 4092 4105
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 192 4107 4129 "behavior.rml" 192 4107 4135
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 192 4107 4137 "behavior.rml" 192 4107 4140
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 193 4145 4147 "behavior.rml" 193 4145 4160
+type(
+  Icobj.atticobj -> string -> unit  
+)
+"behavior.rml" 193 4145 4161 "behavior.rml" 193 4145 4164
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 193 4145 4165 "behavior.rml" 193 4145 4174
+type(
+  string  
+)
+"behavior.rml" 193 4145 4147 "behavior.rml" 193 4145 4174
+type(
+  unit  
+)
+"behavior.rml" 194 4176 4194 "behavior.rml" 194 4176 4201
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 195 4204 4211 "behavior.rml" 195 4204 4220
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f -> process  
+)
+"behavior.rml" 195 4204 4221 "behavior.rml" 195 4204 4228
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 195 4204 4210 "behavior.rml" 195 4204 4229
+type(
+  process  
+)
+"behavior.rml" 198 4291 4303 "behavior.rml" 198 4291 4313
+type(
+  'a * 'b * ('c , 'd) event * 'e * 'f * 'g -> process  
+)
+"behavior.rml" 198 4291 4316 "behavior.rml" 198 4291 4317
+type(
+  'a  
+)
+"behavior.rml" 198 4291 4318 "behavior.rml" 198 4291 4319
+type(
+  'a  
+)
+"behavior.rml" 198 4291 4320 "behavior.rml" 198 4291 4327
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 198 4291 4328 "behavior.rml" 198 4291 4329
+type(
+  'a  
+)
+"behavior.rml" 198 4291 4330 "behavior.rml" 198 4291 4331
+type(
+  'a  
+)
+"behavior.rml" 198 4291 4332 "behavior.rml" 198 4291 4333
+type(
+  'a  
+)
+"behavior.rml" 198 4291 4315 "behavior.rml" 198 4291 4334
+type(
+  'a * 'b * ('c , 'd) event * 'e * 'f * 'g  
+)
+"behavior.rml" 198 4291 4314 "behavior.rml" 198 4291 4347
+type(
+  'a * 'b * ('c , 'd) event * 'e * 'f * 'g  
+)
+"behavior.rml" 199 4350 4374 "behavior.rml" 199 4350 4381
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 206 4458 4474 "behavior.rml" 206 4458 4482
+type(
+  (('a , 'a list) event -> process) list ->
+  ('a list , 'a list list) event -> process  
+)
+"behavior.rml" 206 4458 4483 "behavior.rml" 206 4458 4484
+type(
+  (('a , 'a list) event -> process) list  
+)
+"behavior.rml" 206 4458 4485 "behavior.rml" 206 4458 4491
+type(
+  ('a list , 'a list list) event  
+)
+"behavior.rml" 207 4494 4503 "behavior.rml" 207 4494 4504
+type(
+  (('a , 'a list) event -> process) list  
+)
+"behavior.rml" 208 4510 4515 "behavior.rml" 208 4510 4517
+type(
+  (('a , 'a list) event -> process) list  
+)
+"behavior.rml" 208 4510 4526 "behavior.rml" 208 4510 4532
+type(
+  ('a list , 'a list list) event  
+)
+"behavior.rml" 208 4510 4533 "behavior.rml" 208 4510 4535
+type(
+  'a list  
+)
+"behavior.rml" 209 4536 4541 "behavior.rml" 209 4536 4542
+type(
+  ('a , 'a list) event -> process  
+)
+"behavior.rml" 209 4536 4544 "behavior.rml" 209 4536 4545
+type(
+  (('a , 'a list) event -> process) list  
+)
+"behavior.rml" 209 4536 4541 "behavior.rml" 209 4536 4545
+type(
+  (('a , 'a list) event -> process) list  
+)
+"behavior.rml" 211 4580 4598 "behavior.rml" 211 4580 4599
+type(
+  ('a , 'a list) event -> process  
+)
+"behavior.rml" 211 4580 4600 "behavior.rml" 211 4580 4601
+type(
+  ('a , 'a list) event  
+)
+"behavior.rml" 211 4580 4597 "behavior.rml" 211 4580 4602
+type(
+  process  
+)
+"behavior.rml" 212 4604 4630 "behavior.rml" 212 4604 4631
+type(
+  ('a , 'a list) event  
+)
+"behavior.rml" 212 4604 4633 "behavior.rml" 212 4604 4635
+type(
+  'a  
+)
+"behavior.rml" 213 4640 4652 "behavior.rml" 213 4640 4660
+type(
+  (('a , 'a list) event -> process) list ->
+  ('a list , 'a list list) event -> process  
+)
+"behavior.rml" 213 4640 4661 "behavior.rml" 213 4640 4662
+type(
+  (('a , 'a list) event -> process) list  
+)
+"behavior.rml" 213 4640 4663 "behavior.rml" 213 4640 4665
+type(
+  ('a list , 'a list list) event  
+)
+"behavior.rml" 213 4640 4651 "behavior.rml" 213 4640 4666
+type(
+  process  
+)
+"behavior.rml" 214 4668 4695 "behavior.rml" 214 4668 4697
+type(
+  ('a list , 'a list list) event  
+)
+"behavior.rml" 214 4668 4699 "behavior.rml" 214 4668 4701
+type(
+  'a list  
+)
+"behavior.rml" 215 4706 4718 "behavior.rml" 215 4706 4724
+type(
+  ('a list , 'a list list) event  
+)
+"behavior.rml" 215 4706 4726 "behavior.rml" 215 4706 4728
+type(
+  'a  
+)
+"behavior.rml" 215 4706 4730 "behavior.rml" 215 4706 4732
+type(
+  'a list  
+)
+"behavior.rml" 215 4706 4725 "behavior.rml" 215 4706 4733
+type(
+  'a list  
+)
+"behavior.rml" 218 4745 4761 "behavior.rml" 218 4745 4771
+type(
+  Icobj.icobj list -> Icobj.atticobj -> process  
+)
+"behavior.rml" 218 4745 4772 "behavior.rml" 218 4745 4773
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 218 4745 4774 "behavior.rml" 218 4745 4777
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 219 4780 4789 "behavior.rml" 219 4780 4790
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 220 4796 4801 "behavior.rml" 220 4796 4803
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 220 4796 4807 "behavior.rml" 220 4796 4809
+type(
+  unit  
+)
+"behavior.rml" 221 4810 4815 "behavior.rml" 221 4810 4816
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 221 4810 4818 "behavior.rml" 221 4810 4819
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 221 4810 4815 "behavior.rml" 221 4810 4819
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 221 4810 4826 "behavior.rml" 221 4810 4829
+type(
+  bool -> bool  
+)
+"behavior.rml" 221 4810 4831 "behavior.rml" 221 4810 4832
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 221 4810 4831 "behavior.rml" 221 4810 4839
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 221 4810 4840 "behavior.rml" 221 4810 4842
+type(
+  Icobj.atticobj -> Icobj.atticobj -> bool  
+)
+"behavior.rml" 221 4810 4843 "behavior.rml" 221 4810 4846
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 221 4810 4830 "behavior.rml" 221 4810 4847
+type(
+  bool  
+)
+"behavior.rml" 221 4810 4826 "behavior.rml" 221 4810 4847
+type(
+  bool  
+)
+"behavior.rml" 222 4853 4877 "behavior.rml" 222 4853 4878
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 222 4853 4877 "behavior.rml" 222 4853 4887
+type(
+  (unit , unit list) event  
+)
+"behavior.rml" 223 4889 4907 "behavior.rml" 223 4889 4917
+type(
+  Icobj.icobj list -> Icobj.atticobj -> process  
+)
+"behavior.rml" 223 4889 4918 "behavior.rml" 223 4889 4919
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 223 4889 4920 "behavior.rml" 223 4889 4923
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 223 4889 4906 "behavior.rml" 223 4889 4924
+type(
+  process  
+)
+"behavior.rml" 227 4930 4942 "behavior.rml" 227 4930 4955
+type(
+  'a -> process  
+)
+"behavior.rml" 227 4930 4956 "behavior.rml" 227 4930 4957
+type(
+  'a  
+)
+"behavior.rml" 233 4998 5002 "behavior.rml" 233 4998 5013
+type(
+  'a -> process  
+)
+"behavior.rml" 233 4998 5016 "behavior.rml" 233 4998 5029
+type(
+  'a -> process  
+)
+"behavior.rml" 235 5033 5037 "behavior.rml" 235 5033 5046
+type(
+  Icobj.icobj list -> Icobj.atticobj -> Icobj.icobj list  
+)
+"behavior.rml" 235 5033 5047 "behavior.rml" 235 5033 5048
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 235 5033 5049 "behavior.rml" 235 5033 5052
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 236 5055 5066 "behavior.rml" 236 5055 5069
+type(
+  Icobj.icobj list -> Icobj.icobj list  
+)
+"behavior.rml" 237 5081 5090 "behavior.rml" 237 5081 5092
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 237 5081 5096 "behavior.rml" 237 5081 5098
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 238 5099 5108 "behavior.rml" 238 5099 5109
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 238 5099 5111 "behavior.rml" 238 5099 5112
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 238 5099 5108 "behavior.rml" 238 5099 5112
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 238 5099 5119 "behavior.rml" 238 5099 5120
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 238 5099 5119 "behavior.rml" 238 5099 5127
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 238 5099 5128 "behavior.rml" 238 5099 5130
+type(
+  Icobj.atticobj -> Icobj.atticobj -> bool  
+)
+"behavior.rml" 238 5099 5131 "behavior.rml" 238 5099 5134
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 238 5099 5119 "behavior.rml" 238 5099 5134
+type(
+  bool  
+)
+"behavior.rml" 239 5140 5164 "behavior.rml" 239 5140 5165
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 240 5166 5188 "behavior.rml" 240 5166 5189
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 240 5166 5192 "behavior.rml" 240 5166 5195
+type(
+  Icobj.icobj list -> Icobj.icobj list  
+)
+"behavior.rml" 240 5166 5196 "behavior.rml" 240 5166 5197
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 240 5166 5191 "behavior.rml" 240 5166 5198
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 240 5166 5188 "behavior.rml" 240 5166 5198
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 238 5099 5116 "behavior.rml" 240 5166 5198
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 236 5055 5072 "behavior.rml" 240 5166 5198
+type(
+  Icobj.icobj list -> Icobj.icobj list  
+)
+"behavior.rml" 241 5202 5208 "behavior.rml" 241 5202 5211
+type(
+  Icobj.icobj list -> Icobj.icobj list  
+)
+"behavior.rml" 241 5202 5212 "behavior.rml" 241 5202 5213
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 241 5202 5208 "behavior.rml" 241 5202 5213
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 236 5055 5058 "behavior.rml" 241 5202 5213
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 243 5217 5229 "behavior.rml" 243 5217 5242
+type(
+  (Icobj.icobj list , 'a) event ->
+  (unit , 'b) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('c , 'd) event * 'e * (unit , 'f) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 243 5217 5243 "behavior.rml" 243 5217 5250
+type(
+  (Icobj.icobj list , 'a) event  
+)
+"behavior.rml" 243 5217 5252 "behavior.rml" 243 5217 5258
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 243 5217 5259 "behavior.rml" 243 5217 5265
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 243 5217 5266 "behavior.rml" 243 5217 5273
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 243 5217 5274 "behavior.rml" 243 5217 5275
+type(
+  'a  
+)
+"behavior.rml" 243 5217 5276 "behavior.rml" 243 5217 5283
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 243 5217 5284 "behavior.rml" 243 5217 5291
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 243 5217 5251 "behavior.rml" 243 5217 5292
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * (unit , 'e) event *
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 244 5295 5301 "behavior.rml" 244 5295 5307
+type(
+  Misc.t  
+)
+"behavior.rml" 244 5295 5310 "behavior.rml" 244 5295 5320
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 244 5295 5321 "behavior.rml" 244 5295 5345
+type(
+  string  
+)
+"behavior.rml" 244 5295 5346 "behavior.rml" 244 5295 5348
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 244 5295 5310 "behavior.rml" 244 5295 5348
+type(
+  Misc.t  
+)
+"behavior.rml" 245 5352 5359 "behavior.rml" 245 5352 5365
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 246 5367 5389 "behavior.rml" 246 5367 5395
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 246 5367 5397 "behavior.rml" 246 5367 5400
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 247 5405 5407 "behavior.rml" 247 5405 5420
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 247 5405 5421 "behavior.rml" 247 5405 5424
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 247 5405 5425 "behavior.rml" 247 5405 5431
+type(
+  Misc.t  
+)
+"behavior.rml" 247 5405 5407 "behavior.rml" 247 5405 5431
+type(
+  unit  
+)
+"behavior.rml" 249 5440 5452 "behavior.rml" 249 5440 5459
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 250 5461 5472 "behavior.rml" 250 5461 5479
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 251 5481 5507 "behavior.rml" 251 5481 5514
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 251 5481 5516 "behavior.rml" 251 5481 5517
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 252 5522 5532 "behavior.rml" 252 5522 5536
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 252 5522 5539 "behavior.rml" 252 5522 5548
+type(
+  Icobj.icobj list -> Icobj.atticobj -> Icobj.icobj list  
+)
+"behavior.rml" 252 5522 5550 "behavior.rml" 252 5522 5564
+type(
+  Icobj.icobj list -> Icobj.atticobj -> Icobj.icobj list  
+)
+"behavior.rml" 252 5522 5565 "behavior.rml" 252 5522 5566
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 252 5522 5567 "behavior.rml" 252 5522 5570
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 252 5522 5549 "behavior.rml" 252 5522 5571
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 252 5522 5572 "behavior.rml" 252 5522 5575
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 252 5522 5539 "behavior.rml" 252 5522 5575
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 253 5579 5590 "behavior.rml" 253 5579 5597
+type(
+  (Icobj.icobj list , 'a) event  
+)
+"behavior.rml" 253 5579 5598 "behavior.rml" 253 5579 5602
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 259 5644 5660 "behavior.rml" 259 5644 5671
+type(
+  'a * 'b * ('c , 'd) event * 'e * 'f * 'g -> process  
+)
+"behavior.rml" 259 5644 5673 "behavior.rml" 259 5644 5674
+type(
+  'a  
+)
+"behavior.rml" 259 5644 5675 "behavior.rml" 259 5644 5676
+type(
+  'a  
+)
+"behavior.rml" 259 5644 5677 "behavior.rml" 259 5644 5684
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 259 5644 5685 "behavior.rml" 259 5644 5686
+type(
+  'a  
+)
+"behavior.rml" 259 5644 5687 "behavior.rml" 259 5644 5688
+type(
+  'a  
+)
+"behavior.rml" 259 5644 5689 "behavior.rml" 259 5644 5690
+type(
+  'a  
+)
+"behavior.rml" 259 5644 5672 "behavior.rml" 259 5644 5691
+type(
+  'a * 'b * ('c , 'd) event * 'e * 'f * 'g  
+)
+"behavior.rml" 260 5694 5703 "behavior.rml" 260 5694 5710
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 264 5719 5731 "behavior.rml" 264 5719 5744
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e -> process  
+)
+"behavior.rml" 264 5719 5746 "behavior.rml" 264 5719 5752
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 264 5719 5753 "behavior.rml" 264 5719 5759
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 264 5719 5760 "behavior.rml" 264 5719 5761
+type(
+  'a  
+)
+"behavior.rml" 264 5719 5762 "behavior.rml" 264 5719 5763
+type(
+  'a  
+)
+"behavior.rml" 264 5719 5764 "behavior.rml" 264 5719 5765
+type(
+  'a  
+)
+"behavior.rml" 264 5719 5766 "behavior.rml" 264 5719 5767
+type(
+  'a  
+)
+"behavior.rml" 264 5719 5745 "behavior.rml" 264 5719 5768
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 265 5771 5777 "behavior.rml" 265 5771 5784
+type(
+  Misc.t  
+)
+"behavior.rml" 265 5771 5787 "behavior.rml" 265 5771 5797
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 265 5771 5798 "behavior.rml" 265 5771 5820
+type(
+  string  
+)
+"behavior.rml" 265 5771 5821 "behavior.rml" 265 5771 5823
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 265 5771 5787 "behavior.rml" 265 5771 5823
+type(
+  Misc.t  
+)
+"behavior.rml" 266 5827 5834 "behavior.rml" 266 5827 5840
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 267 5842 5864 "behavior.rml" 267 5842 5870
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 267 5842 5872 "behavior.rml" 267 5842 5875
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 268 5880 5882 "behavior.rml" 268 5880 5895
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 268 5880 5896 "behavior.rml" 268 5880 5899
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 268 5880 5900 "behavior.rml" 268 5880 5907
+type(
+  Misc.t  
+)
+"behavior.rml" 268 5880 5882 "behavior.rml" 268 5880 5907
+type(
+  unit  
+)
+"behavior.rml" 275 5984 5996 "behavior.rml" 275 5984 6006
+type(
+  'a -> process  
+)
+"behavior.rml" 275 5984 6007 "behavior.rml" 275 5984 6008
+type(
+  'a  
+)
+"behavior.rml" 278 6039 6051 "behavior.rml" 278 6039 6063
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e -> process  
+)
+"behavior.rml" 278 6039 6065 "behavior.rml" 278 6039 6071
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 278 6039 6072 "behavior.rml" 278 6039 6078
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 278 6039 6079 "behavior.rml" 278 6039 6080
+type(
+  'a  
+)
+"behavior.rml" 278 6039 6081 "behavior.rml" 278 6039 6082
+type(
+  'a  
+)
+"behavior.rml" 278 6039 6083 "behavior.rml" 278 6039 6084
+type(
+  'a  
+)
+"behavior.rml" 278 6039 6085 "behavior.rml" 278 6039 6086
+type(
+  'a  
+)
+"behavior.rml" 278 6039 6064 "behavior.rml" 278 6039 6087
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 279 6090 6096 "behavior.rml" 279 6090 6102
+type(
+  Misc.t  
+)
+"behavior.rml" 279 6090 6105 "behavior.rml" 279 6090 6115
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 279 6090 6116 "behavior.rml" 279 6090 6133
+type(
+  string  
+)
+"behavior.rml" 279 6090 6134 "behavior.rml" 279 6090 6136
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 279 6090 6105 "behavior.rml" 279 6090 6136
+type(
+  Misc.t  
+)
+"behavior.rml" 280 6140 6147 "behavior.rml" 280 6140 6153
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 281 6155 6177 "behavior.rml" 281 6155 6183
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 281 6155 6185 "behavior.rml" 281 6155 6188
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 282 6193 6195 "behavior.rml" 282 6193 6208
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 282 6193 6209 "behavior.rml" 282 6193 6212
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 282 6193 6213 "behavior.rml" 282 6193 6219
+type(
+  Misc.t  
+)
+"behavior.rml" 282 6193 6195 "behavior.rml" 282 6193 6219
+type(
+  unit  
+)
+"behavior.rml" 287 6258 6270 "behavior.rml" 287 6258 6283
+type(
+  'a -> process  
+)
+"behavior.rml" 287 6258 6284 "behavior.rml" 287 6258 6285
+type(
+  'a  
+)
+"behavior.rml" 293 6403 6419 "behavior.rml" 293 6403 6432
+type(
+  Icobj.icobj list ->
+  Icobj.atticobj ->
+  bool ref ->
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event -> process  
+)
+"behavior.rml" 293 6403 6433 "behavior.rml" 293 6403 6434
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 293 6403 6435 "behavior.rml" 293 6403 6438
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 293 6403 6439 "behavior.rml" 293 6403 6445
+type(
+  bool ref  
+)
+"behavior.rml" 293 6403 6446 "behavior.rml" 293 6403 6452
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 294 6455 6466 "behavior.rml" 294 6455 6467
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 295 6473 6480 "behavior.rml" 295 6473 6482
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 295 6473 6491 "behavior.rml" 295 6473 6497
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 295 6473 6498 "behavior.rml" 295 6473 6511
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 296 6512 6519 "behavior.rml" 296 6512 6520
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 296 6512 6522 "behavior.rml" 296 6512 6523
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 296 6512 6519 "behavior.rml" 296 6512 6523
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 296 6512 6530 "behavior.rml" 296 6512 6531
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 296 6512 6530 "behavior.rml" 296 6512 6538
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 296 6512 6539 "behavior.rml" 296 6512 6541
+type(
+  Icobj.atticobj -> Icobj.atticobj -> bool  
+)
+"behavior.rml" 296 6512 6542 "behavior.rml" 296 6512 6545
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 296 6512 6530 "behavior.rml" 296 6512 6545
+type(
+  bool  
+)
+"behavior.rml" 297 6551 6577 "behavior.rml" 297 6551 6590
+type(
+  Icobj.icobj list ->
+  Icobj.atticobj ->
+  bool ref ->
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event -> process  
+)
+"behavior.rml" 297 6551 6591 "behavior.rml" 297 6551 6592
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 297 6551 6593 "behavior.rml" 297 6551 6596
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 297 6551 6597 "behavior.rml" 297 6551 6603
+type(
+  bool ref  
+)
+"behavior.rml" 297 6551 6604 "behavior.rml" 297 6551 6610
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 297 6551 6576 "behavior.rml" 297 6551 6611
+type(
+  process  
+)
+"behavior.rml" 300 6666 6674 "behavior.rml" 300 6666 6687
+type(
+  Icobj.icobj list ->
+  Icobj.atticobj ->
+  bool ref ->
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event -> process  
+)
+"behavior.rml" 300 6666 6688 "behavior.rml" 300 6666 6689
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 300 6666 6690 "behavior.rml" 300 6666 6693
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 300 6666 6694 "behavior.rml" 300 6666 6700
+type(
+  bool ref  
+)
+"behavior.rml" 300 6666 6701 "behavior.rml" 300 6666 6705
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 300 6666 6673 "behavior.rml" 300 6666 6706
+type(
+  process  
+)
+"behavior.rml" 301 6708 6716 "behavior.rml" 301 6708 6717
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 301 6708 6716 "behavior.rml" 301 6708 6730
+type(
+  (Icobj.behavior , Icobj.behavior list) event -> process  
+)
+"behavior.rml" 301 6708 6731 "behavior.rml" 301 6708 6739
+type(
+  (Icobj.behavior , Icobj.behavior list) event  
+)
+"behavior.rml" 301 6708 6715 "behavior.rml" 301 6708 6740
+type(
+  process  
+)
+"behavior.rml" 302 6742 6765 "behavior.rml" 302 6742 6773
+type(
+  (Icobj.behavior , Icobj.behavior list) event  
+)
+"behavior.rml" 302 6742 6775 "behavior.rml" 302 6742 6780
+type(
+  Icobj.behavior  
+)
+"behavior.rml" 303 6785 6808 "behavior.rml" 303 6785 6812
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 303 6785 6814 "behavior.rml" 303 6785 6822
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 304 6827 6834 "behavior.rml" 304 6827 6839
+type(
+  Icobj.behavior  
+)
+"behavior.rml" 304 6827 6840 "behavior.rml" 304 6827 6842
+type(
+  Icobj.behavior -> Icobj.behavior -> bool  
+)
+"behavior.rml" 304 6827 6843 "behavior.rml" 304 6827 6856
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 304 6827 6834 "behavior.rml" 304 6827 6856
+type(
+  bool  
+)
+"behavior.rml" 304 6827 6857 "behavior.rml" 304 6827 6859
+type(
+  bool -> bool -> bool  
+)
+"behavior.rml" 304 6827 6860 "behavior.rml" 304 6827 6865
+type(
+  Icobj.behavior  
+)
+"behavior.rml" 304 6827 6866 "behavior.rml" 304 6827 6868
+type(
+  Icobj.behavior -> Icobj.behavior -> bool  
+)
+"behavior.rml" 304 6827 6869 "behavior.rml" 304 6827 6882
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 304 6827 6860 "behavior.rml" 304 6827 6882
+type(
+  bool  
+)
+"behavior.rml" 304 6827 6833 "behavior.rml" 304 6827 6884
+type(
+  bool  
+)
+"behavior.rml" 305 6890 6901 "behavior.rml" 305 6890 6907
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 305 6890 6908 "behavior.rml" 305 6890 6918
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 307 6927 6936 "behavior.rml" 307 6927 6941
+type(
+  Icobj.behavior  
+)
+"behavior.rml" 307 6927 6942 "behavior.rml" 307 6927 6944
+type(
+  Icobj.behavior -> Icobj.behavior -> bool  
+)
+"behavior.rml" 307 6927 6945 "behavior.rml" 307 6927 6955
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 307 6927 6936 "behavior.rml" 307 6927 6955
+type(
+  bool  
+)
+"behavior.rml" 308 6961 6968 "behavior.rml" 308 6961 6974
+type(
+  bool ref  
+)
+"behavior.rml" 308 6961 6975 "behavior.rml" 308 6961 6977
+type(
+  bool ref -> bool -> unit  
+)
+"behavior.rml" 308 6961 6978 "behavior.rml" 308 6961 6981
+type(
+  bool -> bool  
+)
+"behavior.rml" 308 6961 6983 "behavior.rml" 308 6961 6984
+type(
+  bool ref -> bool  
+)
+"behavior.rml" 308 6961 6984 "behavior.rml" 308 6961 6990
+type(
+  bool ref  
+)
+"behavior.rml" 308 6961 6982 "behavior.rml" 308 6961 6991
+type(
+  bool  
+)
+"behavior.rml" 308 6961 6978 "behavior.rml" 308 6961 6991
+type(
+  bool  
+)
+"behavior.rml" 308 6961 6968 "behavior.rml" 308 6961 6991
+type(
+  unit  
+)
+"behavior.rml" 309 6993 7005 "behavior.rml" 309 6993 7011
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 309 6993 7012 "behavior.rml" 309 6993 7022
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 312 7042 7055 "behavior.rml" 312 7042 7061
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 312 7042 7063 "behavior.rml" 312 7042 7074
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 312 7042 7075 "behavior.rml" 312 7042 7083
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 312 7042 7084 "behavior.rml" 312 7042 7089
+type(
+  Icobj.behavior  
+)
+"behavior.rml" 312 7042 7062 "behavior.rml" 312 7042 7090
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 319 7143 7155 "behavior.rml" 319 7143 7165
+type(
+  Icobj.atticobj ->
+  Misc.t ->
+  Misc.t ->
+  Misc.t ->
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  , 'a) event ->
+  ('b , 'c) event ->
+  (unit , 'd) event ->
+  (Icobj.icobj list , Icobj.icobj list list) event ->
+  (char , char list) event -> process  
+)
+"behavior.rml" 319 7143 7166 "behavior.rml" 319 7143 7169
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 319 7143 7170 "behavior.rml" 319 7143 7179
+type(
+  Misc.t  
+)
+"behavior.rml" 319 7143 7180 "behavior.rml" 319 7143 7190
+type(
+  Misc.t  
+)
+"behavior.rml" 319 7143 7191 "behavior.rml" 319 7143 7197
+type(
+  Misc.t  
+)
+"behavior.rml" 319 7143 7198 "behavior.rml" 319 7143 7206
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  , 'a) event  
+)
+"behavior.rml" 319 7143 7207 "behavior.rml" 319 7143 7214
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 319 7143 7215 "behavior.rml" 319 7143 7222
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 319 7143 7223 "behavior.rml" 319 7143 7230
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 319 7143 7231 "behavior.rml" 319 7143 7238
+type(
+  (char , char list) event  
+)
+"behavior.rml" 320 7241 7247 "behavior.rml" 320 7241 7250
+type(
+  ('a -> process) -> ('a -> process) -> 'a -> process  
+)
+"behavior.rml" 320 7241 7251 "behavior.rml" 320 7241 7252
+type(
+  'a -> process  
+)
+"behavior.rml" 320 7241 7253 "behavior.rml" 320 7241 7254
+type(
+  'a -> process  
+)
+"behavior.rml" 320 7241 7260 "behavior.rml" 320 7241 7261
+type(
+  'a -> process  
+)
+"behavior.rml" 320 7241 7262 "behavior.rml" 320 7241 7264
+type(
+  ('a -> process) -> ('a -> process) -> bool  
+)
+"behavior.rml" 320 7241 7265 "behavior.rml" 320 7241 7278
+type(
+  'a -> process  
+)
+"behavior.rml" 320 7241 7260 "behavior.rml" 320 7241 7278
+type(
+  bool  
+)
+"behavior.rml" 321 7284 7303 "behavior.rml" 321 7284 7304
+type(
+  'a -> process  
+)
+"behavior.rml" 323 7326 7347 "behavior.rml" 323 7326 7348
+type(
+  'a -> process  
+)
+"behavior.rml" 323 7326 7349 "behavior.rml" 323 7326 7351
+type(
+  ('a -> process) -> ('a -> process) -> bool  
+)
+"behavior.rml" 323 7326 7352 "behavior.rml" 323 7326 7365
+type(
+  'a -> process  
+)
+"behavior.rml" 323 7326 7347 "behavior.rml" 323 7326 7365
+type(
+  bool  
+)
+"behavior.rml" 324 7371 7384 "behavior.rml" 324 7371 7385
+type(
+  'a -> process  
+)
+"behavior.rml" 326 7402 7422 "behavior.rml" 326 7402 7430
+type(
+  ('a -> process) -> ('a -> process) -> 'a -> process  
+)
+"behavior.rml" 326 7402 7431 "behavior.rml" 326 7402 7432
+type(
+  'a -> process  
+)
+"behavior.rml" 326 7402 7433 "behavior.rml" 326 7402 7434
+type(
+  'a -> process  
+)
+"behavior.rml" 326 7402 7422 "behavior.rml" 326 7402 7434
+type(
+  'a -> process  
+)
+"behavior.rml" 323 7326 7344 "behavior.rml" 326 7402 7434
+type(
+  'a -> process  
+)
+"behavior.rml" 320 7241 7257 "behavior.rml" 326 7402 7434
+type(
+  'a -> process  
+)
+"behavior.rml" 328 7453 7459 "behavior.rml" 328 7453 7468
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 328 7453 7473 "behavior.rml" 328 7453 7476
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 328 7453 7477 "behavior.rml" 328 7453 7490
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 328 7453 7473 "behavior.rml" 328 7453 7490
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 329 7494 7500 "behavior.rml" 329 7494 7510
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 329 7494 7513 "behavior.rml" 329 7494 7516
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 329 7494 7517 "behavior.rml" 329 7494 7530
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 329 7494 7513 "behavior.rml" 329 7494 7530
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 330 7534 7540 "behavior.rml" 330 7534 7546
+type(
+  bool ref  
+)
+"behavior.rml" 330 7534 7549 "behavior.rml" 330 7534 7552
+type(
+  bool -> bool ref  
+)
+"behavior.rml" 330 7534 7553 "behavior.rml" 330 7534 7558
+type(
+  bool  
+)
+"behavior.rml" 330 7534 7549 "behavior.rml" 330 7534 7558
+type(
+  bool ref  
+)
+"behavior.rml" 332 7577 7579 "behavior.rml" 332 7577 7592
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 332 7577 7593 "behavior.rml" 332 7577 7596
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 332 7577 7597 "behavior.rml" 332 7577 7606
+type(
+  Misc.t  
+)
+"behavior.rml" 332 7577 7579 "behavior.rml" 332 7577 7606
+type(
+  unit  
+)
+"behavior.rml" 335 7630 7640 "behavior.rml" 335 7630 7647
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 336 7649 7658 "behavior.rml" 336 7649 7665
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 337 7667 7691 "behavior.rml" 337 7667 7698
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 337 7667 7700 "behavior.rml" 337 7667 7701
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 338 7706 7714 "behavior.rml" 338 7706 7718
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 338 7706 7721 "behavior.rml" 338 7706 7735
+type(
+  Icobj.icobj list -> Icobj.atticobj -> Icobj.icobj list  
+)
+"behavior.rml" 338 7706 7736 "behavior.rml" 338 7706 7737
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 338 7706 7738 "behavior.rml" 338 7706 7741
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 338 7706 7721 "behavior.rml" 338 7706 7741
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 339 7745 7756 "behavior.rml" 339 7745 7767
+type(
+  Icobj.icobj list -> int  
+)
+"behavior.rml" 339 7745 7768 "behavior.rml" 339 7745 7772
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 339 7745 7756 "behavior.rml" 339 7745 7772
+type(
+  int  
+)
+"behavior.rml" 342 7887 7894 "behavior.rml" 342 7887 7895
+type(
+  int  
+)
+"behavior.rml" 342 7887 7902 "behavior.rml" 342 7887 7903
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 342 7887 7903 "behavior.rml" 342 7887 7912
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 342 7887 7902 "behavior.rml" 342 7887 7912
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 342 7887 7913 "behavior.rml" 342 7887 7915
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> bool  
+)
+"behavior.rml" 342 7887 7916 "behavior.rml" 342 7887 7929
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 342 7887 7902 "behavior.rml" 342 7887 7929
+type(
+  bool  
+)
+"behavior.rml" 342 7887 7930 "behavior.rml" 342 7887 7932
+type(
+  bool -> bool -> bool  
+)
+"behavior.rml" 343 7933 7948 "behavior.rml" 343 7933 7949
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 343 7933 7949 "behavior.rml" 343 7933 7959
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 343 7933 7948 "behavior.rml" 343 7933 7959
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 343 7933 7960 "behavior.rml" 343 7933 7962
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> bool  
+)
+"behavior.rml" 343 7933 7963 "behavior.rml" 343 7933 7976
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 343 7933 7948 "behavior.rml" 343 7933 7976
+type(
+  bool  
+)
+"behavior.rml" 342 7887 7902 "behavior.rml" 343 7933 7976
+type(
+  bool  
+)
+"behavior.rml" 346 8023 8039 "behavior.rml" 346 8023 8040
+type(
+  bool ref -> bool  
+)
+"behavior.rml" 346 8023 8040 "behavior.rml" 346 8023 8046
+type(
+  bool ref  
+)
+"behavior.rml" 346 8023 8039 "behavior.rml" 346 8023 8046
+type(
+  bool  
+)
+"behavior.rml" 346 8023 8047 "behavior.rml" 346 8023 8049
+type(
+  bool -> bool -> bool  
+)
+"behavior.rml" 346 8023 8050 "behavior.rml" 346 8023 8053
+type(
+  bool -> bool  
+)
+"behavior.rml" 346 8023 8055 "behavior.rml" 346 8023 8056
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 346 8023 8056 "behavior.rml" 346 8023 8065
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 346 8023 8055 "behavior.rml" 346 8023 8065
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 346 8023 8066 "behavior.rml" 346 8023 8068
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> bool  
+)
+"behavior.rml" 346 8023 8069 "behavior.rml" 346 8023 8082
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 346 8023 8054 "behavior.rml" 346 8023 8083
+type(
+  bool  
+)
+"behavior.rml" 346 8023 8050 "behavior.rml" 346 8023 8083
+type(
+  bool  
+)
+"behavior.rml" 346 8023 8039 "behavior.rml" 346 8023 8083
+type(
+  bool  
+)
+"behavior.rml" 347 8089 8098 "behavior.rml" 347 8089 8108
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 347 8089 8109 "behavior.rml" 347 8089 8111
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> unit  
+)
+"behavior.rml" 347 8089 8112 "behavior.rml" 347 8089 8113
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 347 8089 8113 "behavior.rml" 347 8089 8123
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 347 8089 8112 "behavior.rml" 347 8089 8123
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 347 8089 8124 "behavior.rml" 347 8089 8125
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 347 8089 8127 "behavior.rml" 347 8089 8134
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 347 8089 8135 "behavior.rml" 347 8089 8136
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 347 8089 8136 "behavior.rml" 347 8089 8145
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 347 8089 8135 "behavior.rml" 347 8089 8145
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 347 8089 8126 "behavior.rml" 347 8089 8146
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 347 8089 8112 "behavior.rml" 347 8089 8146
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 347 8089 8098 "behavior.rml" 347 8089 8146
+type(
+  unit  
+)
+"behavior.rml" 346 8023 8036 "behavior.rml" 347 8089 8146
+type(
+  unit  
+)
+"behavior.rml" 349 8201 8207 "behavior.rml" 349 8201 8220
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 349 8201 8221 "behavior.rml" 349 8201 8224
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 349 8201 8225 "behavior.rml" 349 8201 8234
+type(
+  Misc.t  
+)
+"behavior.rml" 349 8201 8207 "behavior.rml" 349 8201 8234
+type(
+  unit  
+)
+"behavior.rml" 351 8268 8279 "behavior.rml" 351 8268 8287
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  , 'a) event  
+)
+"behavior.rml" 351 8268 8289 "behavior.rml" 351 8268 8290
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 351 8268 8290 "behavior.rml" 351 8268 8300
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 351 8268 8288 "behavior.rml" 351 8268 8301
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 352 8303 8316 "behavior.rml" 352 8303 8325
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 352 8303 8326 "behavior.rml" 352 8303 8328
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> unit  
+)
+"behavior.rml" 352 8303 8329 "behavior.rml" 352 8303 8342
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 352 8303 8316 "behavior.rml" 352 8303 8342
+type(
+  unit  
+)
+"behavior.rml" 353 8344 8350 "behavior.rml" 353 8344 8360
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 353 8344 8361 "behavior.rml" 353 8344 8363
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> unit  
+)
+"behavior.rml" 353 8344 8364 "behavior.rml" 353 8344 8377
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 353 8344 8350 "behavior.rml" 353 8344 8377
+type(
+  unit  
+)
+"behavior.rml" 354 8379 8385 "behavior.rml" 354 8379 8391
+type(
+  bool ref  
+)
+"behavior.rml" 354 8379 8392 "behavior.rml" 354 8379 8394
+type(
+  bool ref -> bool -> unit  
+)
+"behavior.rml" 354 8379 8395 "behavior.rml" 354 8379 8400
+type(
+  bool  
+)
+"behavior.rml" 354 8379 8385 "behavior.rml" 354 8379 8400
+type(
+  unit  
+)
+"behavior.rml" 353 8344 8350 "behavior.rml" 354 8379 8400
+type(
+  unit  
+)
+"behavior.rml" 352 8303 8316 "behavior.rml" 354 8379 8400
+type(
+  unit  
+)
+"behavior.rml" 356 8415 8422 "behavior.rml" 356 8415 8423
+type(
+  int  
+)
+"behavior.rml" 359 8551 8568 "behavior.rml" 359 8551 8581
+type(
+  Icobj.icobj list ->
+  Icobj.atticobj ->
+  bool ref ->
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event -> process  
+)
+"behavior.rml" 359 8551 8582 "behavior.rml" 359 8551 8586
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 359 8551 8587 "behavior.rml" 359 8551 8590
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 359 8551 8591 "behavior.rml" 359 8551 8597
+type(
+  bool ref  
+)
+"behavior.rml" 359 8551 8598 "behavior.rml" 359 8551 8606
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 359 8551 8567 "behavior.rml" 359 8551 8607
+type(
+  process  
+)
+"behavior.rml" 360 8609 8641 "behavior.rml" 360 8609 8649
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 360 8609 8651 "behavior.rml" 360 8609 8663
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 361 8668 8676 "behavior.rml" 361 8668 8677
+type(
+  bool ref -> bool  
+)
+"behavior.rml" 361 8668 8677 "behavior.rml" 361 8668 8683
+type(
+  bool ref  
+)
+"behavior.rml" 361 8668 8676 "behavior.rml" 361 8668 8683
+type(
+  bool  
+)
+"behavior.rml" 362 8689 8696 "behavior.rml" 362 8689 8705
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 362 8689 8706 "behavior.rml" 362 8689 8708
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> unit  
+)
+"behavior.rml" 362 8689 8709 "behavior.rml" 362 8689 8710
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 362 8689 8710 "behavior.rml" 362 8689 8719
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 362 8689 8709 "behavior.rml" 362 8689 8719
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 362 8689 8720 "behavior.rml" 362 8689 8721
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 362 8689 8722 "behavior.rml" 362 8689 8734
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 362 8689 8709 "behavior.rml" 362 8689 8734
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 362 8689 8696 "behavior.rml" 362 8689 8734
+type(
+  unit  
+)
+"behavior.rml" 363 8736 8743 "behavior.rml" 363 8736 8756
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 363 8736 8757 "behavior.rml" 363 8736 8760
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 363 8736 8761 "behavior.rml" 363 8736 8767
+type(
+  Misc.t  
+)
+"behavior.rml" 363 8736 8743 "behavior.rml" 363 8736 8767
+type(
+  unit  
+)
+"behavior.rml" 362 8689 8695 "behavior.rml" 364 8768 8775
+type(
+  unit  
+)
+"behavior.rml" 367 8844 8854 "behavior.rml" 367 8844 8857
+type(
+  bool -> bool  
+)
+"behavior.rml" 367 8844 8858 "behavior.rml" 367 8844 8859
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 367 8844 8859 "behavior.rml" 367 8844 8868
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 367 8844 8858 "behavior.rml" 367 8844 8868
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 367 8844 8869 "behavior.rml" 367 8844 8871
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> bool  
+)
+"behavior.rml" 367 8844 8872 "behavior.rml" 367 8844 8885
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 367 8844 8857 "behavior.rml" 367 8844 8886
+type(
+  bool  
+)
+"behavior.rml" 367 8844 8854 "behavior.rml" 367 8844 8886
+type(
+  bool  
+)
+"behavior.rml" 368 8892 8907 "behavior.rml" 368 8892 8917
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 368 8892 8918 "behavior.rml" 368 8892 8920
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> unit  
+)
+"behavior.rml" 368 8892 8921 "behavior.rml" 368 8892 8922
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 368 8892 8922 "behavior.rml" 368 8892 8932
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 368 8892 8921 "behavior.rml" 368 8892 8932
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 368 8892 8933 "behavior.rml" 368 8892 8934
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 368 8892 8936 "behavior.rml" 368 8892 8943
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 368 8892 8944 "behavior.rml" 368 8892 8945
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 368 8892 8945 "behavior.rml" 368 8892 8954
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 368 8892 8944 "behavior.rml" 368 8892 8954
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 368 8892 8935 "behavior.rml" 368 8892 8955
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 368 8892 8921 "behavior.rml" 368 8892 8955
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 368 8892 8907 "behavior.rml" 368 8892 8955
+type(
+  unit  
+)
+"behavior.rml" 369 8957 8965 "behavior.rml" 369 8957 8974
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 369 8957 8975 "behavior.rml" 369 8957 8977
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> unit  
+)
+"behavior.rml" 369 8957 8978 "behavior.rml" 369 8957 8991
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 369 8957 8965 "behavior.rml" 369 8957 8992
+type(
+  unit  
+)
+"behavior.rml" 368 8892 8906 "behavior.rml" 370 8993 9001
+type(
+  unit  
+)
+"behavior.rml" 367 8844 8851 "behavior.rml" 370 8993 9001
+type(
+  unit  
+)
+"behavior.rml" 371 9003 9010 "behavior.rml" 371 9003 9020
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 371 9003 9021 "behavior.rml" 371 9003 9023
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> unit  
+)
+"behavior.rml" 371 9003 9024 "behavior.rml" 371 9003 9025
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 371 9003 9025 "behavior.rml" 371 9003 9035
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 371 9003 9024 "behavior.rml" 371 9003 9035
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 371 9003 9036 "behavior.rml" 371 9003 9037
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 371 9003 9038 "behavior.rml" 371 9003 9050
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 371 9003 9024 "behavior.rml" 371 9003 9050
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 371 9003 9010 "behavior.rml" 371 9003 9050
+type(
+  unit  
+)
+"behavior.rml" 372 9052 9062 "behavior.rml" 372 9052 9063
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 372 9052 9063 "behavior.rml" 372 9052 9073
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 372 9052 9062 "behavior.rml" 372 9052 9073
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 372 9052 9074 "behavior.rml" 372 9052 9076
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> bool  
+)
+"behavior.rml" 372 9052 9077 "behavior.rml" 372 9052 9090
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 372 9052 9062 "behavior.rml" 372 9052 9090
+type(
+  bool  
+)
+"behavior.rml" 373 9096 9105 "behavior.rml" 373 9096 9118
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 373 9096 9119 "behavior.rml" 373 9096 9122
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 373 9096 9123 "behavior.rml" 373 9096 9132
+type(
+  Misc.t  
+)
+"behavior.rml" 373 9096 9105 "behavior.rml" 373 9096 9132
+type(
+  unit  
+)
+"behavior.rml" 375 9152 9161 "behavior.rml" 375 9152 9174
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 375 9152 9175 "behavior.rml" 375 9152 9178
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 375 9152 9179 "behavior.rml" 375 9152 9189
+type(
+  Misc.t  
+)
+"behavior.rml" 375 9152 9161 "behavior.rml" 375 9152 9189
+type(
+  unit  
+)
+"behavior.rml" 372 9052 9059 "behavior.rml" 375 9152 9190
+type(
+  unit  
+)
+"behavior.rml" 371 9003 9010 "behavior.rml" 375 9152 9190
+type(
+  unit  
+)
+"behavior.rml" 366 8786 8792 "behavior.rml" 376 9191 9198
+type(
+  unit  
+)
+"behavior.rml" 361 8668 8673 "behavior.rml" 376 9191 9198
+type(
+  unit  
+)
+"behavior.rml" 382 9269 9294 "behavior.rml" 382 9269 9301
+type(
+  (char , char list) event  
+)
+"behavior.rml" 382 9269 9303 "behavior.rml" 382 9269 9304
+type(
+  char  
+)
+"behavior.rml" 383 9309 9318 "behavior.rml" 383 9309 9329
+type(
+  char -> int  
+)
+"behavior.rml" 383 9309 9330 "behavior.rml" 383 9309 9331
+type(
+  char  
+)
+"behavior.rml" 383 9309 9317 "behavior.rml" 383 9309 9332
+type(
+  int  
+)
+"behavior.rml" 383 9309 9333 "behavior.rml" 383 9309 9334
+type(
+  int -> int -> bool  
+)
+"behavior.rml" 383 9309 9335 "behavior.rml" 383 9309 9337
+type(
+  int  
+)
+"behavior.rml" 383 9309 9317 "behavior.rml" 383 9309 9337
+type(
+  bool  
+)
+"behavior.rml" 384 9343 9349 "behavior.rml" 384 9343 9358
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 384 9343 9360 "behavior.rml" 384 9343 9362
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> unit  
+)
+"behavior.rml" 384 9343 9363 "behavior.rml" 384 9343 9376
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 384 9343 9349 "behavior.rml" 384 9343 9376
+type(
+  unit  
+)
+"behavior.rml" 385 9378 9384 "behavior.rml" 385 9378 9394
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref  
+)
+"behavior.rml" 385 9378 9395 "behavior.rml" 385 9378 9397
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ref ->
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) -> unit  
+)
+"behavior.rml" 385 9378 9398 "behavior.rml" 385 9378 9411
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 385 9378 9384 "behavior.rml" 385 9378 9411
+type(
+  unit  
+)
+"behavior.rml" 386 9413 9419 "behavior.rml" 386 9413 9432
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 386 9413 9433 "behavior.rml" 386 9413 9436
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 386 9413 9437 "behavior.rml" 386 9413 9446
+type(
+  Misc.t  
+)
+"behavior.rml" 386 9413 9419 "behavior.rml" 386 9413 9447
+type(
+  unit  
+)
+"behavior.rml" 385 9378 9384 "behavior.rml" 386 9413 9447
+type(
+  unit  
+)
+"behavior.rml" 384 9343 9348 "behavior.rml" 387 9448 9454
+type(
+  unit  
+)
+"behavior.rml" 383 9309 9314 "behavior.rml" 387 9448 9454
+type(
+  unit  
+)
+"behavior.rml" 394 9505 9521 "behavior.rml" 394 9505 9536
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) * ('a -> process) * Rml_Graphics.pos)
+  , 'b) event ->
+  (unit , 'c) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('d , 'e) event * (char , char list) event * (unit , 'f) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 394 9505 9537 "behavior.rml" 394 9505 9547
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) * ('a -> process) * Rml_Graphics.pos)
+  , 'b) event  
+)
+"behavior.rml" 394 9505 9549 "behavior.rml" 394 9505 9555
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 394 9505 9556 "behavior.rml" 394 9505 9562
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 394 9505 9563 "behavior.rml" 394 9505 9570
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 394 9505 9571 "behavior.rml" 394 9505 9578
+type(
+  (char , char list) event  
+)
+"behavior.rml" 394 9505 9579 "behavior.rml" 394 9505 9586
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 394 9505 9587 "behavior.rml" 394 9505 9594
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 394 9505 9548 "behavior.rml" 394 9505 9595
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 396 9620 9626 "behavior.rml" 396 9620 9635
+type(
+  Misc.t  
+)
+"behavior.rml" 396 9620 9639 "behavior.rml" 396 9620 9649
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 396 9620 9650 "behavior.rml" 396 9620 9671
+type(
+  string  
+)
+"behavior.rml" 396 9620 9672 "behavior.rml" 396 9620 9674
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 396 9620 9639 "behavior.rml" 396 9620 9674
+type(
+  Misc.t  
+)
+"behavior.rml" 397 9679 9685 "behavior.rml" 397 9679 9695
+type(
+  Misc.t  
+)
+"behavior.rml" 397 9679 9698 "behavior.rml" 397 9679 9708
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 397 9679 9709 "behavior.rml" 397 9679 9736
+type(
+  string  
+)
+"behavior.rml" 397 9679 9737 "behavior.rml" 397 9679 9739
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 397 9679 9698 "behavior.rml" 397 9679 9739
+type(
+  Misc.t  
+)
+"behavior.rml" 398 9744 9750 "behavior.rml" 398 9744 9756
+type(
+  Misc.t  
+)
+"behavior.rml" 398 9744 9763 "behavior.rml" 398 9744 9773
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 398 9744 9774 "behavior.rml" 398 9744 9805
+type(
+  string  
+)
+"behavior.rml" 398 9744 9806 "behavior.rml" 398 9744 9808
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 398 9744 9763 "behavior.rml" 398 9744 9808
+type(
+  Misc.t  
+)
+"behavior.rml" 399 9812 9819 "behavior.rml" 399 9812 9825
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 400 9827 9849 "behavior.rml" 400 9827 9855
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 400 9827 9857 "behavior.rml" 400 9827 9860
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 401 9865 9872 "behavior.rml" 401 9865 9882
+type(
+  Icobj.atticobj ->
+  Misc.t ->
+  Misc.t ->
+  Misc.t ->
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event ->
+  ('a , 'b) event ->
+  (unit , 'c) event ->
+  (Icobj.icobj list , Icobj.icobj list list) event ->
+  (char , char list) event -> process  
+)
+"behavior.rml" 401 9865 9883 "behavior.rml" 401 9865 9886
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 401 9865 9887 "behavior.rml" 401 9865 9896
+type(
+  Misc.t  
+)
+"behavior.rml" 401 9865 9897 "behavior.rml" 401 9865 9907
+type(
+  Misc.t  
+)
+"behavior.rml" 401 9865 9908 "behavior.rml" 401 9865 9914
+type(
+  Misc.t  
+)
+"behavior.rml" 401 9865 9915 "behavior.rml" 401 9865 9924
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 401 9865 9925 "behavior.rml" 401 9865 9932
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 401 9865 9933 "behavior.rml" 401 9865 9940
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 401 9865 9941 "behavior.rml" 401 9865 9948
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 401 9865 9949 "behavior.rml" 401 9865 9956
+type(
+  (char , char list) event  
+)
+"behavior.rml" 401 9865 9871 "behavior.rml" 401 9865 9957
+type(
+  process  
+)
+"behavior.rml" 405 9994 10018 "behavior.rml" 405 9994 10027
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 405 9994 10029 "behavior.rml" 405 9994 10031
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 406 10036 10046 "behavior.rml" 406 10036 10056
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) * ('a -> process) * Rml_Graphics.pos)
+  , 'b) event  
+)
+"behavior.rml" 406 10036 10059 "behavior.rml" 406 10036 10063
+type(
+  bool  
+)
+"behavior.rml" 406 10036 10065 "behavior.rml" 406 10036 10067
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 406 10036 10068 "behavior.rml" 406 10036 10072
+type(
+  bool  
+)
+"behavior.rml" 406 10036 10064 "behavior.rml" 406 10036 10073
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * bool  
+)
+"behavior.rml" 406 10036 10074 "behavior.rml" 406 10036 10087
+type(
+  'a -> process  
+)
+"behavior.rml" 406 10036 10088 "behavior.rml" 406 10036 10091
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 406 10036 10088 "behavior.rml" 406 10036 10095
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 406 10036 10058 "behavior.rml" 406 10036 10096
+type(
+  bool *
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  * bool) * ('a -> process) * Rml_Graphics.pos  
+)
+"behavior.rml" 412 10120 10136 "behavior.rml" 412 10120 10149
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) * ('a -> process) * Rml_Graphics.pos)
+  , 'b) event ->
+  ('c , 'd) event ->
+  string ->
+  (unit , 'e) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('f , 'g) event * (char , char list) event * (unit , 'h) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 412 10120 10150 "behavior.rml" 412 10120 10160
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) * ('a -> process) * Rml_Graphics.pos)
+  , 'b) event  
+)
+"behavior.rml" 412 10120 10161 "behavior.rml" 412 10120 10166
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 412 10120 10167 "behavior.rml" 412 10120 10171
+type(
+  string  
+)
+"behavior.rml" 412 10120 10173 "behavior.rml" 412 10120 10179
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 412 10120 10180 "behavior.rml" 412 10120 10186
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 412 10120 10187 "behavior.rml" 412 10120 10194
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 412 10120 10195 "behavior.rml" 412 10120 10202
+type(
+  (char , char list) event  
+)
+"behavior.rml" 412 10120 10203 "behavior.rml" 412 10120 10210
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 412 10120 10211 "behavior.rml" 412 10120 10218
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 412 10120 10172 "behavior.rml" 412 10120 10219
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 414 10244 10250 "behavior.rml" 414 10244 10259
+type(
+  Misc.t  
+)
+"behavior.rml" 414 10244 10263 "behavior.rml" 414 10244 10273
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 414 10244 10274 "behavior.rml" 414 10244 10292
+type(
+  string  
+)
+"behavior.rml" 414 10244 10293 "behavior.rml" 414 10244 10295
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 414 10244 10263 "behavior.rml" 414 10244 10295
+type(
+  Misc.t  
+)
+"behavior.rml" 415 10300 10306 "behavior.rml" 415 10300 10316
+type(
+  Misc.t  
+)
+"behavior.rml" 415 10300 10319 "behavior.rml" 415 10300 10329
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 415 10300 10330 "behavior.rml" 415 10300 10354
+type(
+  string  
+)
+"behavior.rml" 415 10300 10355 "behavior.rml" 415 10300 10357
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 415 10300 10319 "behavior.rml" 415 10300 10357
+type(
+  Misc.t  
+)
+"behavior.rml" 416 10362 10368 "behavior.rml" 416 10362 10374
+type(
+  Misc.t  
+)
+"behavior.rml" 416 10362 10381 "behavior.rml" 416 10362 10391
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 416 10362 10392 "behavior.rml" 416 10362 10420
+type(
+  string  
+)
+"behavior.rml" 416 10362 10421 "behavior.rml" 416 10362 10423
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 416 10362 10381 "behavior.rml" 416 10362 10423
+type(
+  Misc.t  
+)
+"behavior.rml" 417 10427 10434 "behavior.rml" 417 10427 10440
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 418 10442 10464 "behavior.rml" 418 10442 10470
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 418 10442 10472 "behavior.rml" 418 10442 10475
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 419 10480 10482 "behavior.rml" 419 10480 10485
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 419 10480 10493 "behavior.rml" 419 10480 10497
+type(
+  string  
+)
+"behavior.rml" 419 10480 10482 "behavior.rml" 419 10480 10497
+type(
+  unit  
+)
+"behavior.rml" 420 10499 10506 "behavior.rml" 420 10499 10516
+type(
+  Icobj.atticobj ->
+  Misc.t ->
+  Misc.t ->
+  Misc.t ->
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event ->
+  ('a , 'b) event ->
+  (unit , 'c) event ->
+  (Icobj.icobj list , Icobj.icobj list list) event ->
+  (char , char list) event -> process  
+)
+"behavior.rml" 420 10499 10517 "behavior.rml" 420 10499 10520
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 420 10499 10521 "behavior.rml" 420 10499 10530
+type(
+  Misc.t  
+)
+"behavior.rml" 420 10499 10531 "behavior.rml" 420 10499 10541
+type(
+  Misc.t  
+)
+"behavior.rml" 420 10499 10542 "behavior.rml" 420 10499 10548
+type(
+  Misc.t  
+)
+"behavior.rml" 420 10499 10549 "behavior.rml" 420 10499 10558
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 420 10499 10559 "behavior.rml" 420 10499 10566
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 420 10499 10567 "behavior.rml" 420 10499 10574
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 420 10499 10575 "behavior.rml" 420 10499 10582
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 420 10499 10583 "behavior.rml" 420 10499 10590
+type(
+  (char , char list) event  
+)
+"behavior.rml" 420 10499 10505 "behavior.rml" 420 10499 10591
+type(
+  process  
+)
+"behavior.rml" 424 10628 10652 "behavior.rml" 424 10628 10661
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 424 10628 10663 "behavior.rml" 424 10628 10665
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 425 10670 10678 "behavior.rml" 425 10670 10680
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 425 10670 10683 "behavior.rml" 425 10670 10690
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ('a , 'b) event ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 425 10670 10691 "behavior.rml" 425 10670 10693
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 425 10670 10695 "behavior.rml" 425 10670 10700
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 425 10670 10683 "behavior.rml" 425 10670 10700
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 426 10704 10713 "behavior.rml" 426 10704 10723
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) * ('a -> process) * Rml_Graphics.pos)
+  , 'b) event  
+)
+"behavior.rml" 426 10704 10725 "behavior.rml" 426 10704 10729
+type(
+  bool  
+)
+"behavior.rml" 426 10704 10731 "behavior.rml" 426 10704 10733
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 426 10704 10734 "behavior.rml" 426 10704 10738
+type(
+  bool  
+)
+"behavior.rml" 426 10704 10730 "behavior.rml" 426 10704 10739
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * bool  
+)
+"behavior.rml" 426 10704 10740 "behavior.rml" 426 10704 10753
+type(
+  'a -> process  
+)
+"behavior.rml" 426 10704 10754 "behavior.rml" 426 10704 10757
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 426 10704 10754 "behavior.rml" 426 10704 10761
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 426 10704 10724 "behavior.rml" 426 10704 10762
+type(
+  bool *
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  * bool) * ('a -> process) * Rml_Graphics.pos  
+)
+"behavior.rml" 431 10785 10801 "behavior.rml" 431 10785 10816
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) * ('a -> process) * Rml_Graphics.pos)
+  , 'b) event ->
+  ('c , 'd) event ->
+  string ->
+  (unit , 'e) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('f , 'g) event * (char , char list) event * (unit , 'h) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 431 10785 10817 "behavior.rml" 431 10785 10827
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) * ('a -> process) * Rml_Graphics.pos)
+  , 'b) event  
+)
+"behavior.rml" 431 10785 10828 "behavior.rml" 431 10785 10833
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 431 10785 10834 "behavior.rml" 431 10785 10838
+type(
+  string  
+)
+"behavior.rml" 431 10785 10840 "behavior.rml" 431 10785 10846
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 431 10785 10847 "behavior.rml" 431 10785 10853
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 431 10785 10854 "behavior.rml" 431 10785 10861
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 431 10785 10862 "behavior.rml" 431 10785 10869
+type(
+  (char , char list) event  
+)
+"behavior.rml" 431 10785 10870 "behavior.rml" 431 10785 10877
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 431 10785 10878 "behavior.rml" 431 10785 10885
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 431 10785 10839 "behavior.rml" 431 10785 10886
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 433 10911 10917 "behavior.rml" 433 10911 10926
+type(
+  Misc.t  
+)
+"behavior.rml" 433 10911 10930 "behavior.rml" 433 10911 10940
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 433 10911 10941 "behavior.rml" 433 10911 10961
+type(
+  string  
+)
+"behavior.rml" 433 10911 10962 "behavior.rml" 433 10911 10964
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 433 10911 10930 "behavior.rml" 433 10911 10964
+type(
+  Misc.t  
+)
+"behavior.rml" 434 10969 10975 "behavior.rml" 434 10969 10985
+type(
+  Misc.t  
+)
+"behavior.rml" 434 10969 10988 "behavior.rml" 434 10969 10998
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 434 10969 10999 "behavior.rml" 434 10969 11025
+type(
+  string  
+)
+"behavior.rml" 434 10969 11026 "behavior.rml" 434 10969 11028
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 434 10969 10988 "behavior.rml" 434 10969 11028
+type(
+  Misc.t  
+)
+"behavior.rml" 435 11033 11039 "behavior.rml" 435 11033 11045
+type(
+  Misc.t  
+)
+"behavior.rml" 435 11033 11052 "behavior.rml" 435 11033 11062
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 435 11033 11063 "behavior.rml" 435 11033 11093
+type(
+  string  
+)
+"behavior.rml" 435 11033 11094 "behavior.rml" 435 11033 11096
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 435 11033 11052 "behavior.rml" 435 11033 11096
+type(
+  Misc.t  
+)
+"behavior.rml" 436 11100 11107 "behavior.rml" 436 11100 11113
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 437 11115 11137 "behavior.rml" 437 11115 11143
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 437 11115 11145 "behavior.rml" 437 11115 11148
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 438 11153 11155 "behavior.rml" 438 11153 11158
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 438 11153 11166 "behavior.rml" 438 11153 11170
+type(
+  string  
+)
+"behavior.rml" 438 11153 11155 "behavior.rml" 438 11153 11170
+type(
+  unit  
+)
+"behavior.rml" 439 11172 11179 "behavior.rml" 439 11172 11189
+type(
+  Icobj.atticobj ->
+  Misc.t ->
+  Misc.t ->
+  Misc.t ->
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event ->
+  ('a , 'b) event ->
+  (unit , 'c) event ->
+  (Icobj.icobj list , Icobj.icobj list list) event ->
+  (char , char list) event -> process  
+)
+"behavior.rml" 439 11172 11190 "behavior.rml" 439 11172 11193
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 439 11172 11194 "behavior.rml" 439 11172 11203
+type(
+  Misc.t  
+)
+"behavior.rml" 439 11172 11204 "behavior.rml" 439 11172 11214
+type(
+  Misc.t  
+)
+"behavior.rml" 439 11172 11215 "behavior.rml" 439 11172 11221
+type(
+  Misc.t  
+)
+"behavior.rml" 439 11172 11222 "behavior.rml" 439 11172 11231
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 439 11172 11232 "behavior.rml" 439 11172 11239
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 439 11172 11240 "behavior.rml" 439 11172 11247
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 439 11172 11248 "behavior.rml" 439 11172 11255
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 439 11172 11256 "behavior.rml" 439 11172 11263
+type(
+  (char , char list) event  
+)
+"behavior.rml" 439 11172 11178 "behavior.rml" 439 11172 11264
+type(
+  process  
+)
+"behavior.rml" 443 11301 11325 "behavior.rml" 443 11301 11334
+type(
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  ,
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) list) event  
+)
+"behavior.rml" 443 11301 11336 "behavior.rml" 443 11301 11338
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 444 11343 11351 "behavior.rml" 444 11343 11353
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 444 11343 11356 "behavior.rml" 444 11343 11365
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) ->
+  ('a , 'b) event ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 444 11343 11366 "behavior.rml" 444 11343 11368
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 444 11343 11370 "behavior.rml" 444 11343 11375
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 444 11343 11356 "behavior.rml" 444 11343 11375
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 445 11379 11388 "behavior.rml" 445 11379 11398
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) * ('a -> process) * Rml_Graphics.pos)
+  , 'b) event  
+)
+"behavior.rml" 445 11379 11400 "behavior.rml" 445 11379 11404
+type(
+  bool  
+)
+"behavior.rml" 445 11379 11406 "behavior.rml" 445 11379 11408
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 445 11379 11409 "behavior.rml" 445 11379 11413
+type(
+  bool  
+)
+"behavior.rml" 445 11379 11405 "behavior.rml" 445 11379 11414
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * bool  
+)
+"behavior.rml" 445 11379 11415 "behavior.rml" 445 11379 11428
+type(
+  'a -> process  
+)
+"behavior.rml" 445 11379 11429 "behavior.rml" 445 11379 11432
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 445 11379 11429 "behavior.rml" 445 11379 11436
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 445 11379 11399 "behavior.rml" 445 11379 11437
+type(
+  bool *
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  * bool) * ('a -> process) * Rml_Graphics.pos  
+)
+"behavior.rml" 454 11480 11484 "behavior.rml" 454 11480 11497
+type(
+  'a -> process  
+)
+"behavior.rml" 454 11480 11500 "behavior.rml" 454 11480 11513
+type(
+  'a -> process  
+)
+"behavior.rml" 456 11517 11529 "behavior.rml" 456 11517 11544
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * (char , char list) event * 'c * 'd -> process  
+)
+"behavior.rml" 456 11517 11546 "behavior.rml" 456 11517 11552
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 456 11517 11553 "behavior.rml" 456 11517 11559
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 456 11517 11560 "behavior.rml" 456 11517 11561
+type(
+  'a  
+)
+"behavior.rml" 456 11517 11562 "behavior.rml" 456 11517 11569
+type(
+  (char , char list) event  
+)
+"behavior.rml" 456 11517 11570 "behavior.rml" 456 11517 11571
+type(
+  'a  
+)
+"behavior.rml" 456 11517 11572 "behavior.rml" 456 11517 11573
+type(
+  'a  
+)
+"behavior.rml" 456 11517 11545 "behavior.rml" 456 11517 11574
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * (char , char list) event * 'c * 'd  
+)
+"behavior.rml" 457 11577 11584 "behavior.rml" 457 11577 11590
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 458 11592 11614 "behavior.rml" 458 11592 11620
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 458 11592 11622 "behavior.rml" 458 11592 11625
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 459 11630 11632 "behavior.rml" 459 11630 11645
+type(
+  Icobj.atticobj -> string -> unit  
+)
+"behavior.rml" 459 11630 11646 "behavior.rml" 459 11630 11649
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 459 11630 11650 "behavior.rml" 459 11630 11661
+type(
+  string  
+)
+"behavior.rml" 459 11630 11632 "behavior.rml" 459 11630 11661
+type(
+  unit  
+)
+"behavior.rml" 461 11670 11696 "behavior.rml" 461 11670 11703
+type(
+  (char , char list) event  
+)
+"behavior.rml" 461 11670 11705 "behavior.rml" 461 11670 11706
+type(
+  char  
+)
+"behavior.rml" 462 11711 11721 "behavior.rml" 462 11711 11732
+type(
+  char -> int  
+)
+"behavior.rml" 462 11711 11733 "behavior.rml" 462 11711 11734
+type(
+  char  
+)
+"behavior.rml" 462 11711 11720 "behavior.rml" 462 11711 11735
+type(
+  int  
+)
+"behavior.rml" 462 11711 11736 "behavior.rml" 462 11711 11737
+type(
+  int -> int -> bool  
+)
+"behavior.rml" 462 11711 11738 "behavior.rml" 462 11711 11739
+type(
+  int  
+)
+"behavior.rml" 462 11711 11720 "behavior.rml" 462 11711 11739
+type(
+  bool  
+)
+"behavior.rml" 463 11745 11757 "behavior.rml" 463 11745 11758
+type(
+  int  
+)
+"behavior.rml" 463 11745 11761 "behavior.rml" 463 11745 11774
+type(
+  string -> int  
+)
+"behavior.rml" 463 11745 11775 "behavior.rml" 463 11745 11778
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 463 11745 11775 "behavior.rml" 463 11745 11782
+type(
+  string  
+)
+"behavior.rml" 463 11745 11761 "behavior.rml" 463 11745 11782
+type(
+  int  
+)
+"behavior.rml" 464 11786 11790 "behavior.rml" 464 11786 11791
+type(
+  int  
+)
+"behavior.rml" 464 11786 11792 "behavior.rml" 464 11786 11794
+type(
+  int -> int -> bool  
+)
+"behavior.rml" 464 11786 11795 "behavior.rml" 464 11786 11796
+type(
+  int  
+)
+"behavior.rml" 464 11786 11790 "behavior.rml" 464 11786 11796
+type(
+  bool  
+)
+"behavior.rml" 465 11802 11811 "behavior.rml" 465 11802 11814
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 465 11802 11822 "behavior.rml" 465 11802 11832
+type(
+  string -> int -> int -> string  
+)
+"behavior.rml" 465 11802 11833 "behavior.rml" 465 11802 11836
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 465 11802 11833 "behavior.rml" 465 11802 11840
+type(
+  string  
+)
+"behavior.rml" 465 11802 11841 "behavior.rml" 465 11802 11842
+type(
+  int  
+)
+"behavior.rml" 465 11802 11845 "behavior.rml" 465 11802 11858
+type(
+  string -> int  
+)
+"behavior.rml" 465 11802 11859 "behavior.rml" 465 11802 11862
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 465 11802 11859 "behavior.rml" 465 11802 11866
+type(
+  string  
+)
+"behavior.rml" 465 11802 11844 "behavior.rml" 465 11802 11867
+type(
+  int  
+)
+"behavior.rml" 465 11802 11868 "behavior.rml" 465 11802 11869
+type(
+  int -> int -> int  
+)
+"behavior.rml" 465 11802 11870 "behavior.rml" 465 11802 11871
+type(
+  int  
+)
+"behavior.rml" 465 11802 11843 "behavior.rml" 465 11802 11872
+type(
+  int  
+)
+"behavior.rml" 465 11802 11822 "behavior.rml" 465 11802 11872
+type(
+  string  
+)
+"behavior.rml" 465 11802 11811 "behavior.rml" 465 11802 11872
+type(
+  unit  
+)
+"behavior.rml" 464 11786 11787 "behavior.rml" 465 11802 11873
+type(
+  unit  
+)
+"behavior.rml" 463 11745 11752 "behavior.rml" 466 11874 11882
+type(
+  unit  
+)
+"behavior.rml" 468 11894 11903 "behavior.rml" 468 11894 11906
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 468 11894 11914 "behavior.rml" 468 11894 11917
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 468 11894 11914 "behavior.rml" 468 11894 11921
+type(
+  string  
+)
+"behavior.rml" 468 11894 11922 "behavior.rml" 468 11894 11923
+type(
+  string -> string -> string  
+)
+"behavior.rml" 468 11894 11925 "behavior.rml" 468 11894 11937
+type(
+  char -> string  
+)
+"behavior.rml" 468 11894 11938 "behavior.rml" 468 11894 11939
+type(
+  char  
+)
+"behavior.rml" 468 11894 11924 "behavior.rml" 468 11894 11940
+type(
+  string  
+)
+"behavior.rml" 468 11894 11914 "behavior.rml" 468 11894 11940
+type(
+  string  
+)
+"behavior.rml" 468 11894 11903 "behavior.rml" 468 11894 11940
+type(
+  unit  
+)
+"behavior.rml" 462 11711 11717 "behavior.rml" 468 11894 11940
+type(
+  unit  
+)
+"behavior.rml" 479 12002 12014 "behavior.rml" 479 12002 12028
+type(
+  (unit , 'a) event -> 'b -> process  
+)
+"behavior.rml" 479 12002 12029 "behavior.rml" 479 12002 12036
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 479 12002 12037 "behavior.rml" 479 12002 12038
+type(
+  'a  
+)
+"behavior.rml" 480 12041 12051 "behavior.rml" 480 12041 12058
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 482 12062 12074 "behavior.rml" 482 12062 12090
+type(
+  (unit , 'a) event ->
+  string ->
+  (unit , 'b) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('c , 'd) event * 'e * 'f * 'g -> process  
+)
+"behavior.rml" 482 12062 12091 "behavior.rml" 482 12062 12098
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 482 12062 12099 "behavior.rml" 482 12062 12103
+type(
+  string  
+)
+"behavior.rml" 482 12062 12105 "behavior.rml" 482 12062 12111
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 482 12062 12112 "behavior.rml" 482 12062 12118
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 482 12062 12119 "behavior.rml" 482 12062 12126
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 482 12062 12127 "behavior.rml" 482 12062 12128
+type(
+  'a  
+)
+"behavior.rml" 482 12062 12129 "behavior.rml" 482 12062 12130
+type(
+  'a  
+)
+"behavior.rml" 482 12062 12131 "behavior.rml" 482 12062 12132
+type(
+  'a  
+)
+"behavior.rml" 482 12062 12104 "behavior.rml" 482 12062 12133
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * 'e * 'f  
+)
+"behavior.rml" 483 12136 12143 "behavior.rml" 483 12136 12149
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 484 12151 12173 "behavior.rml" 484 12151 12179
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 484 12151 12181 "behavior.rml" 484 12151 12184
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 485 12189 12195 "behavior.rml" 485 12189 12200
+type(
+  Misc.t  
+)
+"behavior.rml" 485 12189 12203 "behavior.rml" 485 12189 12213
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 485 12189 12214 "behavior.rml" 485 12189 12235
+type(
+  string  
+)
+"behavior.rml" 485 12189 12236 "behavior.rml" 485 12189 12238
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 485 12189 12203 "behavior.rml" 485 12189 12238
+type(
+  Misc.t  
+)
+"behavior.rml" 486 12242 12244 "behavior.rml" 486 12242 12247
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 486 12242 12255 "behavior.rml" 486 12242 12259
+type(
+  string  
+)
+"behavior.rml" 486 12242 12244 "behavior.rml" 486 12242 12259
+type(
+  unit  
+)
+"behavior.rml" 487 12261 12263 "behavior.rml" 487 12261 12276
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 487 12261 12277 "behavior.rml" 487 12261 12280
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 487 12261 12281 "behavior.rml" 487 12261 12286
+type(
+  Misc.t  
+)
+"behavior.rml" 487 12261 12263 "behavior.rml" 487 12261 12286
+type(
+  unit  
+)
+"behavior.rml" 489 12295 12305 "behavior.rml" 489 12295 12312
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 490 12314 12323 "behavior.rml" 490 12314 12330
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 496 12361 12373 "behavior.rml" 496 12361 12384
+type(
+  ('a , 'b) event -> 'c -> process  
+)
+"behavior.rml" 496 12361 12385 "behavior.rml" 496 12361 12392
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 496 12361 12393 "behavior.rml" 496 12361 12394
+type(
+  'a  
+)
+"behavior.rml" 497 12397 12408 "behavior.rml" 497 12397 12415
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 499 12419 12431 "behavior.rml" 499 12419 12444
+type(
+  'a ->
+  string ->
+  (unit , 'b) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'c * 'd * 'e * 'f -> process  
+)
+"behavior.rml" 499 12419 12445 "behavior.rml" 499 12419 12452
+type(
+  'a  
+)
+"behavior.rml" 499 12419 12453 "behavior.rml" 499 12419 12457
+type(
+  string  
+)
+"behavior.rml" 499 12419 12459 "behavior.rml" 499 12419 12465
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 499 12419 12466 "behavior.rml" 499 12419 12472
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 499 12419 12473 "behavior.rml" 499 12419 12480
+type(
+  'a  
+)
+"behavior.rml" 499 12419 12481 "behavior.rml" 499 12419 12482
+type(
+  'a  
+)
+"behavior.rml" 499 12419 12483 "behavior.rml" 499 12419 12484
+type(
+  'a  
+)
+"behavior.rml" 499 12419 12485 "behavior.rml" 499 12419 12486
+type(
+  'a  
+)
+"behavior.rml" 499 12419 12458 "behavior.rml" 499 12419 12487
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 500 12490 12497 "behavior.rml" 500 12490 12503
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 501 12505 12527 "behavior.rml" 501 12505 12533
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 501 12505 12535 "behavior.rml" 501 12505 12538
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 502 12543 12549 "behavior.rml" 502 12543 12553
+type(
+  Misc.t  
+)
+"behavior.rml" 502 12543 12555 "behavior.rml" 502 12543 12565
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 502 12543 12566 "behavior.rml" 502 12543 12584
+type(
+  string  
+)
+"behavior.rml" 502 12543 12585 "behavior.rml" 502 12543 12587
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 502 12543 12555 "behavior.rml" 502 12543 12587
+type(
+  Misc.t  
+)
+"behavior.rml" 503 12591 12593 "behavior.rml" 503 12591 12596
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 503 12591 12604 "behavior.rml" 503 12591 12608
+type(
+  string  
+)
+"behavior.rml" 503 12591 12593 "behavior.rml" 503 12591 12608
+type(
+  unit  
+)
+"behavior.rml" 504 12610 12612 "behavior.rml" 504 12610 12625
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 504 12610 12626 "behavior.rml" 504 12610 12629
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 504 12610 12630 "behavior.rml" 504 12610 12634
+type(
+  Misc.t  
+)
+"behavior.rml" 504 12610 12612 "behavior.rml" 504 12610 12634
+type(
+  unit  
+)
+"behavior.rml" 503 12591 12593 "behavior.rml" 504 12610 12634
+type(
+  unit  
+)
+"behavior.rml" 502 12543 12545 "behavior.rml" 504 12610 12634
+type(
+  unit  
+)
+"behavior.rml" 511 12693 12697 "behavior.rml" 511 12693 12708
+type(
+  'a -> process  
+)
+"behavior.rml" 511 12693 12711 "behavior.rml" 511 12693 12724
+type(
+  'a -> process  
+)
+"behavior.rml" 513 12728 12740 "behavior.rml" 513 12728 12753
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event ->
+  (unit , 'f) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('g , 'h) event * 'i * (unit , 'j) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 513 12728 12754 "behavior.rml" 513 12728 12764
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event  
+)
+"behavior.rml" 513 12728 12766 "behavior.rml" 513 12728 12772
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 513 12728 12773 "behavior.rml" 513 12728 12779
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 513 12728 12780 "behavior.rml" 513 12728 12787
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 513 12728 12788 "behavior.rml" 513 12728 12795
+type(
+  'a  
+)
+"behavior.rml" 513 12728 12796 "behavior.rml" 513 12728 12803
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 513 12728 12804 "behavior.rml" 513 12728 12811
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 513 12728 12765 "behavior.rml" 513 12728 12812
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * 'd * (unit , 'e) event *
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 515 12838 12844 "behavior.rml" 515 12838 12849
+type(
+  int ref  
+)
+"behavior.rml" 515 12838 12852 "behavior.rml" 515 12838 12855
+type(
+  int -> int ref  
+)
+"behavior.rml" 515 12838 12856 "behavior.rml" 515 12838 12857
+type(
+  int  
+)
+"behavior.rml" 515 12838 12852 "behavior.rml" 515 12838 12857
+type(
+  int ref  
+)
+"behavior.rml" 516 12861 12867 "behavior.rml" 516 12861 12873
+type(
+  Misc.t  
+)
+"behavior.rml" 516 12861 12876 "behavior.rml" 516 12861 12886
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 516 12861 12887 "behavior.rml" 516 12861 12903
+type(
+  string  
+)
+"behavior.rml" 516 12861 12904 "behavior.rml" 516 12861 12906
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 516 12861 12876 "behavior.rml" 516 12861 12906
+type(
+  Misc.t  
+)
+"behavior.rml" 517 12910 12917 "behavior.rml" 517 12910 12923
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 518 12925 12947 "behavior.rml" 518 12925 12953
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 518 12925 12955 "behavior.rml" 518 12925 12958
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 519 12963 12965 "behavior.rml" 519 12963 12978
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 519 12963 12979 "behavior.rml" 519 12963 12982
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 519 12963 12983 "behavior.rml" 519 12963 12989
+type(
+  Misc.t  
+)
+"behavior.rml" 519 12963 12965 "behavior.rml" 519 12963 12989
+type(
+  unit  
+)
+"behavior.rml" 521 12998 13010 "behavior.rml" 521 12998 13017
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 522 13019 13030 "behavior.rml" 522 13019 13037
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 523 13039 13065 "behavior.rml" 523 13039 13072
+type(
+  (Icobj.icobj list , Icobj.icobj list list) event  
+)
+"behavior.rml" 523 13039 13074 "behavior.rml" 523 13039 13075
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 524 13080 13090 "behavior.rml" 524 13080 13094
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 524 13080 13097 "behavior.rml" 524 13080 13106
+type(
+  Icobj.icobj list -> Icobj.atticobj -> Icobj.icobj list  
+)
+"behavior.rml" 524 13080 13108 "behavior.rml" 524 13080 13122
+type(
+  Icobj.icobj list -> Icobj.atticobj -> Icobj.icobj list  
+)
+"behavior.rml" 524 13080 13123 "behavior.rml" 524 13080 13124
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 524 13080 13125 "behavior.rml" 524 13080 13128
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 524 13080 13107 "behavior.rml" 524 13080 13129
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 524 13080 13130 "behavior.rml" 524 13080 13133
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 524 13080 13097 "behavior.rml" 524 13080 13133
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 525 13137 13146 "behavior.rml" 525 13137 13157
+type(
+  Icobj.icobj list -> int  
+)
+"behavior.rml" 525 13137 13158 "behavior.rml" 525 13137 13162
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 525 13137 13146 "behavior.rml" 525 13137 13162
+type(
+  int  
+)
+"behavior.rml" 525 13137 13163 "behavior.rml" 525 13137 13164
+type(
+  int -> int -> bool  
+)
+"behavior.rml" 525 13137 13165 "behavior.rml" 525 13137 13166
+type(
+  int  
+)
+"behavior.rml" 525 13137 13146 "behavior.rml" 525 13137 13166
+type(
+  bool  
+)
+"behavior.rml" 527 13191 13202 "behavior.rml" 527 13191 13207
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 527 13191 13210 "behavior.rml" 527 13191 13217
+type(
+  Icobj.icobj list -> Icobj.icobj  
+)
+"behavior.rml" 527 13191 13218 "behavior.rml" 527 13191 13222
+type(
+  Icobj.icobj list  
+)
+"behavior.rml" 527 13191 13210 "behavior.rml" 527 13191 13222
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 528 13226 13238 "behavior.rml" 528 13226 13243
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 528 13226 13238 "behavior.rml" 528 13226 13258
+type(
+  (Icobj.behavior , Icobj.behavior list) event -> process  
+)
+"behavior.rml" 528 13226 13259 "behavior.rml" 528 13226 13260
+type(
+  (Icobj.behavior , Icobj.behavior list) event  
+)
+"behavior.rml" 528 13226 13237 "behavior.rml" 528 13226 13261
+type(
+  process  
+)
+"behavior.rml" 529 13263 13290 "behavior.rml" 529 13263 13291
+type(
+  (Icobj.behavior , Icobj.behavior list) event  
+)
+"behavior.rml" 529 13263 13293 "behavior.rml" 529 13263 13294
+type(
+  Icobj.behavior  
+)
+"behavior.rml" 530 13299 13309 "behavior.rml" 530 13299 13310
+type(
+  Icobj.behavior  
+)
+"behavior.rml" 530 13299 13311 "behavior.rml" 530 13299 13313
+type(
+  Icobj.behavior -> Icobj.behavior -> bool  
+)
+"behavior.rml" 530 13299 13314 "behavior.rml" 530 13299 13329
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 530 13299 13309 "behavior.rml" 530 13299 13329
+type(
+  bool  
+)
+"behavior.rml" 530 13299 13330 "behavior.rml" 530 13299 13332
+type(
+  bool -> bool -> bool  
+)
+"behavior.rml" 530 13299 13333 "behavior.rml" 530 13299 13336
+type(
+  bool -> bool  
+)
+"behavior.rml" 530 13299 13338 "behavior.rml" 530 13299 13343
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 530 13299 13338 "behavior.rml" 530 13299 13350
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 530 13299 13338 "behavior.rml" 530 13299 13354
+type(
+  string  
+)
+"behavior.rml" 530 13299 13355 "behavior.rml" 530 13299 13356
+type(
+  string -> string -> bool  
+)
+"behavior.rml" 530 13299 13357 "behavior.rml" 530 13299 13359
+type(
+  string  
+)
+"behavior.rml" 530 13299 13337 "behavior.rml" 530 13299 13360
+type(
+  bool  
+)
+"behavior.rml" 530 13299 13333 "behavior.rml" 530 13299 13360
+type(
+  bool  
+)
+"behavior.rml" 530 13299 13309 "behavior.rml" 530 13299 13360
+type(
+  bool  
+)
+"behavior.rml" 532 13388 13400 "behavior.rml" 532 13388 13404
+type(
+  string  
+)
+"behavior.rml" 532 13388 13407 "behavior.rml" 532 13388 13412
+type(
+  Icobj.icobj  
+)
+"behavior.rml" 532 13388 13407 "behavior.rml" 532 13388 13419
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 532 13388 13407 "behavior.rml" 532 13388 13423
+type(
+  string  
+)
+"behavior.rml" 532 13388 13424 "behavior.rml" 532 13388 13425
+type(
+  string -> string -> string  
+)
+"behavior.rml" 532 13388 13427 "behavior.rml" 532 13388 13440
+type(
+  int -> string  
+)
+"behavior.rml" 532 13388 13441 "behavior.rml" 532 13388 13442
+type(
+  int ref -> int  
+)
+"behavior.rml" 532 13388 13442 "behavior.rml" 532 13388 13447
+type(
+  int ref  
+)
+"behavior.rml" 532 13388 13441 "behavior.rml" 532 13388 13447
+type(
+  int  
+)
+"behavior.rml" 532 13388 13426 "behavior.rml" 532 13388 13448
+type(
+  string  
+)
+"behavior.rml" 532 13388 13407 "behavior.rml" 532 13388 13448
+type(
+  string  
+)
+"behavior.rml" 533 13452 13460 "behavior.rml" 533 13452 13463
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 533 13452 13471 "behavior.rml" 533 13452 13475
+type(
+  string  
+)
+"behavior.rml" 533 13452 13460 "behavior.rml" 533 13452 13475
+type(
+  unit  
+)
+"behavior.rml" 534 13478 13492 "behavior.rml" 534 13478 13499
+type(
+  ('a , 'b) event  
+)
+"behavior.rml" 535 13501 13502 "behavior.rml" 535 13501 13505
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 535 13501 13513 "behavior.rml" 535 13501 13515
+type(
+  string  
+)
+"behavior.rml" 535 13501 13502 "behavior.rml" 535 13501 13515
+type(
+  unit  
+)
+"behavior.rml" 536 13517 13518 "behavior.rml" 536 13517 13523
+type(
+  int ref  
+)
+"behavior.rml" 536 13517 13524 "behavior.rml" 536 13517 13526
+type(
+  int ref -> int -> unit  
+)
+"behavior.rml" 536 13517 13527 "behavior.rml" 536 13517 13528
+type(
+  int ref -> int  
+)
+"behavior.rml" 536 13517 13528 "behavior.rml" 536 13517 13533
+type(
+  int ref  
+)
+"behavior.rml" 536 13517 13527 "behavior.rml" 536 13517 13533
+type(
+  int  
+)
+"behavior.rml" 536 13517 13534 "behavior.rml" 536 13517 13535
+type(
+  int -> int -> int  
+)
+"behavior.rml" 536 13517 13536 "behavior.rml" 536 13517 13537
+type(
+  int  
+)
+"behavior.rml" 536 13517 13527 "behavior.rml" 536 13517 13537
+type(
+  int  
+)
+"behavior.rml" 536 13517 13518 "behavior.rml" 536 13517 13537
+type(
+  unit  
+)
+"behavior.rml" 537 13540 13553 "behavior.rml" 537 13540 13563
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event  
+)
+"behavior.rml" 537 13540 13565 "behavior.rml" 537 13540 13569
+type(
+  bool  
+)
+"behavior.rml" 538 13571 13588 "behavior.rml" 538 13571 13601
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 538 13571 13602 "behavior.rml" 538 13571 13606
+type(
+  bool  
+)
+"behavior.rml" 538 13571 13587 "behavior.rml" 538 13571 13607
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * bool  
+)
+"behavior.rml" 539 13609 13618 "behavior.rml" 539 13609 13631
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event ->
+  (unit , unit list) event ->
+  string ->
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 539 13609 13632 "behavior.rml" 539 13609 13642
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event  
+)
+"behavior.rml" 539 13609 13643 "behavior.rml" 539 13609 13644
+type(
+  (unit , unit list) event  
+)
+"behavior.rml" 539 13609 13645 "behavior.rml" 539 13609 13649
+type(
+  string  
+)
+"behavior.rml" 539 13609 13618 "behavior.rml" 539 13609 13649
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 540 13651 13664 "behavior.rml" 540 13651 13667
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 540 13651 13664 "behavior.rml" 540 13651 13671
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 540 13651 13664 "behavior.rml" 540 13651 13674
+type(
+  int  
+)
+"behavior.rml" 540 13651 13678 "behavior.rml" 540 13651 13681
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 540 13651 13678 "behavior.rml" 540 13651 13685
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 540 13651 13678 "behavior.rml" 540 13651 13688
+type(
+  int  
+)
+"behavior.rml" 540 13651 13688 "behavior.rml" 540 13651 13689
+type(
+  int -> int -> int  
+)
+"behavior.rml" 540 13651 13689 "behavior.rml" 540 13651 13691
+type(
+  int  
+)
+"behavior.rml" 540 13651 13678 "behavior.rml" 540 13651 13691
+type(
+  int  
+)
+"behavior.rml" 540 13651 13660 "behavior.rml" 540 13651 13692
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 537 13540 13564 "behavior.rml" 540 13651 13693
+type(
+  bool *
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  * bool) *
+  ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * Rml_Graphics.pos  
+)
+"behavior.rml" 542 13704 13710 "behavior.rml" 542 13704 13720
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event  
+)
+"behavior.rml" 542 13704 13722 "behavior.rml" 542 13704 13726
+type(
+  bool  
+)
+"behavior.rml" 543 13728 13751 "behavior.rml" 543 13728 13765
+type(
+  (unit , unit list) event ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 543 13728 13766 "behavior.rml" 543 13728 13767
+type(
+  (unit , unit list) event  
+)
+"behavior.rml" 543 13728 13751 "behavior.rml" 543 13728 13767
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 543 13728 13768 "behavior.rml" 543 13728 13773
+type(
+  bool  
+)
+"behavior.rml" 543 13728 13750 "behavior.rml" 543 13728 13774
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * bool  
+)
+"behavior.rml" 544 13776 13785 "behavior.rml" 544 13776 13801
+type(
+  (unit , unit list) event ->
+  string ->
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 544 13776 13802 "behavior.rml" 544 13776 13803
+type(
+  (unit , unit list) event  
+)
+"behavior.rml" 544 13776 13804 "behavior.rml" 544 13776 13808
+type(
+  string  
+)
+"behavior.rml" 544 13776 13785 "behavior.rml" 544 13776 13808
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 545 13810 13823 "behavior.rml" 545 13810 13826
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 545 13810 13823 "behavior.rml" 545 13810 13830
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 545 13810 13823 "behavior.rml" 545 13810 13833
+type(
+  int  
+)
+"behavior.rml" 545 13810 13833 "behavior.rml" 545 13810 13834
+type(
+  int -> int -> int  
+)
+"behavior.rml" 545 13810 13834 "behavior.rml" 545 13810 13836
+type(
+  int  
+)
+"behavior.rml" 545 13810 13823 "behavior.rml" 545 13810 13836
+type(
+  int  
+)
+"behavior.rml" 545 13810 13840 "behavior.rml" 545 13810 13843
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 545 13810 13840 "behavior.rml" 545 13810 13847
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 545 13810 13840 "behavior.rml" 545 13810 13850
+type(
+  int  
+)
+"behavior.rml" 545 13810 13850 "behavior.rml" 545 13810 13851
+type(
+  int -> int -> int  
+)
+"behavior.rml" 545 13810 13851 "behavior.rml" 545 13810 13853
+type(
+  int  
+)
+"behavior.rml" 545 13810 13840 "behavior.rml" 545 13810 13853
+type(
+  int  
+)
+"behavior.rml" 545 13810 13819 "behavior.rml" 545 13810 13854
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 542 13704 13721 "behavior.rml" 545 13810 13855
+type(
+  bool *
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  * bool) *
+  ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * Rml_Graphics.pos  
+)
+"behavior.rml" 547 13866 13872 "behavior.rml" 547 13866 13882
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event  
+)
+"behavior.rml" 547 13866 13884 "behavior.rml" 547 13866 13888
+type(
+  bool  
+)
+"behavior.rml" 548 13890 13914 "behavior.rml" 548 13890 13925
+type(
+  (unit , unit list) event ->
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 548 13890 13926 "behavior.rml" 548 13890 13927
+type(
+  (unit , unit list) event  
+)
+"behavior.rml" 548 13890 13914 "behavior.rml" 548 13890 13927
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 548 13890 13928 "behavior.rml" 548 13890 13933
+type(
+  bool  
+)
+"behavior.rml" 548 13890 13913 "behavior.rml" 548 13890 13934
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * bool  
+)
+"behavior.rml" 549 13936 13945 "behavior.rml" 549 13936 13958
+type(
+  (unit , unit list) event ->
+  string ->
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 549 13936 13960 "behavior.rml" 549 13936 13961
+type(
+  (unit , unit list) event  
+)
+"behavior.rml" 549 13936 13962 "behavior.rml" 549 13936 13966
+type(
+  string  
+)
+"behavior.rml" 549 13936 13945 "behavior.rml" 549 13936 13966
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 550 13968 13981 "behavior.rml" 550 13968 13984
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 550 13968 13981 "behavior.rml" 550 13968 13988
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 550 13968 13981 "behavior.rml" 550 13968 13991
+type(
+  int  
+)
+"behavior.rml" 550 13968 13995 "behavior.rml" 550 13968 13998
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 550 13968 13995 "behavior.rml" 550 13968 14002
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 550 13968 13995 "behavior.rml" 550 13968 14005
+type(
+  int  
+)
+"behavior.rml" 550 13968 14005 "behavior.rml" 550 13968 14006
+type(
+  int -> int -> int  
+)
+"behavior.rml" 550 13968 14006 "behavior.rml" 550 13968 14008
+type(
+  int  
+)
+"behavior.rml" 550 13968 13995 "behavior.rml" 550 13968 14008
+type(
+  int  
+)
+"behavior.rml" 550 13968 13977 "behavior.rml" 550 13968 14009
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 547 13866 13883 "behavior.rml" 550 13968 14010
+type(
+  bool *
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  * bool) *
+  ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * Rml_Graphics.pos  
+)
+"behavior.rml" 552 14021 14034 "behavior.rml" 552 14021 14044
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event  
+)
+"behavior.rml" 552 14021 14046 "behavior.rml" 552 14021 14050
+type(
+  bool  
+)
+"behavior.rml" 553 14052 14076 "behavior.rml" 553 14052 14089
+type(
+  (unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  (unit , unit list) event * (char , char list) event *
+  (unit , unit list) event * (Icobj.icobj list , Icobj.icobj list list) event
+  -> process  
+)
+"behavior.rml" 553 14052 14090 "behavior.rml" 553 14052 14094
+type(
+  bool  
+)
+"behavior.rml" 553 14052 14075 "behavior.rml" 553 14052 14095
+type(
+  ((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   (unit , unit list) event * (char , char list) event *
+   (unit , unit list) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * bool  
+)
+"behavior.rml" 554 14097 14120 "behavior.rml" 554 14097 14135
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event ->
+  (unit , unit list) event ->
+  string ->
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 554 14097 14136 "behavior.rml" 554 14097 14146
+type(
+  ((bool *
+   (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event
+     * (unit , unit list) event * (char , char list) event *
+     (unit , unit list) event *
+     (Icobj.icobj list , Icobj.icobj list list) event
+    -> process)
+   * bool) *
+   ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process) * Rml_Graphics.pos)
+  , 'e) event  
+)
+"behavior.rml" 554 14097 14147 "behavior.rml" 554 14097 14148
+type(
+  (unit , unit list) event  
+)
+"behavior.rml" 554 14097 14149 "behavior.rml" 554 14097 14153
+type(
+  string  
+)
+"behavior.rml" 554 14097 14120 "behavior.rml" 554 14097 14153
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+  ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+  (Icobj.icobj list , Icobj.icobj list list) event -> process  
+)
+"behavior.rml" 555 14155 14182 "behavior.rml" 555 14155 14185
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 555 14155 14182 "behavior.rml" 555 14155 14189
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 555 14155 14182 "behavior.rml" 555 14155 14192
+type(
+  int  
+)
+"behavior.rml" 555 14155 14192 "behavior.rml" 555 14155 14193
+type(
+  int -> int -> int  
+)
+"behavior.rml" 555 14155 14193 "behavior.rml" 555 14155 14195
+type(
+  int  
+)
+"behavior.rml" 555 14155 14182 "behavior.rml" 555 14155 14195
+type(
+  int  
+)
+"behavior.rml" 555 14155 14199 "behavior.rml" 555 14155 14202
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 555 14155 14199 "behavior.rml" 555 14155 14206
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 555 14155 14199 "behavior.rml" 555 14155 14209
+type(
+  int  
+)
+"behavior.rml" 555 14155 14210 "behavior.rml" 555 14155 14211
+type(
+  int -> int -> int  
+)
+"behavior.rml" 555 14155 14212 "behavior.rml" 555 14155 14214
+type(
+  int  
+)
+"behavior.rml" 555 14155 14199 "behavior.rml" 555 14155 14214
+type(
+  int  
+)
+"behavior.rml" 555 14155 14178 "behavior.rml" 555 14155 14215
+type(
+  Rml_Graphics.pos  
+)
+"behavior.rml" 552 14021 14045 "behavior.rml" 555 14155 14216
+type(
+  bool *
+  (((unit , unit list) event * (Icobj.atticobj , Icobj.atticobj list) event *
+    (unit , unit list) event * (char , char list) event *
+    (unit , unit list) event *
+    (Icobj.icobj list , Icobj.icobj list list) event
+   -> process)
+  * bool) *
+  ((unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event *
+   ('b , 'c) event * (char , char list) event * (unit , 'd) event *
+   (Icobj.icobj list , Icobj.icobj list list) event
+  -> process) * Rml_Graphics.pos  
+)
+"behavior.rml" 566 14291 14303 "behavior.rml" 566 14291 14313
+type(
+  'a -> process  
+)
+"behavior.rml" 566 14291 14314 "behavior.rml" 566 14291 14315
+type(
+  'a  
+)
+"behavior.rml" 569 14334 14346 "behavior.rml" 569 14334 14358
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e -> process  
+)
+"behavior.rml" 569 14334 14360 "behavior.rml" 569 14334 14366
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 569 14334 14367 "behavior.rml" 569 14334 14373
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 569 14334 14374 "behavior.rml" 569 14334 14375
+type(
+  'a  
+)
+"behavior.rml" 569 14334 14376 "behavior.rml" 569 14334 14377
+type(
+  'a  
+)
+"behavior.rml" 569 14334 14378 "behavior.rml" 569 14334 14379
+type(
+  'a  
+)
+"behavior.rml" 569 14334 14380 "behavior.rml" 569 14334 14381
+type(
+  'a  
+)
+"behavior.rml" 569 14334 14359 "behavior.rml" 569 14334 14382
+type(
+  (unit , 'a) event * (Icobj.atticobj , Icobj.atticobj list) event * 
+  'b * 'c * 'd * 'e  
+)
+"behavior.rml" 570 14385 14391 "behavior.rml" 570 14385 14397
+type(
+  Misc.t  
+)
+"behavior.rml" 570 14385 14400 "behavior.rml" 570 14385 14410
+type(
+  string -> Misc.load_option list -> Misc.t  
+)
+"behavior.rml" 570 14385 14411 "behavior.rml" 570 14385 14428
+type(
+  string  
+)
+"behavior.rml" 570 14385 14429 "behavior.rml" 570 14385 14431
+type(
+  Misc.load_option list  
+)
+"behavior.rml" 570 14385 14400 "behavior.rml" 570 14385 14431
+type(
+  Misc.t  
+)
+"behavior.rml" 571 14435 14442 "behavior.rml" 571 14435 14448
+type(
+  (unit , 'a) event  
+)
+"behavior.rml" 572 14450 14472 "behavior.rml" 572 14450 14478
+type(
+  (Icobj.atticobj , Icobj.atticobj list) event  
+)
+"behavior.rml" 572 14450 14480 "behavior.rml" 572 14450 14483
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 573 14488 14490 "behavior.rml" 573 14488 14503
+type(
+  Icobj.atticobj -> Misc.t -> unit  
+)
+"behavior.rml" 573 14488 14504 "behavior.rml" 573 14488 14507
+type(
+  Icobj.atticobj  
+)
+"behavior.rml" 573 14488 14508 "behavior.rml" 573 14488 14514
+type(
+  Misc.t  
+)
+"behavior.rml" 573 14488 14490 "behavior.rml" 573 14488 14514
+type(
+  unit  
+)

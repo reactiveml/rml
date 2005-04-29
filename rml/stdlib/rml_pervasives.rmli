@@ -19,7 +19,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: pervasives.mli,v 1.94 2003/10/08 13:13:33 weis Exp $ *)
+(* $Id: rml_pervasives.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (* Add to ocaml pervasives.mli *)
 

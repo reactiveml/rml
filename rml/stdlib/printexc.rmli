@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: printexc.mli,v 1.11 2001/12/07 13:40:57 xleroy Exp $ *)
+(* $Id: printexc.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (** Facilities for printing exceptions. *)
 

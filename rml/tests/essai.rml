@@ -1,5 +1,0 @@
-let process main_machine {} =
-      print_endline "ESSAI"
-
-let main = main_machine
-

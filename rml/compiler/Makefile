@@ -1,6 +1,6 @@
 BIN = rmlc
 
-DIRECTORIES = global parsing static typing reac lk lco caml main 
+DIRECTORIES = global parsing external static typing reac lk lco caml main 
 
 GLOBAL = asttypes.mli \
 	global/global.ml \
@@ -22,6 +22,10 @@ PARSING = parsing/lexer.mll \
 	parsing/parse_printer.ml \
 	parsing/parser.mly \
 	parsing/syntaxerr.ml \
+
+EXTERNAL = external/lucky.ml \
+	external/lucky_errors.ml \
+	external/external.ml \
 
 STATIC = static/def_static.mli \
 	static/static.ml \
@@ -53,7 +57,7 @@ MAIN = 	main/compiler.cmo \
 	main/errors.cmo \
 	main/main.cmo \
 
-SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(STATIC) $(LK) $(LCO) $(CAML) $(MAIN)
+SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(EXTERNAL) $(STATIC) $(LK) $(LCO) $(CAML) $(MAIN)
 
 OBJ =   global/warnings.cmo \
 	parsing/linenum.cmo \
@@ -72,6 +76,9 @@ OBJ =   global/warnings.cmo \
 	parsing/parser.cmo \
 	parsing/parse.cmo \
 	parsing/parse_printer.cmo \
+	external/lucky_errors.cmo \
+	external/lucky.cmo \
+	external/external.cmo \
 	static/static_errors.cmo \
 	static/static.cmo \
 	reac/reac_ast.cmo \

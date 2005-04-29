@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gc.mli,v 1.40 2004/06/14 13:27:36 doligez Exp $ *)
+(* $Id: gc.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (** Memory management control and statistics; finalised values. *)
 

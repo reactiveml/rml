@@ -7,7 +7,7 @@
 (*  Remarque : Taken from Lucid Synchrone                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: types_printer.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (* Printing a type expression *)
 

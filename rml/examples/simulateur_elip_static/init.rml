@@ -1,0 +1,126 @@
+let nb_instants = ref (-1)
+
+(* simulation space *)
+let max_x = ref 1000
+let max_y = ref 1000
+
+let area_size_x = ref 100
+let area_size_y = ref 100
+
+(* nodes *)
+let nb_nodes = ref 500 
+let coverage_range = ref 100
+let speed = ref 1
+
+(* packets *)
+let elip_proba = ref 100.0
+let elip_forecast = ref 0
+
+let msg_proba = ref 50.0
+let msg_len = ref 1
+
+
+(* outputs *)
+let with_graphics = ref true
+
+(* Set functions *)
+let option_set r v = r := Some v
+
+let set_option r v_opt =
+  match v_opt with
+  | None -> ()
+  | Some v -> r := v
+
+
+let set_size t =
+  set_option max_x t;
+  set_option max_y t
+
+
+let set_density d =
+  let surface = float_of_int (!max_x * !max_y) in
+  let range =
+    int_of_float 
+      (sqrt(d *. surface /. (3.14 *. float_of_int(!nb_nodes))))
+  in
+  coverage_range := range
+
+let set_with_graphics r v_opt =
+  match v_opt with
+  | None -> ()
+  | Some v -> r := not v
+
+
+let set_area t_opt =
+  match t_opt with
+  | None ->
+      area_size_x := 2 * !coverage_range;
+      area_size_y := 2 * !coverage_range
+  | Some t ->
+      area_size_x := t;
+      area_size_y := t
+
+(* Configuration function *)
+let configure () = 
+  let doc = ""
+  and doc_N = "<nb> nombre d'instant de smulation"
+  and doc_D = "<density> densité par zone de couverture"
+  and doc_n = "<nb> nombre de noeuds dans la topologie"
+  and doc_t = "<longueur> longueur d'un cote"
+  and doc_range = "<r> rayon de couverture" 
+  and doc_area = "<longueur> longueur d'un cote d'une area"
+  and doc_o = 
+    "<pref> calcul des stats (<pref> est lepréfixe des fichiers de sortie)"
+  and doc_msg_proba = "<p> probabilité d'émission d'un message"
+  and doc_msg_len = "<n> longueur max d'un message"
+  and doc_elip_proba = "<n> probabilité d'insertion d'une info de elip"
+  and doc_elip_forecast = "<n> distance de prevision"
+  and doc_nox = " sans mode graphique"
+  and doc_node = "<n> numero du noeud observé"
+  and errmsg = "Options are:"
+  in
+  let var_N = ref None
+  and var_D = ref None
+  and var_n = ref None
+  and var_t = ref None
+  and var_range = ref None
+  and var_area = ref None
+  and var_o = ref None
+  and var_msg_proba = ref None
+  and var_msg_len = ref None
+  and var_elip_proba = ref None
+  and var_elip_forecast = ref None
+  and var_node = ref None
+  in
+  Arg.parse
+    [ ("-N", Arg.Int (option_set var_N), doc_N);
+      ("-n", Arg.Int (option_set var_n), doc_n);
+      ("-t", Arg.Int (option_set var_t), doc_t);
+      ("-range", Arg.Int (option_set var_range), doc_range);
+      ("-D", Arg.Float (option_set var_D), doc_D);
+      ("-area", Arg.Int (option_set var_area), doc_area);
+      ("-msg_proba", Arg.Float (option_set var_msg_proba), doc_msg_proba);
+      ("-msg_len", Arg.Int (option_set var_msg_len), doc_msg_len);
+      ("-elip_proba", Arg.Float (option_set var_elip_proba), doc_elip_proba);
+(*      ("-o", Arg.String (option_set var_o), doc_o);*)
+      ("-nox", Arg.Clear with_graphics, doc_nox); 
+      ("-node", Arg.Int (option_set var_node), doc_node);
+    ]
+    (fun s -> raise (Invalid_argument s))
+    errmsg;
+
+  if (!var_D <> None) && (!var_range <> None) then 
+    failwith "-D and -range are not compatible";
+  set_option nb_instants !var_N;
+  set_option nb_nodes !var_n;
+  set_size !var_t;
+  set_option coverage_range !var_range;
+  begin match !var_D with
+  | None -> ()
+  | Some d -> set_density d
+  end;
+  set_area !var_area;
+  set_option elip_proba !var_elip_proba;
+  set_option msg_proba !var_msg_proba;
+  set_option msg_len !var_msg_len
+

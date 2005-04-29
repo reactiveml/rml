@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: nativeint.mli,v 1.17 2004/01/01 16:42:40 doligez Exp $ *)
+(* $Id: nativeint.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 open Int32
 type nativeint

@@ -28,6 +28,8 @@ SRC= rml_pervasives.rmli \
 	lazy.rmli \
 	lexing.rmli \
 	list.rmli \
+	lucaml.rmli \
+	lucaml_nolbl.rmli \
 	marshal.rmli \
 	obj.rmli \
 	parsing.rmli \

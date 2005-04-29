@@ -57,22 +57,24 @@ realclean: clean-distrib
 
 # Making binary distribution 
 DATE=`date -I`
+VERSION=1.03
+
 source-distrib:
 	touch config
 	make realclean
-	mkdir -p distrib/rml-v1.02-$(DATE)
+	mkdir -p distrib/rml-$(VERSION)-$(DATE)
 	cp -r compiler interpreter stdlib emacs examples doc man \
-		distrib/rml-v1.02-$(DATE)
+		distrib/rml-$(VERSION)-$(DATE)
 	cp configure configure.in config.in Makefile install-sh INSTALL \
-		distrib/rml-v1.02-$(DATE)
-	mkdir -p distrib/rml-v1.02-$(DATE)/distrib
+		distrib/rml-$(VERSION)-$(DATE)
+	mkdir -p distrib/rml-$(VERSION)-$(DATE)/distrib
 	cp -r distrib/rml distrib/Makefile.byte distrib/Makefile.opt \
 		distrib/rmlc.in.byte distrib/rmlc.in.opt \
-		distrib/rml-v1.02-$(DATE)/distrib
+		distrib/rml-$(VERSION)-$(DATE)/distrib
 	(cd distrib; \
-	 tar --exclude=CVS -czvf rml-v1.02-$(DATE).tar.gz rml-v1.02-$(DATE); \
-	 rm -rf rml-v1.02-$(DATE); \
-	 mv rml-v1.02-$(DATE).tar.gz ..)
+	 tar --exclude=CVS -czvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
+	 rm -rf rml-$(VERSION)-$(DATE); \
+	 mv rml-$(VERSION)-$(DATE).tar.gz ..)
 
 binary-distrib: binary-distrib.opt
 
@@ -119,7 +121,7 @@ clean-distrib:
 		distrib/rml/emacs \
 		distrib/rml/man \
 	rm -f rml-`./compiler/rmlc -version`.*.tar.gz
-	rm -f rml-v1.02-????-??-??.tar.gz
+	rm -f rml-$(VERSION)-????-??-??.tar.gz
 
 
 

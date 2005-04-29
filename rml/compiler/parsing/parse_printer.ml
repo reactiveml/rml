@@ -7,7 +7,7 @@
 (*  Remarque : Inspired by OCaml                                         *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: parse_printer.ml,v 1.2 2005/03/29 10:15:36 mandel Exp $ *)
 
 open Format
 open Lexing
@@ -385,7 +385,7 @@ let rec impl_item i ppf x =
       line i ppf "Pimpl_let %a\n" fmt_rec_flag rf;
       list i pattern_x_expression_def ppf l;
   | Pimpl_signal (l, eeo) ->
-      line i ppf "Pexpr_signal\n";
+      line i ppf "Pimpl_signal\n";
       list i string_x_type_expression_option ppf l;
       option i expression_x_expression ppf eeo;
   | Pimpl_type (l) ->
@@ -399,6 +399,9 @@ let rec impl_item i ppf x =
       ident i ppf id;
   | Pimpl_open (s) ->
       line i ppf "Pimpl_open %s\n" s;
+  | Pimpl_lucky (id, in_ty_list, out_ty_list, files) ->
+      line i ppf "Pimpl_lucky ... A FAIRE ...\n";
+      
 
 and string_x_string_list_x_type_expression_def i ppf (s,l,td) =
   line i ppf "<def> %a\n" fmt_simple s;

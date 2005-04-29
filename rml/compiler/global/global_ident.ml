@@ -7,7 +7,7 @@
 (*  Remarque : Taken from Lucid Synchrone (names.ml)                     *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: global_ident.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (* global names *)
 

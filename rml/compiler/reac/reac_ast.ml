@@ -7,7 +7,7 @@
 (*  Remarque : taken from CamlLight                                      *)
 (*************************************************************************)
 
-(* $Id$ *) 
+(* $Id: reac_ast.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *) 
 
 (* The abstract syntax for the reac language *)
 
@@ -54,6 +54,9 @@ and expression_desc =
   | Rexpr_pre of pre_kind * expression
   | Rexpr_emit of expression
   | Rexpr_emit_val of expression * expression
+  | Rexpr_signal of 
+      (ident * type_expression option) 
+	* (expression * expression) option * expression
 
 
 (* Process expressions *)

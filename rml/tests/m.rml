@@ -1,3 +1,0 @@
-let process p {inout s} =
-  await immediate s(x) in
-  nothing

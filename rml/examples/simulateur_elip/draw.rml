@@ -57,7 +57,7 @@ let draw_node kind n =
   in
   let _, date = Pos_tbl.get pos_tbl !main_node in
   if date = Pos_tbl.no_info then
-    Graphics.set_color Graphics.yellow
+    Graphics.set_color Graphics.green
   else
     if n.date - date < 0 then
       Graphics.set_color Graphics.blue
@@ -74,8 +74,8 @@ let draw_node kind n =
 	    Graphics.set_color Graphics.black;
   
   Graphics.moveto n.pos.x n.pos.y;
-(*  Graphics.draw_string (string_of_int n.id); *)
-  Graphics.draw_circle n.pos.x n.pos.y 1;
+  Graphics.draw_string (string_of_int n.id); 
+(*  Graphics.draw_circle n.pos.x n.pos.y 1; *)
   Graphics.set_color Graphics.black;
   if n.id = !main_node then
     (Graphics.draw_circle n.pos.x n.pos.y coverage_range;
@@ -140,7 +140,20 @@ let draw_neighborhood self =
     self.neighbors;
   Graphics.set_color Graphics.black
 
-
+let draw_areas () =
+  let x = ref 0 in
+  let y = ref 0 in
+  Graphics.set_color Graphics.black;
+  while !x < max_x do
+    Graphics.moveto !x 0; 
+    Graphics.lineto !x max_y;
+    x := !x + area_size_x 
+  done;
+  while !y < max_y do
+    Graphics.moveto 0 !y; 
+    Graphics.lineto max_x !y;
+    y := !y + area_size_y 
+  done
 
 let search_closer (x,y) all =
   let pos = { x=x; y=y } in
@@ -158,9 +171,9 @@ let search_closer (x,y) all =
   match best_info with
   | None -> !main_node
   | Some info -> info.id
-    
 
-let process draw_simul draw suspend =
+
+let process draw_simul draw suspend new_node kill =
    Graphics.open_graph (" "^(string_of_int max_x)^"x"^(string_of_int max_y));
 (*  Graphics.open_graph "";*)
   Graphics.set_window_title 
@@ -168,9 +181,10 @@ let process draw_simul draw suspend =
   Graphics.auto_synchronize false;
 
   let with_neighborhood = ref false in
+  let with_areas = ref false in
   let routage = ref ELIP in
   let all_infos = ref [] in
-  signal (*suspend,*) refresh in
+  signal refresh in
   signal key, click in
   control
     loop
@@ -185,6 +199,7 @@ let process draw_simul draw suspend =
     Graphics.clear_graph();
     List.iter (draw_node !routage) !all_infos;
     if !with_neighborhood then List.iter draw_neighborhood !all_infos;
+    if !with_areas then draw_areas();
     Graphics.synchronize();
     pause;
     Graphics.synchronize();
@@ -204,33 +219,55 @@ let process draw_simul draw suspend =
   print_newline();
   print_string "\tr: to change protocol location distribution";
   print_newline();
+  print_string "\ta: to create a new node";
+  print_newline();
+  print_string "\tk: to kill a node";
+  print_newline();
+  print_string "\tg: to display areas";
+  print_newline();
 
   loop
     await one key (c) in
     begin
       match c with
-      | 'n' -> 
+      | 'N'| 'n' -> 
 	  with_neighborhood := not !with_neighborhood;
 	  emit refresh
-      | 'p' ->
+      | 'P' | 'p' ->
 	  emit suspend
-      | 'm' ->
+      | 'M' | 'm' ->
 	  print_string "click on a node";
 	  print_newline();
 	  await one click (p) in
 	  main_node := search_closer p !all_infos;
 	  history := [];
 	  emit refresh
-      | 'r' ->
+      | 'R' | 'r' ->
 	  begin
 	    match !routage with
 	    | LE -> routage := ELIP
 	    | ELIP -> routage := LE
 	  end;
 	  emit refresh
-      | 'h' ->
+      | 'H' | 'h' ->
 	  with_history := not !with_history;
 	  history := [];
+	  emit refresh
+      | 'A' | 'a' -> 
+	  print_string "click to create a new node";
+	  print_newline();
+	  await one click (x,y) in
+	  emit new_node {x=x; y=y};
+	  emit refresh
+      | 'K' | 'k' ->
+	  print_string "click on a node";
+	  print_newline();
+	  await one click (p) in
+	  let node = search_closer p !all_infos in
+	  emit kill node;
+	  emit refresh
+      | 'G'| 'g' -> 
+	  with_areas := not !with_areas;
 	  emit refresh
       | _ -> nothing
     end;

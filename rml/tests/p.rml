@@ -1,7 +1,0 @@
-
-
-let process p {} =
-  signal s in
-    run (process {out s} -> emit s 1) {s=s}
-    ||
-    await one s (x) in print_int x; print_newline()

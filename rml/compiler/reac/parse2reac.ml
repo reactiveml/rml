@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: parse2reac.ml,v 1.3 2005/03/29 10:15:36 mandel Exp $ *)
 
 (* The translation of Parse to Reac *)
 
@@ -440,6 +440,13 @@ let rec translate_ml env e =
     | Pexpr_emit_val (s,expr) ->
 	Rexpr_emit_val (translate_ml env s,
 			translate_ml env expr)
+    
+    | Pexpr_signal (sig_typ_list, None, expr) ->
+	(translate_ml_signal env sig_typ_list None expr).expr_desc
+    | Pexpr_signal (sig_typ_list, Some(e1,e2), expr) ->
+	let comb = Some(translate_ml env e1, translate_ml env e2) in
+	(translate_ml_signal env sig_typ_list comb expr).expr_desc
+
 
     | _ -> 
 	raise (Internal (e.pexpr_loc,"Parse2reac.translate_ml: non ML expr"))
@@ -707,6 +714,22 @@ and translate_proc_signal env sig_typ_list comb expr =
 	    translate_proc_signal env sig_typ_list comb expr))
 	Location.none
 
+and translate_ml_signal env sig_typ_list comb expr =
+  match sig_typ_list with
+  | [] -> translate_ml env expr
+  | (s,typ) :: sig_typ_list ->
+      let (id, rtyp) = 
+	Ident.create gen_var s.psimple_id Ident.Sig, 
+	opt_map translate_te typ 
+      in
+      let env = Env.add s.psimple_id id env in
+      make_expr
+	(Rexpr_signal 
+	   ((id, rtyp), 
+	    comb, 
+	    translate_ml_signal env sig_typ_list comb expr))
+	Location.none
+
 (* Add a varpatt in the environment *)
 and add_varpatt env vars =
   List.fold_left 
@@ -796,6 +819,11 @@ let translate_impl_item info_chan item =
     | Pimpl_open s -> 
 	Modules.open_module s;
 	Rimpl_open s
+
+    | Pimpl_lucky _ -> 
+	raise (Internal (item.pimpl_loc,
+			 "Parse2reac.translate_impl_item: must be translated"))
+
 
   in
   make_impl ritem item.pimpl_loc

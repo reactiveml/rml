@@ -7,7 +7,7 @@
 (*  Remarque : taken from OCaml                                          *)
 (*************************************************************************)
 
-(* $Id$ *) 
+(* $Id: ident.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *) 
 
 type kind = 
     Val_ML | Val_RML | Sig 

@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: def_static.mli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 type context = Process | ML
 

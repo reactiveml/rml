@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: caml_ast.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *)
 
 (* The abstract syntax for CAML *)
 

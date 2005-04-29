@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: static.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *)
 
 (* Set the Static/Dynamique status in parse_ast *)
 
@@ -224,22 +224,14 @@ let rec static_expr ctx e =
 	  expr_wrong_static_err e
 
     | Pexpr_signal (_, None, p) ->
-	if ctx = Process
-	then 
-	  let typ1 = static_expr Process p in
-	  Dynamic
-	else
-	  expr_wrong_static_err e
+	static_expr ctx p 
 
     | Pexpr_signal (_, Some(e1,e2), p) ->
-	if ctx = Process
-	then 
-	  let typ1 = static_expr ML e1 in
-	  let typ2 = static_expr ML e2 in
-	  let typ3 = static_expr Process p in
-	  if unify typ1 typ2 = Static
-	  then Dynamic
-	  else expr_wrong_static_err e
+	let typ1 = static_expr ML e1 in
+	let typ2 = static_expr ML e2 in
+	let typ3 = static_expr ctx p in
+	if unify typ1 typ2 = Static
+	then typ3
 	else expr_wrong_static_err e
 
     | Pexpr_process (p) ->

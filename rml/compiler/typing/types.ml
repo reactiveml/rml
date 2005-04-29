@@ -7,7 +7,7 @@
 (*  Remarque : Taken from Lucid Synchrone                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: types.ml,v 1.2 2005/02/04 09:53:44 mandel Exp $ *)
 
 (* Basic operations over types *)
 
@@ -150,7 +150,26 @@ let gen ty =
     ts_desc = ty }
 let non_gen ty = ignore (gen_ty false ty)
 
-
+(* To compute the free type variables in a type *)
+let free_type_vars level ty =
+  let fv = ref [] in
+  let rec free_vars ty =
+    let ty = type_repr ty in
+    match ty.type_desc with
+      Type_var ->
+        if ty.type_level >= level then fv := ty :: !fv
+    | Type_arrow(t1,t2) ->
+	free_vars t1; free_vars t2
+    | Type_product(ty_list) ->
+	List.iter free_vars ty_list
+    | Type_constr(c, ty_list) ->
+	List.iter free_vars ty_list 
+    | Type_link(link) ->
+	free_vars link
+    | Type_process -> ()
+  in
+  free_vars ty;
+  !fv
 
 let s = ref []
 let save v = s := v :: !s

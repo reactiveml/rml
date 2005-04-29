@@ -1,7 +1,0 @@
-(* 28/05/2004 *)
-(* pb localisation *)
-
-let process p {} =
-  let x = 1 in
-  do pause until x
-

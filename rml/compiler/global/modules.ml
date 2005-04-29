@@ -7,7 +7,7 @@
 (*  Remarque : Taken from the Caml Light sources, INRIA                  *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: modules.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *)
 
 open Misc
 open Global_ident

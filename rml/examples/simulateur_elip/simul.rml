@@ -4,15 +4,23 @@ open Node
 open Draw  
 
 
-
-let rec process make_nodes n =
-  if n > 0 then
+let process make_nodes n =
+  for i = 1 to n dopar
     let pos = { x = Random.int max_x;
 		y = Random.int max_y } 
     in
-    run (node pos (Move.random_waypoint 200 pos) Msg.make)
-    ||
-    run (make_nodes (n-1))
+    run (node (get_new_id()) pos (Move.random_waypoint 200 pos) Msg.make)
+  done
+
+let process make_preemptible_nodes n kill=
+  for i = 1 to n dopar
+    let pos = { x = Random.int max_x;
+		y = Random.int max_y } 
+    in
+    run (Dynamic.preemptible_node (get_new_id())
+	   pos (Move.random_waypoint 200 pos) Msg.make kill)
+  done
+
 
 
 let process main =
@@ -20,12 +28,24 @@ let process main =
   Random.self_init ();
   run Area.make_areas;
   signal suspend in
+  signal start in
+  signal new_node, kill in
   control
-    run (make_nodes nb_nodes)
+(*    run (make_nodes nb_nodes) *)
+    run (make_preemptible_nodes nb_nodes kill)
+    ||
+    run (Dynamic.add new_node start)
+    ||
+    loop
+      emit start;
+      pause;
+      pause;
+      pause
+    end
   with suspend
   ||
   (if with_graphics then
-    run (draw_simul draw suspend))
+    run (draw_simul draw suspend new_node kill))
   ||
   if nb_instants > 0 then
     begin

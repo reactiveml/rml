@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: marshal.mli,v 1.13 2004/01/01 16:42:40 doligez Exp $ *)
+(* $Id: marshal.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (** Marshaling of data structures.
 

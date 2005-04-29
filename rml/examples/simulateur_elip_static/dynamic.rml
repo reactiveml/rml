@@ -1,0 +1,22 @@
+open Position
+open Global
+open Node
+
+let process preemptible_node pos_init move make_msg kill =
+  do 
+    run (node pos_init move make_msg)
+  until kill done
+
+
+let rec process add new_node start =
+  await new_node (pos) in
+  run (add new_node start)
+  ||
+  await immediate start;
+  let pos = { x = Random.int max_x;
+	      y = Random.int max_y } 
+  in
+  run (node pos 
+            (Move.random_waypoint (max_x/4) pos) 
+             Msg.make)
+

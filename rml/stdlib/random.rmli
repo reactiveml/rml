@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: random.mli,v 1.16 2003/06/24 09:50:23 xleroy Exp $ *)
+(* $Id: random.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (** Pseudo-random number generators (PRNG). *)
 

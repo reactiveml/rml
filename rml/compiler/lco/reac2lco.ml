@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: reac2lco.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *)
 
 (* The translation of Reac to Lco *)
 
@@ -218,6 +218,14 @@ let rec translate_ml e =
 
     | Rexpr_emit_val (s, e) -> 
 	Coexpr_emit_val (translate_ml s, translate_ml e)
+
+    | Rexpr_signal ((s,typ), comb, e) ->
+	Coexpr_signal ((s, opt_map translate_te typ),
+		       opt_map 
+			 (fun (e1,e2) -> 
+			   translate_ml e1, translate_ml e2) comb,
+		       translate_ml e)
+
   in
   make_expr coexpr e.expr_loc
 

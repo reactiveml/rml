@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: callback.mli,v 1.5 2001/12/07 13:40:50 xleroy Exp $ *)
+(* $Id: callback.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (** Registering Caml values with the C runtime.
 

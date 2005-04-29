@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: misc.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *)
 
 (* version of the compiler *)
 let version = VERSION

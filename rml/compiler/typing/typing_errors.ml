@@ -7,7 +7,7 @@
 (*  Remarque : Taken from Lucid Synchrone                                *)
 (*************************************************************************)
 
-(* $Id$ *)
+(* $Id: typing_errors.ml,v 1.2 2005/02/04 09:53:44 mandel Exp $ *)
 
 (* Printing of error messages during typing *)
 
@@ -175,6 +175,15 @@ let label_not_mutable_err exp lbl =
     Global_ident.print_oc lbl;
   raise Error
 
+(* Top level *)
+let cannot_generalize_err expr =
+  Printf.eprintf 
+    "%aThe type of this expression, %a,\n\
+    contains type variables that cannot be generalized"
+    Location.print_oc expr.expr_loc
+    Types_printer.output expr.expr_type;
+  raise Error
+;;
 
 (* Warnings *)
 let partial_apply_warning loc =
