@@ -6,7 +6,7 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id: lco_ast.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *) 
+(* $Id: lco_ast.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *) 
 
 (* The abstract syntax for the Lco language *)
 
@@ -42,7 +42,7 @@ and expression_desc =
   | Coexpr_assert of expression
   | Coexpr_ifthenelse of expression * expression * expression
   | Coexpr_match of expression * (pattern * expression) list
-  | Coexpr_when of expression * expression
+  | Coexpr_when_match of expression * expression
   | Coexpr_while of expression * expression
   | Coexpr_for of 
       ident * expression * expression * direction_flag * expression
@@ -51,6 +51,9 @@ and expression_desc =
   | Coexpr_pre of pre_kind * expression
   | Coexpr_emit of expression
   | Coexpr_emit_val of expression * expression
+  | Coexpr_signal of 
+      (ident * type_expression option) 
+	* (expression * expression) option * expression
 
 (* Process expressions *)
 and process =
@@ -59,6 +62,7 @@ and process =
 and process_desc =
   | Coproc_nothing
   | Coproc_pause
+  | Coproc_halt
   | Coproc_compute of expression
   | Coproc_emit of expression
   | Coproc_emit_val of expression * expression
@@ -68,23 +72,35 @@ and process_desc =
   | Coproc_fordopar of 
       ident * expression * expression * direction_flag * process
   | Coproc_seq of process * process
-  | Coproc_par of process * process
+  | Coproc_par of process list
   | Coproc_merge of process * process
   | Coproc_signal of 
       (ident * type_expression option) 
 	* (expression * expression) option * process
   | Coproc_def of (pattern * expression) * process
+  | Coproc_def_dyn of (pattern * process) * process
+  | Coproc_def_and_dyn of (pattern * process) list * process
   | Coproc_run of expression 
-  | Coproc_until of expression * process * (pattern * process) option
-  | Coproc_when of expression * process
-  | Coproc_control of expression * process
+  | Coproc_until of event_config * process * (pattern * process) option
+  | Coproc_when of event_config * process
+  | Coproc_control of event_config * process
   | Coproc_get of expression * pattern * process
-  | Coproc_present of expression * process * process
+  | Coproc_present of event_config * process * process
   | Coproc_ifthenelse of expression * process * process
   | Coproc_match of expression * (pattern * process) list
-  | Coproc_await of immediate_flag * expression
+  | Coproc_when_match of expression * process
+  | Coproc_await of immediate_flag * event_config
   | Coproc_await_val of 
       immediate_flag * await_kind * expression * pattern * process
+
+(* event configuration *)
+and event_config =
+    { coconf_desc: event_config_desc;
+      coconf_loc: Location.t; }
+and event_config_desc =
+  | Coconf_present of expression
+  | Coconf_and of event_config * event_config
+  | Coconf_or of event_config * event_config
 
 (* Patterns *)
 and pattern =
@@ -115,7 +131,7 @@ and type_expression_desc =
   | Cotype_arrow of type_expression * type_expression 
   | Cotype_product of type_expression list                  
   | Cotype_constr of type_description global * type_expression list
-  | Cotype_process 
+  | Cotype_process of type_expression
 
 and type_declaration =
   | Cotype_abstract

@@ -46,3 +46,15 @@ let multiply_bound_variable_err x loc =
     Location.print loc
     x;
   raise Error
+
+let orpat_vars loc =
+  Format.eprintf 
+    "%aVariables must occur on both sides of this | pattern.\n"
+    Location.print loc;
+  raise Error
+
+let event_config_err loc =
+  Format.eprintf 
+    "%aEvent configuration outside of a await, present, until, control or when.\n"
+    Location.print loc;
+  raise Error

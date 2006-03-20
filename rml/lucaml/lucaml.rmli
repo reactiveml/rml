@@ -1,0 +1,51 @@
+(*-----------------------------------------------------------------------
+** Copyright (C) - Verimag.
+** This file may only be copied under the terms of the GNU Library General
+** Public License
+**-----------------------------------------------------------------------
+**
+** File: luckyCaml.ml
+** Author: jahier@imag.fr
+*)
+
+(** Lucky ocaml API *)
+
+
+type name = string
+type value = F of float | I of int | B of bool
+type subst = name * value
+
+type inputs  = subst list
+type outputs = subst list
+type locals  = subst list
+
+type solution = outputs * locals
+
+
+(* Abtract state containing the Lucky runtime information. A step in Lucky
+   machine updates this state.
+*)
+type state
+
+
+val make : 
+  (int) ->      (* to fix a seed for the pseudo-random generator *)
+  (bool) ->     (* favour fairness over efficiency *)
+  (string) ->     (* in order to use a preprocessor before parsing *) 
+  (bool) ->  
+  string list ->      (* list of ".luc" file names *)
+    state             (* initial state of the machine *)
+
+(** To indicate whether the point used to perform the step is
+  drawn inside, at edges, or at vertices of the convex hull of
+  numeric solutions; the step mode is used iff at least one 
+  controllable variable is numeric.  
+*)
+type step_mode = StepInside | StepEdges | StepVertices
+
+(** the default step mode is StepInside *)
+val step : (step_mode) -> state -> inputs -> state * solution
+
+(* side-effect version of step *)
+val step_se : (step_mode) -> state ref -> inputs -> solution
+

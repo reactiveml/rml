@@ -3,21 +3,25 @@ SAMPLING=-1
 
 all: simul simul.opt
 
-rml:
-	rmlc init.rml
-	rmlc position.rml
-	rmlc pos_tbl.rmli
-	rmlc global.rml
-	rmlc area.rml
-	rmlc rml_graphics.rml
-	rmlc draw.rml
-	rmlc move.rml
-	rmlc msg.rml
-	rmlc routing.rml
-	rmlc node.rml
-	rmlc -s main -n $(N) -sampling $(SAMPLING) simul.rml
+link:
+	- ln -s pos_tbl_array_dynamic.rml pos_tbl.ml
 
-cmo: rml
+rml:
+	rmlc $(RMLCFLAGS) init.rml
+	rmlc $(RMLCFLAGS) position.rml
+	rmlc $(RMLCFLAGS) pos_tbl.rmli
+	rmlc $(RMLCFLAGS) global.rml
+	rmlc $(RMLCFLAGS) area.rml
+	rmlc $(RMLCFLAGS) rml_graphics.rml
+	rmlc $(RMLCFLAGS) draw.rml
+	rmlc $(RMLCFLAGS) move.rml
+	rmlc $(RMLCFLAGS) msg.rml
+	rmlc $(RMLCFLAGS) routing.rml
+	rmlc $(RMLCFLAGS) node.rml
+	rmlc $(RMLCFLAGS) dynamic.rml
+	rmlc $(RMLCFLAGS) -s main -n $(N) -sampling $(SAMPLING) simul.rml
+
+cmo: rml link
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) init.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) position.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) pos_tbl.mli
@@ -30,6 +34,7 @@ cmo: rml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) msg.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) routing.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) node.ml
+	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) dynamic.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) simul.ml
 
 cmx: rml
@@ -45,6 +50,7 @@ cmx: rml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) msg.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) routing.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) node.ml
+	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) dynamic.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) simul.ml
 
 simul: cmo
@@ -62,6 +68,7 @@ simul: cmo
 		msg.cmo \
 		routing.cmo \
 		node.cmo \
+		dynamic.cmo \
 		simul.cmo 
 
 simul.opt: cmx
@@ -79,6 +86,7 @@ simul.opt: cmx
 		msg.cmx \
 		routing.cmx \
 		node.cmx \
+		dynamic.cmx \
 		simul.cmx 
 
 clean:
@@ -94,9 +102,10 @@ clean:
 	msg.ml \
 	routing.ml \
 	node.ml \
+	dynamic.ml \
 	simul.ml 
 
 cleanall: clean
-	rm -f simul simul.opt *~
+	rm -f simul simul.opt pos_tbl.ml *~
 
 realclean: cleanall

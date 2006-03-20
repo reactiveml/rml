@@ -1,8 +1,19 @@
-lco_ctrl_tree.cmo: lco_interpreter.cmi 
-lco_ctrl_tree.cmx: lco_interpreter.cmi 
-lco_ctrl_tree.old.cmo: lco_interpreter.cmi 
-lco_ctrl_tree.old.cmx: lco_interpreter.cmi 
-lk_rewrite_debug.cmo: lk_interpreter.cmi 
-lk_rewrite_debug.cmx: lk_interpreter.cmi 
-lk_rewrite.cmo: lk_interpreter.cmi 
-lk_rewrite.cmx: lk_interpreter.cmi 
+lco_interpreter.cmi: sig_env.cmo 
+implantation.cmo: sig_env.cmo lco_rewrite.cmo lco_ctrl_tree.cmo 
+implantation.cmx: sig_env.cmx lco_rewrite.cmx lco_ctrl_tree.cmx 
+lco_ctrl_tree.01.cmo: lco_interpreter.cmi 
+lco_ctrl_tree.01.cmx: lco_interpreter.cmi 
+lco_ctrl_tree.02.cmo: lco_interpreter.cmi 
+lco_ctrl_tree.02.cmx: lco_interpreter.cmi 
+lco_ctrl_tree.03.cmo: sig_env.cmo 
+lco_ctrl_tree.03.cmx: sig_env.cmx 
+lco_ctrl_tree.cmo: sig_env.cmo 
+lco_ctrl_tree.cmx: sig_env.cmx 
+lco_rewrite.01.cmo: lco_interpreter.cmi 
+lco_rewrite.01.cmx: lco_interpreter.cmi 
+lco_rewrite.02.cmo: sig_env.cmo 
+lco_rewrite.02.cmx: sig_env.cmx 
+lco_rewrite.cmo: sig_env.cmo 
+lco_rewrite.cmx: sig_env.cmx 
+lk_interpreter.cmo: sig_env.cmo 
+lk_interpreter.cmx: sig_env.cmx 

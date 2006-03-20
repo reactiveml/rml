@@ -68,4 +68,4 @@ let wrap parsing_fun lexbuf =
 
 let implementation = wrap Parser.implementation
 and interface = wrap Parser.interface
-
+and interactive = wrap Parser.interactive

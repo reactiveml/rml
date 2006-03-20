@@ -50,7 +50,8 @@ let process pacman_clavier key_push new_move pacman_pos new_pos abandon =
 
 let process pacman_affichage pacman_pos new_pos affichage new_move nbclignote =
   loop
-    await new_pos;
+    pause;
+    await immediate new_pos;
     let anc_pos = List.hd (pre ?pacman_pos) in
     pause;
     emit affichage [ My_image(get_brique anc_pos, pos_to_coord anc_pos)];
@@ -125,7 +126,8 @@ let process pacman_collision coll nb_inv nbclignote lostlive =
   (* Attend une collision et tue le pacman
      si il n'est pas invincible *)
   loop
-    await coll;
+    pause;
+    await immediate coll;
     await immediate one nb_inv (nb) in
     await immediate one nbclignote (n) in
     if n = 0 && nb = 0 then
@@ -285,26 +287,33 @@ let process creer_scene graph key_push quitter =
     run (charge_table_to_X graph);
     pause;
     do
-      run (arene_jeu graph key_push
-                     victoire defaite abandon
-		     nbvie nbpoint nbmt)
-    until 
-    | victoire ->
-                emit graph [My_texte("Vous avez GAGNE !!! ('c' pour continuer)",
-                                     Graphics.red,{xi=150;yi=520})]
-    | abandon (_) ->
-            emit graph
-                 [My_texte("Vous avez abandonne X-( !!! ('r' pour recommencer)",
-                        Graphics.red,{xi=150;yi=520})];
-    | defaite (_) -> emit graph
-                          [My_texte("Vous avez perdu !! ('r' pour recommencer)",
-                                    Graphics.red,{xi=150;yi=520})]
+      do
+	do
+	  run (arene_jeu graph key_push
+               victoire defaite abandon
+	       nbvie nbpoint nbmt)
+	until 
+	| defaite (_) -> emit graph
+            [My_texte("Vous avez perdu !! ('r' pour recommencer)",
+                      Graphics.red,{xi=150;yi=520})]
+	done
+      until
+      | abandon (_) ->
+          emit graph
+          [My_texte("Vous avez abandonne X-( !!! ('r' pour recommencer)",
+                    Graphics.red,{xi=150;yi=520})];
+      done
+    until
+	| victoire ->
+            emit graph [My_texte("Vous avez GAGNE !!! ('c' pour continuer)",
+                                 Graphics.red,{xi=150;yi=520})]
     done;
   (* On attend la decision de l'utilisateur *)
     let touche = if pre victoire then 'c' else 'r' in
     do
       loop
-        await one key_push (s) in
+	pause;
+        await immediate one key_push (s) in
         (match s with
          | 'q' -> emit quitter
 (*         | k when k = touche -> emit continue;*)

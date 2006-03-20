@@ -7,7 +7,7 @@
 (*  Remarque : inspired by CamlLight                                     *)
 (*************************************************************************)
 
-(* $Id: parse_ast.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
+(* $Id: parse_ast.ml,v 1.2 2005/03/29 10:15:36 mandel Exp $ *)
 
 (* The abstract syntax for the parsed language *)
 
@@ -22,9 +22,8 @@ and simple_ident =
 
 (* Expressions *)
 type expression =
-    {pexpr_desc: expression_desc;
-     pexpr_loc: Location.t;
-     mutable pexpr_static: Def_static.static;}
+    { pexpr_desc: expression_desc;
+      pexpr_loc: Location.t; }
 and expression_desc =
   | Pexpr_ident of ident
   | Pexpr_constant of immediate
@@ -52,6 +51,7 @@ and expression_desc =
   | Pexpr_seq of expression * expression
   | Pexpr_nothing
   | Pexpr_pause
+  | Pexpr_halt
   | Pexpr_emit of expression
   | Pexpr_emit_val of expression * expression
   | Pexpr_loop of expression
@@ -63,16 +63,22 @@ and expression_desc =
   | Pexpr_process of expression
   | Pexpr_run of expression 
   | Pexpr_until of 
-      expression * expression * (pattern * expression) option 
-  (* signal      * body       * handler *)
-  | Pexpr_when of expression * expression
-  | Pexpr_control of expression * expression
+      event_config * expression * (pattern * expression) option 
+  (* signal        * body       * handler *)
+  | Pexpr_when of event_config * expression
+  | Pexpr_control of event_config * expression
   | Pexpr_get of expression 
-  | Pexpr_present of expression * expression * expression
-  | Pexpr_await of immediate_flag * expression
+  | Pexpr_present of event_config * expression * expression
+  | Pexpr_await of immediate_flag * event_config
   | Pexpr_await_val of 
       immediate_flag * await_kind * expression * pattern * expression
   | Pexpr_pre of pre_kind * expression
+(* event configuration *)
+  | Pconf_present of expression
+  | Pconf_and of event_config * event_config
+  | Pconf_or of event_config * event_config
+
+and event_config = expression
 
 (* Patterns *)
 and pattern =
@@ -99,7 +105,7 @@ and type_expression_desc =
   | Ptype_arrow of type_expression * type_expression
   | Ptype_tuple of type_expression list
   | Ptype_constr of ident * type_expression list
-  | Ptype_process 
+  | Ptype_process of type_expression
 
 and type_declaration = 
   | Ptype_abstract
@@ -123,6 +129,11 @@ and impl_desc =
   | Pimpl_exn of simple_ident * type_expression option
   | Pimpl_exn_rebind of simple_ident * ident
   | Pimpl_open of string
+  | Pimpl_lucky of 
+      simple_ident * 
+	(simple_ident * type_expression) list * (* inputs: (id * ty) *)
+	(simple_ident * type_expression) list * (* outputs: (id * ty) *)
+	string list (* files *)
 
 (* Signature *)
 type interface = intf_item list

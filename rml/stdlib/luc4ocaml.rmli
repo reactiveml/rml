@@ -1,0 +1,68 @@
+(*-----------------------------------------------------------------------
+** Copyright (C) - Verimag.
+** This file may only be copied under the terms of the GNU Library General
+** Public License
+**-----------------------------------------------------------------------
+**
+** File: luc4ocaml.ml
+** Author: jahier@imag.fr
+*)
+
+(** Lucky ocaml API *)
+
+
+type var_name = string
+type value = F of float | I of int | B of bool
+type subst = var_name * value
+
+type inputs  = subst list
+type outputs = subst list
+type locals  = subst list
+
+type solution = outputs * locals
+
+
+(** Abtract state containing the Lucky runtime information. A step in Lucky
+   machine updates this state.
+*)
+type state
+
+
+(** Builds the initial state of the Lucky machine *)
+val make : 
+  (int) ->      (* to fix a seed for the pseudo-random generator *)
+  (bool) ->     (* favour fairness over efficiency *)
+  (string) ->     (* in order to use a preprocessor before parsing *) 
+  (int) ->  (* verbose *)
+  (int) ->  (* precision *)
+  string list ->      (* list of ".luc" file names *)
+    state
+
+(** To indicate whether the point used to perform the step is
+  drawn inside, at edges, or at vertices of the convex hull of
+  numeric solutions; the step mode is used iff at least one 
+  controllable variable is numeric.  
+*)
+
+type step_mode = StepInside | StepEdges | StepVertices
+
+(** the default step mode is StepInside *)
+val step : (step_mode) -> state -> inputs -> state * solution
+
+(** side-effect version of step *)
+val step_se : (step_mode) -> state ref -> inputs -> solution
+
+
+
+(** Reads from an in_channel Lucky inputs in RIF 
+
+nb: RIF = Reactive Input Format
+  It is the input/output format of most Lustre/verimag tools.
+
+*)
+val rif_read : in_channel -> state -> inputs * state
+
+
+
+(** Pretty-print *)
+val string_of_value : value -> string

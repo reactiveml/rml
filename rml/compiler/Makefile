@@ -1,8 +1,9 @@
 BIN = rmlc
 
-DIRECTORIES = global parsing static typing reac lk lco caml main 
+DIRECTORIES = global parsing external static typing reac lco lk caml main 
 
-GLOBAL = asttypes.mli \
+
+GLOBAL = global/asttypes.mli \
 	global/global.ml \
 	global/global_ident.ml \
 	global/ident.ml \
@@ -23,13 +24,19 @@ PARSING = parsing/lexer.mll \
 	parsing/parser.mly \
 	parsing/syntaxerr.ml \
 
+EXTERNAL = external/lucky.ml \
+	external/lucky_errors.ml \
+	external/external.ml \
+
 STATIC = static/def_static.mli \
 	static/static.ml \
 	static/static_errors.ml \
 
 REAC =	reac/binding_errors.ml \
 	reac/parse2reac.ml \
+	reac/reac2reac.ml \
 	reac/reac_ast.ml \
+	reac/reac_misc.ml \
 
 TYPING = typing/def_types.ml \
 	typing/stypes.ml \
@@ -38,22 +45,27 @@ TYPING = typing/def_types.ml \
 	typing/typing.ml \
 	typing/typing_errors.ml \
 
-LK = 	lk/lk_ast.ml \
-	lk/reac2lk.ml \
 
 LCO =	lco/lco_ast.ml \
+	lco/lco_misc.ml \
 	lco/reac2lco.ml \
 
+LK  =	lk/lk_ast.ml \
+	lk/reac2lk.ml \
+
 CAML = 	caml/caml_ast.ml \
-	caml/lk2caml.ml \
+	caml/caml_misc.ml \
 	caml/lco2caml.ml \
-	caml/print_caml_src.cmo \
+	caml/lk2caml.ml \
+	caml/print_caml_src.ml \
 
-MAIN = 	main/compiler.cmo \
-	main/errors.cmo \
-	main/main.cmo \
+MAIN = 	main/compiler.ml \
+	main/errors.ml \
+	main/interactive.ml \
+	main/main.ml \
 
-SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(STATIC) $(LK) $(LCO) $(CAML) $(MAIN)
+SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(EXTERNAL) $(STATIC) $(LCO) $(LK) $(CAML) $(MAIN)
+
 
 OBJ =   global/warnings.cmo \
 	parsing/linenum.cmo \
@@ -72,28 +84,37 @@ OBJ =   global/warnings.cmo \
 	parsing/parser.cmo \
 	parsing/parse.cmo \
 	parsing/parse_printer.cmo \
+	external/lucky_errors.cmo \
+	external/lucky.cmo \
+	external/external.cmo \
 	static/static_errors.cmo \
 	static/static.cmo \
 	reac/reac_ast.cmo \
 	reac/binding_errors.cmo \
 	typing/types.cmo \
+	reac/reac_misc.cmo \
 	reac/parse2reac.cmo \
+	reac/reac2reac.cmo \
 	global/initialization.cmo \
 	typing/types_printer.cmo \
 	typing/stypes.cmo \
 	typing/typing_errors.cmo \
 	typing/typing.cmo \
+	lco/lco_ast.cmo \
+	lco/lco_misc.cmo \
+	lco/reac2lco.cmo \
 	lk/lk_ast.cmo \
 	lk/reac2lk.cmo \
-	lco/lco_ast.cmo \
-	lco/reac2lco.cmo \
 	caml/caml_ast.cmo \
-	caml/lk2caml.cmo \
+	caml/caml_misc.cmo \
 	caml/lco2caml.cmo \
+	caml/lk2caml.cmo \
 	caml/print_caml_src.cmo \
 	main/errors.cmo \
 	main/compiler.cmo \
+	main/interactive.cmo \
 	main/main.cmo \
+
 
 OBJ_OPT = $(OBJ:.cmo=.cmx)
 

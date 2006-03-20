@@ -38,14 +38,12 @@ open Reac_ast;;
 type type_info =
     Ti_patt   of pattern
   | Ti_expr  of expression
-  | Ti_proc  of process
 ;;
 
 let get_location ti =
   match ti with
     Ti_patt p   -> p.patt_loc
   | Ti_expr e  -> e.expr_loc
-  | Ti_proc p -> p.proc_loc
 ;;
 
 let type_info = ref ([] : type_info list);;
@@ -106,7 +104,6 @@ let rec printtyp_reset_maybe loc =
 
 let print_info oc pp ti =
   match ti with
-  | Ti_proc _ -> ()
   | Ti_patt {patt_loc = loc; patt_type = typ}
   | Ti_expr {expr_loc = loc; expr_type = typ} ->
       print_position pp loc.loc_start;

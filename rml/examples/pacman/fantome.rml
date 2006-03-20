@@ -28,13 +28,15 @@ let process affichage_fantome text_fant fant_pos nb_inv bouge_fant affichage =
        await immediate bouge_fant;
        (* On le fait bouger *)
        let anc_pos = List.hd (pre ?fant_pos) in
-       await one fant_pos (pos) in
+       pause;
+       await immediate one fant_pos (pos) in
        emit affichage [My_image(get_brique anc_pos, pos_to_coord anc_pos);
                        My_image(text_aff, pos_to_coord pos)];
        
        pause;
        await immediate bouge_fant;
-       await one fant_pos (pos) in
+       pause;
+       await immediate one fant_pos (pos) in
        (* Fait le clignoter quand le pacman n'est
           presque plus invincible *)
        let image = if (pre ?nb_inv) > [1] && (pre ?nb_inv) <= [10] then

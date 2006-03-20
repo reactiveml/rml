@@ -50,7 +50,12 @@ class name_generator =
       counter <- i
   end
 
-let currentid = ref 0
+let gen_var = new name_generator
+let gen_constr = new name_generator
+let gen_type = new name_generator
+let gen_label = new name_generator
+
+
 
 let create gen s k =
   {id = gen#name;

@@ -59,8 +59,8 @@ let rec arrow_list ty_l ty_res =
   | [ty] -> arrow ty ty_res
   | ty :: ty_l -> arrow ty (arrow_list ty_l ty_res)
 
-let process () =
-  make_type (Type_process)
+let process ty =
+  make_type (Type_process ty)
 
 
 let no_type_expression = 
@@ -137,8 +137,8 @@ let rec gen_ty is_gen ty =
 	  notgeneric ty_list
   | Type_link(link) ->
       ty.type_level <- gen_ty is_gen link
-  | Type_process ->
-      ty.type_level <- notgeneric
+  | Type_process(ty) ->
+      ty.type_level <- gen_ty is_gen ty
   end;
   ty.type_level
 
@@ -166,7 +166,7 @@ let free_type_vars level ty =
 	List.iter free_vars ty_list 
     | Type_link(link) ->
 	free_vars link
-    | Type_process -> ()
+    | Type_process(ty) -> free_vars ty
   in
   free_vars ty;
   !fv
@@ -208,8 +208,12 @@ let rec copy ty =
       then
 	constr name (List.map copy ty_list)
       else ty
-  | Type_process ->
-      ty
+  | Type_process(ty) ->
+      if level = generic
+      then
+	process (copy ty)
+      else
+	ty
 
 (* instanciation *)
 let instance { ts_desc = ty } =
@@ -252,12 +256,13 @@ let rec occur_check level index ty =
     | Type_constr(name, ty_list) ->
  	List.iter check ty_list
     | Type_link(link) -> check link
-    | Type_process -> ()
+    | Type_process(ty) -> check ty
   in check ty
 
 
 (* type constructor equality *)
 let same_type_constr c1 c2 = Global_ident.same c1.gi c2.gi
+
 
 (* Expansion of an abbreviation *)
 let bind_variable ty1 ty2 =
@@ -307,7 +312,7 @@ let rec unify expected_ty actual_ty =
 	  unify (expand_abbrev params body args) actual_ty
       | _, Type_constr({info={constr_abbr=Constr_abbrev(params,body)}},args) ->
 	  unify expected_ty (expand_abbrev params body args) 
-      | Type_process, Type_process -> ()
+      | Type_process(ty1), Type_process(ty2) -> unify ty1 ty2
       | _ -> raise Unify
 
 

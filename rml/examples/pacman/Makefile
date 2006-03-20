@@ -5,6 +5,22 @@ CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
 RMLC = rmlc
 INTERPRETERDIR=`$(RMLC) -where`
+CAMLIMAGESDIR=-I +camlimages
+# CAMLIMAGESDIR=-I $(HOME)/Ocaml/camlimages-2.2/ps \
+# -I $(HOME)/Ocaml/camlimages-2.2/bmp \
+# -I $(HOME)/Ocaml/camlimages-2.2/gif \
+# -I $(HOME)/Ocaml/camlimages-2.2/png \
+# -I $(HOME)/Ocaml/camlimages-2.2/ppm \
+# -I $(HOME)/Ocaml/camlimages-2.2/xpm \
+# -I $(HOME)/Ocaml/camlimages-2.2/jpeg \
+# -I $(HOME)/Ocaml/camlimages-2.2/tiff \
+# -I $(HOME)/Ocaml/camlimages-2.2/corelib \
+# -I $(HOME)/Ocaml/camlimages-2.2/graphics \
+# -I $(HOME)/Ocaml/camlimages-2.2/lablgtk \
+# -I $(HOME)/Ocaml/camlimages-2.2/xvthumb \
+# -I $(HOME)/Ocaml/camlimages-2.2/freetype2 \
+# -I $(HOME)/Ocaml/camlimages-2.2/lablgtk2 \
+
 
 SAMPLING = 0.02
 
@@ -30,7 +46,7 @@ MLINTER = pacman.ml moteur.ml main.ml fantome.ml affichage.ml
 # Executable :
 EXEC = pacman
 # Librairie de linkage :
-LIBS = unix.cma graphics.cma -I +camlimages ci_core.cma ci_graphics.cma ci_bmp.cma $(INTERPRETERDIR)/$(INTERPRETER).cma
+LIBS = unix.cma graphics.cma $(CAMLIMAGESDIR) ci_core.cma ci_graphics.cma ci_bmp.cma $(INTERPRETERDIR)/$(INTERPRETER).cma
 
 all: $(EXEC)
 
@@ -46,7 +62,7 @@ affichage.ml: affichage.rml
 fantome.ml:fantome.rml convenient.rzi
 
 misc.cmo:misc.ml misc.cmi
-	$(OCAMLC) -c -I +camlimages $<
+	$(OCAMLC) -c $(CAMLIMAGESDIR) $<
 
 convenient.cmo:convenient.ml convenient.cmi
 

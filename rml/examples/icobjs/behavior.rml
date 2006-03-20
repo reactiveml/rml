@@ -246,7 +246,8 @@ let process ptrashnoclone detruit (getatt,icoatt,a_click,_,getlist,listico) =
   await immediate one icoatt (att) in
   att_set_image att imloop;
   loop
-      await a_click;
+      pause;
+      await immediate a_click;
       emit getlist;
       await immediate one listico (l) in
       let objs = get_other (geticobj_under l att) att in
@@ -257,7 +258,8 @@ let process ptrashnoclone detruit (getatt,icoatt,a_click,_,getlist,listico) =
 (* L'attente d'activation *)
 
 let rec process pclonemouse (_,_,a_click,_,_,_) =
-   await a_click;;
+  pause;
+  await immediate a_click;;
 
 
    
@@ -332,7 +334,8 @@ let process copy_behav att imdefault imbuilding imloop outbehav a_click getlist 
   att_set_image att imdefault;
   (*********) 
   loop
-    await a_click;
+    pause;
+    await immediate a_click;
     emit getlist;
     await immediate one listico (l) in
     let objs = geticobj_under l att in
@@ -486,7 +489,8 @@ let process pgeneratenoclone evenmnt name (getatt,icoatt,a_click,_,_,_) =
   att.txt <- name;
   att_set_image att imgen;
   loop
-    await a_click;
+    pause;
+    await immediate a_click;
     emit evenmnt;
   end;;
                  
@@ -494,7 +498,8 @@ let process pgeneratenoclone evenmnt name (getatt,icoatt,a_click,_,_,_) =
 
 
 let process pawaitclone evenmnt _ =
-    	await evenmnt;;
+  pause;
+  await immediate evenmnt;;
 
 let process pawaitnoclone evenmnt name (getatt,icoatt,a_click,_,_,_) =
   emit getatt;
@@ -518,45 +523,47 @@ let process peventnoclone ajouticobj (getatt,icoatt,a_click,clavier,getlist,list
   await immediate one icoatt (att) in
   att_set_image att imloop;
   loop
-      await a_click;
-      emit getlist;
-      await immediate one listico (l) in
-      let objs = get_other (geticobj_under l att) att in
-      if List.length objs = 1 then
+    pause;
+    await immediate  a_click;
+    emit getlist;
+    await immediate one listico (l) in
+    let objs = get_other (geticobj_under l att) att in
+    if List.length objs = 1 then
       (signal s in
-       let other = List.hd objs in
-       run (other.getnocloneable s);
-       await immediate one s (b) in
-       if b == ptextboxnoclone && not (other.attrib.txt = "")  then 
-       (signal s in
+      let other = List.hd objs in
+      run (other.getnocloneable s);
+      await immediate one s (b) in
+      if b == ptextboxnoclone && not (other.attrib.txt = "")  then 
+	(signal s in
         let name = other.attrib.txt ^ (string_of_int !index) in
-        att.txt <- name; 
-        await a_click;
+        att.txt <- name;
+	pause;
+        await immediate a_click;
 	att.txt <- "";
 	index := !index + 1 ;
         emit ajouticobj (true,
-	               (pbuilderclone,true),
-		       puntilnoclone ajouticobj s name,
-		       {xi=att.pos.xi;yi=att.pos.yi-40});
+			 (pbuilderclone,true),
+			 puntilnoclone ajouticobj s name,
+			 {xi=att.pos.xi;yi=att.pos.yi-40});
         
 	emit ajouticobj (true,
-                      (pgenerateclone s,false),
-		       pgeneratenoclone s name,
-		       {xi=att.pos.xi+60;yi=att.pos.yi-90});
+			 (pgenerateclone s,false),
+			 pgeneratenoclone s name,
+			 {xi=att.pos.xi+60;yi=att.pos.yi-90});
         
 	emit ajouticobj (true,
-                       (pawaitclone s,false),
-		       pawaitnoclone  s name,
-		       {xi=att.pos.xi;yi=att.pos.yi-90});
+			 (pawaitclone s,false),
+			 pawaitnoclone  s name,
+			 {xi=att.pos.xi;yi=att.pos.yi-90});
         
         emit ajouticobj (true,
-                       (pbuilderclone,true),
-                       pcontrolnoclone ajouticobj s name,
-                       {xi=att.pos.xi+60;yi=att.pos.yi - 40});
+			 (pbuilderclone,true),
+			 pcontrolnoclone ajouticobj s name,
+			 {xi=att.pos.xi+60;yi=att.pos.yi - 40});
+	)
        )
-      )
-      else
-          nothing;
+    else
+      nothing;
   end;;
 
 

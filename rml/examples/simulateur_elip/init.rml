@@ -1,15 +1,15 @@
 let nb_instants = ref (-1)
 
 (* simulation space *)
-let max_x = ref 1000
-let max_y = ref 1000
+let max_x = ref 800
+let max_y = ref 800
 
-let area_size_x = ref 100
-let area_size_y = ref 100
+let area_size_x = ref 80
+let area_size_y = ref 80
 
 (* nodes *)
 let nb_nodes = ref 500 
-let coverage_range = ref 100
+let coverage_range = ref 80
 let speed = ref 1
 
 (* packets *)

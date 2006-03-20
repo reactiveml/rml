@@ -43,7 +43,7 @@ and expression_desc =
   | Cexpr_assert of expression
   | Cexpr_ifthenelse of expression * expression * expression
   | Cexpr_match of expression * (pattern * expression) list
-  | Cexpr_when of expression * expression
+  | Cexpr_when_match of expression * expression
   | Cexpr_while of expression * expression
   | Cexpr_for of 
       ident * expression * expression * direction_flag * expression

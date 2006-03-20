@@ -73,14 +73,15 @@
           "\\|v\\(al\\|irtual\\)\\)\\>")
          'font-lock-type-face)
 ;builtin
-   '("\\<\\(emit\\|nothing\\|p\\(ause\\|re\\)\\|run\\)\\>"
+   '("\\<\\(emit\\|nothing\\|p\\(ause\\|re\\)\\|halt\\|run\\)\\>"
     . font-lock-builtin-face)
 ;blocking
    '("\\<\\(begin\\|loop\\|end\\|object\\|s\\(ig\\|truct\\)\\)\\>"
      . font-lock-keyword-face)
 ;control
    (cons (concat
-          "\\<\\(control\\|do\\(ne\\|wnto\\)?\\|else\\|for\\|i\\(f\\|gnore\\)"
+          "\\<\\(control\\|do\\(ne\\|par\\|wnto\\)?\\|else"
+	  "\\|for\\|i\\(f\\|gnore\\)"
           "\\|lazy\\|match\\|new\\|or\\|present\\|t\\(hen\\|o\\|ry\\)"
           "\\|until\\|w\\(h\\(en\\|ile\\)\\|ith\\)\\)\\>"
           "\\|\|\\|->\\|&\\|#")

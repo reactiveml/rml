@@ -18,7 +18,7 @@
 /*                                                                     */
 /***********************************************************************/
 
-/* $Id: parser.mly,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ */
+/* $Id: parser.mly,v 1.2 2005/03/29 10:15:36 mandel Exp $ */
 
 /* The parser definition */
 
@@ -48,8 +48,7 @@ let mkpatt d =
   { ppatt_desc = d; ppatt_loc = symbol_rloc() }
 let mkexpr d =
   { pexpr_desc = d; 
-    pexpr_loc = symbol_rloc(); 
-    pexpr_static = Def_static.Dynamic; }
+    pexpr_loc = symbol_rloc(); }
 let mkimpl d =
   { pimpl_desc = d; pimpl_loc = symbol_rloc() }
 let mkintf d =
@@ -72,8 +71,7 @@ let reloc_expr x = { x with pexpr_loc = symbol_rloc () };;
 
 let mkoperator name pos =
   { pexpr_desc = Pexpr_ident (mkident (Pident name) pos);
-    pexpr_loc = rhs_loc pos;
-    pexpr_static = Def_static.Dynamic; }
+    pexpr_loc = rhs_loc pos; }
 
 
 (*
@@ -94,8 +92,7 @@ let mkoperator name pos =
   it must be ghost.
 *)
 let ghexpr d = { pexpr_desc = d; 
-		 pexpr_loc = symbol_gloc ();
-		 pexpr_static = Def_static.Dynamic; };;
+		 pexpr_loc = symbol_gloc (); };;
 let ghpatt d = { ppatt_desc = d; ppatt_loc = symbol_gloc () };;
 let ghte d = { pte_desc = d; pte_loc = symbol_gloc () };;
 let ghimpl d = { pimpl_desc = d; pimpl_loc = symbol_gloc () };;
@@ -126,13 +123,11 @@ let rec mktailexpr = function
                loc_ghost = true}
       in
       let arg = {pexpr_desc = Pexpr_tuple [e1; exp_el]; 
-		 pexpr_loc = l;
-		 pexpr_static = Def_static.Dynamic} 
+		 pexpr_loc = l;}
       in
       {pexpr_desc = Pexpr_construct(mkident_loc (Pident "::") l, 
 				    Some arg); 
-       pexpr_loc = l;
-       pexpr_static = Def_static.Dynamic}
+       pexpr_loc = l;}
 
 let rec mktailpatt = function
     [] ->
@@ -179,6 +174,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token ASSERT              /* "assert" */
 %token AWAIT               /* "await" */
 %token BACKQUOTE           /* "`" */
+%token BACKSLASHSLASH      /* " \/ " */
 %token BAR                 /* "|" */
 %token BARBAR              /* "||" */
 %token BARRBRACKET         /* "|]" */
@@ -217,6 +213,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token GREATER             /* ">" */
 %token GREATERRBRACE       /* ">}" */
 %token GREATERRBRACKET     /* ">]" */
+%token HALT                /* "halt" */
 %token IF                  /* "if" */
 %token IMMEDIATE           /* "immediate" */
 %token IN                  /* "in" */
@@ -228,7 +225,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <string> INFIXOP4
 %token INHERIT             /* "inherit" */
 %token INITIALIZER         /* "initializer" */
-%token INOUT               /* "inout" */
+/* %token INOUT */               /* "inout" */
 %token <int> INT
 %token <int32> INT32
 %token <int64> INT64
@@ -261,7 +258,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token OPEN                /* "open" */
 %token <string> OPTLABEL
 %token OR                  /* "or" */
-%token OUT                 /* "out" */
+/* %token OUT */                 /* "out" */
 /* %token PARSER */
 %token PAUSE               /* "pause" */
 %token PLUS                /* "+" */
@@ -283,6 +280,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token SHARP               /* "#" */
 %token SIG                 /* "sig" */
 %token SIGNAL              /* "signal" */
+%token SLASHBACKSLASH      /* " /\ " */
 %token STAR                /* "*" */
 %token <string> STRING
 %token STRUCT              /* "struct" */
@@ -342,8 +340,9 @@ The precedences must be listed from low to high.
 %nonassoc below_COMMA
 %left     COMMA                         /* expr/expr_comma_list (e,e,e) */
 %right    MINUSGREATER                  /* core_type2 (t -> t -> t) */
-%right    OR                            /* expr (e or e or e) */
-%right    AMPERSAND AMPERAMPER          /* expr (e && e && e) */
+%right    OR BACKSLASHSLASH             /* expr (e or e or e) */
+%right    AMPERSAND AMPERAMPER SLASHBACKSLASH
+                                        /* expr (e && e && e) */
 %nonassoc below_EQUAL
 %left     INFIXOP0 EQUAL LESS GREATER   /* expr (e OP e OP e) */
 %right    INFIXOP1                      /* expr (e OP e OP e) */
@@ -359,7 +358,7 @@ The precedences must be listed from low to high.
 %nonassoc below_DOT
 %nonassoc DOT
 /* Finally, the first tokens of simple_expr are above everything else. */
-%nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT INT INT32 INT64
+%nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
           NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE LOOP
 
@@ -370,6 +369,8 @@ The precedences must be listed from low to high.
 %type <Parse_ast.implementation> implementation
 %start interface                        /* for interface files */
 %type <Parse_ast.interface> interface
+%start interactive                      /* for interactive mode */
+%type <Parse_ast.implementation> interactive
 
 %%
 
@@ -381,6 +382,18 @@ implementation:
 interface:
     signature EOF                        { List.rev $1 }
 ;
+interactive:
+/*
+    structure_item SEMISEMI              { [$1] }
+  | seq_expr SEMISEMI                    { [ghimpl (Pimpl_expr $1)] }
+*/
+    interactive_defs                     { $1 }
+  | seq_expr SEMISEMI                    { [ghimpl (Pimpl_expr $1)] }
+;
+interactive_defs:
+    structure_item SEMISEMI              { [$1] }
+  | structure_item interactive_defs      {  $1 :: $2 }    
+
 
 /* implementation */
 
@@ -412,6 +425,13 @@ structure_item:
       { mkimpl(Pimpl_exn_rebind(mksimple $2 2, $4)) }
   | OPEN UIDENT
       { mkimpl(Pimpl_open $2) }
+  | EXTERNAL DOT LIDENT LIDENT lucky_declarations lucky_declarations 
+      EQUAL lucky_files
+      { match $3 with 
+        | "luc" -> 
+	    mkimpl(Pimpl_lucky(mksimple $4 4, List.rev $5, List.rev $6, $8)) 
+	| _ -> raise (Syntaxerr.Error(Syntaxerr.Other (rhs_loc 1)))
+      }
 ;
 
 /* interface */
@@ -423,6 +443,8 @@ signature:
 ;
 signature_item:
     VAL val_ident_colon core_type
+      { mkintf(Pintf_val($2, $3)) }
+  | EXTERNAL val_ident_colon core_type EQUAL primitive_declaration
       { mkintf(Pintf_val($2, $3)) }
   | TYPE type_declarations
       { mkintf(Pintf_type(List.rev $2)) }
@@ -504,10 +526,14 @@ expr:
       { mkinfix $1 ">" $3 }
   | expr OR expr
       { mkinfix $1 "or" $3 }
+  | expr BACKSLASHSLASH expr
+      { mkexpr(Pconf_or($1,$3)) }
   | expr AMPERSAND expr
       { mkinfix $1 "&" $3 }
   | expr AMPERAMPER expr
       { mkinfix $1 "&&" $3 }
+  | expr SLASHBACKSLASH expr
+      { mkexpr(Pconf_and($1,$3)) }
   | expr COLONEQUAL expr
       { mkinfix $1 ":=" $3 }
   | subtractive expr %prec prec_unary_minus
@@ -609,6 +635,8 @@ simple_expr:
       { mkexpr Pexpr_nothing }
   | PAUSE
       { mkexpr Pexpr_pause }
+  | HALT
+      { mkexpr Pexpr_halt }
   | LOOP par_expr END
       { mkexpr (Pexpr_loop $2) }
 ;
@@ -630,8 +658,7 @@ let_bindings:
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
   | val_longident LESS pattern GREATER                
       {	[$3, { pexpr_desc = Pexpr_get (mkexpr(Pexpr_ident $1)); 
-	       pexpr_loc = rhs_loc 1;
-	       pexpr_static = Def_static.Dynamic; }] }
+	       pexpr_loc = rhs_loc 1; }] }
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 ;
 let_binding:
@@ -714,8 +741,10 @@ until_handlers:
   | simple_expr MINUSGREATER par_expr
                                               { [$1, 
 						 Some(mkpatt(Ppatt_any), $3)] }
+/*
   | until_handlers BAR simple_expr LPAREN pattern RPAREN MINUSGREATER par_expr
                                               { ($3, Some($5, $8)) :: $1 }
+*/
 ;
 
 /* Patterns */
@@ -783,6 +812,12 @@ lbl_pattern_list:
   | lbl_pattern_list SEMI label_longident EQUAL pattern { ($3, $5) :: $1 }
 ;
 
+/* Primitive declarations */
+
+primitive_declaration:
+    STRING                                      { [$1] }
+  | STRING primitive_declaration                { $1 :: $2 }
+;
 
 /* Type declarations */
 
@@ -862,8 +897,8 @@ simple_core_type2:
       { mkte(Ptype_constr($2, [$1])) }
   | LPAREN core_type_comma_list RPAREN type_longident
       { mkte(Ptype_constr($4, List.rev $2)) }
-  | PROCESS 
-      { mkte(Ptype_process) }
+  | simple_core_type2 PROCESS 
+      { mkte(Ptype_process $1) }
 ;
 simple_core_type_or_tuple:
     simple_core_type                            { $1 }
@@ -1020,5 +1055,40 @@ opt_semi:
 subtractive:
   | MINUS                                       { "-" }
   | MINUSDOT                                    { "-." }
+;
+
+/* Lucky */
+
+lucky_declarations:
+    LBRACE RBRACE                               { [] }
+  | LBRACE lucky_declarations2 opt_semi RBRACE  { $2 }
+;
+lucky_declarations2:
+    lucky_declaration                           { [$1] }
+  | lucky_declarations2 SEMI lucky_declaration  { $3 :: $1 }
+;
+lucky_declaration:
+    lucky_label COLON core_type                 { ($1, $3) }
+;
+lucky_label:
+    LIDENT                                      { mksimple $1 1 }
+  | UIDENT                                      { mksimple $1 1 }
+;
+/* string list */
+lucky_files:
+  | LBRACKET string_semi_list opt_semi RBRACKET
+      { List.rev $2 }
+  | LBRACKET string_semi_list opt_semi error
+      { unclosed "[" 1 "]" 4 }
+;
+string_semi_list:
+    constant                                   
+      { match $1 with
+        | Const_string s -> [s]
+	| _ -> syntax_error() }
+  | string_semi_list SEMI constant
+      { match $3 with 
+        | Const_string s -> s :: $1
+	| _ -> syntax_error() }
 ;
 %%

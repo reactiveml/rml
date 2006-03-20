@@ -135,6 +135,8 @@ let fenetre affiche =
       pause;
       run (read_click button pos a_click a_move mouse_pos mouse_down)
   in
+(* Begin louis *)
+(*
      let process create_doublesingleclick a_click ds realclick realdoubleclick =
      signal finattente in
      loop
@@ -147,13 +149,30 @@ let fenetre affiche =
 	 emit finattente;
 	 pause;
 	 ||
-         await one a_click (p) in
+         await immediate one a_click (p) in
 	 emit realdoubleclick (p);
 	 emit finattente;
 	 pause;
        until finattente done;
      end
   in
+*)
+     let process create_doublesingleclick a_click ds realclick realdoubleclick =
+       loop 
+	 await one a_click(fst_pos) in
+	 do
+	   await ds;
+           await ds;
+           await ds;
+	   emit realclick (fst_pos)
+	 until a_click (p) ->
+	   emit realdoubleclick (List.hd p);
+	   pause
+	 done
+       end
+     in
+
+(* End louis*)
 
 (*-----------------------------------------------------*)
 (* machine read_key [] emet un instant sur deux        *)
@@ -182,7 +201,9 @@ let fenetre affiche =
 (* machine read_key []                                 *)
 (*-----------------------------------------------------*)
   fun taille_x taille_y freq -> 
-  process a_click a_doubleclick a_move key_push pos p mouse_down ->
+  fun a_click a_doubleclick a_move key_push pos p mouse_down ->
+  process
+  begin
 (*    let t = ref (gettimeofday ()) in*)
 (*----------------------------------------------------*)
     signal internalclick in
@@ -203,6 +224,6 @@ let fenetre affiche =
     ||
     run (genere_temps freq ds)
     ||
-    run (create_doublesingleclick internalclick ds a_click a_doubleclick);;
-
+    run (create_doublesingleclick internalclick ds a_click a_doubleclick)
+  end
 

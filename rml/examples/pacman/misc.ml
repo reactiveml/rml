@@ -2,9 +2,9 @@ open Bmp;;
 open Graphic_image;;
 
 
-type t = Image.t;;
+type t = Images.t;;
 
-type load_option = Image.load_option;;
+type load_option = Images.load_option;;
 
 let misc_load = Bmp.load;;
 

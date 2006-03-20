@@ -1,4 +1,4 @@
-RMLC=rmlc
+RMLC=rmlc -i -dtypes
 RMLFLAGS=
 N=-1
 SAMPLING=-1.0

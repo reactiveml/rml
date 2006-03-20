@@ -30,7 +30,7 @@ and type_expression_desc =
   | Type_product of type_expression list                  
   | Type_constr of type_constr global * type_expression list
   | Type_link of type_expression
-  | Type_process
+  | Type_process of type_expression
 
 (* Type constructors *)
 and type_constr =

@@ -17,12 +17,20 @@ open Global_ident
 open Def_types
 open Global
 
-let gen_ident = new name_generator
 
-let pervasives_name id k = { qual = pervasives_module;
-			     id = Ident.create gen_ident id k }
-let interpreter_name id k = { qual = interpreter_module;
-			     id = Ident.create gen_ident id k }
+let pervasives_type id = 
+  { qual = pervasives_module;
+    id = Ident.create Ident.gen_type id Ident.Type }
+let interpreter_type id = 
+  { qual = !interpreter_module;
+    id = Ident.create Ident.gen_type id Ident.Type }
+let pervasives_constr id = 
+  { qual = pervasives_module;
+    id = Ident.create Ident.gen_constr id Ident.Constr }
+let pervasives_val id = 
+  { qual = pervasives_module;
+    id = Ident.create Ident.gen_var id Ident.Val_ML }
+
 
 let abstract_type id = { type_constr = 
 			 { gi = id; 
@@ -34,42 +42,42 @@ let type_desc id =
     info = abstract_type id }
 
 (* int *)
-let int_ident = pervasives_name "int" Type
+let int_ident = pervasives_type "int"
 let type_desc_int = type_desc int_ident
 let type_int = Types.constr_notabbrev int_ident []
 
 (* bool *)
-let bool_ident = pervasives_name "bool" Type
+let bool_ident = pervasives_type "bool"
 let type_desc_bool = type_desc bool_ident
 let type_bool = Types.constr_notabbrev bool_ident []
 
 (* float *)
-let float_ident = pervasives_name "float" Type
+let float_ident = pervasives_type "float"
 let type_desc_float = type_desc float_ident
 let type_float = Types.constr_notabbrev float_ident []
 
 (* char *)
-let char_ident = pervasives_name "char" Type
+let char_ident = pervasives_type "char" 
 let type_desc_char = type_desc char_ident
 let type_char = Types.constr_notabbrev char_ident []
 
 (* string *)
-let string_ident = pervasives_name "string" Type
+let string_ident = pervasives_type "string"
 let type_desc_string = type_desc string_ident
 let type_string = Types.constr_notabbrev string_ident []
 
 (* unit *)
-let unit_ident = pervasives_name "unit" Type
+let unit_ident = pervasives_type "unit"
 let type_desc_unit = type_desc unit_ident
 let type_unit =  Types.constr_notabbrev unit_ident []
 
 (* exn *)
-let exn_ident = pervasives_name "exn" Type
+let exn_ident = pervasives_type "exn"
 let type_desc_exn = type_desc exn_ident
 let type_exn = Types.constr_notabbrev exn_ident []
 
 (* array *)
-let array_ident = pervasives_name "array" Type
+let array_ident = pervasives_type "array"
 let type_desc_array = 
   { gi = array_ident;
     info = { type_constr = { gi = array_ident;
@@ -79,7 +87,7 @@ let type_desc_array =
 let type_array = Types.constr_notabbrev array_ident [Types.new_generic_var()]
 
 (* event *)
-let event_ident = interpreter_name "event" Type
+let event_ident = interpreter_type "event"
 let type_desc_event =
   { gi = event_ident;
     info = { type_constr = { gi = event_ident;
@@ -91,9 +99,9 @@ let type_event = Types.constr_notabbrev event_ident [Types.new_generic_var();
 
 
 (* list *)
-let list_ident = pervasives_name "list" Type
+let list_ident = pervasives_type "list"
 
-let nil_ident = pervasives_name "[]" Constr
+let nil_ident = pervasives_constr "[]"
 let nil_constr_desc =
   let var = Types.new_generic_var() in
   let nil_constr =
@@ -103,7 +111,7 @@ let nil_constr_desc =
   { gi = nil_ident;
     info = nil_constr; }
 
-let cons_ident = pervasives_name "::" Constr
+let cons_ident = pervasives_constr "::"
 let cons_constr_desc = 
   let var = Types.new_generic_var() in
   let var_list = Types.constr_notabbrev list_ident [var] in
@@ -122,9 +130,9 @@ let type_desc_list =
 	     type_arity = 1; } }
     
 (* option *)
-let option_ident = pervasives_name "option" Type
+let option_ident = pervasives_type "option"
 
-let none_ident = pervasives_name "None" Constr
+let none_ident = pervasives_constr "None"
 let none_constr_desc =
   let var = Types.new_generic_var() in
   let none_constr =
@@ -134,7 +142,7 @@ let none_constr_desc =
   { gi = none_ident;
     info = none_constr; }
 
-let some_ident = pervasives_name "Some" Constr
+let some_ident = pervasives_constr "Some"
 let some_constr_desc = 
   let var = Types.new_generic_var() in
   let some_constr =

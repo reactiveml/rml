@@ -22,33 +22,43 @@ parsing/lexer.cmx: global/warnings.cmx parsing/parser.cmx global/misc.cmx \
 parsing/location.cmo: global/warnings.cmo parsing/linenum.cmo 
 parsing/location.cmx: global/warnings.cmx parsing/linenum.cmx 
 parsing/parse_ast.cmo: parsing/parse_ident.cmo parsing/location.cmo \
-    static/def_static.cmi global/asttypes.cmi 
+    global/asttypes.cmi 
 parsing/parse_ast.cmx: parsing/parse_ident.cmx parsing/location.cmx \
-    static/def_static.cmi global/asttypes.cmi 
+    global/asttypes.cmi 
 parsing/parse.cmo: parsing/syntaxerr.cmo parsing/parser.cmi \
     parsing/location.cmo parsing/lexer.cmo 
 parsing/parse.cmx: parsing/syntaxerr.cmx parsing/parser.cmx \
     parsing/location.cmx parsing/lexer.cmx 
 parsing/parse_printer.cmo: parsing/parse_ident.cmo parsing/parse_ast.cmo \
-    parsing/location.cmo static/def_static.cmi global/asttypes.cmi 
+    parsing/location.cmo global/asttypes.cmi 
 parsing/parse_printer.cmx: parsing/parse_ident.cmx parsing/parse_ast.cmx \
-    parsing/location.cmx static/def_static.cmi global/asttypes.cmi 
+    parsing/location.cmx global/asttypes.cmi 
 parsing/parser.cmo: parsing/syntaxerr.cmo parsing/parse_ident.cmo \
-    parsing/parse_ast.cmo parsing/location.cmo static/def_static.cmi \
-    global/asttypes.cmi parsing/parser.cmi 
+    parsing/parse_ast.cmo parsing/location.cmo global/asttypes.cmi \
+    parsing/parser.cmi 
 parsing/parser.cmx: parsing/syntaxerr.cmx parsing/parse_ident.cmx \
-    parsing/parse_ast.cmx parsing/location.cmx static/def_static.cmi \
-    global/asttypes.cmi parsing/parser.cmi 
+    parsing/parse_ast.cmx parsing/location.cmx global/asttypes.cmi \
+    parsing/parser.cmi 
 parsing/syntaxerr.cmo: parsing/location.cmo 
 parsing/syntaxerr.cmx: parsing/location.cmx 
-static/static_errors.cmo: parsing/parse_ast.cmo global/misc.cmo \
+external/external.cmo: parsing/parse_ast.cmo external/lucky.cmo 
+external/external.cmx: parsing/parse_ast.cmx external/lucky.cmx 
+external/lucky_errors.cmo: parsing/parse_ast.cmo global/misc.cmo \
     parsing/location.cmo 
-static/static_errors.cmx: parsing/parse_ast.cmx global/misc.cmx \
+external/lucky_errors.cmx: parsing/parse_ast.cmx global/misc.cmx \
     parsing/location.cmx 
-static/static.cmo: static/static_errors.cmo parsing/parse_ast.cmo \
-    global/misc.cmo static/def_static.cmi 
-static/static.cmx: static/static_errors.cmx parsing/parse_ast.cmx \
-    global/misc.cmx static/def_static.cmi 
+external/lucky.cmo: parsing/parse_ident.cmo parsing/parse_ast.cmo \
+    external/lucky_errors.cmo parsing/location.cmo global/asttypes.cmi 
+external/lucky.cmx: parsing/parse_ident.cmx parsing/parse_ast.cmx \
+    external/lucky_errors.cmx parsing/location.cmx global/asttypes.cmi 
+static/static_errors.cmo: reac/reac_ast.cmo global/misc.cmo \
+    parsing/location.cmo 
+static/static_errors.cmx: reac/reac_ast.cmx global/misc.cmx \
+    parsing/location.cmx 
+static/static.cmo: static/static_errors.cmo reac/reac_ast.cmo global/misc.cmo \
+    static/def_static.cmi global/asttypes.cmi 
+static/static.cmx: static/static_errors.cmx reac/reac_ast.cmx global/misc.cmx \
+    static/def_static.cmi global/asttypes.cmi 
 typing/def_types.cmo: global/global.cmo global/asttypes.cmi 
 typing/def_types.cmx: global/global.cmx global/asttypes.cmi 
 typing/stypes.cmo: typing/types_printer.cmo reac/reac_ast.cmo global/misc.cmo \
@@ -86,53 +96,69 @@ reac/binding_errors.cmo: parsing/parse_ident.cmo parsing/parse_ast.cmo \
 reac/binding_errors.cmx: parsing/parse_ident.cmx parsing/parse_ast.cmx \
     global/misc.cmx parsing/location.cmx 
 reac/parse2reac.cmo: typing/types.cmo global/symbol_table.cmo \
-    reac/reac_ast.cmo parsing/parse_ident.cmo parsing/parse_ast.cmo \
-    global/modules.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
-    global/global.cmo typing/def_types.cmo static/def_static.cmi \
-    reac/binding_errors.cmo global/asttypes.cmi 
+    reac/reac_misc.cmo reac/reac_ast.cmo parsing/parse_ident.cmo \
+    parsing/parse_ast.cmo global/modules.cmo global/misc.cmo \
+    parsing/location.cmo global/ident.cmo global/global.cmo \
+    typing/def_types.cmo reac/binding_errors.cmo global/asttypes.cmi 
 reac/parse2reac.cmx: typing/types.cmx global/symbol_table.cmx \
-    reac/reac_ast.cmx parsing/parse_ident.cmx parsing/parse_ast.cmx \
-    global/modules.cmx global/misc.cmx parsing/location.cmx global/ident.cmx \
-    global/global.cmx typing/def_types.cmx static/def_static.cmi \
-    reac/binding_errors.cmx global/asttypes.cmi 
+    reac/reac_misc.cmx reac/reac_ast.cmx parsing/parse_ident.cmx \
+    parsing/parse_ast.cmx global/modules.cmx global/misc.cmx \
+    parsing/location.cmx global/ident.cmx global/global.cmx \
+    typing/def_types.cmx reac/binding_errors.cmx global/asttypes.cmi 
+reac/reac2reac.cmo: reac/reac_misc.cmo reac/reac_ast.cmo typing/def_types.cmo 
+reac/reac2reac.cmx: reac/reac_misc.cmx reac/reac_ast.cmx typing/def_types.cmx 
 reac/reac_ast.cmo: parsing/location.cmo global/ident.cmo global/global.cmo \
-    typing/def_types.cmo global/asttypes.cmi 
+    typing/def_types.cmo static/def_static.cmi global/asttypes.cmi 
 reac/reac_ast.cmx: parsing/location.cmx global/ident.cmx global/global.cmx \
+    typing/def_types.cmx static/def_static.cmi global/asttypes.cmi 
+reac/reac_misc.cmo: typing/types.cmo reac/reac_ast.cmo typing/def_types.cmo \
+    static/def_static.cmi 
+reac/reac_misc.cmx: typing/types.cmx reac/reac_ast.cmx typing/def_types.cmx \
+    static/def_static.cmi 
+lco/lco_ast.cmo: parsing/location.cmo global/ident.cmo global/global.cmo \
+    typing/def_types.cmo global/asttypes.cmi 
+lco/lco_ast.cmx: parsing/location.cmx global/ident.cmx global/global.cmx \
     typing/def_types.cmx global/asttypes.cmi 
+lco/lco_misc.cmo: lco/lco_ast.cmo 
+lco/lco_misc.cmx: lco/lco_ast.cmx 
+lco/reac2lco.cmo: reac/reac_misc.cmo reac/reac_ast.cmo global/modules.cmo \
+    global/misc.cmo parsing/location.cmo lco/lco_ast.cmo \
+    global/initialization.cmo global/ident.cmo global/global.cmo \
+    static/def_static.cmi global/asttypes.cmi 
+lco/reac2lco.cmx: reac/reac_misc.cmx reac/reac_ast.cmx global/modules.cmx \
+    global/misc.cmx parsing/location.cmx lco/lco_ast.cmx \
+    global/initialization.cmx global/ident.cmx global/global.cmx \
+    static/def_static.cmi global/asttypes.cmi 
 lk/lk_ast.cmo: parsing/location.cmo global/ident.cmo global/global.cmo \
     typing/def_types.cmo global/asttypes.cmi 
 lk/lk_ast.cmx: parsing/location.cmx global/ident.cmx global/global.cmx \
     typing/def_types.cmx global/asttypes.cmi 
 lk/reac2lk.cmo: reac/reac_ast.cmo global/misc.cmo parsing/location.cmo \
-    lk/lk_ast.cmo global/ident.cmo 
+    lk/lk_ast.cmo global/ident.cmo static/def_static.cmi global/asttypes.cmi 
 lk/reac2lk.cmx: reac/reac_ast.cmx global/misc.cmx parsing/location.cmx \
-    lk/lk_ast.cmx global/ident.cmx 
-lco/lco_ast.cmo: parsing/location.cmo global/ident.cmo global/global.cmo \
-    typing/def_types.cmo global/asttypes.cmi 
-lco/lco_ast.cmx: parsing/location.cmx global/ident.cmx global/global.cmx \
-    typing/def_types.cmx global/asttypes.cmi 
-lco/reac2lco.cmo: reac/reac_ast.cmo global/misc.cmo lco/lco_ast.cmo \
-    global/ident.cmo 
-lco/reac2lco.cmx: reac/reac_ast.cmx global/misc.cmx lco/lco_ast.cmx \
-    global/ident.cmx 
+    lk/lk_ast.cmx global/ident.cmx static/def_static.cmi global/asttypes.cmi 
 caml/caml_ast.cmo: parsing/location.cmo global/ident.cmo global/global.cmo \
     typing/def_types.cmo global/asttypes.cmi 
 caml/caml_ast.cmx: parsing/location.cmx global/ident.cmx global/global.cmx \
     typing/def_types.cmx global/asttypes.cmi 
-caml/lco2caml.cmo: global/modules.cmo global/misc.cmo parsing/location.cmo \
-    lco/lco_ast.cmo global/initialization.cmo global/ident.cmo \
-    global/global_ident.cmo global/global.cmo caml/caml_ast.cmo \
-    global/asttypes.cmi 
-caml/lco2caml.cmx: global/modules.cmx global/misc.cmx parsing/location.cmx \
-    lco/lco_ast.cmx global/initialization.cmx global/ident.cmx \
-    global/global_ident.cmx global/global.cmx caml/caml_ast.cmx \
-    global/asttypes.cmi 
+caml/caml_misc.cmo: global/misc.cmo parsing/location.cmo \
+    global/initialization.cmo global/ident.cmo global/global_ident.cmo \
+    global/global.cmo caml/caml_ast.cmo global/asttypes.cmi 
+caml/caml_misc.cmx: global/misc.cmx parsing/location.cmx \
+    global/initialization.cmx global/ident.cmx global/global_ident.cmx \
+    global/global.cmx caml/caml_ast.cmx global/asttypes.cmi 
+caml/lco2caml.cmo: global/misc.cmo parsing/location.cmo lco/lco_misc.cmo \
+    lco/lco_ast.cmo global/global_ident.cmo global/global.cmo \
+    caml/caml_misc.cmo caml/caml_ast.cmo global/asttypes.cmi 
+caml/lco2caml.cmx: global/misc.cmx parsing/location.cmx lco/lco_misc.cmx \
+    lco/lco_ast.cmx global/global_ident.cmx global/global.cmx \
+    caml/caml_misc.cmx caml/caml_ast.cmx global/asttypes.cmi 
 caml/lk2caml.cmo: global/misc.cmo parsing/location.cmo lk/lk_ast.cmo \
     global/ident.cmo global/global_ident.cmo global/global.cmo \
-    caml/caml_ast.cmo global/asttypes.cmi 
+    caml/caml_misc.cmo caml/caml_ast.cmo global/asttypes.cmi 
 caml/lk2caml.cmx: global/misc.cmx parsing/location.cmx lk/lk_ast.cmx \
     global/ident.cmx global/global_ident.cmx global/global.cmx \
-    caml/caml_ast.cmx global/asttypes.cmi 
+    caml/caml_misc.cmx caml/caml_ast.cmx global/asttypes.cmi 
 caml/print_caml_src.cmo: global/misc.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo caml/caml_ast.cmo \
     global/asttypes.cmi 
@@ -140,24 +166,30 @@ caml/print_caml_src.cmx: global/misc.cmx global/ident.cmx \
     global/global_ident.cmx global/global.cmx caml/caml_ast.cmx \
     global/asttypes.cmi 
 main/compiler.cmo: typing/typing.cmo typing/stypes.cmo static/static.cmo \
-    lk/reac2lk.cmo lco/reac2lco.cmo caml/print_caml_src.cmo \
-    parsing/parse_printer.cmo parsing/parse_ident.cmo reac/parse2reac.cmo \
-    parsing/parse.cmo global/modules.cmo global/misc.cmo parsing/location.cmo \
-    caml/lk2caml.cmo caml/lco2caml.cmo global/initialization.cmo \
-    global/ident.cmo global/global_ident.cmo global/global.cmo \
-    main/errors.cmo 
+    reac/reac2reac.cmo lk/reac2lk.cmo lco/reac2lco.cmo \
+    caml/print_caml_src.cmo parsing/parse_printer.cmo parsing/parse_ident.cmo \
+    reac/parse2reac.cmo parsing/parse.cmo global/modules.cmo global/misc.cmo \
+    parsing/location.cmo caml/lk2caml.cmo caml/lco2caml.cmo \
+    global/initialization.cmo global/ident.cmo global/global_ident.cmo \
+    global/global.cmo external/external.cmo main/errors.cmo 
 main/compiler.cmx: typing/typing.cmx typing/stypes.cmx static/static.cmx \
-    lk/reac2lk.cmx lco/reac2lco.cmx caml/print_caml_src.cmx \
-    parsing/parse_printer.cmx parsing/parse_ident.cmx reac/parse2reac.cmx \
-    parsing/parse.cmx global/modules.cmx global/misc.cmx parsing/location.cmx \
-    caml/lk2caml.cmx caml/lco2caml.cmx global/initialization.cmx \
-    global/ident.cmx global/global_ident.cmx global/global.cmx \
-    main/errors.cmx 
+    reac/reac2reac.cmx lk/reac2lk.cmx lco/reac2lco.cmx \
+    caml/print_caml_src.cmx parsing/parse_printer.cmx parsing/parse_ident.cmx \
+    reac/parse2reac.cmx parsing/parse.cmx global/modules.cmx global/misc.cmx \
+    parsing/location.cmx caml/lk2caml.cmx caml/lco2caml.cmx \
+    global/initialization.cmx global/ident.cmx global/global_ident.cmx \
+    global/global.cmx external/external.cmx main/errors.cmx 
 main/errors.cmo: global/warnings.cmo parsing/syntaxerr.cmo global/misc.cmo \
     parsing/location.cmo parsing/lexer.cmo 
 main/errors.cmx: global/warnings.cmx parsing/syntaxerr.cmx global/misc.cmx \
     parsing/location.cmx parsing/lexer.cmx 
-main/main.cmo: global/modules.cmo global/misc.cmo main/errors.cmo \
-    main/compiler.cmo 
-main/main.cmx: global/modules.cmx global/misc.cmx main/errors.cmx \
-    main/compiler.cmx 
+main/interactive.cmo: parsing/parse.cmo global/modules.cmo \
+    parsing/location.cmo global/initialization.cmo external/external.cmo \
+    main/errors.cmo main/compiler.cmo 
+main/interactive.cmx: parsing/parse.cmx global/modules.cmx \
+    parsing/location.cmx global/initialization.cmx external/external.cmx \
+    main/errors.cmx main/compiler.cmx 
+main/main.cmo: global/modules.cmo global/misc.cmo main/interactive.cmo \
+    main/errors.cmo main/compiler.cmo 
+main/main.cmx: global/modules.cmx global/misc.cmx main/interactive.cmx \
+    main/errors.cmx main/compiler.cmx 

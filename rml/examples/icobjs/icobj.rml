@@ -14,7 +14,7 @@ type atticobj =
   mutable larg  : int;
   mutable date  : int;
   destructible  : bool; 
-  detruit       : process;
+  detruit       : (unit, unit list) event;
   mutable txt   : string
 }
 
@@ -25,14 +25,14 @@ type behavior =
 (* a_click *) (unit , unit list) event *
 (* clavier *) (char, char list) event *
 (* getlist *) (unit , unit list) event *
-(* listico *) (icobj list, icobj list list) event -> process
+(* listico *) (icobj list, icobj list list) event -> unit process
  
 and
      icobj = {attrib : atticobj;
               activate : (unit, unit list) event;
-	      clavier  : (char, char list) event -> process;
-	      getcloneable : (behavior,behavior list) event -> process;
-              getnocloneable : (behavior,behavior list) event -> process;
+	      clavier  : (char, char list) event -> unit process;
+	      getcloneable : (behavior,behavior list) event -> unit process;
+              getnocloneable : (behavior,behavior list) event -> unit process;
 	     }
 
 
@@ -61,13 +61,24 @@ let get_newdate =
   let a = ref  0 in
   fun () -> a := !a + 1;!a;;
 
-
+(* begin : louis *)
+(*
 let process sustain s =
  loop
     if (pre s) then
         emit s (List.hd (pre?s));
     pause;
  end;;
+*)
+
+let process sustain s =
+  await immediate one s(x) in
+  loop
+    pause;
+    emit s x
+  end
+
+(* end : louis *)
 
 
 
@@ -81,34 +92,35 @@ let process icobj clonbehav runclonbehav noclonbehav mpos candestroy
                   getatt icoatt
                   getlist listico =
   signal detruit in
-  let attrib = {pos = mpos;
-                couleur = black;
-		appar = App_text "pas d'apparance";
-		haut = snd (text_size "pas d'apparance");
-		larg = fst (text_size "pas d'apparance");
-		date = get_newdate ();
-		detruit = process (emit detruit); 
-	        destructible = candestroy;
-		txt = "";
-               }  in
-
-  
+  let attrib = { pos = mpos;
+                 couleur = black;
+		 appar = App_text "pas d'apparence";
+		 haut = snd (text_size "pas d'apparence");
+		 larg = fst (text_size "pas d'apparence");
+		 date = get_newdate ();
+		 detruit = detruit; 
+	         destructible = candestroy;
+		 txt = ""; }  
+  in
   let process affiche =
     loop
-      await dograph;
+      await immediate dograph;
       if attrib.appar != App_none then
-       (let obj = match attrib.appar with
-                  | App_Image i -> Image (i,attrib.pos)
-                  | App_text s  -> Texte (s,attrib.couleur,attrib.pos)
-                  | App_none    -> failwith "Erreur" in
-        let lobj = if attrib.txt != "" then
-                     [Texte (attrib.txt,
-		             black,
-			     {xi=attrib.pos.xi + attrib.larg + 3;
-			      yi=attrib.pos.yi}) ]
-		   else []   in
-        emit graph (attrib.date,obj :: lobj)
-       );
+	(let obj = 
+	  match attrib.appar with
+          | App_Image i -> Image (i,attrib.pos)
+          | App_text s  -> Texte (s,attrib.couleur,attrib.pos)
+          | App_none    -> failwith "Erreur" in
+        let lobj = 
+	  if attrib.txt != "" then
+            [Texte (attrib.txt,
+		    black,
+		    {xi=attrib.pos.xi + attrib.larg + 3;
+		     yi=attrib.pos.yi}) ]
+	  else []   
+	in
+        emit graph (attrib.date,obj :: lobj));
+      pause
     end
         in
   do 
@@ -137,13 +149,15 @@ let process icobj clonbehav runclonbehav noclonbehav mpos candestroy
     ||
     (* Accesseur de la partie cloneable de l'icobj *)
     loop
-      await getclonebehav;
+      pause;
+      await immediate getclonebehav;
       emit clonebehav clonbehav;
     end
     ||
     (* Accesseur de la partie non-cloneable de l'icobj *)
     loop
-      await getnoclonebehav;
+      pause;
+      await immediate getnoclonebehav;
       emit noclonebehav noclonbehav;
     end
     ||
@@ -298,7 +312,7 @@ let rec process detruit_icobj anc l sig_newlist =
    match anc with
    | []   -> emit sig_newlist [];
    | e::r -> if (is_in e l) then
-             (run e.attrib.detruit;
+             (emit e.attrib.detruit;
 	      run (detruit_icobj r l sig_newlist)
 	     )
 	     else
@@ -382,14 +396,11 @@ let process workspace width height newicobj delicobj =
   ||
   (* Selection des icobjs *)
   await mouse_down;
-  pause;
   loop
     let pos = List.hd (pre ?mouse_down) in
     let objsproperties = geticobj listicobj pos in
     if objsproperties = [] then
-    (await immediate mouse_down;
-     pause
-    ) 
+      await mouse_down
     else
       do
         run (selected_object (get_high_icobj objsproperties)
@@ -415,8 +426,9 @@ let process workspace width height newicobj delicobj =
   ||
   (* Pour qu'un icobj puisse savoir ou se trouve les autres *)
   loop
-     await getlisticobj;
-     emit listico !listicobj;
+    pause;
+    await immediate getlisticobj;
+    emit listico !listicobj;
   end
   (* ***************************************** *)
   ||

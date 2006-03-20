@@ -62,6 +62,15 @@ let run_wrong_type_err loc actual_ty expected_ty =
     Types_printer.output expected_ty;
   raise Error
 
+let var_wrong_type_err loc actual_ty expected_ty =
+  Printf.eprintf 
+    "%aThis pattern has type %a,\n\
+    but is used with type %a.\n"
+    Location.print_oc loc
+    Types_printer.output actual_ty
+    Types_printer.output expected_ty;
+  raise Error
+
 let application_of_non_function_err exp ty =
   begin try
     let _ = filter_arrow ty in
@@ -79,6 +88,12 @@ let non_event_err exp =
   Printf.eprintf 
     "%aThis expression is not an event.\n"
     Location.print_oc exp.expr_loc;
+  raise Error
+
+let non_event_err2 conf =
+  Printf.eprintf 
+    "%aThis expression is not an event.\n"
+    Location.print_oc conf.conf_loc;
   raise Error
 
 (* typing errors *)
@@ -167,6 +182,12 @@ let repeated_label_definition_err s loc =
     Location.print_oc loc s;
   raise Error
 
+let orpat_vars loc s =
+  Format.eprintf 
+    "%aVariable %s must occur on both sides of this | pattern.\n"
+    Location.print loc s;
+  raise Error
+ 
 
 (* label *)
 let label_not_mutable_err exp lbl =
@@ -190,4 +211,8 @@ let partial_apply_warning loc =
   Printf.eprintf "%aWarning: this function application is partial,\n\
            maybe some arguments are missing.\n"
     Location.print_oc loc
+
+let not_unit_type_warning expr =
+  Printf.eprintf "%aWarning: this expression should have type unit.\n"
+    Location.print_oc expr.expr_loc
 

@@ -6,15 +6,16 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id: reac2lco.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *)
+(* $Id: reac2lco.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *)
 
 (* The translation of Reac to Lco *)
 
+open Asttypes
 open Reac_ast
 open Lco_ast
+open Global
 open Misc
 
-let gen_k = new Ident.name_generator
 
 let make_expr e loc =
   { coexpr_desc = e;
@@ -32,6 +33,10 @@ let make_te t loc =
   { cote_desc = t;
     cote_loc = loc; }
 
+let make_conf c loc =
+  { coconf_desc = c;
+    coconf_loc = loc; }
+
 let make_impl it loc =
   { coimpl_desc = it;
     coimpl_loc = loc; }
@@ -39,6 +44,14 @@ let make_impl it loc =
 let make_intf it loc =
   { cointf_desc = it;
     cointf_loc = loc; }
+
+let make_unit () =
+  make_expr 
+    (Coexpr_constant Const_unit)
+    Location.none
+
+let make_nothing () =
+  make_proc Coproc_nothing Location.none
 
 (* Translation of type expressions *)
 let rec translate_te typ =
@@ -51,8 +64,8 @@ let rec translate_te typ =
 	Cotype_product (List.map translate_te typ_list)
     | Rtype_constr (cstr, te_list) ->
 	Cotype_constr (cstr, List.map translate_te te_list)
-    | Rtype_process ->
-	Cotype_process 
+    | Rtype_process t ->
+	Cotype_process (translate_te t)
   in
   make_te cotyp typ.te_loc
 
@@ -192,8 +205,8 @@ let rec translate_ml e =
 			(fun (p,e) -> translate_pattern p, translate_ml e)
 			l)
 
-    | Rexpr_when (e1, e2) ->
-	Coexpr_when (translate_ml e1, translate_ml e2)
+    | Rexpr_when_match (e1, e2) ->
+	Coexpr_when_match (translate_ml e1, translate_ml e2)
 
     | Rexpr_while(e1, e2) ->
 	Coexpr_while (translate_ml e1, translate_ml e2)
@@ -205,8 +218,20 @@ let rec translate_ml e =
 		    flag,
 		    translate_ml e3)
 
-    | Rexpr_seq (e1, e2) ->
-	Coexpr_seq (translate_ml e1, translate_ml e2)
+    | Rexpr_seq (e1::e_list) ->
+	let rec f acc l =
+	  match l with
+	  | [] -> assert false
+	  | [e] ->
+	      Coexpr_seq (acc, translate_ml e)
+	  | e::l' ->
+	      let acc' =
+		make_expr
+		  (Coexpr_seq (acc, translate_ml e))
+		  Location.none
+	      in
+	      f acc' l'
+	in f (translate_ml e1) e_list 
 
     | Rexpr_process (p) ->
 	Coexpr_process (translate_proc p)
@@ -218,113 +243,428 @@ let rec translate_ml e =
 
     | Rexpr_emit_val (s, e) -> 
 	Coexpr_emit_val (translate_ml s, translate_ml e)
+
+    | Rexpr_signal ((s,typ), comb, e) ->
+	Coexpr_signal ((s, opt_map translate_te typ),
+		       opt_map 
+			 (fun (e1,e2) -> 
+			   translate_ml e1, translate_ml e2) comb,
+		       translate_ml e)
+
+    | _ -> 
+	raise (Internal (e.expr_loc,
+			 "Reac2lco.translate_ml: expr"))
+
   in
   make_expr coexpr e.expr_loc
 
 (* Translation of Process expressions                                    *)
 and translate_proc p =
   let coproc =
-    match p.proc_desc with
-    | Rproc_nothing -> Coproc_nothing
+    if p.expr_static = Def_static.Static then
+      Coproc_compute (translate_ml p)
+    else
+      match p.expr_desc with
+      | Rexpr_nothing -> Coproc_nothing
+	    
+      | Rexpr_pause -> Coproc_pause 
 
-    | Rproc_pause -> Coproc_pause 
+      | Rexpr_halt -> Coproc_halt
 
-    | Rproc_compute e -> Coproc_compute (translate_ml e)
+      | Rexpr_emit s -> Coproc_emit (translate_ml s)
 
-    | Rproc_emit s -> Coproc_emit (translate_ml s)
+      | Rexpr_emit_val (s, e) -> 
+	  Coproc_emit_val (translate_ml s, translate_ml e)
 
-    | Rproc_emit_val (s, e) -> 
-	Coproc_emit_val (translate_ml s, translate_ml e)
+      | Rexpr_loop proc -> Coproc_loop (translate_proc proc)
 
-    | Rproc_loop proc -> Coproc_loop (translate_proc proc)
+      | Rexpr_while (expr, proc) ->
+	  Coproc_while (translate_ml expr, translate_proc proc)
 
-    | Rproc_while (expr, proc) ->
-	Coproc_while (translate_ml expr, translate_proc proc)
+      | Rexpr_for (i, e1, e2, flag, proc) ->
+	  Coproc_for(i,
+		     translate_ml e1,
+		     translate_ml e2,
+		     flag,
+		     translate_proc proc)
 
-    | Rproc_for (i, e1, e2, flag, proc) ->
-	Coproc_for(i,
-		   translate_ml e1,
-		   translate_ml e2,
-		   flag,
-		   translate_proc proc)
-
-    | Rproc_fordopar (i, e1, e2, flag, proc) ->
-	Coproc_fordopar(i,
-			translate_ml e1,
-			translate_ml e2,
-			flag,
-			translate_proc proc)
-
-    | Rproc_seq (p1, p2) ->
-	Coproc_seq(translate_proc p1, translate_proc p2)
-
-    | Rproc_par (p1, p2) ->
-	Coproc_par (translate_proc p1,
-		    translate_proc p2)
-
-    | Rproc_merge (p1, p2) ->
-	Coproc_merge (translate_proc p1,
-		     translate_proc p2)
-
-    | Rproc_signal ((s,typ), comb, proc) ->
-	Coproc_signal ((s, opt_map translate_te typ),
-		       opt_map 
-			 (fun (e1,e2) -> 
-			   translate_ml e1, translate_ml e2) comb,
-		       translate_proc proc)
-
-    | Rproc_def ((patt, expr), proc) ->
-	Coproc_def ((translate_pattern patt, translate_ml expr),
-		    translate_proc proc)
-
-    | Rproc_run (expr) ->
-	Coproc_run (translate_ml expr)
-
-    | Rproc_until (s, proc, patt_proc_opt) ->
-	Coproc_until (translate_ml s, 
-		      translate_proc proc,
-		      opt_map 
-			(fun (patt, proc) -> 
-			  translate_pattern patt, translate_proc proc)
-			patt_proc_opt)
-
-    | Rproc_when (s, proc) ->
-	Coproc_when (translate_ml s, translate_proc proc)
-
-    | Rproc_control (s, proc) ->
-	Coproc_control (translate_ml s, translate_proc proc)
-
-    | Rproc_get (s, patt, proc) ->
-	Coproc_get (translate_ml s, 
-		    translate_pattern patt, 
-		    translate_proc proc)
-	  
-    | Rproc_present (s, p1, p2) ->
-	Coproc_present (translate_ml s, 
-			translate_proc p1, 
-			translate_proc p2)
-
-    | Rproc_ifthenelse (expr, p1, p2) ->
-	Coproc_ifthenelse (translate_ml expr, 
-			   translate_proc p1, 
-			   translate_proc p2)
-
-    | Rproc_match (expr, l) ->
-	Coproc_match (translate_ml expr,
-		      List.map 
-			(fun (p,e) -> translate_pattern p, translate_proc e)
-			l)
-
-    | Rproc_await (flag, s) -> Coproc_await (flag, translate_ml s)
-
-    | Rproc_await_val (flag1, flag2, s, patt, proc) ->
-	Coproc_await_val (flag1,
-			  flag2,
-			  translate_ml s, 
-			  translate_pattern patt, 
+      | Rexpr_fordopar (i, e1, e2, flag, proc) ->
+	  Coproc_fordopar(i,
+			  translate_ml e1,
+			  translate_ml e2,
+			  flag,
 			  translate_proc proc)
+
+      | Rexpr_seq (p1::p_list) ->
+	let rec f acc l =
+	  match l with
+	  | [] -> assert false
+	  | [p] ->
+	      Coproc_seq (acc, translate_proc p)
+	  | p::l' ->
+	      let acc' =
+		make_proc
+		  (Coproc_seq (acc, translate_proc p))
+		  Location.none
+	      in
+	      f acc' l'
+	in f (translate_proc p1) p_list 
+
+(*	    
+      | Rexpr_par p_list ->
+	  let p_list' =
+	    List.map (fun p -> translate_proc p) p_list
+	  in
+	  Coproc_par p_list'
+*)
+      | Rexpr_par [p1; p2] ->
+	  Coproc_par [translate_proc p1; translate_proc p2]
+      | Rexpr_par p_list ->
+	  let p_list' =
+	    List.map 
+	      (fun p -> 
+		if p.expr_type = Initialization.type_unit then
+		  translate_proc p
+		else
+		  if p.expr_static = Def_static.Static then
+		    make_proc
+		      (Coproc_compute 
+			 (make_expr
+			    (Coexpr_seq (translate_ml p, make_unit()))
+			    Location.none))
+		      Location.none
+		  else
+		    make_proc
+		      (Coproc_seq (translate_proc p, make_nothing()))
+		      Location.none)
+	      p_list
+	  in
+	  Coproc_par p_list'	    
+
+      | Rexpr_merge (p1, p2) ->
+	  Coproc_merge (translate_proc p1,
+			translate_proc p2)
+	    
+      | Rexpr_signal ((s,typ), comb, proc) ->
+	  Coproc_signal ((s, opt_map translate_te typ),
+			 opt_map 
+			   (fun (e1,e2) -> 
+			     translate_ml e1, translate_ml e2) comb,
+			 translate_proc proc)
+
+(*
+   | Rexpr_let (Nonrecursive,[(patt, expr)], proc) ->
+   Coproc_def ((translate_pattern patt, translate_ml expr),
+   translate_proc proc)
+   | Rexpr_let (flag, patt_expr_list, proc) ->
+   Coproc_def (translate_proc_let flag patt_expr_list,
+   translate_proc proc)
+ *)
+      | Rexpr_let (flag, patt_expr_list, proc) ->
+	  translate_proc_let flag patt_expr_list proc
+
+      | Rexpr_run (expr) ->
+	  Coproc_run (translate_ml expr)
+	    
+      | Rexpr_until (s, proc, patt_proc_opt) ->
+	  Coproc_until (translate_conf s, 
+			translate_proc proc,
+			opt_map 
+			  (fun (patt, proc) -> 
+			    translate_pattern patt, translate_proc proc)
+			  patt_proc_opt)
+
+      | Rexpr_when (s, proc) ->
+	  Coproc_when (translate_conf s, translate_proc proc)
+
+      | Rexpr_control (s, proc) ->
+	  Coproc_control (translate_conf s, translate_proc proc)
+
+      | Rexpr_get (s, patt, proc) ->
+	  Coproc_get (translate_ml s, 
+		      translate_pattern patt, 
+		      translate_proc proc)
+	    
+      | Rexpr_present (s, p1, p2) ->
+	  Coproc_present (translate_conf s, 
+			  translate_proc p1, 
+			  translate_proc p2)
+
+      | Rexpr_ifthenelse (expr, p1, p2) ->
+	  Coproc_ifthenelse (translate_ml expr, 
+			     translate_proc p1, 
+			     translate_proc p2)
+
+      | Rexpr_match (expr, l) ->
+	  Coproc_match (translate_ml expr,
+			List.map 
+			  (fun (p,e) -> translate_pattern p, translate_proc e)
+			  l)
+
+      | Rexpr_when_match (e1, e2) ->
+	  Coproc_when_match (translate_ml e1, translate_proc e2)
+
+      | Rexpr_await (flag, s) -> Coproc_await (flag, translate_conf s)
+
+      | Rexpr_await_val (flag1, flag2, s, patt, proc) ->
+	  Coproc_await_val (flag1,
+			    flag2,
+			    translate_ml s, 
+			    translate_pattern patt, 
+			    translate_proc proc)
+
+      | _ -> 
+	  raise (Internal (p.expr_loc,
+			   "Reac2lco.translate_proc: expr"))
+
   in
-  make_proc coproc p.proc_loc
+  make_proc coproc p.expr_loc
+
+(* Translation of event configurations *)
+and translate_conf conf =
+  let coconf =
+    match conf.conf_desc with
+    | Rconf_present e -> Coconf_present (translate_ml e)
+
+    | Rconf_and (c1,c2) -> 
+	Coconf_and (translate_conf c1, translate_conf c2)
+
+    | Rconf_or (c1,c2) -> 
+	Coconf_or (translate_conf c1, translate_conf c2)
+
+  in
+  make_conf coconf conf.conf_loc
+    
+(* Translation of let definitions in a PROCESS context *)
+and translate_proc_let =
+  let rec is_static patt_expr_list =
+    match patt_expr_list with
+    | [] -> true
+    | (_, expr) :: tl ->
+	if expr.expr_static = Def_static.Dynamic then
+	  false
+	else
+	  is_static tl
+  in
+  fun rec_flag patt_expr_list proc ->
+    if is_static patt_expr_list then
+      begin match rec_flag, patt_expr_list with
+      | Nonrecursive, [(patt, expr)] ->
+	  Coproc_def ((translate_pattern patt, translate_ml expr),
+		      translate_proc proc)
+      | _ ->
+          (* x, C y = e1 and z = e2                              *)
+          (* is translated in                                    *)
+          (* x,y,z = let x, C y = e1 and z = e2 in x,y,z         *)
+	  let vars =
+	    List.fold_left 
+	      (fun vars (patt,_) -> (Reac_misc.vars_of_patt patt) @ vars) 
+	      [] patt_expr_list
+	  in
+	  let rexpr_and_copatt_of_var x = 
+	    match x with 
+	    | Varpatt_local id -> 
+		Reac_misc.make_expr (Rexpr_local id) Location.none,
+		make_patt (Copatt_var (Covarpatt_local id)) Location.none 
+	    | Varpatt_global gl -> assert false
+	  in
+	  let rexpr_of_vars, copatt_of_vars =
+	    List.fold_left
+	      (fun (el,pl) var -> 
+		let e, p = rexpr_and_copatt_of_var var in 
+		e::el, p::pl)
+	      ([],[])
+	      vars
+	  in
+	  let body = 
+	    translate_ml
+	      (Reac_misc.make_expr 
+		 (Rexpr_let(rec_flag, 
+			    patt_expr_list, 
+			    Reac_misc.make_expr 
+			      (Rexpr_tuple rexpr_of_vars) 
+			      Location.none)) 
+		 Location.none)
+	  in
+	  Coproc_def
+	    ((make_patt (Copatt_tuple copatt_of_vars) Location.none, body),
+	     translate_proc proc)
+      end
+    else
+      begin match patt_expr_list with
+      | [(patt, expr)] ->
+	  Coproc_def_dyn
+	    ((translate_pattern patt, translate_proc expr),
+	     translate_proc proc)
+      | _ ->
+(*
+	  Coproc_def_and_dyn
+	    (List.map
+	       (fun (patt,expr) -> 
+		 (translate_pattern patt, translate_proc expr))
+	       patt_expr_list,
+	     translate_proc proc)
+*)
+          (*  let x1 = e1                                  *)
+          (*  and x2 = e2                                  *)
+          (*  in e                                         *)
+          (*                                               *)
+          (*  is translated into                           *)
+          (*                                               *)
+          (*  let v1, v2 = ref None, ref None in           *)
+          (*  (let x1 = e1 in v1 := Some x1                *)
+          (*   ||                                          *)
+          (*   let x2 = e2 in v2 := Some x2);              *)
+          (*  let x1, x2 =                                 *)
+          (*    match !v1, !v2 with                        *)
+          (*    | Some v1, Some v2 -> v1, v2               *)
+          (*    | _ -> assert false                        *)
+          (*  in e                                         *)
+	  let ref_global = 
+	    Modules.find_value_desc (Initialization.pervasives_val "ref")
+	  in
+	  let set_global = 
+	    Modules.find_value_desc (Initialization.pervasives_val ":=")
+	  in
+	  let deref_global =
+	    Modules.find_value_desc (Initialization.pervasives_val "!")
+	  in
+	  let id_array = 
+	    Array.init (List.length patt_expr_list)
+	      (fun i -> Ident.create Ident.gen_var ("v"^(string_of_int i)) 
+		  Ident.Internal)
+	  in
+	  let par =
+	    Coproc_par
+	      (List.fold_right2
+		 (fun id (_, expr) expr_list -> 
+		   let local_id = 
+		     Ident.create Ident.gen_var "x" Ident.Internal
+		   in
+		   make_proc
+		     (Coproc_def_dyn
+			( (* let x_i = e_i *)
+			 (make_patt
+			    (Copatt_var (Covarpatt_local local_id))
+			    Location.none,
+			  translate_proc expr),
+			  (* in ref_i := Some x1*)
+			 make_proc
+			   (Coproc_compute
+			      (make_expr
+				 (Coexpr_apply 
+				    (make_expr
+				       (Coexpr_global set_global)
+				       Location.none,
+				     [make_expr (Coexpr_local id) 
+					Location.none;
+				      make_expr
+					(Coexpr_construct
+					   (Initialization.some_constr_desc,
+					    Some
+					      (make_expr 
+						 (Coexpr_local local_id) 
+						 Location.none)))
+					Location.none;]))
+				 Location.none))
+			   Location.none))
+		     Location.none
+		   :: expr_list)
+		 (Array.to_list id_array) patt_expr_list [])
+	  in
+	  let let_match =
+	    Coproc_def 
+	      ((make_patt
+		  (Copatt_tuple
+		     (List.fold_right
+			(fun (patt, _) patt_list ->
+			  (translate_pattern patt) :: patt_list)
+			patt_expr_list []))
+		  Location.none,
+
+		make_expr
+		  (Coexpr_match
+		     ((make_expr
+			 (Coexpr_tuple
+			    (Array.fold_right
+			       (fun id expr_list ->
+				 make_expr
+				   (Coexpr_apply
+				      ((make_expr
+					  (Coexpr_global deref_global)
+					  Location.none,
+					[make_expr (Coexpr_local id) 
+					   Location.none])))
+				   Location.none
+				 :: expr_list)
+			       id_array []))
+			 Location.none),
+		      [(make_patt
+			  (Copatt_tuple
+			     (Array.fold_right
+				(fun id patt_list ->
+				  make_patt
+				    (Copatt_construct 
+				       (Initialization.some_constr_desc, 
+					Some 
+					  (make_patt
+					     (Copatt_var (Covarpatt_local id))
+					     Location.none)))
+				    Location.none
+				  :: patt_list)
+				id_array []))
+			  Location.none,
+			make_expr
+			  (Coexpr_tuple
+			     (Array.fold_right
+				(fun id expr_list ->
+				  make_expr (Coexpr_local id) Location.none
+				  :: expr_list)
+				id_array []))
+			  Location.none);
+		       (make_patt (Copatt_any) Location.none,
+			make_expr (Coexpr_assert 
+				     (make_expr (Coexpr_constant 
+						   (Const_bool false)) 
+					Location.none)) 
+			  Location.none)]))
+		  Location.none),
+	       translate_proc proc)
+	  in
+	  Coproc_def
+	    ((make_patt
+		(Copatt_tuple 
+		   (Array.fold_right
+		      (fun id patt_list ->
+			(make_patt
+			   (Copatt_var (Covarpatt_local id))
+			   Location.none)
+			:: patt_list)
+		      id_array []))
+		Location.none,
+	      make_expr
+		(Coexpr_tuple
+		   (Array.fold_left
+		      (fun expr_list id ->
+			(make_expr
+			   (Coexpr_apply 
+			      (make_expr
+				 (Coexpr_global ref_global)
+				 Location.none,
+			       [ make_expr 
+				   (Coexpr_construct 
+				      (Initialization.none_constr_desc, None))
+				   Location.none ]))
+			   Location.none)
+			:: expr_list)
+		      [] id_array))
+		Location.none),
+	     make_proc 
+	       (Coproc_seq 
+		  (make_proc par Location.none, 
+		   make_proc let_match Location.none))
+	       Location.none)
+      end
 
 let translate_impl_item info_chan item =
   let coitem =

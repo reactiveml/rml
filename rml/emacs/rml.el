@@ -1,4 +1,4 @@
-;;; rml.el --- O'Caml code editing commands for Emacs
+;;; rml.el --- Reactive ML code editing commands for Emacs
 
 ;; Xavier Leroy, july 1993.
 
@@ -221,6 +221,11 @@ Usually negative. nil is align on master.")
 Usually negative. nil is align on master.")
 (make-variable-buffer-local 'rml-do-extra-indent)
 
+(defvar rml-dopar-extra-indent nil
+  "*Extra indent for rml lines starting with the dopar keyword.
+Usually negative. nil is align on master.")
+(make-variable-buffer-local 'rml-dopar-extra-indent)
+
 (defvar rml-done-extra-indent nil
   "*Extra indent for rml lines starting with the done keyword.
 Usually negative. nil is align on master.")
@@ -305,6 +310,9 @@ have rml-electric-indent on, which see.")
         (not (fboundp 'buffer-substring-no-properties)))
     (require 'rml-compat))
 
+(defvar rml-shell-active nil
+  "Non nil when a subshell is running.")
+
 (defvar running-xemacs  (string-match "XEmacs" emacs-version)
   "Non-nil if we are running in the XEmacs environment.")
 
@@ -330,7 +338,7 @@ have rml-electric-indent on, which see.")
   ;; rml-types
   (define-key rml-mode-map [?\C-c?\C-t] 'rml-types-show-type)
   ;; to prevent misbehavior in case of error during exploration.
-  (define-key rml-mode-map [mouse-2] 'rml-types-mouse-ignore)
+;  (define-key rml-mode-map [mouse-2] 'rml-types-mouse-ignore)
   (define-key rml-mode-map [down-mouse-2] 'rml-types-explore)
   ;; rml-help
   (define-key rml-mode-map [?\C-c?i] 'rml-add-path)
@@ -358,8 +366,11 @@ have rml-electric-indent on, which see.")
   (define-key rml-mode-map "\C-c\C-\[" 'rml-backward-to-less-indent)
   (define-key rml-mode-map "\C-c\C-\]" 'rml-forward-to-less-indent)
   (define-key rml-mode-map "\C-c\C-q" 'rml-indent-phrase)
+  (define-key rml-mode-map "\C-c\C-r" 'rml-eval-region)
+  (define-key rml-mode-map "\C-c\C-s" 'rml-show-subshell)
   (define-key rml-mode-map "\M-\C-h" 'rml-mark-phrase)
   (define-key rml-mode-map "\M-\C-q" 'rml-indent-phrase)
+  (define-key rml-mode-map "\M-\C-x" 'rml-eval-phrase)
 
   (if running-xemacs nil ; if not running xemacs
     (let ((map (make-sparse-keymap "Reactive-ML"))
@@ -383,6 +394,7 @@ have rml-electric-indent on, which see.")
       (define-key map [separator-types] '("---"))
 
       ;; others
+      (define-key map [run-rml] '("Start subshell..." . run-rml))
       (define-key map [compile] '("Compile..." . compile))
       (define-key map [switch-view]
         '("Switch view" . rml-find-alternate-file))
@@ -390,6 +402,10 @@ have rml-electric-indent on, which see.")
       (define-key map [forms] (cons "Forms" forms))
       (define-key map [show-imenu] '("Show index" . rml-show-imenu))
       (put 'rml-show-imenu 'menu-enable '(not rml-imenu-shown))
+      (define-key map [show-subshell] '("Show subshell" . rml-show-subshell))
+      (put 'rml-show-subshell 'menu-enable 'rml-shell-active)
+      (define-key map [eval-phrase] '("Eval phrase" . rml-eval-phrase))
+      (put 'rml-eval-phrase 'menu-enable 'rml-shell-active)
       (define-key map [indent-phrase] '("Indent phrase" . rml-indent-phrase))
       (define-key forms [while]
         '("while .. do .. done" . rml-insert-while-form))
@@ -412,6 +428,9 @@ have rml-electric-indent on, which see.")
   (if running-xemacs
       '("Reactive-ML"
         [ "Indent phrase" rml-indent-phrase :keys "C-M-q" ]
+        [ "Eval phrase" rml-eval-phrase
+          :active rml-shell-active :keys "C-M-x" ]
+        [ "Show subshell" rml-show-subshell rml-shell-active ]
         ("Forms"
          [ "while .. do .. done" rml-insert-while-form t]
          [ "control .. with .." rml-insert-control-form t ]
@@ -430,6 +449,7 @@ have rml-electric-indent on, which see.")
         "---"
         [ "Switch view" rml-find-alternate-file t ]
         [ "Compile..." compile t ]
+        [ "Start subshell..." run-rml t ]
         "---"
         [ "Show type at point" rml-types-show-type t ]
         "---"
@@ -472,6 +492,7 @@ have rml-electric-indent on, which see.")
   (setq rml-mode-abbrev-table (make-abbrev-table))
   (define-abbrev rml-mode-abbrev-table "and" "and" 'rml-abbrev-hook)
   (define-abbrev rml-mode-abbrev-table "do" "do" 'rml-abbrev-hook)
+  (define-abbrev rml-mode-abbrev-table "dopar" "dopar" 'rml-abbrev-hook)
   (define-abbrev rml-mode-abbrev-table "done" "done" 'rml-abbrev-hook)
   (define-abbrev rml-mode-abbrev-table "else" "else" 'rml-abbrev-hook)
   (define-abbrev rml-mode-abbrev-table "end" "end" 'rml-abbrev-hook)
@@ -508,11 +529,12 @@ have rml-electric-indent on, which see.")
 
 (defconst rml-imenu-search-regexp
   (concat "\\<in\\>\\|"
-          "^[ \t]*\\(await immediate\\|await\\|class\\|let process"
+          "^[ \t]*\\(await immediate\\|await\\|class"
 	  "\\|let\\|signal\\|type\\|m\\(odule\\|ethod\\)"
           "\\|functor\\|and\\|val\\)[ \t]+"
           "\\(\\('[a-zA-Z0-9]+\\|([^)]+)"
-          "\\|mutable\\|private\\|rec\\|type\\)[ \t]+\\)?"
+          "\\|mutable\\|private\\|process\\|rec process"
+	  "\\|rec\\|type\\)[ \t]+\\)?"
           "\\([a-zA-Z][a-zA-Z0-9_']*\\)"))
 
 ;;; The major mode
@@ -617,6 +639,59 @@ have rml-electric-indent on, which see.")
          (concat
           (rml-match-string 1 name)
           (if (string= "rml" (rml-match-string 2 name)) ".rmli" ".rml"))))))
+
+;;; subshell support
+
+(defun rml-eval-region (start end)
+  "Send the current region to the inferior Rml process."
+  (interactive"r")
+  (require 'inf-rml)
+  (inferior-rml-eval-region start end))
+
+;; old version ---to be deleted later
+; 
+; (defun rml-eval-phrase ()
+;   "Send the current Rml phrase to the inferior Rml process."
+;   (interactive)
+;   (save-excursion
+;     (let ((bounds (rml-mark-phrase)))
+;     (inferior-rml-eval-region (car bounds) (cdr bounds)))))
+
+(defun rml-eval-phrase (arg &optional min max)
+  "Send the phrase containing the point to the RML process.
+With prefix-arg send as many phrases as its numeric value, 
+If an error occurs during evalutaion, stop at this phrase and
+repport the error. 
+
+Return nil if noerror and position of error if any.
+
+If arg's numeric value is zero or negative, evaluate the current phrase
+or as many as prefix arg, ignoring evaluation errors. 
+This allows to jump other erroneous phrases. 
+
+Optional arguments min max defines a region within which the phrase
+should lies."
+  (interactive "p")
+  (require 'inf-rml)
+  (inferior-rml-eval-phrase arg min max))
+
+(defun rml-eval-buffer (arg)
+  "Evaluate the buffer from the beginning to the phrase under the point.
+With prefix arg, evaluate past the whole buffer, no stopping at
+the current point."
+  (interactive "p")
+  (let ((here (point)) err)
+    (goto-char (point-min))
+    (setq err
+          (rml-eval-phrase 500 (point-min) (if arg (point-max) here)))
+    (if err (set-mark err))
+    (goto-char here)))
+
+(defun rml-show-subshell ()
+  (interactive)
+  (require 'inf-rml)
+  (inferior-rml-show-subshell))
+
 
 
 ;;; Imenu support
@@ -1101,8 +1176,8 @@ Returns nil for the parenthesis openning a comment."
 ;; Various constants and regexps
 
 (defconst rml-before-expr-prefix
-  (concat "\\<\\(asr\\|begin\\|loop\\|class\\|do\\(wnto\\)?\\|else"
-          "\\|do\\|i\\(f\\|n\\(herit\\|itializer\\)?\\)"
+  (concat "\\<\\(asr\\|begin\\|loop\\|class\\|do\\(par\\|wnto\\)?"
+	  "\\|else\\|i\\(f\\|n\\(herit\\|itializer\\)?\\)"
           "\\|f\\(or\\|un\\(ct\\(ion\\|or\\)\\)?\\)"
           "\\|l\\(and\\|or\\|s[lr]\\|xor\\)\\|m\\(atch\\|od\\)"		
 	  "\\|present\\|control"
@@ -1115,7 +1190,7 @@ Used to distinguish it from toplevel let construct.")
 
 (defconst rml-matching-kw-regexp
   (concat
-   "\\<\\(and\\|do\\(ne\\)?\\|e\\(lse\\|nd\\)\\|in\\|t\\(hen\\|o\\)"
+   "\\<\\(and\\|do\\(ne\\|par\\)?\\|e\\(lse\\|nd\\)\\|in\\|t\\(hen\\|o\\)"
    "\\|until\\|when\\|with\\)\\>\\|[^[|]|[^|]")
   "Regexp used in rml mode for skipping back over nested blocks.")
 
@@ -1133,6 +1208,7 @@ Used to distinguish it from toplevel let construct.")
     ("then" . rml-find-then-match)
     ("to" . rml-find-done-match)
     ("do" . rml-find-done-match)
+    ("dopar" . rml-find-done-match)
     ("and" . rml-find-and-match))
 
   "Association list used in rml mode for skipping back over nested blocks.")
@@ -1157,7 +1233,21 @@ Used to distinguish it from toplevel let construct.")
         (forward-char)
         (rml-forward-comment)
         (skip-chars-forward " \t\n"))
-      (if (<= pos (point)) (setq in-expr nil))))
+
+      (if (string= (match-string 0) "when")
+	  (progn
+	    (let ((pos2 (- (point) 5)))
+	      (goto-char pos2)
+	      (if (= (rml-verif-boucle pos) 1)
+		  ;not first statement : not in-expr
+		  (setq in-expr nil)
+		
+		))
+	    (goto-char pos)))
+      ;(goto-char pos)
+
+      (if (<= pos (point)) (setq in-expr nil))
+))
     (goto-char pos)
     in-expr))
 
@@ -1305,18 +1395,39 @@ the line where the governing keyword occurs.")
 (defun rml-find-done-match ()
   (let ((unbalanced 1) (kwop t))
     (while (and (not (= 0 unbalanced)) kwop)
-      (setq kwop (rml-find-kwop "\\<\\(do\\(ne\\)?\\|for\\|while\\)\\>"))
+      (setq kwop (rml-find-kwop "\\<\\(do\\(ne\\)?\\|for\\|wh\\(en\\|ile\\)\\)\\>"))
       (cond
        ((not kwop))
+
+       ((string= kwop "when") 
+	(let ((beg (point)) (prec (rml-find-when-match)))
+	  (if prec
+	      prec
+	    (goto-char beg))))
+
        ((string= kwop "do")
-	(let ((beg (point)) (prec (rml-find-done-match)))
-	  (if (not (string= prec "for"))
-	      (progn  
-		(goto-char beg)  ;rml-find-done-match a modifie la pos
-		(setq unbalanced (1- unbalanced)))
-	    (setq kwop prec)
+	(let ((beg (point)) 
+	      (retour (search-backward-regexp "\\<\\(for\\|while\\)\\>" 
+				       (point-min) 
+				       t)))
+	  (if retour
+	      (progn
+		(let ((for-point (point)))
+		(search-forward-regexp "do[ \n\t]\\|dopar[ \n\t]" (point-max) t)
+		(if (string= (rml-match-string 0) "downto")
+		    (search-forward "do" (point-max) t)
+		  (if (> (point) beg)
+		    ;same do : in a for form
+		    (progn
+		      (setq kwop "for")
+		      (goto-char for-point)
+		      (setq unbalanced (1- unbalanced)))
+		  (goto-char beg)
+		  (setq unbalanced (1- unbalanced))))))
+	    (goto-char beg)
 	    (setq unbalanced (1- unbalanced)))))
-       ((string= kwop "done") (setq unbalanced (1+ unbalanced)))
+
+        ((string= kwop "done") (setq unbalanced (1+ unbalanced)))
        (t (setq unbalanced (1- unbalanced)))))
     kwop))
 
@@ -1369,29 +1480,60 @@ the line where the governing keyword occurs.")
        ((not kwop))
        ((string= kwop "when") (rml-find-when-match))
        ((string= kwop "until") (setq unbalanced (1+ unbalanced)))
- ;      (t (setq unbalanced (1- unbalanced)))))
-       (t (let ((beg (point)) (prec (rml-find-done-match)))
-	    (if (not (string= prec "for"))
-		(progn  (goto-char beg)  ;rml-find-done-match a modifie la pos
-			(setq unbalanced (1- unbalanced)))
-	      )))))
+
+       (t (let ((beg (point)) 
+(retour (search-backward-regexp "\\<\\(for\\|while\\)\\>" 
+				       (point-min) 
+				       t)))
+;(retour (search-backward "for" (point-min) t)))
+	    (if retour
+		(progn
+		  (let ((for-point (point)))
+;		    (search-forward "\\<\\(do[^w]\\)\\>" (point-max) t)
+		    (search-forward-regexp "do[ \n\t]\\|dopar" (point-max) t)
+		    (if (string= (rml-match-string 0) "downto")
+			(search-forward "do" (point-max) t)
+		      (if (> (point) beg)
+		      ;same do
+			  (goto-char for-point)
+			(goto-char beg)
+			(setq unbalanced (1- unbalanced))))))
+	      (goto-char beg)
+	      (setq unbalanced (1- unbalanced)))))
+			  
+))
     kwop))
 
 (defun rml-find-when-match ()
   (let ((unbalanced 1) (kwop t))
     (while (and (not (= 0 unbalanced)) kwop)
-      (setq kwop (rml-find-kwop "\\<\\(until\\|do\\|when\\)\\>"))
+      (setq kwop (rml-find-kwop "\\<\\(do\\(ne\\)?\\|when\\)\\>"))
       (cond
        ((not kwop))
-       ((string= kwop "until") (rml-find-until-match))
+       ;((string= kwop "until") (rml-find-until-match))
+       ((string= kwop "done") (rml-find-done-match))
        ((string= kwop "when") (setq unbalanced (1+ unbalanced)))
-       ;(t (setq unbalanced (1- unbalanced)))))
-       (t (let ((beg (point)) (prec (rml-find-done-match)))
-	    (if (not (string= prec "for"))
-		(progn  (goto-char beg)  ;rml-find-done-match a modifie la pos
-		       (setq unbalanced (1- unbalanced)))
-	      )))))
 
+       (t (let ((beg (point)) 
+(retour (search-backward-regexp "\\<\\(for\\|while\\)\\>" 
+				       (point-min) 
+				       t)))
+;(retour (search-backward "for" (point-min) t)))
+	    (if retour
+		(progn
+		  (let ((for-point (point)))
+;		    (search-forward "\\<\\(do[^w]\\)\\>" (point-max) t)
+		    (search-forward-regexp "do[ \n\t]\\|dopar" (point-max) t)
+		    (if (string= (rml-match-string 0) "downto")
+			(search-forward "do" (point-max) t)
+		      (if (> (point) beg)
+		      ;same do
+			  (goto-char for-point)
+			(goto-char beg)
+			(setq unbalanced (1- unbalanced))))))
+	      (goto-char beg)
+	      (setq unbalanced (1- unbalanced)))))
+))
    kwop))
 
 (defun rml-find-with-match ()
@@ -1512,7 +1654,6 @@ the line where the governing keyword occurs.")
   "Look back for a rml keyword matching rml-kwop-regexps [PRIO].
 
  Skip nested blocks."
-
   (let ((done nil) (kwop nil) (matching-fun)(pos (point))
         (kwop-list (aref rml-kwop-regexps prio)))
     (while (not done)
@@ -1553,40 +1694,91 @@ the line where the governing keyword occurs.")
              (re-search-backward "\\<with\\>" (- (point) 5) t))
         (setq kwop (rml-find-with-match))
         (setq done t))
-       ((and (if (looking-at "do[^n]")
-		 (let ((beg (point)) (prec (rml-find-done-match)))
-		   (goto-char beg)
-		   prec) ;not nil if for-form
-	       t)
-	     (if (looking-at "when")
-		 (let ((beg (point)) (prec (rml-find-when-match)))
-		   (goto-char beg)
-		   (if prec
-		       t    ;if do-when form
-		     nil))
-	       t)
-	     (setq matching-fun (cdr-safe (assoc kwop rml-matching-kw-alist))))	     
-	(if (and (or (looking-at "when") (looking-at "until"))
-		 (= (rml-verif-boucle pos) 1)) ;if not first statement
-	    (rml-find-until-match)
+       ((and (looking-at "do[ \t\n]")
+	     (not (looking-at "done"))
+	     (not (looking-at "dopar")))
+	(let ((beg (point)) ;(prec (rml-find-done-match)))
+(retour (search-backward-regexp "\\<\\(for\\|while\\)\\>" 
+				       (point-min) 
+				       t)))
+;	      (retour (search-backward "for" (point-min) t)))
+	  (if retour
+	      (progn
+		(let ((for-point (point)))
+;		  (search-forward "\\<\\(do[^w]\\)\\>" (point-max) t)
+		  (search-forward-regexp "do[ \n\t]\\|dopar" (point-max) t)
+		  (if (string= (rml-match-string 0) "downto")
+		      (search-forward "do" (point-max) t)
+		    (if (> (point) beg)
+;		    (setq kwop prec)
+			(progn
+			  (goto-char beg)
+			  (setq matching-fun (cdr-safe (assoc kwop rml-matching-kw-alist))))
+		      
+		      (setq done t)
+		      (goto-char beg)
+		      (setq kwop-list
+			    (aref rml-kwop-regexps 6))
+		      (setq done t)))))
+	    (goto-char beg)
+	    (setq kwop-list
+		  (aref rml-kwop-regexps 6))
+	    (setq done t)
+)))
+      
+       ((and (looking-at "when")
+	     (let ((beg (point)) (prec (rml-find-when-match)))
+	       (goto-char beg)
+	       (if prec
+		   t    ;if do-when form
+		 nil)))
+	(setq matching-fun (cdr-safe (assoc kwop rml-matching-kw-alist)))
+	(if (= (rml-verif-boucle pos) 1) ;if not first statement
+	    (rml-find-when-match)
 	  (setq kwop (funcall matching-fun))
 	  (if (looking-at kwop-list) (setq done t))))
+       
+       ((looking-at "until")
+	(setq matching-fun (cdr-safe (assoc kwop rml-matching-kw-alist)))
+	(let ((beg (point)))
+	(if (= (rml-verif-boucle (point)) 0) ;if first statement
+	    (progn
+	      (goto-char beg)
+	      (rml-find-until-match))
+	  (setq kwop (funcall matching-fun))
+	  (if (looking-at kwop-list) (setq done t)))))
+       ((and
+	 (not (string= kwop "do"))
+	 (not (string= kwop "done"))
+;	 (not (string= kwop "dopar"))
+	 (setq matching-fun (cdr-safe (assoc kwop rml-matching-kw-alist))))
+	 (setq kwop (funcall matching-fun))
+	 (if (looking-at kwop-list) (setq done t))
+)
+
        ((and (looking-at "when")
 	    (< prio 3))	
 	(setq kwop nil))
        (t 
-	(if (or (string= kwop "await")
-		(string= kwop "let"))
+	(if ;(or 
+	    (string= kwop "await")
+		;(string= kwop "let"))
 	    (progn
 	      (let ((pos (point)))
 		(end-of-line)
+		(skip-chars-backward " \t")
+		;; (while (or (= (preceding-char) "\t")
+;; 			   (= (preceding-char) " "))
+;; 		  (goto-char (- (point) 1)))
 		(if (= (preceding-char) ?\;)
+		;(goto-char (- (point) 2))
+		;(if (string= (rml-match-string 0) ";;")
 		    (goto-char pos)
 		  (goto-char pos)
 		  (setq done t))))
 	  (let* ((kwop-info (assoc kwop rml-kwop-alist))
                  (is-op (and (nth 1 kwop-info)
-					; check that we are not at beginning of line
+			  ; check that we are not at beginning of line
                              (let ((pos (point)) bti)
                                (back-to-indentation)
                                (setq bti (point))
@@ -1617,12 +1809,35 @@ Does not preserve point."
                 ((and (looking-at rml-phrase-start-keywords)
                       (rml-in-expr-p))
                  (rml-find-end-match))
-		((looking-at "do[^n]")
-		 (let ((beg (point)) (prec (rml-find-done-match)))
-		   (if prec 
-		       prec  ;if in a for form
+
+		((and (looking-at "do[ \t\n]")
+		      (not (looking-at "done"))
+		      (not (looking-at "dopar")))
+		 (let ((beg (point)) ;(prec (rml-find-done-match)))
+(retour (search-backward-regexp "\\<\\(for\\|while\\)\\>" 
+				       (point-min) 
+				       t)))
+;		       (retour (search-backward "for" (point-min) t)))
+		   (if retour 
+		       (progn
+			 (let ((for-point (point)))
+			   (search-forward-regexp 
+			    "\\<\\(do\\|dopar\\)\\>" (point-max) t)
+			   (if (string= (rml-match-string 0) "downto")
+			       (search-forward "do" (point-max) t)
+			     (if (> (point) beg)
+			     ;same do : for-form
+				 (progn 
+				   (search-backward-regexp 
+				    "do" (point-min) t)
+				   (rml-find-done-match)
+				   )
+			   ;do-form
+			       (goto-char beg)  
+			       (rml-find-kwop-skipping-blocks 6)))))
 		     (goto-char beg)  
-		     (rml-find-kwop-skipping-blocks 6))))		
+		     (rml-find-kwop-skipping-blocks 6))))
+
 		((looking-at "when") 
 		 (let ((beg (point)) (prec (rml-find-when-match)))
 		   (if prec 
@@ -1635,7 +1850,6 @@ Does not preserve point."
 					   rml-matching-kw-alist))))
                 ((looking-at
                   (aref rml-kwop-regexps rml-max-indent-priority))
-		 
                  (let* ((kwop (rml-match-string 0))
                         (kwop-info (assoc kwop rml-kwop-alist))
                         (prio (if kwop-info (nth 2 kwop-info)
@@ -1664,7 +1878,7 @@ Does not preserve point."
 		  (beginning-of-line))
               (- (symbol-value (nth 3 kwop-info))
                  (if (and (looking-at "|") (not (looking-at "||"))) 
-		     (progn  rml-|-extra-indent) 
+		     (progn rml-|-extra-indent) 
 		    0))))))
          (extra (if in-expr rml-apply-extra-indent 0)))
     (+ indent-diff extra (current-column))))
@@ -1675,15 +1889,15 @@ statement after the keyword (return 0) or not (return 1)"
 
    (let ((pos2 (+ (point) 5)))
      (goto-char pos2)
-     (let ((d (skip-chars-forward " \t\n" pos)))       
-	       (if (= d (- pos pos2))
+     (let ((d (skip-chars-forward " \t\n" pos)))
+       (if (= d (- pos pos2))
 		   (progn (goto-char (- pos2 5)) 0)
 		 (goto-char (- pos2 5))
 		 1))))
 
 (defconst rml-leading-kwops-regexp
   (concat
-   "\\<\\(and\\|do\\(ne\\)?\\|e\\(lse\\|nd\\)\\|in"
+   "\\<\\(and\\|do\\(ne\\|par\\)?\\|e\\(lse\\|nd\\)\\|in"
    "\\|t\\(hen\\|o\\)\\|until\\|when\\|with\\)\\>\\|[]|})]")
 
   "Regexp matching rml keywords which need special indentation.")
@@ -1691,6 +1905,7 @@ statement after the keyword (return 0) or not (return 1)"
 (defconst rml-leading-kwops-alist
   '(("and" rml-and-extra-indent 2)
     ("do" rml-do-extra-indent 0)
+    ("dopar" rml-dopar-extra-indent 0)
     ("done" rml-done-extra-indent 0)
     ("else" rml-else-extra-indent 3)
     ("end" rml-end-extra-indent 0)
@@ -1727,16 +1942,34 @@ matching nodes to determine KEYWORD's final indentation.")
             (closing 1)
             (comment-mark 1)
             (t rml-comment-indent)))))
-     ((looking-at "do[^n]")
-      (let ((beg (point)) (prec (rml-find-done-match)))
-	(if prec 
-	    (progn	      
-	      (goto-char beg)
-	      (let ((basic (rml-compute-basic-indent 0)))
-		(max 0 (current-column))))	  
-	  (goto-char beg)  ;rml-find-done-match a modife la pos
+     ((and (looking-at "do[ \n\t]")
+	   (not (looking-at "done"))
+	   (not (looking-at "dopar")))
+      (let ((beg (point)) ;(prec (rml-find-done-match)))
+(retour (search-backward-regexp "\\<\\(for\\|while\\)\\>" 
+				       (point-min) 
+				       t)))
+;	    (retour (search-backward "for" (point-min) t)))
+	(if retour
+	    (progn
+	      (let ((for-point (point)))
+;		(search-forward "\\<\\(do[^w]\\)\\>" (point-max) t)
+		(search-forward-regexp "do[ \n\t]\\|dopar" (point-max) t)
+		(if (string= (rml-match-string 0) "downto")
+		    (search-forward "do" (point-max) t)
+		  (if (> (point) beg)
+		  ;same do : for-form
+		      (progn
+			(goto-char beg)
+			(let ((basic (rml-compute-basic-indent 0)))
+			  (max 0 (current-column))))
+		    (goto-char beg)
+		    (let ((basic (rml-compute-basic-indent rml-max-indent-priority)))
+		      (max 0 basic))))))
+	  (goto-char beg) 
 	  (let ((basic (rml-compute-basic-indent rml-max-indent-priority)))
-	    (max 0 basic)))))
+		(max 0 basic)))))
+
      ((looking-at "when")
       (let ((beg (point)) (prec (rml-find-when-match)))
 	(if prec 

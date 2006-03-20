@@ -19,7 +19,8 @@ let process score graph victoire mangep nbpoint =
 	               Graphics.red,emplacement)];
   (* Puis a chaque incrementation, met a jour le compteur *)
   loop
-    await mangep;
+    pause;
+    await immediate mangep;
     let nouveau_score = List.hd (pre ?nbpoint) + 1 in
     emit graph [efface_texte;
                 My_texte(cat_string_int "Score : " nouveau_score,

@@ -2,20 +2,19 @@
 (*                              Reactive ML                              *)
 (*                                                                       *)
 (*  Fichier : lk_ast.ml                                                  *)
-(*  Date de creation : 30/04/2004                                        *)
+(*  Date de creation : 09/08/2005                                        *)
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id: lk_ast.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *)
+(* $Id$ *) 
 
-(* The abstract syntax for the continuation language *)
+(* The abstract syntax for the Lk language (cf. thesis) *)
 
 open Asttypes
 open Def_types
 
 type ident = Ident.t
 
-(*type global_ident = Global_ident.qualified_ident*)
 type 'a global = 'a Global.global
 
 (* Expressions *)
@@ -43,57 +42,84 @@ and expression_desc =
   | Kexpr_assert of expression
   | Kexpr_ifthenelse of expression * expression * expression
   | Kexpr_match of expression * (pattern * expression) list
-  | Kexpr_when of expression * expression
+  | Kexpr_when_match of expression * expression
   | Kexpr_while of expression * expression
   | Kexpr_for of 
       ident * expression * expression * direction_flag * expression
   | Kexpr_seq of expression * expression
-  | Kexpr_process of process
+  | Kexpr_process of ident * ident * process
   | Kexpr_pre of pre_kind * expression
-  | Kexpr_emit of expression 
-  | Kexpr_emit_val of expression * expression 
+  | Kexpr_emit of expression
+  | Kexpr_emit_val of expression * expression
+  | Kexpr_signal of 
+      (ident * type_expression option) 
+	* (expression * expression) option * expression
 
 (* Process expressions *)
 and process =
   { kproc_desc: process_desc;
     kproc_loc: Location.t;}
 and process_desc =
-  | Kproc_var of ident
-  | Kproc_abs of ident * process
-  | Kproc_apply of process * process
-  | Kproc_term
   | Kproc_pause of process
+  | Kproc_halt of process
   | Kproc_compute of expression * process
   | Kproc_emit of expression * process
   | Kproc_emit_val of expression * expression * process
-  | Kproc_loop of process
-  | Kproc_while of expression * process * process
+  | Kproc_loop of ident * process
+  | Kproc_while of expression * (ident * process) * process
   | Kproc_for of 
-      ident * expression * expression * direction_flag * process *process
+      ident * expression * expression * direction_flag * 
+	(ident * process) * process
   | Kproc_fordopar of 
-      ident * expression * expression * direction_flag * process *process
-  | Kproc_par of process * process * process
-  | Kproc_merge of process * process * process
+      ident * expression * expression * direction_flag * (ident * process)
+  | Kproc_split_def of ident * ident list * process list
+  | Kproc_join_def of ident * ident * ident list * process
+  | Kproc_split_par of ident * process list
+  | Kproc_join_par of ident * process
+(*  | Kproc_merge of process * process *)
   | Kproc_signal of 
-      (ident * type_expression option) * 
-	(expression * expression) option * process
-  | Kproc_def of (pattern * expression) * process
-  | Kproc_run of expression * process
-  | Kproc_until of expression * process * (pattern * process) option * process
-  | Kproc_when of expression * process * process
-  | Kproc_control of expression * process * process
+      (ident * type_expression option) 
+	* (expression * expression) option * process
+  | Kproc_def of rec_flag * (pattern * expression) list * process
+  | Kproc_def_dyn of pattern * process
+  | Kproc_def_and_dyn of pattern list * process
+  | Kproc_run of expression  * process
+  | Kproc_start_until of 
+      ident * event_config * (ident * process) * (pattern * process) option
+  | Kproc_end_until of ident * process
+  | Kproc_start_when of
+      ident * event_config * (ident * process) 
+  | Kproc_when of ident * expression * ident
+  | Kproc_end_when of ident * process
+  | Kproc_start_control of
+      ident * event_config * (ident * process) 
+  | Kproc_end_control of ident * process
   | Kproc_get of expression * pattern * process
-  | Kproc_present of expression * process * process
+  | Kproc_present of ident * event_config * process * process
   | Kproc_ifthenelse of expression * process * process
-  | Kproc_match of expression * (pattern * process) list 
-  | Kproc_await of immediate_flag * expression * process
+  | Kproc_match of expression * (pattern * process) list
+  | Kproc_when_match of expression * process
+  | Kproc_await of immediate_flag * event_config * process
   | Kproc_await_val of 
       immediate_flag * await_kind * expression * pattern * process
+  | Kproc_bind of
+      pattern * process * process
+  | Kproc_var of ident
+
+
+(* event configuration *)
+and event_config =
+    { kconf_desc: event_config_desc;
+      kconf_loc: Location.t; }
+and event_config_desc =
+  | Kconf_present of expression
+  | Kconf_and of event_config * event_config
+  | Kconf_or of event_config * event_config
 
 (* Patterns *)
 and pattern =
     { kpatt_desc: pattern_desc;
-      kpatt_loc: Location.t;}
+      kpatt_loc: Location.t; }
 and pattern_desc =
   | Kpatt_any
   | Kpatt_var of varpatt
@@ -106,7 +132,7 @@ and pattern_desc =
   | Kpatt_array of pattern list
   | Kpatt_constraint of pattern * type_expression
 
-and varpatt = 
+and varpatt =
   | Kvarpatt_local of ident
   | Kvarpatt_global of value_type_description global
 
@@ -119,7 +145,7 @@ and type_expression_desc =
   | Ktype_arrow of type_expression * type_expression 
   | Ktype_product of type_expression list                  
   | Ktype_constr of type_description global * type_expression list
-  | Ktype_process 
+  | Ktype_process of type_expression
 
 and type_declaration =
   | Ktype_abstract

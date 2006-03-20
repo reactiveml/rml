@@ -1,6 +1,6 @@
 CAMLC = ocamlc
 OCAMLOPT = ocamlopt
-RMLC = rmlc
+RMLC = rmlc -dtypes
 INTERPRETER=rml_interpreter
 INTERPRETERDIR=`$(RMLC) -where`
 
@@ -14,21 +14,19 @@ OCAMLOPTS = -I $(INTERPRETERDIR) -I libgraph
 
 
 
-OBJS = coord.cmo \
-       icobj.cmo \
+OBJS = icobj.cmo \
        behavior.cmo \
        entities.cmo \
        scene.cmo \
        main.cmo
 
-OBJSOPT = coord.cmx \
-       icobj.cmx \
+OBJSOPT = icobj.cmx \
        behavior.cmx \
        entities.cmx \
           scene.cmx \
           main.cmx
 
-MLINTER = coord.ml icobj.ml scene.ml main.ml entities.ml
+MLINTER = icobj.ml scene.ml main.ml entities.ml behavior.ml
 
 EXEC    = icobj
 EXECOPT = icobj.opt
@@ -48,10 +46,10 @@ opt: $(EXECOPT)
 clean :
 	rm -f *.cmi *.cmo *.cmx *.o
 	rm -f $(MLINTER)
-	rm -f *.rzi
+	rm -f *.rzi *.rannot
 
 cleanall : clean
-	rm -f $(EXEC) $(EXECOPT)
+	rm -f $(EXEC) $(EXECOPT) 
 
 $(EXEC): $(OBJS)
 	$(CAMLC) -o $(EXEC) $(OCAMLOPTS) $(LIBS) rml_Graphics.cma $(OBJS) 

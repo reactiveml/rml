@@ -1,15 +1,25 @@
 include ../config
 
-OBJ=	lk_rewrite.cmo \
-	lk_rewrite_debug.cmo \
+SRC=	sig_env.ml \
+	lco_interpreter.mli \
+	lco_ctrl_tree.ml \
+	lco_rewrite.ml \
+	implantation.ml \
+	lk_interpreter.ml \
+	rml_machine.ml \
+
+OBJ=	sig_env.cmo \
 	lco_ctrl_tree.cmo \
+	lco_rewrite.cmo \
+	implantation.cmo \
+	lk_interpreter.cmo \
+	rml_machine.cmo \
 
 #	lco_ctrl_tree_debug.cmo \
 
 OBJ_OPT = $(OBJ:.cmo=.cmx)
 
 INTF = $(OBJ:.cmo=.cmi) \
-	lk_interpreter.cmi \
 	lco_interpreter.cmi
 
 LIB= rml_interpreter.cma rml_interpreter.cmxa rml_interpreter.a 
@@ -38,7 +48,7 @@ depend:
 	$(OCAMLDEP) $(OCAMLDEPFLAGS) $(INCLUDES) *.mli *.ml > .depend
 
 wc:
-	wc --lines $$d/*.ml $$d/*.mli
+	wc --lines *.ml *.mli
 
 # library
 rml_interpreter.cma: $(OBJ)
@@ -49,12 +59,9 @@ rml_interpreter.cmxa: $(OBJ_OPT)
 
 
 # dependencies
-lk_rewrite.cmo: OCAMLFLAGS := -rectypes
-lk_rewrite.cmx: OCAMLOPTFLAGS := -rectypes
-
-lk_rewrite_debug.cmo: OCAMLFLAGS := -rectypes
-lk_rewrite_debug.cmx: OCAMLOPTFLAGS := -rectypes
+lco_rewrite.cmo: OCAMLFLAGS := -rectypes
+lco_rewrite.cmx: OCAMLOPTFLAGS := -rectypes
 
 include .depend
 
-.PHONY: all install uninstall clean realclean depend wc 
+.PHONY: all install uninstall clean realclean .depend wc 

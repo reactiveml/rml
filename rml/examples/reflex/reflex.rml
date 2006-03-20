@@ -24,7 +24,8 @@ let process measure ready stop
    * emitted during the waiting *)
   do
     loop
-      await stop;
+      pause;
+      await immediate stop;
       emit ring_bell
     end
   until ready done;
@@ -53,7 +54,8 @@ let process measure ready stop
     end
     ||
     loop
-      await ready;
+      pause;
+      await immediate ready;
       emit ring_bell
     end
   until stop ->
@@ -76,24 +78,25 @@ let process game_controller
     emit game_over_off;
     emit display 0;
 
-    do
-      signal update_average, average_value default 0 gather (+) in
-      run (average update_average average_value)
-      ||
-      for i = 1 to measure_number do
-	run (measure 
-	       ready stop ring_bell go_on go_off error display update_average)
-      done;
-      (* normal end: wait a few seconds and display the average time *)
-      for i = 1 to pause_length do pause done;
-      emit display (pre ?average_value); 
-      emit end_measure
-    until 
-    | error (x) -> 
+    do 
+      do
+	signal update_average, average_value default 0 gather (+) in
+	run (average update_average average_value)
+	||
+	for i = 1 to measure_number do
+	  run (measure 
+		 ready stop ring_bell go_on go_off error display update_average)
+	done;
+	(* normal end: wait a few seconds and display the average time *)
+	for i = 1 to pause_length do pause done;
+	emit display (pre ?average_value); 
+	emit end_measure
+      until error (x) -> 
 	emit red_on;
 	emit go_off
-    | end_measure (x) ->
-	nothing
+      done
+    until
+      end_measure 
     done;
     emit game_over_on;
   end
@@ -133,7 +136,7 @@ let inside (x,y) (x1, y1, x2, y2) =
 
 let process button frame mevent oclick =
   loop
-    await one mevent (pos) in
+    await immediate one mevent (pos) in
     if inside pos frame then emit oclick;
     pause
   end

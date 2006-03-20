@@ -289,10 +289,8 @@ let rec print pri e =
       print_space ();
       print_te 0 typ;
       print_string ")";
-(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! A FAIRE !!!!!!!!!!!!!!!!!!!!!!!!!! *)
-  | Cexpr_when _ ->
-      Misc.not_yet_implemented "Print_caml_src.print Cexpr_when"
-(* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! *)
+  | Cexpr_when_match _ ->
+      raise (Internal (e.cexpr_loc, "Print_caml_src.print Cexpr_when_match"))
   end;
   if pri > pri_e then print_string ")";
   close_box()
@@ -442,7 +440,8 @@ and print_patt_expr print_sep (pat, expr) =
   open_box 2;
   print_pattern 0 pat;
   match expr.cexpr_desc with
-  | Cexpr_when(e1,e2) ->
+  | Cexpr_when_match(e1,e2) ->
+      print_space ();
       print_string "when";
       print_space ();
       print 1 e1;

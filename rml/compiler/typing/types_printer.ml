@@ -26,7 +26,7 @@ open Global
 let print_qualified_ident q =
   if (compiled_module_name () <> q.qual) & 
     (pervasives_module <> q.qual) &
-    (interpreter_module <> q.qual)
+    (!interpreter_module <> q.qual)
   then begin print_string q.qual;print_string "." end;
   print_string (Ident.name q.id)
 
@@ -61,7 +61,9 @@ let rec print priority ty =
       print_qualified_ident name.gi
   | Type_link(link) ->
       print priority link
-  | Type_process ->
+  | Type_process(ty) ->
+      print 2 ty;
+      print_space ();
       print_string "process";
   end;
   close_box ()

@@ -7,7 +7,7 @@
 (*  Remarque : taken from CamlLight                                      *)
 (*************************************************************************)
 
-(* $Id: reac_ast.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *) 
+(* $Id: reac_ast.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *) 
 
 (* The abstract syntax for the reac language *)
 
@@ -25,7 +25,9 @@ type 'a global = 'a Global.global
 type expression =
   { expr_desc: expression_desc;
     expr_loc: Location.t;
-    mutable expr_type: Def_types.type_expression; }
+    mutable expr_type: Def_types.type_expression; 
+    mutable expr_static: Def_static.static;}
+
 and expression_desc =
   | Rexpr_local of ident
   | Rexpr_global of value_type_description global
@@ -45,50 +47,44 @@ and expression_desc =
   | Rexpr_assert of expression
   | Rexpr_ifthenelse of expression * expression * expression
   | Rexpr_match of expression * (pattern * expression) list
-  | Rexpr_when of expression * expression
+  | Rexpr_when_match of expression * expression
   | Rexpr_while of expression * expression
   | Rexpr_for of 
       ident * expression * expression * direction_flag * expression
-  | Rexpr_seq of expression * expression
-  | Rexpr_process of process
+  | Rexpr_seq of expression list
+  | Rexpr_process of expression
   | Rexpr_pre of pre_kind * expression
+  | Rexpr_nothing
+  | Rexpr_pause
+  | Rexpr_halt
   | Rexpr_emit of expression
   | Rexpr_emit_val of expression * expression
-
-
-(* Process expressions *)
-and process =
-  { proc_desc: process_desc;
-    proc_loc: Location.t;}
-and process_desc =
-  | Rproc_nothing
-  | Rproc_pause
-  | Rproc_compute of expression
-  | Rproc_emit of expression
-  | Rproc_emit_val of expression * expression
-  | Rproc_loop of process
-  | Rproc_while of expression * process
-  | Rproc_for of ident * expression * expression * direction_flag * process
-  | Rproc_fordopar of 
-      ident * expression * expression * direction_flag * process
-  | Rproc_seq of process * process
-  | Rproc_par of process * process
-  | Rproc_merge of process * process
-  | Rproc_signal of 
+  | Rexpr_loop of expression
+  | Rexpr_fordopar of 
+      ident * expression * expression * direction_flag * expression
+  | Rexpr_par of expression list
+  | Rexpr_merge of expression * expression
+  | Rexpr_signal of 
       (ident * type_expression option) 
-	* (expression * expression) option * process
-  | Rproc_def of (pattern * expression) * process
-  | Rproc_run of expression 
-  | Rproc_until of expression * process * (pattern * process) option
-  | Rproc_when of expression * process
-  | Rproc_control of expression * process
-  | Rproc_get of expression * pattern * process
-  | Rproc_present of expression * process * process
-  | Rproc_ifthenelse of expression * process * process
-  | Rproc_match of expression * (pattern * process) list
-  | Rproc_await of immediate_flag * expression
-  | Rproc_await_val of 
-      immediate_flag * await_kind * expression * pattern * process
+	* (expression * expression) option * expression
+  | Rexpr_run of expression 
+  | Rexpr_until of event_config * expression * (pattern * expression) option
+  | Rexpr_when of event_config * expression
+  | Rexpr_control of event_config * expression
+  | Rexpr_get of expression * pattern * expression
+  | Rexpr_present of event_config * expression * expression
+  | Rexpr_await of immediate_flag * event_config
+  | Rexpr_await_val of 
+      immediate_flag * await_kind * expression * pattern * expression
+
+(* event configuration *)
+and event_config =
+    { conf_desc: event_config_desc;
+      conf_loc: Location.t; }
+and event_config_desc =
+  | Rconf_present of expression
+  | Rconf_and of event_config * event_config
+  | Rconf_or of event_config * event_config
 
 (* Patterns *)
 and pattern =
@@ -120,7 +116,7 @@ and type_expression_desc =
   | Rtype_arrow of type_expression * type_expression 
   | Rtype_product of type_expression list                  
   | Rtype_constr of type_description global * type_expression list
-  | Rtype_process
+  | Rtype_process of type_expression
 
 and type_declaration =
   | Rtype_abstract

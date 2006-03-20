@@ -7,7 +7,7 @@
 (*  Remarque : Inspired by OCaml                                         *)
 (*************************************************************************)
 
-(* $Id: parse_printer.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
+(* $Id: parse_printer.ml,v 1.2 2005/03/29 10:15:36 mandel Exp $ *)
 
 open Format
 open Lexing
@@ -89,12 +89,6 @@ let fmt_await_kind_flag f x =
   | One -> fprintf f "One"
 ;;
 
-let fmt_static_flag f x =
-  match x with
-  | Def_static.Static -> fprintf f "Static"
-  | Def_static.Dynamic -> fprintf f "Dynamic"
-;;
-
 let line i f s (*...*) =
   fprintf f "%s" (String.make (2*i) ' ');
   fprintf f s (*...*)
@@ -132,8 +126,9 @@ let rec type_expression i ppf x =
   | Ptype_constr (pi, l) ->
       line i ppf "Ptype_constr %a\n" fmt_ident pi;
       list i type_expression ppf l
-  | Ptype_process ->
-      line i ppf "Ptype_process\n"
+  | Ptype_process ct ->
+      line i ppf "Ptype_process\n";
+      type_expression i ppf ct
 ;;
 
 let rec pattern i ppf x =
@@ -173,9 +168,8 @@ and ident_x_pattern i ppf (li, p) =
 ;;
 
 let rec expression i ppf x =
-  line i ppf "expr %a : %a\n" 
-    fmt_location x.pexpr_loc 
-    fmt_static_flag x.pexpr_static;
+  line i ppf "expr %a\n" 
+    fmt_location x.pexpr_loc; 
   let i = i+1 in
   match x.pexpr_desc with
   | Pexpr_ident (id) -> line i ppf "Pexpr_ident %a\n" fmt_ident id;
@@ -259,6 +253,8 @@ let rec expression i ppf x =
       line i ppf "Pexpr_nothing\n";
   | Pexpr_pause ->
       line i ppf "Pexpr_pause\n";
+  | Pexpr_halt ->
+      line i ppf "Pexpr_halt\n";
   | Pexpr_emit (e) ->
       line i ppf "Pexpr_emit";
       expression i ppf e;
@@ -320,6 +316,17 @@ let rec expression i ppf x =
   | Pexpr_pre (k, s) ->
       line i ppf "Pexpr_pre %a\n" fmt_pre_kind k;
       expression i ppf s;
+  | Pconf_present (e) -> 
+      line i ppf "Pconf_present\n";
+      expression i ppf e
+  | Pconf_and (e1,e2) ->
+      line i ppf "Pconf_and\n";
+      expression i ppf e1;
+      expression i ppf e2
+  | Pconf_or (e1,e2) ->
+      line i ppf "Pconf_or\n";
+      expression i ppf e1;
+      expression i ppf e2
 
 and pattern_x_expression_case i ppf (p, e) =
   line i ppf "<case>\n";
@@ -385,7 +392,7 @@ let rec impl_item i ppf x =
       line i ppf "Pimpl_let %a\n" fmt_rec_flag rf;
       list i pattern_x_expression_def ppf l;
   | Pimpl_signal (l, eeo) ->
-      line i ppf "Pexpr_signal\n";
+      line i ppf "Pimpl_signal\n";
       list i string_x_type_expression_option ppf l;
       option i expression_x_expression ppf eeo;
   | Pimpl_type (l) ->
@@ -399,6 +406,9 @@ let rec impl_item i ppf x =
       ident i ppf id;
   | Pimpl_open (s) ->
       line i ppf "Pimpl_open %s\n" s;
+  | Pimpl_lucky (id, in_ty_list, out_ty_list, files) ->
+      line i ppf "Pimpl_lucky ... A FAIRE ...\n";
+      
 
 and string_x_string_list_x_type_expression_def i ppf (s,l,td) =
   line i ppf "<def> %a\n" fmt_simple s;

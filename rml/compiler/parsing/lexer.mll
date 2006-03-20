@@ -67,13 +67,14 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "function", FUNCTION;
     "functor", FUNCTOR;
     "gather", GATHER;
+    "halt", HALT;
     "if", IF;
     "immediate", IMMEDIATE;
     "in", IN;
     "include", INCLUDE;
     "inherit", INHERIT;
     "initializer", INITIALIZER;
-    "inout", INOUT;
+(*    "inout", INOUT;*)
     "lazy", LAZY;
     "let", LET;
     "loop", LOOP;
@@ -88,7 +89,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "one", ONE;
     "open", OPEN;
     "or", OR;
-    "out", OUT;
+(*    "out", OUT;*)
 (*  "parser", PARSER; *)
     "pause", PAUSE;
     "pre", PRE;
@@ -351,6 +352,8 @@ rule token = parse
   | "#"  { SHARP }
   | "&"  { AMPERSAND }
   | "&&" { AMPERAMPER }
+  | "\\/"{ BACKSLASHSLASH }
+  | "/\\"{ SLASHBACKSLASH }
   | "`"  { BACKQUOTE }
   | "'"  { QUOTE }
   | "("  { LPAREN }

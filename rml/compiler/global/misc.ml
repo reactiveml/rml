@@ -26,15 +26,17 @@ let not_yet_implemented msg =
 
 (* standard module *)
 let pervasives_module = "Rml_pervasives"
-let interpreter_module = "Rml_interpreter"
+let interpreter_module = ref "Lco_ctrl_tree_record"
 let interpreter_intf = ref "Lco_interpreter"
-let interpreter_impl = ref "Lco_ctrl_tree"
+let interpreter_impl = ref "Implantation"
+
 
 let standard_lib = STDLIB 
 
 (* interpreter *)
 let set_interpreter_intf s = interpreter_intf := s
 let set_interpreter_impl s = interpreter_impl := s
+let set_interpreter_module s = interpreter_module := s
 
 (* different translations *)
 type translations = Lk | Lco
@@ -64,6 +66,31 @@ let save_types = ref false
 
 (* dparse *)
 let dparse = ref false
+
+(* dtime *)
+let dtime = ref false
+
+(*
+let display_time =
+  let last = ref 0.0 in
+  fun s ->
+    if !dtime then
+      let current = Sys.time() in
+      Printf.printf "%s\t%f\t%f\n"
+	s
+	(current -. !last)
+	current;
+      last := current
+*)
+
+(* interactive *)
+let interactive = ref false
+
+(* optimization *)
+let nary_optimization = ref true
+
+(* const_let *)
+let const_let = ref true
 
 let find_in_path filename =
   if Sys.file_exists filename then
@@ -121,3 +148,74 @@ let is_an_infix_or_prefix_operator op =
   else
     let c = String.get op 0 in
     not (((c >= 'a') & (c <= 'z')) or ((c >= 'A') & (c <= 'Z')))
+
+module Diagnostic =
+  struct
+    open Format
+      
+    let diag_list = ref []
+    let global_time = ref 0.0
+
+    let round f = float(truncate(100.0 *. f)) /. 100.0
+
+    let print oc =
+      (* prints the diagnostic given by one entry *)
+      let print_entry (name, time) =
+	let average = 100.0 *. !time /. !global_time in
+	print_tab ();
+	print_string name;
+	print_string ":";
+	print_tab ();
+	print_float (round !time);
+	print_string "s";
+	print_tab ();
+	print_float (round average);
+	print_string "%" in
+      
+      (* prints a diagnostic of the execution *)
+      set_max_boxes max_int;
+      set_formatter_out_channel oc;
+      
+      open_tbox ();
+      set_tab ();
+      print_tbreak 30 0;
+      set_tab ();
+      print_tbreak 30 0;
+      set_tab ();
+      print_string "\n";
+      print_string "====================================\
+                    ==============================\n";
+      print_string "        Summary of execution time\n";
+      List.iter print_entry (List.rev !diag_list);
+      print_string "\n";
+      print_entry ("Total", global_time);
+      print_string "\n";
+      print_string "====================================\
+                    ==============================\n";
+      close_tbox ();
+      print_flush ()
+  end
+
+(* every step of the compiler takes its own timer *)
+module Timer = 
+  functor (Name: sig val name: string end) ->
+  struct
+    open Diagnostic
+    
+    let exec_time = ref 0.0
+    let accumulated_time = ref 0.0
+    let start_time = ref 0.0;;
+	
+    (* add the entry to the list *)
+    diag_list := (Name.name, accumulated_time) :: !diag_list
+
+    (* start counting *)
+    let start () = start_time := Sys.time ()
+    
+    (* counting *)
+    let time () =
+      let t = Sys.time () in
+      exec_time := t -. !start_time;
+      accumulated_time := !accumulated_time +. !exec_time;
+      global_time := !global_time +. !exec_time
+  end

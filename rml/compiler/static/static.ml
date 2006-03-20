@@ -6,11 +6,12 @@
 (*  Auteur : Louis Mandel                                                *)
 (*************************************************************************)
 
-(* $Id: static.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
+(* $Id: static.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *)
 
 (* Set the Static/Dynamique status in parse_ast *)
 
-open Parse_ast
+open Asttypes
+open Reac_ast
 open Def_static
 open Static_errors
 
@@ -34,94 +35,85 @@ let static_expr_list f filter ctx l =
 
 let rec static_expr ctx e =
   let t = 
-    match e.pexpr_desc with
-    | Pexpr_ident x -> Static
+    match e.expr_desc with
+    | Rexpr_local x -> Static
 
-    | Pexpr_constant im -> Static
+    | Rexpr_global x -> Static
 
-    | Pexpr_let (_, [_, { pexpr_desc = Pexpr_get s }], e1) ->
-	if ctx = Process
-	then 
-	  if static_expr ML s = Static
-	  then 
-	    let typ1 = static_expr Process e1 in
-	    Dynamic
-	  else expr_wrong_static_err s
-	else
-	  expr_wrong_static_err e
-    | Pexpr_let (_, patt_expr_list, e1) ->
+    | Rexpr_constant im -> Static
+
+    | Rexpr_let (Recursive, patt_expr_list, e1) ->
 	if static_expr_list static_expr snd ML patt_expr_list = Static
 	then static_expr ctx e1 
 	else expr_wrong_static_err e
+    | Rexpr_let (Nonrecursive, patt_expr_list, e1) ->
+	let typ1 = static_expr_list static_expr snd ctx patt_expr_list in
+	let typ2 = static_expr ctx e1 in
+	unify typ1 typ2
 
-    | Pexpr_function patt_expr_list ->
+    | Rexpr_function patt_expr_list ->
 	if static_expr_list static_expr snd ML patt_expr_list = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_apply (e1, expr_list) ->
+    | Rexpr_apply (e1, expr_list) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr_list static_expr id ML expr_list in
 	if unify typ1 typ2 = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_tuple expr_list ->
+    | Rexpr_tuple expr_list ->
 	if static_expr_list static_expr id ML expr_list = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_construct (_, None) -> Static
-    | Pexpr_construct (_, Some e1) ->
+    | Rexpr_construct (_, None) -> Static
+    | Rexpr_construct (_, Some e1) ->
 	if static_expr ML e1 = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_array expr_list ->
+    | Rexpr_array expr_list ->
 	if static_expr_list static_expr id ML expr_list = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_record ide_expr_list ->
+    | Rexpr_record ide_expr_list ->
 	if static_expr_list static_expr snd ML ide_expr_list = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_record_access (e1, _) ->
+    | Rexpr_record_access (e1, _) ->
 	if static_expr ML e1 = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_record_update (e1, _, e2) ->
+    | Rexpr_record_update (e1, _, e2) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in
 	if unify typ1 typ2 = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_constraint (e1, _) ->
+    | Rexpr_constraint (e1, _) ->
 	if static_expr ML e1 = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_trywith (e1, patt_expr_list) ->
+    | Rexpr_trywith (e1, patt_expr_list) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr_list static_expr snd ML patt_expr_list in
 	if unify typ1 typ2 = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_assert e1 ->
+    | Rexpr_assert e1 ->
 	if static_expr ML e1 = Static
 	then Static
 	else expr_wrong_static_err e
 
-    | Pexpr_ifthenelse (e1, e2, None) ->
-	if static_expr ML e1 = Static
-	then 
-	  static_expr ctx e2 
-	else expr_wrong_static_err e
-    | Pexpr_ifthenelse (e1, e2, Some e3) ->
+    | Rexpr_ifthenelse (e1, e2, e3) ->
 	if static_expr ML e1 = Static
 	then 
 	  let typ2 = static_expr ctx e2 in
@@ -129,56 +121,62 @@ let rec static_expr ctx e =
 	  unify typ2 typ3
 	else expr_wrong_static_err e
 
-    | Pexpr_match (e1, patt_expr_list) ->
+    | Rexpr_match (e1, patt_expr_list) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr_list static_expr snd ctx patt_expr_list in
 	unify typ1 typ2
 
-    | Pexpr_when_match (e1,e2) ->
-	let typ1 = static_expr ML e1 in
-	let typ2 = static_expr Process e2 in
-	unify typ1 typ2
-
-    | Pexpr_while (e1,e2) ->
+    | Rexpr_when_match (e1,e2) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ctx e2 in
 	unify typ1 typ2
 
-    | Pexpr_for (_, e1, e2, _, e3) ->
+    | Rexpr_while (e1,e2) ->
+	let typ1 = static_expr ML e1 in
+	let typ2 = static_expr ctx e2 in
+	unify typ1 typ2
+
+    | Rexpr_for (_, e1, e2, _, e3) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in
 	if unify typ1 typ2 = Static
 	then static_expr ctx e3
 	else expr_wrong_static_err e
 
-    | Pexpr_fordopar (_, e1, e2, _, e3) ->
+    | Rexpr_fordopar (_, e1, e2, _, e3) ->
 	if ctx = Process
 	then
 	  let typ1 = static_expr ML e1 in
 	  let typ2 = static_expr ML e2 in
 	  if unify typ1 typ2 = Static
 	  then 
-	    let typ = static_expr Process e3 in
+	    let _typ = static_expr Process e3 in
 	    Dynamic
 	  else expr_wrong_static_err e
 	else expr_wrong_static_err e
 
-    | Pexpr_seq (e1,e2) ->
-	let typ1 = static_expr ctx e1 in
-	let typ2 = static_expr ctx e2 in
-	unify typ1 typ2
+    | Rexpr_seq e_list ->
+	List.fold_left 
+	  (fun typ1 e -> let typ2 = static_expr ctx e in unify typ1 typ2)
+	  Static
+	  e_list
 
-    | Pexpr_nothing ->
+    | Rexpr_nothing ->
 	if ctx = Process
 	then Dynamic
 	else expr_wrong_static_err e
 
-    | Pexpr_pause ->
+    | Rexpr_pause ->
 	if ctx = Process
 	then Dynamic
 	else expr_wrong_static_err e
 
-    | Pexpr_emit s ->
+    | Rexpr_halt ->
+	if ctx = Process
+	then Dynamic
+	else expr_wrong_static_err e
+
+    | Rexpr_emit s ->
 	if static_expr ML s = Static
 	then 
 	  if ctx = Process
@@ -186,7 +184,7 @@ let rec static_expr ctx e =
 	  else Static
 	else expr_wrong_static_err s
 
-    | Pexpr_emit_val (s, e1) ->
+    | Rexpr_emit_val (s, e1) ->
 	if static_expr ML s = Static
 	then
 	  if static_expr ML e1 = Static
@@ -197,146 +195,167 @@ let rec static_expr ctx e =
 	  else expr_wrong_static_err e1
 	else expr_wrong_static_err s
 
-    | Pexpr_loop e1 ->
+    | Rexpr_loop e1 ->
 	if ctx = Process
 	then 
-	  let typ1 = static_expr Process e1 in
+	  let _typ1 = static_expr Process e1 in
 	  Dynamic
 	else
 	  expr_wrong_static_err e
 
-    | Pexpr_par (e1,e2) ->
+    | Rexpr_par e_list ->
 	if ctx = Process
 	then 
-	  let typ1 = static_expr ctx e1 in
-	  let typ2 = static_expr ctx e2 in
+	  (List.iter (fun e -> ignore (static_expr ctx e)) e_list;
+	   Dynamic)
+	else
+	  expr_wrong_static_err e
+
+    | Rexpr_merge (e1,e2) ->
+	if ctx = Process
+	then 
+	  let _typ1 = static_expr ctx e1 in
+	  let _typ2 = static_expr ctx e2 in
 	  Dynamic
 	else
 	  expr_wrong_static_err e
 
-    | Pexpr_merge (e1,e2) ->
-	if ctx = Process
-	then 
-	  let typ1 = static_expr ctx e1 in
-	  let typ2 = static_expr ctx e2 in
-	  Dynamic
-	else
-	  expr_wrong_static_err e
+    | Rexpr_signal (_, None, p) ->
+	static_expr ctx p 
 
-    | Pexpr_signal (_, None, p) ->
-	if ctx = Process
-	then 
-	  let typ1 = static_expr Process p in
-	  Dynamic
-	else
-	  expr_wrong_static_err e
-
-    | Pexpr_signal (_, Some(e1,e2), p) ->
-	if ctx = Process
-	then 
-	  let typ1 = static_expr ML e1 in
-	  let typ2 = static_expr ML e2 in
-	  let typ3 = static_expr Process p in
-	  if unify typ1 typ2 = Static
-	  then Dynamic
-	  else expr_wrong_static_err e
+    | Rexpr_signal (_, Some(e1,e2), p) ->
+	let typ1 = static_expr ML e1 in
+	let typ2 = static_expr ML e2 in
+	let typ3 = static_expr ctx p in
+	if unify typ1 typ2 = Static
+	then typ3
 	else expr_wrong_static_err e
 
-    | Pexpr_process (p) ->
-	let typ = static_expr Process p in
+    | Rexpr_process (p) ->
+	let _typ = static_expr Process p in
 	Static
 
-    | Pexpr_run (e1) ->
+    | Rexpr_run (e1) ->
 	if static_expr ML e1 = Static
 	then Dynamic
 	else expr_wrong_static_err e
 
-    | Pexpr_until (s, p, p_e_opt) ->
+    | Rexpr_until (s, p, p_e_opt) ->
 	if ctx = Process
 	then 
-	  if static_expr ML s = Static
-	  then 
-	    let typ1 = static_expr Process p in
-	    let typ2_opt = 
-	      Misc.opt_map (fun (_,e) -> static_expr Process e) p_e_opt 
-	    in
-	    Dynamic
-	  else expr_wrong_static_err s
+	  (static_conf s;
+	   let _typ1 = static_expr Process p in
+	   let _typ2_opt = 
+	     Misc.opt_map (fun (_,e) -> static_expr Process e) p_e_opt 
+	   in
+	   Dynamic)
 	else
 	  expr_wrong_static_err e
 
-    | Pexpr_when (s, p) ->
+    | Rexpr_when (s, p) ->
 	if ctx = Process
 	then 
-	  if static_expr ML s = Static
-	  then 
-	    let typ1 = static_expr Process p in
-	    Dynamic
-	  else expr_wrong_static_err s
+	  (static_conf s;
+	   let _typ1 = static_expr Process p in
+	   Dynamic)
 	else
 	  expr_wrong_static_err e
 
-    | Pexpr_control (s, p) ->
+    | Rexpr_control (s, p) ->
 	if ctx = Process
 	then 
-	  if static_expr ML s = Static
-	  then 
-	    let typ1 = static_expr Process p in
-	    Dynamic
-	  else expr_wrong_static_err s
+	  (static_conf s;
+	   let _typ1 = static_expr Process p in
+	   Dynamic)
 	else
 	  expr_wrong_static_err e
-    | Pexpr_present (s, p1, p2) ->
+
+    | Rexpr_present (s, p1, p2) ->
 	if ctx = Process
 	then
-	  if static_expr ML s = Static
-	  then 
-	    let typ1 = static_expr ctx p1 in
-	    let typ2 = static_expr ctx p2 in
-	    Dynamic
-	  else expr_wrong_static_err s
+	  (static_conf s;
+	   let _typ1 = static_expr ctx p1 in
+	   let _typ2 = static_expr ctx p2 in
+	   Dynamic)
  	else
 	  expr_wrong_static_err e
-    | Pexpr_await (_, s) ->
+
+    | Rexpr_await (_, s) ->
 	if ctx = Process
 	then 
-	  if static_expr ML s = Static
-	  then Dynamic
-	  else expr_wrong_static_err s
+	  (static_conf s;
+	   Dynamic)
 	else expr_wrong_static_err e
-    | Pexpr_await_val (_, _, s, _, p) ->
+    | Rexpr_await_val (_, _, s, _, p) ->
 	if ctx = Process
 	then 
 	  if static_expr ML s = Static
 	  then 
-	    let typ1 = static_expr Process p in
+	    let _typ1 = static_expr Process p in
 	    Dynamic
 	  else expr_wrong_static_err s
 	else
 	  expr_wrong_static_err e
-    | Pexpr_pre (_, s) ->
+    | Rexpr_pre (_, s) ->
 	if static_expr ML s = Static
 	then Static
  	else expr_wrong_static_err s
-    | Pexpr_get _ -> 
-	raise (Misc.Internal (e.pexpr_loc ,"Static.static_expr: Pexpr_values"))
+    | Rexpr_get (s, _, p) ->
+ 	if ctx = Process
+	then
+	  if static_expr ML s = Static
+	  then 
+	    let _typ = static_expr ctx p in
+	    Dynamic
+	  else expr_wrong_static_err s
+ 	else
+	  expr_wrong_static_err p
   in 
-  e.pexpr_static <- t;
+  e.expr_static <- t;
   t
+
+and static_conf conf =
+  let t = 
+    match conf.conf_desc with
+    | Rconf_present e ->
+	if static_expr ML e = Static
+	then 
+	  Static
+	else expr_wrong_static_err e
+
+    | Rconf_and (c1, c2) ->
+	static_conf c1;
+	static_conf c2;
+	Static
+
+    | Rconf_or (c1, c2) ->
+	static_conf c1;
+	static_conf c2;
+	Static
+  in
+  t
+
 
 let static info_chan impl =
   let typ =
-    match impl.pimpl_desc with
-    | Pimpl_expr e -> static_expr ML e
-    | Pimpl_let (_, l) -> 
+    match impl.impl_desc with
+    | Rimpl_expr e -> static_expr ML e
+    | Rimpl_let (_, l) -> 
 	static_expr_list static_expr snd ML l
-    | Pimpl_signal (s, Some(e1,e2)) ->
-	if (static_expr ML e1) <> Static 
-	then expr_wrong_static_err e1
-	else 
-	  if (static_expr ML e2) <> Static 
-	  then expr_wrong_static_err e2
-	  else Static
+    | Rimpl_signal (s_list) ->
+	List.iter
+	  (fun (_, combine) ->
+	    match combine with 
+	    | Some(e1,e2) ->
+		if (static_expr ML e1) <> Static 
+		then expr_wrong_static_err e1
+		else 
+		  if (static_expr ML e2) <> Static 
+		  then expr_wrong_static_err e2
+		  else ()
+	    | None -> ())
+	  s_list;
+	Static
     | _ -> Static
   in
   if typ = Dynamic then impl_wrong_static_err impl

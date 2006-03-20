@@ -9,6 +9,12 @@ all:
 	(cd stdlib; make all)
 	(cd interpreter; touch .depend; make depend; make all)
 
+toplevel:
+	(cd toplevel; make all)
+
+toplevel_install:
+	(cd toplevel; make install)
+
 
 opt: TARGET := opt
 opt: all
@@ -22,6 +28,7 @@ install.byte:
 	(cd compiler; make install.byte)
 	(cd stdlib; make install)
 	(cd interpreter; make install)
+	(cd lucaml; make install)
 	(cd man; make install)
 	(cd emacs; make install)
 
@@ -29,6 +36,7 @@ install.opt:
 	(cd compiler; make install.opt)
 	(cd stdlib; make install)
 	(cd interpreter; make install)
+	(cd lucaml; make install)
 	(cd man; make install)
 	(cd emacs; make install)
 
@@ -42,6 +50,7 @@ clean:
 	(cd compiler;make clean)
 	(cd stdlib; make clean)
 	(cd interpreter; make clean)
+	(cd toplevel; make clean)
 	(cd man; make clean)
 	(cd doc; make clean)
 
@@ -49,6 +58,7 @@ realclean: clean-distrib
 	(cd compiler;make realclean)
 	(cd stdlib; make realclean)
 	(cd interpreter; make realclean)
+	(cd toplevel; make realclean)
 	(cd man; make realclean)
 	(cd doc; make realclean)
 	rm -rf config.cache config.status config.log config \
@@ -57,13 +67,14 @@ realclean: clean-distrib
 
 # Making binary distribution 
 DATE=`date -I`
-VERSION=1.03
+VERSION=1.04.05-dev
+#VERSION=`cat compiler/version`
 
 source-distrib:
 	touch config
 	make realclean
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
-	cp -r compiler interpreter stdlib emacs examples doc man \
+	cp -r compiler interpreter stdlib toplevel emacs examples doc man lucaml \
 		distrib/rml-$(VERSION)-$(DATE)
 	cp configure configure.in config.in Makefile install-sh INSTALL \
 		distrib/rml-$(VERSION)-$(DATE)
@@ -85,9 +96,11 @@ binary-distrib.opt: clean-distrib
 	(cd compiler; touch .depend; make depend; make opt)
 	(cd stdlib; make all)
 	(cd interpreter; make all)
+	(cd toplevel; make all)
 	(cd distrib/rml/; \
 	 mkdir bin lib lib/rml; \
 	 cp ../../compiler/rmlc.opt bin/rmlc.opt ; \
+	 cp ../../toplevel/rmltop bin/rmltop ; \
 	 cp ../../stdlib/*.{rzi,rmli} lib/rml; \
 	 cp ../../interpreter/{*.{cma,cmxa,a,cmi}} lib/rml; \
 	 cp -r ../../emacs .; \
@@ -104,9 +117,11 @@ binary-distrib.byte: clean-distrib
 	(cd compiler; touch .depend; make depend; make byte)
 	(cd stdlib; make all)
 	(cd interpreter; make all)
+	(cd toplevel; make all)
 	(cd distrib/rml/; \
 	 mkdir bin lib lib/rml; \
 	 cp ../../compiler/rmlc.byte bin/rmlc.byte ; \
+	 cp ../../toplevel/rmltop bin/rmltop ; \
 	 cp ../../stdlib/*.{rzi,rmli} lib/rml; \
 	 cp ../../interpreter/{*.{cma,cmxa,a,cmi}} lib/rml; \
 	 cp -r ../../emacs .; \
