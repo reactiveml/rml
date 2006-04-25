@@ -276,7 +276,8 @@ and translate_proc p =
       | Rexpr_emit_val (s, e) -> 
 	  Coproc_emit_val (translate_ml s, translate_ml e)
 
-      | Rexpr_loop proc -> Coproc_loop (translate_proc proc)
+      | Rexpr_loop (n_opt, proc) -> 
+	  Coproc_loop (opt_map translate_ml n_opt, translate_proc proc)
 
       | Rexpr_while (expr, proc) ->
 	  Coproc_while (translate_ml expr, translate_proc proc)

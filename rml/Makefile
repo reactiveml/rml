@@ -67,7 +67,7 @@ realclean: clean-distrib
 
 # Making binary distribution 
 DATE=`date -I`
-VERSION=1.04.05-dev
+VERSION=1.04.06-dev
 #VERSION=`cat compiler/version`
 
 source-distrib:

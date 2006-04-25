@@ -60,21 +60,24 @@ and process =
   { kproc_desc: process_desc;
     kproc_loc: Location.t;}
 and process_desc =
-  | Kproc_pause of process
+  | Kproc_pause of process * ident
   | Kproc_halt of process
   | Kproc_compute of expression * process
   | Kproc_emit of expression * process
   | Kproc_emit_val of expression * expression * process
   | Kproc_loop of ident * process
+  | Kproc_loop_n of ident * expression * process * process
   | Kproc_while of expression * (ident * process) * process
   | Kproc_for of 
       ident * expression * expression * direction_flag * 
 	(ident * process) * process
   | Kproc_fordopar of 
-      ident * expression * expression * direction_flag * (ident * process)
+      ident * expression * expression * direction_flag * 
+	(ident * process) * process
   | Kproc_split_def of ident * ident list * process list
   | Kproc_join_def of ident * ident * ident list * process
-  | Kproc_split_par of ident * process list
+(*   | Kproc_split_par of ident * process list *)
+  | Kproc_split_par of ident * pattern * process * process list
   | Kproc_join_par of ident * process
 (*  | Kproc_merge of process * process *)
   | Kproc_signal of 
@@ -83,25 +86,26 @@ and process_desc =
   | Kproc_def of rec_flag * (pattern * expression) list * process
   | Kproc_def_dyn of pattern * process
   | Kproc_def_and_dyn of pattern list * process
-  | Kproc_run of expression  * process
+  | Kproc_run of expression  * process * ident
   | Kproc_start_until of 
-      ident * event_config * (ident * process) * (pattern * process) option
+      (* ident * *)
+      event_config * (ident * process) * (pattern * process) 
   | Kproc_end_until of ident * process
   | Kproc_start_when of
-      ident * event_config * (ident * process) 
-  | Kproc_when of ident * expression * ident
+      (* ident * *) event_config * (ident * process) 
+(*  | Kproc_when of ident * expression * ident *)
   | Kproc_end_when of ident * process
   | Kproc_start_control of
-      ident * event_config * (ident * process) 
+      (* ident * *) event_config * (ident * process) 
   | Kproc_end_control of ident * process
-  | Kproc_get of expression * pattern * process
+  | Kproc_get of expression * pattern * process * ident
   | Kproc_present of ident * event_config * process * process
   | Kproc_ifthenelse of expression * process * process
   | Kproc_match of expression * (pattern * process) list
   | Kproc_when_match of expression * process
-  | Kproc_await of immediate_flag * event_config * process
+  | Kproc_await of immediate_flag * event_config * process * ident
   | Kproc_await_val of 
-      immediate_flag * await_kind * expression * pattern * process
+      immediate_flag * await_kind * expression * pattern * process * ident
   | Kproc_bind of
       pattern * process * process
   | Kproc_var of ident

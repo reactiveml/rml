@@ -59,7 +59,7 @@ and expression_desc =
   | Rexpr_halt
   | Rexpr_emit of expression
   | Rexpr_emit_val of expression * expression
-  | Rexpr_loop of expression
+  | Rexpr_loop of expression option * expression
   | Rexpr_fordopar of 
       ident * expression * expression * direction_flag * expression
   | Rexpr_par of expression list

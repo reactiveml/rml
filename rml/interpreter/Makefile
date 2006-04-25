@@ -3,16 +3,18 @@ include ../config
 SRC=	sig_env.ml \
 	lco_interpreter.mli \
 	lco_ctrl_tree.ml \
+	lco_ctrl_tree_thread.ml \
 	lco_rewrite.ml \
-	implantation.ml \
 	lk_interpreter.ml \
+	implantation.ml \
 	rml_machine.ml \
 
 OBJ=	sig_env.cmo \
 	lco_ctrl_tree.cmo \
+	lco_ctrl_tree_thread.cmo \
 	lco_rewrite.cmo \
-	implantation.cmo \
 	lk_interpreter.cmo \
+	implantation.cmo \
 	rml_machine.cmo \
 
 #	lco_ctrl_tree_debug.cmo \
@@ -61,6 +63,9 @@ rml_interpreter.cmxa: $(OBJ_OPT)
 # dependencies
 lco_rewrite.cmo: OCAMLFLAGS := -rectypes
 lco_rewrite.cmx: OCAMLOPTFLAGS := -rectypes
+
+lco_ctrl_tree_thread.cmo: OCAMLFLAGS := -thread threads.cma
+lco_ctrl_tree_thread.cmx: OCAMLOPTFLAGS := -thread threads.cmxa
 
 include .depend
 

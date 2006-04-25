@@ -26,7 +26,8 @@ let not_yet_implemented msg =
 
 (* standard module *)
 let pervasives_module = "Rml_pervasives"
-let interpreter_module = ref "Lco_ctrl_tree_record"
+let interpreter_module = ref "Lco_ctrl_tree_record" 
+(* let interpreter_module = ref "Lk_record" *)
 let interpreter_intf = ref "Lco_interpreter"
 let interpreter_impl = ref "Implantation"
 
@@ -88,6 +89,8 @@ let interactive = ref false
 
 (* optimization *)
 let nary_optimization = ref true
+let static_optimization = ref true
+let for_optimization = ref true
 
 (* const_let *)
 let const_let = ref true

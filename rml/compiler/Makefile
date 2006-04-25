@@ -94,8 +94,8 @@ OBJ =   global/warnings.cmo \
 	typing/types.cmo \
 	reac/reac_misc.cmo \
 	reac/parse2reac.cmo \
-	reac/reac2reac.cmo \
 	global/initialization.cmo \
+	reac/reac2reac.cmo \
 	typing/types_printer.cmo \
 	typing/stypes.cmo \
 	typing/typing_errors.cmo \

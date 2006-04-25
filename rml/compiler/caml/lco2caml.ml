@@ -291,10 +291,15 @@ and translate_proc e =
 	     [embed_ml s;
 	      embed_ml e;])
 
-    | Coproc_loop k ->
+    | Coproc_loop (None, k) ->
 	Cexpr_apply
 	  (make_instruction "rml_loop",
 	   [translate_proc k])
+
+    | Coproc_loop (Some e, k) ->
+	Cexpr_apply
+	  (make_instruction "rml_loop_n",
+	   [embed_ml e; translate_proc k])
 
     | Coproc_while (e1, k) ->
 	Cexpr_apply

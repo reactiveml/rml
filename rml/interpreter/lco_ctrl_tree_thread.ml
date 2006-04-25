@@ -2,22 +2,16 @@
 (*                        ReactiveML                                  *)
 (*                                                                    *)
 (* Auteur : Louis Mandel                                              *) 
-(* Date de creation : 04/06/2004                                      *)
-(* Fichier : lco_ctrl_tree                                            *)
-(* Remarque : taken from                                              *)
-(*            interpreter_without_scope_extrusion_control.ml          *)
+(* Date de creation : 14/04/2006                                      *)
+(* Fichier : lco_ctrl_tree_thread                                     *)
+(* Remarque : taken from lco_ctrl_tree.ml                             *)
 (* Description :                                                      *)
-(*   On a une liste next associee a chaque noeud de l'arbre de        *)
-(*   control.                                                         *)
-(*   On utilise un entier pour coder le status d'un signal pour ne    *)
-(*   pas avoir a faire de reste a la fin d'instant.                   *) 
-(*   Marche avec Scope Extrusion                                      *)
-(*   Ajout des valeurs pour traiter def_dyn et def_and_dyn            *)
-(*   Ajout de until_match et await_match                              *)
-(*   Ajout des configurations evenementielles                         *)
-(*   Parametrisation par le foncteur "Event"                          *)
-(*   Suppression du type "value" et des "Obj.magic"                   *)
-(*   Suppression de exec                                              *)
+(*   Gestion de plusieur scheduler executé dans des threads           *)
+(*   differents.                                                      *)
+(*                                                                    *)
+(*  A FAIRE:                                                          *)
+(*  - Vérifier qu'un processus ne peut pas changer de ctrl en cours   *)
+(*    d'exécution (cf pb de pause par exemple).                       *)
 (*                                                                    *)
 (**********************************************************************)
 
@@ -28,53 +22,89 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     exception RML
 
     type ('a, 'b) event = 
-	('a,'b) Event.t * unit step list ref * unit step list ref  
-    and event_cfg = bool -> (unit -> bool) * unit step list ref list
+	scheduler_id * 
+	  ('a,'b) Event.t * unit step list ref * unit step list ref  
+    and event_cfg = bool -> (scheduler -> bool) * unit step list ref list
 
     and control_tree = 
 	{ kind: contol_type;
 	  mutable alive: bool;
 	  mutable susp: bool;
-	  mutable cond: (unit -> bool);
+	  mutable cond: (scheduler -> bool);
 	  mutable children: control_tree list;
 	  mutable next: next; }
     and contol_type = 
 	Top 
       | Kill of unit step 
-      | Kill_handler of (unit -> unit step)
+      | Kill_handler of (scheduler -> unit step)
       | Susp 
       | When of unit step ref
 
-    and 'a step = 'a -> unit
+    and 'a step = scheduler -> 'a -> unit
     and next = unit step list
-    and current = unit step list
-    and 'a expr = 'a step -> control_tree -> unit step
+    and 'a expr = 'a step -> control_tree ->  unit step
     and 'a process = unit -> 'a expr
+    and scheduler_id = Thread.t
+    and scheduler = 
+	{ id: scheduler_id;
+	  mutable current: unit step list;
+	  mutable toWakeUp:  unit step list ref list;
+	  top: control_tree; 
+	  mutable eoi: bool;
+	  weoi: unit step list ref; }
 
+    exception Wrong_scheduler
 
-	
-(* liste des processus a executer dans l'instant *)
-    let current = ref []
-    
+(* gestion des schedulers *)
+    let schedulers = ref ([]: (scheduler_id * scheduler) list)
+    let m_sched = Mutex.create()
+
+(* creation d'un scheduler *)
+    let new_scheduler () =
+      let id = Thread.self() in
+      let top =
+	{ kind = Top;
+	  alive = true;
+	  susp = false;
+	  children = [];
+	  cond = (fun sched -> false);
+	  next = []; }
+      in 
+      let sched = 
+	{ id = id;
+	  current = [];
+	  toWakeUp = [];
+	  top = top; 
+	  eoi = false;
+	  weoi = ref []; }
+      in
+      Mutex.lock m_sched;
+      schedulers := (id,sched) :: !schedulers;
+      Mutex.unlock m_sched;
+      sched
+      
+
+(* récuperer le scheduler courrant *)
+    let get_current_sched () =
+      let self = Thread.self() in
+      Mutex.lock m_sched;
+      let sched =  List.assoc self !schedulers in
+      Mutex.unlock m_sched;
+      sched
+
+    let get_current_sched_id () =
+      let sched = get_current_sched () in
+      sched.id
+
 (* liste des listes de processus a revillier a la fin d'instant *)
-    let toWakeUp = ref []
-    let wakeUpAll () = 
+    let wakeUpAll sched = 
       List.iter
 	(fun wp ->
-	  current := List.rev_append !wp !current;
+	  sched.current <- List.rev_append !wp sched.current;
 	  wp := [])
-	!toWakeUp;
-      toWakeUp := []
+	sched.toWakeUp;
+      sched.toWakeUp <- []
 	  
-(* racine de l'arbre de control *)
-    let top =
-      { kind = Top;
-	alive = true;
-	susp = false;
-	children = [];
-	cond = (fun () -> false);
-	next = []; }
-
 (* tuer un arbre p *)
     let rec set_kill p =
       p.alive <- true;
@@ -85,12 +115,12 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	
 (* calculer le nouvel etat de l'arbre de control *)
     let eval_control =
-      let rec eval pere p =
+      let rec eval pere p sched =
 	if p.alive then
 	  match p.kind with
 	  | Top -> raise RML
 	  | Kill f_k -> 
-	      if p.cond() 
+	      if p.cond sched
 	      then 
 		(pere.next <- f_k :: pere.next;
 		 set_kill p;
@@ -99,36 +129,36 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 		(p.children <-
 		  List.fold_left 
 		    (fun acc node -> 
-		      if eval p node 
+		      if eval p node sched 
 		      then node :: acc
 		      else acc) 
 		    [] p.children;
 		 true)
 	  | Kill_handler handler -> 
-	      if p.cond() 
+	      if p.cond sched 
 	      then 
-		(pere.next <- (handler()) :: pere.next;
+		(pere.next <- (handler sched) :: pere.next;
 		 set_kill p;
 		 false)
 	      else
 		(p.children <-
 		  List.fold_left 
 		    (fun acc node -> 
-		      if eval p node 
+		      if eval p node sched 
 		      then node :: acc
 		      else acc) 
 		    [] p.children;
 		 true)
 	  | Susp -> (
 	      let pre_susp = p.susp in
-	      if p.cond() then p.susp <- not pre_susp;
+	      if p.cond sched then p.susp <- not pre_susp;
 	      if pre_susp
 	      then true
 	      else 
 		(p.children <-
 		  List.fold_left 
 		    (fun acc node -> 
-		      if eval p node 
+		      if eval p node sched 
 		      then node :: acc
 		      else acc) 
 		    [] p.children;
@@ -142,7 +172,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 		 p.children <-
 		   List.fold_left 
 		     (fun acc node -> 
-		       if eval p node 
+		       if eval p node sched
 		       then node :: acc
 		       else acc) 
 		     [] p.children;
@@ -151,76 +181,87 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	  (set_kill p;
 	   false)
       in
-      fun () ->
-	top.children <-
+      fun sched ->
+	sched.top.children <-
 	  (List.fold_left 
 	     (fun acc node -> 
-	       if eval top node 
+	       if eval sched.top node sched 
 	       then node :: acc
 	       else acc) 
-	     [] top.children)
+	     [] sched.top.children)
 
 (* deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
-    let rec next_to_current p =
-      if p.alive
-      then
-	if p.susp 
-	then ()
-	else
-	  (current := List.rev_append p.next !current;
-	   p.next <- [];
-	   List.iter next_to_current p.children)
-      else ()
+    let next_to_current sched =
+      let rec next_to_current p =
+	if p.alive
+	then
+	  if p.susp 
+	  then ()
+	  else
+	    (sched.current <- List.rev_append p.next sched.current;
+	     p.next <- [];
+	     List.iter next_to_current p.children)
+	else ()
+      in next_to_current
 
 (* debloquer les processus en attent d'un evt *)
-    let wakeUp w =
-      current := List.rev_append !w !current;
+    let wakeUp sched w =
+      sched.current <- List.rev_append !w sched.current;
       w := []
 
 
 (* creation d'evenements *)
-    let new_evt_combine default combine =
-      (Event.create default combine, ref [], ref [])
+    let new_evt_combine sched_id default combine =
+      (sched_id, Event.create default combine, ref [], ref [])
 
-    let new_evt() =
-      new_evt_combine [] (fun x y -> x :: y)
-
-    let eoi = ref false
-    let weoi = ref []
+    let new_evt sched_id =
+      new_evt_combine sched_id [] (fun x y -> x :: y)
 
     let unit_value = () 
-    let dummy_step _ = ()
+    let dummy_step _ _ = ()
 
 
 (**************************************************)
 (* sched                                          *)
 (**************************************************)
-    let rec sched =
-      fun () ->
-	match !current with
+    let rec schedule sched =
+	match sched.current with
 	| f :: c -> 
-	    current := c;
-	    f unit_value
+	    sched.current <- c;
+	    f sched unit_value
 	| [] -> ()
 
 (* ------------------------------------------------------------------------ *)
-    let rml_pre_status (n, _, _) = Event.pre_status n 
+    let rml_pre_status (sid, n, _, _) = 
+      if sid = get_current_sched_id() then
+	Event.pre_status n 
+      else 
+	raise Wrong_scheduler 
 	  
-    let rml_pre_value (n, _, _) = Event.pre_value n
+    let rml_pre_value (sid, n, _, _) = 
+      if sid = get_current_sched_id() then
+	Event.pre_value n
+      else
+	raise Wrong_scheduler
  
 (* ------------------------------------------------------------------------ *)
-    let rml_global_signal = new_evt
+    let rml_global_signal () = new_evt (get_current_sched_id()) 
 
-    let rml_global_signal_combine =  new_evt_combine
+    let rml_global_signal_combine default combine =  
+      new_evt_combine (get_current_sched_id()) default combine
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
 (* configurations                     *)
 (**************************************)
-    let cfg_present' (n,wa,wp) =
+    let cfg_present' (sid, n,wa,wp) =
       fun is_long_wait ->
-	(fun () -> Event.status n),
+	(fun sched ->
+	  if sid = sched.id then
+	    Event.status n
+	  else
+	    raise Wrong_scheduler),
 	[ if is_long_wait then wa else wp ]
 
     let cfg_present evt_expr =
@@ -232,14 +273,14 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       fun is_long_wait ->
 	let is_true1, evt_list1 = c1 is_long_wait in
 	let is_true2, evt_list2 = c2 is_long_wait in
-	(fun () -> is_true1() && is_true2()),
+	(fun sched -> is_true1 sched && is_true2 sched),
 	List.rev_append evt_list1 evt_list2
 
     let cfg_or c1 c2 =
       fun is_long_wait ->
 	let is_true1, evt_list1 = c1 is_long_wait in
 	let is_true2, evt_list2 = c2 is_long_wait in
-	(fun () -> is_true1() or is_true2()),
+	(fun sched -> is_true1 sched or is_true2 sched),
 	List.rev_append evt_list1 evt_list2
 
 
@@ -252,8 +293,8 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     let rml_nothing =
       fun f_k ctrl ->
 	let f_nothing =
-	  fun _ ->
-	    f_k unit_value
+	  fun sched _ ->
+	    f_k sched unit_value
 	in f_nothing
 
 (**************************************)
@@ -262,9 +303,9 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     let rml_compute e =
       fun f_k ctrl ->
 	let f_compute =
-	  fun _ ->
+	  fun sched _ ->
 	    let v = e() in
-	    f_k v
+	    f_k sched v
 	in f_compute
       
 (**************************************)
@@ -273,9 +314,9 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     let rml_pause =
       fun f_k ctrl ->
 	let f_pause =
-	  fun _ ->
+	  fun sched _ ->
 	    ctrl.next <- f_k :: ctrl.next;
-	    sched ()
+	    schedule sched
 	in f_pause
 
 (**************************************)
@@ -284,25 +325,28 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     let rml_halt =
       fun f_k ctrl ->
 	let f_halt =
-	  fun _ ->
-	    sched ()
+	  fun sched _ ->
+	    schedule sched
 	in f_halt
 
 (**************************************)
 (* emit                               *)
 (**************************************)
-    let step_emit f_k ctrl (n,wa,wp) e _ =
-      Event.emit n (e());
-      wakeUp wa;
-      wakeUp wp;
-      f_k unit_value
+    let step_emit f_k ctrl (sid,n,wa,wp) e sched _ =
+      if sid = sched.id then
+	(Event.emit n (e());
+	 wakeUp sched wa;
+	 wakeUp sched wp;
+	 f_k sched unit_value)
+      else
+	raise Wrong_scheduler
  
     let rml_emit_val expr_evt e =
       fun f_k ctrl ->
 	let f_emit_val =
-	  fun _ ->
+	  fun sched _ ->
 	    let evt = expr_evt() in
-	    step_emit f_k ctrl evt e unit_value
+	    step_emit f_k ctrl evt e sched unit_value
 	in f_emit_val
 	  
     let rml_emit_val' evt e =
@@ -314,10 +358,14 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     let rml_emit expr_evt = rml_emit_val expr_evt (fun() -> ())
     let rml_emit' evt = rml_emit_val' evt (fun() -> ())
 
-    let rml_expr_emit_val (n,wa,wp) v =
-      Event.emit n v;
-      wakeUp wa;
-      wakeUp wp
+    let rml_expr_emit_val (sid,n,wa,wp) v =
+      let sched = get_current_sched() in
+      if sid = sched.id then
+	(Event.emit n v;
+	 wakeUp sched wa;
+	 wakeUp sched wp)
+      else
+	raise Wrong_scheduler
 
     let rml_expr_emit evt =
       rml_expr_emit_val evt ()
@@ -325,41 +373,47 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 (**************************************)
 (* await_immediate                    *)
 (**************************************)
-    let step_await_immediate f_k ctrl (n,wa,wp) =
+    let step_await_immediate f_k ctrl (sid,n,wa,wp) =
       let w = if ctrl.kind = Top then wa else wp in
       if ctrl.kind = Top then
 	let rec f_await_top =
-	  fun _ ->
-	    if Event.status n
-	    then
-	      f_k unit_value
+	  fun sched _ ->
+	    if sid = sched.id then
+	      if Event.status n
+	      then
+		f_k sched unit_value
+	      else
+		(w := f_await_top :: !w;
+		 schedule sched)
 	    else
-	      (w := f_await_top :: !w;
-	       sched ())
+	      raise Wrong_scheduler
 	in f_await_top
       else
 	let rec f_await_not_top =
-	  fun _ -> 
-	    if Event.status n
-	    then
-	      f_k unit_value
-	    else
-	      if !eoi
+	  fun sched _ -> 
+	    if sid = sched.id then
+	      if Event.status n
 	      then
-		(ctrl.next <- f_await_not_top :: ctrl.next;
-		 sched())
+		f_k sched unit_value
 	      else
-		(w := f_await_not_top :: !w;
-		 toWakeUp := w :: !toWakeUp;
-		 sched())
+		if sched.eoi
+		then
+		  (ctrl.next <- f_await_not_top :: ctrl.next;
+		   schedule sched)
+		else
+		  (w := f_await_not_top :: !w;
+		   sched.toWakeUp <- w :: sched.toWakeUp;
+		   schedule sched)
+	    else
+	      raise Wrong_scheduler
 	in f_await_not_top
 
     let rml_await_immediate expr_evt =
       fun f_k ctrl ->
 	let f_await =
-	  fun _ ->
+	  fun sched _ ->
 	    let evt = expr_evt() in
-	    step_await_immediate f_k ctrl evt unit_value
+	    step_await_immediate f_k ctrl evt sched unit_value
 	in f_await
 
     let rml_await_immediate' evt =
@@ -375,98 +429,101 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       fun f_k ctrl ->
 	if ctrl.kind = Top then
 	  let f_await_top = 
-	    fun _ ->
+	    fun sched _ ->
 	      let is_true, w_list = expr_cfg true in
-	      if is_true() then 
-		f_k unit_value
+	      if is_true sched then 
+		f_k sched unit_value
 	      else
 		let ref_f = ref None in
-		let f w step_wake_up = 
-		  if is_true() then
+		let f w step_wake_up sched _= 
+		  if is_true sched then
 		    (ref_f := None;
-		     f_k unit_value)
+		     f_k sched unit_value)
 		  else
 		    (w := step_wake_up :: !w;
-		     sched ())
+		     schedule sched)
 		in
 		let gen_step w =
-		  let rec step_wake_up _ =
+		  let rec step_wake_up sched x =
 		    match !ref_f with
-		    | None -> sched ()
-		    | Some f -> f w step_wake_up
+		    | None -> schedule sched
+		    | Some f -> f w step_wake_up sched x
 		  in step_wake_up
 		in
 		ref_f := Some f;
 		List.iter 
 		  (fun w -> w := (gen_step w) :: !w)
 		  w_list;
-		sched()
+		schedule sched
 	  in f_await_top
 	else
 	  let f_await_not_top = 
-	    fun _ ->
+	    fun sched _ ->
 	      let is_true, w_list = expr_cfg false in
-	      if is_true() then 
-		f_k unit_value
+	      if is_true sched then 
+		f_k sched unit_value
 	      else
 		let ref_f = ref None in
-		let rec f w step_wake_up = 
-		  if is_true() then
+		let rec f w step_wake_up sched _ = 
+		  if is_true sched then
 		    (ref_f := None;
-		     f_k unit_value)
+		     f_k sched unit_value)
 		  else
-		    if !eoi
+		    if sched.eoi
 		    then
 		      (ctrl.next <- step_wake_up :: ctrl.next;
-		       sched())
+		       schedule sched)
 		    else
 		      (w := step_wake_up :: !w;
-		       toWakeUp := w :: !toWakeUp;
-		       sched ())
+		       sched.toWakeUp <- w :: sched.toWakeUp;
+		       schedule sched)
 		in
 		let gen_step w =
-		  let rec step_wake_up _ =
+		  let rec step_wake_up sched x =
 		    match !ref_f with
-		    | None -> sched ()
-		    | Some f -> f w step_wake_up
+		    | None -> schedule sched
+		    | Some f -> f w step_wake_up sched x
 		  in step_wake_up
 		in
 		ref_f := Some f;
 		List.iter 
 		  (fun w ->
 		    w := (gen_step w) :: !w;
-		    toWakeUp := w :: !toWakeUp)
+		    sched.toWakeUp <- w :: sched.toWakeUp)
 		  w_list;
-		sched()
+		schedule sched
 	  in f_await_not_top
 
 (**************************************)
 (* get                                *)
 (**************************************)
-    let step_get f_k ctrl (n,_,_) p =
+    let step_get f_k ctrl (sid,n,_,_) p =
       let rec f_get =
-	fun _ ->
-	  if !eoi 
-	  then 
-	    let x =
-	      if Event.status n
-	      then Event.value n
-	      else Event.default n
-	    in
-	    let f_body = p x f_k ctrl in
-	    ctrl.next <- f_body :: ctrl.next;
-	    sched()
+	fun sched _ ->
+	  if sid = sched.id then 
+	    if sched.eoi 
+	    then 
+	      let x =
+		if Event.status n
+		then Event.value n
+		else Event.default n
+	      in
+	      let f_body = p x f_k ctrl in
+	      ctrl.next <- f_body :: ctrl.next;
+	      schedule sched
+	    else 
+	      (sched.weoi := f_get :: !(sched.weoi);
+	       schedule sched)
 	  else 
-	    (weoi := f_get :: !weoi;
-	     sched ())
+	    raise Wrong_scheduler
       in f_get
 
     let rml_get expr_evt p =
       fun f_k ctrl ->
 	let f_get =
-	  fun _ ->
+	  fun sched _ ->
 	    let evt = expr_evt() in
-	    step_get f_k ctrl evt p unit_value
+	    step_get f_k ctrl evt p sched unit_value
 	in f_get
 
     let rml_get' evt p =
@@ -481,45 +538,50 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 (**************************************)
 (* await_immediate_one                *)
 (**************************************)
-    let step_await_immediate_one f_k ctrl (n,wa,wp) p =
+    let step_await_immediate_one f_k ctrl (sid,n,wa,wp) p =
       let w = if ctrl.kind = Top then wa else wp in
       let f_await_one =
 	if ctrl.kind = Top then 
 	  let rec f_await_one_top =
-	    fun _ ->
-	      if Event.status n 
-	      then 
-		let x = Event.one n in
-		p x f_k ctrl unit_value
+	    fun sched _ ->
+	      if sid = sched.id then 
+		if Event.status n 
+		then 
+		  let x = Event.one n in
+		  p x f_k ctrl sched unit_value
+		else
+		  (w := f_await_one_top :: !w;
+		   schedule sched)
 	      else
-		(w := f_await_one_top :: !w;
-		 sched ())
+		raise Wrong_scheduler
 	  in f_await_one_top
 	else
 	  let rec f_await_one_not_top =
-	    fun _ ->
-	      if Event.status n
-	      then 
-		let x = Event.one n in
-		p x f_k ctrl unit_value
-	      else
-		if !eoi 
-		then
-		  (ctrl.next <- f_await_one_not_top :: ctrl.next;
-		   sched())
+	    fun sched _ ->
+	      if sid = sched.id then
+		if Event.status n
+		then 
+		  let x = Event.one n in
+		  p x f_k ctrl sched unit_value
 		else
-		  (w := f_await_one_not_top :: !w;
-		   toWakeUp := w :: !toWakeUp;
-		   sched())
+		  if sched.eoi 
+		  then
+		    (ctrl.next <- f_await_one_not_top :: ctrl.next;
+		     schedule sched)
+		  else
+		    (w := f_await_one_not_top :: !w;
+		     sched.toWakeUp <- w :: sched.toWakeUp;
+		     schedule sched)
+	      else raise Wrong_scheduler
 	  in f_await_one_not_top
       in f_await_one
     
      let rml_await_immediate_one expr_evt p =
       fun f_k ctrl ->
       let f_await_one =
-	fun _ ->
+	fun sched _ ->
 	  let evt = expr_evt() in
-	  step_await_immediate_one f_k ctrl evt p unit_value
+	  step_await_immediate_one f_k ctrl evt p sched unit_value
       in f_await_one
 	
     let rml_await_immediate_one' evt p =
@@ -530,52 +592,58 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 (**************************************)
 (* await_all_match                    *)
 (**************************************)
-    let step_await_all_match f_k ctrl (n,wa,wp) matching p =
+    let step_await_all_match f_k ctrl (sid,n,wa,wp) matching p =
       let w = if ctrl.kind = Top then wa else wp in
       let f_await_all_match =
 	if ctrl.kind = Top then 
 	  let rec f_await_top =
-	    fun _ ->
-	      let v = Event.value n in
-	      if !eoi
-	      then
-		if Event.status n & matching v
+	    fun sched _ ->
+	      if sid = sched.id then 
+		let v = Event.value n in
+		if sched.eoi
 		then
-		  let x = v in
-		  let f_body = p x f_k ctrl in
-		  ctrl.next <- f_body :: ctrl.next;
-		  sched()
+		  if Event.status n & matching v
+		  then
+		    let x = v in
+		    let f_body = p x f_k ctrl in
+		    ctrl.next <- f_body :: ctrl.next;
+		    schedule sched
+		  else
+		    (w := f_await_top :: !w;
+		     schedule sched)
 		else
-		  (w := f_await_top :: !w;
-		   sched ())
-	      else
-		if Event.status n
-		then
-		  (weoi := f_await_top :: !weoi;
-		   sched ())
-		else
-		  (w := f_await_top :: !w;
-		   sched ())
+		  if Event.status n
+		  then
+		    (sched.weoi := f_await_top :: !(sched.weoi);
+		     schedule sched)
+		  else
+		    (w := f_await_top :: !w;
+		     schedule sched)
+	      else 
+		raise Wrong_scheduler 
 	  in f_await_top
 	else
 	  let rec f_await_not_top =
-	    fun _ ->
-	      if !eoi
-	      then
-		let v = Event.value n in
-		if Event.status n & matching v
+	    fun sched _ ->
+	      if sid = sched.id then
+		if sched.eoi
 		then
-		  let x = v in
-		  let f_body = p x f_k ctrl in
-		  ctrl.next <- f_body :: ctrl.next;
-		  sched()
-		else
+		  let v = Event.value n in
+		  if Event.status n & matching v
+		  then
+		    let x = v in
+		    let f_body = p x f_k ctrl in
+		    ctrl.next <- f_body :: ctrl.next;
+		    schedule sched
+		  else
 		    (ctrl.next <- f_await_not_top :: ctrl.next;
-		     sched ())
-	      else
-		(w := f_await_not_top :: !w;
-		 toWakeUp := w :: !toWakeUp;
-		 sched ())
+		     schedule sched)
+		else
+		  (w := f_await_not_top :: !w;
+		   sched.toWakeUp <- w :: sched.toWakeUp;
+		   schedule sched)
+	      else 
+		raise Wrong_scheduler 
 	  in f_await_not_top
       in f_await_all_match
     
@@ -583,9 +651,9 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     let rml_await_all_match expr_evt matching p = 
       fun f_k ctrl ->
 	let f_await_all_match =
-	  fun _ ->
+	  fun sched _ ->
 	    let evt = expr_evt() in
-	    step_await_all_match f_k ctrl evt matching p unit_value
+	    step_await_all_match f_k ctrl evt matching p sched unit_value
 	in f_await_all_match
 
     let rml_await_all_match' evt matching p =
@@ -596,21 +664,22 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 (* present                            *)
 (**************************************)
     
-    let step_present f_k ctrl (n,_,wp) f_1 f_2 =
+    let step_present f_k ctrl (sid,n,_,wp) f_1 f_2 =
       let rec f_present =
-	fun _ ->
-	  if Event.status n
-	  then 
-	    f_1 unit_value
-	  else
-	    if !eoi
+	fun sched _ ->
+	  if sid = sched.id then
+	    if Event.status n
 	    then 
-	      (ctrl.next <- f_2 :: ctrl.next;
-	       sched ())
-	    else 
-	      (wp := f_present :: !wp;
-	       toWakeUp := wp :: !toWakeUp;
-	       sched ())
+	      f_1 sched unit_value
+	    else
+	      if sched.eoi
+	      then 
+		(ctrl.next <- f_2 :: ctrl.next;
+		 schedule sched)
+	      else 
+		(wp := f_present :: !wp;
+		 sched.toWakeUp <- wp :: sched.toWakeUp;
+		 schedule sched)
       in f_present
 
     let rml_present expr_evt p_1 p_2 =
@@ -618,9 +687,9 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	let f_1 = p_1 f_k ctrl in
 	let f_2 = p_2 f_k ctrl in
 	let rec f_present =
-	  fun _ ->
+	  fun sched _ ->
 	    let evt = expr_evt () in
-	    step_present f_k ctrl evt f_1 f_2 unit_value
+	    step_present f_k ctrl evt f_1 f_2 sched unit_value
 	in f_present
 
     let rml_present' evt p_1 p_2 =
@@ -634,43 +703,43 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 (**************************************)
     let rml_present_conf expr_cfg p_1 p_2 =
       fun f_k ctrl ->
-	fun _ -> 
+	fun sched _ -> 
 	  let f_1 = p_1 f_k ctrl in
 	  let f_2 = p_2 f_k ctrl in
 	  let is_true, w_list = expr_cfg false in
-	  if is_true ()
+	  if is_true sched
 	  then 
-	    f_1 unit_value
+	    f_1 sched unit_value
 	  else
 	    let ref_f = ref None in
-	    let f w step_wake_up = 
-	      if is_true() then
+	    let f w step_wake_up sched _ = 
+	      if is_true sched then
 		(ref_f := None;
-		 f_1 unit_value)
+		 f_1 sched unit_value)
 	      else
-		if !eoi
+		if sched.eoi
 		then
 		  (ctrl.next <- f_2 :: ctrl.next;
-		   sched())
+		   schedule sched)
 		else
 		  (w := step_wake_up :: !w;
-		   toWakeUp := w :: !toWakeUp;
-		   sched ())
+		   sched.toWakeUp <- w :: sched.toWakeUp;
+		   schedule sched)
 	    in
 	    let gen_step w =
-	      let rec step_wake_up _ =
+	      let rec step_wake_up sched x =
 	      match !ref_f with
-	      | None -> sched ()
-	      | Some f -> f w step_wake_up
+	      | None -> schedule sched
+	      | Some f -> f w step_wake_up sched x
 	      in step_wake_up
 	    in
 	    ref_f := Some f;
 	    List.iter 
 	      (fun w ->
 		w := (gen_step w) :: !w;
-		toWakeUp := w :: !toWakeUp)
+		sched.toWakeUp <- w :: sched.toWakeUp)
 	      w_list;
-	    sched()
+	    schedule sched
 
 (**************************************)
 (* seq                                *)
@@ -679,7 +748,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     let rml_seq p_1 p_2 =
       fun f_k ctrl ->
 	let f_2 = p_2 f_k ctrl in
-	let f_1 = p_1 (fun x -> f_2 ()) ctrl in
+	let f_1 = p_1 (fun sched x -> f_2 sched ()) ctrl in
 	f_1
 
 (**************************************)
@@ -691,15 +760,15 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     let join cpt =
       fun f_k ctrl ->
 	let f_join =
-	  fun _ ->
+	  fun sched _ ->
 	    incr cpt;
 	    if !cpt = 2 
 	    then (
 	      (* cpt := 0; *)
-	      f_k unit_value
+	      f_k sched unit_value
 	     )
 	    else
-	      sched ()
+	      schedule sched 
 	in f_join
       
     let rml_par p_1 p_2 =
@@ -709,10 +778,10 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	let f_1 = p_1 (Obj.magic j: 'a step) ctrl in 
 	let f_2 = p_2 (Obj.magic j: 'b step) ctrl in
 	let f_par =
-	  fun _ -> 
+	  fun sched _ -> 
 	    cpt := 0;
-	    current := f_2 :: !current;
-	    f_1 unit_value
+	    sched.current <- f_2 :: sched.current;
+	    f_1 sched unit_value
 	in f_par
 
 (**************************************)
@@ -721,15 +790,15 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 
     let rml_merge p_1 p_2 =
       fun f_k ctrl ->
-	fun _ -> raise RML
+	fun sched _ -> raise RML
 
 
 (**************************************)
 (* loop                               *)
 (**************************************)
 (*
-let rec rml_loop p f_k ctrl _ =
-  p (rml_loop p f_k ctrl) ctrl unit_value
+let rec rml_loop p f_k ctrl sched _ =
+  p (rml_loop p f_k ctrl) ctrl sched unit_value
 *)
 
 (*
@@ -737,8 +806,8 @@ let rml_loop p =
   fun f_k ctrl ->
     let rec f_1 = lazy (p f ctrl) 
     and f =
-      fun _ ->
-	Lazy.force f_1 unit_value
+      fun sched _ ->
+	Lazy.force f_1 sched unit_value
     in
     f
 *)
@@ -746,9 +815,10 @@ let rml_loop p =
     let rml_loop p =
       fun f_k ctrl ->
 	let f_1 = ref dummy_step in
-	let f_loop = p (fun _ -> !f_1 unit_value) ctrl in
+	let f_loop = p (fun sched _ -> !f_1 sched unit_value) ctrl in
 	f_1 := f_loop;
 	f_loop
+
 
 (**************************************)
 (* loop_n                             *)
@@ -760,22 +830,17 @@ let rml_loop p =
 	let f_1 = ref dummy_step in
 	let f_loop = 
 	  p 
-	    (fun _ -> 
+	    (fun sched _ -> 
 	      if !cpt > 0 then 
-		(decr cpt; !f_1 unit_value) 
+		(decr cpt; !f_1 sched unit_value) 
 	      else 
 		f_k unit_value) 
 	    ctrl 
 	in
 	f_1 := f_loop;
-	fun _ ->
-	  let n = e() in
-	  if n > 0 then
-	    (cpt := n - 1;
-	     f_loop unit_value)
-	  else
-	    f_k unit_value
-
+	fun sched _ ->
+	  cpt := e();
+	  f_loop sched unit_value
 
 (**************************************)
 (* signal                             *)
@@ -784,19 +849,19 @@ let rml_loop p =
     let rml_signal p = 
       fun f_k ctrl ->
 	let f_signal =
-	  fun _ ->
-	    let evt = new_evt() in
+	  fun sched _ ->
+	    let evt = new_evt sched.id in
 	    let f = p evt f_k ctrl in
-	    f unit_value
+	    f sched unit_value
 	in f_signal
 
     let rml_signal_combine default comb p = 
       fun f_k ctrl ->
 	let f_signal =
-	  fun _ ->
-	    let evt = new_evt_combine (default()) (comb()) in
+	  fun sched _ ->
+	    let evt = new_evt_combine sched.id (default()) (comb()) in
 	    let f = p evt f_k ctrl in
-	    f unit_value
+	    f sched unit_value
 	in f_signal
 
 (**************************************)
@@ -806,9 +871,9 @@ let rml_loop p =
     let rml_def e p =
       fun f_k ctrl ->
 	let f_def =
-	  fun _ ->
+	  fun sched _ ->
 	    let f = p (e()) f_k ctrl in
-	    f unit_value
+	    f sched unit_value
 	in f_def
 
 (**************************************)
@@ -819,9 +884,9 @@ let rml_loop p =
       fun f_k ctrl ->
 	let f_def =
 	  p1 
-	    (fun v ->
+	    (fun sched v ->
 	      let f = p2 v f_k ctrl in
-	      f unit_value)
+	      f sched unit_value)
 	    ctrl
 	in f_def
 
@@ -832,14 +897,14 @@ let rml_loop p =
     let rml_def_and_dyn =
       let join_n cpt value_array p3 i =
 	fun f_k ctrl ->
-	  fun x ->
+	  fun sched x ->
 	    value_array.(i) <- x;
 	    decr cpt;
 	    if !cpt = 0 then
 	      let f = p3 value_array f_k ctrl in
-	      f unit_value
+	      f sched unit_value
 	    else
-	      sched()
+	      schedule sched
       in
       fun p_array p3 ->
 	fun f_k ctrl ->
@@ -847,15 +912,15 @@ let rml_loop p =
 	  let cpt = ref n in 
 	  let value_array = Array.make n (Obj.magic()) in
 	  let step_init = 
-	    fun _ ->
+	    fun sched _ ->
 	      cpt := n;
 	      for i = 0 to n - 1 do
 		let f = 
 		  p_array.(i) (join_n cpt value_array p3 i f_k ctrl) ctrl
 		in
-		current := f :: !current
+		sched.current <- f :: sched.current
 	      done;
-	      sched()
+	      schedule sched
 	  in step_init
 
 (**************************************)
@@ -865,9 +930,9 @@ let rml_loop p =
     let rml_match e p =
       fun f_k ctrl ->
 	let f_match =
-	  fun _ ->
+	  fun sched _ ->
 	    let f = p (e()) f_k ctrl in
-	    f unit_value
+	    f sched unit_value
 	in f_match
 
 
@@ -878,9 +943,9 @@ let rml_loop p =
     let rml_run e =
       fun f_k ctrl ->
 	let f_run =
-	  fun _ ->
+	  fun sched _ ->
 	    let f_1 = (e ()) () f_k ctrl in
-	    f_1 unit_value
+	    f_1 sched unit_value
 	in f_run
 
 
@@ -893,12 +958,12 @@ let rml_loop p =
 	alive = true;
 	susp = false;
 	children = [];
-	cond = (fun () -> false);
+	cond = (fun sched -> false);
 	next = [] }
 
     let start_ctrl f_k ctrl f new_ctrl =
       let f_ctrl =
-	fun _ ->
+	fun sched _ ->
 	  if new_ctrl.alive
 	  then 
 	    (ctrl.children <- new_ctrl :: ctrl.children)
@@ -906,14 +971,14 @@ let rml_loop p =
 	    (new_ctrl.alive <- true;
 	     new_ctrl.susp <- false;
 	     new_ctrl.next <- []);
-	  f unit_value
+	  f sched unit_value
       in f_ctrl
 
     let end_ctrl f_k new_ctrl =
-      fun x ->
+      fun sched x ->
 	set_kill new_ctrl;
 	new_ctrl.alive <- false;
-	f_k x
+	f_k sched x
 (* ---------------------------------------------------------------- *)
 
     let rml_until expr_evt p =
@@ -921,17 +986,27 @@ let rml_loop p =
 	let new_ctrl = new_ctrl (Kill f_k) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
 	let f_until =
-	  fun _ ->
-	    let (n,_,_) = expr_evt () in
-	    new_ctrl.cond <- (fun () -> Event.status n);
-	    start_ctrl f_k ctrl f new_ctrl unit_value
+	  fun sched _ ->
+	    let (sid,n,_,_) = expr_evt () in
+	    new_ctrl.cond <- 
+	      (fun sched -> 
+		if sid = sched.id then
+		  Event.status n
+		else
+		  raise Wrong_scheduler);
+	    start_ctrl f_k ctrl f new_ctrl sched unit_value
 	in f_until
 
-    let rml_until' (n,_,_) p =
+    let rml_until' (sid,n,_,_) p =
       fun f_k ctrl ->
 	let new_ctrl = new_ctrl (Kill f_k) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
-	new_ctrl.cond <- (fun () -> Event.status n);
+	new_ctrl.cond <- 
+	  (fun sched -> 
+	    if sid = sched.id then
+	      Event.status n
+	    else
+	      raise Wrong_scheduler);
 	start_ctrl f_k ctrl f new_ctrl
 
 
@@ -944,10 +1019,10 @@ let rml_loop p =
 	let new_ctrl = new_ctrl (Kill f_k) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
 	let f_until =
-	  fun _ ->
+	  fun sched _ ->
 	    let cond, _ = expr_cfg true in
 	    new_ctrl.cond <- cond;
-	    start_ctrl f_k ctrl f new_ctrl unit_value
+	    start_ctrl f_k ctrl f new_ctrl sched unit_value
 	in f_until
 
 
@@ -960,12 +1035,14 @@ let rml_loop p =
       fun f_k ctrl ->
 	let evt = ref (Obj.magic()) in
 	let handler =
-	  fun () ->
+	  fun sched ->
 	    let x =
-	      let n, _, _ = !evt in
-	      if Event.status n
-	      then Event.value n
-	      else raise RML
+	      let sid,n, _, _ = !evt in
+	      if sid = sched.id then
+		if Event.status n
+		then Event.value n
+		else raise RML
+	      else raise Wrong_scheduler
 	    in
 	    let f_handler = p_handler x f_k ctrl in
 	    f_handler
@@ -973,27 +1050,36 @@ let rml_loop p =
 	let new_ctrl = new_ctrl (Kill_handler handler) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
 	let f_until =
-	  fun _ ->
-	    let (n, _, _) as e = expr_evt () in
+	  fun sched _ ->
+	    let (sid, n, _, _) as e = expr_evt () in
 	    evt := e;
 	    begin match matching_opt with
 	    | None ->
-		new_ctrl.cond <- (fun () -> Event.status n);
+		new_ctrl.cond <- 
+		  (fun sched -> 
+		    if sid = sched.id then
+		      Event.status n
+		    else raise Wrong_scheduler);
 	    | Some matching ->
 		new_ctrl.cond <- 
-		  (fun () -> Event.status n & matching (Event.value n));
+		  (fun sched -> 
+		    if sid = sched.id then
+		      Event.status n & matching (Event.value n)
+		    else raise Wrong_scheduler);
 	    end;
-	    start_ctrl f_k ctrl f new_ctrl unit_value
+	    start_ctrl f_k ctrl f new_ctrl sched unit_value
 	in f_until
 
-    let rml_until_handler_local' (n,_,_) matching_opt p p_handler =
+    let rml_until_handler_local' (sid,n,_,_) matching_opt p p_handler =
       fun f_k ctrl ->
 	let handler =
-	  fun () ->
+	  fun sched ->
 	    let x =
-	      if Event.status n
-	      then Event.value n
-	      else raise RML
+	      if sid = sched.id then
+		if Event.status n
+		then Event.value n
+		else raise RML
+	      else raise Wrong_scheduler
 	    in
 	    let f_handler = p_handler x f_k ctrl in
 	    f_handler
@@ -1002,10 +1088,17 @@ let rml_loop p =
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
 	begin match matching_opt with
 	| None ->
-	    new_ctrl.cond <- (fun () -> Event.status n);
+	    new_ctrl.cond <- 
+	      (fun sched -> 
+		if sid = sched.id then
+		  Event.status n
+		else raise Wrong_scheduler);
 	| Some matching ->
 	    new_ctrl.cond <- 
-	      (fun () -> Event.status n & matching (Event.value n));
+	      (fun sched -> 
+		if sid = sched.id then
+		  Event.status n & matching (Event.value n)
+		else raise Wrong_scheduler);
 	end;
 	start_ctrl f_k ctrl f new_ctrl
 
@@ -1030,17 +1123,25 @@ let rml_loop p =
 	let new_ctrl = new_ctrl Susp in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
 	let f_control =
-	  fun _ ->
-	    let (n, _, _) = expr_evt () in
-	    new_ctrl.cond <- (fun () -> Event.status n);
-	    start_ctrl f_k ctrl f new_ctrl ()
+	  fun sched _ ->
+	    let (sid, n, _, _) = expr_evt () in
+	    new_ctrl.cond <- 
+	      (fun sched -> 
+		if sid = sched.id then
+		  Event.status n
+		else raise Wrong_scheduler);
+	    start_ctrl f_k ctrl f new_ctrl sched unit_value
 	in f_control
 	  
-    let rml_control' (n, _, _) p =
+    let rml_control' (sid, n, _, _) p =
       fun f_k ctrl ->
 	let new_ctrl = new_ctrl Susp in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
-	new_ctrl.cond <- (fun () -> Event.status n);
+	new_ctrl.cond <- 
+	  (fun sched -> 
+	    if sid = sched.id then
+	      Event.status n
+	    else raise Wrong_scheduler);
 	start_ctrl f_k ctrl f new_ctrl 
 
 (**************************************)
@@ -1052,10 +1153,10 @@ let rml_loop p =
 	let new_ctrl = new_ctrl Susp in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
 	let f_control =
-	  fun _ ->
+	  fun sched _ ->
 	    let cond, _ = expr_cfg true in
 	    new_ctrl.cond <- cond;
-	    start_ctrl f_k ctrl f new_ctrl ()
+	    start_ctrl f_k ctrl f new_ctrl sched ()
 	in f_control
 
 
@@ -1063,28 +1164,34 @@ let rml_loop p =
 (* when                               *)
 (**************************************)
 
-    let step_when f_k ctrl (n,wa,wp) f new_ctrl dummy =
+    let step_when f_k ctrl (sid,n,wa,wp) f new_ctrl dummy =
       let w = if ctrl.kind = Top then wa else wp in
-      new_ctrl.cond <- (fun () -> Event.status n);
+      new_ctrl.cond <- 
+	(fun sched -> 
+	  if sid = sched.id then
+	    Event.status n
+	  else raise Wrong_scheduler);
       let rec f_when =
-	fun _ ->
-	  if Event.status n
-	  then
-	    (new_ctrl.susp <- false;
-	     next_to_current new_ctrl;
-	     sched())
-	  else 
-	    if !eoi
+	fun sched _ ->
+	  if sid = sched.id then
+	    if Event.status n
 	    then
-	      (ctrl.next <- f_when :: ctrl.next;
-	       sched())
-	    else
-	      (w := f_when :: !w;
-	       if ctrl.kind <> Top then toWakeUp := w :: !toWakeUp;
-	       sched())
+	      (new_ctrl.susp <- false;
+	       next_to_current sched new_ctrl;
+	       schedule sched)
+	    else 
+	      if sched.eoi
+	      then
+		(ctrl.next <- f_when :: ctrl.next;
+		 schedule sched)
+	      else
+		(w := f_when :: !w;
+		 if ctrl.kind <> Top then 
+		   sched.toWakeUp <- w :: sched.toWakeUp;
+		 schedule sched)
       in
       let start_when =
-	fun _ ->
+	fun sched _ ->
 	  if new_ctrl.alive
 	  then 
 	    (ctrl.children <- new_ctrl :: ctrl.children)
@@ -1092,17 +1199,20 @@ let rml_loop p =
 	    (new_ctrl.alive <- true;
 	     new_ctrl.susp <- false;
 	     new_ctrl.next <- []);
-	  if Event.status n
-	  then 
-	    (new_ctrl.susp <- false;
-	     new_ctrl.next <- [];
-	     f unit_value)
-	  else 
-	    (new_ctrl.susp <- true;
-	     new_ctrl.next <- [f];
-	     w := f_when :: !w;
-	     if ctrl.kind <> Top then toWakeUp := w :: !toWakeUp;
-	     sched())
+	  if sid = sched.id then
+	    if Event.status n
+	    then 
+	      (new_ctrl.susp <- false;
+	       new_ctrl.next <- [];
+	       f sched unit_value)
+	    else 
+	      (new_ctrl.susp <- true;
+	       new_ctrl.next <- [f];
+	       w := f_when :: !w;
+	       if ctrl.kind <> Top then sched.toWakeUp <- w :: sched.toWakeUp;
+	       schedule sched)
+	  else
+	    raise Wrong_scheduler
       in
       dummy := f_when;
       start_when
@@ -1113,9 +1223,9 @@ let rml_loop p =
 	let new_ctrl = new_ctrl (When dummy) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
 	let start_when =
-	  fun _ ->
+	  fun sched _ ->
 	    let evt = expr_evt () in
-	    step_when f_k ctrl evt f new_ctrl dummy unit_value
+	    step_when f_k ctrl evt f new_ctrl dummy sched unit_value
 	in
 	start_when
 
@@ -1134,7 +1244,7 @@ let rml_loop p =
 (**************************************)
     let rml_when_conf expr_cfg =
       fun f_k ctrl ->
-	fun _ -> raise RML
+	fun sched _ -> raise RML
 
 
 (**************************************)
@@ -1146,11 +1256,11 @@ let rml_loop p =
 	let f_1 = p_1 f_k ctrl in
 	let f_2 = p_2 f_k ctrl in
 	let f_if =
-	  fun _ ->
+	  fun sched _ ->
 	    if e() then
-	      f_1 unit_value
+	      f_1 sched unit_value
 	    else
-	      f_2 unit_value
+	      f_2 sched unit_value
 	in f_if
 
 
@@ -1162,10 +1272,10 @@ let rml_loop p =
       fun f_k ctrl ->
 	let f_body = ref dummy_step in
 	let f_while =
-	  fun _ ->
+	  fun sched _ ->
 	    if e()
-	    then !f_body unit_value
-	    else f_k unit_value
+	    then !f_body sched unit_value
+	    else f_k sched unit_value
 	in
 	f_body := p f_while ctrl;
 	f_while
@@ -1179,19 +1289,19 @@ let rml_loop p =
       let (incr, cmp) = if dir then incr, (<=) else decr, (>=) in
       fun f_k ctrl ->
 	let rec f_for i v2 =
-	  fun _ ->
+	  fun sched _ ->
 	    incr i;
 	    if cmp !i v2 
-	    then p !i (f_for i v2) ctrl unit_value
-	    else f_k unit_value
+	    then p !i (f_for i v2) ctrl sched unit_value
+	    else f_k sched unit_value
 	in
 	let f_for_init =
-	  fun _ ->
+	  fun sched _ ->
 	    let i = ref (e1()) in
 	    let v2 = e2() in
 	    if cmp !i v2
-	    then p !i (f_for i v2) ctrl unit_value
-	    else f_k unit_value
+	    then p !i (f_for i v2) ctrl sched unit_value
+	    else f_k sched unit_value
 	in
 	f_for_init
 
@@ -1202,12 +1312,12 @@ let rml_loop p =
     let join_n cpt =
       fun f_k ctrl ->
 	let f_join_n =
-	  fun _ ->
+	  fun sched _ ->
 	    decr cpt;
 	    if !cpt = 0 then
-	      f_k unit_value
+	      f_k sched unit_value
 	    else
-	      sched ()
+	      schedule sched 
 	in f_join_n
 
     let rml_fordopar e1 e2 dir p =
@@ -1215,21 +1325,21 @@ let rml_loop p =
 	let cpt = ref 0 in
 	let j = join_n cpt f_k ctrl in
 	let f_fordopar =
-	  fun _ ->
+	  fun sched _ ->
 	    if dir then
 	      begin
 		let min = e1() in
 		let max = e2() in
 		cpt := max - min + 1;
 		if !cpt <= 0 then
-		  f_k unit_value
+		  f_k sched unit_value
 		else
 		  begin
 		    for i = max downto min do
 		      let f = p i j ctrl in
-		      current := f :: !current
+		      sched.current <- f :: sched.current
 		    done;
-		    sched()
+		    schedule sched
 		  end
 	      end
 	    else
@@ -1238,14 +1348,14 @@ let rml_loop p =
 		let min = e2() in
 		cpt := max - min + 1;
 		if !cpt <= 0 then
-		  f_k unit_value
+		  f_k sched unit_value
 		else
 		  begin
 		    for i = min to max do
 		      let f = p i j ctrl in
-		      current := f :: !current
+		      sched.current <- f :: sched.current
 		    done;
-		    sched ()
+		    schedule sched 
 		  end
 	      end
 	in
@@ -1259,9 +1369,9 @@ let rml_loop p =
 
     let rml_await expr_evt =
       fun f_k ctrl ->
-	fun _ ->
+	fun sched _ ->
 	  let evt = expr_evt () in
-	  rml_await_immediate' evt (rml_pause f_k ctrl) ctrl unit_value
+	  rml_await_immediate' evt (rml_pause f_k ctrl) ctrl sched unit_value
 
     let rml_await' evt =
       fun f_k ctrl ->
@@ -1269,9 +1379,10 @@ let rml_loop p =
 
     let rml_await_all expr_evt p =
       fun f_k ctrl ->
-	fun _ ->
+	fun sched _ ->
 	  let evt = expr_evt () in
-	  rml_await_immediate' evt (rml_get' evt p f_k ctrl) ctrl unit_value
+	  rml_await_immediate' evt (rml_get' evt p f_k ctrl) ctrl 
+	    sched unit_value
 
     let rml_await_all' evt p =
       fun f_k ctrl ->
@@ -1283,9 +1394,9 @@ let rml_loop p =
 	  rml_pause (p x f_k ctrl) ctrl
       in
       fun f_k ctrl ->
-	fun _ ->
+	fun sched _ ->
 	  let evt = expr_evt () in
-	  rml_await_immediate_one' evt pause_p f_k ctrl unit_value
+	  rml_await_immediate_one' evt pause_p f_k ctrl sched unit_value
 
     let rml_await_one' evt p =
       let pause_p x =
@@ -1319,10 +1430,10 @@ let rml_loop p =
 	let j = join_n cpt f_k ctrl in
 	let f_list = List.rev_map (fun p -> p j ctrl) p_list in
 	let f_par_n =
-	  fun _ ->
+	  fun sched _ ->
 	    cpt := nb;
-	    current := List.rev_append f_list !current;
-	    sched()
+	    sched.current <- List.rev_append f_list sched.current;
+	    schedule sched
 	in f_par_n
 
     let rml_seq_n p_list =
@@ -1340,21 +1451,23 @@ let rml_loop p =
 (* rml_make                                       *)
 (**************************************************)
     let rml_make p = 
+      (* creates the scheduler *)
+      let sched = new_scheduler () in
       (* the main step function *)
-      let f = p () (fun x -> raise (End (Obj.magic x: value))) top in
-      current := [f];
+      let f = p () (fun x -> raise (End (Obj.magic x: value))) sched.top in
+      sched.current <- [f];
       (* the react function *)
       let rml_react () =
 	try 
-	  sched ();
-	  eoi := true;
-	  wakeUp weoi;
-	  wakeUpAll ();
-	  sched ();
-	  eval_control();
-	  next_to_current top;
+	  schedule sched;
+	  sched.eoi <- true;
+	  wakeUp sched sched.weoi;
+	  wakeUpAll sched;
+	  schedule sched;
+	  eval_control sched;
+	  next_to_current sched sched.top;
 	  Event.next ();
-	  eoi := false;
+	  sched.eoi <- false;
 	  None
 	with 
 	| End v -> Some (Obj.magic v)
@@ -1367,37 +1480,39 @@ let rml_loop p =
 (**************************************************)
 
     let rml_make_unit (p: unit process) = 
+      (* creates the scheduler *)
+      let sched = new_scheduler () in
 
       (* Function to create the last continuation of a toplevel process *)
       let join_end =
 	let term_cpt = ref 0 in
 	fun () ->
 	  incr term_cpt;
-	  let f x =
+	  let f sched x =
 	    decr term_cpt;
 	    if !term_cpt > 0 then
-	      sched()
+	      schedule sched
 	    else
 	      raise (End (Obj.magic (): value))
 	  in f
       in
 
       (* the main step function *)
-      let f = p () (join_end()) top in
-      current := [f];
+      let f = p () (join_end ()) sched.top in
+      sched.current <- [f];
 
       (* the react function *)
       let rml_react () =
 	try 
-	  sched ();
-	  eoi := true;
-	  wakeUp weoi;
-	  wakeUpAll ();
-	  sched ();
-	  eval_control();
-	  next_to_current top;
+	  schedule sched;
+	  sched.eoi <- true;
+	  wakeUp sched sched.weoi;
+	  wakeUpAll sched;
+	  schedule sched;
+	  eval_control sched;
+	  next_to_current sched sched.top;
 	  Event.next ();
-	  eoi := false;
+	  sched.eoi <- false;
 	  None
 	with 
 	| End v -> Some ()
@@ -1405,8 +1520,8 @@ let rml_loop p =
 
       (* the add_process function*)
       let add_process p =
-	let f =  p () (join_end()) top in
-	current := f :: !current
+	let f =  p () (join_end()) sched.top in
+	sched.current <- f :: sched.current
       in
 
       rml_react, add_process

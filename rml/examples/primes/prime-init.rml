@@ -3,7 +3,7 @@ let max = 4000;;
 let global = ref 0;;
 
 (*********** generation of odd numbers ************)
-let process producer {out start} =
+let process producer start =
   global := 1;
   loop
     global := !global + 2;
@@ -24,23 +24,23 @@ let output =
     else ()
 ;;
 (*********** prime numbers ************************)
-let rec process filter {inout me} =
-  let prime = ref 0 in
+let rec process filter me =
   await immediate me;
-  prime := !global;
-  output !prime;
+  let prime = !global in
+  output prime;
   signal next in
-    (run filter {me = next}
+    (run (filter next)
     ||
      loop
-       await me;
-       if (!global mod !prime) != 0 then emit next
+       pause;
+       await immediate me;
+       if (!global mod prime) != 0 then emit next
      end)
 ;;
 (*********** main function ************************)
-let process main {} =
+let process main =
   signal start in
-  run producer {start = start}
+  run (producer start)
   ||
-  run filter {me = start}
+  run (filter start)
 ;;

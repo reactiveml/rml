@@ -25,7 +25,7 @@ type version =
 
 let version = ref Combinator
 
-(* Build a step function of body : cexpr *)
+(* Builds a step function of body : cexpr *)
 let make_step_function cexpr loc =
   let step =
     Cexpr_fun
@@ -35,17 +35,17 @@ let make_step_function cexpr loc =
   make_expr step loc
 
 
-(* Create he expression "()" *)
+(* Creates the expression "()" *)
 let make_unit = 
   make_expr (Cexpr_constant Const_unit) Location.none
 
-(* Create he expression "ref (Obj.magic())" *)
+(* Creates the expression "ref (Obj.magic())" *)
 let ref_obj_magic () =
   make_expr
     (Cexpr_apply
        (make_expr 
 	  (Cexpr_global 
-	     { gi = { qual = "Pervasive"; 
+	     { gi = { qual = "Pervasives"; 
 		      id = Ident.create Ident.gen_var "ref" Ident.Internal };
 	       info = no_info; })
 	  Location.none,
@@ -62,20 +62,32 @@ let ref_obj_magic () =
 	   Location.none]))
     Location.none
 
-(* Create he expression "!vref" *)
+(* Creates the expression "!vref" *)
 let deref vref =
   make_expr
     (Cexpr_apply
        (make_expr 
 	  (Cexpr_global 
-	     { gi = { qual = "Pervasive"; 
+	     { gi = { qual = "Pervasives"; 
 		      id = Ident.create Ident.gen_var "!" Ident.Internal };
 	       info = no_info; })
 	  Location.none,
 	[make_expr_var_local vref]))
     Location.none
 
-
+(* Creates an expr from list of kproc *)
+let make_list_of_proc tr k_list =
+  List.fold_right
+    (fun k l ->
+      make_expr
+	(Cexpr_construct
+	   (Initialization.cons_constr_desc, 
+	    Some(make_expr (Cexpr_tuple([tr k;l])) Location.none)))
+	Location.none)
+    k_list
+    (make_expr 
+       (Cexpr_construct(Initialization.nil_constr_desc,None))
+       Location.none)
 
 (* Translation of type expressions *)
 let rec translate_te typ =
@@ -344,10 +356,11 @@ and translate_proc e =
 
     | Kproc_var k -> Cexpr_local k
 	  
-    | Kproc_pause k ->
+    | Kproc_pause (k, ctrl) ->
 	Cexpr_apply 
 	  (make_instruction "rml_pause",
-	   [translate_proc k])
+	   [translate_proc k;
+	    make_expr_var_local ctrl])
 
     | Kproc_halt k ->
 	Cexpr_apply 
@@ -379,6 +392,15 @@ and translate_proc e =
 	   [make_expr
 	      (Cexpr_function [make_patt_var_local k_id, translate_proc k])
 	      Location.none])
+
+    | Kproc_loop_n (k_id, e, k, k') -> 
+	Cexpr_apply
+	  (make_instruction "rml_loop_n",
+	   [embed_ml e;
+	    make_expr
+	      (Cexpr_function [make_patt_var_local k_id, translate_proc k])
+	      Location.none;
+	    translate_proc k'])
 	  
     | Kproc_while (e1, (k_id, k1), k2) ->
 	Cexpr_apply
@@ -404,7 +426,7 @@ and translate_proc e =
 	      Location.none;
 	    translate_proc k2])
 	  
-    | Kproc_fordopar (i, e1, e2, flag, (j_id, k)) ->
+    | Kproc_fordopar (i, e1, e2, flag, (j_id, k), k') ->
 	Cexpr_apply
 	  (make_instruction "rml_fordopar",
 	   [ embed_ml e1;
@@ -416,8 +438,10 @@ and translate_proc e =
 		  ([ make_patt_var_local j_id; 
 		     make_patt_var_local i; ],
 		   translate_proc k))
-	       Location.none; ])
+	       Location.none; 
+	     translate_proc k'])
 	  
+(*
     | Kproc_split_par (j_id, [k1; k2]) ->
 	Cexpr_apply
 	  (make_instruction "rml_split_par",
@@ -428,6 +452,37 @@ and translate_proc e =
 		      (Cexpr_tuple [translate_proc k1; translate_proc k2])
 		      Location.none)))
 	       Location.none; ])
+*)
+(*
+    | Kproc_split_par (j_id, k_list) ->
+	Cexpr_apply
+	  (make_instruction "rml_split_par",
+	   [ make_expr
+	       (Cexpr_constant (Const_int (List.length k_list)))
+	       Location.none;
+	     make_expr
+	       (Cexpr_fun
+		  ([ make_patt_var_local j_id; ],
+		   make_list_of_proc translate_proc k_list))
+	       Location.none; ])
+*)
+    | Kproc_split_par (j_id, kj_patt, join, k_list) ->
+	Cexpr_apply
+	  (make_instruction "rml_split_par",
+	   [ make_expr
+	       (Cexpr_constant (Const_int (List.length k_list)))
+	       Location.none;
+	     make_expr
+	       (Cexpr_fun
+		  ([ make_patt_var_local j_id; ],
+		   (make_expr
+		      (	Cexpr_let
+			  (Nonrecursive,
+			   [translate_pattern kj_patt, translate_proc join],
+			   make_list_of_proc translate_proc k_list))
+		      Location.none)))
+	       Location.none; ])
+
 
     | Kproc_join_par (j_id, k) ->
 	Cexpr_apply
@@ -454,7 +509,7 @@ and translate_proc e =
 		   (Nonrecursive, 
 		    [pattern_of_signal s, 
 		     make_expr 
-		       (Cexpr_apply (make_instruction "new_event",
+		       (Cexpr_apply (make_instruction "rml_global_signal",
 				     [make_expr_unit()]))
 		       Location.none], 
 		    make_expr 
@@ -483,7 +538,7 @@ and translate_proc e =
 		   (Nonrecursive, 
 		    [pattern_of_signal s, 
 		     make_expr 
-		       (Cexpr_apply (make_instruction "new_event_combine",
+		       (Cexpr_apply (make_instruction "rml_global_signal_combine",
 				     [ translate_ml e1;
 				       translate_ml e2; ]))
 		       Location.none], 
@@ -522,7 +577,10 @@ and translate_proc e =
 (*              and vref1 = ref (Obj.magic()) in [k1; k2])               *)
 	Cexpr_apply
 	  (make_instruction "rml_split_par",
-	   [ make_expr
+	   [  make_expr
+	       (Cexpr_constant (Const_int (List.length k_list)))
+	       Location.none;
+	      make_expr
 	       (Cexpr_fun
 		  ([ make_patt_var_local j_id; ],
 		   make_expr
@@ -596,7 +654,7 @@ and translate_proc e =
 		   Location.none))
 	     Location.none)
 
-    | Kproc_run (expr, k) ->
+    | Kproc_run (expr, k, ctrl) ->
 	begin match !version with
 	| Combinator ->
 (* Tr(run e.k) =                                                         *)
@@ -604,64 +662,86 @@ and translate_proc e =
 	    Cexpr_apply
 	      (make_instruction "rml_run",
 	       [embed_ml expr;
-		translate_proc k])
+		translate_proc k;
+		make_expr_var_local ctrl])
 	| Inline ->
 (* Tr(run e.k) =                                                         *)
 (*   fun _ -> e k ()                                                     *)
 	    let f =
 	      make_step_function
 		(Cexpr_apply 
-		   (translate_ml expr, [translate_proc k; make_expr_unit()])) 
+		   (translate_ml expr, 
+		    [translate_proc k;
+		     make_expr_var_local ctrl;
+		     make_expr_unit();])) 
 		e.kproc_loc
 	    in f.cexpr_desc
 	end
 
-(*
-    | Kproc_until (s, k1, None, k2) ->
-	Cexpr_apply
-	  (make_instruction "rml_until",
-	   [embed_ml s;
-	    translate_proc k1;
-	    translate_proc k2])
 
-    | Kproc_until (s, k1, Some (patt,kh), k2) ->
+    | Kproc_start_until({kconf_desc = Kconf_present s}, 
+			(ctrl, k1), (patt,k2)) ->
 	Cexpr_apply
-	  (make_instruction "rml_until_handler",
+	  (make_instruction "rml_start_until",
 	   [embed_ml s;
-	    translate_proc k1;
-	    make_expr
-	      (Cexpr_function [translate_pattern patt, translate_proc kh])
-	      Location.none;
-	    translate_proc k2])
+	    (make_expr 
+	       (Cexpr_fun([make_patt_var_local ctrl], translate_proc k1))
+	       Location.none);
+	    (make_expr 
+	       (Cexpr_fun([translate_pattern patt], translate_proc k2))
+	       Location.none)])
 
-    | Kproc_when (s, k1, k2) ->
+    | Kproc_end_until(ctrl, k) ->
 	Cexpr_apply
-	  (make_instruction "rml_when",
-	   [embed_ml s;
-	    translate_proc k1;
-	    translate_proc k2])
+	  (make_instruction "rml_end_until",
+	   [make_expr_var_local ctrl;
+	    translate_proc k])
 
-    | Kproc_control (s, k1, k2) ->
+    | Kproc_start_when({kconf_desc = Kconf_present s}, (ctrl, k)) ->
 	Cexpr_apply
-	  (make_instruction "rml_control",
+	  (make_instruction "rml_start_when",
 	   [embed_ml s;
-	    translate_proc k1;
-	    translate_proc k2])
-*)
+	    (make_expr 
+	       (Cexpr_fun([make_patt_var_local ctrl], translate_proc k))
+	       Location.none)])
 
-    | Kproc_get (s, patt, k) ->
+    | Kproc_end_when(ctrl, k) ->
+	Cexpr_apply
+	  (make_instruction "rml_end_when",
+	   [make_expr_var_local ctrl;
+	    translate_proc k])
+
+
+    | Kproc_start_control({kconf_desc = Kconf_present s}, (ctrl, k)) ->
+	Cexpr_apply
+	  (make_instruction "rml_start_control",
+	   [embed_ml s;
+	    (make_expr 
+	       (Cexpr_fun([make_patt_var_local ctrl], translate_proc k))
+	       Location.none)])
+
+    | Kproc_end_control(ctrl, k) ->
+	Cexpr_apply
+	  (make_instruction "rml_end_control",
+	   [make_expr_var_local ctrl;
+	    translate_proc k])
+	
+
+    | Kproc_get (s, patt, k, ctrl) ->
 	Cexpr_apply
 	  (make_instruction "rml_get",
 	   [embed_ml s;
 	    make_expr
-	      (Cexpr_function [translate_pattern patt, translate_proc k])
-	      Location.none])
+	      (Cexpr_function 
+		 [translate_pattern patt, translate_proc k])
+	      Location.none;
+	    make_expr_var_local ctrl])
 
     | Kproc_present (ctrl, {kconf_desc = Kconf_present s}, k1, k2) ->
 	Cexpr_apply
 	  (make_instruction "rml_present",
 	   [make_expr_var_local ctrl;
-	    translate_ml s;
+	    embed_ml s;
 	    translate_proc k1;
 	    translate_proc k2])
 
@@ -738,7 +818,7 @@ and translate_proc e =
 
 
 
-    | Kproc_await (flag, {kconf_desc = Kconf_present s}, k) ->
+    | Kproc_await (flag, {kconf_desc = Kconf_present s}, k, ctrl) ->
 	let _immediate =
 	  match flag with
 	  | Nonimmediate -> ""
@@ -747,9 +827,10 @@ and translate_proc e =
 	Cexpr_apply
 	  (make_instruction ("rml_await"^_immediate),
 	   [embed_ml s;
-	    translate_proc k])
+	    translate_proc k;
+	    make_expr_var_local ctrl])
 
-    | Kproc_await_val (flag1, flag2, s, patt, k) ->
+    | Kproc_await_val (flag1, flag2, s, patt, k, ctrl) ->
 	let im = 
 	  match flag1 with
 	  | Immediate -> "_immediate"
@@ -760,12 +841,19 @@ and translate_proc e =
 	  | One -> "_one"
 	  | All -> "_all"
 	in
-	Cexpr_apply
-	  (make_instruction ("rml_await"^im^kind),
-	   [embed_ml s;
-	    make_expr
-	      (Cexpr_function [translate_pattern patt, translate_proc k])
-	      Location.none])
+	let cpatt = translate_pattern patt in
+	if Caml_misc.partial_match cpatt then 
+	  begin
+	    not_yet_implemented "await_{one|all}_match";
+	  end
+	else
+	  Cexpr_apply
+	    (make_instruction ("rml_await"^im^kind),
+	     [embed_ml s;
+	      make_expr
+		(Cexpr_function [translate_pattern patt, translate_proc k])
+		Location.none;
+	      make_expr_var_local ctrl])
 
   in
   make_expr cexpr e.kproc_loc
@@ -820,8 +908,8 @@ let translate_impl_item info_chan item =
 			   make_expr
 			     (Cexpr_apply
 				(make_instruction "rml_global_signal_combine",
-				 [embed_ml e1;
-				  embed_ml e2;]))
+				 [translate_ml e1;
+				  translate_ml e2;]))
 			     Location.none)
 		     l)
 

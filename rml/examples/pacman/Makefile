@@ -24,7 +24,7 @@ CAMLIMAGESDIR=-I +camlimages
 
 SAMPLING = 0.02
 
-RMLCOPTS = -runtime ctrl_tree
+RMLCOPTS = 
 
 MAINFILE=main.rml
 

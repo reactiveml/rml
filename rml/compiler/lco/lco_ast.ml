@@ -66,7 +66,7 @@ and process_desc =
   | Coproc_compute of expression
   | Coproc_emit of expression
   | Coproc_emit_val of expression * expression
-  | Coproc_loop of process
+  | Coproc_loop of expression option * process
   | Coproc_while of expression * process
   | Coproc_for of ident * expression * expression * direction_flag * process
   | Coproc_fordopar of 

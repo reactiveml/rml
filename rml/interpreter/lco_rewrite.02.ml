@@ -374,6 +374,23 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       in self
 
 (**************************************)
+(* loop_n                             *)
+(**************************************)
+    let rml_loop_n e p =
+      let rec self n =
+	fun () ->
+	  if n > 0 then
+	    match p () with
+	    | (SUSP | STOP) as alpha, p' ->
+		(alpha, rml_seq p' (self (n-1)))
+	    | _ -> failwith "Instantaneous loop !"
+	  else
+	    (TERM (), rml_nothing)
+      in 
+      fun () ->
+	self (e()) ()
+
+(**************************************)
 (* signal                             *)
 (**************************************)
     let rml_signal p = 

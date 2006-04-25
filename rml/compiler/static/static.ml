@@ -195,13 +195,24 @@ let rec static_expr ctx e =
 	  else expr_wrong_static_err e1
 	else expr_wrong_static_err s
 
-    | Rexpr_loop e1 ->
+    | Rexpr_loop (None, e1) ->
 	if ctx = Process
 	then 
 	  let _typ1 = static_expr Process e1 in
 	  Dynamic
 	else
 	  expr_wrong_static_err e
+
+    | Rexpr_loop (Some n, e1) ->
+	if static_expr ML n = Static
+	then
+	  if ctx = Process
+	  then 
+	    let _typ1 = static_expr Process e1 in
+	    Dynamic
+	  else
+	    expr_wrong_static_err e
+	else expr_wrong_static_err n
 
     | Rexpr_par e_list ->
 	if ctx = Process

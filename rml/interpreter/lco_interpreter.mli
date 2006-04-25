@@ -73,6 +73,7 @@ module type S =
     val rml_par: 'a expr -> 'b expr -> unit expr
     val rml_merge: 'a expr -> 'b expr -> unit expr
     val rml_loop: 'a expr -> unit expr
+    val rml_loop_n: (unit -> int) -> 'a expr -> unit expr
     val rml_while: (unit -> bool) -> 'a expr -> unit expr
     val rml_for: 
 	(unit -> int) -> (unit -> int) -> bool -> (int -> 'a expr) -> 

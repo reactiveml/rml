@@ -35,6 +35,11 @@ let init lexbuf fname =
 
 let none = { loc_start = dummy_pos; loc_end = dummy_pos; loc_ghost = true };;
 
+let concat loc1 loc2 = 
+  { loc_start = loc1.loc_start; 
+    loc_end = loc2.loc_end; 
+    loc_ghost = loc1.loc_ghost or loc2.loc_ghost; };;
+
 let curr lexbuf = {
   loc_start = lexbuf.lex_start_p;
   loc_end = lexbuf.lex_curr_p;

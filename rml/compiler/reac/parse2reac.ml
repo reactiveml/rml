@@ -425,7 +425,7 @@ let rec translate env e =
     | Pexpr_halt -> Rexpr_halt
 
     | Pexpr_loop expr ->
-	Rexpr_loop (translate env expr)
+	Rexpr_loop (None, translate env expr)
 	  
     | Pexpr_par (e1, e2) ->
 	Rexpr_par [translate env e1;

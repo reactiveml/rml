@@ -592,7 +592,12 @@ let rec type_of_expression env expr =
 
   | Rexpr_halt -> new_var()
 
-  | Rexpr_loop (p) ->
+  | Rexpr_loop (None, p) ->
+      type_statement env p;
+      type_unit
+
+  | Rexpr_loop (Some n, p) ->
+      type_expect env n type_int;
       type_statement env p;
       type_unit
 

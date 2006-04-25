@@ -220,13 +220,13 @@ let get_moore_neighbors_circular cell cell_array =
 (* cell process                                                           *)
 (**************************************************************************)
 
-let rec process activate_neighborhood self neighbors =
+let rec activate_neighborhood self neighbors =
   match neighbors with
-  | [] -> nothing
+  | [] -> ()
   | (dir, activation_sig) :: neighbors ->
       let info = make_info (opposite dir) self in
       emit activation_sig info;
-      run (activate_neighborhood self neighbors)
+      activate_neighborhood self neighbors
 
 let process cell draw_cell get_neighbors cell_behavior
     x y (status_init, ext_init) cell_array =
@@ -238,9 +238,11 @@ let process cell draw_cell get_neighbors cell_behavior
   self.cell_neighborhood <- get_neighbors self cell_array;
   loop
     if self.cell_status <> Status_Quiescent 
-    then run (activate_neighborhood self self.cell_neighborhood)
+    then activate_neighborhood self self.cell_neighborhood
     else await immediate activation;
-    let activation <neighbors> in
+(*    let activation <neighbors> in *)
+    pause;
+    let neighbors = if pre activation then pre ?activation else [] in
     cell_behavior self neighbors;
     draw_cell self
   end
@@ -358,8 +360,7 @@ let process cellular_automaton_start
 let behavior = ref "fire"
 
 let configure () = 
-  let doc = ""
-  and doc_zoom = "<n> set the size of a cell"
+  let doc_zoom = "<n> set the size of a cell"
   and doc_width = "<n> set the number of cells in the width"
   and doc_height = "<n> set the number of cells in the height"
   and doc_behavior = "<s> select the behavior of the automaton"

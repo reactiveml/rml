@@ -34,6 +34,7 @@ module Reac2lco_timer = Timer (struct let name = "Reac2lco" end)
 module Reac2lk_timer = Timer (struct let name = "Reac2lk" end)
 module Lco2caml_timer = Timer (struct let name = "Lco2caml" end)
 module Lk2caml_timer = Timer (struct let name = "Lk2caml" end)
+module Optimization_timer = Timer (struct let name = "Optimization" end)
 
 
 (* front-end *)
@@ -52,24 +53,47 @@ let compile_implementation_front_end info_chan itf impl_list =
     Parse2reac_timer.start();
     let rml_code = Parse2reac.translate_impl_item info_chan impl in
     Parse2reac_timer.time();
+
+    Optimization_timer.start();
     let rml_code =
       if !nary_optimization then 
 	Reac2reac.impl_map Reac2reac.binary2nary rml_code
       else
 	rml_code
     in
-    rml_table :=  rml_code :: !rml_table;
+    Optimization_timer.time();
+
 
     (* static analysis *)
     Static_timer.start();
     Static.static info_chan rml_code;
     Static_timer.time();
 
+    Optimization_timer.start();
+    let rml_code =
+      if !static_optimization then 
+	Reac2reac.impl_map Reac2reac.dynamic2static rml_code
+      else
+	rml_code
+    in
+    Optimization_timer.time();
+
     (* typing *)
     Typing_timer.start();
     Typing.type_impl_item info_chan rml_code;
     Typing_timer.time();
 
+
+    Optimization_timer.start();
+    let rml_code =
+      if !for_optimization then 
+	Reac2reac.impl_map Reac2reac.for2loop_n rml_code
+      else
+	rml_code
+    in
+    Optimization_timer.time();
+
+    rml_table :=  rml_code :: !rml_table;
   in
   
   (* compilation of the whole file *)
@@ -262,10 +286,10 @@ let compile_interface_front_end info_chan itf intf_list =
 
 (* back-end *)
 let compile_interface_back_end info_chan out_chan module_name rml_table =
-(*  let lk_table = ref [] in*)
+  let lk_table = ref [] in
   let lco_table = ref [] in
   let caml_table = ref [] in
-(*
+
   let lk_compile_one_phrase intf = 
     
     (* translation into lk code *)
@@ -276,7 +300,7 @@ let compile_interface_back_end info_chan out_chan module_name rml_table =
     let caml_code = Lk2caml.translate_intf_item info_chan lk_code in 
     caml_table := caml_code :: !caml_table;
   in
-*)
+
   let lco_compile_one_phrase intf = 
 
     (* translation into lco code *)
@@ -291,7 +315,7 @@ let compile_interface_back_end info_chan out_chan module_name rml_table =
   (* selection of the back-end *)
   let compile_one_phrase =
     match !translation with
-    | Lk -> assert false (* lk_compile_one_phrase *)
+    | Lk -> (* assert false *) lk_compile_one_phrase 
     | Lco -> lco_compile_one_phrase
   in
 

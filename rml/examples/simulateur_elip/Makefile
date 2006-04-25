@@ -1,12 +1,26 @@
 N=-1
 SAMPLING=-1
 
+SRC=	init.rml \
+	position.rml \
+	pos_tbl.rmli \
+	global.rml \
+	area.rml \
+	rml_graphics.rml \
+	draw.rml \
+	move.rml \
+	msg.rml \
+	routing.rml \
+	node.rml \
+	dynamic.rml \
+	simul.rml
+
 all: simul simul.opt
 
 link:
 	- ln -s pos_tbl_array_dynamic.rml pos_tbl.ml
 
-rml:
+rml: $(SRC)
 	rmlc $(RMLCFLAGS) init.rml
 	rmlc $(RMLCFLAGS) position.rml
 	rmlc $(RMLCFLAGS) pos_tbl.rmli
@@ -39,7 +53,7 @@ cmo: rml link
 
 cmx: rml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) init.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLCFLAGS) position.ml
+	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) position.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) pos_tbl.mli
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) pos_tbl.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) global.ml

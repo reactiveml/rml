@@ -103,12 +103,6 @@ let set_runtime s =
       set_interpreter_impl "Implantation";
       set_interpreter_module "Lco_rewrite_record";
       set_translation Lco
-(*
-  | "rewrite_debug" ->
-      set_interpreter_intf "Lk_interpreter";
-      set_interpreter_impl "Lk_rewrite_debug";
-      set_translation Lk
-*)
   | "Lco_ctrl_tree" -> 
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implantation";
@@ -122,7 +116,8 @@ let set_runtime s =
 *)
   | "Lk" ->
       set_interpreter_intf "Lk_interpreter";
-      set_interpreter_impl "Lk_interpreter";
+      set_interpreter_impl "Implantation";
+      set_interpreter_module "Lk_record";
       set_translation Lk
 
   | "Rmltop" ->
@@ -152,6 +147,10 @@ let set_interactive () =
 
 (* suspend the nary optimization *)
 let set_no_nary () = nary_optimization := false
+(* suspend the static optimization *)
+let set_no_static () = static_optimization := false
+(* suspend the for optimization *)
+let set_no_for () = for_optimization := false
 
 (* the string of messages *)
 let doc_v = "Print compiler version and location of standard library and exit"
@@ -161,6 +160,8 @@ and doc_stdlib = "<dir> Directory for the standard library"
 and doc_no_pervasives = "(undocumented)"
 and doc_no_const_let = "(undocumented)"
 and doc_no_nary = "(undocumented)"
+and doc_no_static = "(undocumented)"
+and doc_no_for = "(undocumented)"
 and doc_compilation = "Compile only (produces a .rzi file)"
 and doc_libraries = "<dir> Add <dir> to the list of include directories"
 and doc_simulation = "<proc> Executes the process <proc>."
@@ -209,7 +210,9 @@ let main () =
 	"-runtime", Arg.String set_runtime, doc_runtime;
 	"-interactive", Arg.Unit set_interactive, doc_interactive;
 	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;
-	"-nonary", Arg.Unit set_no_nary, doc_no_nary;
+	"-no_nary_opt", Arg.Unit set_no_nary, doc_no_nary;
+	"-no_static_opt", Arg.Unit set_no_static, doc_no_static;
+	"-no_for_opt", Arg.Unit set_no_for, doc_no_for;
 	"-noconstlet", Arg.Clear const_let, doc_no_const_let;
 	"-dparse", Arg.Unit set_dparse, doc_dparse;
 	"-dtime", Arg.Unit set_dtime, doc_dtime;
