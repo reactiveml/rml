@@ -34,6 +34,11 @@ let interpreter_impl = ref "Implantation"
 
 let standard_lib = STDLIB 
 
+(* List of file to compile *)
+let to_compile = ref ([] : string list)
+
+let default_used_modules = ref ([] : string list)
+
 (* interpreter *)
 let set_interpreter_intf s = interpreter_intf := s
 let set_interpreter_impl s = interpreter_impl := s
@@ -91,9 +96,7 @@ let interactive = ref false
 let nary_optimization = ref true
 let static_optimization = ref true
 let for_optimization = ref true
-
-(* const_let *)
-let const_let = ref true
+let const_optimization = ref true
 
 let find_in_path filename =
   if Sys.file_exists filename then

@@ -24,20 +24,20 @@ let process pacman_clavier key_push new_move pacman_pos new_pos abandon =
       do
         run (sustain pacman_pos)
       until key_push done;
-      let key = List.hd (pre ?key_push) in
+      let key = List.hd (last ?key_push) in
       (match cmd_clavier key with
        | Quit   -> emit abandon
-       | No_cmd -> emit pacman_pos (List.hd (pre ?pacman_pos))
+       | No_cmd -> emit pacman_pos (List.hd (last ?pacman_pos))
        | Dir x  -> 
                    let (peut_bouger,npos) = 
-                      est_possible (List.hd (pre ?pacman_pos)) x false 
+                      est_possible (List.hd (last ?pacman_pos)) x false 
                     in
                     if peut_bouger then
                     (emit pacman_pos (npos);
                      emit new_pos
                     )
                     else
-                      emit pacman_pos (List.hd (pre ?pacman_pos))
+                      emit pacman_pos (List.hd (last ?pacman_pos))
       );
       pause;
     done;
@@ -52,7 +52,7 @@ let process pacman_affichage pacman_pos new_pos affichage new_move nbclignote =
   loop
     pause;
     await immediate new_pos;
-    let anc_pos = List.hd (pre ?pacman_pos) in
+    let anc_pos = List.hd (last ?pacman_pos) in
     pause;
     emit affichage [ My_image(get_brique anc_pos, pos_to_coord anc_pos)];
   end
@@ -63,10 +63,10 @@ let process pacman_affichage pacman_pos new_pos affichage new_move nbclignote =
     do
       loop
 	emit affichage [My_image(joueur,
-	                         pos_to_coord (List.hd (pre ?pacman_pos)))];
+	                         pos_to_coord (List.hd (last ?pacman_pos)))];
 	pause;
 	await immediate one nbclignote (n) in
-	let pos = List.hd (pre ?pacman_pos) in
+	let pos = List.hd (last ?pacman_pos) in
 	emit affichage [My_image(
 			(if n = 0 then
 			  joueur
@@ -78,7 +78,7 @@ let process pacman_affichage pacman_pos new_pos affichage new_move nbclignote =
     until new_pos done;
     (************)
     (* Fait le Bouger *)
-    let npos = List.hd (pre ?pacman_pos) in
+    let npos = List.hd (last ?pacman_pos) in
     (** Fait des trucs **)
     
     (* On peut prendre en compte un nouveau mouvement *)
@@ -97,7 +97,7 @@ let process pacman_invincible invincible nb_inv new_pos bouge_fant =
 	  pause;
 	  run (sustain nb_inv);
 	until bouge_fant done;
-	let nb = List.hd (pre ?nb_inv) in
+	let nb = List.hd (last ?nb_inv) in
 	emit nb_inv (decremente nb);
      end 
     until new_pos done;
@@ -107,18 +107,18 @@ let process pacman_invincible invincible nb_inv new_pos bouge_fant =
       emit nb_inv (nbtourinv)
     else
       if (pre bouge_fant) then 
-	let nb = decremente (List.hd (pre ?nb_inv)) in  
+	let nb = decremente (List.hd (last ?nb_inv)) in  
         emit nb_inv (nb)
       else
-        emit nb_inv (List.hd (pre ?nb_inv));
+        emit nb_inv (List.hd (last ?nb_inv));
     pause;
     (* --------------- *)
     (* Pour eviter de louper un bouge_fant *)
     if (pre bouge_fant) then 
-      let nb = decremente (List.hd (pre ?nb_inv)) in  
+      let nb = decremente (List.hd (last ?nb_inv)) in  
       emit nb_inv (nb)
     else
-      emit nb_inv (List.hd (pre ?nb_inv));
+      emit nb_inv (List.hd (last ?nb_inv));
   end;;
 
 
@@ -140,7 +140,7 @@ let process pacman_after_live lostlive nbclignote =
       (* Decremente nbclignote de 1 a
          chaque instant *)
       loop
-	let nb = List.hd (pre ?nbclignote) in
+	let nb = List.hd (last ?nbclignote) in
 	emit nbclignote (if nb <= 0 then 0 else nb -1);
 	pause;
       end;
@@ -203,13 +203,13 @@ let process pacman affichage key_push mangep mypos new_aff fin
         run (pacman_invincible invincible nb_inv new_pos bouge_fant)
         ||
 	loop
-	  emit prepacman_pos (List.hd (pre ?pacman_pos));
+	  emit prepacman_pos (List.hd (last ?pacman_pos));
 	  pause;
 	end;
       end
     until lostlive done;
     (* Avant de le remettre au debut, il faut l'effacer de sa position *)
-    let p_pos = List.hd (pre ?prepacman_pos) in
+    let p_pos = List.hd (last ?prepacman_pos) in
     emit affichage [My_image(get_brique p_pos, pos_to_coord p_pos)];
     emit pacman_pos posdep;
     pause;

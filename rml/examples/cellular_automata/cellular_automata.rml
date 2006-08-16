@@ -242,7 +242,7 @@ let process cell draw_cell get_neighbors cell_behavior
     else await immediate activation;
 (*    let activation <neighbors> in *)
     pause;
-    let neighbors = if pre activation then pre ?activation else [] in
+    let neighbors = pre ?activation in
     cell_behavior self neighbors;
     draw_cell self
   end
@@ -384,7 +384,7 @@ let process main =
 			    (string_of_int (!maxy * !zoom)));
   Graphics.auto_synchronize false;
   begin
-    match !behavior with
+    begin match !behavior with
     | "gol" ->
 	signal tmp in
 	let cell_array = cell_array_create tmp in
@@ -422,10 +422,11 @@ let process main =
 	       fire_behavior
 	       cell_array);
     | s -> raise (Invalid_argument s)
-  end
-  ||
-  loop 
-    Graphics.synchronize (); 
-    pause;
+    end
+    ||
+    loop 
+      Graphics.synchronize (); 
+      pause;
+    end
   end
 

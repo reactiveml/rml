@@ -34,23 +34,17 @@ let random pos =
 let same_dir dir_init =
   let dir = ref dir_init in
   fun pos ->
-    let p = Random.int 100 in
-    if p < 80 then 
-      ();
-    if 80 <= p & p < 85 then 
-      dir := (!dir + 1) mod 8;
-    if 85 <= p & p < 90 then 
-      dir := (!dir + 7) mod 8;
-    if 90 <= p & p < 92 then 
-      dir := (!dir + 2) mod 8;
-    if 92 <= p & p < 94 then 
-      dir := (!dir + 6) mod 8;
-    if 94 <= p & p < 96 then 
-      dir := (!dir + 3) mod 8;
-    if 96 <= p & p < 98 then 
-      dir := (!dir + 5) mod 8;
-    if 98 <= p & p < 100 then 
-      dir := (!dir + 4) mod 8;
+    begin match Random.int 100 with
+    | p when (p < 80) -> ()
+    | p when (80 <= p & p < 85) -> dir := (!dir + 1) mod 8
+    | p when (85 <= p & p < 90) -> dir := (!dir + 7) mod 8
+    | p when (90 <= p & p < 92) -> dir := (!dir + 2) mod 8
+    | p when (92 <= p & p < 94) -> dir := (!dir + 6) mod 8
+    | p when (94 <= p & p < 96) -> dir := (!dir + 3) mod 8
+    | p when (96 <= p & p < 98) -> dir := (!dir + 5) mod 8
+    | p when (98 <= p & p < 100) -> dir := (!dir + 4) mod 8
+    | _ -> ()
+    end;
     translate pos !dir speed
 
 

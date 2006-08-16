@@ -49,6 +49,8 @@ and expression_desc =
   | Kexpr_seq of expression * expression
   | Kexpr_process of ident * ident * process
   | Kexpr_pre of pre_kind * expression
+  | Kexpr_last of expression
+  | Kexpr_default of expression
   | Kexpr_emit of expression
   | Kexpr_emit_val of expression * expression
   | Kexpr_signal of 
@@ -61,7 +63,7 @@ and process =
     kproc_loc: Location.t;}
 and process_desc =
   | Kproc_pause of process * ident
-  | Kproc_halt of process
+  | Kproc_halt
   | Kproc_compute of expression * process
   | Kproc_emit of expression * process
   | Kproc_emit_val of expression * expression * process
@@ -88,15 +90,15 @@ and process_desc =
   | Kproc_def_and_dyn of pattern list * process
   | Kproc_run of expression  * process * ident
   | Kproc_start_until of 
-      (* ident * *)
+      ident (* ctrl father *) * 
       event_config * (ident * process) * (pattern * process) 
   | Kproc_end_until of ident * process
   | Kproc_start_when of
-      (* ident * *) event_config * (ident * process) 
+      ident * event_config * (ident * process) 
 (*  | Kproc_when of ident * expression * ident *)
   | Kproc_end_when of ident * process
   | Kproc_start_control of
-      (* ident * *) event_config * (ident * process) 
+      ident * event_config * (ident * process) 
   | Kproc_end_control of ident * process
   | Kproc_get of expression * pattern * process * ident
   | Kproc_present of ident * event_config * process * process

@@ -28,7 +28,7 @@ EXTERNAL = external/lucky.ml \
 	external/lucky_errors.ml \
 	external/external.ml \
 
-STATIC = static/def_static.mli \
+STATIC = static/def_static.ml \
 	static/static.ml \
 	static/static_errors.ml \
 
@@ -53,13 +53,15 @@ LCO =	lco/lco_ast.ml \
 LK  =	lk/lk_ast.ml \
 	lk/reac2lk.ml \
 
-CAML = 	caml/caml_ast.ml \
+CAML = 	caml/caml2caml.ml \
+	caml/caml_ast.ml \
 	caml/caml_misc.ml \
 	caml/lco2caml.ml \
 	caml/lk2caml.ml \
 	caml/print_caml_src.ml \
 
 MAIN = 	main/compiler.ml \
+	main/configure.ml \
 	main/errors.ml \
 	main/interactive.ml \
 	main/main.ml \
@@ -73,12 +75,15 @@ OBJ =   global/warnings.cmo \
 	global/misc.cmo \
 	global/ident.cmo \
 	typing/def_types.cmo \
+	static/def_static.cmo \
 	global/modules.cmo \
 	global/global_ident.cmo \
 	global/global.cmo \
 	global/symbol_table.cmo \
 	parsing/lexer.cmo \
 	parsing/syntaxerr.cmo \
+	main/errors.cmo \
+	main/configure.cmo \
 	parsing/parse_ast.cmo \
 	parsing/parse_ident.cmo \
 	parsing/parser.cmo \
@@ -109,8 +114,8 @@ OBJ =   global/warnings.cmo \
 	caml/caml_misc.cmo \
 	caml/lco2caml.cmo \
 	caml/lk2caml.cmo \
+	caml/caml2caml.cmo \
 	caml/print_caml_src.cmo \
-	main/errors.cmo \
 	main/compiler.cmo \
 	main/interactive.cmo \
 	main/main.cmo \

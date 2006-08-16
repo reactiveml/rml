@@ -123,8 +123,20 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
     (* producing caml code *)
     Lk2caml_timer.start();
     let caml_code = Lk2caml.translate_impl_item info_chan lk_code in 
-    caml_table := caml_code :: !caml_table;
     Lk2caml_timer.time();
+
+    (* Optimization *)
+    Optimization_timer.start();
+    let caml_code =
+      if !const_optimization then
+	Caml2caml.constant_propagation_impl caml_code 
+      else
+	caml_code
+    in
+    Optimization_timer.time();
+
+    caml_table := caml_code :: !caml_table
+
   in
 
   let lco_compile_one_phrase impl = 
@@ -138,8 +150,19 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
     (* producing caml code *)
     Lco2caml_timer.start();
     let caml_code = Lco2caml.translate_impl_item info_chan lco_code in 
-    caml_table := caml_code :: !caml_table;
     Lco2caml_timer.time();
+
+    (* Optimization *)
+    Optimization_timer.start();
+    let caml_code =
+      if !const_optimization then
+	Caml2caml.constant_propagation_impl caml_code 
+      else
+	caml_code
+    in
+    Optimization_timer.time();
+
+    caml_table := caml_code :: !caml_table
   in
 
   (* selection of the back-end *)

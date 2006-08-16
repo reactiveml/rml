@@ -1,0 +1,84 @@
+open Position
+open Global
+open Node
+open Draw  
+
+let _ =
+  init_make_move := (fun pos -> Move.rwp (4. *. coverage_range) pos);
+  init_make_make_msg := (fun () -> Msg.make_msg);
+  init_make_insert_elip_info := (fun pos -> Msg.insert_locality pos)
+(*  init_make_insert_elip_info := (fun pos -> Msg.insert_proba)
+  init_make_insert_elip_info := (fun pos -> Msg.insert_proba_locality pos)*)
+
+
+let process make_nodes n =
+  for i = 1 to n dopar
+    let pos = { x = Random.float max_x;
+		y = Random.float max_y } 
+    in
+    run (node (get_new_id()) pos)
+  done
+
+let process make_preemptible_nodes n kill=
+  for i = 1 to n dopar
+    let pos = { x = Random.float max_x;
+		y = Random.float max_y } 
+    in
+    run (Dynamic.preemptible_node (get_new_id()) pos kill)
+  done
+
+
+
+let process main =
+  Area.make_areas;
+  signal suspend in
+  signal start in
+  signal new_node, kill in
+  control 
+    (* run (make_nodes nb_nodes) *)
+    run (make_preemptible_nodes nb_nodes kill) 
+    ||
+    run (Dynamic.add new_node start)
+    ||
+    loop
+      emit start;
+      pause;
+      pause;
+      pause;
+    end
+    ||
+    if with_stat then run (Stat.stat start)
+  with suspend 
+  ||
+  (if with_graphics then
+    run (draw_simul draw suspend new_node kill))
+  ||
+  if nb_instants > 0 then
+    begin
+      let t_init = Unix.time () in
+      for i = 1 to nb_instants * 3 do pause done;
+      let t_fin = Unix.time () in
+      let proc_time = Sys.time() in
+      let gc_stat = Gc.stat() in
+      print_int nb_nodes;
+      print_char '\t';
+      print_float max_x;
+      print_char '\t';
+      print_float coverage_range;
+      print_char '\t';
+      print_float area_size_x;
+      print_char '\t';
+      print_float (t_fin -. t_init);
+      print_char '\t';
+      print_float proc_time;
+      print_char '\t';
+      print_int gc_stat.Gc.top_heap_words;
+      print_char '\t';
+      print_float ((t_fin -. t_init) /. float_of_int nb_instants);
+      print_char '\t';
+      print_float (proc_time /. float_of_int nb_instants);
+      print_char '\t';
+      print_newline();
+(*      Gc.print_stat stdout;*)
+      exit 0;
+    end

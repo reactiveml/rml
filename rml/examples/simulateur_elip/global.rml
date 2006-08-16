@@ -11,7 +11,8 @@ type node =
       mutable date: int;
       pos_tbl_le: Pos_tbl.t;
       pos_tbl_elip: Pos_tbl.t;
-      mutable neighbors: node list; }
+      mutable neighbors: node list;
+      mutable visited: bool }
 
 type packet_header =
   | H_LE
@@ -96,7 +97,8 @@ let make_node id pos =
      pos_tbl_le = Pos_tbl.make nb_nodes; 
      pos_tbl_elip = Pos_tbl.make nb_nodes; 
      neighbors = [];
-     pos = pos; }
+     pos = pos;
+     visited = false; }
 
 
 let make_packet header src_node dest =

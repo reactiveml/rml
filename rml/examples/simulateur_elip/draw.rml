@@ -226,6 +226,8 @@ let process draw_simul draw suspend new_node kill =
   print_newline();
   print_string "\tg: to display areas";
   print_newline();
+  print_string "\tq: to quit";
+  print_newline();
 
   loop
     await immediate one key (c) in
@@ -267,10 +269,12 @@ let process draw_simul draw suspend new_node kill =
 	  let node = search_closer p !all_infos in
 	  emit kill node;
 	  emit refresh
-      | 'G'| 'g' -> 
+      | 'G' | 'g' -> 
 	  with_areas := not !with_areas;
 	  emit refresh
-      | _ -> nothing
+      | 'Q' | 'q' -> 
+	  exit 0
+      | _ -> ()
     end;
     pause
   end

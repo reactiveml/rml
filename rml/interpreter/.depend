@@ -3,18 +3,12 @@ implantation.cmo: sig_env.cmo lk_interpreter.cmo lco_rewrite.cmo \
     lco_ctrl_tree.cmo 
 implantation.cmx: sig_env.cmx lk_interpreter.cmx lco_rewrite.cmx \
     lco_ctrl_tree.cmx 
-lco_ctrl_tree.01.cmo: lco_interpreter.cmi 
-lco_ctrl_tree.01.cmx: lco_interpreter.cmi 
-lco_ctrl_tree.02.cmo: lco_interpreter.cmi 
-lco_ctrl_tree.02.cmx: lco_interpreter.cmi 
 lco_ctrl_tree.03.cmo: sig_env.cmo 
 lco_ctrl_tree.03.cmx: sig_env.cmx 
 lco_ctrl_tree.cmo: sig_env.cmo 
 lco_ctrl_tree.cmx: sig_env.cmx 
 lco_ctrl_tree_thread.cmo: sig_env.cmo 
 lco_ctrl_tree_thread.cmx: sig_env.cmx 
-lco_rewrite.01.cmo: lco_interpreter.cmi 
-lco_rewrite.01.cmx: lco_interpreter.cmi 
 lco_rewrite.02.cmo: sig_env.cmo 
 lco_rewrite.02.cmx: sig_env.cmx 
 lco_rewrite.cmo: sig_env.cmo 

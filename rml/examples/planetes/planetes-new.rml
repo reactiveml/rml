@@ -104,8 +104,9 @@ let maj_aff all =
 	(int_of_float p.pos.x + max_x_2)
 	(int_of_float p.pos.y  + max_y_2)
 	(*3*)
-	( if (p.pos.z < 5000.0) & (p.pos.z > -5000.0)
-	then 5+(int_of_float p.pos.z / 50) else 1))
+	(if (-200.0 < p.pos.z) & (p.pos.z < 5000.0) then 
+	  5+(int_of_float p.pos.z / 50) 
+	else 1))
     all
 ;;
 
@@ -174,8 +175,9 @@ let process fenetre new_planete p kill_sun kill suspend =
   in
 (*----------------------------------------------------*)
   signal aff in
-    Graphics.open_graph "";
-    Graphics.auto_synchronize false;
+  Graphics.open_graph "";
+  Graphics.auto_synchronize false;
+  begin
     loop
       await p (all) in 
       maj_aff all;
@@ -189,6 +191,7 @@ let process fenetre new_planete p kill_sun kill suspend =
     run read_click 
     ||
     run read_key 
+  end
 ;;
 
 (******************************************************)

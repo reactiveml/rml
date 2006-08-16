@@ -10,12 +10,14 @@ SRC=	init.rml \
 	draw.rml \
 	move.rml \
 	msg.rml \
+	search_best_age.rmli \
+	search_best_age.ml \
 	routing.rml \
 	node.rml \
 	dynamic.rml \
 	simul.rml
 
-all: simul simul.opt
+all: elip elip.opt
 
 link:
 	- ln -s pos_tbl_array_dynamic.rml pos_tbl.ml
@@ -30,6 +32,7 @@ rml: $(SRC)
 	rmlc $(RMLCFLAGS) draw.rml
 	rmlc $(RMLCFLAGS) move.rml
 	rmlc $(RMLCFLAGS) msg.rml
+	rmlc $(RMLCFLAGS) search_best_age.rmli
 	rmlc $(RMLCFLAGS) routing.rml
 	rmlc $(RMLCFLAGS) node.rml
 	rmlc $(RMLCFLAGS) dynamic.rml
@@ -46,6 +49,8 @@ cmo: rml link
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) draw.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) move.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) msg.ml
+	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) search_best_age.mli
+	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) search_best_age.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) routing.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) node.ml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) dynamic.ml
@@ -62,13 +67,15 @@ cmx: rml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) draw.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) move.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) msg.ml
+	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) search_best_age.mli
+	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) search_best_age.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) routing.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) node.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) dynamic.ml
 	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) simul.ml
 
-simul: cmo
-	ocamlc $(OCAMLCFLAGS) -o simul \
+elip: cmo
+	ocamlc $(OCAMLCFLAGS) -o elip \
 		unix.cma graphics.cma \
 		-I `rmlc -where` rml_interpreter.cma \
 		init.cmo \
@@ -80,13 +87,14 @@ simul: cmo
 		draw.cmo \
 		move.cmo \
 		msg.cmo \
+		search_best_age.cmo \
 		routing.cmo \
 		node.cmo \
 		dynamic.cmo \
 		simul.cmo 
 
-simul.opt: cmx
-	ocamlopt $(OCAMLOPTFLAGS) -o simul.opt \
+elip.opt: cmx
+	ocamlopt $(OCAMLOPTFLAGS) -o elip.opt \
 		unix.cmxa graphics.cmxa \
 		-I `rmlc -where` rml_interpreter.cmxa \
 		init.cmx \
@@ -98,6 +106,7 @@ simul.opt: cmx
 		draw.cmx \
 		move.cmx \
 		msg.cmx \
+		search_best_age.cmx \
 		routing.cmx \
 		node.cmx \
 		dynamic.cmx \
@@ -114,12 +123,13 @@ clean:
 	draw.ml \
 	move.ml \
 	msg.ml \
+	search_best_age.mli \
 	routing.ml \
 	node.ml \
 	dynamic.ml \
 	simul.ml 
 
 cleanall: clean
-	rm -f simul simul.opt pos_tbl.ml *~
+	rm -f elip elip.opt pos_tbl.ml *~
 
 realclean: cleanall

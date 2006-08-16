@@ -211,19 +211,21 @@ let fenetre affiche =
     Graphics.open_graph (" " ^ (string_of_int taille_x) ^ "x" ^
                                 (string_of_int taille_y));
     Graphics.auto_synchronize false;
-    loop
-       await p(all) in
-       affiche all;
-       Graphics.synchronize ();
+    begin
+      loop
+	await p(all) in
+	affiche all;
+	Graphics.synchronize ();
+      end
+      ||
+      run (read_click false
+             (get_mouse_pos ()) internalclick a_move pos mouse_down)
+      ||
+      run (read_key key_push)
+      ||
+      run (genere_temps freq ds)
+      ||
+      run (create_doublesingleclick internalclick ds a_click a_doubleclick)
     end
-    ||
-    run (read_click false
-                    (get_mouse_pos ()) internalclick a_move pos mouse_down)
-    ||
-    run (read_key key_push)
-    ||
-    run (genere_temps freq ds)
-    ||
-    run (create_doublesingleclick internalclick ds a_click a_doubleclick)
   end
 

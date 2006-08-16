@@ -1,0 +1,60 @@
+open Position
+open Area
+open Global
+
+
+let update_pos_tbl self neighbors =
+  List.iter 
+    (fun node ->
+      Pos_tbl.set self.pos_tbl_le node.id node.pos self.date;
+      Pos_tbl.set self.pos_tbl_elip node.id node.pos self.date)
+    neighbors
+
+let get_neighbors =
+  let rec get_neighbors n1 others acc =
+    match others with
+    | [] -> acc
+    | n2::tl ->
+	if distance2 n1.pos n2.pos < coverage_range2 then
+	  get_neighbors n1 tl (n2 :: acc)
+	else
+	  get_neighbors n1 tl acc
+  in
+  fun n1 others ->
+    get_neighbors n1 others []
+
+let process node id pos_init =
+  let self = make_node id pos_init in
+  loop
+
+    self.date <- self.date + 1;
+
+    (* Moving *)
+    self.pos <- self.move self.pos;
+    emit draw self;
+
+    (* Neighborhood discovering *)
+    let (i,j) as local_area, neighbor_areas = 
+      get_areas self.pos.x self.pos.y 
+    in
+    List.iter 
+      (fun (i,j) -> emit hello_array.(i).(j) self) 
+      (local_area::neighbor_areas);
+    await hello_array.(i).(j) (all) in
+    self.neighbors <- get_neighbors self all;
+
+    update_pos_tbl self self.neighbors;
+
+    (* Routing *)
+    pause;
+
+    List.iter 
+      (fun dest_id -> 
+	Routing.route LE self 
+	  (make_le_packet self dest_id);
+        Routing.route ELIP self 
+	  (make_elip_packet self dest_id))
+      (self.make_msg self);
+
+    pause;
+  end

@@ -34,13 +34,13 @@ let process cercle c_x c_y r =
   run (maj_ord 0.05 y) 
   ||
   loop
+    pause;
     coul := (!coul + 1) mod 6;
     Graphics.set_color (color_of_int !coul);
     Graphics.fill_circle 
       (int_of_float (c_x +. !x *. r)) 
       (int_of_float (c_y +. !y *. r))
-      5;
-    pause
+      5
   end
 
 let process main =

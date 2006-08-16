@@ -14,7 +14,7 @@ let maj_abs pas x () =
   while (true) do
     x := cos(!alpha);
     alpha := !alpha +. pas;
-(*    Thread.yield()*)
+    Thread.yield()
   done
 
 let maj_ord pas y () =
@@ -22,7 +22,7 @@ let maj_ord pas y () =
   while (true) do
     y := sin(!alpha);
     alpha := !alpha +. pas;
-(*    Thread.yield()*)
+    Thread.yield()
   done
 
 let aff coul c_x c_y x y r () =
@@ -33,7 +33,7 @@ let aff coul c_x c_y x y r () =
       (int_of_float (c_x +. !x *. r)) 
       (int_of_float (c_y +. !y *. r))
       5;
-(*    Thread.yield()*)
+    Thread.yield()
   done
 
 let cercle c_x c_y r () =

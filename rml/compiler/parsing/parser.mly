@@ -230,6 +230,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <int32> INT32
 %token <int64> INT64
 %token <string> LABEL
+%token LAST                /* "last" */
 %token LAZY                /* "lazy" */
 %token LBRACE              /* "{" */
 %token LBRACELESS          /* "{<" */
@@ -550,6 +551,10 @@ expr:
       { mkassert $2 }
   | PRE pre_expr
       { let k,s = $2 in mkexpr(Pexpr_pre (k,s)) }
+  | LAST QUESTION simple_expr
+      { mkexpr(Pexpr_last $3) }
+  | DEFAULT QUESTION simple_expr
+      { mkexpr(Pexpr_default $3) }
   | EMIT simple_expr 
       { mkexpr(Pexpr_emit $2 ) }
   | EMIT simple_expr simple_expr

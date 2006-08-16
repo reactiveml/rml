@@ -1,6 +1,7 @@
 OCAMLC = ocamlc
 OCAMLOPT = ocamlopt
 RMLC = rmlc
+RMLFLAGS=
 INTERPRETER=interpreter
 INTERPRETERPATH=`$(RMLC) -where`
 
@@ -46,7 +47,7 @@ moteur.cmx: moteur.ml
 
 
 main.ml: main.rml
-	$(RMLC) -s main $<
+	$(RMLC) $(RMLFLAGS) -s main $<
 
 clean:
 	rm -f *.cmi *.cmo *.cmx cube.ml moteur.ml main.ml *.rzi *.o
@@ -66,7 +67,7 @@ realclean:cleanall
 
 
 .rml.ml:
-	$(RMLC) $<
+	$(RMLC) $(RMLFLAGS) $<
 
 .ml.cmo:
 	$(OCAMLC) -c -I $(INTERPRETERPATH) $<

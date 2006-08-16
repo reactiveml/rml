@@ -245,6 +245,19 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       else
 	raise Wrong_scheduler
  
+    let rml_last (sid, n, _, _) = 
+      if sid = get_current_sched_id() then
+	Event.last n
+      else
+	raise Wrong_scheduler
+ 
+    let rml_default (sid, n, _, _) = 
+      if sid = get_current_sched_id() then
+	Event.default n
+      else
+	raise Wrong_scheduler
+
+
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal () = new_evt (get_current_sched_id()) 
 

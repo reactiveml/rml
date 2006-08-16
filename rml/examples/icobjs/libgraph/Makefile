@@ -1,5 +1,6 @@
 PREFIX=
 RMLC=rmlc
+RMLFLAGS=
 OCAMLC=ocamlc
 OCAMLOPT=ocamlopt
 INTERPRETERPATH=`rmlc -where`
@@ -49,7 +50,7 @@ misc.cmx:misc.ml
 .SUFFIXES: .rml .ml .cmo .cmi .mli .rzi .rmli
 
 .rml.ml:
-	$(RMLC) $<
+	$(RMLC) $(RMLFLAGS) $<
 
 .ml.cmo:
 	$(OCAMLC) $(CAMLIMAGESDIR) -c $(OCAMLOPTS) $<
@@ -61,7 +62,7 @@ misc.cmx:misc.ml
 	$(OCAMLC) $(CAMLIMAGESDIR) -c $(OCAMLOPTS) $<
 
 .rmli.rzi:
-	$(RMLC) $<
+	$(RMLC) $(RMLFLAGS) $<
 
 #LIBS = unix.cma graphics.cma $(CAMLIMAGESDIR) ci_core.cma ci_graphics.cma ci_bmp.cma $(INTERPRETERDIR)/$(INTERPRETER).cmo
 

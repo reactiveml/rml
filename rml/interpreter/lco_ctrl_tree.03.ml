@@ -82,10 +82,12 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       p.next <- [];
       List.iter set_kill p.children;
       p.children <- []
-	
+
 (* calculer le nouvel etat de l'arbre de control *)
-    let eval_control =
-      let rec eval pere p =
+(* et deplacer dans la liste current les processus qui sont dans  *)
+(* les listes next *)
+    let eval_control_and_next_to_current =
+      let rec eval pere p active =
 	if p.alive then
 	  match p.kind with
 	  | Top -> raise RML
@@ -96,13 +98,8 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 		 set_kill p;
 		 false)
 	      else
-		(p.children <-
-		  List.fold_left 
-		    (fun acc node -> 
-		      if eval p node 
-		      then node :: acc
-		      else acc) 
-		    [] p.children;
+		(p.children <- eval_children p p.children active [];
+		 if active then next_to_current p;
 		 true)
 	  | Kill_handler handler -> 
 	      if p.cond() 
@@ -111,66 +108,62 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 		 set_kill p;
 		 false)
 	      else
-		(p.children <-
-		  List.fold_left 
-		    (fun acc node -> 
-		      if eval p node 
-		      then node :: acc
-		      else acc) 
-		    [] p.children;
+		(p.children <- eval_children p p.children active [];
+		 if active then next_to_current p;
 		 true)
-	  | Susp -> (
+	  | Susp -> 
 	      let pre_susp = p.susp in
 	      if p.cond() then p.susp <- not pre_susp;
+	      let active = active & not p.susp in
 	      if pre_susp
-	      then true
+	      then 
+		(if active then next_to_current p;
+		 true)
 	      else 
-		(p.children <-
-		  List.fold_left 
-		    (fun acc node -> 
-		      if eval p node 
-		      then node :: acc
-		      else acc) 
-		    [] p.children;
-		 true))
+		(p.children <- eval_children p p.children active [];
+		 if active then next_to_current p;
+		 true)
 	  | When f_when ->
 	      if p.susp 
 	      then true
 	      else
 		(p.susp <- true;
 		 pere.next <- !f_when :: pere.next;
-		 p.children <-
-		   List.fold_left 
-		     (fun acc node -> 
-		       if eval p node 
-		       then node :: acc
-		       else acc) 
-		     [] p.children;
+		 p.children <- eval_children p p.children false [];
 		 true)
 	else 
 	  (set_kill p;
 	   false)
+
+      and eval_children p nodes active acc =
+	match nodes with 
+	| [] -> acc
+	| node :: nodes ->
+	    if eval p node active
+	    then eval_children p nodes active (node :: acc)
+	    else eval_children p nodes active acc 
+
+      and next_to_current =
+	let rec aux next current =
+	  match next with
+	  | [] -> current
+	  | f :: next -> aux next (f::current)
+	in 
+	fun node ->
+	  current := aux node.next !current;
+	  node.next <- []
       in
       fun () ->
-	top.children <-
-	  (List.fold_left 
-	     (fun acc node -> 
-	       if eval top node 
-	       then node :: acc
-	       else acc) 
-	     [] top.children)
+	top.children <- eval_children top top.children true [];
+	next_to_current top
 
 (* deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
     let rec next_to_current p =
-      if p.alive
-      then
-	if p.susp 
-	then ()
-	else
-	  (current := List.rev_append p.next !current;
-	   p.next <- [];
-	   List.iter next_to_current p.children)
+      if p.alive & not p.susp then 
+	(current := List.rev_append p.next !current;
+	 p.next <- [];
+	 List.iter next_to_current p.children)
       else ()
 
 (* debloquer les processus en attent d'un evt *)
@@ -208,7 +201,11 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     let rml_pre_status (n, _, _) = Event.pre_status n 
 	  
     let rml_pre_value (n, _, _) = Event.pre_value n
+
+    let rml_last (n, _, _) = Event.last n
  
+    let rml_default (n, _, _) = Event.default n
+
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal = new_evt
 
@@ -934,7 +931,6 @@ let rml_loop p =
 	new_ctrl.cond <- (fun () -> Event.status n);
 	start_ctrl f_k ctrl f new_ctrl
 
-
 (**************************************)
 (* until_conf                         *)
 (**************************************)
@@ -1076,7 +1072,7 @@ let rml_loop p =
 	  else 
 	    if !eoi
 	    then
-	      (ctrl.next <- f_when :: ctrl.next;
+	      (ctrl.next <- f_when :: ctrl.next; 
 	       sched())
 	    else
 	      (w := f_when :: !w;
@@ -1351,8 +1347,7 @@ let rml_loop p =
 	  wakeUp weoi;
 	  wakeUpAll ();
 	  sched ();
-	  eval_control();
-	  next_to_current top;
+	  eval_control_and_next_to_current ();
 	  Event.next ();
 	  eoi := false;
 	  None
@@ -1394,8 +1389,7 @@ let rml_loop p =
 	  wakeUp weoi;
 	  wakeUpAll ();
 	  sched ();
-	  eval_control();
-	  next_to_current top;
+	  eval_control_and_next_to_current ();
 	  Event.next ();
 	  eoi := false;
 	  None

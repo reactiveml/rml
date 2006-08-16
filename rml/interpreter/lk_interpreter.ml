@@ -22,11 +22,12 @@ module type Lk_interpreter =
       val rml_expr_emit_val: ('a, 'b) event -> 'a -> unit
       val rml_pre_status: ('a, 'b) event -> bool
       val rml_pre_value: ('a, 'b) event -> 'b
-
+      val rml_last: ('a, 'b) event -> 'b
+      val rml_default: ('a, 'b) event -> 'b
 
       val rml_compute: (unit -> 'a) -> 'a step -> 'b step
       val rml_pause: unit step -> control_tree -> 'a step
-      val rml_halt: unit step -> 'a step
+      val rml_halt: 'a step
       val rml_emit_val:
         (unit -> ('a, 'b) event) -> (unit -> 'a) -> unit step -> 'c step
       val rml_emit:
@@ -40,6 +41,9 @@ module type Lk_interpreter =
         (unit -> ('a, 'b) event) -> ('b -> unit step) -> control_tree -> 
 	  'c step
       val rml_await_immediate_one:
+        (unit -> ('a, 'a list) event) -> ('a -> unit step) -> control_tree ->
+	  'b step
+      val rml_await_one:
         (unit -> ('a, 'a list) event) -> ('a -> unit step) -> control_tree ->
 	  'b step
       val rml_await_all:
@@ -82,6 +86,23 @@ module type Lk_interpreter =
 	  (unit -> int) -> (unit -> int) -> bool -> 
 	    (int ref -> int -> unit step) -> unit step -> 'b step
 	    
+      val rml_start_until: 
+	  control_tree -> (unit -> ('a, 'b) event) -> 
+	    (control_tree -> unit step) -> ('b -> unit step) -> 'c step
+      val rml_end_until:
+	  control_tree -> 'a step -> 'a step
+
+      val rml_start_control: 
+	  control_tree -> (unit -> ('a, 'b) event) -> 
+	    (control_tree -> unit step) -> 'c step
+      val rml_end_control:
+	  control_tree -> 'a step -> 'a step
+
+      val rml_start_when: 
+	  control_tree -> (unit -> ('a, 'b) event) -> 
+	    (control_tree -> unit step) -> 'c step
+      val rml_end_when:
+	  control_tree -> 'a step -> 'a step
 
       val rml_make: 'a process -> (unit -> 'a option)
     end
@@ -105,8 +126,7 @@ module Lk_interpreter: Lk_interpreter =
 	  mutable next: next; }
     and control_type = 
 	Top 
-      | Kill of unit step 
-      | Kill_handler of (unit -> unit step)
+      | Kill of (unit -> unit step)
       | Susp 
       | When of unit step ref
 
@@ -147,102 +167,77 @@ module Lk_interpreter: Lk_interpreter =
 	cond = (fun () -> false);
 	next = []; }
 
-(* tuer un arbre p *)
-    let rec set_kill p =
-      p.alive <- true;
-      p.susp <- false;
-      p.next <- [];
-      List.iter set_kill p.children;
-      p.children <- []
 	
 (* calculer le nouvel etat de l'arbre de control *)
-    let eval_control =
-      let rec eval pere p =
+(* et deplacer dans la liste current les processus qui sont dans  *)
+(* les listes next *)
+    let eval_control_and_next_to_current =
+      let rec eval pere p active =
 	if p.alive then
 	  match p.kind with
 	  | Top -> raise RML
-	  | Kill f_k -> 
-	      if p.cond() 
-	      then 
-		(pere.next <- f_k :: pere.next;
-		 set_kill p;
-		 false)
-	      else
-		(p.children <-
-		  List.fold_left 
-		    (fun acc node -> 
-		      if eval p node 
-		      then node :: acc
-		      else acc) 
-		    [] p.children;
-		 true)
-	  | Kill_handler handler -> 
+	  | Kill handler -> 
 	      if p.cond() 
 	      then 
 		(pere.next <- (handler()) :: pere.next;
-		 set_kill p;
 		 false)
 	      else
-		(p.children <-
-		  List.fold_left 
-		    (fun acc node -> 
-		      if eval p node 
-		      then node :: acc
-		      else acc) 
-		    [] p.children;
+		(p.children <- eval_children p p.children active [];
+		 if active then next_to_current p;
 		 true)
-	  | Susp -> (
+
+	  | Susp -> 
 	      let pre_susp = p.susp in
 	      if p.cond() then p.susp <- not pre_susp;
+	      let active = active & not p.susp in
 	      if pre_susp
-	      then true
+	      then 
+		(if active then next_to_current p;
+		 true)
 	      else 
-		(p.children <-
-		  List.fold_left 
-		    (fun acc node -> 
-		      if eval p node 
-		      then node :: acc
-		      else acc) 
-		    [] p.children;
-		 true))
+		(p.children <- eval_children p p.children active [];
+		 if active then next_to_current p;
+		 true)
 	  | When f_when ->
 	      if p.susp 
 	      then true
 	      else
 		(p.susp <- true;
 		 pere.next <- !f_when :: pere.next;
-		 p.children <-
-		   List.fold_left 
-		     (fun acc node -> 
-		       if eval p node 
-		       then node :: acc
-		       else acc) 
-		     [] p.children;
+		 p.children <- eval_children p p.children false [];
 		 true)
 	else 
-	  (set_kill p;
-	   false)
+	  false
+
+      and eval_children p nodes active acc =
+	match nodes with 
+	| [] -> acc
+	| node :: nodes ->
+	    if eval p node active
+	    then eval_children p nodes active (node :: acc)
+	    else eval_children p nodes active acc
+
+      and next_to_current =
+	let rec aux next current =
+	  match next with
+	  | [] -> current
+	  | f :: next -> aux next (f::current)
+	in 
+	fun node ->
+	  current := aux node.next !current;
+	  node.next <- []
       in
       fun () ->
-	top.children <-
-	  (List.fold_left 
-	     (fun acc node -> 
-	       if eval top node 
-	       then node :: acc
-	       else acc) 
-	     [] top.children)
+	top.children <- eval_children top top.children true [];
+	next_to_current top
 
 (* deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
     let rec next_to_current p =
-      if p.alive
-      then
-	if p.susp 
-	then ()
-	else
-	  (current := List.rev_append p.next !current;
-	   p.next <- [];
-	   List.iter next_to_current p.children)
+      if p.alive & not p.susp then 
+	(current := List.rev_append p.next !current;
+	 p.next <- [];
+	 List.iter next_to_current p.children)
       else ()
 
 (* creation d'evenements *)
@@ -270,6 +265,11 @@ module Lk_interpreter: Lk_interpreter =
 	  
     let rml_pre_value (n, _, _) = Event.pre_value n
  
+    let rml_last (n, _, _) = Event.last n
+ 
+    let rml_default (n, _, _) = Event.default n
+
+
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal = new_evt
 
@@ -292,7 +292,7 @@ module Lk_interpreter: Lk_interpreter =
 (**************************************)
 (* halt                               *)
 (**************************************)
-    let rml_halt k _ =
+    let rml_halt _ =
       sched ()
 
 (**************************************)
@@ -326,7 +326,7 @@ module Lk_interpreter: Lk_interpreter =
 	then
 	  k ()
 	else
-	  (wa := (Obj.magic self: unit step) :: !wa;
+	  (wa := k :: !wa;
 	   sched ())
       in self
 
@@ -627,47 +627,93 @@ module Lk_interpreter: Lk_interpreter =
 
 
 (* ---------- Misc functions for until, control and when ---------- *)
-    let new_ctrl kind =
+    let new_ctrl kind cond =
       { kind = kind;
 	alive = true;
 	susp = false;
 	children = [];
-	cond = (fun () -> false);
+	cond = cond;
 	next = [] }
 
-    let start_ctrl f ctrl new_ctrl =
-      let f_ctrl =
-	fun _ ->
-	  if new_ctrl.alive
-	  then 
-	    (ctrl.children <- new_ctrl :: ctrl.children)
-	  else
-	    (new_ctrl.alive <- true;
-	     new_ctrl.susp <- false;
-	     new_ctrl.next <- []);
-	  f ()
-      in f_ctrl
-
-    let end_ctrl k new_ctrl =
-      fun x ->
-	set_kill new_ctrl;
-	new_ctrl.alive <- false;
-	k x
 
 (**************************************)
 (* until                              *)
 (**************************************)
-(*
-    let rml_start_until expr_evt p ctrl =
-	let new_ctrl = new_ctrl (Kill k) in
-	let f = p new_ctrl in
-	let f_until =
-	  fun _ ->
-	    let (n,_,_) = expr_evt () in
-	    new_ctrl.cond <- (fun () -> Event.status n);
-	    start_ctrl f ctrl new_ctrl ()
-	in f_until
-*)
+    let rml_start_until ctrl expr_evt p k _ =
+      let (n,_,_) = expr_evt () in
+      let new_ctrl = 
+	new_ctrl 
+	  (Kill (fun () -> let v = Event.value n in k v)) 
+	  (fun () -> Event.status n) 
+      in
+      ctrl.children <- new_ctrl :: ctrl.children;
+      p new_ctrl ()
+
+    let rml_end_until new_ctrl k x =
+      new_ctrl.alive <- false;
+      k x
+
+(**************************************)
+(* control                            *)
+(**************************************)
+   let rml_start_control ctrl expr_evt p _ =
+      let (n,_,_) = expr_evt () in
+      let new_ctrl = 
+	new_ctrl 
+	  Susp
+	  (fun () -> Event.status n) 
+      in
+      ctrl.children <- new_ctrl :: ctrl.children;
+      p new_ctrl ()
+
+    let rml_end_control new_ctrl k x =
+      new_ctrl.alive <- false;
+      k x
+
+ 
+(**************************************)
+(* when                               *)
+(**************************************)
+    let step_when ctrl new_ctrl n w =
+      let rec f_when =
+	fun _ ->
+	  if Event.status n
+	  then
+	    (new_ctrl.susp <- false;
+	     next_to_current new_ctrl;
+	     sched())
+	  else 
+	    if !eoi
+	    then
+	      (ctrl.next <- f_when :: ctrl.next;
+	       sched())
+	    else
+	      (w := f_when :: !w;
+	       if ctrl.kind <> Top then toWakeUp := w :: !toWakeUp;
+	       sched())
+      in f_when
+      
+    let rml_start_when ctrl expr_evt p _ =
+      let (n,wa,wp) = expr_evt () in
+      let dummy = ref (fun _ -> assert false) in
+      let new_ctrl = 
+	new_ctrl 
+	  (When dummy)
+	  (fun () -> Event.status n) 
+      in
+      let f_when = 
+	step_when ctrl new_ctrl n (if ctrl.kind = Top then wa else wp) 
+      in
+      dummy := f_when;
+      new_ctrl.next <- p new_ctrl :: new_ctrl.next;
+      ctrl.children <- new_ctrl :: ctrl.children;
+      f_when ()      
+
+    let rml_end_when new_ctrl k x =
+      new_ctrl.alive <- false;
+      k x
+
+      
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
@@ -680,6 +726,13 @@ module Lk_interpreter: Lk_interpreter =
     let rml_await_all expr_evt p ctrl _ =
       let evt = expr_evt () in
       rml_await_immediate' evt (step_get evt p ctrl) ctrl ()
+
+    let rml_await_one expr_evt p ctrl _ =
+      let pause_p x = 
+	rml_pause (fun () -> p x ()) ctrl
+      in
+      rml_await_immediate_one expr_evt pause_p ctrl ()
+
 
 
 (* ------------------------------------------------------------------------ *)
@@ -701,8 +754,7 @@ module Lk_interpreter: Lk_interpreter =
 	  wakeUp weoi;
 	  wakeUpAll ();
 	  sched ();
-	  eval_control();
-	  next_to_current top;
+	  eval_control_and_next_to_current ();
 	  Event.next ();
 	  eoi := false;
 	  None

@@ -15,11 +15,6 @@ open Reac_ast
 open Def_static
 open Static_errors
 
-(* For debug *)
-let string_of_static typ = 
-  match typ with
-  | Static -> "Static"
-  | Dynamic -> "Dynamic"
 
 let id x = x
 
@@ -122,19 +117,19 @@ let rec static_expr ctx e =
 	else expr_wrong_static_err e
 
     | Rexpr_match (e1, patt_expr_list) ->
-	let typ1 = static_expr ML e1 in
+	let _typ1 = static_expr ML e1 in
 	let typ2 = static_expr_list static_expr snd ctx patt_expr_list in
-	unify typ1 typ2
+	typ2
 
     | Rexpr_when_match (e1,e2) ->
-	let typ1 = static_expr ML e1 in
+	let _typ1 = static_expr ML e1 in
 	let typ2 = static_expr ctx e2 in
-	unify typ1 typ2
+	typ2
 
     | Rexpr_while (e1,e2) ->
-	let typ1 = static_expr ML e1 in
+	let _typ1 = static_expr ML e1 in
 	let typ2 = static_expr ctx e2 in
-	unify typ1 typ2
+	typ2
 
     | Rexpr_for (_, e1, e2, _, e3) ->
 	let typ1 = static_expr ML e1 in
@@ -176,22 +171,16 @@ let rec static_expr ctx e =
 	then Dynamic
 	else expr_wrong_static_err e
 
-    | Rexpr_emit s ->
+    | Rexpr_emit (s, None) ->
 	if static_expr ML s = Static
-	then 
-	  if ctx = Process
-	  then Dynamic 
-	  else Static
+	then Static
 	else expr_wrong_static_err s
 
-    | Rexpr_emit_val (s, e1) ->
+    | Rexpr_emit (s, Some e1) ->
 	if static_expr ML s = Static
 	then
 	  if static_expr ML e1 = Static
-	  then 
-	    if ctx = Process
-	    then Dynamic
-	    else Static
+	  then Static
 	  else expr_wrong_static_err e1
 	else expr_wrong_static_err s
 
@@ -297,6 +286,7 @@ let rec static_expr ctx e =
 	  (static_conf s;
 	   Dynamic)
 	else expr_wrong_static_err e
+
     | Rexpr_await_val (_, _, s, _, p) ->
 	if ctx = Process
 	then 
@@ -307,10 +297,22 @@ let rec static_expr ctx e =
 	  else expr_wrong_static_err s
 	else
 	  expr_wrong_static_err e
+
     | Rexpr_pre (_, s) ->
 	if static_expr ML s = Static
 	then Static
  	else expr_wrong_static_err s
+
+    | Rexpr_last s ->
+	if static_expr ML s = Static
+	then Static
+ 	else expr_wrong_static_err s
+
+    | Rexpr_default s ->
+	if static_expr ML s = Static
+	then Static
+ 	else expr_wrong_static_err s
+
     | Rexpr_get (s, _, p) ->
  	if ctx = Process
 	then

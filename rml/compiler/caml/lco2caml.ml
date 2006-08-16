@@ -211,6 +211,16 @@ let rec translate_ml e =
 	  (make_instruction ("rml_pre_"^kind),
 	   [translate_ml s])
 
+    | Coexpr_last (s) ->
+	Cexpr_apply
+	  (make_instruction "rml_last",
+	   [translate_ml s;])
+
+    | Coexpr_default (s) ->
+	Cexpr_apply
+	  (make_instruction "rml_default",
+	   [translate_ml s;])
+
     | Coexpr_emit (s) ->
 	Cexpr_apply
 	  (make_instruction "rml_expr_emit",
@@ -376,7 +386,7 @@ and translate_proc e =
 	      Location.none])
 
     | Coproc_def ((patt, expr), k) ->
-	if !const_let && Lco_misc.is_value expr then
+	if Lco_misc.is_value expr then
 	  Cexpr_let
 	    (Nonrecursive,
 	     [translate_pattern patt, translate_ml expr],

@@ -26,6 +26,7 @@ let get_neighbors =
 let process node id pos_init move make_msg =
   let self = make_node id pos_init in
   loop
+
     self.date <- self.date + 1;
 
     (* Moving *)

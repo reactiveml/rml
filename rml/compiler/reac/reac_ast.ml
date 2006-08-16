@@ -54,11 +54,12 @@ and expression_desc =
   | Rexpr_seq of expression list
   | Rexpr_process of expression
   | Rexpr_pre of pre_kind * expression
+  | Rexpr_last of expression
+  | Rexpr_default of expression
   | Rexpr_nothing
   | Rexpr_pause
   | Rexpr_halt
-  | Rexpr_emit of expression
-  | Rexpr_emit_val of expression * expression
+  | Rexpr_emit of expression * expression option
   | Rexpr_loop of expression option * expression
   | Rexpr_fordopar of 
       ident * expression * expression * direction_flag * expression

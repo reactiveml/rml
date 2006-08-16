@@ -89,7 +89,7 @@ let process game_controller
 	done;
 	(* normal end: wait a few seconds and display the average time *)
 	for i = 1 to pause_length do pause done;
-	emit display (pre ?average_value); 
+	emit display (last ?average_value); 
 	emit end_measure
       until error (x) -> 
 	emit red_on;

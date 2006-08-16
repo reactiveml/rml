@@ -75,6 +75,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "inherit", INHERIT;
     "initializer", INITIALIZER;
 (*    "inout", INOUT;*)
+    "last", LAST;
     "lazy", LAZY;
     "let", LET;
     "loop", LOOP;

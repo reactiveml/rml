@@ -53,19 +53,36 @@ let draw_bounds (min_x,max_x,min_y,max_y) =
   Graphics.lineto min_x min_y
 ;;
 
+let draw_boid b =
+  Graphics.draw_circle 
+    (int_of_float b.pos.x)
+    (int_of_float b.pos.y)
+    2
+
 let maj_aff all =
   Graphics.clear_graph();
   draw_bounds bounds;
-  List.iter 
-    (fun b -> 
-(*      Graphics.fill_circle *)
-      Graphics.draw_circle 
-	(int_of_float b.pos.x)
-	(int_of_float b.pos.y)
-	2)
-    all;
+  List.iter draw_boid all;
   Graphics.synchronize()
 ;;
+
+
+(********************************)
+(* check_bounds                 *)
+(********************************)
+let check_bounds (min_x, max_x, min_y, max_y) b =
+  if b.pos.x < min_x then (
+    b.pos.x <- min_x;
+    b.v.x <- abs_float b.v.x);
+  if b.pos.x > max_x then (
+    b.pos.x <- max_x;
+    b.v.x <- 0.0 -. (abs_float b.v.x));
+  if b.pos.y < min_y then (
+    b.pos.y <- min_y;
+    b.v.y <- abs_float b.v.y);
+  if b.pos.y > max_y then (
+    b.pos.y <- max_y;
+    b.v.y <- 0.0 -. (abs_float b.v.y))
 
 
 (********************************)
@@ -73,7 +90,7 @@ let maj_aff all =
 (********************************)
 let separation = 
   let sum_f f b1 (b2,dist2) =
-    if (dist2 < epsilon_float) or (dist2 > vision_sep2) then
+    if (dist2 <= epsilon_float) or (dist2 > vision_sep2) then
       ()
     else (
       f.x <- f.x -. (b2.pos.x -. b1.pos.x)/.dist2;
@@ -90,7 +107,7 @@ let separation =
 (********************************)
 let cohesion = 
   let sum_f cpt f b1 (b2,dist2) =
-    if (dist2 < epsilon_float) or (dist2 > vision_cohes2) then
+    if (dist2 <= epsilon_float) or (dist2 > vision_cohes2) then
       ()
     else (
       cpt := !cpt + 1;
@@ -116,7 +133,7 @@ let cohesion =
 (********************************)
 let alignment =   
   let sum_f cpt f b1 (b2,dist2) =
-    if (dist2 < epsilon_float) or (dist2 > vision_alig2) then
+    if (dist2 <= epsilon_float) or (dist2 > vision_alig2) then
       ()
     else (
       let norme = b2.v.x *. b2.v.x +. b2.v.y *. b2.v.y in
@@ -140,23 +157,7 @@ let alignment =
      )
 ;;
 
-(********************************)
-(* check_bounds                 *)
-(********************************)
-let check_bounds (min_x, max_x, min_y, max_y) b =
-  if b.pos.x < min_x then (
-    b.pos.x <- min_x;
-    b.v.x <- abs_float b.v.x);
-  if b.pos.x > max_x then (
-    b.pos.x <- max_x;
-    b.v.x <- 0.0 -. (abs_float b.v.x));
-  if b.pos.y < min_y then (
-    b.pos.y <- min_y;
-    b.v.y <- abs_float b.v.y);
-  if b.pos.y > max_y then (
-    b.pos.y <- max_y;
-    b.v.y <- 0.0 -. (abs_float b.v.y));
-;;
+
 (********************************)
 (* set_acc                      *)
 (********************************)
@@ -191,137 +192,124 @@ let set_pos b =
 ;;
 
 (******************************************************)
-(* machine fenetre cpt [new_boid,kill_boid,p]              *)
+(* fenetre cpt                                        *)
 (******************************************************)
 let process fenetre cpt new_boid kill_boid p  =
-(*----------------------------------------------------*)
-(* machine read_click cpt [new_boid]                  *)
-(*----------------------------------------------------*)
   let process read_click new_boid =
     let click = ref false in
     let pre_click =  ref false in
     let pos = ref {x = 0.0; y = 0.0;} in
     loop 
+      pause;
       click := Graphics.button_down();
-      (if !click && not !pre_click
-      then (
-        pos := get_mouse_pos();
-        emit new_boid (!pos); 
-(*        cpt := !cpt + 1; *)
-	print_string ("new_boid "^(string_of_int (!cpt + 1)));
-	print_newline())
-      else
-        nothing);
+      if !click && not !pre_click
+      then 
+	begin
+          pos := get_mouse_pos();
+          emit new_boid (!pos); 
+	  print_string ("new_boid "^(string_of_int (!cpt + 1)));
+	  print_newline()
+	end;
       pre_click := !click;
-      pause
     end
   in
-(*----------------------------------------------------*)
-(* machine read_key [kill_boid]                            *)
-(*----------------------------------------------------*)
   let process read_key kill_boid =
     let cpt = ref 0 in
     loop 
+      pause;
       if Graphics.key_pressed()
-      then 
-	let c = get_key() in
-       	(print_string ("key_pressed = ");
-         print_char c;
-	 print_newline();
-	 if c = 'k' then (
-	   emit kill_boid (!cpt); 
-	   print_string "emit kill ";
-	   print_int !cpt;
-	   print_newline();
-	   incr cpt)
-	 else nothing;
-	)
-      else nothing;
-      pause
+      then
+	begin
+	  let c = get_key() in
+       	  print_string ("key_pressed = ");
+          print_char c;
+	  print_newline();
+	  if c = 'k' then (
+	    emit kill_boid (!cpt); 
+	    print_string "emit kill ";
+	    print_int !cpt;
+	    print_newline();
+	    incr cpt)
+	end;
     end
   in
 (*----------------------------------------------------*)
-    Graphics.open_graph "";
-    Graphics.auto_synchronize false;
-    draw_bounds bounds;
-    loop
-      await p (all) in 
-      maj_aff all;
+  Graphics.open_graph "";
+  Graphics.auto_synchronize false;
+  draw_bounds bounds;
+  loop
+    await p (all) in 
+    maj_aff all;
 (*
       pause;
       pause;
 *)
-    end
-    ||
-    run (read_click new_boid)
-    ||
-    run (read_key kill_boid)
+  end
+  ||
+  run (read_click new_boid)
+  ||
+  run (read_key kill_boid)
 ;;
 
 (******************************************************)
-(* machine boid id pos_init [p,kill_boid]                  *)
+(* boid                                               *)
 (******************************************************)
 let process boid id pos_init p kill_boid =
   signal kill_me in
-    do 
-      let me = 
-	{id = id;
-	 pos = pos_init;
-	 v = {x = 0.0; y = 0.0};
-	 acc = {x = 0.0; y = 0.0};}
-      in
-      let f_sep = {x=0.0;y=0.0} in
-      let f_cohes = {x=0.0;y=0.0} in 
-      let f_alig = {x=0.0;y=0.0} in 
-      let dep = {x=0.0;y=0.0} in 
-      loop 
-	emit p (me);
-        await p (all) in
-        let all = List.rev_map (fun b -> b, (distance2 me.pos b.pos)) all in
-        (separation f_sep me all
-         ||
-	 cohesion f_cohes me all
-	 ||
-	 alignment f_alig me all);
-        set_acc me f_sep f_cohes f_alig;
-        set_v me;
-        set_pos me;
-	check_bounds bounds me
-      end
-      ||
-      loop
-	await kill_boid (n) in
-        if List.mem me.id n then 
-	  emit kill_me
-      end
-    until kill_me done
+  do 
+    let me = 
+      {id = id;
+       pos = pos_init;
+       v = {x = 0.0; y = 0.0};
+       acc = {x = 0.0; y = 0.0};}
+    in
+    let f_sep = {x=0.0;y=0.0} in
+    let f_cohes = {x=0.0;y=0.0} in 
+    let f_alig = {x=0.0;y=0.0} in 
+    let dep = {x=0.0;y=0.0} in 
+    loop 
+      emit p (me);
+      await p (all) in
+      let all = List.rev_map (fun b -> b, (distance2 me.pos b.pos)) all in
+      separation f_sep me all;
+      cohesion f_cohes me all;
+      alignment f_alig me all;
+      set_acc me f_sep f_cohes f_alig;
+      set_v me;
+      set_pos me;
+      check_bounds bounds me
+    end
+    ||
+    loop
+      await kill_boid (n) in
+      if List.mem me.id n then 
+	emit kill_me
+    end
+  until kill_me done
 ;;
 
 (******************************************************)
-(* machine add [new_boid,p,kill_boid]                 *)
+(* add                                                *)
 (******************************************************)
 let rec process add cpt new_boid p kill_boid =
-  await new_boid (pos) in
+  await one new_boid (pos) in
   cpt := !cpt + 1;
-  run (boid !cpt (List.hd pos) p kill_boid)
+  run (boid !cpt pos p kill_boid)
   ||
   run (add cpt new_boid p kill_boid)
 ;;
 
 (******************************************************)
-(* machine boids n [p,kill_boid]                      *)
+(* boids                                              *)
 (******************************************************)
-let rec process boids n p kill_boid =
-  if n < 1 then
-    nothing
-  else
-    (run (boids (n-1) p kill_boid)  
-     ||
-     run (boid n (random_pos()) p kill_boid))
+let process boids n p kill_boid =
+  for i = 1 to n dopar
+    run (boid n (random_pos()) p kill_boid)
+  done
 ;;
 
 (******************************************************)
-(* machine systeme n cpt                              *)
+(* systeme                                            *)
 (******************************************************)
 let process systeme n cpt =
   signal p in 

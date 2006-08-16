@@ -118,11 +118,13 @@ let fenetre =
 (*    Graphics.auto_synchronize false;*)
 	Graphics.set_line_width 4;
 	Graphics.set_color (color_of_int 0);
-	loop
-	  await p(all) in
-	  affiche_all all
+	begin
+	  loop
+	    await p(all) in
+	    affiche_all all
+	  end
+	  ||
+	  run (read_key key_push)
 	end
-	||
-	run (read_key key_push)
       end
 

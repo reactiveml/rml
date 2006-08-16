@@ -40,10 +40,13 @@ let forward self p =
 (* Search best position information function                              *)
 (* ---------------------------------------------------------------------- *)
 
+let search_best_age = Search_best_age.search_best_age
+
+(*
 let search_best_age kind src_node dest age_limit =
   let level = ref 0 in
   let node_cpt = ref 0 in
-  let visited = Hashtbl.create 150 in
+  let visited = Hashtbl.create 141 in
   let rec add_next_neighbors neighbors next =
     match neighbors with
     | [] -> next
@@ -105,7 +108,7 @@ let search_best_age kind src_node dest age_limit =
 	neighbors
     in
     aux neighbors
-
+*)
 
 (* ---------------------------------------------------------------------- *)
 (* Anchor function                                                        *)
@@ -145,12 +148,10 @@ let pos_tbl_update kind self p =
     | LE -> self.pos_tbl_le 
     | ELIP -> self.pos_tbl_elip
   in
-  if kind = ELIP then
-    begin
-      (match p.header with
-      | H_ELIP (Some src_pos) -> Pos_tbl.update pos_tbl p.src_id src_pos 0
-      | _ -> ())
-    end;
+  begin match p.header with
+  | H_ELIP (Some src_pos) -> Pos_tbl.update pos_tbl p.src_id src_pos self.date
+  | _ -> ()
+  end;
   Pos_tbl.update pos_tbl p.dest_id p.dest_pos (self.date - p.dest_pos_age)
 
 

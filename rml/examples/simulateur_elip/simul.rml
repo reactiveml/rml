@@ -24,15 +24,13 @@ let process make_preemptible_nodes n kill=
 
 
 let process main =
-(*  Random.init 1; *)
-  Random.self_init ();
-  run Area.make_areas;
+  Area.make_areas;
   signal suspend in
   signal start in
   signal new_node, kill in
-  control
-(*    run (make_nodes nb_nodes) *)
-    run (make_preemptible_nodes nb_nodes kill)
+  control 
+    (* run (make_nodes nb_nodes) *)
+    run (make_preemptible_nodes nb_nodes kill) 
     ||
     run (Dynamic.add new_node start)
     ||
@@ -42,7 +40,7 @@ let process main =
       pause;
       pause
     end
-  with suspend
+  with suspend 
   ||
   (if with_graphics then
     run (draw_simul draw suspend new_node kill))

@@ -1,21 +1,22 @@
 N=-1
 SAMPLING=-1
+RMLCFLAGS=
 
 all: simul simul.opt
 
 rml:
-	rmlc init.rml
-	rmlc position.rml
-	rmlc pos_tbl.rmli
-	rmlc global.rml
-	rmlc area.rml
-	rmlc rml_graphics.rml
-	rmlc draw.rml
-	rmlc move.rml
-	rmlc msg.rml
-	rmlc routing.rml
-	rmlc node.rml
-	rmlc -s main -n $(N) -sampling $(SAMPLING) simul.rml
+	rmlc $(RMLCFLAGS) init.rml
+	rmlc $(RMLCFLAGS) position.rml
+	rmlc $(RMLCFLAGS) pos_tbl.rmli
+	rmlc $(RMLCFLAGS) global.rml
+	rmlc $(RMLCFLAGS) area.rml
+	rmlc $(RMLCFLAGS) rml_graphics.rml
+	rmlc $(RMLCFLAGS) draw.rml
+	rmlc $(RMLCFLAGS) move.rml
+	rmlc $(RMLCFLAGS) msg.rml
+	rmlc $(RMLCFLAGS) routing.rml
+	rmlc $(RMLCFLAGS) node.rml
+	rmlc $(RMLCFLAGS) -s main -n $(N) -sampling $(SAMPLING) simul.rml
 
 cmo: rml
 	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) init.ml

@@ -1,6 +1,6 @@
 CAMLC = ocamlc
 OCAMLOPT = ocamlopt
-RMLC = rmlc -dtypes
+RMLC = rmlc
 INTERPRETER=rml_interpreter
 INTERPRETERDIR=`$(RMLC) -where`
 

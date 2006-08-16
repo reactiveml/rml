@@ -46,6 +46,10 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	  
     let rml_pre_value = Event.pre_value
 	  
+    let rml_last = Event.last 
+ 
+    let rml_default = Event.default
+
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal = new_evt
 
@@ -622,19 +626,42 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	fun () ->
 	  match p () with
 	  | TERM v, _ -> TERM v, rml_compute (fun () -> v)
-	  | alpha, p' ->
-	      if !eoi && (Event.status evt)
-	      then
-		(alpha, suspended evt p')
+	  | SUSP, p' ->
+	      if !eoi then
+		if Event.status evt 
+		then
+		  (STOP, suspended evt p')
+		else
+		  (STOP, active evt p')
 	      else
-		(alpha, active evt p')
+		(SUSP, active evt p')
+	  | STOP, p' ->
+	      if !eoi then
+		if Event.status evt 
+		then
+		  (STOP, suspended evt p')
+		else
+		  (STOP, active evt p')
+	      else
+		(SUSP, active_await evt p')
+      and active_await evt p =
+	fun () ->
+	  if !eoi then
+	    if (Event.status evt)
+	    then
+	      (STOP, suspended evt p)
+	    else
+	      (STOP, active evt p)
+	  else (SUSP, active_await evt p)
       and suspended evt p =
 	fun () ->
-	  if !eoi && (Event.status evt)
-	  then
-	    (STOP, active evt p)
-	  else
-	    (STOP, suspended evt p)
+	  if !eoi then
+	    if (Event.status evt)
+	    then
+	      (STOP, active evt p)
+	    else
+	      (STOP, suspended evt p)
+	  else (SUSP, suspended evt p)
       in active
 
     let rml_control expr_evt p =
@@ -650,20 +677,44 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	fun () ->
 	  match p () with
 	  | TERM v, _ -> TERM v, rml_compute (fun () -> v)
-	  | alpha, p' ->
-	      if !eoi && cfg()
-	      then
-		(alpha, suspended cfg p')
+	  | SUSP, p' ->
+	      if !eoi then
+		if cfg()
+		then
+		  (STOP, suspended cfg p')
+		else
+		  (STOP, active cfg p')
 	      else
-		(alpha, active cfg p')
+		(SUSP, active cfg p')
+	  | STOP, p' ->
+	      if !eoi then
+		if cfg() 
+		then
+		  (STOP, suspended cfg p')
+		else
+		  (STOP, active cfg p')
+	      else
+		(SUSP, active_await cfg p')
+      and active_await cfg p =
+	fun () ->
+	  if !eoi then
+	    if cfg ()
+	    then
+	      (STOP, suspended cfg p)
+	    else
+	      (STOP, active cfg p)
+	  else (SUSP, active_await cfg p)
       and suspended cfg p =
 	fun () ->
-	  if !eoi && cfg()
-	  then
-	    (STOP, active cfg p)
-	  else
-	    (STOP, suspended cfg p)
+	  if !eoi then
+	    if cfg ()
+	    then
+	      (STOP, active cfg p)
+	    else
+	      (STOP, suspended cfg p)
+	  else (SUSP, suspended cfg p)
       in active
+
 
     let rml_control_conf expr_cfg p =
       fun () -> 

@@ -1,0 +1,13 @@
+let process read_click click =
+  loop 
+	let pos_x, pos_y = Graphics.mouse_pos() in
+    if Graphics.button_down() then emit click ((float_of_int pos_x), (float_of_int pos_y	));
+    pause
+  end
+
+let process read_key key =
+  loop
+    if Graphics.key_pressed() then emit key (Graphics.read_key());
+    pause
+  end
+

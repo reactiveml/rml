@@ -155,6 +155,14 @@ let expr_map  =
       | Rexpr_pre (pre_kind, e) ->
 	  let e' = expr_map f e in
 	  f (make_expr_all (Rexpr_pre (pre_kind, e')) typ static loc)
+
+      | Rexpr_last e ->
+	  let e' = expr_map f e in
+	  f (make_expr_all (Rexpr_last e') typ static loc)
+
+      | Rexpr_default e ->
+	  let e' = expr_map f e in
+	  f (make_expr_all (Rexpr_default e') typ static loc)
 	    
       | Rexpr_nothing ->
 	  f expr
@@ -165,14 +173,14 @@ let expr_map  =
       | Rexpr_halt ->
 	  f expr
 	    
-      | Rexpr_emit e ->
+      | Rexpr_emit (e, None) ->
 	  let e' = expr_map f e in
-	  f (make_expr_all (Rexpr_emit e') typ static loc)
+	  f (make_expr_all (Rexpr_emit (e', None)) typ static loc)
 	    
-      | Rexpr_emit_val (e1, e2) ->
+      | Rexpr_emit (e1, Some e2) ->
 	  let e1' = expr_map f e1 in
 	  let e2' = expr_map f e2 in
-	  f (make_expr_all (Rexpr_emit_val (e1', e2')) typ static loc)
+	  f (make_expr_all (Rexpr_emit (e1', Some e2')) typ static loc)
 	    
       | Rexpr_loop (n_opt, e) ->
 	  let n_opt' = Misc.opt_map (expr_map f) n_opt in
@@ -318,7 +326,7 @@ let binary2nary e =
   in { e with expr_desc = e' }
 
 
-(* Translate reactive seq to combinatorial seq *)
+(* Translate reactive seq to combinatorial seq and set the statut of emit *)
 let dynamic2static e =
   begin match e.expr_desc with
   | Rexpr_seq e_list ->
@@ -333,9 +341,22 @@ let dynamic2static e =
 	    in
 	    e'.expr_static <- Def_static.Static;
 	    f left (e'::l')
+
+	| ({ expr_desc = Rexpr_emit _ } as e1) 
+	  :: ({ expr_static = Def_static.Dynamic } as e2) :: l' ->
+	    e1.expr_static <- Def_static.Dynamic;
+	    f (left@[e1]) (e2::l')
+
+
+	| [ { expr_static = Def_static.Dynamic } as e1; 
+	    { expr_desc = Rexpr_emit _ } as e2 ] ->
+	    e2.expr_static <- Def_static.Dynamic;
+	    left@[e1; e2]
+
 	| x :: l' ->
 	    let left' = left @ [x] in
 	    f left' l'
+
 	| [] -> left
       in 
       begin match f [] e_list with
@@ -346,6 +367,9 @@ let dynamic2static e =
 	  e'.expr_static <- Def_static.Dynamic;
 	  e'
       end
+  | Rexpr_when(_, ({ expr_desc = Rexpr_emit _ } as e2)) ->
+      e2.expr_static <- Def_static.Dynamic;
+      e
   | _ -> e
   end
 
@@ -432,9 +456,6 @@ let for2loop_n expr =
 
 let print_static e = 
   Location.print_oc stderr e.expr_loc;
-  if e.expr_static = Def_static.Dynamic then
-    prerr_string " : Dynamic"
-  else
-    prerr_string " : Static";
+  prerr_string (Def_static.string_of_static e.expr_static);
   prerr_newline ();
   e

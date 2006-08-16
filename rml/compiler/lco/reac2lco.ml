@@ -239,9 +239,15 @@ let rec translate_ml e =
     | Rexpr_pre (flag,s) ->
 	Coexpr_pre (flag, translate_ml s)  
 
-    | Rexpr_emit s -> Coexpr_emit (translate_ml s)
+    | Rexpr_last s ->
+	Coexpr_last (translate_ml s)
 
-    | Rexpr_emit_val (s, e) -> 
+    | Rexpr_default s ->
+	Coexpr_default (translate_ml s)
+
+    | Rexpr_emit (s, None) -> Coexpr_emit (translate_ml s)
+
+    | Rexpr_emit (s, Some e) -> 
 	Coexpr_emit_val (translate_ml s, translate_ml e)
 
     | Rexpr_signal ((s,typ), comb, e) ->
@@ -261,55 +267,56 @@ let rec translate_ml e =
 (* Translation of Process expressions                                    *)
 and translate_proc p =
   let coproc =
-    if p.expr_static = Def_static.Static then
-      Coproc_compute (translate_ml p)
-    else
-      match p.expr_desc with
-      | Rexpr_nothing -> Coproc_nothing
-	    
-      | Rexpr_pause -> Coproc_pause 
-
-      | Rexpr_halt -> Coproc_halt
-
-      | Rexpr_emit s -> Coproc_emit (translate_ml s)
-
-      | Rexpr_emit_val (s, e) -> 
-	  Coproc_emit_val (translate_ml s, translate_ml e)
-
-      | Rexpr_loop (n_opt, proc) -> 
-	  Coproc_loop (opt_map translate_ml n_opt, translate_proc proc)
-
-      | Rexpr_while (expr, proc) ->
-	  Coproc_while (translate_ml expr, translate_proc proc)
-
-      | Rexpr_for (i, e1, e2, flag, proc) ->
-	  Coproc_for(i,
-		     translate_ml e1,
-		     translate_ml e2,
-		     flag,
-		     translate_proc proc)
-
-      | Rexpr_fordopar (i, e1, e2, flag, proc) ->
-	  Coproc_fordopar(i,
-			  translate_ml e1,
-			  translate_ml e2,
-			  flag,
-			  translate_proc proc)
-
-      | Rexpr_seq (p1::p_list) ->
-	let rec f acc l =
-	  match l with
-	  | [] -> assert false
-	  | [p] ->
-	      Coproc_seq (acc, translate_proc p)
-	  | p::l' ->
-	      let acc' =
-		make_proc
-		  (Coproc_seq (acc, translate_proc p))
-		  Location.none
-	      in
-	      f acc' l'
-	in f (translate_proc p1) p_list 
+    begin match p.expr_static with
+    | Def_static.Static ->
+	Coproc_compute (translate_ml p)
+    | Def_static.Dynamic ->
+	begin match p.expr_desc with
+	| Rexpr_nothing -> Coproc_nothing
+	      
+	| Rexpr_pause -> Coproc_pause 
+	      
+	| Rexpr_halt -> Coproc_halt
+	      
+	| Rexpr_emit (s, None) -> Coproc_emit (translate_ml s)
+	      
+	| Rexpr_emit (s, Some e) -> 
+	    Coproc_emit_val (translate_ml s, translate_ml e)
+	      
+	| Rexpr_loop (n_opt, proc) -> 
+	    Coproc_loop (opt_map translate_ml n_opt, translate_proc proc)
+	      
+	| Rexpr_while (expr, proc) ->
+	    Coproc_while (translate_ml expr, translate_proc proc)
+	      
+	| Rexpr_for (i, e1, e2, flag, proc) ->
+	    Coproc_for(i,
+		       translate_ml e1,
+		       translate_ml e2,
+		       flag,
+		       translate_proc proc)
+	      
+	| Rexpr_fordopar (i, e1, e2, flag, proc) ->
+	    Coproc_fordopar(i,
+			    translate_ml e1,
+			    translate_ml e2,
+			    flag,
+			    translate_proc proc)
+	      
+	| Rexpr_seq (p1::p_list) ->
+	    let rec f acc l =
+	      match l with
+	      | [] -> assert false
+	      | [p] ->
+		  Coproc_seq (acc, translate_proc p)
+	      | p::l' ->
+		  let acc' =
+		    make_proc
+		      (Coproc_seq (acc, translate_proc p))
+		      Location.none
+		  in
+		  f acc' l'
+	    in f (translate_proc p1) p_list 
 
 (*	    
       | Rexpr_par p_list ->
@@ -318,40 +325,40 @@ and translate_proc p =
 	  in
 	  Coproc_par p_list'
 *)
-      | Rexpr_par [p1; p2] ->
-	  Coproc_par [translate_proc p1; translate_proc p2]
-      | Rexpr_par p_list ->
-	  let p_list' =
-	    List.map 
-	      (fun p -> 
-		if p.expr_type = Initialization.type_unit then
-		  translate_proc p
-		else
-		  if p.expr_static = Def_static.Static then
-		    make_proc
-		      (Coproc_compute 
-			 (make_expr
-			    (Coexpr_seq (translate_ml p, make_unit()))
-			    Location.none))
-		      Location.none
+	| Rexpr_par [p1; p2] ->
+	    Coproc_par [translate_proc p1; translate_proc p2]
+	| Rexpr_par p_list ->
+	    let p_list' =
+	      List.map 
+		(fun p -> 
+		  if p.expr_type = Initialization.type_unit then
+		    translate_proc p
 		  else
-		    make_proc
-		      (Coproc_seq (translate_proc p, make_nothing()))
-		      Location.none)
-	      p_list
-	  in
-	  Coproc_par p_list'	    
-
-      | Rexpr_merge (p1, p2) ->
-	  Coproc_merge (translate_proc p1,
-			translate_proc p2)
-	    
-      | Rexpr_signal ((s,typ), comb, proc) ->
-	  Coproc_signal ((s, opt_map translate_te typ),
-			 opt_map 
-			   (fun (e1,e2) -> 
-			     translate_ml e1, translate_ml e2) comb,
-			 translate_proc proc)
+		    if p.expr_static = Def_static.Static then
+		      make_proc
+			(Coproc_compute 
+			   (make_expr
+			      (Coexpr_seq (translate_ml p, make_unit()))
+			      Location.none))
+			Location.none
+		    else
+		      make_proc
+			(Coproc_seq (translate_proc p, make_nothing()))
+			Location.none)
+		p_list
+	    in
+	    Coproc_par p_list'	    
+	      
+	| Rexpr_merge (p1, p2) ->
+	    Coproc_merge (translate_proc p1,
+			  translate_proc p2)
+	      
+	| Rexpr_signal ((s,typ), comb, proc) ->
+	    Coproc_signal ((s, opt_map translate_te typ),
+			   opt_map 
+			     (fun (e1,e2) -> 
+			       translate_ml e1, translate_ml e2) comb,
+			   translate_proc proc)
 
 (*
    | Rexpr_let (Nonrecursive,[(patt, expr)], proc) ->
@@ -361,63 +368,65 @@ and translate_proc p =
    Coproc_def (translate_proc_let flag patt_expr_list,
    translate_proc proc)
  *)
-      | Rexpr_let (flag, patt_expr_list, proc) ->
-	  translate_proc_let flag patt_expr_list proc
-
-      | Rexpr_run (expr) ->
-	  Coproc_run (translate_ml expr)
-	    
-      | Rexpr_until (s, proc, patt_proc_opt) ->
-	  Coproc_until (translate_conf s, 
-			translate_proc proc,
-			opt_map 
-			  (fun (patt, proc) -> 
-			    translate_pattern patt, translate_proc proc)
-			  patt_proc_opt)
-
-      | Rexpr_when (s, proc) ->
-	  Coproc_when (translate_conf s, translate_proc proc)
-
-      | Rexpr_control (s, proc) ->
-	  Coproc_control (translate_conf s, translate_proc proc)
-
-      | Rexpr_get (s, patt, proc) ->
-	  Coproc_get (translate_ml s, 
-		      translate_pattern patt, 
-		      translate_proc proc)
-	    
-      | Rexpr_present (s, p1, p2) ->
-	  Coproc_present (translate_conf s, 
-			  translate_proc p1, 
-			  translate_proc p2)
-
-      | Rexpr_ifthenelse (expr, p1, p2) ->
-	  Coproc_ifthenelse (translate_ml expr, 
-			     translate_proc p1, 
-			     translate_proc p2)
-
-      | Rexpr_match (expr, l) ->
-	  Coproc_match (translate_ml expr,
-			List.map 
-			  (fun (p,e) -> translate_pattern p, translate_proc e)
-			  l)
-
-      | Rexpr_when_match (e1, e2) ->
-	  Coproc_when_match (translate_ml e1, translate_proc e2)
-
-      | Rexpr_await (flag, s) -> Coproc_await (flag, translate_conf s)
-
-      | Rexpr_await_val (flag1, flag2, s, patt, proc) ->
-	  Coproc_await_val (flag1,
-			    flag2,
-			    translate_ml s, 
-			    translate_pattern patt, 
-			    translate_proc proc)
-
-      | _ -> 
-	  raise (Internal (p.expr_loc,
-			   "Reac2lco.translate_proc: expr"))
-
+	| Rexpr_let (flag, patt_expr_list, proc) ->
+	    translate_proc_let flag patt_expr_list proc
+	      
+	| Rexpr_run (expr) ->
+	    Coproc_run (translate_ml expr)
+	      
+	| Rexpr_until (s, proc, patt_proc_opt) ->
+	    Coproc_until (translate_conf s, 
+			  translate_proc proc,
+			  opt_map 
+			    (fun (patt, proc) -> 
+			      translate_pattern patt, translate_proc proc)
+			    patt_proc_opt)
+	      
+	| Rexpr_when (s, proc) ->
+	    Coproc_when (translate_conf s, translate_proc proc)
+		
+	| Rexpr_control (s, proc) ->
+	    Coproc_control (translate_conf s, translate_proc proc)
+	      
+	| Rexpr_get (s, patt, proc) ->
+	    Coproc_get (translate_ml s, 
+			translate_pattern patt, 
+			translate_proc proc)
+	      
+	| Rexpr_present (s, p1, p2) ->
+	    Coproc_present (translate_conf s, 
+			    translate_proc p1, 
+			    translate_proc p2)
+	      
+	| Rexpr_ifthenelse (expr, p1, p2) ->
+	    Coproc_ifthenelse (translate_ml expr, 
+			       translate_proc p1, 
+			       translate_proc p2)
+	      
+	| Rexpr_match (expr, l) ->
+	    Coproc_match (translate_ml expr,
+			  List.map 
+			    (fun (p,e) -> 
+			      (translate_pattern p, translate_proc e))
+			    l)
+	      
+	| Rexpr_when_match (e1, e2) ->
+	    Coproc_when_match (translate_ml e1, translate_proc e2)
+	      
+	| Rexpr_await (flag, s) -> Coproc_await (flag, translate_conf s)
+	      
+	| Rexpr_await_val (flag1, flag2, s, patt, proc) ->
+	    Coproc_await_val (flag1,
+			      flag2,
+			      translate_ml s, 
+			      translate_pattern patt, 
+			      translate_proc proc)
+	      
+	| _ -> 
+	    raise (Internal (p.expr_loc,
+			     "Reac2lco.translate_proc: expr"))
+	end
+    end
   in
   make_proc coproc p.expr_loc
 
@@ -442,7 +451,7 @@ and translate_proc_let =
     match patt_expr_list with
     | [] -> true
     | (_, expr) :: tl ->
-	if expr.expr_static = Def_static.Dynamic then
+	if expr.expr_static <> Def_static.Static then
 	  false
 	else
 	  is_static tl

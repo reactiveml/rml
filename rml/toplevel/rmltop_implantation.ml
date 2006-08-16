@@ -13,7 +13,7 @@ module Sig_env (* : S *) =
 	{ mutable status: int;
 	  mutable value: 'b;
 	  mutable pre_status: int;
-	  mutable pre_value: 'b;
+	  mutable last: 'b;
 	  mutable default: 'b;
 	  combine: ('a -> 'b -> 'b); }
 
@@ -24,7 +24,7 @@ module Sig_env (* : S *) =
       { status = absent; 
 	value = default;
 	pre_status = absent; 
-	pre_value = default;
+	last = default;
 	default = default;
 	combine = combine; } 
 
@@ -39,10 +39,21 @@ module Sig_env (* : S *) =
       then n.pre_status = !instant - 1
       else n.status = !instant - 1
 	  
+    let last n =
+      if n.status = !instant
+      then n.last
+      else n.value
+
     let pre_value n =
       if n.status = !instant
-      then n.pre_value
-      else n.value
+      then 
+	if n.pre_status = !instant - 1 
+	then n.last
+	else n.default
+      else 
+	if n.status = !instant - 1 
+	then n.value
+	else n.default
 
     let one n =
       match n.value with
@@ -56,7 +67,7 @@ module Sig_env (* : S *) =
       if n.status <> !instant 
       then 
 	(n.pre_status <- n.status;
-	 n.pre_value <- n.value;
+	 n.last <- n.value;
 	 n.status <- !instant;
 	 n.value <- n.combine v n.default)
       else

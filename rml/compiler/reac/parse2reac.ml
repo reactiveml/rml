@@ -396,12 +396,18 @@ let rec translate env e =
     | Pexpr_pre (flag, expr) ->
 	Rexpr_pre (flag, translate env expr)
 
+    | Pexpr_last expr ->
+	Rexpr_last (translate env expr)
+
+    | Pexpr_default expr ->
+	Rexpr_default (translate env expr)
+
     | Pexpr_emit s -> 
-	Rexpr_emit (translate env s)
+	Rexpr_emit (translate env s, None)
 
     | Pexpr_emit_val (s,expr) ->
-	Rexpr_emit_val (translate env s,
-			translate env expr)
+	Rexpr_emit (translate env s,
+		    Some (translate env expr))
     
     | Pexpr_signal (sig_typ_list, None, expr) ->
 	(translate_signal env sig_typ_list None expr).expr_desc

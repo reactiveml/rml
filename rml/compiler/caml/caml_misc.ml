@@ -138,6 +138,22 @@ let rec is_value e =
 
   | _ -> false
 
+(* Test if an expression is an ML constant *)
+let rec is_constant e =
+  match e.cexpr_desc with
+  | Cexpr_local _  | Cexpr_global _ | Cexpr_constant _ ->
+      true
+  | Cexpr_tuple expr_list ->
+      List.for_all is_constant expr_list
+
+  | Cexpr_construct (_, None) -> true
+  | Cexpr_construct (_, Some expr) -> is_constant expr
+
+  | Cexpr_constraint (expr, _) -> is_constant expr
+      
+  | _ -> false
+
+
 (* Test is a pattern is a partial matching *)
 let rec partial_match patt = 
   match patt.cpatt_desc with

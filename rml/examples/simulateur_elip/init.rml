@@ -62,21 +62,23 @@ let set_area t_opt =
 
 (* Configuration function *)
 let configure () = 
-  let doc = ""
-  and doc_N = "<nb> nombre d'instant de smulation"
+  let doc_N = "<nb> nombre d'instant de smulation"
   and doc_D = "<density> densité par zone de couverture"
   and doc_n = "<nb> nombre de noeuds dans la topologie"
   and doc_t = "<longueur> longueur d'un cote"
   and doc_range = "<r> rayon de couverture" 
   and doc_area = "<longueur> longueur d'un cote d'une area"
+(*
   and doc_o = 
     "<pref> calcul des stats (<pref> est lepréfixe des fichiers de sortie)"
+*)
   and doc_msg_proba = "<p> probabilité d'émission d'un message"
   and doc_msg_len = "<n> longueur max d'un message"
   and doc_elip_proba = "<n> probabilité d'insertion d'une info de elip"
-  and doc_elip_forecast = "<n> distance de prevision"
+(*  and doc_elip_forecast = "<n> distance de prevision" *)
   and doc_nox = " sans mode graphique"
   and doc_node = "<n> numero du noeud observé"
+  and doc_seed = "<n> initialisation du random"
   and errmsg = "Options are:"
   in
   let var_N = ref None
@@ -85,12 +87,13 @@ let configure () =
   and var_t = ref None
   and var_range = ref None
   and var_area = ref None
-  and var_o = ref None
+(*  and var_o = ref None *)
   and var_msg_proba = ref None
   and var_msg_len = ref None
   and var_elip_proba = ref None
-  and var_elip_forecast = ref None
+(*  and var_elip_forecast = ref None *)
   and var_node = ref None
+  and var_seed = ref None
   in
   Arg.parse
     [ ("-N", Arg.Int (option_set var_N), doc_N);
@@ -105,6 +108,7 @@ let configure () =
 (*      ("-o", Arg.String (option_set var_o), doc_o);*)
       ("-nox", Arg.Clear with_graphics, doc_nox); 
       ("-node", Arg.Int (option_set var_node), doc_node);
+      ("-seed", Arg.Int (option_set var_seed), doc_seed);
     ]
     (fun s -> raise (Invalid_argument s))
     errmsg;
@@ -122,5 +126,10 @@ let configure () =
   set_area !var_area;
   set_option elip_proba !var_elip_proba;
   set_option msg_proba !var_msg_proba;
-  set_option msg_len !var_msg_len
+  set_option msg_len !var_msg_len;
+  begin match !var_seed with
+  | None -> Random.self_init()
+  | Some seed -> Random.init seed
+  end
+
 

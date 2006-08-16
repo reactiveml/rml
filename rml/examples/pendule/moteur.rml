@@ -127,15 +127,17 @@ let fenetre =
 	Graphics.auto_synchronize false;
 	Graphics.set_line_width 4;
 	Graphics.set_color (color_of_int 0);
-	loop
-	  await immediate one p (all) in
-	  maj_aff all;
-	  pause;
+	begin
+	  loop
+	    await immediate one p (all) in
+	    maj_aff all;
+	    pause;
+	  end
+	  ||
+	  run (read_click false (get_mouse_pos ()) a_click a_move pos)
+	  ||
+	  run (read_key key_push)
 	end
-	||
-	run (read_click false (get_mouse_pos ()) a_click a_move pos)
-	||
-	run (read_key key_push)
       end
 
 

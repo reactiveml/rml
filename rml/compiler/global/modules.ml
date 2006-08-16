@@ -135,8 +135,6 @@ let open_module modname =
 
 (* The current state of the compiler *)
 
-let default_used_modules = ref ([] : string list)
-
 let defined_module = ref (new_module "")
 
 let start_compiling_interface modname =

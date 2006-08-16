@@ -21,16 +21,12 @@ module type S =
     val rml_make: 'a process -> (unit -> 'a option)
     val rml_make_unit: 
 	unit process -> (unit -> unit option) * (unit process -> unit)
-
-(*	  
-    val rml_exec: 'a process -> unit
-    val rml_exec_n: 'a process -> int -> unit
-    val rml_exec_sampling: 'a process -> float -> unit
-    val rml_exec_n_sampling: 'a process -> int -> float -> unit
-*)	
   
     val rml_pre_status: ('a, 'b) event -> bool
     val rml_pre_value: ('a, 'b) event -> 'b
+    val rml_last: ('a, 'b) event -> 'b
+    val rml_default: ('a, 'b) event -> 'b
+
     val rml_expr_emit: (unit, 'b) event -> unit 
     val rml_expr_emit_val: ('a, 'b) event -> 'a -> unit
 

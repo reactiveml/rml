@@ -214,6 +214,12 @@ let expr_free_vars e =
 	  
     | Rexpr_pre (pre_kind, e) ->
 	expr_free_vars vars e
+
+    | Rexpr_last e ->
+	expr_free_vars vars e
+
+    | Rexpr_default e ->
+	expr_free_vars vars e
 	  
     | Rexpr_nothing -> ()
 	  
@@ -221,10 +227,10 @@ let expr_free_vars e =
 
     | Rexpr_halt -> ()
 	  
-    | Rexpr_emit e ->
+    | Rexpr_emit (e, None) ->
 	expr_free_vars vars e
 	  
-    | Rexpr_emit_val (e1, e2) ->
+    | Rexpr_emit (e1, Some e2) ->
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
 	  

@@ -9,7 +9,7 @@ open Fantome;;
 let cat_string_int s i = s ^ (string_of_int i) ;;
 
 let process score graph victoire mangep nbpoint =
-  let score_init = List.hd (pre ?nbpoint) in
+  let score_init = List.hd (last ?nbpoint) in
   let emplacement = {xi=10;yi=520} in
   let efface_texte = My_fill_rect(emplacement,{xi=100;yi=20},Graphics.black) in
   
@@ -21,7 +21,7 @@ let process score graph victoire mangep nbpoint =
   loop
     pause;
     await immediate mangep;
-    let nouveau_score = List.hd (pre ?nbpoint) + 1 in
+    let nouveau_score = List.hd (last ?nbpoint) + 1 in
     emit graph [efface_texte;
                 My_texte(cat_string_int "Score : " nouveau_score,
 	                 Graphics.red,emplacement)];
@@ -37,11 +37,11 @@ let process score graph victoire mangep nbpoint =
 let process vie graph defaite coll nbvie =
   let emplacement = {xi=10;yi=500} in (* endroit ou le texte est affiche *)
   let efface_texte = My_fill_rect(emplacement,{xi=100;yi=20},Graphics.black) in
-  emit graph [My_texte(cat_string_int "Vie : " (List.hd (pre?nbvie)),
+  emit graph [My_texte(cat_string_int "Vie : " (List.hd (last ?nbvie)),
               Graphics.red,emplacement)];
   loop
     await immediate coll;
-    let new_nbvie = List.hd (pre?nbvie) - 1 in
+    let new_nbvie = List.hd (last ?nbvie) - 1 in
     emit nbvie (new_nbvie);
     emit graph 
          [efface_texte;
@@ -61,11 +61,11 @@ let process monstre_tue graph mt nbmt =
   let emplacement = {xi=110;yi=500} in (* endroit ou le texte est affiche *)
   let efface_texte = My_fill_rect(emplacement,{xi=110;yi=20},Graphics.black) in
   emit graph
-    [My_texte(cat_string_int "Monstre tues : " (List.hd (pre?nbmt)),
+    [My_texte(cat_string_int "Monstre tues : " (List.hd (last ?nbmt)),
               Graphics.red,emplacement)];
   loop
     await immediate mt;
-    let new_nbmt = List.hd (pre ?nbmt) + 1 in
+    let new_nbmt = List.hd (last ?nbmt) + 1 in
     emit graph
       [efface_texte;
        My_texte(cat_string_int "Monstre tues : " new_nbmt,

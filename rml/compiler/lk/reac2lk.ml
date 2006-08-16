@@ -237,9 +237,15 @@ let rec translate_ml e =
     | Rexpr_pre (flag,s) ->
 	Kexpr_pre (flag, translate_ml s)  
 
-    | Rexpr_emit s -> Kexpr_emit (translate_ml s)
+    | Rexpr_last s ->
+	Kexpr_last (translate_ml s)
 
-    | Rexpr_emit_val (s, e) -> 
+    | Rexpr_default s ->
+	Kexpr_default (translate_ml s)
+
+    | Rexpr_emit (s, None) -> Kexpr_emit (translate_ml s)
+
+    | Rexpr_emit (s, Some e) -> 
 	Kexpr_emit_val (translate_ml s, translate_ml e)
 
     | Rexpr_signal ((s,typ), comb, e) ->
@@ -259,89 +265,90 @@ let rec translate_ml e =
 (* Translation of Process expressions                                    *)
 and translate_proc e k (ctrl: ident) =
   let kproc =
-    if e.expr_static = Def_static.Static then
-      Kproc_compute (translate_ml e, k)
-    else
-      match e.expr_desc with
-      | Rexpr_nothing -> k.kproc_desc
+    begin match e.expr_static with
+    | Def_static.Static ->
+	Kproc_compute (translate_ml e, k)
+    | Def_static.Dynamic -> 
+	begin match e.expr_desc with
+	| Rexpr_nothing -> k.kproc_desc
 	    
-      | Rexpr_pause -> Kproc_pause (k, ctrl)
+	| Rexpr_pause -> Kproc_pause (k, ctrl)
 
-      | Rexpr_halt -> Kproc_halt k
+	| Rexpr_halt -> Kproc_halt
 
-      | Rexpr_emit s -> Kproc_emit (translate_ml s, k)
+	| Rexpr_emit (s, None) -> Kproc_emit (translate_ml s, k)
 
-      | Rexpr_emit_val (s, e) -> 
-	  Kproc_emit_val (translate_ml s, translate_ml e, k) 
+	| Rexpr_emit (s, Some e) -> 
+	    Kproc_emit_val (translate_ml s, translate_ml e, k) 
 
 (* C_k[loop p] = loop (fun k' -> C_k'[p])                                  *)
-      | Rexpr_loop (None, proc) -> 
-	  let id = make_var "k" in
-	  let k_var = make_proc (Kproc_var id) Location.none in
-	  Kproc_loop (id, translate_proc proc k_var ctrl)
+	| Rexpr_loop (None, proc) -> 
+	    let id = make_var "k" in
+	    let k_var = make_proc (Kproc_var id) Location.none in
+	    Kproc_loop (id, translate_proc proc k_var ctrl)
 
 (* C_k[loop_n n p] = loop_n n (fun k' -> C_k'[p]) k                        *)
-      | Rexpr_loop (Some n, proc) -> 
-	  let id = make_var "k" in
-	  let k_var = make_proc (Kproc_var id) Location.none in
-	  Kproc_loop_n (id, translate_ml n, translate_proc proc k_var ctrl, k)
+	| Rexpr_loop (Some n, proc) -> 
+	    let id = make_var "k" in
+	    let k_var = make_proc (Kproc_var id) Location.none in
+	    Kproc_loop_n(id, translate_ml n, translate_proc proc k_var ctrl, k)
 
 (* C_k[while e do p done] = while C[e] do (fun k' -> C_k'[p]) done.k       *)
-      | Rexpr_while (expr, proc) ->
-	  let id = make_var "k" in
-	  let k_var = make_proc (Kproc_var id) Location.none in
-	  Kproc_while (translate_ml expr, 
-		       (id, translate_proc proc k_var ctrl), k)
+	| Rexpr_while (expr, proc) ->
+	    let id = make_var "k" in
+	    let k_var = make_proc (Kproc_var id) Location.none in
+	    Kproc_while (translate_ml expr, 
+			 (id, translate_proc proc k_var ctrl), k)
 
-      | Rexpr_for (i, e1, e2, flag, proc) ->
-	  let id = make_var "k" in
-	  let k_var = make_proc (Kproc_var id) Location.none in
-	  Kproc_for(i,
-		    translate_ml e1,
-		    translate_ml e2,
-		    flag,
-		    (id, translate_proc proc k_var ctrl),
-		    k)
+	| Rexpr_for (i, e1, e2, flag, proc) ->
+	    let id = make_var "k" in
+	    let k_var = make_proc (Kproc_var id) Location.none in
+	    Kproc_for(i,
+		      translate_ml e1,
+		      translate_ml e2,
+		      flag,
+		      (id, translate_proc proc k_var ctrl),
+		      k)
 
-      | Rexpr_fordopar (i, e1, e2, flag, proc) ->
+	| Rexpr_fordopar (i, e1, e2, flag, proc) ->
 (* C_k[for i = e1 to e2 dopar e3 done] =                                   *)
 (*   bind K = k in                                                         *)
 (*     fordopar i e1 e2 (\j. (k3.join_par j.K))                            *)
-	  let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-	  let j_id = make_var "j" in
-	  let join = 
-	    make_proc
-	      (Kproc_join_par (j_id, k_var))
-	      Location.none
-	  in
-	  Kproc_bind
-	    (k_patt, 
-	     k,
-	     make_proc 
-	       (Kproc_fordopar(i,
-			       translate_ml e1,
-			       translate_ml e2,
-			       flag,
-			       (j_id, translate_proc proc join ctrl),
-			       k_var))
-	       Location.none)
-
-      | Rexpr_seq p_list ->
-	  let kproc =
-	    let rec f l =
-	      match l with
-	      | [] -> assert false
-	      | [p] -> translate_proc p k ctrl
-	      | p::l' ->
-		  let k' = f l' in
-		  translate_proc p k' ctrl
-	    in f p_list 
-	  in
-	  kproc.kproc_desc
+	    let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+	    let j_id = make_var "j" in
+	    let join = 
+	      make_proc
+		(Kproc_join_par (j_id, k_var))
+		Location.none
+	    in
+	    Kproc_bind
+	      (k_patt, 
+	       k,
+	       make_proc 
+		 (Kproc_fordopar(i,
+				 translate_ml e1,
+				 translate_ml e2,
+				 flag,
+				 (j_id, translate_proc proc join ctrl),
+				 k_var))
+		 Location.none)
+	      
+	| Rexpr_seq p_list ->
+	    let kproc =
+	      let rec f l =
+		match l with
+		| [] -> assert false
+		| [p] -> translate_proc p k ctrl
+		| p::l' ->
+		    let k' = f l' in
+		    translate_proc p k' ctrl
+	      in f p_list 
+	    in
+	    kproc.kproc_desc
 
 (* C_k[p1||p2] =                                                           *)
 (*   bind K = k in                                                         *)
@@ -371,223 +378,227 @@ and translate_proc e k (ctrl: ident) =
 (* C_k[p1||p2] =                                                           *)
 (*   bind K = k in                                                         *)
 (*     split (\j. bind Kj = join_par j.K in (k1.Kj, k2.Kj))                *) 
-      | Rexpr_par p_list ->
-	  let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-	  let kj_id = make_var "kj" in
-	  let kj_var = make_proc (Kproc_var kj_id) Location.none in
-	  let kj_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local kj_id)) Location.none 
-	  in
-	  let j_id = make_var "j" in
-	  let k_list = 
-	    List.map
-	      (fun p ->
-		translate_proc p kj_var ctrl)
-	      p_list
-	  in
-	  let join = make_proc (Kproc_join_par (j_id, k_var)) Location.none in 
-	  Kproc_bind 
-	    (k_patt, 
-	     k,
-	     make_proc 
-	       (Kproc_split_par (j_id, kj_patt, join, k_list)) 
-	       Location.none)
+	| Rexpr_par p_list ->
+	    let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+	    let kj_id = make_var "kj" in
+	    let kj_var = make_proc (Kproc_var kj_id) Location.none in
+	    let kj_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local kj_id)) Location.none 
+	    in
+	    let j_id = make_var "j" in
+	    let k_list = 
+	      List.map
+		(fun p ->
+		  translate_proc p kj_var ctrl)
+		p_list
+	    in
+	    let join = 
+	      make_proc (Kproc_join_par (j_id, k_var)) Location.none 
+	    in 
+	    Kproc_bind 
+	      (k_patt, 
+	       k,
+	       make_proc 
+		 (Kproc_split_par (j_id, kj_patt, join, k_list)) 
+		 Location.none)
 	    
 
-      | Rexpr_merge (p1, p2) ->
-	  not_yet_implemented "merge"
-
+	| Rexpr_merge (p1, p2) ->
+	    not_yet_implemented "merge"
+	      
 (* C_k[signal s in p] =                                                    *) 
 (*   bind K = k in signal s in C_K[p]     avec K \not= s                   *)
-      | Rexpr_signal ((s,typ), comb, proc) ->
-	  let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-	  Kproc_bind 
-	    (k_patt, k,
-	     make_proc     
-	       (Kproc_signal 
-		  ((s, opt_map translate_te typ),
-		   opt_map 
-		     (fun (e1,e2) -> translate_ml e1, translate_ml e2) comb,
-		   translate_proc proc k_var ctrl))
-	       Location.none)
-
-      | Rexpr_let (flag, patt_expr_list, proc) ->
-	  translate_proc_let flag patt_expr_list proc k ctrl
-
-      | Rexpr_run (expr) ->
-	  Kproc_run (translate_ml expr, k, ctrl)
+	| Rexpr_signal ((s,typ), comb, proc) ->
+	    let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+	    Kproc_bind 
+	      (k_patt, k,
+	       make_proc     
+		 (Kproc_signal 
+		    ((s, opt_map translate_te typ),
+		     opt_map 
+		       (fun (e1,e2) -> translate_ml e1, translate_ml e2) comb,
+		     translate_proc proc k_var ctrl))
+		 Location.none)
+	      
+	| Rexpr_let (flag, patt_expr_list, proc) ->
+	    translate_proc_let flag patt_expr_list proc k ctrl
+	      
+	| Rexpr_run (expr) ->
+	    Kproc_run (translate_ml expr, k, ctrl)
 
 (* C_k[do p until s(x) -> p' done] =                                       *)
 (*   bind K = k in                                                         *)
-(*   start C[s] (fun ctrl' -> C_(end.k, ctrl')[p]) (x -> C_k[p'])          *)
-      | Rexpr_until (s, proc, patt_proc_opt) ->
-          let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-          let ctrl_id = make_var "ctrl" in
-	  let end_until =
-	    make_proc
-	      (Kproc_end_until(ctrl_id, k_var))
-	      Location.none
-	  in
-	  Kproc_bind 
-	    (k_patt, k,
-	     make_proc     
-	       (Kproc_start_until
-		  (translate_conf s,
-		   (ctrl_id, translate_proc proc end_until ctrl_id),
-		   begin match patt_proc_opt with
-		   | None -> 
-		       (make_patt Kpatt_any Location.none, k_var)
-		   | Some (patt,proc') -> 
-		       (translate_pattern patt,
-			translate_proc proc' k_var ctrl)
-		   end))
-	       Location.none)
-
+(*   start ctrl C[s] (fun ctrl' -> C_(end.k, ctrl')[p]) (x -> C_k[p'])     *)
+	| Rexpr_until (s, proc, patt_proc_opt) ->
+            let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+            let ctrl_id = make_var "ctrl" in
+	    let end_until =
+	      make_proc
+		(Kproc_end_until(ctrl_id, k_var))
+		Location.none
+	    in
+	    Kproc_bind 
+	      (k_patt, k,
+	       make_proc     
+		 (Kproc_start_until
+		    (ctrl, translate_conf s,
+		     (ctrl_id, translate_proc proc end_until ctrl_id),
+		     begin match patt_proc_opt with
+		     | None -> 
+			 (make_patt Kpatt_any Location.none, k_var)
+		     | Some (patt,proc') -> 
+			 (translate_pattern patt,
+			  translate_proc proc' k_var ctrl)
+		     end))
+		 Location.none)
+	      
 (* C_k[do p when s] =                                                      *)
 (*   bind K = k in                                                         *)
-(*   start C[s] (fun ctrl' -> C_(end.k, ctrl')[p])                         *)
-      | Rexpr_when (s, proc) ->
-          let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-          let ctrl_id = make_var "ctrl" in
-	  let end_when =
-	    make_proc
-	      (Kproc_end_when(ctrl_id, k_var))
-	      Location.none
-	  in
-	  Kproc_bind 
-	    (k_patt, k,
-	     make_proc     
-	       (Kproc_start_when
-		  (translate_conf s,
-		   (ctrl_id, translate_proc proc end_when ctrl_id)))
-	       Location.none)
-
-      | Rexpr_control (s, proc) ->
-          let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-          let ctrl_id = make_var "ctrl" in
-	  let end_control =
-	    make_proc
-	      (Kproc_end_control(ctrl_id, k_var))
-	      Location.none
-	  in
-	  Kproc_bind 
-	    (k_patt, k,
-	     make_proc     
-	       (Kproc_start_control
-		  (translate_conf s,
-		   (ctrl_id, translate_proc proc end_control ctrl_id)))
-	       Location.none)
-
+(*   start ctrl C[s] (fun ctrl' -> C_(end.k, ctrl')[p])                    *)
+	| Rexpr_when (s, proc) ->
+            let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+            let ctrl_id = make_var "ctrl" in
+	    let end_when =
+	      make_proc
+		(Kproc_end_when(ctrl_id, k_var))
+		Location.none
+	    in
+	    Kproc_bind 
+	      (k_patt, k,
+	       make_proc     
+		 (Kproc_start_when
+		     (ctrl, translate_conf s,
+		      (ctrl_id, translate_proc proc end_when ctrl_id)))
+		 Location.none)
+	      
+	| Rexpr_control (s, proc) ->
+            let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+            let ctrl_id = make_var "ctrl" in
+	    let end_control =
+	      make_proc
+		(Kproc_end_control(ctrl_id, k_var))
+		Location.none
+	    in
+	    Kproc_bind 
+	      (k_patt, k,
+	       make_proc     
+		 (Kproc_start_control
+		    (ctrl, translate_conf s,
+		     (ctrl_id, translate_proc proc end_control ctrl_id)))
+		 Location.none)
+	      
 
 (* C_k[let s<x> in p] =                                                    *)
 (*   bind K = k in let s<x> in C_K[p]                                      *)
-      | Rexpr_get (s, patt, proc) ->
-	  let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-	  Kproc_bind 
-	    (k_patt, k,
-	     make_proc
-	       (Kproc_get (translate_ml s, 
-			   translate_pattern patt, 
-			   translate_proc proc k_var ctrl,
-			   ctrl))
-	       Location.none)
+	| Rexpr_get (s, patt, proc) ->
+	    let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+	    Kproc_bind 
+	      (k_patt, k,
+	       make_proc
+		 (Kproc_get (translate_ml s, 
+			     translate_pattern patt, 
+			     translate_proc proc k_var ctrl,
+			     ctrl))
+		 Location.none)
 	    
-      | Rexpr_present (s, p1, p2) ->
-	  let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-	  Kproc_bind 
-	    (k_patt, k,
+	| Rexpr_present (s, p1, p2) ->
+	    let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+	    Kproc_bind 
+	      (k_patt, k,
+	       make_proc
+		 (Kproc_present (ctrl,
+				 translate_conf s, 
+				 translate_proc p1 k_var ctrl, 
+				 translate_proc p2 k_var ctrl))
+		 Location.none)
+	      
+	| Rexpr_ifthenelse (expr, p1, p2) ->
+	    let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+	    Kproc_bind 
+	      (k_patt, k,
+	       make_proc
+		 (Kproc_ifthenelse (translate_ml expr, 
+				    translate_proc p1 k_var ctrl, 
+				    translate_proc p2 k_var ctrl))
+		 Location.none)
+	      
+	| Rexpr_match (expr, l) ->
+	    let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+	    Kproc_bind 
+	      (k_patt, k,
+	       make_proc
+		 (Kproc_match 
+		    (translate_ml expr,
+		     List.map 
+		       (fun (p,e) -> 
+			 translate_pattern p, translate_proc e k_var ctrl)
+		       l))
+		 Location.none)
+	      
+	| Rexpr_when_match (e1, e2) ->
+	    Kproc_when_match (translate_ml e1, translate_proc e2 k ctrl)
+	      
+	| Rexpr_await (flag, s) -> 
+	    Kproc_await (flag, translate_conf s, k, ctrl)
+	      
+	| Rexpr_await_val (flag1, flag2, s, patt, proc) ->
+	    let k_id = make_var "k" in
+	    let k_var = make_proc (Kproc_var k_id) Location.none in
+	    let k_patt = 
+	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
+	    in
+	    Kproc_bind 
+	      (k_patt, k,
 	     make_proc
-	       (Kproc_present (ctrl,
-			       translate_conf s, 
-			       translate_proc p1 k_var ctrl, 
-			       translate_proc p2 k_var ctrl))
-	       Location.none)
-
-      | Rexpr_ifthenelse (expr, p1, p2) ->
-	  let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-	  Kproc_bind 
-	    (k_patt, k,
-	     make_proc
-	       (Kproc_ifthenelse (translate_ml expr, 
-				  translate_proc p1 k_var ctrl, 
-				  translate_proc p2 k_var ctrl))
-	       Location.none)
-
-      | Rexpr_match (expr, l) ->
-	  let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-	  Kproc_bind 
-	    (k_patt, k,
-	     make_proc
-	       (Kproc_match 
-		  (translate_ml expr,
-		   List.map 
-		     (fun (p,e) -> 
-		       translate_pattern p, translate_proc e k_var ctrl)
-		     l))
-	       Location.none)
-
-      | Rexpr_when_match (e1, e2) ->
-	  Kproc_when_match (translate_ml e1, translate_proc e2 k ctrl)
-
-      | Rexpr_await (flag, s) -> Kproc_await (flag, translate_conf s, k, ctrl)
-
-      | Rexpr_await_val (flag1, flag2, s, patt, proc) ->
-	  let k_id = make_var "k" in
-	  let k_var = make_proc (Kproc_var k_id) Location.none in
-	  let k_patt = 
-	    make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none 
-	  in
-	  Kproc_bind 
-	    (k_patt, k,
-	     make_proc
-	       (Kproc_await_val (flag1,
-				 flag2,
-				 translate_ml s, 
-				 translate_pattern patt, 
-				 translate_proc proc k_var ctrl,
-				 ctrl))
-	       Location.none)
-
-      | _ -> 
-	  raise (Internal (e.expr_loc,
-			   "Reac2lk.translate_proc: expr"))
-
+		 (Kproc_await_val (flag1,
+				   flag2,
+				   translate_ml s, 
+				   translate_pattern patt, 
+				   translate_proc proc k_var ctrl,
+				   ctrl))
+		 Location.none)
+	      
+	| _ -> 
+	    raise (Internal (e.expr_loc,
+			     "Reac2lk.translate_proc: expr"))
+	end
+    end
   in
   make_proc kproc e.expr_loc
 

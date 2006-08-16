@@ -16,6 +16,7 @@ module type S =
     val value: ('a, 'b) t -> 'b
     val pre_status: ('a, 'b) t -> bool
     val pre_value: ('a, 'b) t -> 'b
+    val last: ('a, 'b) t -> 'b
     val default: ('a, 'b) t -> 'b
     val one: ('a, 'a list) t -> 'a
 
@@ -31,7 +32,7 @@ module Record (* : S *) =
 	{ mutable status: int;
 	  mutable value: 'b;
 	  mutable pre_status: int;
-	  mutable pre_value: 'b;
+	  mutable last: 'b;
 	  mutable default: 'b;
 	  combine: ('a -> 'b -> 'b); }
 
@@ -42,7 +43,7 @@ module Record (* : S *) =
       { status = absent; 
 	value = default;
 	pre_status = absent; 
-	pre_value = default;
+	last = default;
 	default = default;
 	combine = combine; } 
 
@@ -57,10 +58,21 @@ module Record (* : S *) =
       then n.pre_status = !instant - 1
       else n.status = !instant - 1
 	  
+    let last n =
+      if n.status = !instant
+      then n.last
+      else n.value
+ 
     let pre_value n =
       if n.status = !instant
-      then n.pre_value
-      else n.value
+      then 
+	if n.pre_status = !instant - 1 
+	then n.last
+	else n.default
+      else 
+	if n.status = !instant - 1 
+	then n.value
+	else n.default
 
     let one n =
       match n.value with
@@ -74,7 +86,7 @@ module Record (* : S *) =
       if n.status <> !instant 
       then 
 	(n.pre_status <- n.status;
-	 n.pre_value <- n.value;
+	 n.last <- n.value;
 	 n.status <- !instant;
 	 n.value <- n.combine v n.default)
       else
@@ -111,12 +123,12 @@ module Class : S =
 	inherit pur_event
 
 	val mutable value = default
-	val mutable pre_value = default
+	val mutable last = default
 	val default = default
 	val combine = combine
 
 	method value = value
-	method pre_value = pre_value
+	method last = last
 	method default = default
 
 	method emit v =
@@ -134,14 +146,14 @@ module Class : S =
 	method update =
 	  if to_update then
 	    begin
-	      to_update <- false;
 	      if status then 
 		begin
-		  pre_value <- value;
+		  last <- value;
 		  value <- default
 		end;
 	      pre_status <- status;
 	      status <- false;
+	      to_update <- pre_status;
 	      pre_status
 	    end
 	  else 
@@ -152,7 +164,7 @@ module Class : S =
 	< status : bool;
           value : 'b;
           pre_status : bool;
-          pre_value : 'b;
+          last : 'b;
           default : 'b;
           emit : 'a -> unit;
           update : bool; >
@@ -167,8 +179,10 @@ module Class : S =
     let value n = n#value
 
     let pre_status n = n#pre_status
+
+    let pre_value n = if n#pre_status then n#last else n#default
 	  
-    let pre_value n = n#pre_value
+    let last n = n#last
 
     let one n =
       match n#value with
@@ -204,7 +218,7 @@ module Hashtbl (*: S*) =
 	{ mutable status: int;
 	  mutable value: 'b;
 	  mutable pre_status: int;
-	  mutable pre_value: 'b;
+	  mutable last: 'b;
 	  mutable default: 'b;
 	  combine: ('a -> 'b -> 'b); }
     type alpha and beta
@@ -225,7 +239,7 @@ module Hashtbl (*: S*) =
 	{ status = absent; 
 	  value = default;
 	  pre_status = absent; 
-	  pre_value = default;
+	  last = default;
 	  default = default;
 	  combine = combine; }
       in
@@ -252,12 +266,24 @@ module Hashtbl (*: S*) =
       then evt_struct.pre_status = !instant - 1
       else evt_struct.status = !instant - 1
 	  
+    let last n =
+      let evt_struct = Obj.magic Hashtbl.find env n in 
+      if evt_struct.status = !instant
+      then evt_struct.last
+      else evt_struct.value
+
     let pre_value n =
       let evt_struct = Obj.magic Hashtbl.find env n in 
       if evt_struct.status = !instant
-      then evt_struct.pre_value
-      else evt_struct.value
-
+      then 
+	if evt_struct.pre_status = !instant - 1
+	then evt_struct.last
+	else evt_struct.default
+      else 
+	if evt_struct.status = !instant - 1
+	then evt_struct.value
+	else evt_struct.default
+      
     let one n =
       let evt_struct = Obj.magic Hashtbl.find env n in 
       match evt_struct.value with
@@ -272,7 +298,7 @@ module Hashtbl (*: S*) =
       if n.status <> !instant 
       then 
 	(n.pre_status <- n.status;
-	 n.pre_value <- n.value;
+	 n.last <- n.value;
 	 n.status <- !instant;
 	 n.value <- n.combine v n.default)
       else

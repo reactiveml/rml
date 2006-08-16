@@ -214,15 +214,17 @@ let fenetre =
       begin
 	Graphics.open_graph "";
 	Graphics.auto_synchronize false;
-	loop
-	  await graph (all) in
-	  await one rot_rubik (rot) in
-	  maj_aff all (fst rot) (snd rot);
-	  Graphics.synchronize ()
+	begin
+	  loop
+	    await graph (all) in
+	    await one rot_rubik (rot) in
+	    maj_aff all (fst rot) (snd rot);
+	    Graphics.synchronize ()
+	  end
+	  ||
+	  run (read_click false (get_mouse_pos ()) clic a_move)
+	  ||
+	  run (read_key clavier)
 	end
-	||
-	run (read_click false (get_mouse_pos ()) clic a_move)
-	||
-	run (read_key clavier)
       end
 

@@ -24,6 +24,7 @@ lib:
 	ocamlc -c -I `rmlc -where` -thread rmltop_machine_controler.ml
 	ocamlc -c -thread rmltop_directives.ml
 	ocamlc -c -thread rmltop_main.ml
+	ocamlc -c -thread rmltop.ml
 
 rmltop: lib
 	ocamlc -o rmltop -I +threads -I `rmlc -where` unix.cma str.cma \
@@ -31,7 +32,7 @@ rmltop: lib
 		rml_interpreter.cma \
 		rmltop_global.cmo \
 		rmltop_directives.cmo \
-		rmltop.ml
+		rmltop.cmo
 
 install: install.lib install.bin
 
@@ -39,7 +40,7 @@ install.bin: rmltop
 	$(INSTALL) -d $(bindir)
 	$(INSTALL) rmltop $(bindir)/rmltop
 
-install.lib: $(INSTALLFILE)
+install.lib: lib 
 	$(INSTALL) -d $(LIBDIR)
 	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)
 

@@ -148,7 +148,7 @@ let pos_tbl_update kind self p =
   if kind = ELIP then
     begin
       (match p.header with
-      | H_ELIP (Some src_pos) -> Pos_tbl.update pos_tbl p.src_id src_pos 0
+      | H_ELIP (Some src_pos) -> Pos_tbl.update pos_tbl p.src_id src_pos self.date
       | _ -> ())
     end;
   Pos_tbl.update pos_tbl p.dest_id p.dest_pos (self.date - p.dest_pos_age)

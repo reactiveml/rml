@@ -23,7 +23,7 @@ type version =
   | Combinator
   | Inline
 
-let version = ref Combinator
+let version = ref Combinator 
 
 (* Builds a step function of body : cexpr *)
 let make_step_function cexpr loc =
@@ -301,6 +301,16 @@ let rec translate_ml e =
 	  (make_instruction ("rml_pre_"^kind),
 	   [translate_ml s])
 
+    | Kexpr_last (s) ->
+	Cexpr_apply
+	  (make_instruction "rml_last",
+	   [translate_ml s])
+
+    | Kexpr_default (s) ->
+	Cexpr_apply
+	  (make_instruction "rml_default",
+	   [translate_ml s])
+
     | Kexpr_emit (s) ->
 	Cexpr_apply
 	  (make_instruction "rml_expr_emit",
@@ -362,10 +372,11 @@ and translate_proc e =
 	   [translate_proc k;
 	    make_expr_var_local ctrl])
 
-    | Kproc_halt k ->
-	Cexpr_apply 
-	  (make_instruction "rml_halt",
-	   [translate_proc k])
+    | Kproc_halt ->
+(* 	Cexpr_apply  *)
+(* 	  (make_instruction "rml_halt", *)
+(* 	   [translate_proc k]) *)
+	(make_instruction "rml_halt").cexpr_desc
 	  
     | Kproc_compute (expr, k) ->
 	Cexpr_apply 
@@ -679,17 +690,21 @@ and translate_proc e =
 	end
 
 
-    | Kproc_start_until({kconf_desc = Kconf_present s}, 
-			(ctrl, k1), (patt,k2)) ->
+    | Kproc_start_until(ctrl, {kconf_desc = Kconf_present s}, 
+			(ctrl', k1), (patt,k2)) ->
 	Cexpr_apply
 	  (make_instruction "rml_start_until",
-	   [embed_ml s;
+	   [make_expr_var_local ctrl;
+	    embed_ml s;
 	    (make_expr 
-	       (Cexpr_fun([make_patt_var_local ctrl], translate_proc k1))
+	       (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k1))
 	       Location.none);
 	    (make_expr 
 	       (Cexpr_fun([translate_pattern patt], translate_proc k2))
 	       Location.none)])
+
+    | Kproc_start_until _ ->
+	not_yet_implemented "lk2caml: Kproc_start_until"
 
     | Kproc_end_until(ctrl, k) ->
 	Cexpr_apply
@@ -697,13 +712,18 @@ and translate_proc e =
 	   [make_expr_var_local ctrl;
 	    translate_proc k])
 
-    | Kproc_start_when({kconf_desc = Kconf_present s}, (ctrl, k)) ->
+    | Kproc_start_when(ctrl, {kconf_desc = Kconf_present s}, (ctrl', k)) ->
 	Cexpr_apply
 	  (make_instruction "rml_start_when",
-	   [embed_ml s;
+	   [make_expr_var_local ctrl;
+	    embed_ml s;
 	    (make_expr 
-	       (Cexpr_fun([make_patt_var_local ctrl], translate_proc k))
+	       (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k))
 	       Location.none)])
+
+    | Kproc_start_when _ ->
+	not_yet_implemented "lk2caml: Kproc_start_when"
+
 
     | Kproc_end_when(ctrl, k) ->
 	Cexpr_apply
@@ -712,13 +732,17 @@ and translate_proc e =
 	    translate_proc k])
 
 
-    | Kproc_start_control({kconf_desc = Kconf_present s}, (ctrl, k)) ->
+    | Kproc_start_control(ctrl, {kconf_desc = Kconf_present s}, (ctrl', k)) ->
 	Cexpr_apply
 	  (make_instruction "rml_start_control",
-	   [embed_ml s;
+	   [make_expr_var_local ctrl;
+	    embed_ml s;
 	    (make_expr 
-	       (Cexpr_fun([make_patt_var_local ctrl], translate_proc k))
+	       (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k))
 	       Location.none)])
+
+    | Kproc_start_control _ ->
+	not_yet_implemented "lk2caml: Kproc_start_control"
 
     | Kproc_end_control(ctrl, k) ->
 	Cexpr_apply
@@ -744,6 +768,9 @@ and translate_proc e =
 	    embed_ml s;
 	    translate_proc k1;
 	    translate_proc k2])
+
+    | Kproc_present _ ->
+	not_yet_implemented "lk2caml: Kproc_present"
 
     | Kproc_ifthenelse (expr, k1, k2) ->
 	begin match !version with
@@ -829,6 +856,10 @@ and translate_proc e =
 	   [embed_ml s;
 	    translate_proc k;
 	    make_expr_var_local ctrl])
+
+    | Kproc_await _ ->
+	not_yet_implemented "lk2caml: Kproc_await"
+
 
     | Kproc_await_val (flag1, flag2, s, patt, k, ctrl) ->
 	let im = 

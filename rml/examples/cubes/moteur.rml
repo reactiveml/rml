@@ -174,12 +174,14 @@ let fenetre =
       begin
 	Graphics.open_graph "";
 	Graphics.auto_synchronize false;
-	loop
-	  await graph (all) in
-	  maj_aff all (* (fst rot) (snd rot) *) ;
+	begin
+	  loop
+	    await graph (all) in
+	    maj_aff all (* (fst rot) (snd rot) *) ;
+	  end
+	  ||
+	  run (read_click false (get_mouse_pos ()) clic)
+	  ||
+	  run (read_key clavier)
 	end
-	||
-	run (read_click false (get_mouse_pos ()) clic)
-	||
-	run (read_key clavier)
       end

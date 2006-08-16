@@ -384,11 +384,13 @@ let process main =
   Graphics.open_graph (" "^(string_of_int (maxx*zoom))^"x"^
 			    (string_of_int (maxy*zoom)));
   Graphics.auto_synchronize false;
-  run (cellular_automaton_start !get_status !cell_behavior cell_array);
-  ||
-  loop 
-    Graphics.synchronize (); 
-    pause;
+  begin
+    run (cellular_automaton_start !get_status !cell_behavior cell_array);
+    ||
+    loop 
+      Graphics.synchronize (); 
+      pause;
+    end
   end
 
 

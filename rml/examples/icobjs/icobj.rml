@@ -61,15 +61,6 @@ let get_newdate =
   let a = ref  0 in
   fun () -> a := !a + 1;!a;;
 
-(* begin : louis *)
-(*
-let process sustain s =
- loop
-    if (pre s) then
-        emit s (List.hd (pre?s));
-    pause;
- end;;
-*)
 
 let process sustain s =
   await immediate one s(x) in
@@ -78,7 +69,6 @@ let process sustain s =
     emit s x
   end
 
-(* end : louis *)
 
 
 
@@ -233,7 +223,7 @@ let process selected_object attribs
         end;
        when dograph;
       until a_move done;
-      let depl = List.hd (pre ?a_move) in
+      let depl = List.hd (last ?a_move) in
       let n_pos = {xi= att.pos.xi + depl.xi;
                    yi= att.pos.yi + depl.yi } in
       att.pos <- n_pos;
@@ -397,7 +387,7 @@ let process workspace width height newicobj delicobj =
   (* Selection des icobjs *)
   await mouse_down;
   loop
-    let pos = List.hd (pre ?mouse_down) in
+    let pos = List.hd (last ?mouse_down) in
     let objsproperties = geticobj listicobj pos in
     if objsproperties = [] then
       await mouse_down

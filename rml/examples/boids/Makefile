@@ -1,9 +1,8 @@
-RMLC=../../compiler/rmlc
-RMLFLAGS= -I ../../stdlib
+RMLC=rmlc
+RMLFLAGS=
 N=-1
 SAMPLING=-1.0
-RUNTIME=ctrl_tree
-INTERPRETERDIR=../../interpreter
+INTERPRETERDIR=`$(RMLC) -where`
 INTERPRETER=rml_interpreter.cma
 OCAMLC=ocamlc
 OCAMLFLAGS=
@@ -14,7 +13,7 @@ all : boids
 .SUFFIXES : .rml .mli .ml .cmi .cmo .rzi
 
 .rml.ml:
-	$(RMLC) $(RMLFLAGS) -n $(N) -runtime $(RUNTIME) -sampling $(SAMPLING) -s $(MAIN) $<
+	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) -s $(MAIN) $<
 .ml.cmo:
 	$(OCAMLC) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) $(INCLUDES) $<
 
@@ -25,7 +24,7 @@ all : boids
 	$(RMLC) -c $<
 
 boids.ml: boids.rml 
-	$(RMLC) $(RMLFLAGS) -n $(N) -runtime $(RUNTIME) -sampling $(SAMPLING) -s main $< 
+	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) -s main $< 
 boids.cmo: boids.ml 
 boids : boids.cmo 
 	 $(OCAMLC) $(FLAGS) -o boids -I $(INTERPRETERDIR) unix.cma graphics.cma $(INTERPRETER) boids.cmo 

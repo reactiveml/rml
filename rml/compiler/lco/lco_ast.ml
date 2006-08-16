@@ -49,6 +49,8 @@ and expression_desc =
   | Coexpr_seq of expression * expression
   | Coexpr_process of process
   | Coexpr_pre of pre_kind * expression
+  | Coexpr_last of expression
+  | Coexpr_default of expression
   | Coexpr_emit of expression
   | Coexpr_emit_val of expression * expression
   | Coexpr_signal of 

@@ -1,0 +1,15 @@
+type position =
+    { x: float;
+      y: float; }
+
+let distance2 pos1 pos2 = 
+  (pos2.x -. pos1.x) *. (pos2.x -. pos1.x) +.
+    (pos2.y -. pos1.y) *. (pos2.y -. pos1.y) 
+
+let print_pos pos =
+	print_string "(";
+	print_float pos.x;
+	print_string ", ";
+	print_float pos.y;
+	print_string ")"
+	

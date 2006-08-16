@@ -147,7 +147,7 @@ let process cell draw_cell get_neighbors cell_behavior
     then activate_neighborhood self self.cell_neighborhood
     else await immediate activation;
     pause;
-    let cpt = if pre activation then pre ?activation else 0 in
+    let cpt = pre ?activation in
     cell_behavior self cpt;
     draw_cell self
   end
@@ -238,7 +238,7 @@ let process main =
   Graphics.auto_synchronize false;
   signal tmp default 0 gather fun x y -> y + 1 in
   begin
-    match !behavior with
+    begin match !behavior with
     | "gol" ->
 	let cell_array = cell_array_create tmp in
 	run (cellular_automaton_start 
@@ -264,10 +264,11 @@ let process main =
 	       fredkin
 	       cell_array);
     | s -> raise (Invalid_argument s)
-  end
-  ||
-  loop 
-    Graphics.synchronize (); 
-    pause;
+    end
+    ||
+    loop 
+      Graphics.synchronize (); 
+      pause;
+    end
   end
 

@@ -21,7 +21,7 @@ let get_areas posx posy =
   done;
   (center_i, center_j), !neighbor_areas
     
-let process make_areas =
+let make_areas =
   for i = 0 to nb_area_x-1 do
     for j = 0 to nb_area_y-1 do
       signal msg_hello in

@@ -316,6 +316,12 @@ let rec expression i ppf x =
   | Pexpr_pre (k, s) ->
       line i ppf "Pexpr_pre %a\n" fmt_pre_kind k;
       expression i ppf s;
+  | Pexpr_last s ->
+      line i ppf "Pexpr_last\n";
+      expression i ppf s;
+  | Pexpr_default s ->
+      line i ppf "Pexpr_default\n";
+      expression i ppf s;
   | Pconf_present (e) -> 
       line i ppf "Pconf_present\n";
       expression i ppf e

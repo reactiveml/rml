@@ -28,7 +28,6 @@ install.byte:
 	(cd compiler; make install.byte)
 	(cd stdlib; make install)
 	(cd interpreter; make install)
-	(cd lucaml; make install)
 	(cd man; make install)
 	(cd emacs; make install)
 
@@ -36,7 +35,6 @@ install.opt:
 	(cd compiler; make install.opt)
 	(cd stdlib; make install)
 	(cd interpreter; make install)
-	(cd lucaml; make install)
 	(cd man; make install)
 	(cd emacs; make install)
 
@@ -67,14 +65,14 @@ realclean: clean-distrib
 
 # Making binary distribution 
 DATE=`date -I`
-VERSION=1.04.06-dev
+VERSION=1.05.00
 #VERSION=`cat compiler/version`
 
 source-distrib:
 	touch config
 	make realclean
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
-	cp -r compiler interpreter stdlib toplevel emacs examples doc man lucaml \
+	cp -r compiler interpreter stdlib toplevel emacs examples doc man \
 		distrib/rml-$(VERSION)-$(DATE)
 	cp configure configure.in config.in Makefile install-sh INSTALL \
 		distrib/rml-$(VERSION)-$(DATE)

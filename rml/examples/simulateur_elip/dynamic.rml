@@ -2,16 +2,18 @@ open Position
 open Global
 open Node
 
+let rec process kill_me id kill local_kill =
+  await kill(k) in
+  if List.mem id k then emit local_kill
+  else run (kill_me id kill local_kill)
+
 let process preemptible_node id pos_init move make_msg kill =
   signal local_kill in
   do 
     run (node id pos_init move make_msg)
-    ||  
-    loop
-      await kill(k) in
-      if List.mem id k then emit local_kill
-    end
   until local_kill done
+  ||
+  run (kill_me id kill local_kill)
 
 let rec process add new_node start =
   await one new_node (pos) in

@@ -26,7 +26,7 @@ let process node pos_init mvt_kind make_msg draw =
       List.fold_left 
 	(fun infos (i,j) -> 
 	  if pre (!hello_array.(i).(j)) then
-	    List.rev_append (pre ?(!hello_array.(i).(j))) infos
+	    List.rev_append (last ?(!hello_array.(i).(j))) infos
 	  else
 	    infos)
 	[] (local_area::neighbor_areas)

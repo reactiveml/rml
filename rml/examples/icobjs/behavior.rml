@@ -528,42 +528,42 @@ let process peventnoclone ajouticobj (getatt,icoatt,a_click,clavier,getlist,list
     emit getlist;
     await immediate one listico (l) in
     let objs = get_other (geticobj_under l att) att in
-    if List.length objs = 1 then
-      (signal s in
-      let other = List.hd objs in
-      run (other.getnocloneable s);
-      await immediate one s (b) in
-      if b == ptextboxnoclone && not (other.attrib.txt = "")  then 
+    begin match objs with
+    | [other] ->
 	(signal s in
-        let name = other.attrib.txt ^ (string_of_int !index) in
-        att.txt <- name;
-	pause;
-        await immediate a_click;
-	att.txt <- "";
-	index := !index + 1 ;
-        emit ajouticobj (true,
-			 (pbuilderclone,true),
-			 puntilnoclone ajouticobj s name,
-			 {xi=att.pos.xi;yi=att.pos.yi-40});
+	run (other.getnocloneable s);
+	await immediate one s (b) in
+	if b == ptextboxnoclone && not (other.attrib.txt = "")  then 
+	  (signal s in
+          let name = other.attrib.txt ^ (string_of_int !index) in
+          att.txt <- name;
+	  pause;
+          await immediate a_click;
+	  att.txt <- "";
+	  index := !index + 1 ;
+          emit ajouticobj (true,
+			   (pbuilderclone,true),
+			   puntilnoclone ajouticobj s name,
+			   {xi=att.pos.xi;yi=att.pos.yi-40});
         
-	emit ajouticobj (true,
-			 (pgenerateclone s,false),
-			 pgeneratenoclone s name,
-			 {xi=att.pos.xi+60;yi=att.pos.yi-90});
-        
-	emit ajouticobj (true,
-			 (pawaitclone s,false),
-			 pawaitnoclone  s name,
-			 {xi=att.pos.xi;yi=att.pos.yi-90});
-        
-        emit ajouticobj (true,
-			 (pbuilderclone,true),
-			 pcontrolnoclone ajouticobj s name,
-			 {xi=att.pos.xi+60;yi=att.pos.yi - 40});
+	  emit ajouticobj (true,
+			   (pgenerateclone s,false),
+			   pgeneratenoclone s name,
+			   {xi=att.pos.xi+60;yi=att.pos.yi-90});
+          
+	  emit ajouticobj (true,
+			   (pawaitclone s,false),
+			   pawaitnoclone  s name,
+			   {xi=att.pos.xi;yi=att.pos.yi-90});
+          
+          emit ajouticobj (true,
+			   (pbuilderclone,true),
+			   pcontrolnoclone ajouticobj s name,
+			   {xi=att.pos.xi+60;yi=att.pos.yi - 40});
+	  )
 	)
-       )
-    else
-      nothing;
+    | _ -> ()
+    end
   end;;
 
 
