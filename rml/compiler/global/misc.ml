@@ -9,7 +9,7 @@
 (* $Id: misc.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *)
 
 (* version of the compiler *)
-let version = VERSION
+let version = Version.version
 
 exception Error
 
@@ -24,6 +24,9 @@ let not_yet_implemented msg =
   prerr_string ">> Not yet implemented: "; prerr_endline msg; raise Error
 
 
+let print_DEBUG msg = 
+  prerr_string ">> DEBUG: "; prerr_endline msg 
+
 (* standard module *)
 let pervasives_module = "Rml_pervasives"
 let interpreter_module = ref "Lco_ctrl_tree_record" 
@@ -32,7 +35,7 @@ let interpreter_intf = ref "Lco_interpreter"
 let interpreter_impl = ref "Implantation"
 
 
-let standard_lib = STDLIB 
+let standard_lib = Version.stdlib 
 
 (* List of file to compile *)
 let to_compile = ref ([] : string list)
@@ -69,6 +72,7 @@ let sampling = ref (-. 1.0)
 (* verbose *)
 let print_type = ref false
 let save_types = ref false
+let instantaneous_loop_waring = ref true
 
 (* dparse *)
 let dparse = ref false

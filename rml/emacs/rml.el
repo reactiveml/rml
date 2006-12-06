@@ -337,9 +337,11 @@ have rml-electric-indent on, which see.")
 
   ;; rml-types
   (define-key rml-mode-map [?\C-c?\C-t] 'rml-types-show-type)
+  ;; rml-static
+  (define-key rml-mode-map [?\C-c?\C-s] 'rml-static-show-type)
   ;; to prevent misbehavior in case of error during exploration.
 ;  (define-key rml-mode-map [mouse-2] 'rml-types-mouse-ignore)
-  (define-key rml-mode-map [down-mouse-2] 'rml-types-explore)
+;  (define-key rml-mode-map [down-mouse-2] 'rml-types-explore)
   ;; rml-help
   (define-key rml-mode-map [?\C-c?i] 'rml-add-path)
   (define-key rml-mode-map [?\C-c?]] 'rml-close-module)
@@ -367,7 +369,7 @@ have rml-electric-indent on, which see.")
   (define-key rml-mode-map "\C-c\C-\]" 'rml-forward-to-less-indent)
   (define-key rml-mode-map "\C-c\C-q" 'rml-indent-phrase)
   (define-key rml-mode-map "\C-c\C-r" 'rml-eval-region)
-  (define-key rml-mode-map "\C-c\C-s" 'rml-show-subshell)
+;  (define-key rml-mode-map "\C-c\C-s" 'rml-show-subshell)
   (define-key rml-mode-map "\M-\C-h" 'rml-mark-phrase)
   (define-key rml-mode-map "\M-\C-q" 'rml-indent-phrase)
   (define-key rml-mode-map "\M-\C-x" 'rml-eval-phrase)
@@ -391,6 +393,11 @@ have rml-electric-indent on, which see.")
       ;; rml-types
       (define-key map [show-type]
           '("Show type at point" . rml-types-show-type ))
+;      (define-key map [separator-types] '("---"))
+
+      ;; rml-static
+      (define-key map [show-static]
+          '("Show static at point" . rml-static-show-type ))
       (define-key map [separator-types] '("---"))
 
       ;; others
@@ -452,6 +459,7 @@ have rml-electric-indent on, which see.")
         [ "Start subshell..." run-rml t ]
         "---"
         [ "Show type at point" rml-types-show-type t ]
+        [ "Show static at point" rml-static-show-type t ]
         "---"
         [ "Complete identifier" rml-complete t ]
         [ "Help for identifier" rml-help t ]
@@ -2375,6 +2383,11 @@ with prefix arg, indent that many phrases starting with the current phrase."
 (autoload 'rml-types-show-type "rml-types"
   "Show the type of expression or pattern at point." t)
 (autoload 'rml-types-explore "rml-types"
+  "Explore type annotations by mouse dragging." t)
+
+(autoload 'rml-static-show-type "rml-static"
+  "Show the type of expression or pattern at point." t)
+(autoload 'rml-static-explore "rml-static"
   "Explore type annotations by mouse dragging." t)
 
 (autoload 'rml-help "rml-help"

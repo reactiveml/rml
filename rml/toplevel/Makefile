@@ -13,32 +13,38 @@ INSTALLFILE=	rmltop.cmi \
 		rmltop_implantation.cmo \
 		rmltop_main.cmo
 
+RMLC=../compiler/rmlc
+RMLLIB=-I ../stdlib -I ../interpreter
+
 all: rmltop
 
-lib:
-	rmlc -c rmltop_global.rmli
-	ocamlc  -I `rmlc -where` rmltop_global.mli
-	ocamlc -c -I `rmlc -where` -thread rmltop_global.ml
-	ocamlc -c -I `rmlc -where` -thread rmltop_implantation.ml
-	rmlc -runtime Rmltop rmltop_machine_controler.rml 
-	ocamlc -c -I `rmlc -where` -thread rmltop_machine_controler.ml
-	ocamlc -c -thread rmltop_directives.ml
-	ocamlc -c -thread rmltop_main.ml
-	ocamlc -c -thread rmltop.ml
+lib: $(RMLC)
+	$(RMLC) $(RMLLIB) -c rmltop_global.rmli
+	$(OCAMLC) $(RMLLIB) rmltop_global.mli
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop_global.ml
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop_implantation.ml
+	$(RMLC) $(RMLLIB) -runtime Rmltop rmltop_machine_controler.rml 
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop_machine_controler.ml
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop_directives.ml
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop_main.ml
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop.ml
 
 rmltop: lib
-	ocamlc -o rmltop -I +threads -I `rmlc -where` unix.cma str.cma \
+	$(OCAMLC) -o rmltop -I +threads $(RMLLIB) unix.cma str.cma \
 		threads.cma \
 		rml_interpreter.cma \
 		rmltop_global.cmo \
 		rmltop_directives.cmo \
 		rmltop.cmo
 
+$(RMLC): 
+	(cd ../compiler/; make $(TARGET))
+
 install: install.lib install.bin
 
 install.bin: rmltop
-	$(INSTALL) -d $(bindir)
-	$(INSTALL) rmltop $(bindir)/rmltop
+	$(INSTALL) -d $(BINDIR)
+	$(INSTALL) rmltop $(BINDIR)/rmltop
 
 install.lib: lib 
 	$(INSTALL) -d $(LIBDIR)
@@ -46,7 +52,7 @@ install.lib: lib
 
 
 test:
-	ledit ocaml -I +threads -I `rmlc -where` unix.cma threads.cma \
+	ledit ocaml -I +threads $(RMLLIB) unix.cma threads.cma \
 		rml_interpreter.cma \
 		rmltop_global.cmo \
 		rmltop_implantation.cmo \
@@ -57,7 +63,8 @@ clean:
 	rm -f *.cm* *.rzi 
 
 realclean: clean
-	rm -f *~ rmltop_machine_controler.ml *.annot *.rannot rmltop
+	rm -f *~ rmltop_machine_controler.ml *.annot *.?annot rmltop
 
 cleanall: realclean
 
+FORCE:

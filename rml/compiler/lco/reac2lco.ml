@@ -270,7 +270,7 @@ and translate_proc p =
     begin match p.expr_static with
     | Def_static.Static ->
 	Coproc_compute (translate_ml p)
-    | Def_static.Dynamic ->
+    | Def_static.Dynamic _ ->
 	begin match p.expr_desc with
 	| Rexpr_nothing -> Coproc_nothing
 	      

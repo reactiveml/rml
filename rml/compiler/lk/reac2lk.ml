@@ -268,7 +268,7 @@ and translate_proc e k (ctrl: ident) =
     begin match e.expr_static with
     | Def_static.Static ->
 	Kproc_compute (translate_ml e, k)
-    | Def_static.Dynamic -> 
+    | Def_static.Dynamic _ -> 
 	begin match e.expr_desc with
 	| Rexpr_nothing -> k.kproc_desc
 	    

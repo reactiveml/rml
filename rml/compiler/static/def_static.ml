@@ -10,12 +10,18 @@
 
 type context = Process | ML
 
-type static = Static | Dynamic 
+type static = Static | Dynamic of instantaneous
+and instantaneous = Instantaneous | Noninstantaneous | Dontknow
 
 (* For debug *)
+let string_of_instantaneous k = 
+  match k with
+  | Instantaneous -> "Instantaneous"
+  | Noninstantaneous -> "Noninstantaneous"
+  | Dontknow -> "Dontknow"
+
 let string_of_static typ = 
   match typ with
   | Static -> "Static"
-  | Dynamic -> "Dynamic"
-
+  | Dynamic k -> "Dynamic:"^(string_of_instantaneous k)
 

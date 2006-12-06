@@ -8,11 +8,12 @@ all:
 	(cd compiler; touch .depend; make depend; make $(TARGET))
 	(cd stdlib; make all)
 	(cd interpreter; touch .depend; make depend; make all)
-
-toplevel:
 	(cd toplevel; make all)
 
-toplevel_install:
+toplevel: FORCE
+	(cd toplevel; make all)
+
+toplevel-install:
 	(cd toplevel; make install)
 
 
@@ -30,6 +31,7 @@ install.byte:
 	(cd interpreter; make install)
 	(cd man; make install)
 	(cd emacs; make install)
+	(cd toplevel; make install)
 
 install.opt:
 	(cd compiler; make install.opt)
@@ -37,6 +39,7 @@ install.opt:
 	(cd interpreter; make install)
 	(cd man; make install)
 	(cd emacs; make install)
+	(cd toplevel; make install)
 
 doc: dvi
 dvi:
@@ -51,6 +54,7 @@ clean:
 	(cd toplevel; make clean)
 	(cd man; make clean)
 	(cd doc; make clean)
+	(cd toplevel; make clean)
 
 realclean: clean-distrib
 	(cd compiler;make realclean)
@@ -59,29 +63,30 @@ realclean: clean-distrib
 	(cd toplevel; make realclean)
 	(cd man; make realclean)
 	(cd doc; make realclean)
-	rm -rf config.cache config.status config.log config \
-		distrib/rml/rmlc.in distrib/rml/Makefile
+	(cd toplevel; make realclean)
+	rm -rf config distrib/rml/rmlc.in distrib/rml/Makefile
+	touch config 
 
+cleanall: realclean
 
 # Making binary distribution 
 DATE=`date -I`
-VERSION=1.05.00
-#VERSION=`cat compiler/version`
+include configure-tools/version
 
 source-distrib:
 	touch config
 	make realclean
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
-	cp -r compiler interpreter stdlib toplevel emacs examples doc man \
+	cp -r compiler interpreter stdlib toplevel emacs doc man \
 		distrib/rml-$(VERSION)-$(DATE)
-	cp configure configure.in config.in Makefile install-sh INSTALL \
+	cp -r configure configure-tools Makefile INSTALL \
 		distrib/rml-$(VERSION)-$(DATE)
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)/distrib
 	cp -r distrib/rml distrib/Makefile.byte distrib/Makefile.opt \
 		distrib/rmlc.in.byte distrib/rmlc.in.opt \
 		distrib/rml-$(VERSION)-$(DATE)/distrib
 	(cd distrib; \
-	 tar --exclude=CVS -czvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
+	 tar --exclude=CVS --exclude=.svn -zcvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
 	 rm -rf rml-$(VERSION)-$(DATE); \
 	 mv rml-$(VERSION)-$(DATE).tar.gz ..)
 
@@ -105,7 +110,7 @@ binary-distrib.opt: clean-distrib
 	 cp ../Makefile.opt Makefile; \
 	 cp ../rmlc.in.opt rmlc.in; \
          cd ..; \
-	 tar --exclude=CVS -zcvf rml-`../compiler/rmlc -version`.opt.tar.gz rml; \
+	 tar --exclude=CVS --exclude=.svn -zcvf rml-`../compiler/rmlc -version`.opt.tar.gz rml; \
          mv rml-`../compiler/rmlc -version`.opt.tar.gz ..)
 
 binary-distrib.byte: clean-distrib
@@ -125,7 +130,7 @@ binary-distrib.byte: clean-distrib
 	 cp -r ../../emacs .; \
 	 cp ../Makefile.byte Makefile; \
 	 cp ../rmlc.in.byte rmlc.in; \
-         cd ..; tar --exclude=CVS -zcvf rml-`../compiler/rmlc -version`.byte.tar.gz rml; \
+         cd ..; tar --exclude=CVS --exclude=.svn -zcvf rml-`../compiler/rmlc -version`.byte.tar.gz rml; \
          mv rml-`../compiler/rmlc -version`.byte.tar.gz ..)
 
 clean-distrib: 
@@ -136,5 +141,4 @@ clean-distrib:
 	rm -f rml-`./compiler/rmlc -version`.*.tar.gz
 	rm -f rml-$(VERSION)-????-??-??.tar.gz
 
-
-
+FORCE:

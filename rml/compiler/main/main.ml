@@ -47,7 +47,7 @@ let main () =
 Printexc.catch main (); 
 (* this is strange, but is required to avoid a bug in ocaml 3.04 *)
 Format.set_formatter_out_channel stdout; 
-if !interactive then Interactive.compile () else ();
+if !interactive then Interactive.compile ();
 if !dtime then Diagnostic.print stderr;
 exit 0;;
 

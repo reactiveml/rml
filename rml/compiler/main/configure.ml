@@ -74,12 +74,15 @@ let set_verbose () =
 let set_save_types () =
   save_types := true
 
+let unset_instantaneous_loop_waring () =
+  instantaneous_loop_waring := false
+
 (* Select the runtime *)
 let set_runtime s =
   match s with
   | "Lco_rewrite" ->
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implantation";
+      set_interpreter_impl "Rec_implantation";
       set_interpreter_module "Lco_rewrite_record";
       set_translation Lco
   | "Lco_ctrl_tree" -> 
@@ -124,9 +127,9 @@ let set_interactive () =
 (*
   interpreter_module := "Rml_interactive";
 *)
-      set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implantation";
-      set_interpreter_module "Lco_ctrl_tree_record";
+  set_interpreter_intf "Lco_interpreter";
+  set_interpreter_impl "Implantation";
+  set_interpreter_module "Lco_ctrl_tree_record";
   interactive := true
 
 (* suspend the nary optimization *)
@@ -152,7 +155,8 @@ and doc_simulation = "<proc> Executes the process <proc>."
 and doc_number_of_instant = "<n> Executes the main process <n> instants"
 and doc_sampling = "<rate> Sets the sampling rate to <rate> seconds"
 and doc_verbose = "Print types"
-and doc_save_types = "Save type information in <filename>.rannot"
+and doc_save_types = "Save type information in <filename>.?annot"
+and doc_no_loop_warning = "Remove instantaneous loop and recursion warnings"
 and doc_interactive = "Read programs on stdin and output on stdout"
 and doc_runtime = 
 (*"<interpreter> select the runtime according to <interpreter>:\n"*)
@@ -192,6 +196,7 @@ let configure () =
 	"-sampling", Arg.Float set_sampling, doc_sampling;
 	"-i", Arg.Unit set_verbose, doc_verbose;
 	"-dtypes", Arg.Unit set_save_types, doc_save_types;
+	"-no_loop_waring", Arg.Unit unset_instantaneous_loop_waring, doc_no_loop_warning;
 	"-runtime", Arg.String set_runtime, doc_runtime;
 	"-interactive", Arg.Unit set_interactive, doc_interactive;
 	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;

@@ -20,6 +20,7 @@ open Global
 open Global_ident
 open Reac_ast
 open Misc
+open Annot
 
 let unify_expr expr expected_ty actual_ty =
   try
@@ -212,7 +213,7 @@ let full_type_of_type_expression typ =
 (* Typing of patterns *)
 let rec type_of_pattern global_env local_env patt ty =
   patt.patt_type <- ty;
-  Stypes.record (Stypes.Ti_patt patt);
+  Stypes.record (Ti_patt patt);
   match patt.patt_desc with
   | Rpatt_any -> 
       (global_env, local_env)
@@ -749,7 +750,7 @@ let rec type_of_expression env expr =
 
   in
   expr.expr_type <- t;
-  Stypes.record (Stypes.Ti_expr expr);
+  Stypes.record (Ti_expr expr);
   t
 
 

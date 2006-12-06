@@ -328,57 +328,59 @@ let binary2nary e =
 
 (* Translate reactive seq to combinatorial seq and set the statut of emit *)
 let dynamic2static e =
-  begin match e.expr_desc with
-  | Rexpr_seq e_list ->
-      let rec f left l =
-	match l with
-	| ({ expr_static = Def_static.Static } as e1) 
-	  :: ({ expr_static = Def_static.Static } as e2) :: l' ->
-	    let e' =  
-	      make_expr 
-		(Rexpr_seq [e1;e2]) 
-		(Location.concat e1.expr_loc e2.expr_loc)
-	    in
-	    e'.expr_static <- Def_static.Static;
-	    f left (e'::l')
+  if e.expr_static = Def_static.Static then e 
+  else 
+    begin match e.expr_desc with
+    | Rexpr_seq e_list ->
+	let rec f left l =
+	  match l with
+	  | ({ expr_static = Def_static.Static } as e1) 
+	    :: ({ expr_static = Def_static.Static } as e2) :: l' ->
+	      let e' =  
+		make_expr 
+		  (Rexpr_seq [e1;e2]) 
+		  (Location.concat e1.expr_loc e2.expr_loc)
+	      in
+	      e'.expr_static <- Def_static.Static;
+	      f left (e'::l')
 
-	| ({ expr_desc = Rexpr_emit _ } as e1) 
-	  :: ({ expr_static = Def_static.Dynamic } as e2) :: l' ->
-	    e1.expr_static <- Def_static.Dynamic;
-	    f (left@[e1]) (e2::l')
+	  | ({ expr_desc = Rexpr_emit _ } as e1) 
+	    :: ({ expr_static = Def_static.Dynamic _ } as e2) :: l' ->
+	      e1.expr_static <- Def_static.Dynamic Def_static.Instantaneous;
+	      f (left@[e1]) (e2::l')
 
 
-	| [ { expr_static = Def_static.Dynamic } as e1; 
-	    { expr_desc = Rexpr_emit _ } as e2 ] ->
-	    e2.expr_static <- Def_static.Dynamic;
-	    left@[e1; e2]
+	  | [ { expr_static = Def_static.Dynamic _ } as e1; 
+	      { expr_desc = Rexpr_emit _ } as e2 ] ->
+		e2.expr_static <- Def_static.Dynamic Def_static.Instantaneous;
+		left@[e1; e2]
 
-	| x :: l' ->
-	    let left' = left @ [x] in
-	    f left' l'
+	  | x :: l' ->
+	      let left' = left @ [x] in
+	      f left' l'
 
-	| [] -> left
-      in 
-      begin match f [] e_list with
-      | [] -> assert false
-      | [e] -> e
-      | e_list' ->
-	  let e' = make_expr (Rexpr_seq e_list') e.expr_loc in
-	  e'.expr_static <- Def_static.Dynamic;
-	  e'
-      end
-  | Rexpr_when(_, ({ expr_desc = Rexpr_emit _ } as e2)) ->
-      e2.expr_static <- Def_static.Dynamic;
-      e
-  | _ -> e
-  end
+	  | [] -> left
+	in 
+	begin match f [] e_list with
+	| [] -> assert false
+	| [e] -> e
+	| e_list' ->
+	    let e' = make_expr (Rexpr_seq e_list') e.expr_loc in
+	    e'.expr_static <- e.expr_static;
+	    e'
+	end
+    | Rexpr_when(_, ({ expr_desc = Rexpr_emit _ } as e2)) ->
+	e2.expr_static <- Def_static.Dynamic Def_static.Instantaneous;
+	e
+    | _ -> e
+    end
 
 
 (* Translate for to loop_n *)
 let for2loop_n expr = 
   begin match expr.expr_desc with
   | Rexpr_for(ident, e1, e2, direction_flag, e) 
-    when expr.expr_static = Def_static.Dynamic->
+    when expr.expr_static <> Def_static.Static ->
       let fv = expr_free_vars e in
       if is_free (Varpatt_local ident) fv then
 	begin
@@ -444,7 +446,7 @@ let for2loop_n expr =
 	      (Rexpr_loop(Some n, e))
 	      expr.expr_loc
 	  in
-	  loop_n.expr_static <- Def_static.Dynamic;
+	  loop_n.expr_static <- expr.expr_static;
 	  loop_n.expr_type <- Initialization.type_unit;
 	  loop_n
 	end

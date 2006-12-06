@@ -25,7 +25,7 @@ let make_expr e loc =
   { expr_desc = e;
     expr_loc = loc; 
     expr_type = no_type_expression; 
-    expr_static = Def_static.Dynamic; }
+    expr_static = Def_static.Dynamic Def_static.Dontknow; }
 
 let make_patt p loc =
   { patt_desc = p;
@@ -47,6 +47,13 @@ let make_impl it loc =
 let make_intf it loc =
   { intf_desc = it;
     intf_loc = loc; }
+
+
+let string_of_varpatt x =
+  begin match x with
+  | Varpatt_local id -> Ident.unique_name id
+  | Varpatt_global x -> Global.little_name_of_global x
+  end
 
 
 (* Compute the list of variables introduce in a pattern *)

@@ -14,7 +14,8 @@ let compile_decl_list module_name itf info_chan out_chan decl_list =
   let decl_list = List.map External.expend decl_list in
   (* front-end *)
   let intermediate_code = 
-    Compiler.compile_implementation_front_end info_chan itf decl_list in
+    Compiler.compile_implementation_front_end info_chan itf decl_list 
+  in
   (* the implementation *)
   Compiler.compile_implementation_back_end info_chan out_chan module_name 
     intermediate_code

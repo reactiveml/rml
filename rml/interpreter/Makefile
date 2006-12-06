@@ -7,6 +7,7 @@ SRC=	sig_env.ml \
 	lco_rewrite.ml \
 	lk_interpreter.ml \
 	implantation.ml \
+	rec_implantation.ml \
 	rml_machine.ml \
 
 OBJ=	sig_env.cmo \
@@ -15,9 +16,10 @@ OBJ=	sig_env.cmo \
 	lco_rewrite.cmo \
 	lk_interpreter.cmo \
 	implantation.cmo \
+	rec_implantation.cmo \
 	rml_machine.cmo \
 
-#	lco_ctrl_tree_debug.cmo \
+
 
 OBJ_OPT = $(OBJ:.cmo=.cmx)
 
@@ -63,6 +65,10 @@ rml_interpreter.cmxa: $(OBJ_OPT)
 # dependencies
 lco_rewrite.cmo: OCAMLFLAGS := -rectypes
 lco_rewrite.cmx: OCAMLOPTFLAGS := -rectypes
+
+rec_implantation.cmo: OCAMLFLAGS := -rectypes
+rec_implantation.cmx: OCAMLOPTFLAGS := -rectypes
+
 
 lco_ctrl_tree_thread.cmo: OCAMLFLAGS := -thread threads.cma
 lco_ctrl_tree_thread.cmx: OCAMLOPTFLAGS := -thread threads.cmxa

@@ -1,9 +1,0 @@
-open Rml_Graphics;;
-open Scene;;
-open Random;;
-
-let systeme = creer_scene;;
-
-
-let main = systeme;; 
-

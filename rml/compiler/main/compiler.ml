@@ -30,6 +30,7 @@ module External_timer = Timer (struct let name = "External" end)
 module Parse2reac_timer = Timer (struct let name = "Parse2reac" end)
 module Typing_timer = Timer (struct let name = "Typing" end)
 module Static_timer = Timer (struct let name = "Static" end)
+module Other_analysis_timer = Timer (struct let name = "Other_analysis" end)
 module Reac2lco_timer = Timer (struct let name = "Reac2lco" end)
 module Reac2lk_timer = Timer (struct let name = "Reac2lk" end)
 module Lco2caml_timer = Timer (struct let name = "Lco2caml" end)
@@ -78,6 +79,9 @@ let compile_implementation_front_end info_chan itf impl_list =
     in
     Optimization_timer.time();
 
+(* Debug *)
+(* Reac2reac.impl_map Reac2reac.print_static rml_code; *)
+
     (* typing *)
     Typing_timer.start();
     Typing.type_impl_item info_chan rml_code;
@@ -92,6 +96,12 @@ let compile_implementation_front_end info_chan itf impl_list =
 	rml_code
     in
     Optimization_timer.time();
+
+    (* Instantaneous loop *)
+    Other_analysis_timer.start();
+    if !instantaneous_loop_waring then 
+      Instantaneous_loop.instantaneous_loop rml_code;
+    Other_analysis_timer.time();
 
     rml_table :=  rml_code :: !rml_table;
   in
@@ -187,7 +197,8 @@ let compile_implementation module_name filename =
   let source_name = filename ^ ".rml"
   and obj_interf_name = filename ^ ".rzi"
   and obj_name = filename ^ ".ml" 
-  and annot_name = filename ^ ".rannot" 
+  and tannot_name = filename ^ ".tannot" 
+  and sannot_name = filename ^ ".sannot" 
   and module_name = String.capitalize filename  in
 
   let ic = open_in source_name in
@@ -274,12 +285,14 @@ let compile_implementation module_name filename =
       end;
 
    (* write types annotation *)
-    Stypes.dump annot_name;
+    Annot.Stypes.dump tannot_name;
+    Annot.Sstatic.dump sannot_name;
 
     close_in ic;
   with
     x -> 
-      Stypes.dump annot_name;
+      Annot.Stypes.dump tannot_name;
+      Annot.Sstatic.dump sannot_name;
       close_in ic;
       raise x
 

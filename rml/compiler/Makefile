@@ -1,6 +1,6 @@
 BIN = rmlc
 
-DIRECTORIES = global parsing external static typing reac lco lk caml main 
+DIRECTORIES = global parsing external static typing other_analysis reac lco lk caml main 
 
 
 GLOBAL = global/asttypes.mli \
@@ -9,9 +9,9 @@ GLOBAL = global/asttypes.mli \
 	global/ident.ml \
 	global/initialization.ml \
 	global/misc.ml \
-	global/misc_pp.mlp \
 	global/modules.ml \
 	global/symbol_table.ml \
+	global/version.ml \
 	global/warnings.ml \
 
 PARSING = parsing/lexer.mll \
@@ -31,20 +31,22 @@ EXTERNAL = external/lucky.ml \
 STATIC = static/def_static.ml \
 	static/static.ml \
 	static/static_errors.ml \
+	static/static_printer.ml \
 
-REAC =	reac/binding_errors.ml \
+REAC =	reac/annot.ml \
+	reac/binding_errors.ml \
 	reac/parse2reac.ml \
 	reac/reac2reac.ml \
 	reac/reac_ast.ml \
 	reac/reac_misc.ml \
 
 TYPING = typing/def_types.ml \
-	typing/stypes.ml \
 	typing/types.ml \
 	typing/types_printer.ml \
 	typing/typing.ml \
 	typing/typing_errors.ml \
 
+OTHER_ANALYSIS = other_analysis/instantaneous_loop.ml \
 
 LCO =	lco/lco_ast.ml \
 	lco/lco_misc.ml \
@@ -66,10 +68,11 @@ MAIN = 	main/compiler.ml \
 	main/interactive.ml \
 	main/main.ml \
 
-SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(EXTERNAL) $(STATIC) $(LCO) $(LK) $(CAML) $(MAIN)
+SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(OTHER_ANALYSIS) $(EXTERNAL) $(STATIC) $(LCO) $(LK) $(CAML) $(MAIN)
 
 
-OBJ =   global/warnings.cmo \
+OBJ =	global/version.cmo \
+	global/warnings.cmo \
 	parsing/linenum.cmo \
 	parsing/location.cmo \
 	global/misc.cmo \
@@ -92,8 +95,6 @@ OBJ =   global/warnings.cmo \
 	external/lucky_errors.cmo \
 	external/lucky.cmo \
 	external/external.cmo \
-	static/static_errors.cmo \
-	static/static.cmo \
 	reac/reac_ast.cmo \
 	reac/binding_errors.cmo \
 	typing/types.cmo \
@@ -101,10 +102,14 @@ OBJ =   global/warnings.cmo \
 	reac/parse2reac.cmo \
 	global/initialization.cmo \
 	reac/reac2reac.cmo \
+	static/static_printer.cmo \
 	typing/types_printer.cmo \
-	typing/stypes.cmo \
+	reac/annot.cmo \
+	static/static_errors.cmo \
+	static/static.cmo \
 	typing/typing_errors.cmo \
 	typing/typing.cmo \
+	other_analysis/instantaneous_loop.cmo \
 	lco/lco_ast.cmo \
 	lco/lco_misc.cmo \
 	lco/reac2lco.cmo \
@@ -141,7 +146,7 @@ clean:
 
 realclean: clean
 	rm -f $(BIN).byte $(BIN).opt $(GENSOURCES) parsing/parser.output
-	rm -f rmlc stdlib
+	rm -f rmlc global/version.ml
 
 # utilities
 depend: $(GENSOURCES)
@@ -159,18 +164,11 @@ parsing/parser.mli parsing/parser.ml: parsing/parser.mly
 	$(OCAMLYACC) -v parsing/parser.mly
 lexer.cmx: parser.cmi
 
-global/misc.cmo: parsing/location.cmi global/misc_pp.cmo stdlib
-global/misc.cmo: OCAMLC := $(TRUE_OCAMLC)
-global/misc.cmo: OCAMLFLAGS := \
-		-pp "camlp4o ./global/misc_pp.cmo" 
-global/misc.cmx: parsing/location.cmi global/misc_pp.cmo stdlib
-global/misc.cmx: OCAMLOPTFLAGS := \
-		-pp "camlp4o ./global/misc_pp.cmo" 
+# version
+global/version.ml:
+	echo "(* This file is generated *)" > global/version.ml
+	echo "let version = \"$(VERSION)\"" >> global/version.ml
+	echo "let stdlib = \"$(LIBDIR)\"" >> global/version.ml
 
-global/misc_pp.cmo: global/misc_pp.mlp
-	$(OCAMLC) -pp "camlp4o pa_extend.cmo q_MLast.cmo -impl" -I +camlp4 -c -impl global/misc_pp.mlp
-
-stdlib: global/misc.ml
-	echo $(LIBDIR) > stdlib
 
 include .depend
