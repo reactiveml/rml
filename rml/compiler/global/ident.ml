@@ -1,13 +1,32 @@
-(*************************************************************************)
-(*                              Reactive ML                              *)
-(*                                                                       *)
-(*  Fichier : ident.ml                                                   *)
-(*  Date de creation : 23/04/2004                                        *)
-(*  Auteur : Louis Mandel                                                *)
-(*  Remarque : taken from OCaml                                          *)
-(*************************************************************************)
+(**********************************************************************)
+(*                                                                    *)
+(*                           ReactiveML                               *)
+(*                    http://reactiveML.org                           *)
+(*                    http://rml.inria.fr                             *)
+(*                                                                    *)
+(*                          Louis Mandel                              *)
+(*                                                                    *)
+(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
+(*  This file is distributed under the terms of the Q Public License  *)
+(*  version 1.0.                                                      *)
+(*                                                                    *)
+(*  ReactiveML has been done in the following labs:                   *)
+(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
+(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
+(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
+(*                                                                    *)
+(**********************************************************************)
 
-(* $Id: ident.ml,v 1.1.1.1 2005/01/23 17:55:36 mandel Exp $ *) 
+(* file: ident.ml *)
+
+(* Warning: *)
+(* This file is based on the original version of ident.ml *)
+(* from the Lucid Synchrone version 2 distribution, Lip6  *)
+
+(* first modification: 2004-04-23  *)
+(* modified by: Louis Mandel *)
+
+(* $Id$ *) 
 
 type kind = 
     Val_ML | Val_RML | Sig 

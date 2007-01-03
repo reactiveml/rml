@@ -4,7 +4,8 @@ Installation procedure for ReactiveML:
   ----------- 
 
 You'll need Objective Caml >= 3.06 in order to build ReactiveML
-from source. You can get it from http://reactiveML.org/.
+from source. You can get it from http://reactiveML.org/ or 
+http://rml.inria.fr/.
 
 . Quick installation:
   ------------------ 
@@ -60,6 +61,9 @@ Other make target which can be usefull:
 		can bet the bytecode version with
 		make binary-distrib.byte
 
+	make public-distrib  makes a file rml-VERSION-DATE.tar.gz
+		containing a full ReactiveML source distribution.
+
 
       - in the compiler/ directory 
 
@@ -78,3 +82,17 @@ Other make target which can be usefull:
 
 	make oprof  produces a compiler with informations for the opt
 		profiler. 
+
+
+
+. Copyright information:
+  ---------------------
+
+License information are given in the file LICENSE. 
+
+Some files are based on Caml Light and Objective Caml. The original
+files with patches are in the compiler/diff/ directory. The license
+of Caml files is also in this directory.
+
+Files in the stdlib/ directory are based on the Objective Caml 
+standard library.

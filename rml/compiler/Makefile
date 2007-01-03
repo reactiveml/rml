@@ -11,7 +11,6 @@ GLOBAL = global/asttypes.mli \
 	global/misc.ml \
 	global/modules.ml \
 	global/symbol_table.ml \
-	global/version.ml \
 	global/warnings.ml \
 
 PARSING = parsing/lexer.mll \
@@ -138,15 +137,24 @@ include ../config
 all: $(TARGET)
 install: install.$(TARGET)
 
+diff: FORCE
+	(cd diff; make diff)
+
 # cleaning:
 clean:
 	(for d in $(DIRECTORIES); \
-         do rm -f $$d/*.cmi $$d/*.cmo $$d/*.cmx $$d/*.o $$d/*.annot; \
+	 do rm -f $$d/*.cmi $$d/*.cmo $$d/*.cmx $$d/*.o $$d/*.annot; \
 	 done)
 
 realclean: clean
+	(for d in $(DIRECTORIES); \
+	 do rm -f $$d/*~; \
+	 done)
 	rm -f $(BIN).byte $(BIN).opt $(GENSOURCES) parsing/parser.output
-	rm -f rmlc global/version.ml
+	rm -f rmlc global/version.ml *~
+
+cleanall: realclean
+
 
 # utilities
 depend: $(GENSOURCES)
@@ -155,9 +163,7 @@ depend: $(GENSOURCES)
 	 done) > .depend
 
 wc:
-	(for d in $(DIRECTORIES); \
-	 do wc --lines $$d/*.ml $$d/*.mli; \
-	 done)
+	wc --lines $(SRC)
 
 # dependencies
 parsing/parser.mli parsing/parser.ml: parsing/parser.mly
@@ -170,5 +176,6 @@ global/version.ml:
 	echo "let version = \"$(VERSION)\"" >> global/version.ml
 	echo "let stdlib = \"$(LIBDIR)\"" >> global/version.ml
 
+FORCE:
 
 include .depend

@@ -1,11 +1,5 @@
-(*************************************************************************)
-(*                              Reactive ML                              *)
-(*                                                                       *)
-(*  Fichier : parse.ml                                                   *)
-(*  Date de creation : 06/05/2004                                        *)
-(*  Auteur : Louis Mandel                                                *)
-(*  Remarque : Taken from OCaml                                          *)
-(*************************************************************************)
+(* This file was parse.ml from Objective Caml *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parse.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
+(* $Id: parse.ml,v 1.15 2002/11/01 17:06:46 doligez Exp $ *)
 
 (* Entry points in the parser *)
 
@@ -68,4 +62,5 @@ let wrap parsing_fun lexbuf =
 
 let implementation = wrap Parser.implementation
 and interface = wrap Parser.interface
-and interactive = wrap Parser.interactive
+and toplevel_phrase = wrap Parser.toplevel_phrase
+and use_file = wrap Parser.use_file

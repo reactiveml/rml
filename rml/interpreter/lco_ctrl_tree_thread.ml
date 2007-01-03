@@ -1,10 +1,28 @@
 (**********************************************************************)
-(*                        ReactiveML                                  *)
 (*                                                                    *)
-(* Auteur : Louis Mandel                                              *) 
-(* Date de creation : 14/04/2006                                      *)
-(* Fichier : lco_ctrl_tree_thread                                     *)
-(* Remarque : taken from lco_ctrl_tree.ml                             *)
+(*                           ReactiveML                               *)
+(*                    http://reactiveML.org                           *)
+(*                    http://rml.inria.fr                             *)
+(*                                                                    *)
+(*                          Louis Mandel                              *)
+(*                                                                    *)
+(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
+(*  This file is distributed under the terms of the GNU Library       *)
+(*  General Public License, with the special exception on linking     *)
+(*  described in file ../LICENSE.                                     *)
+(*                                                                    *)
+(*  ReactiveML has been done in the following labs:                   *)
+(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
+(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
+(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
+(*                                                                    *)
+(**********************************************************************)
+
+(* file: lco_ctrl_tree_thread *)
+(* author: Louis Mandel *)
+(* created: 2006-04-14  *)
+(* Remark: taken from lco_ctrl_tree.ml *)
+
 (* Description :                                                      *)
 (*   Gestion de plusieur scheduler executé dans des threads           *)
 (*   differents.                                                      *)
@@ -12,8 +30,7 @@
 (*  A FAIRE:                                                          *)
 (*  - Vérifier qu'un processus ne peut pas changer de ctrl en cours   *)
 (*    d'exécution (cf pb de pause par exemple).                       *)
-(*                                                                    *)
-(**********************************************************************)
+
 
 module Rml_interpreter (*: Lco_interpreter.S*) =
   functor (Event: Sig_env.S) ->

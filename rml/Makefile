@@ -63,8 +63,7 @@ realclean: clean-distrib
 	(cd toplevel; make realclean)
 	(cd man; make realclean)
 	(cd doc; make realclean)
-	(cd toplevel; make realclean)
-	rm -rf config distrib/rml/rmlc.in distrib/rml/Makefile
+	rm -rf config distrib/rml/rmlc.in distrib/rml/Makefile *~
 	touch config 
 
 cleanall: realclean
@@ -73,13 +72,33 @@ cleanall: realclean
 DATE=`date -I`
 include configure-tools/version
 
+public-distrib:
+	touch config
+	make realclean
+	mkdir -p distrib/rml-$(VERSION)-$(DATE)
+	cp -r compiler interpreter stdlib toplevel emacs doc man \
+		distrib/rml-$(VERSION)-$(DATE)
+	cp -r configure configure-tools Makefile INSTALL LICENSE \
+		distrib/rml-$(VERSION)-$(DATE)
+	mkdir -p distrib/rml-$(VERSION)-$(DATE)/distrib
+	cp -r distrib/rml distrib/Makefile.byte distrib/Makefile.opt \
+		distrib/rmlc.in.byte distrib/rmlc.in.opt \
+		distrib/rml-$(VERSION)-$(DATE)/distrib
+	(cd distrib/rml-$(VERSION)-$(DATE)/compiler/diff; \
+	 make public-distrib)
+	(cd distrib; \
+	 tar --exclude=CVS --exclude=.svn -zcvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
+	 rm -rf rml-$(VERSION)-$(DATE); \
+	 mv rml-$(VERSION)-$(DATE).tar.gz ..)
+
+
 source-distrib:
 	touch config
 	make realclean
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
 	cp -r compiler interpreter stdlib toplevel emacs doc man \
 		distrib/rml-$(VERSION)-$(DATE)
-	cp -r configure configure-tools Makefile INSTALL \
+	cp -r configure configure-tools Makefile INSTALL LICENSE \
 		distrib/rml-$(VERSION)-$(DATE)
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)/distrib
 	cp -r distrib/rml distrib/Makefile.byte distrib/Makefile.opt \

@@ -1,13 +1,32 @@
-(*************************************************************************)
-(*                              Reactive ML                              *)
-(*                                                                       *)
-(*  Fichier : main.ml                                                    *)
-(*  Date de creation : 06/05/2004                                        *)
-(*  Auteur : Louis Mandel                                                *)
-(*  Remarque : Taken from Lucid Synchron                                 *)
-(*************************************************************************)
+(**********************************************************************)
+(*                                                                    *)
+(*                           ReactiveML                               *)
+(*                    http://reactiveML.org                           *)
+(*                    http://rml.inria.fr                             *)
+(*                                                                    *)
+(*                          Louis Mandel                              *)
+(*                                                                    *)
+(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
+(*  This file is distributed under the terms of the Q Public License  *)
+(*  version 1.0.                                                      *)
+(*                                                                    *)
+(*  ReactiveML has been done in the following labs:                   *)
+(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
+(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
+(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
+(*                                                                    *)
+(**********************************************************************)
 
-(* $Id: main.ml,v 1.2 2005/04/30 16:49:15 mandel Exp $ *)
+(* file: main.ml *)
+
+(* Warning: *)
+(* This file is based on the original version of main.ml *)
+(* from the Lucid Synchrone version 2 distribution, Lip6 *)
+
+(* first modification: 2004-05-06 *)
+(* modified by: Louis Mandel      *)
+
+(* $Id$ *)
 
 open Misc
 open Modules

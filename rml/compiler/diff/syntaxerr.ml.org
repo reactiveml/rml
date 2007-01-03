@@ -1,11 +1,5 @@
-(*************************************************************************)
-(*                              Reactive ML                              *)
-(*                                                                       *)
-(*  Fichier : syntaxerr.ml                                               *)
-(*  Date de creation : 05/05/2004                                        *)
-(*  Auteur : Louis Mandel                                                *)
-(*  Remarque : Taken from OCaml                                          *)
-(*************************************************************************)
+(* This file was syntaxerr.ml from Objective Caml *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: syntaxerr.ml,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
+(* $Id: syntaxerr.ml,v 1.8 2002/04/18 08:50:43 garrigue Exp $ *)
 
 (* Auxiliary type for reporting syntax errors *)
 
@@ -33,10 +27,16 @@ exception Escape_error
 
 let report_error ppf = function
   | Unclosed(opening_loc, opening, closing_loc, closing) ->
-      fprintf ppf "%aSyntax error: '%s' expected@."
-        Location.print closing_loc closing;
-      fprintf ppf "%aThis '%s' might be unmatched"
-        Location.print opening_loc opening 
+      if String.length !Location.input_name = 0
+      && Location.highlight_locations ppf opening_loc closing_loc
+      then fprintf ppf "Syntax error: '%s' expected, \
+                   the highlighted '%s' might be unmatched" closing opening
+      else begin
+        fprintf ppf "%aSyntax error: '%s' expected@."
+          Location.print closing_loc closing;
+        fprintf ppf "%aThis '%s' might be unmatched"
+          Location.print opening_loc opening 
+      end
   | Other loc ->
       fprintf ppf "%aSyntax error" Location.print loc
 

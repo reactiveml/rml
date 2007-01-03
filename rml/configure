@@ -2,21 +2,7 @@
 
 # ReactiveML
 # Louis Mandel
-# taken from Objective Caml
-
-#########################################################################
-#                                                                       #
-#                            Objective Caml                             #
-#                                                                       #
-#            Xavier Leroy, projet Cristal, INRIA Rocquencourt           #
-#                                                                       #
-#   Copyright 1999 Institut National de Recherche en Informatique et    #
-#   en Automatique.  All rights reserved.  This file is distributed     #
-#   under the terms of the GNU Library General Public License, with     #
-#   the special exception on linking described in file LICENSE.         #
-#                                                                       #
-#########################################################################
-
+# adapted from Objective Caml
 
 configure_options="$*"
 prefix=/usr/local
@@ -296,6 +282,16 @@ echo
 cat config.in >> config
 
 mv config ..
+
+# Patch Caml files
+
+cd ../compiler/diff
+if sh ./patch.sh; then
+    echo "Patch OK"
+else
+    { echo "configure: error: Install \"patch\" or send an email to louis.mandel@reactiveML.org" 1>&2; exit 1; }
+fi
+cd ../../configure-tools
 
 # Print a summary
 

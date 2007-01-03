@@ -1,7 +1,7 @@
-global/global_ident.cmo: global/ident.cmo 
-global/global_ident.cmx: global/ident.cmx 
 global/global.cmo: global/misc.cmo global/global_ident.cmo 
 global/global.cmx: global/misc.cmx global/global_ident.cmx 
+global/global_ident.cmo: global/ident.cmo 
+global/global_ident.cmx: global/ident.cmx 
 global/initialization.cmo: typing/types.cmo global/modules.cmo \
     global/misc.cmo global/ident.cmo global/global_ident.cmo \
     global/global.cmo typing/def_types.cmo 
@@ -21,14 +21,14 @@ parsing/lexer.cmx: global/warnings.cmx parsing/parser.cmx global/misc.cmx \
     parsing/location.cmx 
 parsing/location.cmo: global/warnings.cmo parsing/linenum.cmo 
 parsing/location.cmx: global/warnings.cmx parsing/linenum.cmx 
-parsing/parse_ast.cmo: parsing/parse_ident.cmo parsing/location.cmo \
-    global/asttypes.cmi 
-parsing/parse_ast.cmx: parsing/parse_ident.cmx parsing/location.cmx \
-    global/asttypes.cmi 
 parsing/parse.cmo: parsing/syntaxerr.cmo parsing/parser.cmi \
     parsing/location.cmo parsing/lexer.cmo 
 parsing/parse.cmx: parsing/syntaxerr.cmx parsing/parser.cmx \
     parsing/location.cmx parsing/lexer.cmx 
+parsing/parse_ast.cmo: parsing/parse_ident.cmo parsing/location.cmo \
+    global/asttypes.cmi 
+parsing/parse_ast.cmx: parsing/parse_ident.cmx parsing/location.cmx \
+    global/asttypes.cmi 
 parsing/parse_printer.cmo: parsing/parse_ident.cmo parsing/parse_ast.cmo \
     parsing/location.cmo global/asttypes.cmi 
 parsing/parse_printer.cmx: parsing/parse_ident.cmx parsing/parse_ast.cmx \
@@ -43,22 +43,22 @@ parsing/syntaxerr.cmo: parsing/location.cmo
 parsing/syntaxerr.cmx: parsing/location.cmx 
 external/external.cmo: parsing/parse_ast.cmo external/lucky.cmo 
 external/external.cmx: parsing/parse_ast.cmx external/lucky.cmx 
-external/lucky_errors.cmo: parsing/parse_ast.cmo global/misc.cmo \
-    parsing/location.cmo 
-external/lucky_errors.cmx: parsing/parse_ast.cmx global/misc.cmx \
-    parsing/location.cmx 
 external/lucky.cmo: parsing/parse_ident.cmo parsing/parse_ast.cmo \
     external/lucky_errors.cmo parsing/location.cmo global/asttypes.cmi 
 external/lucky.cmx: parsing/parse_ident.cmx parsing/parse_ast.cmx \
     external/lucky_errors.cmx parsing/location.cmx global/asttypes.cmi 
-static/static_errors.cmo: reac/reac_ast.cmo global/misc.cmo \
+external/lucky_errors.cmo: parsing/parse_ast.cmo global/misc.cmo \
     parsing/location.cmo 
-static/static_errors.cmx: reac/reac_ast.cmx global/misc.cmx \
+external/lucky_errors.cmx: parsing/parse_ast.cmx global/misc.cmx \
     parsing/location.cmx 
 static/static.cmo: static/static_errors.cmo reac/reac_ast.cmo global/misc.cmo \
     static/def_static.cmo global/asttypes.cmi reac/annot.cmo 
 static/static.cmx: static/static_errors.cmx reac/reac_ast.cmx global/misc.cmx \
     static/def_static.cmx global/asttypes.cmi reac/annot.cmx 
+static/static_errors.cmo: reac/reac_ast.cmo global/misc.cmo \
+    parsing/location.cmo 
+static/static_errors.cmx: reac/reac_ast.cmx global/misc.cmx \
+    parsing/location.cmx 
 static/static_printer.cmo: reac/reac_ast.cmo static/def_static.cmo \
     global/asttypes.cmi 
 static/static_printer.cmx: reac/reac_ast.cmx static/def_static.cmx \
@@ -75,12 +75,6 @@ typing/types_printer.cmo: global/modules.cmo global/misc.cmo global/ident.cmo \
 typing/types_printer.cmx: global/modules.cmx global/misc.cmx global/ident.cmx \
     global/global_ident.cmx global/global.cmx typing/def_types.cmx \
     global/asttypes.cmi 
-typing/typing_errors.cmo: typing/types_printer.cmo typing/types.cmo \
-    reac/reac_ast.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
-    global/global_ident.cmo typing/def_types.cmo 
-typing/typing_errors.cmx: typing/types_printer.cmx typing/types.cmx \
-    reac/reac_ast.cmx global/misc.cmx parsing/location.cmx global/ident.cmx \
-    global/global_ident.cmx typing/def_types.cmx 
 typing/typing.cmo: typing/typing_errors.cmo typing/types_printer.cmo \
     typing/types.cmo global/symbol_table.cmo reac/reac_ast.cmo \
     global/misc.cmo parsing/location.cmo global/initialization.cmo \
@@ -91,6 +85,12 @@ typing/typing.cmx: typing/typing_errors.cmx typing/types_printer.cmx \
     global/misc.cmx parsing/location.cmx global/initialization.cmx \
     global/ident.cmx global/global_ident.cmx global/global.cmx \
     typing/def_types.cmx global/asttypes.cmi reac/annot.cmx 
+typing/typing_errors.cmo: typing/types_printer.cmo typing/types.cmo \
+    reac/reac_ast.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
+    global/global_ident.cmo typing/def_types.cmo 
+typing/typing_errors.cmx: typing/types_printer.cmx typing/types.cmx \
+    reac/reac_ast.cmx global/misc.cmx parsing/location.cmx global/ident.cmx \
+    global/global_ident.cmx typing/def_types.cmx 
 other_analysis/instantaneous_loop.cmo: static/static.cmo reac/reac_misc.cmo \
     reac/reac_ast.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo static/def_static.cmo \

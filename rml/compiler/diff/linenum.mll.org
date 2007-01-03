@@ -1,11 +1,5 @@
-(*************************************************************************)
-(*                              Reactive ML                              *)
-(*                                                                       *)
-(*  Fichier : linenum.mll                                                *)
-(*  Date de creation : 06/05/2004                                        *)
-(*  Auteur : Louis Mandel                                                *)
-(*  Remarque : Taken from OCaml                                          *)
-(*************************************************************************)
+(* This file was linenum.mll from Objective Caml *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: linenum.mll,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
+(* $Id: linenum.mll,v 1.7 1999/11/17 18:58:17 xleroy Exp $ *)
 
 (* An auxiliary lexer for determining the line number corresponding to
    a file position, honoring the directives # linenum "filename" *)
@@ -43,7 +37,7 @@ let parse_sharp_line s =
     if !f1 < String.length s then
       filename := String.sub s (!f1 + 1) (!f2 - !f1 - 1)
   with Failure _ | Invalid_argument _ ->
-    failwith "Linenum.parse_sharp_line"
+    Misc.fatal_error "Linenum.parse_sharp_line"
 }
 
 rule skip_line = parse

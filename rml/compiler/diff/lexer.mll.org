@@ -1,11 +1,5 @@
-(*************************************************************************)
-(*                              Reactive ML                              *)
-(*                                                                       *)
-(*  Fichier : lexer.mll                                                  *)
-(*  Date de creation : 05/05/2004                                        *)
-(*  Auteur : Louis Mandel                                                *)
-(*  Remarque : Taken from OCaml                                          *)
-(*************************************************************************)
+(* This file was lexer.mll from Objective Caml *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                           Objective Caml                            *)
@@ -18,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
+(* $Id: lexer.mll,v 1.66 2003/08/25 13:15:47 doligez Exp $ *)
 
 (* The lexer definition *)
 
@@ -40,24 +34,18 @@ exception Error of error * Location.t;;
 
 (* The table of keywords *)
 
-let keyword_table = ((Hashtbl.create 149) : (string, token) Hashtbl.t);;
-
-List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok) 
-  [ "and", AND;
+let keyword_table =
+  create_hashtable 149 [
+    "and", AND;
     "as", AS;
     "assert", ASSERT;
-    "await", AWAIT;
     "begin", BEGIN;
     "class", CLASS;
     "constraint", CONSTRAINT;
-    "control", CONTROL;
-    "default", DEFAULT;
     "do", DO;
     "done", DONE;
-    "dopar", DOPAR;
     "downto", DOWNTO;
     "else", ELSE;
-    "emit", EMIT;
     "end", END;
     "exception", EXCEPTION;
     "external", EXTERNAL;
@@ -66,48 +54,32 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "fun", FUN;
     "function", FUNCTION;
     "functor", FUNCTOR;
-    "gather", GATHER;
-    "halt", HALT;
     "if", IF;
-    "immediate", IMMEDIATE;
     "in", IN;
     "include", INCLUDE;
     "inherit", INHERIT;
     "initializer", INITIALIZER;
-(*    "inout", INOUT;*)
-    "last", LAST;
     "lazy", LAZY;
     "let", LET;
-    "loop", LOOP;
     "match", MATCH;
     "method", METHOD;
     "module", MODULE;
     "mutable", MUTABLE;
     "new", NEW;
-    "nothing", NOTHING;
     "object", OBJECT;
     "of", OF;
-    "one", ONE;
     "open", OPEN;
     "or", OR;
-(*    "out", OUT;*)
 (*  "parser", PARSER; *)
-    "pause", PAUSE;
-    "pre", PRE;
-    "present", PRESENT;
     "private", PRIVATE;
-    "process", PROCESS;
     "rec", REC;
-    "run", RUN;
     "sig", SIG;
-    "signal", SIGNAL;
     "struct", STRUCT;
     "then", THEN;
     "to", TO;
     "true", TRUE;
     "try", TRY;
     "type", TYPE;
-    "until", UNTIL;
     "val", VAL;
     "virtual", VIRTUAL;
     "when", WHEN;
@@ -121,7 +93,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "lsl", INFIXOP4("lsl");
     "lsr", INFIXOP4("lsr");
     "asr", INFIXOP4("asr")
-  ]
+]
 
 (* To buffer string literals *)
 
@@ -195,6 +167,19 @@ let char_for_hexadecimal_code lexbuf i =
              else d2 - 48
   in
   Char.chr (val1 * 16 + val2)
+
+(* Remove underscores from float literals *)
+
+let remove_underscores s =
+  let l = String.length s in
+  let rec remove src dst =
+    if src >= l then
+      if dst >= l then s else String.sub s 0 dst
+    else
+      match s.[src] with
+        '_' -> remove (src + 1) dst
+      |  c  -> s.[dst] <- c; remove (src + 1) (dst + 1)
+  in remove 0 0
 
 (* Update the current location with file name and line number. *)
 
@@ -290,7 +275,7 @@ rule token = parse
   | int_literal
       { INT (int_of_string(Lexing.lexeme lexbuf)) }
   | float_literal
-      { FLOAT (float_of_string(Lexing.lexeme lexbuf)) }
+      { FLOAT (remove_underscores(Lexing.lexeme lexbuf)) }
   | int_literal "l"
       { let s = Lexing.lexeme lexbuf in
         INT32 (Int32.of_string(String.sub s 0 (String.length s - 1))) }
@@ -353,8 +338,6 @@ rule token = parse
   | "#"  { SHARP }
   | "&"  { AMPERSAND }
   | "&&" { AMPERAMPER }
-  | "\\/"{ BACKSLASHSLASH }
-  | "/\\"{ SLASHBACKSLASH }
   | "`"  { BACKQUOTE }
   | "'"  { QUOTE }
   | "("  { LPAREN }
@@ -382,7 +365,6 @@ rule token = parse
   | "|"  { BAR }
   | "||" { BARBAR }
   | "|]" { BARRBRACKET }
-  | "|>" { BARGRATER }
   | ">"  { GREATER }
   | ">]" { GREATERRBRACKET }
   | "}"  { RBRACE }

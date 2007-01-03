@@ -8,5 +8,6 @@ install:
 clean:
 
 realclean:clean
+	rm -f *~
 
 .PHONY:all install realclean clean

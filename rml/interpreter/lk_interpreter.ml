@@ -1,11 +1,27 @@
 (**********************************************************************)
-(*                        ReactiveML                                  *)
 (*                                                                    *)
-(* Auteur : Louis Mandel                                              *) 
-(* Date de creation : 31/08/2005                                      *)
-(* Fichier : lk_interpreter.ml                                        *)
+(*                           ReactiveML                               *)
+(*                    http://reactiveML.org                           *)
+(*                    http://rml.inria.fr                             *)
+(*                                                                    *)
+(*                          Louis Mandel                              *)
+(*                                                                    *)
+(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
+(*  This file is distributed under the terms of the GNU Library       *)
+(*  General Public License, with the special exception on linking     *)
+(*  described in file ../LICENSE.                                     *)
+(*                                                                    *)
+(*  ReactiveML has been done in the following labs:                   *)
+(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
+(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
+(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
 (*                                                                    *)
 (**********************************************************************)
+
+(* author: Louis Mandel *)
+(* created: 2005-08-31  *)
+(* file: lk_interpreter.ml *)
+
 
 module type Lk_interpreter =
   functor (Event : Sig_env.S) ->

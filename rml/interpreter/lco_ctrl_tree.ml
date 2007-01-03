@@ -1,11 +1,30 @@
 (**********************************************************************)
-(*                        ReactiveML                                  *)
 (*                                                                    *)
-(* Auteur : Louis Mandel                                              *) 
-(* Date de creation : 04/06/2004                                      *)
-(* Fichier : lco_ctrl_tree                                            *)
-(* Remarque : taken from                                              *)
-(*            interpreter_without_scope_extrusion_control.ml          *)
+(*                           ReactiveML                               *)
+(*                    http://reactiveML.org                           *)
+(*                    http://rml.inria.fr                             *)
+(*                                                                    *)
+(*                          Louis Mandel                              *)
+(*                                                                    *)
+(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
+(*  This file is distributed under the terms of the GNU Library       *)
+(*  General Public License, with the special exception on linking     *)
+(*  described in file ../LICENSE.                                     *)
+(*                                                                    *)
+(*  ReactiveML has been done in the following labs:                   *)
+(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
+(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
+(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
+(*                                                                    *)
+(**********************************************************************)
+
+(* author: Louis Mandel *)
+(* created: 2004-06-04  *)
+(* file: lco_ctrl_tree *)
+
+(* Remark: taken from                                         *)
+(*            interpreter_without_scope_extrusion_control.ml  *)
+
 (* Description :                                                      *)
 (*   On a une liste next associee a chaque noeud de l'arbre de        *)
 (*   control.                                                         *)
@@ -18,8 +37,7 @@
 (*   Parametrisation par le foncteur "Event"                          *)
 (*   Suppression du type "value" et des "Obj.magic"                   *)
 (*   Suppression de exec                                              *)
-(*                                                                    *)
-(**********************************************************************)
+
 
 module Rml_interpreter (*: Lco_interpreter.S*) =
   functor (Event: Sig_env.S) ->
