@@ -68,7 +68,7 @@ realclean: clean-distrib
 
 cleanall: realclean
 
-# Making binary distribution 
+# Making distribution 
 DATE=`date -I`
 include configure-tools/version
 
@@ -123,8 +123,8 @@ binary-distrib.opt: clean-distrib
 	 mkdir bin lib lib/rml; \
 	 cp ../../compiler/rmlc.opt bin/rmlc.opt ; \
 	 cp ../../toplevel/rmltop bin/rmltop ; \
-	 cp ../../stdlib/*.{rzi,rmli} lib/rml; \
-	 cp ../../interpreter/{*.{cma,cmxa,a,cmi}} lib/rml; \
+	 cp ../../stdlib/*.rzi ../../stdlib/*.rmli lib/rml; \
+	 cp ../../interpreter/*.cma ../../interpreter/*.cmxa ../../interpreter/*.a ../../interpreter/*.cmi lib/rml; \
 	 cp -r ../../emacs .; \
 	 cp ../Makefile.opt Makefile; \
 	 cp ../rmlc.in.opt rmlc.in; \
@@ -144,9 +144,9 @@ binary-distrib.byte: clean-distrib
 	 mkdir bin lib lib/rml; \
 	 cp ../../compiler/rmlc.byte bin/rmlc.byte ; \
 	 cp ../../toplevel/rmltop bin/rmltop ; \
-	 cp ../../stdlib/*.{rzi,rmli} lib/rml; \
-	 cp ../../interpreter/{*.{cma,cmxa,a,cmi}} lib/rml; \
-	 cp -r ../../emacs .; \
+	 cp ../../stdlib/*.rzi ../../stdlib/*.rmli lib/rml ; \
+	 cp ../../interpreter/*.cma ../../interpreter/*.cmxa ../../interpreter/*.a ../../interpreter/*.cmi lib/rml; \
+	 cp -r ../../emacs . ; \
 	 cp ../Makefile.byte Makefile; \
 	 cp ../rmlc.in.byte rmlc.in; \
          cd ..; tar --exclude=CVS --exclude=.svn -zcvf rml-`../compiler/rmlc -version`.byte.tar.gz rml; \

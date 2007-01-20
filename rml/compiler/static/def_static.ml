@@ -31,12 +31,12 @@ and instantaneous = Instantaneous | Noninstantaneous | Dontknow
 (* For debug *)
 let string_of_instantaneous k = 
   match k with
-  | Instantaneous -> "Instantaneous"
-  | Noninstantaneous -> "Noninstantaneous"
-  | Dontknow -> "Dontknow"
+  | Instantaneous -> "-"
+  | Noninstantaneous -> "+"
+  | Dontknow -> "+/-"
 
 let string_of_static typ = 
   match typ with
   | Static -> "Static"
-  | Dynamic k -> "Dynamic:"^(string_of_instantaneous k)
+  | Dynamic k -> "Dynamic("^(string_of_instantaneous k)^")"
 

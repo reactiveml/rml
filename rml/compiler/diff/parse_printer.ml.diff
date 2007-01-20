@@ -1,5 +1,5 @@
---- parse_printer.ml.org	2007-01-04 23:48:02.000000000 +0100
-+++ ../parsing/parse_printer.ml	2007-01-04 23:48:02.000000000 +0100
+--- parse_printer.ml.org	2007-01-21 14:46:35.473884823 +0100
++++ ../parsing/parse_printer.ml	2007-01-21 14:46:35.256913504 +0100
 @@ -1,24 +1,39 @@
 -(* This file was printast.ml from Objective Caml *)
 -

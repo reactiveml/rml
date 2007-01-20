@@ -1,5 +1,5 @@
---- annot.ml.org	2007-01-04 23:48:02.000000000 +0100
-+++ ../reac/annot.ml	2007-01-04 23:48:02.000000000 +0100
+--- annot.ml.org	2007-01-21 14:46:35.406893679 +0100
++++ ../reac/annot.ml	2007-01-21 14:46:35.274911125 +0100
 @@ -1,4 +1,30 @@
 -(* This file was stypes.ml from Objective Caml *)
 +(**********************************************************************)
@@ -25,7 +25,7 @@
 +
 +(* Warning: *)
 +(* This file is based on the original version of stypes.ml *)
-+(* from the Objective Caml 3.07 distribution, INRIA           *)
++(* from the Objective Caml 3.07 distribution, INRIA        *)
 +
 +(* first modification: 2004-08-17 *)
 +(* modified by: Louis Mandel      *)
