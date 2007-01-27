@@ -37,6 +37,15 @@ let search r s =
   with
   | Not_found -> false
 
+let substitute_end_of_phrase phrase new_end =
+  match List.rev phrase with
+  | [] -> []
+  | last :: esarhp ->
+      let new_last =
+	Str.replace_first end_of_phrase new_end last 
+      in
+      List.rev (new_last :: esarhp)
+
 let read_phrase ch =
   let rec aux line previous_lines =
     if search end_of_phrase line then
@@ -73,7 +82,52 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
 	match (*String.sub s' 0 3*) extract_directive s' with
 	| "run" ->
 	    let proc = Str.string_after s' 3 in
-	    "Rmltop_directives.set_add "::(read_phrase rmltop_in proc)
+	    let phrase = read_phrase rmltop_in proc in
+	    (* add "(process ( run (...); ()));;" *)
+	    let phrase =
+	      " (process ( run ("::
+	      (substitute_end_of_phrase phrase "); ()));;")
+	    in
+	    (* send phrase to rmlc *)
+	    List.iter (fun line -> output_string rmlc_in line) phrase;
+	    flush rmlc_in;
+	    (* read the compiled phrase *)
+	    let ocaml_phrase = read_phrase rmlc_out "" in
+	    "Rmltop_directives.set_add ("::
+	    (substitute_end_of_phrase ocaml_phrase ");;")
+
+	| "exec" ->
+	    let proc = Str.string_after s' 4 in
+	    let phrase = read_phrase rmltop_in proc in
+	    (* add "(process ( ...; ()));;" *)
+	    let phrase =
+	      " (process ( "::
+	      (substitute_end_of_phrase phrase "; ()));;")
+	    in
+	    (* send phrase to rmlc *)
+	    List.iter (fun line -> output_string rmlc_in line) phrase;
+	    flush rmlc_in;
+	    (* read the compiled phrase *)
+	    let ocaml_phrase = read_phrase rmlc_out "" in
+	    "Rmltop_directives.set_add ("::
+	    (substitute_end_of_phrase ocaml_phrase ");;")
+
+	| "emit" ->
+	    let proc = Str.string_after s' 4 in
+	    let phrase = read_phrase rmltop_in proc in
+	    (* add "(process ( emit ... ));;" *)
+	    let phrase =
+	      " (process ( emit "::
+	      (substitute_end_of_phrase phrase "));;")
+	    in
+	    (* send phrase to rmlc *)
+	    List.iter (fun line -> output_string rmlc_in line) phrase;
+	    flush rmlc_in;
+	    (* read the compiled phrase *)
+	    let ocaml_phrase = read_phrase rmlc_out "" in
+	    "Rmltop_directives.set_add ("::
+	    (substitute_end_of_phrase ocaml_phrase ");;")
+
 	| "step_by_step" ->
 	    ["Rmltop_directives.set_step_by_step ();; \n"]
 	| "step" ->

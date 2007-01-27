@@ -260,6 +260,7 @@ let compile_implementation module_name filename =
 (*	Back_end_timer.start ();*)
 
 	let out_chan = open_out obj_name in
+	output_string out_chan "(* THIS FILE IS GENERATED. *)\n\n";
         (* selection of the interpreter *)
 	output_string out_chan ("open "^ !interpreter_impl ^";;\n");
 
