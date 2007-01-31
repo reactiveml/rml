@@ -1,5 +1,5 @@
---- modules.ml.org	2007-01-28 17:19:30.951020630 +0100
-+++ ../global/modules.ml	2007-01-28 17:19:30.623064057 +0100
+--- modules.ml.org	2007-02-01 10:24:46.924622517 +0100
++++ ../global/modules.ml	2007-02-01 10:24:46.749645647 +0100
 @@ -1,274 +1,239 @@
 -(* This file was modules.ml from Caml Light *)
 -

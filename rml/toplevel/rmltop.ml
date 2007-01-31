@@ -213,9 +213,9 @@ let _ =
   Arg.parse
     [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x), 
       "<rate> Sets the sampling rate to <rate> seconds";
-      "--", Arg.Rest (fun x -> ocaml := !ocaml ^ x), 
+      "--", Arg.Rest (fun x -> ocaml := !ocaml ^ " " ^ x), 
       "Sends all others options to the Ocaml toplevel"]
-    (fun x -> ocaml := !ocaml ^ x)
+    (fun x -> ocaml := !ocaml ^ " " ^ x)
     usage;
   main ""
 

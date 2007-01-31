@@ -59,6 +59,10 @@ test:
 		rmltop_machine_controler.cmo \
 		rmltop_directives.cmo \
 		rmltop_main.cmo
+
+wc:
+	wc --lines *.ml *.mli *.rml *.rmli
+
 clean: 
 	rm -f *.cm* *.rzi 
 

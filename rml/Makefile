@@ -47,6 +47,11 @@ dvi:
 html:
 	(cd doc; make html)
 
+wc:
+	(cd compiler;make wc)
+	(cd interpreter; make wc)
+	(cd toplevel; make wc)
+
 clean:
 	(cd compiler;make clean)
 	(cd stdlib; make clean)
@@ -54,7 +59,6 @@ clean:
 	(cd toplevel; make clean)
 	(cd man; make clean)
 	(cd doc; make clean)
-	(cd toplevel; make clean)
 
 realclean: clean-distrib
 	(cd compiler;make realclean)
@@ -125,6 +129,7 @@ binary-distrib.opt: clean-distrib
 	 cp ../../toplevel/rmltop bin/rmltop ; \
 	 cp ../../stdlib/*.rzi ../../stdlib/*.rmli lib/rml; \
 	 cp ../../interpreter/*.cma ../../interpreter/*.cmxa ../../interpreter/*.a ../../interpreter/*.cmi lib/rml; \
+	 cp ../../toplevel/*.cmo ../../toplevel/*.cmi lib/rml; \
 	 cp -r ../../emacs .; \
 	 cp ../Makefile.opt Makefile; \
 	 cp ../rmlc.in.opt rmlc.in; \
@@ -146,6 +151,7 @@ binary-distrib.byte: clean-distrib
 	 cp ../../toplevel/rmltop bin/rmltop ; \
 	 cp ../../stdlib/*.rzi ../../stdlib/*.rmli lib/rml ; \
 	 cp ../../interpreter/*.cma ../../interpreter/*.cmxa ../../interpreter/*.a ../../interpreter/*.cmi lib/rml; \
+	 cp ../../toplevel/*.cmo ../../toplevel/*.cmi lib/rml; \
 	 cp -r ../../emacs . ; \
 	 cp ../Makefile.byte Makefile; \
 	 cp ../rmlc.in.byte rmlc.in; \
