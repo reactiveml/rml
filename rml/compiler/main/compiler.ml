@@ -83,6 +83,10 @@ let compile_implementation_front_end info_chan itf impl_list =
     in
     Optimization_timer.time();
 
+    (* typing *)
+    Typing_timer.start();
+    Typing.type_impl_item info_chan rml_code;
+    Typing_timer.time();
 
     (* static analysis *)
     Static_timer.start();
@@ -98,15 +102,18 @@ let compile_implementation_front_end info_chan itf impl_list =
     in
     Optimization_timer.time();
 
-(* Debug *)
-(* Reac2reac.impl_map Reac2reac.print_static rml_code; *)
+    ignore 
+      (Reac2reac.impl_map
+	 (fun e ->  Annot.Sstatic.record (Annot.Ti_expr e); e)
+	 rml_code);
 
-    (* typing *)
-    Typing_timer.start();
-    Typing.type_impl_item info_chan rml_code;
-    Typing_timer.time();
+    (* Instantaneous loop *)
+    Other_analysis_timer.start();
+    if !instantaneous_loop_waring then 
+      Instantaneous_loop.instantaneous_loop rml_code;
+    Other_analysis_timer.time();
 
-
+    (* for option *)
     Optimization_timer.start();
     let rml_code =
       if !for_optimization then 
@@ -116,21 +123,32 @@ let compile_implementation_front_end info_chan itf impl_list =
     in
     Optimization_timer.time();
 
-    (* Instantaneous loop *)
-    Other_analysis_timer.start();
-    if !instantaneous_loop_waring then 
-      Instantaneous_loop.instantaneous_loop rml_code;
-    Other_analysis_timer.time();
-
     rml_table :=  rml_code :: !rml_table;
   in
   
   (* compilation of the whole file *)
   List.iter compile_one_phrase impl_list;
 
-  (* write interface *)
-  Modules.write_compiled_interface itf;
 
+  (* XXX A FAIRE XXX : verifier s'il y a un .rmli (ou un .mli) pour verifier *)
+  (* la coherence et voir s'il faut ecrir l'insterface.                      *)
+(*
+  if Sys.file_exists (filename ^ ".rmli") 
+  ||  Sys.file_exists (filename ^ ".mli") 
+  then begin
+    if not (Sys.file_exists (filename ^ ".rzi")) then begin
+      raise(Error(Location.in_file mlifile, Interface_not_compiled mlifile))
+    end else begin
+      let dclsig = Env.read_signature modulename cmifile in
+      Includemod.compunit "(obtained by packing)" sg mlifile dclsig      
+    end 
+  end else begin
+*)
+    (* write interface *)
+    Modules.write_compiled_interface itf;
+(*
+  end;
+*)
   (* we return the rml code *)
   List.rev !rml_table
 
@@ -249,7 +267,9 @@ let compile_implementation module_name filename =
 	decl_list in
     close_out itf;
 
-    if Sys.file_exists (filename ^ ".rmli") then ()
+    if Sys.file_exists (filename ^ ".rmli") 
+       ||  Sys.file_exists (filename ^ ".mli") 
+    then ()
     else Typing.check_nongen_values intermediate_code;
 
 (*    Front_end_timer.time ();*)
@@ -260,7 +280,10 @@ let compile_implementation module_name filename =
 (*	Back_end_timer.start ();*)
 
 	let out_chan = open_out obj_name in
-	output_string out_chan "(* THIS FILE IS GENERATED. *)\n\n";
+	output_string out_chan 
+	  ("(* THIS FILE IS GENERATED. *)\n"^
+	   "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
+	   "*)\n\n");
         (* selection of the interpreter *)
 	output_string out_chan ("open "^ !interpreter_impl ^";;\n");
 

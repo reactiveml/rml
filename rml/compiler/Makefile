@@ -76,11 +76,11 @@ OBJ =	global/version.cmo \
 	parsing/location.cmo \
 	global/misc.cmo \
 	global/ident.cmo \
-	typing/def_types.cmo \
-	static/def_static.cmo \
-	global/modules.cmo \
 	global/global_ident.cmo \
 	global/global.cmo \
+	static/def_static.cmo \
+	typing/def_types.cmo \
+	global/modules.cmo \
 	global/symbol_table.cmo \
 	parsing/lexer.cmo \
 	parsing/syntaxerr.cmo \
@@ -163,7 +163,7 @@ depend: $(GENSOURCES)
 	 done) > .depend
 
 wc:
-	wc --lines $(SRC)
+	wc -l $(SRC)
 
 # dependencies
 parsing/parser.mli parsing/parser.ml: parsing/parser.mly

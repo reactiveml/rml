@@ -15,7 +15,7 @@ PREFIX = /usr/local
 
 # No further modification should be needed
 
-install:
+install: FORCE
 	sed -e s,PREFIX,$(PREFIX),g  rmlc.in > bin/rmlc
 	chmod a+x bin/rmlc
 	cp -r bin lib $(PREFIX)
@@ -23,3 +23,4 @@ install:
 uninstall:
 	rm -rf $(PREFIX)/bin/rmlc $(PREFIX)/bin/rmlc.opt $(PREFIX)/lib/rml
 
+FORCE:

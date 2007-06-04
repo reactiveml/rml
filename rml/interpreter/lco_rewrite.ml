@@ -94,7 +94,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       fun () ->
 	let is_true1 = c1 () in
 	let is_true2 = c2 () in
-	(fun () -> is_true1() or is_true2())
+	(fun () -> is_true1() || is_true2())
 
 
 (* ------------------------------------------------------------------------ *)
@@ -257,7 +257,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	  if !eoi
 	  then
 	    let v = Event.value evt in
-	    if (Event.status evt) & (matching v)
+	    if (Event.status evt) && (matching v)
 	    then
 	      let x = v in
 	      let f_body = p x in
@@ -620,7 +620,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	  if !eoi
 	  then
 	    let v = Event.value evt in
-	    if Event.status evt & matching v 
+	    if Event.status evt && matching v 
 	    then
 	      let f = hdl v in
 	      (STOP, f)

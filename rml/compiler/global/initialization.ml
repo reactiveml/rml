@@ -53,12 +53,12 @@ let pervasives_val id =
 
 let abstract_type id = { type_constr = 
 			 { gi = id; 
-			   info = { constr_abbr = Constr_notabbrev}};
+			   info = Some { constr_abbr = Constr_notabbrev}};
 			 type_kind = Type_abstract;
 			 type_arity = 0; }
 let type_desc id =
   { gi = id;
-    info = abstract_type id }
+    info = Some (abstract_type id) }
 
 (* int *)
 let int_ident = pervasives_type "int"
@@ -99,20 +99,22 @@ let type_exn = Types.constr_notabbrev exn_ident []
 let array_ident = pervasives_type "array"
 let type_desc_array = 
   { gi = array_ident;
-    info = { type_constr = { gi = array_ident;
-			     info = { constr_abbr = Constr_notabbrev} };
-	     type_kind = Type_abstract;
-	     type_arity = 1; } }
+    info = Some { type_constr = { gi = array_ident;
+				  info = Some { constr_abbr=Constr_notabbrev} };
+		  type_kind = Type_abstract;
+		  type_arity = 1; } }
 let type_array = Types.constr_notabbrev array_ident [Types.new_generic_var()]
 
 (* event *)
-let event_ident = interpreter_type "event"
+(* let event_ident = interpreter_type "event" *)
+let event_ident = pervasives_type "event"
+
 let type_desc_event =
   { gi = event_ident;
-    info = { type_constr = { gi = event_ident;
-			     info = { constr_abbr = Constr_notabbrev} };
-	     type_kind = Type_abstract;
-	     type_arity = 2; } }
+    info = Some { type_constr = { gi = event_ident;
+				  info = Some{ constr_abbr=Constr_notabbrev} };
+		  type_kind = Type_abstract;
+		  type_arity = 2; } }
 let type_event = Types.constr_notabbrev event_ident [Types.new_generic_var(); 
 						     Types.new_generic_var(); ]
 
@@ -128,7 +130,7 @@ let nil_constr_desc =
       cstr_res = Types.constr_notabbrev list_ident [var] }
   in
   { gi = nil_ident;
-    info = nil_constr; }
+    info = Some nil_constr; }
 
 let cons_ident = pervasives_constr "::"
 let cons_constr_desc = 
@@ -139,14 +141,16 @@ let cons_constr_desc =
       cstr_res = var_list; }
   in
   { gi = cons_ident;
-    info = cons_constr; }
+    info = Some cons_constr; }
 
 let type_desc_list =
   { gi = list_ident;
-    info = { type_constr = { gi = list_ident;
-			     info = { constr_abbr = Constr_notabbrev} };
-	     type_kind = Type_variant [nil_constr_desc; cons_constr_desc];
-	     type_arity = 1; } }
+    info = Some { type_constr = { gi = list_ident;
+				  info = Some { constr_abbr=Constr_notabbrev} };
+		  type_kind = Type_variant [nil_constr_desc; cons_constr_desc];
+		  type_arity = 1; } }
+
+let type_list = Types.constr_notabbrev list_ident [Types.new_generic_var()]
     
 (* option *)
 let option_ident = pervasives_type "option"
@@ -159,7 +163,7 @@ let none_constr_desc =
       cstr_res = Types.constr_notabbrev option_ident [var] }
   in
   { gi = none_ident;
-    info = none_constr; }
+    info = Some none_constr; }
 
 let some_ident = pervasives_constr "Some"
 let some_constr_desc = 
@@ -169,15 +173,16 @@ let some_constr_desc =
       cstr_res = Types.constr_notabbrev option_ident [var]; }
   in
   { gi = some_ident;
-    info = some_constr; }
+    info = Some some_constr; }
 
 let type_desc_option =
   { gi = option_ident;
-    info = { type_constr = { gi = option_ident;
-			     info = { constr_abbr = Constr_notabbrev} };
-	     type_kind = Type_variant [none_constr_desc; some_constr_desc];
-	     type_arity = 1; } }
+    info = Some { type_constr = { gi = option_ident;
+				  info = Some { constr_abbr=Constr_notabbrev} };
+		  type_kind = Type_variant [none_constr_desc; some_constr_desc];
+		  type_arity = 1; } }
    
+let type_option = Types.constr_notabbrev option_ident [Types.new_generic_var()]
 
 
 let list_of_type_desc =

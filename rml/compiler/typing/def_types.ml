@@ -49,7 +49,15 @@ and type_expression_desc =
   | Type_product of type_expression list                  
   | Type_constr of type_constr global * type_expression list
   | Type_link of type_expression
-  | Type_process of type_expression
+  | Type_process of type_expression * process_info
+
+and process_info =
+    { mutable proc_static: process_static option }
+
+and process_static =
+  | Proc_def of Def_static.instantaneous ref
+  | Proc_link of process_static
+  | Proc_unify of process_static * process_static
 
 (* Type constructors *)
 and type_constr =
@@ -104,6 +112,6 @@ type exception_declaration = type_expression list
 let generic = (-1)
 and notgeneric = 0
 
-let type_of_global g = g.info.value_typ
-let type_of_constr_arg g = g.info.cstr_arg 
-let type_of_label_res g = g.info.lbl_res
+let type_of_global g = (info g).value_typ
+let type_of_constr_arg g = (info g).cstr_arg 
+let type_of_label_res g = (info g).lbl_res

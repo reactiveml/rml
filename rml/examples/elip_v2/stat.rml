@@ -1,0 +1,167 @@
+open Global
+
+
+(* global values *)
+let instant = ref 0
+
+let le_packet_cpt = ref 0
+let le_packet_fail_cpt = ref 0
+let le_packet_success_cpt = ref 0
+let elip_packet_cpt = ref 0
+let elip_packet_fail_cpt = ref 0
+let elip_packet_success_cpt = ref 0
+
+let le_overhead = ref 0.0
+let elip_overhead = ref 0.0
+
+let le_route_len = ref 0
+let elip_route_len = ref 0
+
+let le_nb_anchor = ref 0
+let le_nb_ask = ref 0
+let le_search_level = ref 0
+let elip_nb_anchor = ref 0
+let elip_nb_ask = ref 0
+let elip_search_level = ref 0
+
+
+let compute_anchor p =
+  List.fold_left 
+    (fun (anchor_cpt, level_cpt, ask_cpt) 
+	(anchor, info_node_opt, level, nb_ask) ->
+	  (anchor_cpt + 1, level_cpt + level, ask_cpt + nb_ask))
+    (0,0,0)
+    p.anchors
+
+let packet_stat p = 
+  let nb_anchor, level_sum, nb_ask = compute_anchor p in
+  begin
+    match p.header with
+    | H_LE ->
+	incr le_packet_cpt;
+	le_route_len := !le_route_len + List.length p.route;
+	le_overhead := !le_overhead +. (float_of_int (search_overhead * p.overhead));
+	le_nb_anchor := !le_nb_anchor + nb_anchor;
+	le_nb_ask := !le_nb_ask + nb_ask;
+	le_search_level := !le_search_level + level_sum;
+    | H_ELIP info_opt ->
+	incr elip_packet_cpt;
+	elip_route_len := !elip_route_len + List.length p.route;
+	elip_overhead := !elip_overhead +. (float_of_int (search_overhead * p.overhead));	
+	elip_nb_anchor := !elip_nb_anchor + nb_anchor;
+	elip_nb_ask := !elip_nb_ask + nb_ask;
+	elip_search_level := !elip_search_level + level_sum;
+	match info_opt with
+	| None -> ()
+	      (*elip_overhead := !elip_overhead +. (float_of_int (search_overhead
+               * * p.overhead));*)
+	| Some info ->
+	    elip_overhead := 
+	      !elip_overhead +. 
+		(float_of_int info.elip_overhead);
+	    (*	(float_of_int ((search_overhead * p.overhead) +
+             *	info.elip_overhead));*)
+  end
+
+let packet_success_stat p =
+  begin match p.header with
+    | H_LE ->
+	incr le_packet_success_cpt;
+    | H_ELIP _ ->
+	incr elip_packet_success_cpt;
+  end;
+  packet_stat p
+
+let packet_fail_stat p =
+  begin match p.header with
+    | H_LE ->
+	incr le_packet_fail_cpt;
+    | H_ELIP _ ->
+	incr elip_packet_fail_cpt;
+  end;
+  packet_stat p
+
+let reset () =
+  le_packet_cpt := 0;
+  le_packet_fail_cpt := 0;
+  le_packet_success_cpt := 0;
+  elip_packet_cpt := 0;
+  elip_packet_fail_cpt := 0;
+  elip_packet_success_cpt := 0;
+  le_route_len := 0;
+  elip_route_len := 0;
+  le_nb_anchor := 0;
+  le_nb_ask := 0;
+  le_search_level := 0;
+  elip_nb_anchor := 0;
+  elip_nb_ask := 0;
+  elip_search_level := 0
+
+let output_overhead overhead_ch =
+  output_string overhead_ch
+    ((string_of_int !instant)^"\t"^
+     (string_of_float !le_overhead)^"\t"^
+     (string_of_float !elip_overhead)^"\t"^
+     (string_of_float (!elip_overhead -. !le_overhead))^"\t"^
+     (string_of_float (!elip_overhead /. !le_overhead))^"\n");
+  flush overhead_ch
+
+let output_route_len route_len_ch =
+  let le_avg = 
+    (float_of_int !le_route_len) /. (float_of_int !le_packet_cpt)
+  in
+  let elip_avg = 
+    (float_of_int !elip_route_len) /. (float_of_int !elip_packet_cpt)
+  in
+  output_string route_len_ch
+    ((string_of_int !instant)^"\t"^
+     (string_of_float le_avg)^"\t"^
+     (string_of_float elip_avg)^"\n");
+  flush route_len_ch
+
+let output_anchor anchor_ch =
+  let le_nb_anchor_avg = 
+    (float_of_int !le_nb_anchor) /. (float_of_int !le_packet_cpt)
+  in
+  let elip_nb_anchor_avg = 
+    (float_of_int !elip_nb_anchor) /. (float_of_int !elip_packet_cpt)
+  in
+  output_string anchor_ch
+    ((string_of_int !instant)^"\t"^
+     (string_of_float (elip_nb_anchor_avg /. le_nb_anchor_avg))^"\t"^
+     (string_of_float 
+	((float_of_int !elip_nb_ask)/.(float_of_int !le_nb_ask)))^"\t"^
+     (string_of_float 
+	((float_of_int !elip_search_level)/.(float_of_int !le_search_level)))^
+     "\n");
+  flush anchor_ch
+
+let output_age_nb ch l =
+  output_string ch ((string_of_int !instant)^"\t");
+  List.iter
+    (fun (dist, age, nb) ->
+      output_string ch
+	((string_of_int age)^"\t"^
+	 (string_of_int nb)^"\t"))
+    l;
+  output_string ch "\n";
+  flush ch
+
+let instant_stat overhead_ch route_len_ch anchor_ch =
+  output_overhead overhead_ch;
+  output_route_len route_len_ch;
+  output_anchor anchor_ch;
+  incr instant;
+  reset()
+
+
+let process stat start = 
+  let overhead_ch = open_out (prefix^"overhead") in
+  let route_len_ch = open_out (prefix^"route_len") in
+  let anchor_ch = open_out (prefix^"anchor") in
+  loop
+    pause;
+    await immediate start;
+    instant_stat overhead_ch route_len_ch anchor_ch
+  end
+

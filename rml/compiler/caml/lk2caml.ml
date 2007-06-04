@@ -50,46 +50,6 @@ let make_step_function cexpr loc =
   make_expr step loc
 
 
-(* Creates the expression "()" *)
-let make_unit = 
-  make_expr (Cexpr_constant Const_unit) Location.none
-
-(* Creates the expression "ref (Obj.magic())" *)
-let ref_obj_magic () =
-  make_expr
-    (Cexpr_apply
-       (make_expr 
-	  (Cexpr_global 
-	     { gi = { qual = "Pervasives"; 
-		      id = Ident.create Ident.gen_var "ref" Ident.Internal };
-	       info = no_info; })
-	  Location.none,
-	[make_expr
-	   (Cexpr_apply
-	      (make_expr 
-		 (Cexpr_global 
-		    { gi = 
-		      { qual="Obj"; 
-			id=Ident.create Ident.gen_var "magic" Ident.Internal };
-		      info = no_info; })
-		 Location.none,
-	       [make_unit]))
-	   Location.none]))
-    Location.none
-
-(* Creates the expression "!vref" *)
-let deref vref =
-  make_expr
-    (Cexpr_apply
-       (make_expr 
-	  (Cexpr_global 
-	     { gi = { qual = "Pervasives"; 
-		      id = Ident.create Ident.gen_var "!" Ident.Internal };
-	       info = no_info; })
-	  Location.none,
-	[make_expr_var_local vref]))
-    Location.none
-
 (* Creates an expr from list of kproc *)
 let make_list_of_proc tr k_list =
   List.fold_right
@@ -597,10 +557,11 @@ and translate_proc e =
 	in f.cexpr_desc
 
 
-    | Kproc_split_def (j_id, vref_list, k_list) ->
-(* Tr(split (\j. (\vref1. k1, \vref2. k2))) =                            *)
+    | Kproc_split_def (j_id, vref_list, get_vrefs_id, k_list) ->
+(* Tr(split (\j. (\vref1:t1. k1, \vref2:t2. k2))) =                      *)
 (*   split (\j. let vref1 = ref (Obj.magic())                            *)
-(*              and vref1 = ref (Obj.magic()) in [k1; k2])               *)
+(*              and vref1 = ref (Obj.magic()) in                         *)
+(*              let get_vrefs () = !vref1, !vref2 in [k1; k2])           *)
 	Cexpr_apply
 	  (make_instruction "rml_split_par",
 	   [  make_expr
@@ -613,32 +574,42 @@ and translate_proc e =
 		     (Cexpr_let 
 			(Nonrecursive,
 			 List.map
-			   (fun vref -> 
-			     (make_patt_var_local vref, ref_obj_magic()))
+			   (fun (vref, t) -> 
+			     (make_patt_var_local vref, 
+			     (*  make_ref (make_magic()) *)
+			      make_ref (make_dummy t)
+			     ))
 			   vref_list,
-			 make_list
-			   (List.map
-			      (fun k -> translate_proc k)
-			      k_list)))
+			 make_expr
+			   (Cexpr_let
+			      (Nonrecursive,
+			       [make_patt_var_local get_vrefs_id,
+				make_expr
+				  (Cexpr_function 
+				     [make_patt_unit(), 
+				      make_expr
+					(Cexpr_tuple 
+					   (List.map 
+					      (fun (vref_id,_) -> deref vref_id)
+					      vref_list))
+					Location.none])
+				  Location.none],
+			       make_list
+				 (List.map
+				    (fun k -> translate_proc k)
+				    k_list)))
+			   Location.none))
 		     Location.none))
 	       Location.none; ])
 
-    | Kproc_join_def (j_id, vref_id, vref_id_list, k) ->
+    | Kproc_join_def (j_id, vref_id, get_vrefs_id, k) ->
 (* Tr(join j vref [vref1;vref2] k) =                                    *)
-(*   join j vref (fun () -> !vref1, !vref2) k                           *)
+(*   join j vref get_vrefs k                           *)
 	Cexpr_apply
 	  (make_instruction "rml_join_def",
 	   [ make_expr_var_local j_id;
 	     make_expr_var_local vref_id;
-	     make_expr
-	       (Cexpr_function 
-		  [make_patt_unit(), 
-		   make_expr
-		     (Cexpr_tuple (List.map 
-				     (fun vref_id -> deref vref_id)
-				     vref_id_list))
-		     Location.none])
-	       Location.none;
+	     make_expr_var_local get_vrefs_id;
 	     translate_proc k ])
 
     | Kproc_def_dyn (patt, k) ->

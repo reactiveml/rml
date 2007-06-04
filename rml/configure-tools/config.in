@@ -11,12 +11,12 @@ world: all
 opt: $(BIN).opt
 $(BIN).opt: $(OBJ_OPT)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(INCLUDES) $(OBJ_OPT) -o $(BIN).opt
-	ln -sf rmlc.opt rmlc
+	ln -sf $(BIN).opt $(BIN)
 
 byte: $(BIN).byte
 $(BIN).byte: $(OBJ)
 	$(OCAMLC) $(OCAMLFLAGS) $(INCLUDES) $(OBJ) -o $(BIN).byte
-	ln -sf rmlc.byte rmlc
+	ln -sf $(BIN).byte $(BIN)
 
 install.opt: opt
 	$(INSTALL) -d $(BINDIR)

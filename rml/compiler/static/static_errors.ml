@@ -42,3 +42,12 @@ let impl_wrong_static_err impl =
     Location.print impl.impl_loc;
   raise Error
 
+(* Type clash *)
+let unify_err exp actual_k expected_k =
+  Printf.eprintf 
+    "%aThis expression is a %s process,\n\
+    but it should be a %s process.\n"
+    Location.print_oc exp.expr_loc
+    (Def_static.string_of_instantaneous actual_k)
+    (Def_static.string_of_instantaneous expected_k);
+  raise Error

@@ -50,13 +50,13 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
     and event_cfg = bool -> (unit -> bool) * unit step list ref list
 
     and control_tree = 
-	{ kind: contol_type;
+	{ kind: control_type;
 	  mutable alive: bool;
 	  mutable susp: bool;
 	  mutable cond: (unit -> bool);
 	  mutable children: control_tree list;
 	  mutable next: next; }
-    and contol_type = 
+    and control_type = 
 	Top 
       | Kill of unit step 
       | Kill_handler of (unit -> unit step)
@@ -101,6 +101,12 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       List.iter set_kill p.children;
       p.children <- []
 
+
+    let rec rev_app x1 x2 =
+      match x1 with
+      | [] -> x2
+      | f :: x1' -> rev_app x1' (f::x2)
+
 (* calculer le nouvel etat de l'arbre de control *)
 (* et deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
@@ -117,7 +123,8 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 		 false)
 	      else
 		(p.children <- eval_children p p.children active [];
-		 if active then next_to_current p;
+		 if active then next_to_current p
+		 else next_to_father pere p;
 		 true)
 	  | Kill_handler handler -> 
 	      if p.cond() 
@@ -127,19 +134,21 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 		 false)
 	      else
 		(p.children <- eval_children p p.children active [];
-		 if active then next_to_current p;
+		 if active then next_to_current p
+		 else next_to_father pere p;
 		 true)
 	  | Susp -> 
 	      let pre_susp = p.susp in
 	      if p.cond() then p.susp <- not pre_susp;
-	      let active = active & not p.susp in
+	      let active = active && not p.susp in
 	      if pre_susp
 	      then 
 		(if active then next_to_current p;
 		 true)
 	      else 
 		(p.children <- eval_children p p.children active [];
-		 if active then next_to_current p;
+		 if active then next_to_current p
+		 else if not p.susp then next_to_father pere p;
 		 true)
 	  | When f_when ->
 	      if p.susp 
@@ -161,15 +170,12 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	    then eval_children p nodes active (node :: acc)
 	    else eval_children p nodes active acc 
 
-      and next_to_current =
-	let rec aux next current =
-	  match next with
-	  | [] -> current
-	  | f :: next -> aux next (f::current)
-	in 
-	fun node ->
-	  current := aux node.next !current;
-	  node.next <- []
+      and next_to_current node =
+	current := rev_app node.next !current;
+	node.next <- []
+      and next_to_father pere node =
+	pere.next <- rev_app node.next pere.next;
+	node.next <- []
       in
       fun () ->
 	top.children <- eval_children top top.children true [];
@@ -178,7 +184,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 (* deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
     let rec next_to_current p =
-      if p.alive & not p.susp then 
+      if p.alive && not p.susp then 
 	(current := List.rev_append p.next !current;
 	 p.next <- [];
 	 List.iter next_to_current p.children)
@@ -255,7 +261,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       fun is_long_wait ->
 	let is_true1, evt_list1 = c1 is_long_wait in
 	let is_true2, evt_list2 = c2 is_long_wait in
-	(fun () -> is_true1() or is_true2()),
+	(fun () -> is_true1() || is_true2()),
 	List.rev_append evt_list1 evt_list2
 
 
@@ -555,7 +561,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	      let v = Event.value n in
 	      if !eoi
 	      then
-		if Event.status n & matching v
+		if Event.status n && matching v
 		then
 		  let x = v in
 		  let f_body = p x f_k ctrl in
@@ -579,7 +585,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	      if !eoi
 	      then
 		let v = Event.value n in
-		if Event.status n & matching v
+		if Event.status n && matching v
 		then
 		  let x = v in
 		  let f_body = p x f_k ctrl in
@@ -971,9 +977,10 @@ let rml_loop p =
 (* until handler                      *)
 (**************************************)
 	
-    let rml_until_handler_local expr_evt matching_opt p p_handler =
+    let rml_until_handler_local 
+	(expr_evt: unit -> ('a, 'b) event) matching_opt p p_handler =
       fun f_k ctrl ->
-	let evt = ref (Obj.magic()) in
+	let evt = ref (Obj.magic() : ('a, 'b) event) in
 	let handler =
 	  fun () ->
 	    let x =
@@ -996,7 +1003,7 @@ let rml_loop p =
 		new_ctrl.cond <- (fun () -> Event.status n);
 	    | Some matching ->
 		new_ctrl.cond <- 
-		  (fun () -> Event.status n & matching (Event.value n));
+		  (fun () -> Event.status n && matching (Event.value n));
 	    end;
 	    start_ctrl f_k ctrl f new_ctrl unit_value
 	in f_until
@@ -1020,7 +1027,7 @@ let rml_loop p =
 	    new_ctrl.cond <- (fun () -> Event.status n);
 	| Some matching ->
 	    new_ctrl.cond <- 
-	      (fun () -> Event.status n & matching (Event.value n));
+	      (fun () -> Event.status n && matching (Event.value n));
 	end;
 	start_ctrl f_k ctrl f new_ctrl
 

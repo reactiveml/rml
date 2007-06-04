@@ -93,6 +93,7 @@ and type_expression_desc =
   | Ctype_arrow of type_expression * type_expression 
   | Ctype_product of type_expression list                  
   | Ctype_constr of type_description global * type_expression list
+  | Ctype_any
 
 and type_declaration =
   | Ctype_abstract

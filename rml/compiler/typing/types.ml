@@ -66,7 +66,7 @@ let constr ty_constr ty_list =
 
 let constr_notabbrev name ty_list =
   make_type (Type_constr({ gi = name;
-			   info = {constr_abbr = Constr_notabbrev} }, 
+			   info = Some {constr_abbr = Constr_notabbrev}; }, 
 			 ty_list))
 
 let arrow ty1 ty2 =
@@ -78,8 +78,8 @@ let rec arrow_list ty_l ty_res =
   | [ty] -> arrow ty ty_res
   | ty :: ty_l -> arrow ty (arrow_list ty_l ty_res)
 
-let process ty =
-  make_type (Type_process ty)
+let process ty k =
+  make_type (Type_process (ty, k))
 
 
 let no_type_expression = 
@@ -156,7 +156,7 @@ let rec gen_ty is_gen ty =
 	  notgeneric ty_list
   | Type_link(link) ->
       ty.type_level <- gen_ty is_gen link
-  | Type_process(ty) ->
+  | Type_process(ty, _) ->
       ty.type_level <- gen_ty is_gen ty
   end;
   ty.type_level
@@ -185,7 +185,7 @@ let free_type_vars level ty =
 	List.iter free_vars ty_list 
     | Type_link(link) ->
 	free_vars link
-    | Type_process(ty) -> free_vars ty
+    | Type_process(ty, _) -> free_vars ty
   in
   free_vars ty;
   !fv
@@ -227,10 +227,10 @@ let rec copy ty =
       then
 	constr name (List.map copy ty_list)
       else ty
-  | Type_process(ty) ->
+  | Type_process(ty, k) ->
       if level = generic
       then
-	process (copy ty)
+	process (copy ty) k
       else
 	ty
 
@@ -275,7 +275,7 @@ let rec occur_check level index ty =
     | Type_constr(name, ty_list) ->
  	List.iter check ty_list
     | Type_link(link) -> check link
-    | Type_process(ty) -> check ty
+    | Type_process(ty, _) -> check ty
   in check ty
 
 
@@ -327,11 +327,23 @@ let rec unify expected_ty actual_ty =
 	  with
 	  | Invalid_argument _ -> raise Unify
 	  end
-      | Type_constr({info={constr_abbr=Constr_abbrev(params,body)}},args), _ ->
+      | Type_constr
+	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } }, args), 
+	_ ->
 	  unify (expand_abbrev params body args) actual_ty
-      | _, Type_constr({info={constr_abbr=Constr_abbrev(params,body)}},args) ->
-	  unify expected_ty (expand_abbrev params body args) 
-      | Type_process(ty1), Type_process(ty2) -> unify ty1 ty2
+      | _, 
+	Type_constr
+	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
+	    unify expected_ty (expand_abbrev params body args) 
+      | Type_process(ty1, pi1), Type_process(ty2, pi2) -> 
+	  begin match pi1.proc_static, pi2.proc_static with
+	  | None, None -> ()
+	  | Some ps, None -> pi2.proc_static <- Some (Proc_link ps)
+	  | None, Some ps -> pi1.proc_static <- Some (Proc_link ps)
+	  | Some ps1, Some ps2 -> 
+	      pi1.proc_static <- Some (Proc_unify (ps1, ps2))
+	  end;
+	  unify ty1 ty2
       | _ -> raise Unify
 
 
@@ -340,7 +352,7 @@ let rec filter_arrow ty =
   let ty = type_repr ty in
   match ty.type_desc with
     Type_arrow(ty1, ty2) -> ty1, ty2
-  | Type_constr({info={constr_abbr=Constr_abbrev(params,body)}},args) ->
+  | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
       filter_arrow (expand_abbrev params body args)
   | _ ->
       let ty1 = new_var () in
@@ -353,10 +365,10 @@ let rec filter_product arity ty =
   match ty.type_desc with 
     Type_product(l) -> 
       if List.length l = arity then l else raise Unify 
-  | Type_constr({info={constr_abbr=Constr_abbrev(params,body)}},args) ->
+  | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
       filter_product arity (expand_abbrev params body args)
   | _ ->
       let ty_list = new_var_list arity in 
       unify ty (product ty_list); 
       ty_list
-    
+

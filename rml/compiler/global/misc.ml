@@ -117,6 +117,14 @@ let static_optimization = ref true
 let for_optimization = ref true
 let const_optimization = ref true
 
+(* File operations *)
+
+let remove_file filename =
+  try
+    Sys.remove filename
+  with Sys_error msg ->
+    ()
+
 let find_in_path filename =
   if Sys.file_exists filename then
     filename
@@ -173,6 +181,17 @@ let is_an_infix_or_prefix_operator op =
   else
     let c = String.get op 0 in
     not (((c >= 'a') & (c <= 'z')) or ((c >= 'A') & (c <= 'Z')))
+
+
+(* Expand a -I option: if it starts with +, make it relative to the standard
+   library directory *)
+
+let expand_directory alt s =
+  if String.length s > 0 && s.[0] = '+'
+  then Filename.concat alt
+                       (String.sub s 1 (String.length s - 1))
+  else s
+
 
 module Diagnostic =
   struct

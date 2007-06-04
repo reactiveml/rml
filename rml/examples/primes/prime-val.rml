@@ -1,0 +1,43 @@
+(*********** generation of odd numbers ************)
+let process producer nat =
+  let n = ref 1 in
+  loop
+    n := !n + 1;
+    emit nat !n;
+    pause
+  end
+    
+(*********** prime numbers ************************)
+let rec process filter nat ok =
+  await nat (prime) in
+  emit ok prime;
+  signal sub_nat default 0 gather fun x y -> x in
+  run (filter sub_nat ok)
+  ||
+  loop
+    await nat(n) in
+    if (n mod prime) != 0 then emit sub_nat n
+  end
+
+(*********** output of result **********************)
+let process output primes =
+  loop
+    await primes (l) in
+    List.iter 
+      (fun n ->
+	print_int n;
+	print_string " "; 
+	flush stdout)
+      l
+  end
+
+
+(*********** main function ************************)
+let process main =
+  signal primes in
+  signal nat default 0 gather fun x y -> x in
+  run (producer nat)
+  ||
+  run (filter nat primes)
+  ||
+  run (output primes)

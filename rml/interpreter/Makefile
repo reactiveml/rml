@@ -1,22 +1,29 @@
 include ../config
 
+THEAD_TYPE=-thread
+
 SRC=	sig_env.ml \
 	lco_interpreter.mli \
 	lco_ctrl_tree.ml \
-	lco_ctrl_tree_thread.ml \
+	lco_ctrl_tree_thread_safe.ml \
 	lco_rewrite.ml \
-	lk_interpreter.ml \
+	lk_interpreter.mli \
+	lk_implantation.ml \
+	lk_threaded.ml \
 	implantation.ml \
 	rec_implantation.ml \
+	thread_implantation.ml \
 	rml_machine.ml \
 
 OBJ=	sig_env.cmo \
 	lco_ctrl_tree.cmo \
-	lco_ctrl_tree_thread.cmo \
+	lco_ctrl_tree_thread_safe.cmo \
 	lco_rewrite.cmo \
-	lk_interpreter.cmo \
+	lk_implantation.cmo \
+	lk_threaded.cmo \
 	implantation.cmo \
 	rec_implantation.cmo \
+	thread_implantation.cmo \
 	rml_machine.cmo \
 
 
@@ -24,13 +31,13 @@ OBJ=	sig_env.cmo \
 OBJ_OPT = $(OBJ:.cmo=.cmx)
 
 INTF = $(OBJ:.cmo=.cmi) \
-	lco_interpreter.cmi
+	lco_interpreter.cmi lk_interpreter.cmi
 
 LIB= rml_interpreter.cma rml_interpreter.cmxa rml_interpreter.a 
 
 INSTALLFILE= $(LIB) $(INTF)
 
-all: $(LIB)
+all: lco_interpreter.cmi lk_interpreter.cmi $(LIB)
 
 install: $(INSTALLFILE)
 	$(INSTALL) -d $(LIBDIR)
@@ -47,31 +54,38 @@ clean:
 realclean: clean
 	rm -f  *~
 
+cleanall: realclean
+
 # utilities
 depend: 
 	$(OCAMLDEP) $(OCAMLDEPFLAGS) $(INCLUDES) *.mli *.ml > .depend
 
 wc:
-	wc --lines *.ml *.mli
+	wc -l *.ml *.mli
 
 # library
 rml_interpreter.cma: $(OBJ)
-	$(OCAMLC) -a -o rml_interpreter.cma $^
+	$(OCAMLC) $(OCAMLFLAGS) -a -o rml_interpreter.cma $^
 
 rml_interpreter.cmxa: $(OBJ_OPT)
-	$(OCAMLOPT) -a -o rml_interpreter.cmxa $^
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -a -o rml_interpreter.cmxa $^
 
 
 # dependencies
-lco_rewrite.cmo: OCAMLFLAGS := -rectypes
-lco_rewrite.cmx: OCAMLOPTFLAGS := -rectypes
+lco_rewrite.cmo: OCAMLFLAGS += -rectypes
+lco_rewrite.cmx: OCAMLOPTFLAGS += -rectypes
 
-rec_implantation.cmo: OCAMLFLAGS := -rectypes
-rec_implantation.cmx: OCAMLOPTFLAGS := -rectypes
+rec_implantation.cmo: OCAMLFLAGS += -rectypes
+rec_implantation.cmx: OCAMLOPTFLAGS += -rectypes
 
+lco_ctrl_tree_thread_safe.cmo: OCAMLFLAGS += $(THEAD_TYPE)
+lco_ctrl_tree_thread_safe.cmx: OCAMLOPTFLAGS += -thread
 
-lco_ctrl_tree_thread.cmo: OCAMLFLAGS := -thread threads.cma
-lco_ctrl_tree_thread.cmx: OCAMLOPTFLAGS := -thread threads.cmxa
+lk_threaded.cmo: OCAMLFLAGS += $(THEAD_TYPE)
+lk_threaded.cmx: OCAMLOPTFLAGS += -thread
+
+thread_implantation.cmo: OCAMLFLAGS += $(THEAD_TYPE)
+thread_implantation.cmx: OCAMLOPTFLAGS += -thread
 
 include .depend
 

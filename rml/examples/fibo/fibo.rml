@@ -1,0 +1,14 @@
+let rec process fibo n = 
+  pause;
+  if n < 2 then
+    1
+  else 
+    let n_1 = run (fibo (n-1)) in
+    let n_2 = run (fibo (n-2)) in
+    n_1 + n_2
+
+let process main =
+   let n = run (fibo 35) in
+   print_int n;
+   print_newline()
+

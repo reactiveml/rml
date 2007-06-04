@@ -29,30 +29,80 @@ open Asttypes
 open Reac_ast
 open Def_static
 open Static_errors
-open Annot
 
 let id x = x
 
+exception Unify_static of instantaneous * instantaneous
 
-(* The unification of two static types is the maximum of the two types. *)
+(* Subtyping relation:                                                  *)
+(* Instantaneous and Noninstantaneous are more precise than Dontknow    *)
+
+let unify_instantaneous expected_k actual_k =
+  match expected_k, actual_k with
+  | Instantaneous, Instantaneous -> Instantaneous
+  | Noninstantaneous, Noninstantaneous -> Noninstantaneous
+  | Dontknow, Dontknow -> Dontknow
+  | _ -> 
+      (* XXX !!!! TODO !!!! XXX *)
+      Dontknow
+      (* raise (Unify_static (actual_k, expected_k)) *)
+
+let unify expected_k actual_k =
+  match expected_k, actual_k with
+  | Static, Static -> Static
+  | Static, Dynamic k -> 
+      Dynamic (unify_instantaneous Instantaneous k)
+  | Dynamic k, Static -> 
+      Dynamic (unify_instantaneous k Instantaneous)
+  | Dynamic k1, Dynamic k2 -> 
+      Dynamic (unify_instantaneous k1 k2)
+
+
+(* The maximum of the two types.                                        *)
 (* The order over static types is:                                      *)
 (* Static < Dynamic _ and Instantaneous < Dontknow < Noninstantaneous   *)
 
-let unify_instantaneous k1 k2 =
+let max_instantaneous k1 k2 =
   match k1, k2 with
   | Instantaneous, Instantaneous -> Instantaneous
   | Instantaneous, k | k, Instantaneous -> k
   | Dontknow, Dontknow -> Dontknow
   | _ -> Noninstantaneous
 
-let unify typ1 typ2 = 
+let max typ1 typ2 = 
   match typ1, typ2 with
   | Static, Static -> Static
   | Static, Dynamic k
   | Dynamic k, Static -> Dynamic k
   | Dynamic k1, Dynamic k2 -> 
-      Dynamic (unify_instantaneous k1 k2)
+      Dynamic (max_instantaneous k1 k2)
 
+(* Compress type path *)
+let rec get_type ty = 
+  match ty.Def_types.type_desc with
+  | Def_types.Type_link (ty') -> get_type ty'
+  | _ -> ty
+
+(* Extract the instantaneous status of a process *)
+let rec get_process_status =
+  let rec aux x =
+    match x with 
+    | Def_types.Proc_def k -> !k
+    | Def_types.Proc_link y -> aux y
+    | Def_types.Proc_unify (x1, x2) ->
+	let k1 = aux x1 in
+	let k2 = aux x2 in
+	unify_instantaneous k1 k2
+  in
+  fun ty ->
+    match (get_type ty).Def_types.type_desc with
+    | Def_types.Type_process (_, pi) -> 
+	begin match pi.Def_types.proc_static with
+	| None -> Dynamic Dontknow
+	| Some k -> Dynamic (aux k)
+	end
+    | _ -> assert false
+	
 
 let static_expr_list static_expr filter ctx l =
   match l with
@@ -61,7 +111,7 @@ let static_expr_list static_expr filter ctx l =
   | x::l ->
       let ty = static_expr ctx (filter x) in
       List.fold_left
-	(fun typ x -> unify typ (static_expr ctx (filter x)))
+	(fun typ x -> max typ (static_expr ctx (filter x)))
 	ty l
 
 
@@ -81,7 +131,7 @@ let rec static_expr ctx e =
     | Rexpr_let (Nonrecursive, patt_expr_list, e1) ->
 	let typ1 = static_expr_list static_expr snd ctx patt_expr_list in
 	let typ2 = static_expr ctx e1 in
-	unify typ1 typ2
+	max typ1 typ2
 
     | Rexpr_function patt_expr_list ->
 	if static_expr_list static_expr snd ML patt_expr_list = Static
@@ -91,7 +141,7 @@ let rec static_expr ctx e =
     | Rexpr_apply (e1, expr_list) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr_list static_expr id ML expr_list in
-	if unify typ1 typ2 = Static
+	if max typ1 typ2 = Static
 	then Static
 	else expr_wrong_static_err e
 
@@ -124,7 +174,7 @@ let rec static_expr ctx e =
     | Rexpr_record_update (e1, _, e2) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in
-	if unify typ1 typ2 = Static
+	if max typ1 typ2 = Static
 	then Static
 	else expr_wrong_static_err e
 
@@ -136,7 +186,7 @@ let rec static_expr ctx e =
     | Rexpr_trywith (e1, patt_expr_list) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr_list static_expr snd ML patt_expr_list in
-	if unify typ1 typ2 = Static
+	if max typ1 typ2 = Static
 	then Static
 	else expr_wrong_static_err e
 
@@ -150,7 +200,18 @@ let rec static_expr ctx e =
 	then 
 	  let typ2 = static_expr ctx e2 in
 	  let typ3 = static_expr ctx e3 in
-	  unify typ2 typ3
+	  begin match typ2, typ3 with
+	  | Static, Static -> Static
+	  | Static, Dynamic Instantaneous
+	  | Dynamic Instantaneous, Static -> Dynamic Instantaneous
+	  | Static, Dynamic _
+	  | Dynamic _, Static -> Dynamic Dontknow
+	  | Dynamic Instantaneous, Dynamic Instantaneous -> 
+	      Dynamic Instantaneous
+	  | Dynamic Noninstantaneous, Dynamic Noninstantaneous -> 
+	      Dynamic Noninstantaneous
+	  | Dynamic _, Dynamic _ -> Dynamic Dontknow
+	  end
 	else expr_wrong_static_err e
 
     | Rexpr_match (e1, patt_expr_list) ->
@@ -171,7 +232,7 @@ let rec static_expr ctx e =
     | Rexpr_for (_, e1, e2, _, e3) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in
-	if unify typ1 typ2 = Static
+	if max typ1 typ2 = Static
 	then static_expr ctx e3
 	else expr_wrong_static_err e
 
@@ -180,7 +241,7 @@ let rec static_expr ctx e =
 	then
 	  let typ1 = static_expr ML e1 in
 	  let typ2 = static_expr ML e2 in
-	  if unify typ1 typ2 = Static
+	  if max typ1 typ2 = Static
 	  then 
 	    begin match static_expr Process e3 with
 	    | Static -> Dynamic Instantaneous
@@ -263,7 +324,7 @@ let rec static_expr ctx e =
 	then 
 	  let typ1 = static_expr ctx e1 in
 	  let typ2 = static_expr ctx e2 in
-	  begin match unify typ1 typ2 with
+	  begin match max typ1 typ2 with
 	  | Static -> Dynamic Instantaneous
 	  | ty -> ty
 	  end
@@ -277,17 +338,48 @@ let rec static_expr ctx e =
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in
 	let typ3 = static_expr ctx p in
-	if unify typ1 typ2 = Static
+	if max typ1 typ2 = Static
 	then typ3
 	else expr_wrong_static_err e
 
     | Rexpr_process (p) ->
-	let _typ = static_expr Process p in
+	let typ = static_expr Process p in
+	let k =
+	  match typ with
+	  | Static -> Instantaneous
+	  | Dynamic(k) -> k
+	in
+	begin match (get_type e.expr_type).Def_types.type_desc with
+	| Def_types.Type_process 
+	    (t, { Def_types.proc_static = Some (Def_types.Proc_def r) }) -> 
+	    r := k
+	| Def_types.Type_process 
+	    (t, { Def_types.proc_static = Some 
+		    (Def_types.Proc_unify 
+		       (Def_types.Proc_def r1,
+			Def_types.Proc_def r2)) }) -> 
+	    begin try
+	      r1 := unify_instantaneous !r2 k
+	    with 
+	    | Unify_static (k1, k2) -> unify_err e k1 k2
+	    end
+	| _ -> 
+	    (* XXX !!! TODO !!! XXX *)
+	    (* raise (Misc.Internal (e.expr_loc, "Static.static_expr")) *)
+	    ()
+	end;
 	Static
 
     | Rexpr_run (e1) ->
 	if static_expr ML e1 = Static
-	then Dynamic Dontknow
+	then 
+	  try
+	    (* XXX !!! TODO !!! XXX *)
+            Dynamic Dontknow
+(*	    get_process_status e1.expr_type *)
+	  with
+	  | Unify_static (k1, k2) -> unify_err e1 k2 k1
+        (* Dynamic Dontknow *)
 	else expr_wrong_static_err e
 
     | Rexpr_until (s, p, p_e_opt) ->
@@ -310,7 +402,7 @@ let rec static_expr ctx e =
 	then 
 	  (static_conf s;
 	   let typ1 = static_expr Process p in
-	   unify (Dynamic Dontknow) typ1)
+	   max (Dynamic Dontknow) typ1)
 	else
 	  expr_wrong_static_err e
 
@@ -332,7 +424,7 @@ let rec static_expr ctx e =
 	  (static_conf s;
 	   let typ1 = static_expr ctx p1 in
 	   let _typ2 = static_expr ctx p2 in
-	   unify (Dynamic Dontknow) typ1)
+	   max (Dynamic Dontknow) typ1)
  	else
 	  expr_wrong_static_err e
 
@@ -355,7 +447,7 @@ let rec static_expr ctx e =
 	  if static_expr ML s = Static
 	  then 
 	    let typ = static_expr Process p in
-	    unify (Dynamic Dontknow) typ
+	    max (Dynamic Dontknow) typ
 	  else expr_wrong_static_err s
 	else
 	  expr_wrong_static_err e
@@ -397,7 +489,6 @@ let rec static_expr ctx e =
 	  expr_wrong_static_err p
   in 
   e.expr_static <- t;
-  Sstatic.record (Ti_expr e);
   t
 
 and static_conf conf =

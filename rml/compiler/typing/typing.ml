@@ -94,7 +94,9 @@ module Env = Symbol_table.Make (Ident)
 
 (* checks that every type is defined *)
 (* and used with the correct arity *)
-let check_type_constr_defined loc {gi = name; info = ty_desc} arity =
+let check_type_constr_defined loc gl arity =
+  let name = gl.gi in
+  let ty_desc = Global.info gl in
   let arity' = ty_desc.type_arity in
   if arity' <> arity
   then type_constr_arity_err name arity' arity loc;
@@ -102,11 +104,11 @@ let check_type_constr_defined loc {gi = name; info = ty_desc} arity =
  
 (* find the type of the constructor C *)
 let get_type_of_constructor c loc =
-  constr_instance c.info
+  constr_instance (Global.info c)
 
 (* find the type of a label *)
 let get_type_of_label label loc =
-  label_instance label.info
+  label_instance (Global.info label)
 
 (* tests if an expression is expansive *)
 let rec is_nonexpansive expr =
@@ -133,7 +135,7 @@ let rec is_nonexpansive expr =
   | Rexpr_array [] -> true
   | Rexpr_record lbl_expr_list ->
       List.for_all (fun (lbl, expr) ->
-        lbl.info.lbl_mut == Immutable && is_nonexpansive expr)
+        (Global.info lbl).lbl_mut == Immutable && is_nonexpansive expr)
         lbl_expr_list
   | Rexpr_record_access(e, lbl) -> is_nonexpansive e
   | Rexpr_when_match(cond, act) -> is_nonexpansive act
@@ -204,8 +206,8 @@ let type_of_type_expression typ_vars typexp =
 	in
 	constr name (List.map type_of ty_list)
 
-    | Rtype_process ty ->
-	process (type_of ty)
+    | Rtype_process (ty,k) ->
+	process (type_of ty) { proc_static = Some(Proc_def (ref k)); }
   in
   type_of typexp
 
@@ -219,7 +221,7 @@ let free_of_type ty =
 	List.fold_left vars v t
     | Rtype_constr(_,t) -> 
 	List.fold_left vars v t
-    | Rtype_process t -> vars v t
+    | Rtype_process (t, _) -> vars v t
   in vars [] ty
 
 (* translating a declared type expression into an internal type *)
@@ -240,7 +242,7 @@ let rec type_of_pattern global_env local_env patt ty =
   | Rpatt_var (Varpatt_global gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
       then non_linear_pattern_err patt (Ident.name gl.gi.id);
-      gl.info <- { value_typ = forall [] ty };
+      gl.info <- Some { value_typ = forall [] ty };
       (gl::global_env, local_env)
   | Rpatt_var (Varpatt_local x) ->
       if List.mem_assoc x local_env 
@@ -250,7 +252,7 @@ let rec type_of_pattern global_env local_env patt ty =
   | Rpatt_alias (p,Varpatt_global gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
       then non_linear_pattern_err patt (Ident.name gl.gi.id);
-      gl.info <- { value_typ = forall [] ty };
+      gl.info <- Some { value_typ = forall [] ty };
       type_of_pattern (gl::global_env) local_env p ty
   | Rpatt_alias (p,Varpatt_local x) ->
       if List.mem_assoc x local_env 
@@ -304,7 +306,8 @@ let rec type_of_pattern global_env local_env patt ty =
 	    | Not_found -> orpat_vars p2.patt_loc (Ident.name gl1.gi.id)
 	  in
 	  unify_var p2.patt_loc 
-	    gl1.info.value_typ.ts_desc gl2.info.value_typ.ts_desc) 
+	    (Global.info gl1).value_typ.ts_desc 
+	    (Global.info gl2).value_typ.ts_desc) 
 	global_env1;
       List.iter 
 	(fun (x1,ty1) -> 
@@ -370,7 +373,7 @@ let rec type_of_expression env expr =
 	instance typ_sch
 
     | Rexpr_global (n) ->
-	instance n.info.value_typ 
+	instance (Global.info n).value_typ 
 
     | Rexpr_let (flag, patt_expr_list, e) ->
 	let gl_env, new_env = type_let (flag = Recursive) env patt_expr_list in
@@ -542,7 +545,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_process(e) ->
 	let ty = type_of_expression env e in
-	process ty
+	process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow)); }
 
 
     | Rexpr_pre (Status, s) ->
@@ -661,7 +664,8 @@ let rec type_of_expression env expr =
     | Rexpr_run (e) ->
 	let ty_e = type_of_expression env e in 
 	let ty = new_var() in
-	unify_run e.expr_loc ty_e (process ty);
+	unify_run e.expr_loc 
+	  ty_e (process ty { proc_static = None; });
 	ty
 	  
     | Rexpr_until (s,p,patt_proc_opt) ->
@@ -823,7 +827,8 @@ and type_let is_rec env patt_expr_list =
     ty_list;
   let _ = 
     List.iter 
-      (fun gl -> gl.info <- { value_typ = gen gl.info.value_typ.ts_desc })
+      (fun gl -> 
+	gl.info <- Some { value_typ = gen (Global.info gl).value_typ.ts_desc })
       global_env 
   in
   let gen_env = Env.map (fun ty -> gen ty.ts_desc) add_env in
@@ -893,8 +898,8 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 	      let ty_arg_opt = 
 		opt_map (type_of_type_expression typ_vars) te_opt
 	      in
-	      gl_cstr.info <- { cstr_arg = ty_arg_opt;
-				cstr_res = final_typ; };
+	      gl_cstr.info <- Some { cstr_arg = ty_arg_opt;
+				     cstr_res = final_typ; };
 	      gl_cstr)
 	    constr_decl_list
 	in
@@ -906,9 +911,9 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 	  List.rev_map 
 	    (fun (gl_lbl, mut, te) ->
 	      let ty_res = type_of_type_expression typ_vars te in
-	      gl_lbl.info <- { lbl_res = ty_res;
-			       lbl_arg = final_typ;
-			       lbl_mut = mut; };
+	      gl_lbl.info <- Some { lbl_res = ty_res;
+				    lbl_arg = final_typ;
+				    lbl_mut = mut; };
 	      gl_lbl)
 	    label_decl_list
 	in
@@ -921,10 +926,10 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 
   in 
   type_gl.info <- 
-    { type_constr = {gi = type_gl.gi;
-		     info = {constr_abbr = abbr}};
-      type_kind = type_desc;
-      type_arity = List.length typ_vars };
+    Some { type_constr = {gi = type_gl.gi;
+			  info = Some {constr_abbr = abbr}};
+	   type_kind = type_desc;
+	   type_arity = List.length typ_vars };
   type_gl
 
 
@@ -979,7 +984,7 @@ let type_impl_item info_chan item =
 		type_expect Env.empty comb 
 		  (arrow ty_emit (arrow ty_get ty_get))
 	  end;
-	  s.info <- { value_typ = forall [] ty_s };
+	  s.info <- Some { value_typ = forall [] ty_s };
 	  (* verbose mode *)
 	  if !print_type 
 	  then Types_printer.output_value_type_declaration info_chan [s])
@@ -993,14 +998,15 @@ let type_impl_item info_chan item =
       then Types_printer.output_type_declaration info_chan global_env
  
   | Rimpl_exn (gl_cstr, te_opt) ->
-      gl_cstr.info <- {cstr_arg = opt_map (type_of_type_expression []) te_opt;
-		       cstr_res = type_exn; };
+      gl_cstr.info <- 
+	Some {cstr_arg = opt_map (type_of_type_expression []) te_opt;
+	      cstr_res = type_exn; };
       (* verbose mode *)
       if !print_type 
       then Types_printer.output_exception_declaration info_chan gl_cstr
 
   | Rimpl_exn_rebind (gl_cstr1, gl_cstr2) ->
-      gl_cstr1.info <- gl_cstr2.info;
+      gl_cstr1.info <- Some (Global.info gl_cstr2);
       (* verbose mode *)
       if !print_type 
       then Types_printer.output_exception_declaration info_chan gl_cstr1
@@ -1011,7 +1017,8 @@ let type_impl_item info_chan item =
 let type_intf_item info_chan item =
   match item.intf_desc with
   | Rintf_val (gl, te) ->
-      gl.info <- { value_typ = gen (full_type_of_type_expression te).ts_desc };
+      gl.info <- 
+	Some { value_typ = gen (full_type_of_type_expression te).ts_desc };
       (* verbose mode *)
       if !print_type 
       then Types_printer.output_value_type_declaration info_chan [gl]
@@ -1025,8 +1032,9 @@ let type_intf_item info_chan item =
       then Types_printer.output_type_declaration info_chan global_env
  
   | Rintf_exn (gl_cstr, te_opt) ->
-      gl_cstr.info <- {cstr_arg = opt_map (type_of_type_expression []) te_opt;
-		       cstr_res = type_exn; };
+      gl_cstr.info <-
+	Some {cstr_arg = opt_map (type_of_type_expression []) te_opt;
+	      cstr_res = type_exn; };
       (* verbose mode *)
       if !print_type 
       then Types_printer.output_exception_declaration info_chan gl_cstr

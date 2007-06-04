@@ -159,7 +159,7 @@ let static_of_list filter l =
   | x :: l ->
       let typ = filter x in
       List.fold_left
-	(fun typ x -> Static.unify typ (filter x))
+	(fun typ x -> Static.max typ (filter x))
 	typ l
   end
 

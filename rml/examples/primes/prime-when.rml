@@ -1,0 +1,47 @@
+let max = 4000;;
+
+let global = ref 0;;
+
+(*********** generation of odd numbers ************)
+let process producer start =
+  global := 1;
+  loop
+    global := !global + 2;
+    emit start;
+    pause
+  end
+;;
+(*********** output of result **********************)
+let output =
+  let num = ref 0 in
+  fun n ->
+    print_int n;
+    print_string " ";
+    flush stdout;
+    num := !num + 1;
+    if (!num > max) 
+    then exit(0)
+    else ()
+;;
+(*********** prime numbers ************************)
+let rec process filter  = 
+  let prime = ref 0 in
+(*  await me;*)
+  prime := !global;
+  output !prime;
+  signal next in
+    (do run filter  when next
+    ||
+     loop
+       pause;
+(*       await me;*)
+       if (!global mod !prime) != 0 then emit next
+     end)
+;;
+(*********** main function ************************)
+let process main = 
+  signal start in
+  run (producer start)
+  ||
+  do run filter  when start
+;;

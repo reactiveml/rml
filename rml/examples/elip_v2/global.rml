@@ -1,0 +1,175 @@
+open Position
+
+(* ---------------------------- *)
+(* Types                        *)
+(* ---------------------------- *)
+type routage_kind = LE | ELIP
+
+type id = int
+
+type node = 
+    { id: id;
+      mutable pos: position;
+      mutable date: int;
+      pos_tbl_le: Pos_tbl.t;
+      pos_tbl_elip: Pos_tbl.t;
+      mutable neighbors: node list;
+      move: (position -> position);
+      insert_elip_info: (node -> packet -> unit);  
+      make_msg: (node -> id list);
+      mutable visited: bool; }
+
+and packet_header =
+  | H_LE
+  | H_ELIP of elip_header option
+
+and elip_header =
+    { elip_id: id;
+      elip_pos: position;
+      mutable elip_overhead: int; }
+
+and packet =
+    { mutable header: packet_header;
+      src_id: id;
+      dest_id: id;
+      mutable dest_pos: position;
+      mutable dest_pos_age: int;
+      (* to compute statistics *)
+      mutable route: node list;
+      mutable anchors: (node * node option * int * int) list; 
+      mutable overhead: int; }
+
+
+
+(* ---------------------------- *)
+(* Global values                *)
+(* ---------------------------- *)
+signal draw: (node, node list)event default [] gather (fun x y -> x::y);;
+
+let () = Init.configure()
+
+let nb_instants = !Init.nb_instants
+let pi = 3.14159265358979312
+
+(* simulation space *)
+let max_x = !Init.max_x
+let max_y = !Init.max_y
+
+let area_size_x = !Init.area_size_x
+let area_size_y = !Init.area_size_y
+
+let nb_area_x =
+  let n = max_x /. area_size_x in
+  int_of_float (ceil n)
+let nb_area_y = 
+  let n = max_y /. area_size_y in
+  int_of_float (ceil n)
+
+
+let hello_array = 
+  Array.make_matrix nb_area_x nb_area_y 
+    ((Obj.magic()): (node, node list) event)
+
+
+(* nodes *)
+let nb_nodes = !Init.nb_nodes
+let coverage_range = !Init.coverage_range
+let coverage_range2 = coverage_range *. coverage_range
+let speed = !Init.speed
+let speed_max = !Init.speed_max
+let speed_min = !Init.speed_min
+let pause_max = !Init.pause_max
+let pause_min = !Init.pause_min
+
+let main_node = ref 0
+
+(* overhead *)
+let search_overhead = !Init.search_overhead
+
+(* packets *)
+let elip_proba = !Init.elip_proba
+let elip_forecast = !Init.elip_forecast
+let elip_min_insert_dist = !Init.elip_min_insert_dist
+let elip_min_insert_dist2 =
+  elip_min_insert_dist *. coverage_range *. coverage_range 
+let elip_min_insert_angle = !Init.elip_min_insert_angle *. pi /. 180.
+
+let msg_proba = !Init.msg_proba
+let msg_len = !Init.msg_len
+
+(* Outputs *)
+let with_graphics = !Init.with_graphics
+let zoom = !Init.zoom
+
+(* output channel *)
+let with_stat = !Init.with_stat
+let prefix = !Init.prefix
+    ^"-nb_node_"^(string_of_int nb_nodes)
+    ^"-maxx_"^(string_of_float (max_x))
+    ^"-dist_couv_"^(string_of_float (coverage_range))
+    ^"-msg_proba_"^(string_of_float (msg_proba))
+    ^"-msg_len_"^(string_of_int (msg_len))
+    ^"-elip_proba_"^(string_of_int (int_of_float(elip_proba)))
+(*	^"-locality_val_"^(string_of_float (elip_min_insert_dist2))*)
+	^"-locality_val_"^(string_of_float (elip_min_insert_dist))
+	^"-angle_val_"^(string_of_float (elip_min_insert_angle))
+    ^"_"
+	
+
+
+
+(* ---------------------------- *)
+(* Misc                         *)
+(* ---------------------------- *) 
+(* Creation functions *)
+let get_new_id =
+  let cpt = ref (-1) in
+  fun () ->
+    incr cpt;
+    !cpt
+
+(* !!!! A MODIFIER !!!!!*)
+let init_make_insert_elip_info = ref (fun _ _ -> assert false)
+let init_make_move = ref (fun _ -> assert false)
+let init_make_make_msg = ref (fun _ -> assert false)
+
+
+let make_node id pos =
+  { id = id;
+    date = 0;
+    pos_tbl_le = Pos_tbl.make nb_nodes; 
+    pos_tbl_elip = Pos_tbl.make nb_nodes; 
+    neighbors = [];
+    pos = pos;
+    move = !init_make_move pos;
+    make_msg = !init_make_make_msg ();
+    insert_elip_info = !init_make_insert_elip_info pos;
+    visited = false; }
+
+
+let make_packet header src_node dest =
+  let dest_pos, dest_pos_date = 
+    match header with
+    | H_LE -> Pos_tbl.get src_node.pos_tbl_le dest 
+    | H_ELIP _ -> Pos_tbl.get src_node.pos_tbl_elip dest
+  in
+  { header = header;
+    src_id = src_node.id;
+    dest_id = dest;
+    dest_pos = dest_pos;
+    dest_pos_age = abs (src_node.date - dest_pos_date);
+    route = [];
+    anchors = [];
+    overhead = 0;
+  }
+
+let make_elip_header id pos =
+    { elip_id = id;
+      elip_pos = pos;
+      elip_overhead = 0; }
+
+
+let make_le_packet =  make_packet H_LE 
+
+let make_elip_packet src_node dest =
+  make_packet (H_ELIP None) src_node dest

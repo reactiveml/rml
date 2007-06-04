@@ -80,12 +80,19 @@ let rec print priority ty =
       print_qualified_ident name.gi
   | Type_link(link) ->
       print priority link
-  | Type_process(ty) ->
+  | Type_process(ty, proc_info) ->
       print 2 ty;
       print_space ();
       print_string "process";
   end;
   close_box ()
+
+and print_proc_info pi = ()
+(*   begin match pi.proc_static with *)
+(*   | None | Some(Def_static.Dontknow) -> () *)
+(*   | Some(Def_static.Instantaneous) -> print_string "-" *)
+(*   | Some(Def_static.Noninstantaneous) -> print_string "+" *)
+(*   end *)
 
 and print_list priority sep l =
   let rec printrec l =
@@ -116,7 +123,7 @@ let print_value_type_declaration global =
   then begin print_string "( "; print_string name; print_string " )" end
   else print_string name;
   print_space ();
-  print_string ": ";
+  print_string ":";
   print_space ();
   print_scheme (type_of_global global);
   print_string "\n";
@@ -189,9 +196,10 @@ let rec print_label_list = function
 	  print_label_list t
 	end
 	
-let print_type_declaration {gi = q; info = info} = 
+let print_type_declaration gl = 
+  let q = Global.gi gl in
   let { type_kind = td;
-	type_arity = ta; } = info in
+	type_arity = ta; } = Global.info gl in
   open_box 2;
   print_type_name q ta;
   begin match td with
@@ -241,7 +249,7 @@ set_max_boxes max_int
 
 let output oc ty = 
   set_formatter_out_channel oc;
-  print_string "  ";
+(*   print_string "  "; *)
   print ty;
   print_flush ()
  

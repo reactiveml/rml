@@ -28,10 +28,6 @@ module Lco_ctrl_tree_record = Lco_ctrl_tree.Rml_interpreter(Sig_env.Record)
 
 module Lco_ctrl_tree_class = Lco_ctrl_tree.Rml_interpreter(Sig_env.Class)
 
-module Lk_record = Lk_interpreter.Lk_interpreter(Sig_env.Record)
+module Lk_record = Lk_implantation.Lk_interpreter(Sig_env.Record)
 
 
-(*
-module Lco_ctrl_tree_thread_record = 
-  Lco_ctrl_tree_thread.Rml_interpreter(Sig_env.Record)
-*)

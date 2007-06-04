@@ -2,6 +2,8 @@
 # Taken from Lucid-synchrone
 # Organization : SPI team, LIP6 laboratory, University Paris 6 
 
+include configure-tools/version
+
 TARGET=byte
 
 all:
@@ -9,6 +11,7 @@ all:
 	(cd stdlib; make all)
 	(cd interpreter; touch .depend; make depend; make all)
 	(cd toplevel; make all)
+	(cd tools; make $(TARGET))
 
 toplevel: FORCE
 	(cd toplevel; make all)
@@ -32,6 +35,7 @@ install.byte:
 	(cd man; make install)
 	(cd emacs; make install)
 	(cd toplevel; make install)
+	(cd tools; make install)
 
 install.opt:
 	(cd compiler; make install.opt)
@@ -40,6 +44,30 @@ install.opt:
 	(cd man; make install)
 	(cd emacs; make install)
 	(cd toplevel; make install)
+	(cd tools; make install)
+
+
+### BEGIN Patch from Serge Leblanc
+
+install.findlib:
+	@echo "Install ReactiveML interpreter in ocamlfind hierarchy."
+	@(echo "version = \"$(VERSION)\"" > ./META)
+	@(cat ./configure-tools/META.in >> ./META)
+	- [ ! -e ./rml_interpreter.a ] && \
+		ln -s ./interpreter/rml_interpreter.a ./rml_interpreter.a 
+	- [ ! -e ./rml_interpreter.cma ] && \
+		ln -s ./interpreter/rml_interpreter.cma ./rml_interpreter.cma
+	- [ ! -e ./rml_interpreter.cmxa ] && \
+		ln -s ./interpreter/rml_interpreter.cmxa ./rml_interpreter.cmxa
+	- [ -r ./META -a -r ./rml_interpreter.a -a -r ./rml_interpreter.cma -a -r ./rml_interpreter.cmxa ] && \
+		ocamlfind install rmlc ./META ./rml_interpreter.a ./rml_interpreter.cma ./rml_interpreter.cmxa
+	- rm -rf rml_interpreter.a rml_interpreter.cma rml_interpreter.cmxa
+
+uninstall.findlib:
+	ocamlfind remove rmlc
+
+### END
+
 
 doc: dvi
 dvi:
@@ -51,44 +79,49 @@ wc:
 	(cd compiler;make wc)
 	(cd interpreter; make wc)
 	(cd toplevel; make wc)
+	(cd tools; make wc)
 
 clean:
 	(cd compiler;make clean)
 	(cd stdlib; make clean)
 	(cd interpreter; make clean)
 	(cd toplevel; make clean)
+	(cd tools; make clean)
 	(cd man; make clean)
 	(cd doc; make clean)
+	(cd patch; make clean)
 
 realclean: clean-distrib
 	(cd compiler;make realclean)
 	(cd stdlib; make realclean)
 	(cd interpreter; make realclean)
 	(cd toplevel; make realclean)
+	(cd tools; make realclean)
 	(cd man; make realclean)
 	(cd doc; make realclean)
+	(cd patch; make realclean)
+	rm -rf META
 	rm -rf config distrib/rml/rmlc.in distrib/rml/Makefile *~
 	touch config 
 
 cleanall: realclean
 
 # Making distribution 
-DATE=`date -I`
-include configure-tools/version
+DATE=`date "+%Y-%m-%d"`
 
 public-distrib:
 	touch config
 	make realclean
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
-	cp -r compiler interpreter stdlib toplevel emacs doc man \
+	cp -r compiler interpreter stdlib toplevel tools emacs doc man examples \
 		distrib/rml-$(VERSION)-$(DATE)
-	cp -r configure configure-tools Makefile INSTALL LICENSE \
+	cp -r configure configure-tools  patch Makefile INSTALL LICENSE \
 		distrib/rml-$(VERSION)-$(DATE)
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)/distrib
 	cp -r distrib/rml distrib/Makefile.byte distrib/Makefile.opt \
 		distrib/rmlc.in.byte distrib/rmlc.in.opt \
 		distrib/rml-$(VERSION)-$(DATE)/distrib
-	(cd distrib/rml-$(VERSION)-$(DATE)/compiler/diff; \
+	(cd distrib/rml-$(VERSION)-$(DATE)/patch; \
 	 make public-distrib)
 	(cd distrib; \
 	 tar --exclude=CVS --exclude=.svn -zcvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
@@ -100,9 +133,9 @@ source-distrib:
 	touch config
 	make realclean
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
-	cp -r compiler interpreter stdlib toplevel emacs doc man \
+	cp -r compiler interpreter stdlib toplevel tools emacs doc man examples \
 		distrib/rml-$(VERSION)-$(DATE)
-	cp -r configure configure-tools Makefile INSTALL LICENSE \
+	cp -r configure configure-tools patch Makefile INSTALL LICENSE \
 		distrib/rml-$(VERSION)-$(DATE)
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)/distrib
 	cp -r distrib/rml distrib/Makefile.byte distrib/Makefile.opt \
@@ -123,14 +156,16 @@ binary-distrib.opt: clean-distrib
 	(cd stdlib; make all)
 	(cd interpreter; make all)
 	(cd toplevel; make all)
+	(cd tools; make opt)
 	(cd distrib/rml/; \
 	 mkdir bin lib lib/rml; \
 	 cp ../../compiler/rmlc.opt bin/rmlc.opt ; \
 	 cp ../../toplevel/rmltop bin/rmltop ; \
-	 cp ../../stdlib/*.rzi ../../stdlib/*.rmli lib/rml; \
-	 cp ../../interpreter/*.cma ../../interpreter/*.cmxa ../../interpreter/*.a ../../interpreter/*.cmi lib/rml; \
-	 cp ../../toplevel/*.cmo ../../toplevel/*.cmi lib/rml; \
-	 cp -r ../../emacs .; \
+	 cp ../../stdlib/*.rzi ../../stdlib/*.rmli lib/rml ; \
+	 cp ../../interpreter/*.cma ../../interpreter/*.cmxa ../../interpreter/*.a ../../interpreter/*.cmi lib/rml ; \
+	 cp ../../toplevel/*.cmo ../../toplevel/*.cmi lib/rml ; \
+	 cp ../../tools/rmldep/rmldep.opt bin/rmldep ; \
+	 cp -r ../../emacs . ; \
 	 cp ../Makefile.opt Makefile; \
 	 cp ../rmlc.in.opt rmlc.in; \
          cd ..; \
@@ -145,17 +180,19 @@ binary-distrib.byte: clean-distrib
 	(cd stdlib; make all)
 	(cd interpreter; make all)
 	(cd toplevel; make all)
-	(cd distrib/rml/; \
-	 mkdir bin lib lib/rml; \
+	(cd tools; make all)
+	(cd distrib/rml/ ; \
+	 mkdir bin lib lib/rml ; \
 	 cp ../../compiler/rmlc.byte bin/rmlc.byte ; \
 	 cp ../../toplevel/rmltop bin/rmltop ; \
 	 cp ../../stdlib/*.rzi ../../stdlib/*.rmli lib/rml ; \
-	 cp ../../interpreter/*.cma ../../interpreter/*.cmxa ../../interpreter/*.a ../../interpreter/*.cmi lib/rml; \
-	 cp ../../toplevel/*.cmo ../../toplevel/*.cmi lib/rml; \
+	 cp ../../interpreter/*.cma ../../interpreter/*.cmxa ../../interpreter/*.a ../../interpreter/*.cmi lib/rml ; \
+	 cp ../../toplevel/*.cmo ../../toplevel/*.cmi lib/rml ; \
+	 cp ../../tools/rmldep/rmldep.byte bin/rmldep ; \
 	 cp -r ../../emacs . ; \
-	 cp ../Makefile.byte Makefile; \
-	 cp ../rmlc.in.byte rmlc.in; \
-         cd ..; tar --exclude=CVS --exclude=.svn -zcvf rml-`../compiler/rmlc -version`.byte.tar.gz rml; \
+	 cp ../Makefile.byte Makefile ; \
+	 cp ../rmlc.in.byte rmlc.in ; \
+         cd ..; tar --exclude=CVS --exclude=.svn -zcvf rml-`../compiler/rmlc -version`.byte.tar.gz rml ; \
          mv rml-`../compiler/rmlc -version`.byte.tar.gz ..)
 
 clean-distrib: 

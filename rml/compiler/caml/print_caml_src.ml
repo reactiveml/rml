@@ -97,19 +97,25 @@ let print_name s =
   print_string s
 
 (** Prints a global name *)
-let print_global { gi = {qual=q; id=n} } =
-  (* special case for values imported from the standard library *)
-  if q = pervasives_module 
-  then print_name (Ident.name n)
+let print_global ({ gi = {qual=q; id=n} } as gl) =
+  if gl.gi = Initialization.event_ident then 
+    (* special case for event type *)
+    begin
+      print_string !interpreter_module;
+      print_string ".";
+      print_name (Ident.name n)
+    end    
+  else if q = pervasives_module then
+    (* special case for values imported from the standard library *)
+    print_name (Ident.name n)
+  else if q = !current_module then 
+    print_name (Ident.name n)
   else
-    if q = !current_module
-    then print_name (Ident.name n)
-    else
-      begin
-	print_string q;
-	print_string ".";
-	print_name (Ident.name n)
-      end
+    begin
+      print_string q;
+      print_string ".";
+      print_name (Ident.name n)
+    end
 
 (** Prints a type variables *)
 let print_type_var s = print_string ("'"^s)
@@ -319,6 +325,7 @@ and print_te pri typ =
   let pri_e = priority_te typ.cte_desc in
   if pri > pri_e then print_string "(";
   begin match typ.cte_desc with
+  | Ctype_any -> print_string "_"
   | Ctype_var s -> print_type_var s
   | Ctype_arrow (t1,t2) ->
       print_te (pri_e + 1) t1;

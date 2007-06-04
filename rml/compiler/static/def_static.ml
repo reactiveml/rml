@@ -28,6 +28,8 @@ type context = Process | ML
 type static = Static | Dynamic of instantaneous
 and instantaneous = Instantaneous | Noninstantaneous | Dontknow
 
+
+
 (* For debug *)
 let string_of_instantaneous k = 
   match k with

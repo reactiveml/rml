@@ -91,8 +91,9 @@ and process_desc =
   | Kproc_fordopar of 
       ident * expression * expression * direction_flag * 
 	(ident * process) * process
-  | Kproc_split_def of ident * ident list * process list
-  | Kproc_join_def of ident * ident * ident list * process
+  | Kproc_split_def of 
+      ident * (ident * Def_types.type_expression) list * ident * process list
+  | Kproc_join_def of ident * ident * ident * process
 (*   | Kproc_split_par of ident * process list *)
   | Kproc_split_par of ident * pattern * process * process list
   | Kproc_join_par of ident * process

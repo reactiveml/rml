@@ -21,3 +21,4 @@ endif
 clean:
 
 realclean:
+	rm -rf *~

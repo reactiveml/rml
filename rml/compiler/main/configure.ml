@@ -100,7 +100,7 @@ let set_runtime s =
       set_interpreter_impl "Rec_implantation";
       set_interpreter_module "Lco_rewrite_record";
       set_translation Lco
-  | "Lco_ctrl_tree" -> 
+  | "Lco_ctrl_tree" | "Lco" -> 
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implantation";
       set_interpreter_module "Lco_ctrl_tree_record";
@@ -109,6 +109,11 @@ let set_runtime s =
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implantation";
       set_interpreter_module "Lco_ctrl_tree_class";
+      set_translation Lco
+  | "Lco_ctrl_tree_thread_safe" -> 
+      set_interpreter_intf "Lco_interpreter";
+      set_interpreter_impl "Thread_implantation";
+      set_interpreter_module "Lco_ctrl_tree_thread_safe_record";
       set_translation Lco
 (*
   | "ctrl_tree_debug" -> 
@@ -120,6 +125,12 @@ let set_runtime s =
       set_interpreter_intf "Lk_interpreter";
       set_interpreter_impl "Implantation";
       set_interpreter_module "Lk_record";
+      set_translation Lk
+
+  | "Lk_threaded" ->
+      set_interpreter_intf "Lk_interpreter";
+      set_interpreter_impl "Thread_implantation";
+      set_interpreter_module "Lk_threaded_record";
       set_translation Lk
 
   | "Rmltop" ->

@@ -1,0 +1,100 @@
+open Position
+open Global
+
+(*   ------------------------------------------------- *)
+(* Compute the direction of the vector p1p2 between 0 and 2*pi. *)
+let angle p1 p2 =
+  let alpha = atan ((p2.y -. p1.y) /. (p2.x -. p1.x)) in
+  if (alpha >= 0. && p2.y <= p1.y) or (alpha <= 0. && p2.y >= p1.y) then
+    alpha +. pi
+  else if (alpha <= 0. && p2.y <= p1.y && p2.x >=p1.x) then
+    alpha +. 2. *. pi
+  else 
+    alpha
+
+(* Compute the difference between two angles *)
+let diff_angle angle1 angle2 =
+  let diff = abs_float (angle1 -. angle2) in
+  if diff > pi then 2. *. pi -. diff
+  else diff 
+
+(*   ------------------------------------------------- *)
+
+
+let make_msg src =
+  if (Random.float 100.0) < msg_proba then 
+    let msg = ref [] in
+    let dest = Random.int nb_nodes in
+    let len = (Random.int msg_len) + 1 in
+    for i = 1 to len do
+      msg := dest::!msg
+    done;
+    !msg
+  else
+    []
+
+
+
+(* Insert ELIP info *)
+
+(* Criterion *)
+
+let criterion_proba () =
+  Random.float 100.0 < elip_proba 
+    
+let criterion_locality self last_insert_pos =
+  (distance2 self.pos last_insert_pos) > elip_min_insert_dist2
+        
+let criterion_angle last_insert_ang current_angle =
+  (diff_angle last_insert_ang  current_angle) > elip_min_insert_angle
+
+(* Insert *)
+
+let insert_elip_info self p criterion =
+  begin match p.header with
+  | H_ELIP info ->
+      begin match info with
+      | None -> 
+          if criterion self p then
+            p.header <- H_ELIP (Some (make_elip_header self.id self.pos))
+      | Some pos -> ()
+      end
+  | _ -> ()
+  end
+
+let insert_proba self p = 
+  insert_elip_info self p (fun _ _ -> criterion_proba ())
+
+let insert_proba_locality pos_init =
+  let last_insert_pos = ref pos_init in
+  fun self p ->
+    insert_elip_info self p 
+      (fun node p -> 
+        if (criterion_proba ()) or 
+          (criterion_locality node !last_insert_pos)
+        then
+          (last_insert_pos := node.pos;
+           true)
+        else false) 
+
+let insert_locality pos_init =
+  let last_insert_pos = ref pos_init in
+  fun self p ->
+    insert_elip_info self p 
+      (fun node p -> 
+        if criterion_locality node !last_insert_pos then
+          (last_insert_pos := node.pos;
+           true)
+        else false)
+        
+let insert_angle () =
+  let last_insert_ang = ref (Random.float (2. *. pi)) in
+  fun self p ->
+    insert_elip_info self p
+      (fun node p ->
+        let current_angle = angle node.pos p.dest_pos in
+        if criterion_angle !last_insert_ang current_angle then
+          (last_insert_ang := current_angle;
+           true)
+        else false)
+

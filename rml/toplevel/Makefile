@@ -61,7 +61,7 @@ test:
 		rmltop_main.cmo
 
 wc:
-	wc --lines *.ml *.mli *.rml *.rmli
+	wc -l *.ml *.mli *.rml *.rmli
 
 clean: 
 	rm -f *.cm* *.rzi 

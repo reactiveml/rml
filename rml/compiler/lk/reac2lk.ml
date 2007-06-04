@@ -72,7 +72,7 @@ let rec translate_te typ =
 	Ktype_product (List.map translate_te typ_list)
     | Rtype_constr (cstr, te_list) ->
 	Ktype_constr (cstr, List.map translate_te te_list)
-    | Rtype_process t ->
+    | Rtype_process (t, _) ->
 	Ktype_process (translate_te t)
   in
   make_te ktyp typ.te_loc
@@ -661,8 +661,9 @@ and translate_proc_let =
       | _ ->
 (* C_k[let x1 = p1 and x2 = p2 in body] =                                  *) 
 (*   bind K = def_and_dyn x1, x2 in k_body.k in                            *)
-(*     split (\j,vref1,vref2. k1.join j vref1 [vref1;vref2].K,             *)
-(*                            k2.join j vref2 [vref1;vref2].K))            *)
+(*     split (\j,(vref1:t1),(vref2:t2),get_vrefs.                          *)
+(*              k1.join j vref1 get_vrefs.K,                               *)
+(*              k2.join j vref2 get_vrefs.K))                              *)
 	  let def =
 	    make_proc     
 	      (Kproc_def_and_dyn 
@@ -677,12 +678,13 @@ and translate_proc_let =
 	      (fun _ -> make_var "v_ref")
 	      patt_expr_list
 	  in
+	  let get_vrefs_id = make_var "get_vrefs" in
 	  let k_list =
 	    List.map2
 	      (fun v_ref (_, proc) ->
 		let join = 
 		  make_proc 
-		    (Kproc_join_def (j_id, v_ref, vref_list, k_var))
+		    (Kproc_join_def (j_id, v_ref, get_vrefs_id, k_var))
 		    Location.none
 		in
 		translate_proc proc join ctrl)
@@ -693,7 +695,12 @@ and translate_proc_let =
 	    (k_patt, 
 	     def,
 	     make_proc
-	       (Kproc_split_def (j_id, vref_list, k_list)) 
+	       (Kproc_split_def (j_id, 
+				 List.map2 
+				   (fun vref (p, _) -> (vref, p.patt_type)) 
+				   vref_list patt_expr_list,
+				 get_vrefs_id, 
+				 k_list)) 
 	       Location.none)
       end
 

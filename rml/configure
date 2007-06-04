@@ -126,10 +126,10 @@ echo "" >> config
 set dummy install; cmd_name=$2
 echo -n "checking for $cmd_name... " 
 if sh ./searchpath $cmd_name; then
-  echo "$cmd_name"
+    echo "$cmd_name"
 else
-  echo "not found"
-  { echo "configure: error: Cannot find $cmd_name." 1>&2; exit 1; }
+    echo "not found"
+    { echo "configure: error: Cannot find $cmd_name." 1>&2; exit 1; }
 fi
 install=$cmd_name
 
@@ -142,17 +142,12 @@ echo >> config
 # checking for ocamlc
 set dummy ocamlc; compiler_name=$2
 echo -n "checking for $compiler_name... " 
-if sh ./searchpath $compiler_name.opt; then
-  echo "$compiler_name.opt"
-  compiler=$compiler_name.opt
-else
-  if sh ./searchpath $compiler_name; then
+if sh ./searchpath $compiler_name; then
     echo "$compiler_name"
     compiler=$compiler_name
-  else
+else
     echo "not found"
     { echo "configure: error: Cannot find $compiler_name." 1>&2; exit 1; }
-  fi
 fi
 ocamlc=$compiler
 
@@ -162,7 +157,7 @@ ocamlversion=`$ocamlc -v | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
 echo "ocaml version is $ocamlversion"
 bad_version=`expr "$ocamlversion" \< "$ocamlversion_min"`
 if test "$bad_version" = "1"; then
-   { echo "configure: error: Ocaml >= $ocamlversion_min needed." 1>&2; exit 1; }
+    { echo "configure: error: Ocaml >= $ocamlversion_min needed." 1>&2; exit 1; }
 fi
 
 ocamllib=`$ocamlc -where`
@@ -172,17 +167,12 @@ echo "ocaml library path is $ocamllib"
 # checking for ocamlopt
 set dummy ocamlopt; compiler_name=$2
 echo -n "checking for $compiler_name... " 
-if sh ./searchpath $compiler_name.opt; then
-  echo "$compiler_name.opt"
-  compiler=$compiler_name.opt
-else
-  if sh ./searchpath $compiler_name; then
+if sh ./searchpath $compiler_name; then
     echo "$compiler_name"
     compiler=$compiler_name
-  else
+else
     echo "not found"
     { echo "configure: error: Cannot find $compiler_name." 1>&2; exit 1; }
-  fi
 fi
 ocamlopt=$compiler
 
@@ -192,7 +182,7 @@ ocamlversion=`$ocamlopt -v | sed -n -e 's|.*version* *\(.*\)$|\1|p' `
 echo "ocaml version is $ocamlversion"
 bad_version=`expr "$ocamlversion" \< "$ocamlversion_min"`
 if test "$bad_version" = "1"; then
-   { echo "configure: error: Ocaml >= $ocamlversion_min needed." 1>&2; exit 1; }
+    { echo "configure: error: Ocaml >= $ocamlversion_min needed." 1>&2; exit 1; }
 fi
 ocamllib=`$ocamlopt -where`
 echo "ocaml library path is $ocamllib"
@@ -201,17 +191,12 @@ echo "ocaml library path is $ocamllib"
 # checking for ocamldep
 set dummy ocamldep; compiler_name=$2
 echo -n "checking for $compiler_name... " 
-if sh ./searchpath $compiler_name.opt; then
-  echo "$compiler_name.opt"
-  compiler=$compiler_name.opt
-else
-  if sh ./searchpath $compiler_name; then
+if sh ./searchpath $compiler_name; then
     echo "$compiler_name"
     compiler=$compiler_name
-  else
+else
     echo "not found"
     { echo "configure: error: Cannot find $compiler_name." 1>&2; exit 1; }
-  fi
 fi
 ocamldep=$compiler
 
@@ -219,17 +204,12 @@ ocamldep=$compiler
 # checking for ocamllex
 set dummy ocamllex; compiler_name=$2
 echo -n "checking for $compiler_name... " 
-if sh ./searchpath $compiler_name.opt; then
-  echo "$compiler_name.opt"
-  compiler=$compiler_name.opt
-else
-  if sh ./searchpath $compiler_name; then
+if sh ./searchpath $compiler_name; then
     echo "$compiler_name"
     compiler=$compiler_name
-  else
+else
     echo "not found"
     { echo "configure: error: Cannot find $compiler_name." 1>&2; exit 1; }
-  fi
 fi
 ocamllex=$compiler
 
@@ -237,17 +217,12 @@ ocamllex=$compiler
 # checking for ocamlyacc
 set dummy ocamlyacc; compiler_name=$2
 echo -n "checking for $compiler_name... " 
-if sh ./searchpath $compiler_name.opt; then
-  echo "$compiler_name.opt"
-  compiler=$compiler_name.opt
-else
-  if sh ./searchpath $compiler_name; then
+if sh ./searchpath $compiler_name; then
     echo "$compiler_name"
     compiler=$compiler_name
-  else
+else
     echo "not found"
     { echo "configure: error: Cannot find $compiler_name." 1>&2; exit 1; }
-  fi
 fi
 ocamlyacc=$compiler
 
@@ -255,17 +230,12 @@ ocamlyacc=$compiler
 # checking for ocamlcp
 set dummy ocamlcp; compiler_name=$2
 echo -n "checking for $compiler_name... " 
-if sh ./searchpath $compiler_name.opt; then
-  echo "$compiler_name.opt"
-  compiler=$compiler_name.opt
-else
-  if sh ./searchpath $compiler_name; then
+if sh ./searchpath $compiler_name; then
     echo "$compiler_name"
     compiler=$compiler_name
-  else
+else
     echo "not found"
     { echo "configure: error: Cannot find $compiler_name." 1>&2; exit 1; }
-  fi
 fi
 ocamlcp=$compiler
 
@@ -285,13 +255,13 @@ mv config ..
 
 # Patch Caml files
 
-cd ../compiler/diff
-if sh ./patch.sh; then
+cd ../patch
+if sh ./patch_all.sh; then
     echo "Patch OK"
 else
     { echo "configure: error: Install \"patch\" or send an email to louis.mandel@reactiveML.org" 1>&2; exit 1; }
 fi
-cd ../../configure-tools
+cd ../configure-tools
 
 # Print a summary
 

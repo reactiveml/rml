@@ -1,0 +1,302 @@
+open Position
+open Global
+open Graphics
+
+let with_history = ref false 
+let history = ref [] 
+
+let draw_route p =
+  let c1, c2, c3, dr =
+    match p.header with
+    | H_LE -> (red, red, magenta, 2)
+    | H_ELIP _ -> (blue, blue, cyan, 1)
+  in
+  begin
+    match p.route with
+    | n :: _ -> 
+	Graphics.moveto 
+	  (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom));
+	if n.id = p.dest_id then
+	  set_color c1
+	else
+	  set_color c3
+    | _ -> ()
+  end;
+  List.iter
+    (fun n ->
+      Graphics.lineto 
+	(int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom)))
+    p.route;
+  List.iter
+    (function 
+      | (src, Some info, _, _) ->
+	  let r = 
+	    (sqrt  
+	       (distance2 src.pos info.pos))
+	  in
+	  set_color c2;
+	  Graphics.draw_circle
+	    (int_of_float (src.pos.x *. zoom)) 
+	    (int_of_float (src.pos.y *. zoom)) 
+	    ((int_of_float (r *. zoom)) + dr)
+      | (src, None, level, _) ->
+	  let r =
+	    level * (int_of_float (coverage_range *. zoom))
+	  in
+	  set_color c3;
+	  Graphics.draw_circle
+	    (int_of_float (src.pos.x *. zoom)) 
+	    (int_of_float (src.pos.y *. zoom)) 
+	    (r + dr))
+    p.anchors
+
+
+
+let draw_node kind n =
+  let pos_tbl = 
+    match kind with
+    | LE -> n.pos_tbl_le
+    | ELIP -> n.pos_tbl_elip
+  in
+  let _, date = Pos_tbl.get pos_tbl !main_node in
+  if date = Pos_tbl.no_info then
+    Graphics.set_color Graphics.green
+  else
+    if n.date - date < 0 then
+      Graphics.set_color Graphics.blue
+    else
+      if n.date - date < 50 then
+	Graphics.set_color Graphics.red
+      else
+	if n.date - date < 100 then
+	  Graphics.set_color Graphics.magenta
+	else
+	  if n.date - date < 150 then
+	    Graphics.set_color Graphics.cyan
+	  else
+	    Graphics.set_color Graphics.black;
+  
+  Graphics.moveto 
+    (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom));
+  Graphics.draw_string (string_of_int n.id); 
+  Graphics.set_color Graphics.black;
+  if n.id = !main_node then
+    (Graphics.draw_circle 
+       (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom)) 
+       (int_of_float (coverage_range *. zoom));
+     if !with_history then
+       (history := n.pos :: !history;
+	begin
+	  match !history with
+	  | pos :: _ -> 
+	      Graphics.moveto 
+		(int_of_float (pos.x *. zoom)) (int_of_float (pos.y *. zoom))
+	  | _ -> ()
+	end;
+	List.iter
+	  (fun pos ->
+	    Graphics.lineto 
+	      (int_of_float (pos.x *. zoom)) (int_of_float (pos.y *. zoom)))
+	  !history))
+
+
+let draw_info_ascii kind n =
+  Graphics.set_color Graphics.black;
+  let pos_tbl = 
+    match kind with
+    | LE -> n.pos_tbl_le
+    | ELIP -> n.pos_tbl_elip
+  in
+  let _, date = Pos_tbl.get pos_tbl !main_node in
+  Graphics.moveto 
+    (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom));
+  if date = Pos_tbl.no_info then
+    Graphics.draw_string "."
+  else
+    if n.date - date < 0 then
+      Graphics.draw_string "#"
+    else
+      if n.date - date < 50 then
+	Graphics.draw_string "@"
+      else
+	if n.date - date < 100 then
+	  Graphics.draw_string "*"
+	else
+	  if n.date - date < 150 then
+	    Graphics.draw_string "+"
+	  else
+	    Graphics.draw_string "-";
+  if n.id = !main_node then
+    (Graphics.draw_circle 
+       (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom)) 
+       (int_of_float (coverage_range *. zoom));
+     if !with_history then
+       (history := n.pos :: !history;
+	begin
+	  match !history with
+	  | pos :: _ -> 
+	      Graphics.moveto 
+		(int_of_float (pos.x *. zoom)) (int_of_float (pos.y *. zoom))
+	  | _ -> ()
+	end;
+	List.iter
+	  (fun pos ->
+	    Graphics.lineto 
+	      (int_of_float (pos.x *. zoom)) (int_of_float (pos.y *. zoom)))
+	  !history))
+
+let draw_neighborhood self =
+  Graphics.set_color Graphics.green;
+  List.iter
+    (fun info ->
+      Graphics.moveto 
+	(int_of_float (self.pos.x *. zoom)) 
+	(int_of_float (self.pos.y *. zoom));
+      Graphics.lineto 
+	(int_of_float (info.pos.x *. zoom)) 
+	(int_of_float (info.pos.y *. zoom)))
+    self.neighbors;
+  Graphics.set_color Graphics.black
+
+let draw_areas () =
+  let x = ref 0 in
+  let y = ref 0 in
+  Graphics.set_color Graphics.black;
+  while !x < (int_of_float (max_x *. zoom)) do
+    Graphics.moveto !x 0; 
+    Graphics.lineto !x (int_of_float (max_y *. zoom));
+    x := !x + (int_of_float (area_size_x *. zoom)) 
+  done;
+  while !y < (int_of_float (max_y *. zoom)) do
+    Graphics.moveto 0 !y; 
+    Graphics.lineto (int_of_float (max_x *. zoom)) !y;
+    y := !y + (int_of_float (area_size_y *. zoom)) 
+  done
+    
+let search_closer (x,y) all =
+  let pos = { x=x; y=y } in
+  let d2_min, best_info =
+    List.fold_left 
+      (fun (d2min, info_min) info ->
+	let d2 = distance2 info.pos pos in
+	if d2 < d2min then
+	  (d2,Some info)
+	else 
+	  (d2min, info_min))
+      (max_float, None)
+      all
+  in
+  match best_info with
+  | None -> !main_node
+  | Some info -> info.id
+
+
+let process draw_simul draw suspend new_node kill =
+   Graphics.open_graph 
+    (" "^(string_of_int (int_of_float (max_x *. zoom)))^"x"^
+     (string_of_int (int_of_float (max_y *. zoom))));
+  Graphics.set_window_title 
+    ("Simulation of "^(string_of_int nb_nodes)^" nodes");
+  Graphics.auto_synchronize false;
+
+  let with_neighborhood = ref false in
+  let with_areas = ref false in
+  let routage = ref ELIP in
+  let all_infos = ref [] in
+  signal refresh in
+  signal key, click in
+  control
+    loop
+      await draw (all) in
+      all_infos := all;
+      emit refresh
+    end
+  with suspend
+  ||
+  loop
+    pause;
+    await immediate refresh;
+    Graphics.clear_graph();
+    List.iter (draw_node !routage) !all_infos;
+    if !with_neighborhood then List.iter draw_neighborhood !all_infos;
+    if !with_areas then draw_areas();
+    Graphics.synchronize();
+    pause;
+    Graphics.synchronize();
+    pause;
+    Graphics.synchronize();
+  end 
+  ||
+  print_string "Press";
+  print_newline();
+  print_string "\th: to display main node's path";
+  print_newline();
+  print_string "\tn: to display the neighborhood";
+  print_newline();
+  print_string "\tm: to change main node";
+  print_newline();
+  print_string "\tp: to suspend the simulation";
+  print_newline();
+  print_string "\tr: to change protocol location distribution";
+  print_newline();
+  print_string "\ta: to create a new node";
+  print_newline();
+  print_string "\tk: to kill a node";
+  print_newline();
+  print_string "\tg: to display areas";
+  print_newline();
+  print_string "\tq: to quit";
+  print_newline();
+  loop
+    await immediate one key (c) in
+    begin
+      match c with
+      | 'N'| 'n' -> 
+	  with_neighborhood := not !with_neighborhood;
+	  emit refresh
+      | 'P' | 'p' ->
+	  emit suspend
+      | 'M' | 'm' ->
+	  print_string "click on a node";
+	  print_newline();
+	  await immediate one click (p) in
+	  main_node := search_closer p !all_infos;
+	  history := [];
+	  emit refresh
+      | 'R' | 'r' ->
+	  begin
+	    match !routage with
+	    | LE -> routage := ELIP
+	    | ELIP -> routage := LE
+	  end;
+	  emit refresh
+      | 'H' | 'h' ->
+	  with_history := not !with_history;
+	  history := [];
+	  emit refresh
+      | 'A' | 'a' -> 
+	  print_string "click to create a new node";
+	  print_newline();
+	  await immediate one click (x,y) in
+	  emit new_node {x=x; y=y};
+	  emit refresh
+      | 'K' | 'k' ->
+	  print_string "click on a node";
+	  print_newline();
+	  await immediate one click (p) in
+	  let node = search_closer p !all_infos in
+	  emit kill node;
+	  emit refresh
+      | 'G' | 'g' -> 
+	  with_areas := not !with_areas;
+	  emit refresh
+      | 'Q' | 'q' -> 
+	  exit 0
+      | _ -> ()
+    end;
+    pause
+  end
+  ||
+  run (Rml_graphics.read_key key)
+  ||
+  run (Rml_graphics.read_click click)

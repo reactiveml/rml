@@ -476,3 +476,4 @@ let print_static e =
   prerr_string (Def_static.string_of_static e.expr_static);
   prerr_newline ();
   e
+
