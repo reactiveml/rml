@@ -1484,18 +1484,18 @@ let rml_loop p =
 	in f
 
 (* ------------------------------------------------------------------------ *)
-    type value
-    exception End of value
+    exception End
 
 
 (**************************************************)
 (* rml_make                                       *)
 (**************************************************)
     let rml_make p = 
+      let result = ref None in
       (* creates the scheduler *)
       let sched = new_scheduler () in
       (* the main step function *)
-      let f = p () (fun x -> raise (End (Obj.magic x: value))) sched.top in
+      let f = p () (fun x -> result := Some x; raise End) sched.top in
       sched.current <- [f];
       (* the react function *)
       let rml_react () =
@@ -1511,7 +1511,7 @@ let rml_loop p =
 	  sched.eoi <- false;
 	  None
 	with 
-	| End v -> Some (Obj.magic v)
+	| End -> !result
       in 
       rml_react
 
@@ -1534,7 +1534,7 @@ let rml_loop p =
 	    if !term_cpt > 0 then
 	      schedule sched
 	    else
-	      raise (End (Obj.magic (): value))
+	      raise End
 	  in f
       in
 
@@ -1556,7 +1556,7 @@ let rml_loop p =
 	  sched.eoi <- false;
 	  None
 	with 
-	| End v -> Some ()
+	| End -> Some ()
       in 
 
       (* the add_process function*)

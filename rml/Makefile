@@ -53,15 +53,15 @@ install.findlib:
 	@echo "Install ReactiveML interpreter in ocamlfind hierarchy."
 	@(echo "version = \"$(VERSION)\"" > ./META)
 	@(cat ./configure-tools/META.in >> ./META)
-	- [ ! -e ./rml_interpreter.a ] && \
-		ln -s ./interpreter/rml_interpreter.a ./rml_interpreter.a 
-	- [ ! -e ./rml_interpreter.cma ] && \
-		ln -s ./interpreter/rml_interpreter.cma ./rml_interpreter.cma
-	- [ ! -e ./rml_interpreter.cmxa ] && \
-		ln -s ./interpreter/rml_interpreter.cmxa ./rml_interpreter.cmxa
-	- [ -r ./META -a -r ./rml_interpreter.a -a -r ./rml_interpreter.cma -a -r ./rml_interpreter.cmxa ] && \
-		ocamlfind install rmlc ./META ./rml_interpreter.a ./rml_interpreter.cma ./rml_interpreter.cmxa
-	- rm -rf rml_interpreter.a rml_interpreter.cma rml_interpreter.cmxa
+	- [ ! -e ./rmllib.a ] && \
+		ln -s ./interpreter/rmllib.a ./rmllib.a 
+	- [ ! -e ./rmllib.cma ] && \
+		ln -s ./interpreter/rmllib.cma ./rmllib.cma
+	- [ ! -e ./rmllib.cmxa ] && \
+		ln -s ./interpreter/rmllib.cmxa ./rmllib.cmxa
+	- [ -r ./META -a -r ./rmllib.a -a -r ./rmllib.cma -a -r ./rmllib.cmxa ] && \
+		ocamlfind install rmlc ./META ./rmllib.a ./rmllib.cma ./rmllib.cmxa
+	- rm -rf rmllib.a rmllib.cma rmllib.cmxa
 
 uninstall.findlib:
 	ocamlfind remove rmlc

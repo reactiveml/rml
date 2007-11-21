@@ -288,12 +288,12 @@ let rec translate_ml e =
 
     | Kexpr_emit (s) ->
 	Cexpr_apply
-	  (make_instruction "rml_expr_emit",
+	  (make_instruction "rml_expr_emit_pure",
 	   [translate_ml s])
 
     | Kexpr_emit_val (s, e) ->
 	Cexpr_apply
-	  (make_instruction "rml_expr_emit_val",
+	  (make_instruction "rml_expr_emit",
 	   [translate_ml s;
 	    translate_ml e])
 
@@ -354,23 +354,56 @@ and translate_proc e =
 	(make_instruction "rml_halt").cexpr_desc
 	  
     | Kproc_compute (expr, k) ->
-	Cexpr_apply 
-	  (make_instruction "rml_compute",
-	   [embed_ml expr;
-	    translate_proc k])
+	if Lk_misc.is_value expr then
+	  Cexpr_apply 
+	    (make_instruction "rml_compute_v",
+	     [translate_ml expr;
+	      translate_proc k])
+	else
+	  Cexpr_apply 
+	    (make_instruction "rml_compute",
+	     [embed_ml expr;
+	      translate_proc k])
 	  
     | Kproc_emit (s, k) ->
-	Cexpr_apply
-	  (make_instruction "rml_emit",
-	   [embed_ml s;
-	    translate_proc k])
+	if Lk_misc.is_value s then
+	  Cexpr_apply
+	    (make_instruction "rml_emit_pure_v",
+	     [translate_ml s;
+	      translate_proc k])
+	else
+	  Cexpr_apply
+	    (make_instruction "rml_emit_pure",
+	     [embed_ml s;
+	      translate_proc k])
 	  
     | Kproc_emit_val (s, e, k) ->
-	Cexpr_apply
-	  (make_instruction "rml_emit_val",
-	   [embed_ml s;
-	    embed_ml e;
-	    translate_proc k])
+	begin match Lk_misc.is_value s, Lk_misc.is_value e with
+	| true, true ->
+	    Cexpr_apply
+	      (make_instruction "rml_emit_v_v",
+	       [translate_ml s;
+		translate_ml e;
+		translate_proc k])
+	| true, false ->
+	    Cexpr_apply
+	      (make_instruction "rml_emit_v_e",
+	       [translate_ml s;
+		embed_ml e;
+		translate_proc k])
+	| false, true ->
+	    Cexpr_apply
+	      (make_instruction "rml_emit_e_v",
+	       [embed_ml s;
+		translate_ml e;
+		translate_proc k])
+	| false, false ->
+	    Cexpr_apply
+	      (make_instruction "rml_emit",
+	       [embed_ml s;
+		embed_ml e;
+		translate_proc k])
+	end
 	  
     | Kproc_loop (k_id, k) -> 
 	Cexpr_apply
@@ -380,13 +413,22 @@ and translate_proc e =
 	      Location.none])
 
     | Kproc_loop_n (k_id, e, k, k') -> 
-	Cexpr_apply
-	  (make_instruction "rml_loop_n",
-	   [embed_ml e;
-	    make_expr
-	      (Cexpr_function [make_patt_var_local k_id, translate_proc k])
-	      Location.none;
-	    translate_proc k'])
+	if Lk_misc.is_value e then
+	  Cexpr_apply
+	    (make_instruction "rml_loop_n_v",
+	     [translate_ml e;
+	      make_expr
+		(Cexpr_function [make_patt_var_local k_id, translate_proc k])
+		Location.none;
+	      translate_proc k'])
+	else
+	  Cexpr_apply
+	    (make_instruction "rml_loop_n",
+	     [embed_ml e;
+	      make_expr
+		(Cexpr_function [make_patt_var_local k_id, translate_proc k])
+		Location.none;
+	      translate_proc k'])
 	  
     | Kproc_while (e1, (k_id, k1), k2) ->
 	Cexpr_apply
@@ -510,13 +552,40 @@ and translate_proc e =
     | Kproc_signal (s, Some(e1,e2), k) ->
 	begin match !version with
 	| Combinator ->
-	    Cexpr_apply
-	      (make_instruction "rml_signal_combine",
-	       [embed_ml e1;
-		embed_ml e2;
-		make_expr 
-		  (Cexpr_function [pattern_of_signal s, translate_proc k])
-		  Location.none])
+	    begin match Lk_misc.is_value e1, Lk_misc.is_value e2 with
+	    | true, true ->
+		Cexpr_apply
+		  (make_instruction "rml_signal_combine_v_v",
+		   [translate_ml e1;
+		    translate_ml e2;
+		    make_expr 
+		      (Cexpr_function [pattern_of_signal s, translate_proc k])
+		      Location.none])
+	    | true, false ->
+		Cexpr_apply
+		  (make_instruction "rml_signal_combine_v_e",
+		   [translate_ml e1;
+		    embed_ml e2;
+		    make_expr 
+		      (Cexpr_function [pattern_of_signal s, translate_proc k])
+		      Location.none])
+	    | false, true ->
+		Cexpr_apply
+		  (make_instruction "rml_signal_combine_e_v",
+		   [embed_ml e1;
+		    translate_ml e2;
+		    make_expr 
+		      (Cexpr_function [pattern_of_signal s, translate_proc k])
+		      Location.none])
+	    | false, false ->
+		Cexpr_apply
+		  (make_instruction "rml_signal_combine",
+		   [embed_ml e1;
+		    embed_ml e2;
+		    make_expr 
+		      (Cexpr_function [pattern_of_signal s, translate_proc k])
+		      Location.none])
+	    end
 	| Inline ->
 	    let f =
 	      make_step_function
@@ -656,11 +725,18 @@ and translate_proc e =
 	| Combinator ->
 (* Tr(run e.k) =                                                         *)
 (*   run (fun () -> e) k                                                 *)
-	    Cexpr_apply
-	      (make_instruction "rml_run",
-	       [embed_ml expr;
-		translate_proc k;
-		make_expr_var_local ctrl])
+	    if Lk_misc.is_value expr then
+	      Cexpr_apply
+		(make_instruction "rml_run_v",
+		 [translate_ml expr;
+		  translate_proc k;
+		  make_expr_var_local ctrl])
+	    else
+	      Cexpr_apply
+		(make_instruction "rml_run",
+		 [embed_ml expr;
+		  translate_proc k;
+		  make_expr_var_local ctrl])
 	| Inline ->
 (* Tr(run e.k) =                                                         *)
 (*   fun _ -> e k ()                                                     *)
@@ -678,16 +754,28 @@ and translate_proc e =
 
     | Kproc_start_until(ctrl, {kconf_desc = Kconf_present s}, 
 			(ctrl', k1), (patt,k2)) ->
-	Cexpr_apply
-	  (make_instruction "rml_start_until",
-	   [make_expr_var_local ctrl;
-	    embed_ml s;
-	    (make_expr 
-	       (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k1))
-	       Location.none);
-	    (make_expr 
-	       (Cexpr_fun([translate_pattern patt], translate_proc k2))
-	       Location.none)])
+	if Lk_misc.is_value s then
+	  Cexpr_apply
+	    (make_instruction "rml_start_until_v",
+	     [make_expr_var_local ctrl;
+	      translate_ml s;
+	      (make_expr 
+		 (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k1))
+		 Location.none);
+	      (make_expr 
+		 (Cexpr_fun([translate_pattern patt], translate_proc k2))
+		 Location.none)])
+	else
+	  Cexpr_apply
+	    (make_instruction "rml_start_until",
+	     [make_expr_var_local ctrl;
+	      embed_ml s;
+	      (make_expr 
+		 (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k1))
+		 Location.none);
+	      (make_expr 
+		 (Cexpr_fun([translate_pattern patt], translate_proc k2))
+		 Location.none)])
 
     | Kproc_start_until _ ->
 	not_yet_implemented "lk2caml: Kproc_start_until"
@@ -699,13 +787,22 @@ and translate_proc e =
 	    translate_proc k])
 
     | Kproc_start_when(ctrl, {kconf_desc = Kconf_present s}, (ctrl', k)) ->
-	Cexpr_apply
-	  (make_instruction "rml_start_when",
-	   [make_expr_var_local ctrl;
-	    embed_ml s;
-	    (make_expr 
-	       (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k))
-	       Location.none)])
+	if Lk_misc.is_value s then
+	  Cexpr_apply
+	    (make_instruction "rml_start_when_v",
+	     [make_expr_var_local ctrl;
+	      translate_ml s;
+	      (make_expr 
+		 (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k))
+		 Location.none)])
+	else
+	  Cexpr_apply
+	    (make_instruction "rml_start_when",
+	     [make_expr_var_local ctrl;
+	      embed_ml s;
+	      (make_expr 
+		 (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k))
+		 Location.none)])
 
     | Kproc_start_when _ ->
 	not_yet_implemented "lk2caml: Kproc_start_when"
@@ -719,13 +816,22 @@ and translate_proc e =
 
 
     | Kproc_start_control(ctrl, {kconf_desc = Kconf_present s}, (ctrl', k)) ->
-	Cexpr_apply
-	  (make_instruction "rml_start_control",
-	   [make_expr_var_local ctrl;
-	    embed_ml s;
-	    (make_expr 
-	       (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k))
-	       Location.none)])
+	if Lk_misc.is_value s then
+	  Cexpr_apply
+	    (make_instruction "rml_start_control_v",
+	     [make_expr_var_local ctrl;
+	      translate_ml s;
+	      (make_expr 
+		 (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k))
+		 Location.none)])
+	else
+	  Cexpr_apply
+	    (make_instruction "rml_start_control",
+	     [make_expr_var_local ctrl;
+	      embed_ml s;
+	      (make_expr 
+		 (Cexpr_fun([make_patt_var_local ctrl'], translate_proc k))
+		 Location.none)])
 
     | Kproc_start_control _ ->
 	not_yet_implemented "lk2caml: Kproc_start_control"
@@ -738,22 +844,40 @@ and translate_proc e =
 	
 
     | Kproc_get (s, patt, k, ctrl) ->
-	Cexpr_apply
-	  (make_instruction "rml_get",
-	   [embed_ml s;
-	    make_expr
-	      (Cexpr_function 
-		 [translate_pattern patt, translate_proc k])
-	      Location.none;
-	    make_expr_var_local ctrl])
+	if Lk_misc.is_value s then
+	  Cexpr_apply
+	    (make_instruction "rml_get_v",
+	     [translate_ml s;
+	      make_expr
+		(Cexpr_function 
+		   [translate_pattern patt, translate_proc k])
+		Location.none;
+	      make_expr_var_local ctrl])
+	else
+	  Cexpr_apply
+	    (make_instruction "rml_get",
+	     [embed_ml s;
+	      make_expr
+		(Cexpr_function 
+		   [translate_pattern patt, translate_proc k])
+		Location.none;
+	      make_expr_var_local ctrl])
 
     | Kproc_present (ctrl, {kconf_desc = Kconf_present s}, k1, k2) ->
-	Cexpr_apply
-	  (make_instruction "rml_present",
-	   [make_expr_var_local ctrl;
-	    embed_ml s;
-	    translate_proc k1;
-	    translate_proc k2])
+	if Lk_misc.is_value s then
+	  Cexpr_apply
+	    (make_instruction "rml_present_v",
+	     [make_expr_var_local ctrl;
+	      translate_ml s;
+	      translate_proc k1;
+	      translate_proc k2])
+	else
+	  Cexpr_apply
+	    (make_instruction "rml_present",
+	     [make_expr_var_local ctrl;
+	      embed_ml s;
+	      translate_proc k1;
+	      translate_proc k2])
 
     | Kproc_present _ ->
 	not_yet_implemented "lk2caml: Kproc_present"
@@ -763,11 +887,18 @@ and translate_proc e =
 	| Combinator ->
 (* Tr(if expr then k1 else k2) =                                         *)
 (*   rml_if (fun () -> e) k1 k2                                          *)
-	    Cexpr_apply
-	      (make_instruction "rml_if",
-	       [embed_ml expr;
-		translate_proc k1;
-		translate_proc k2])
+	    if Lk_misc.is_value expr then
+	      Cexpr_apply
+		(make_instruction "rml_if_v",
+		 [translate_ml expr;
+		  translate_proc k1;
+		  translate_proc k2])
+	    else
+	      Cexpr_apply
+		(make_instruction "rml_if",
+		 [embed_ml expr;
+		  translate_proc k1;
+		  translate_proc k2])
 
 	| Inline ->
 (* Tr(if expr then k1 else k2) =                                         *)
@@ -791,16 +922,28 @@ and translate_proc e =
 	| Combinator ->
 (* Tr(match expr with | p1 -> k1 ... | pn -> kn) =                       *)
 (*   rml_match (fun () -> e) (function | p1 -> k1 | ... | pn -> kn)      *)
-	    Cexpr_apply
-	      (make_instruction "rml_match",
-	       [embed_ml expr;
-		make_expr
-		  (Cexpr_function 
-		     (List.map 
-			(fun (patt,k) -> 
-			  translate_pattern patt, translate_proc k)
-			patt_proc_list))
-		  Location.none])
+	    if Lk_misc.is_value expr then
+	      Cexpr_apply
+		(make_instruction "rml_match_v",
+		 [translate_ml expr;
+		  make_expr
+		    (Cexpr_function 
+		       (List.map 
+			  (fun (patt,k) -> 
+			    translate_pattern patt, translate_proc k)
+			  patt_proc_list))
+		    Location.none])
+	    else
+	      Cexpr_apply
+		(make_instruction "rml_match",
+		 [embed_ml expr;
+		  make_expr
+		    (Cexpr_function 
+		       (List.map 
+			  (fun (patt,k) -> 
+			    translate_pattern patt, translate_proc k)
+			  patt_proc_list))
+		    Location.none])
 	| Inline ->
 (* Tr(match expr with | p1 -> k1 ... | pn -> kn) =                       *)
 (*   fun _ -> match expr with | p1 -> k1() ... | pn -> kn()              *)
@@ -837,11 +980,18 @@ and translate_proc e =
 	  | Nonimmediate -> ""
 	  | Immediate -> "_immediate"
 	in
-	Cexpr_apply
-	  (make_instruction ("rml_await"^_immediate),
-	   [embed_ml s;
-	    translate_proc k;
-	    make_expr_var_local ctrl])
+	if Lk_misc.is_value s then
+	  Cexpr_apply
+	    (make_instruction ("rml_await"^_immediate^"_v"),
+	     [translate_ml s;
+	      translate_proc k;
+	      make_expr_var_local ctrl])
+	else
+	  Cexpr_apply
+	    (make_instruction ("rml_await"^_immediate),
+	     [embed_ml s;
+	      translate_proc k;
+	      make_expr_var_local ctrl])
 
     | Kproc_await _ ->
 	not_yet_implemented "lk2caml: Kproc_await"
@@ -861,16 +1011,43 @@ and translate_proc e =
 	let cpatt = translate_pattern patt in
 	if Caml_misc.partial_match cpatt then 
 	  begin
-	    not_yet_implemented "await_{one|all}_match";
+	    if flag2 = One then not_yet_implemented "await_one_match";
+	    Cexpr_apply
+	      (make_instruction ("rml_await"^im^kind^"_match"),
+	       [embed_ml s;
+		make_expr
+		  (Cexpr_function 
+		     [cpatt, 
+		      make_expr 
+			(Cexpr_constant (Const_bool true)) Location.none;
+		      make_patt Cpatt_any Location.none, 
+		      make_expr 
+			(Cexpr_constant (Const_bool false)) Location.none;])
+		  Location.none;
+		make_expr
+		  (Cexpr_function 
+		     [(cpatt, translate_proc k);
+		      (make_patt Cpatt_any Location.none, make_raise_RML())])
+		  Location.none;
+		make_expr_var_local ctrl])
 	  end
 	else
-	  Cexpr_apply
-	    (make_instruction ("rml_await"^im^kind),
-	     [embed_ml s;
-	      make_expr
-		(Cexpr_function [translate_pattern patt, translate_proc k])
-		Location.none;
-	      make_expr_var_local ctrl])
+	  if Lk_misc.is_value s then
+	    Cexpr_apply
+	      (make_instruction ("rml_await"^im^kind^"_v"),
+	       [translate_ml s;
+		make_expr
+		  (Cexpr_function [cpatt, translate_proc k])
+		  Location.none;
+		make_expr_var_local ctrl])
+	  else
+	    Cexpr_apply
+	      (make_instruction ("rml_await"^im^kind),
+	       [embed_ml s;
+		make_expr
+		  (Cexpr_function [cpatt, translate_proc k])
+		  Location.none;
+		make_expr_var_local ctrl])
 
   in
   make_expr cexpr e.kproc_loc

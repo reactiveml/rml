@@ -1,4 +1,4 @@
 require = "unix"
 description = "Runtime support for ReactiveML"
-archive(byte) = "rml_interpreter.cma"
-archive(native) = "rml_interpreter.cmxa"
+archive(byte) = "rmllib.cma"
+archive(native) = "rmllib.cmxa"

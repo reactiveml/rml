@@ -1,6 +1,6 @@
---- compiler/reac/reac_ast.ml	2007-06-05 20:51:48.000000000 +0200
-+++ ../compiler/reac/reac_ast.ml	2007-06-05 20:51:48.000000000 +0200
-@@ -1,169 +1,178 @@
+--- compiler/reac/reac_ast.ml	2007-11-22 23:03:04.000000000 +0100
++++ ../compiler/reac/reac_ast.ml	2007-11-22 23:03:04.000000000 +0100
+@@ -1,169 +1,179 @@
 -(* This file was syntax.ml from Caml Light *)
 +(**********************************************************************)
 +(*                                                                    *)
@@ -82,7 +82,8 @@
 +  { expr_desc: expression_desc;
 +    expr_loc: Location.t;
 +    mutable expr_type: Def_types.type_expression; 
-+    mutable expr_static: Def_static.static;}
++    mutable expr_static: Def_static.static;
++    mutable expr_reactivity: (varpatt * int) list; }
 +
  and expression_desc =
 -    Zident of expr_ident ref

@@ -187,7 +187,7 @@ let rmlc = ref "rmlc -i -interactive"
 let ocaml = 
   ref 
 (*"ocaml -I +threads -I `rmlc -where` unix.cma threads.cma rml_interactive.cmo "*)
-    "ocaml -I +threads -I `rmlc -where` -I `rmlc -where`/toplevel unix.cma threads.cma rml_interpreter.cma rmltop_global.cmo rmltop_implantation.cmo rmltop_machine_controler.cmo rmltop_directives.cmo rmltop_main.cmo "
+    "ocaml -I +threads -I `rmlc -where` -I `rmlc -where`/toplevel unix.cma threads.cma rmllib.cma rmltop_global.cmo rmltop_implantation.cmo rmltop_machine_controler.cmo rmltop_directives.cmo rmltop_main.cmo "
 
 let sampling = ref None
     

@@ -102,16 +102,16 @@ let compile_implementation_front_end info_chan itf impl_list =
     in
     Optimization_timer.time();
 
+    (* Instantaneous loop *)
+    Other_analysis_timer.start();
+    if !instantaneous_loop_warning then 
+      Instantaneous_loop.instantaneous_loop rml_code;
+    Other_analysis_timer.time();
+
     ignore 
       (Reac2reac.impl_map
 	 (fun e ->  Annot.Sstatic.record (Annot.Ti_expr e); e)
 	 rml_code);
-
-    (* Instantaneous loop *)
-    Other_analysis_timer.start();
-    if !instantaneous_loop_waring then 
-      Instantaneous_loop.instantaneous_loop rml_code;
-    Other_analysis_timer.time();
 
     (* for option *)
     Optimization_timer.start();

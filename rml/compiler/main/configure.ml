@@ -89,8 +89,8 @@ let set_verbose () =
 let set_save_types () =
   save_types := true
 
-let unset_instantaneous_loop_waring () =
-  instantaneous_loop_waring := false
+let unset_instantaneous_loop_warning () =
+  instantaneous_loop_warning := false
 
 (* Select the runtime *)
 let set_runtime s =
@@ -201,7 +201,7 @@ Usage: rmlc [options] -s <process> <file>.rml
   <file>.rml : file containing the source of <process>
   Ouputs the file <file>.ml.
   This file should compile with:
-  ocamlc -I `rmlc -where` unix.cma rml_interpreter.cma <obj_files> <file>.ml
+  ocamlc -I `rmlc -where` unix.cma rmllib.cma <obj_files> <file>.ml
 
 Options are:"
 
@@ -222,7 +222,7 @@ let configure () =
 	"-sampling", Arg.Float set_sampling, doc_sampling;
 	"-i", Arg.Unit set_verbose, doc_verbose;
 	"-dtypes", Arg.Unit set_save_types, doc_save_types;
-	"-no_loop_waring", Arg.Unit unset_instantaneous_loop_waring, doc_no_loop_warning;
+	"-no_loop_warning", Arg.Unit unset_instantaneous_loop_warning, doc_no_loop_warning;
 	"-runtime", Arg.String set_runtime, doc_runtime;
 	"-interactive", Arg.Unit set_interactive, doc_interactive;
 	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;

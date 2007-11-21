@@ -1,6 +1,6 @@
 (* Warning: This file has been modified to be ReactiveML compatible. *)
 
-(* file: rml_pervasives.mli *)
+(* file: pervasives.rmli *)
 (* created: 2004-05-09  *)
 (* author: Louis Mandel *)
 (* remark: Taken from the Ocaml sources, INRIA *)
@@ -18,7 +18,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rml_pervasives.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
+(* $Id: pervasives.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
 
 (* Add to ocaml pervasives.mli *)
 

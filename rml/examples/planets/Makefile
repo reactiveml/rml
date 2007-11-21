@@ -3,11 +3,11 @@ RMLFLAGS=
 N=-1
 SAMPLING=-1.0
 INTERPRETERDIR=`rmlc -where`
-INTERPRETER=rml_interpreter.cma
+INTERPRETER=rmllib.cma
 OCAMLC=ocamlc
 OCAMLFLAGS=
 MAIN=systeme
- 
+
 all : planets
 
 

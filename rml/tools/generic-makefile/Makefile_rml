@@ -95,7 +95,7 @@ CAMLYACC = ocamlyacc
 # LIBS=$(WITHGRAPHICS) $(WITHUNIX) $(WITHSTR) $(WITHNUMS) $(WITHTHREADS)\
 # $(WITHDBM)
 
-LIBS=
+LIBS=$(WITHUNIX) $(WITHRML)
 
 # Should be set to -custom if you use any of the libraries above
 # or if any C code have to be linked with your program
@@ -117,6 +117,8 @@ WITHTHREADS =threads.cma -cclib -lthreads
 
 WITHDBM =dbm.cma -cclib -lmldbm -cclib -lndbm
 
+WITHRML =rmllib.cma
+
 ################ End of user's variables #####################
 
 
@@ -127,7 +129,7 @@ WITHDBM =dbm.cma -cclib -lmldbm -cclib -lndbm
 
 all: depend $(EXEC)
 
-opt : $(EXEC).opt
+opt: $(EXEC).opt
 
 #ocamlc -custom other options graphics.cma other files -cclib -lgraphics -cclib -lX11
 #ocamlc -thread -custom other options threads.cma other files -cclib -lthreads
@@ -140,13 +142,14 @@ SOURCES0 = $(SOURCES:.rml=.cmo) $(MAIN_FILE:.rml=.cmo)
 SOURCES1 = $(SOURCES0:.mly=.ml)
 SOURCES2 = $(SOURCES1:.mll=.ml)
 OBJS = $(SOURCES2:.ml=.cmo)
-OPTOBJS = $(SOURCES2:.ml=.cmx)
+OPTOBJS = $(OBJS:.cmo=.cmx)
 
 $(EXEC): $(OBJS) 
-	$(CAMLC) $(CUSTOM) -o $(EXEC) $(LIBS) $(OBJS)
+	$(CAMLC) $(CUSTOM) -o $(EXEC) -I `$(RMLC) -where` $(LIBS) $(OBJS)
 
 $(EXEC).opt: $(OPTOBJS)
-	$(CAMLOPT) -o $(EXEC).opt $(LIBS:.cma=.cmxa) $(OPTOBJS)
+	$(CAMLOPT) -o $(EXEC).opt -I `$(RMLC) -where` $(LIBS:.cma=.cmxa) $(OPTOBJS)
+
 
 $(MAIN_FILE:.rml=.cmo): 
 	$(RMLC) -s $(MAIN_PROCESS) $(MAIN_FILE)
@@ -206,15 +209,15 @@ $(MAIN_FILE:.rml=.cmo):
 	$(CAMLYACC) $<
 
 clean:
-	rm -f *.cm[iox] *~ .*~ #*#
+	rm -f *.cm[iox] *~ .*~ *.rzi #*#
 	rm -f $(EXEC)
 	rm -f $(EXEC).opt
 
-.depend: $(SOURCES2)
+.depend:
 	$(CAMLDEP) *.mli *.ml > .depend
 	$(RMLDEP) *.rmli *.rml >> .depend
 
-depend: $(SOURCES2)
+depend:
 	$(CAMLDEP) *.mli *.ml > .depend
 	$(RMLDEP) *.rmli *.rml >> .depend
 

@@ -43,7 +43,7 @@ let print_DEBUG msg =
   prerr_string ">> DEBUG: "; prerr_endline msg 
 
 (* standard module *)
-let pervasives_module = "Rml_pervasives"
+let pervasives_module = "Pervasives"
 let interpreter_module = ref "Lco_ctrl_tree_record" 
 (* let interpreter_module = ref "Lk_record" *)
 let interpreter_intf = ref "Lco_interpreter"
@@ -87,7 +87,7 @@ let sampling = ref (-. 1.0)
 (* verbose *)
 let print_type = ref false
 let save_types = ref false
-let instantaneous_loop_waring = ref true
+let instantaneous_loop_warning = ref true
 
 (* dparse *)
 let dparse = ref false

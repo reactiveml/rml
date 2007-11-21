@@ -1,5 +1,5 @@
---- compiler/parsing/parser.mly	2007-06-05 20:51:48.000000000 +0200
-+++ ../compiler/parsing/parser.mly	2007-06-05 20:51:48.000000000 +0200
+--- compiler/parsing/parser.mly	2007-11-22 23:03:04.000000000 +0100
++++ ../compiler/parsing/parser.mly	2007-11-22 23:03:04.000000000 +0100
 @@ -1,4 +1,30 @@
 -/* This file was parser.mly from Objective Caml */
 +/**********************************************************************/

@@ -32,7 +32,7 @@ lib: $(RMLC)
 rmltop: lib
 	$(OCAMLC) -o rmltop -I +threads $(RMLLIB) unix.cma str.cma \
 		threads.cma \
-		rml_interpreter.cma \
+		rmllib.cma \
 		rmltop_global.cmo \
 		rmltop_directives.cmo \
 		rmltop.cmo
@@ -53,7 +53,7 @@ install.lib: lib
 
 test:
 	ledit ocaml -I +threads $(RMLLIB) unix.cma threads.cma \
-		rml_interpreter.cma \
+		rmllib.cma \
 		rmltop_global.cmo \
 		rmltop_implantation.cmo \
 		rmltop_machine_controler.cmo \

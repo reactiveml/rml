@@ -1,5 +1,5 @@
---- compiler/reac/annot.ml	2007-06-05 20:51:48.000000000 +0200
-+++ ../compiler/reac/annot.ml	2007-06-05 20:51:48.000000000 +0200
+--- compiler/reac/annot.ml	2007-11-22 23:03:04.000000000 +0100
++++ ../compiler/reac/annot.ml	2007-11-22 23:03:04.000000000 +0100
 @@ -1,4 +1,30 @@
 -(* This file was stypes.ml from Objective Caml *)
 +(**********************************************************************)
@@ -166,7 +166,7 @@
  let rec printtyp_reset_maybe loc =
    match !phrases with
    | cur :: t when cur.loc_start.pos_cnum <= loc.loc_start.pos_cnum ->
-@@ -94,39 +124,76 @@
+@@ -94,39 +124,80 @@
       printtyp_reset_maybe loc;
    | _ -> ()
  ;;
@@ -261,13 +261,17 @@
 +
 +module Sstatic =
 +  Annot(struct
-+    type t = Def_static.static
++    type t = Def_static.static * (varpatt * int) list
 +
 +    let get_type ti =
 +      begin match ti with
-+      | Ti_patt _ -> Def_static.Static
-+      | Ti_expr {expr_static = typ;} -> typ
++      | Ti_patt _ -> (Def_static.Static, [])
++      | Ti_expr {expr_static = typ; expr_reactivity = pi; } -> (typ, pi)
 +      end
 +
-+    let output = Static_printer.output
++    let output oc (k, pi) =
++      Static_printer.output oc k;
++      Printf.fprintf oc " / %s" (Instantaneous_loop.Env.string_of_t pi);
++      flush oc
++
 +  end)

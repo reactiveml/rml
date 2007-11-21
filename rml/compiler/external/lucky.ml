@@ -176,16 +176,16 @@ let emit_outputs =
        (Pexpr_apply
 	  (make_expr 
 	     (Pexpr_ident 
-		(make_ident (Pdot("Rml_pervasives","prerr_string")))),
+		(make_ident (Pdot("Pervasives","prerr_string")))),
 	   [make_expr
 	      (Pexpr_apply
 		 (make_expr 
-		    (Pexpr_ident (make_ident (Pdot("Rml_pervasives","^")))),
+		    (Pexpr_ident (make_ident (Pdot("Pervasives","^")))),
 		  [(make_expr
 		      (Pexpr_apply
 			 (make_expr 
 			    (Pexpr_ident 
-			       (make_ident (Pdot("Rml_pervasives","^")))),
+			       (make_ident (Pdot("Pervasives","^")))),
 			  [make_expr 
 			     (Pexpr_constant 
 				(Const_string "Warning: the signal \\\""));

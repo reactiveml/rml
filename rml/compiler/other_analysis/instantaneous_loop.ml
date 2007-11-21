@@ -33,11 +33,10 @@ open Reac_ast
 open Reac_misc
 open Def_static
 
-
 module Env :
     sig
       type key = varpatt
-      type t
+      type t = (key * int) list
       val empty: t
       val create: key -> int -> t
       val equal: t -> t -> bool
@@ -51,6 +50,7 @@ module Env :
       val string_of_t: t -> string
     end  =
   struct
+
     type key = varpatt
     type t = (key * int) list
 		      
@@ -138,6 +138,7 @@ module Env :
       List.fold_left
         (fun env (x,n) -> add env x n)
 	env2 env1
+
 
   end
 
@@ -455,6 +456,7 @@ let instantaneous_loop_expr =
 	  let ty1 = analyse vars e1 in
 	  let ty2 = analyse vars e2 in
 	  let ty2' = Env.plus ty2 (-2) in
+	  if not (Env.equal Env.empty ty1) then rec_warning e1;
 	  if not (Env.positive ty2') then rec_warning e2;
 	  let ty = analyse vars e in
 	  Env.append ty1 (Env.append ty2' ty)
@@ -512,6 +514,7 @@ let instantaneous_loop_expr =
 (*     Printf.printf "%a : %s\n" *)
 (*       Location.print_oc expr.expr_loc *)
 (*       (Env.string_of_t env); *)
+    expr.expr_reactivity <- env;
     env
 
     and config_analyse vars config =

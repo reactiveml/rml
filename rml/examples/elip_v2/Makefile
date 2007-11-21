@@ -87,7 +87,7 @@ cmx: rml
 elip: cmo
 	$(OCAMLC) $(OCAMLCFLAGS) -o elip \
 		unix.cma graphics.cma \
-		-I `$(RMLC) -where` rml_interpreter.cma \
+		-I `$(RMLC) -where` rmllib.cma \
 		init.cmo \
 		position.cmo \
 		pos_tbl.cmo \
@@ -107,7 +107,7 @@ elip: cmo
 elip.opt: cmx
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o elip.opt \
 		unix.cmxa graphics.cmxa \
-		-I `$(RMLC) -where` rml_interpreter.cmxa \
+		-I `$(RMLC) -where` rmllib.cmxa \
 		init.cmx \
 		position.cmx \
 		pos_tbl.cmx \

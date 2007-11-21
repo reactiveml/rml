@@ -52,6 +52,7 @@ LCO =	lco/lco_ast.ml \
 	lco/reac2lco.ml \
 
 LK  =	lk/lk_ast.ml \
+	lk/lk_misc.ml \
 	lk/reac2lk.ml \
 
 CAML = 	caml/caml2caml.ml \
@@ -103,16 +104,17 @@ OBJ =	global/version.cmo \
 	reac/reac2reac.cmo \
 	static/static_printer.cmo \
 	typing/types_printer.cmo \
-	reac/annot.cmo \
 	static/static_errors.cmo \
 	static/static.cmo \
+	other_analysis/instantaneous_loop.cmo \
+	reac/annot.cmo \
 	typing/typing_errors.cmo \
 	typing/typing.cmo \
-	other_analysis/instantaneous_loop.cmo \
 	lco/lco_ast.cmo \
 	lco/lco_misc.cmo \
 	lco/reac2lco.cmo \
 	lk/lk_ast.cmo \
+	lk/lk_misc.cmo \
 	lk/reac2lk.cmo \
 	caml/caml_ast.cmo \
 	caml/caml_misc.cmo \

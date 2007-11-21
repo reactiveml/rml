@@ -558,9 +558,9 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	if ctrl.kind = Top then 
 	  let rec f_await_top =
 	    fun _ ->
-	      let v = Event.value n in
 	      if !eoi
 	      then
+		let v = Event.value n in
 		if Event.status n && matching v
 		then
 		  let x = v in
@@ -1354,16 +1354,16 @@ let rml_loop p =
 	in f
 
 (* ------------------------------------------------------------------------ *)
-    type value
-    exception End of value
+    exception End
 
 
 (**************************************************)
 (* rml_make                                       *)
 (**************************************************)
-    let rml_make p = 
+    let rml_make p =
+      let result = ref None in
       (* the main step function *)
-      let f = p () (fun x -> raise (End (Obj.magic x: value))) top in
+      let f = p () (fun x -> result := Some x; raise End) top in
       current := [f];
       (* the react function *)
       let rml_react () =
@@ -1378,7 +1378,7 @@ let rml_loop p =
 	  eoi := false;
 	  None
 	with 
-	| End v -> Some (Obj.magic v)
+	| End -> !result
       in 
       rml_react
 
@@ -1399,7 +1399,7 @@ let rml_loop p =
 	    if !term_cpt > 0 then
 	      sched()
 	    else
-	      raise (End (Obj.magic (): value))
+	      raise End
 	  in f
       in
 
@@ -1420,7 +1420,7 @@ let rml_loop p =
 	  eoi := false;
 	  None
 	with 
-	| End v -> Some ()
+	| End -> Some ()
       in 
 
       (* the add_process function*)

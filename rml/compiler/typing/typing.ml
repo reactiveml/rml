@@ -160,6 +160,12 @@ let rec is_nonexpansive expr =
       is_nonexpansive_conf c && is_nonexpansive e && is_nonexpansive e'
   | Rexpr_when (c, e) -> 
       is_nonexpansive_conf c && is_nonexpansive e
+  | Rexpr_control (c, e) -> 
+      is_nonexpansive_conf c && is_nonexpansive e
+  | Rexpr_par e_list ->
+      List.for_all is_nonexpansive e_list
+  | Rexpr_merge (e1, e2) ->
+      is_nonexpansive e1 && is_nonexpansive e2
   | _ -> false
  
 and is_nonexpansive_conf c =

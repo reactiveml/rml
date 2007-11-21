@@ -9,7 +9,7 @@ RMLC := ../compiler/rmlc
 
 #RMLC:=../compiler/rmlc.byte
 
-SRC= rml_pervasives.rmli \
+SRC= pervasives.rmli \
 	arg.rmli \
 	array.rmli \
 	buffer.rmli \

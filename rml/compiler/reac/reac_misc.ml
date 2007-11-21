@@ -30,17 +30,19 @@ open Reac_ast
 open Def_types
 open Types
 
-let make_expr_all e typ static loc =
+let make_expr_all e typ static reactivity loc =
   { expr_desc = e;
     expr_loc = loc; 
     expr_type = typ; 
-    expr_static = static; }
+    expr_static = static; 
+    expr_reactivity = reactivity; }
 
 let make_expr e loc =
   { expr_desc = e;
     expr_loc = loc; 
     expr_type = no_type_expression; 
-    expr_static = Def_static.Dynamic Def_static.Dontknow; }
+    expr_static = Def_static.Dynamic Def_static.Dontknow; 
+    expr_reactivity = []; }
 
 let make_patt p loc =
   { patt_desc = p;

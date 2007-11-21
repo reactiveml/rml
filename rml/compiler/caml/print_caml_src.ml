@@ -78,7 +78,7 @@ let print_immediate i =
 	(* patch because "x.0" is printed "x" by C for caml < 3.05 *)
 	(* if (fst (modf f)) = 0.0 then print_string ".0" *)
   | Const_char(c) -> print_char '\''; print_char c; print_char '\''
-  | Const_string(s) -> print_string ("\""^s^"\"")
+  | Const_string(s) -> print_string ("\""^(String.escaped s)^"\"")
 	
 (** Prints a name. Infix chars are surrounded by parenthesis *)
 let print_name s =
@@ -90,11 +90,30 @@ let print_name s =
     else 
       if c >= 'a' & c <= 'z' or c >= 'A' & c <= 'Z' or c = '_' 
       then s
-      else
-	if c = '*' then "( " ^ s ^ " )" 
-	else "(" ^ s ^ ")" 
+      else if c = '*' then "( " ^ s ^ " )" 
+	else
+	"(" ^ s ^ ")" 
   in
   print_string s
+
+(** Prints pervasives values *)
+let print_pervasives n =
+  match n with 
+  | "int" | "char" | "string" | "float" | "bool" | "unit" | "exn" | 
+    "array" | "list" | "option" | "int32" | "int64" | "nativeint" | 
+    "format4" | "lazy_t" |
+    "[]" | "::" | 
+    "None" | "Some" | 
+    "Match_failure" | "Assert_failure" | "Invalid_argument" | "Failure" |
+    "Not_found" | "Out_of_memory" | "Stack_overflow" | "Sys_error" |
+    "End_of_file" | "Division_by_zero" | "Sys_blocked_io" |
+    "Undefined_recursive_module" ->
+      print_name n
+  | _ ->
+      print_string "Pervasives";
+      print_string ".";
+      print_name n
+
 
 (** Prints a global name *)
 let print_global ({ gi = {qual=q; id=n} } as gl) =
@@ -107,7 +126,7 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
     end    
   else if q = pervasives_module then
     (* special case for values imported from the standard library *)
-    print_name (Ident.name n)
+    print_pervasives (Ident.name n)
   else if q = !current_module then 
     print_name (Ident.name n)
   else

@@ -17,48 +17,47 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: lco_misc.ml *)
-(* created: 2005-08-03  *)
+(* file: lk_misc.ml *)
+(* created: 2007-06-11  *)
 (* author: Louis Mandel *)
 
 (* $Id$ *)
 
-(* Functions on Lco AST *)
+(* Functions on Lk AST *)
 
-open Lco_ast
+open Lk_ast
 
 let rec is_value e =
-  match e.coexpr_desc with
-  | Coexpr_local _  | Coexpr_global _ | Coexpr_constant _
-  | Coexpr_function _ | Coexpr_process _ -> 
+  match e.kexpr_desc with
+  | Kexpr_local _ | Kexpr_global _ | Kexpr_constant _
+  | Kexpr_function _ | Kexpr_process _ ->
       true
 
-  | Coexpr_let(_, patt_expr_list, expr) ->
+  | Kexpr_let (_, patt_expr_list, expr) ->
       (is_value expr)
-	&&
+      &&
       (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
 
-  | Coexpr_tuple expr_list ->
+  | Kexpr_tuple expr_list ->
       List.for_all is_value expr_list
 
-  | Coexpr_construct (_, None) -> true
-  | Coexpr_construct (_, Some expr) -> is_value expr
+  | Kexpr_construct (_, None) -> true
+  | Kexpr_construct (_, Some expr) -> is_value expr 
 
-  | Coexpr_constraint (expr, _) -> is_value expr
+  | Kexpr_constraint (expr, _) -> is_value expr 
+  | Kexpr_trywith (expr, patt_expr_list) ->
+      (is_value expr)
+      &&
+      (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
 
-  | Coexpr_trywith (expr, patt_expr_list) ->
+  | Kexpr_assert expr -> is_value expr 
+  | Kexpr_ifthenelse  (e1, e2, e3) ->
+      (is_value e1) && (is_value e2) && (is_value e3) 
+
+  | Kexpr_match (expr, patt_expr_list) ->
       (is_value expr)
 	&&
       (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
 
-  | Coexpr_assert expr -> is_value expr
-
-  | Coexpr_ifthenelse (e1, e2, e3) ->
-      (is_value e1) && (is_value e2) && (is_value e3)
-
-  | Coexpr_match (expr, patt_expr_list) ->
-      (is_value expr)
-	&&
-      (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
 
   | _ -> false

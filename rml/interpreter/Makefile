@@ -33,7 +33,7 @@ OBJ_OPT = $(OBJ:.cmo=.cmx)
 INTF = $(OBJ:.cmo=.cmi) \
 	lco_interpreter.cmi lk_interpreter.cmi
 
-LIB= rml_interpreter.cma rml_interpreter.cmxa rml_interpreter.a 
+LIB= rmllib.cma rmllib.cmxa rmllib.a 
 
 INSTALLFILE= $(LIB) $(INTF)
 
@@ -49,7 +49,7 @@ uninstall:
 
 # cleaning:
 clean:
-	rm -f *.cm* *.annot *.o $(CIBLE) rml_interpreter.a
+	rm -f *.cm* *.annot *.o $(CIBLE) rmllib.a
 
 realclean: clean
 	rm -f  *~
@@ -64,11 +64,11 @@ wc:
 	wc -l *.ml *.mli
 
 # library
-rml_interpreter.cma: $(OBJ)
-	$(OCAMLC) $(OCAMLFLAGS) -a -o rml_interpreter.cma $^
+rmllib.cma: $(OBJ)
+	$(OCAMLC) $(OCAMLFLAGS) -a -o rmllib.cma $^
 
-rml_interpreter.cmxa: $(OBJ_OPT)
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -a -o rml_interpreter.cmxa $^
+rmllib.cmxa: $(OBJ_OPT)
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -a -o rmllib.cmxa $^
 
 
 # dependencies
