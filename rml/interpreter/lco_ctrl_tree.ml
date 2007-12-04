@@ -39,7 +39,7 @@
 (*   Suppression de exec                                              *)
 
 
-module Rml_interpreter (*: Lco_interpreter.S*) =
+module Rml_interpreter : Lco_interpreter.S =
   functor (Event: Sig_env.S) ->
   struct
    

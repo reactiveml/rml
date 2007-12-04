@@ -17,30 +17,17 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: rmltop_directives.ml *)
+(* file: rmltop_reactive_machine.ml *)
+(* created: 2007-12-03  *)
 (* author: Louis Mandel *)
-(* created: 2005-10-25  *)
 
-let exec_machine_controller () =
-  let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
-  let debut = ref 0.0 in
-  let sleep = ref 0.0 in
-  let react = 
-    Rmltop_implantation.Machine_controler_machine.rml_make 
-      Rmltop_machine_controller.controller
+let rml_react = 
+  let step =
+    Implantation.Lco_ctrl_tree_record.rml_make Rmltop_machine_body.exec_process
   in
-  while true do
-    let _ = debut := Sys.time() in
-    let _ = react () in
-    let _ = 
-      sleep := !Rmltop_global.sampling -. ((Sys.time()) -. !debut);
-      if !sleep > 0.001 then 
-	begin try Thread.delay !sleep 
-	with Unix.Unix_error _ -> () end
-    in ()
-  done
+  (fun () -> ignore (step()))
 
-let start () =
-  Thread.create exec_machine_controller ()
-
-let machine = start ()
+let emit_add p = 
+  Implantation.Lco_ctrl_tree_record.rml_expr_emit_val
+    Rmltop_machine_body.add
+    ((Obj.magic p): unit Rmltop_global.rml_process)

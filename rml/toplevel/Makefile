@@ -2,10 +2,14 @@ include ../config
 
 INSTALLFILE=	rmltop.cmi \
 		rmltop_global.cmi \
-		rmltop_machine_controler.cmi \
+		rmltop_machine_body.cmi \
+		rmltop_reactive_machine.cmi \
+		rmltop_machine_controller.cmi \
 		rmltop.cmo \
 		rmltop_global.cmo \
-		rmltop_machine_controler.cmo \
+		rmltop_machine_body.cmo \
+		rmltop_reactive_machine.cmo \
+		rmltop_machine_controller.cmo \
 		rmltop_directives.cmi \
 		rmltop_implantation.cmi \
 		rmltop_main.cmi \
@@ -19,12 +23,17 @@ RMLLIB=-I ../stdlib -I ../interpreter
 all: rmltop
 
 lib: $(RMLC)
-	$(RMLC) $(RMLLIB) -c rmltop_global.rmli
+	$(RMLC) -c $(RMLLIB) rmltop_global.rmli
 	$(OCAMLC) $(RMLLIB) rmltop_global.mli
 	$(OCAMLC) -c $(RMLLIB) -thread rmltop_global.ml
+	$(RMLC) $(RMLLIB) -runtime Lco_ctrl_tree rmltop_machine_body.rml
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop_machine_body.ml
+	$(RMLC) $(RMLLIB) rmltop_reactive_machine.rmli
+	$(OCAMLC) $(RMLLIB) rmltop_reactive_machine.mli
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop_reactive_machine.ml
 	$(OCAMLC) -c $(RMLLIB) -thread rmltop_implantation.ml
-	$(RMLC) $(RMLLIB) -runtime Rmltop rmltop_machine_controler.rml 
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_machine_controler.ml
+	$(RMLC) $(RMLLIB) -runtime Rmltop rmltop_machine_controller.rml 
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop_machine_controller.ml
 	$(OCAMLC) -c $(RMLLIB) -thread rmltop_directives.ml
 	$(OCAMLC) -c $(RMLLIB) -thread rmltop_main.ml
 	$(OCAMLC) -c $(RMLLIB) -thread rmltop.ml
@@ -56,7 +65,7 @@ test:
 		rmllib.cma \
 		rmltop_global.cmo \
 		rmltop_implantation.cmo \
-		rmltop_machine_controler.cmo \
+		rmltop_machine_controller.cmo \
 		rmltop_directives.cmo \
 		rmltop_main.cmo
 
@@ -67,7 +76,10 @@ clean:
 	rm -f *.cm* *.rzi 
 
 realclean: clean
-	rm -f *~ rmltop_machine_controler.ml *.annot *.?annot rmltop
+	rm -f *~ *.annot *.?annot rmltop \
+		rmltop_machine_controller.ml \
+		rmltop_machine_body.ml \
+		rmltop_reactive_machine.mli \
 
 cleanall: realclean
 

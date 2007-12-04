@@ -55,7 +55,8 @@ let read_phrase ch =
       aux new_line ((line^"\n") :: previous_lines)
   in
   fun s ->
-    aux s []
+    try aux s []
+    with End_of_file -> exit 0
 
 let string_of_char c =
   let s = "a" in
@@ -74,7 +75,10 @@ let extract_directive s =
 
 let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
   while true do
-    let s = input_line rmltop_in in
+    let s = 
+      try input_line rmltop_in 
+      with End_of_file -> exit 0
+    in
     if search begin_of_directive s then
       let i = String.index s '#' in
       let s' = Str.string_after s (i+1) in
@@ -128,16 +132,28 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
 	    "Rmltop_directives.set_add ("::
 	    (substitute_end_of_phrase ocaml_phrase ");;")
 
-	| "step_by_step" ->
-	    ["Rmltop_directives.set_step_by_step ();; \n"]
+(* 	| "step" -> *)
+(* 	    ["Rmltop_directives.set_step 4;; \n"] *)
 	| "step" ->
-	    ["Rmltop_directives.set_step ();; \n"]
+	    let proc = Str.string_after s' 4 in
+	    let phrase = read_phrase rmltop_in proc in
+	    "Rmltop_directives.set_step " :: phrase @ ["\n"]
+
+	| "show" ->
+	    let proc = Str.string_after s' 4 in
+	    let phrase = read_phrase rmltop_in proc in
+	    let phrase = "(pre ":: (substitute_end_of_phrase phrase ");;") in
+	    (* send phrase to rmlc *)
+	    List.iter (fun line -> output_string rmlc_in line) phrase;
+	    flush rmlc_in;
+	    (* read the compiled phrase *)
+	    let ocaml_phrase = read_phrase rmlc_out "" in
+	    (substitute_end_of_phrase ocaml_phrase ";;")
+
 	| "suspend" ->
-	    ["Rmltop_directives.set_suspend_resume ();; \n"]
+	    ["Rmltop_directives.set_suspend ();; \n"]
 	| "resume" ->
-	    ["Rmltop_directives.set_suspend_resume ();; \n"]
-	| "sampled" ->
-	    ["Rmltop_directives.set_sampled ();; \n"]
+	    ["Rmltop_directives.set_resume ();; \n"]
 	| "sampling" ->
 	    let n = Str.string_after s' 8 in
 	    "Rmltop_directives.set_sampling "::(read_phrase rmltop_in n)
@@ -187,7 +203,7 @@ let rmlc = ref "rmlc -i -interactive"
 let ocaml = 
   ref 
 (*"ocaml -I +threads -I `rmlc -where` unix.cma threads.cma rml_interactive.cmo "*)
-    "ocaml -I +threads -I `rmlc -where` -I `rmlc -where`/toplevel unix.cma threads.cma rmllib.cma rmltop_global.cmo rmltop_implantation.cmo rmltop_machine_controler.cmo rmltop_directives.cmo rmltop_main.cmo "
+    "ocaml -I +threads -I `rmlc -where` -I `rmlc -where`/toplevel unix.cma threads.cma rmllib.cma rmltop_global.cmo rmltop_implantation.cmo rmltop_machine_body.cmo rmltop_reactive_machine.cmo rmltop_machine_controller.cmo rmltop_directives.cmo rmltop_main.cmo "
 
 let sampling = ref None
     

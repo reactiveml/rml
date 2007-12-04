@@ -28,8 +28,10 @@ let set ref n =
 
 let set_sampling n =  Rmltop_global.sampling := n
 
-let set_sampled = set Rmltop_global.sampled
-let set_suspend_resume = set Rmltop_global.suspend_resume 
-let set_step_by_step = set Rmltop_global.step_by_step 
+let set_suspend = set Rmltop_global.suspend
+let set_resume = set Rmltop_global.resume 
 let set_step = set Rmltop_global.step 
-let set_add = set Rmltop_global.add 
+let set_add p = 
+  Rmltop_global.lock();
+  Rmltop_global.to_run := p :: !Rmltop_global.to_run;
+  Rmltop_global.unlock()

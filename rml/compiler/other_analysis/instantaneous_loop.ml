@@ -48,6 +48,7 @@ module Env :
       val min: t -> int option
       val append: t -> t -> t
       val string_of_t: t -> string
+      val remove_zero: t -> t
     end  =
   struct
 
@@ -139,6 +140,10 @@ module Env :
         (fun env (x,n) -> add env x n)
 	env2 env1
 
+    let remove_zero =
+      List.fold_left 
+	(fun acc ((_,n) as x) -> if n <= 0 then acc else x :: acc) []
+      
 
   end
 
@@ -227,8 +232,7 @@ let instantaneous_loop_expr =
 		List.fold_left 
 		  (fun (vars, ty_res, var_list) (p_list, ty) ->
 		    begin match Env.min ty with
-		    | None | Some 0 ->
-	  	    (* if min(ty) = 0 we don't have to repeate the warning *)
+		    | None ->
 			(vars, 
 			 Env.append ty ty_res, 
 			 List.rev_append p_list var_list)
@@ -293,7 +297,7 @@ let instantaneous_loop_expr =
 			p_list
 		    in
 		    begin match Env.min ty' with
-		    | None | Some 0 -> 
+		    | None -> 
 			(vars, Env.append ty' ty_res)
 		    | Some n -> 
 			let vars' =
@@ -318,10 +322,13 @@ let instantaneous_loop_expr =
       | Rexpr_apply (e, expr_list) ->
 	  let ty = analyse vars e in
 	  let ty' = Env.plus ty (- List.length expr_list) in
-(* 	if not (Env.positive ty') then rec_warning expr; *)
-	  let ty_args = instantaneous_loop_expr_list analyse id vars expr_list in
+ 	  (*if not (Env.positive ty') then rec_warning expr; *)
+          let ty'' = Env.remove_zero ty' in (* si bug demander a Florence*)
+	  let ty_args = 
+	    instantaneous_loop_expr_list analyse id vars expr_list 
+	  in
 	  if not (Env.equal Env.empty ty_args) then rec_warning expr;
-	  ty'
+	  ty''
 	    
       | Rexpr_tuple expr_list ->
 	  instantaneous_loop_expr_list analyse id vars expr_list
@@ -465,7 +472,7 @@ let instantaneous_loop_expr =
 	  let ty = analyse vars e in
 	  let ty' = Env.plus ty (-1) in
 	  if not (Env.positive ty') then rec_warning expr;
-	  ty'
+	  Env.remove_zero ty'
 	    
       | Rexpr_until (config, e, None) ->
 	  let ty_config = config_analyse vars config in

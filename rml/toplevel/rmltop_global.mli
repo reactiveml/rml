@@ -21,23 +21,15 @@
 (* author: Louis Mandel *)
 (* created: 2005-09-23  *)
 
-
 type 'a rml_process = 'a Implantation.Lco_ctrl_tree_record.process
 
 val sampling : float ref
 
-val sampled : unit option ref
-val suspend_resume : unit option ref
-val step_by_step : unit option ref
-val step : unit option ref
-val add : unit rml_process option ref
+val suspend : unit option ref
+val resume : unit option ref
+val step : int option ref
+val to_run : unit rml_process list ref
 
 val lock : unit -> unit
 val unlock : unit -> unit
 
-val rml_nothing : unit rml_process
-val rml_halt : unit rml_process
-val combine_process : unit rml_process -> unit rml_process -> unit rml_process 
-
-val rml_react : unit -> unit
-val add_process : unit rml_process -> unit

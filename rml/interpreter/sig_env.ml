@@ -41,7 +41,7 @@ module type S =
 
   end
 
-module Record (* : S *) =
+module Record  (*: S*)  =
   struct 
     type ('a, 'b) t =
 	{ mutable status: int;

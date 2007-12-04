@@ -17,59 +17,13 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: rmltop_machine_controler.ml *)
+(* file: rmltop_machine_body.rml *)
+(* created: 2007-12-03  *)
 (* author: Louis Mandel *)
-(* created: 2005-09-23  *)
 
+signal add: (unit process , unit process) event default process () 
+            gather (fun p q -> process (run p || run q));;
 
-signal sampled, suspend_resume, step_by_step, step 
-    default () 
-    gather (fun () () -> ());;
-
-signal add 
-    default Rmltop_global.rml_nothing 
-    gather Rmltop_global.combine_process;;
-
-let ref_to_sig ref_s s = 
-  match !ref_s with 
-  | None -> ()
-  | Some v ->
-      ref_s := None; 
-      emit s v
-
-let process generate_signals =
-  loop
-    Rmltop_global.lock();
-    ref_to_sig Rmltop_global.sampled sampled;
-    ref_to_sig Rmltop_global.suspend_resume suspend_resume;
-    ref_to_sig Rmltop_global.step_by_step step_by_step;
-    ref_to_sig Rmltop_global.step step;
-    ref_to_sig Rmltop_global.add add;
-    Rmltop_global.unlock();
-    pause;
-  end
-
-let process add_process =
-  loop
-    await add(p) in
-    Rmltop_global.add_process p;
-  end
-
-let process machine =
-  loop
-    do 
-      control
-        loop Rmltop_global.rml_react(); pause end
-      with suspend_resume
-    until step_by_step done;
-    do 
-      loop await step; Rmltop_global.rml_react() end
-    until sampled done
-  end
-
-let process main =
-  run machine
-  ||
-  run add_process
-  || 
-  run generate_signals
+let rec process exec_process = 
+  await add(p) in run exec_process || run p
+;;
