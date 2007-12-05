@@ -5,6 +5,7 @@ INSTALLFILE=	rmltop.cmi \
 		rmltop_machine_body.cmi \
 		rmltop_reactive_machine.cmi \
 		rmltop_machine_controller.cmi \
+		rmltop_lexer.cmo \
 		rmltop.cmo \
 		rmltop_global.cmo \
 		rmltop_machine_body.cmo \
@@ -23,6 +24,8 @@ RMLLIB=-I ../stdlib -I ../interpreter
 all: rmltop
 
 lib: $(RMLC)
+	$(OCAMLLEX) rmltop_lexer.mll
+	$(OCAMLC) -c $(RMLLIB) -thread rmltop_lexer.ml
 	$(RMLC) -c $(RMLLIB) rmltop_global.rmli
 	$(OCAMLC) $(RMLLIB) rmltop_global.mli
 	$(OCAMLC) -c $(RMLLIB) -thread rmltop_global.ml
@@ -42,6 +45,7 @@ rmltop: lib
 	$(OCAMLC) -o rmltop -I +threads $(RMLLIB) unix.cma str.cma \
 		threads.cma \
 		rmllib.cma \
+		rmltop_lexer.cmo \
 		rmltop_global.cmo \
 		rmltop_directives.cmo \
 		rmltop.cmo
@@ -80,6 +84,8 @@ realclean: clean
 		rmltop_machine_controller.ml \
 		rmltop_machine_body.ml \
 		rmltop_reactive_machine.mli \
+		rmltop_lexer.ml \
+
 
 cleanall: realclean
 

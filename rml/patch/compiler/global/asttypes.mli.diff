@@ -1,5 +1,5 @@
---- compiler/global/asttypes.mli	2007-12-05 19:01:30.000000000 +0100
-+++ ../compiler/global/asttypes.mli	2007-12-05 19:01:30.000000000 +0100
+--- compiler/global/asttypes.mli	2007-12-06 16:38:27.000000000 +0100
++++ ../compiler/global/asttypes.mli	2007-12-06 16:38:26.000000000 +0100
 @@ -1,4 +1,30 @@
 -(* This file was asttypes.ml from Objective Caml *)
 +(**********************************************************************)

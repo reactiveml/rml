@@ -23,13 +23,13 @@
 
 type 'a rml_process = 'a Implantation.Lco_ctrl_tree_record.process
 
-let sampling = ref 0.01
+let global_mutex = Mutex.create ()
+let lock () = Mutex.lock global_mutex
+let unlock () = Mutex.unlock global_mutex
 
 let suspend = ref None
 let resume = ref None
 let step = ref None
 let to_run = ref []
+let sampling = ref 0.01
 
-let global_mutex = Mutex.create ()
-let lock () = Mutex.lock global_mutex
-let unlock () = Mutex.unlock global_mutex

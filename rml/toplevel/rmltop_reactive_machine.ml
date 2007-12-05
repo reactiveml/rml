@@ -29,5 +29,4 @@ let rml_react =
 
 let emit_add p = 
   Implantation.Lco_ctrl_tree_record.rml_expr_emit_val
-    Rmltop_machine_body.add
-    ((Obj.magic p): unit Rmltop_global.rml_process)
+    Rmltop_machine_body.add p

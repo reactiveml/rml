@@ -1,5 +1,5 @@
---- compiler/global/global.ml	2007-12-05 19:01:30.000000000 +0100
-+++ ../compiler/global/global.ml	2007-12-05 19:01:30.000000000 +0100
+--- compiler/global/global.ml	2007-12-06 16:38:27.000000000 +0100
++++ ../compiler/global/global.ml	2007-12-06 16:38:26.000000000 +0100
 @@ -1,107 +1,48 @@
 -(* This file was globals.ml from Caml Light *)
 +(**********************************************************************)

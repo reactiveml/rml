@@ -1,5 +1,5 @@
---- compiler/parsing/parse.ml	2007-12-05 19:01:30.000000000 +0100
-+++ ../compiler/parsing/parse.ml	2007-12-05 19:01:30.000000000 +0100
+--- compiler/parsing/parse.ml	2007-12-06 16:38:27.000000000 +0100
++++ ../compiler/parsing/parse.ml	2007-12-06 16:38:26.000000000 +0100
 @@ -1,4 +1,30 @@
 -(* This file was parse.ml from Objective Caml *)
 +(**********************************************************************)

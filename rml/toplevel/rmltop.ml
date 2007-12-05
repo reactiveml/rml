@@ -21,175 +21,90 @@
 (* created: 2005-06-11  *)
 (* author: Louis Mandel *)
 
-
-let print_DEBUG s =
-  print_string s;
-  print_newline()
-
-
-let end_of_phrase = Str.regexp ";;"
-let begin_of_directive = Str.regexp "^\b*#"  
-
-let search r s =
-  try 
-    let _ = Str.search_forward r s 0 in 
-    true 
-  with
-  | Not_found -> false
-
-let substitute_end_of_phrase phrase new_end =
-  match List.rev phrase with
-  | [] -> []
-  | last :: esarhp ->
-      let new_last =
-	Str.replace_first end_of_phrase new_end last 
-      in
-      List.rev (new_last :: esarhp)
-
-let read_phrase ch =
-  let rec aux line previous_lines =
-    if search end_of_phrase line then
-      List.rev ((line^"\n") :: previous_lines)
-    else
-      let new_line = input_line ch in
-      aux new_line ((line^"\n") :: previous_lines)
-  in
-  fun s ->
-    try aux s []
-    with End_of_file -> exit 0
-
-let string_of_char c =
-  let s = "a" in
-  s.[0] <- c;
-  s
-
-let extract_directive s =
-  let rec aux s res =
-    match s.[0] with
-    | ('a' .. 'z' | '_') as c -> 
-	aux 
-	  (String.sub s 1 ((String.length s) - 1)) 
-	  (res ^ (string_of_char c))
-    | c -> res
-  in aux s ""
+let print_DEBUG s = print_string s; print_newline()
 
 let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
+  let rmltop_in_lexbuf = Lexing.from_channel rmltop_in in
+  let rmlc_out_lexbuf = Lexing.from_channel rmlc_out in
   while true do
-    let s = 
-      try input_line rmltop_in 
-      with End_of_file -> exit 0
-    in
-    if search begin_of_directive s then
-      let i = String.index s '#' in
-      let s' = Str.string_after s (i+1) in
-      let directive = 
-	match (*String.sub s' 0 3*) extract_directive s' with
-	| "run" ->
-	    let proc = Str.string_after s' 3 in
-	    let phrase = read_phrase rmltop_in proc in
+    try
+      let ocaml_phrase =
+	match Rmltop_lexer.phrase rmltop_in_lexbuf with
+	| Rmltop_lexer.Rml_phrase s ->
+	    let phrase = s::[";;"] in
+	    (* send phrase to rmlc *)
+	    List.iter (fun line -> output_string rmlc_in line) phrase;
+	    flush rmlc_in;
+	    (* read the compiled phrase *)
+	    let ocaml_phrase = Rmltop_lexer.expr rmlc_out_lexbuf in
+	    ocaml_phrase::[";;"]
+	| Rmltop_lexer.OCaml_phrase s ->
+	    s::[";;"]
+	| Rmltop_lexer.Run s -> 
 	    (* add "(process ( run (...); ()));;" *)
-	    let phrase =
-	      " (process ( run ("::
-	      (substitute_end_of_phrase phrase "); ()));;")
-	    in
+	    let phrase = " (process ( run ("::s::["); ()));;"] in
 	    (* send phrase to rmlc *)
 	    List.iter (fun line -> output_string rmlc_in line) phrase;
 	    flush rmlc_in;
 	    (* read the compiled phrase *)
-	    let ocaml_phrase = read_phrase rmlc_out "" in
-	    "Rmltop_directives.set_add ("::
-	    (substitute_end_of_phrase ocaml_phrase ");;")
-
-	| "exec" ->
-	    let proc = Str.string_after s' 4 in
-	    let phrase = read_phrase rmltop_in proc in
+	    let ocaml_phrase = Rmltop_lexer.expr rmlc_out_lexbuf in
+	    "Rmltop_directives.set_add ("::ocaml_phrase::[");;"]
+	| Rmltop_lexer.Exec s ->
 	    (* add "(process ( ...; ()));;" *)
-	    let phrase =
-	      " (process ( "::
-	      (substitute_end_of_phrase phrase "; ()));;")
-	    in
+	    let phrase = " (process ( "::s::["; ()));;"] in
 	    (* send phrase to rmlc *)
 	    List.iter (fun line -> output_string rmlc_in line) phrase;
 	    flush rmlc_in;
 	    (* read the compiled phrase *)
-	    let ocaml_phrase = read_phrase rmlc_out "" in
-	    "Rmltop_directives.set_add ("::
-	    (substitute_end_of_phrase ocaml_phrase ");;")
-
-	| "emit" ->
-	    let proc = Str.string_after s' 4 in
-	    let phrase = read_phrase rmltop_in proc in
+	    let ocaml_phrase = Rmltop_lexer.expr rmlc_out_lexbuf in
+	    "Rmltop_directives.set_add ("::ocaml_phrase::[");;"]
+	| Rmltop_lexer.Emit s ->
 	    (* add "(process ( emit ... ));;" *)
-	    let phrase =
-	      " (process ( emit "::
-	      (substitute_end_of_phrase phrase "));;")
-	    in
+	    let phrase = " (process ( emit "::s::["));;"] in
 	    (* send phrase to rmlc *)
 	    List.iter (fun line -> output_string rmlc_in line) phrase;
 	    flush rmlc_in;
 	    (* read the compiled phrase *)
-	    let ocaml_phrase = read_phrase rmlc_out "" in
-	    "Rmltop_directives.set_add ("::
-	    (substitute_end_of_phrase ocaml_phrase ");;")
-
-(* 	| "step" -> *)
-(* 	    ["Rmltop_directives.set_step 4;; \n"] *)
-	| "step" ->
-	    let proc = Str.string_after s' 4 in
-	    let phrase = read_phrase rmltop_in proc in
-	    "Rmltop_directives.set_step " :: phrase @ ["\n"]
-
-	| "show" ->
-	    let proc = Str.string_after s' 4 in
-	    let phrase = read_phrase rmltop_in proc in
-	    let phrase = "(pre ":: (substitute_end_of_phrase phrase ");;") in
+	    let ocaml_phrase = Rmltop_lexer.expr rmlc_out_lexbuf in
+	    "Rmltop_directives.set_add ("::ocaml_phrase::[");;"]
+	| Rmltop_lexer.Step None ->
+	    ["Rmltop_directives.set_step 1;;"]
+	| Rmltop_lexer.Step (Some n) ->
+	    "Rmltop_directives.set_step " :: (string_of_int n) :: [";;"]
+	| Rmltop_lexer.Show s ->
+	    (* pre (...);; *)
+	    let phrase = "(pre "::s::[");;"] in
 	    (* send phrase to rmlc *)
 	    List.iter (fun line -> output_string rmlc_in line) phrase;
 	    flush rmlc_in;
 	    (* read the compiled phrase *)
-	    let ocaml_phrase = read_phrase rmlc_out "" in
-	    (substitute_end_of_phrase ocaml_phrase ";;")
+	    let ocaml_phrase = Rmltop_lexer.expr rmlc_out_lexbuf in
+	    ocaml_phrase::[";;"]
+	| Rmltop_lexer.Suspend ->
+	    ["Rmltop_directives.set_suspend ();;"]
+	| Rmltop_lexer.Resume ->
+	    ["Rmltop_directives.set_resume ();;"]
+	| Rmltop_lexer.Sampling n ->
+            "Rmltop_directives.set_sampling "::(string_of_float n)::[";;"]
 
-	| "suspend" ->
-	    ["Rmltop_directives.set_suspend ();; \n"]
-	| "resume" ->
-	    ["Rmltop_directives.set_resume ();; \n"]
-	| "sampling" ->
-	    let n = Str.string_after s' 8 in
-	    "Rmltop_directives.set_sampling "::(read_phrase rmltop_in n)
-	| _ ->
-	    read_phrase rmltop_in s' 
       in
-      (* send directive to OCaml *)
-      List.iter (fun line -> output_string ocaml_in line) directive;
-      flush ocaml_in;
-    else
-      let phrase = read_phrase rmltop_in s in
-      (* send phrase to rmlc *)
-      List.iter (fun line -> output_string rmlc_in line) phrase;
-      flush rmlc_in;
-      (* read the compiled phrase *)
-      let ocaml_phrase = read_phrase rmlc_out "" in
-      (* send the compiled phrase to OCaml *)
+      (* send to OCaml *)
       List.iter (fun line -> output_string ocaml_in line) ocaml_phrase;
-      flush ocaml_in;
+      output_string ocaml_in "\n";
+      flush ocaml_in
+    with
+    | Rmltop_lexer.EOF -> print_DEBUG "coiucoiuaskldjhal"; exit 0
+    | Rmltop_lexer.Syntax_error -> 
+	Printf.fprintf stderr "Syntax error\n";
+	flush stderr;
+	output_string ocaml_in "();;\n\n";
+	flush ocaml_in
   done
 
-(*
-let run_machine ocaml_in =
-  output_string ocaml_in "Rmltop_main.machine();;\n";
-  flush ocaml_in
-
-let run_machine_sampling ocaml_in sampling =
-  output_string ocaml_in ("Rml_interactive.machine_sampling "^
-			  (string_of_float sampling)^";;\n");
-  flush ocaml_in
-*)
 let init ocaml_in =
   output_string ocaml_in ("open Implantation;;\n");
   output_string ocaml_in ("();;\n");
   flush ocaml_in  
-
       
 let print_intro () =
   print_string "        ReactiveML version ";
@@ -211,14 +126,14 @@ let main s =
   let _ = print_intro() in
   (* fork the ReactiveML compiler *)
   let rmlc_out, rmlc_in = Unix.open_process !rmlc in
+  at_exit (fun () -> ignore (Unix.close_process (rmlc_out, rmlc_in)));
   (* fork the OCaml toplevel *)
   let ocaml_in = Unix.open_process_out (!ocaml ^ s) in
+  at_exit (fun () -> ignore (Unix.close_process_out ocaml_in));
   (* start the machine *)
   begin match !sampling with
-  | None -> (*run_machine ocaml_in*) 
-      ()
-  | Some n -> (*run_machine_sampling ocaml_in n*)
-      Rmltop_directives.set_sampling n
+  | None -> ()
+  | Some n -> Rmltop_directives.set_sampling n
   end;
   init ocaml_in;
   main_loop stdin rmlc_in rmlc_out ocaml_in
@@ -234,14 +149,3 @@ let _ =
     (fun x -> ocaml := !ocaml ^ " " ^ x)
     usage;
   main ""
-
-(*
-  let args = 
-    let tmp = ref "" in
-    for i = 1 to Array.length Sys.argv - 1 do
-      tmp := !tmp^" "^Sys.argv.(i)
-    done;
-    !tmp
-  in
-  main args
-*)
