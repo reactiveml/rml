@@ -24,8 +24,6 @@
 {
  open Lexing
 
- let print_DEBUG s = print_string ("XXX"^s^"XXX"); print_newline()
-
  exception EOF 
  exception Syntax_error
 
@@ -37,9 +35,8 @@
    | Step of int option
    | Sampling of float
    | Run of string
-   | Emit of string
    | Exec of string
-   | Show of string
+   | Quit
 
  let expr_buffer = Buffer.create 512
 }
@@ -72,7 +69,7 @@ let float_literal =
 rule phrase = parse
   | sep* '#'         { directive lexbuf }
   | sep*             { Rml_phrase (expr lexbuf) }
-  | eof              { print_DEBUG "EOF"; raise EOF }
+  | eof              { raise EOF }
 
 and directive = parse
   | "suspend"        { end_of_phrase lexbuf; Suspend }
@@ -81,18 +78,17 @@ and directive = parse
   | "step" sep*      { Step (Some (int_expr lexbuf)) }
   | "sampling" sep*  { Sampling (float_expr lexbuf) }
   | "run"            { Run (expr lexbuf) }
-  | "emit"           { Emit (expr lexbuf) }
   | "exec"           { Exec (expr lexbuf) }
-  | "show"           { Show (expr lexbuf) }
+  | "quit"           { end_of_phrase lexbuf; Quit }
   | sep+             { OCaml_phrase (expr lexbuf) }
-  | eof              { print_DEBUG "EOF"; raise EOF }
+  | eof              { raise EOF }
   | _                { error lexbuf; assert false }
 
 and expr = parse
   | ";;"             { let s = Buffer.contents expr_buffer in
                        Buffer.reset expr_buffer;
                        s }
-  | eof              { print_DEBUG "EOF"; raise EOF }
+  | eof              { raise EOF }
   | _                { Buffer.add_string expr_buffer (lexeme lexbuf);
 	               expr lexbuf }
 
@@ -100,7 +96,7 @@ and float_expr = parse
   | float_literal    { let x = float_of_string (Lexing.lexeme lexbuf) in 
                        end_of_phrase lexbuf;
                        x }
-  | eof              { print_DEBUG "EOF"; raise EOF }
+  | eof              { raise EOF }
   | ";;"             { raise Syntax_error }
   | _                { error lexbuf; assert false }
 
@@ -108,12 +104,12 @@ and int_expr = parse
   | int_literal      { let x = int_of_string (Lexing.lexeme lexbuf) in 
                         end_of_phrase lexbuf;
                         x }
-  | eof              { print_DEBUG "EOF"; raise EOF }
+  | eof              { raise EOF }
   | _                { error lexbuf; assert false }
 
 and end_of_phrase = parse
   | sep*  ";;"       { () } 
-  | eof              { print_DEBUG "EOF"; raise EOF }
+  | eof              { raise EOF }
   | _                { error lexbuf; assert false }
 
 and error = parse

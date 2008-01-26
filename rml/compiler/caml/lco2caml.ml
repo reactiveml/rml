@@ -214,7 +214,12 @@ let rec translate_ml e =
 	Cexpr_seq (translate_ml e1, translate_ml e2)
 
     | Coexpr_process (p) -> 
-	Cexpr_function [make_patt_unit(), translate_proc p]
+	Cexpr_constraint
+	  (make_expr 
+	     (Cexpr_function [make_patt_unit(), translate_proc p]) 
+	     e.coexpr_loc,
+	   make_rml_type "process" [make_te Ctype_any Location.none])
+	
 
     | Coexpr_pre(flag, s) ->
 	let kind = 

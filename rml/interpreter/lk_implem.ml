@@ -20,7 +20,7 @@
 
 (* author: Louis Mandel *)
 (* created: 2005-08-31  *)
-(* file: lk_implantation.ml *)
+(* file: lk_implem.ml *)
 
 
 

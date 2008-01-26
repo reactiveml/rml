@@ -8,22 +8,22 @@ SRC=	sig_env.ml \
 	lco_ctrl_tree_thread_safe.ml \
 	lco_rewrite.ml \
 	lk_interpreter.mli \
-	lk_implantation.ml \
+	lk_implem.ml \
 	lk_threaded.ml \
-	implantation.ml \
-	rec_implantation.ml \
-	thread_implantation.ml \
+	implem.ml \
+	rec_implem.ml \
+	thread_implem.ml \
 	rml_machine.ml \
 
 OBJ=	sig_env.cmo \
 	lco_ctrl_tree.cmo \
 	lco_ctrl_tree_thread_safe.cmo \
 	lco_rewrite.cmo \
-	lk_implantation.cmo \
+	lk_implem.cmo \
 	lk_threaded.cmo \
-	implantation.cmo \
-	rec_implantation.cmo \
-	thread_implantation.cmo \
+	implem.cmo \
+	rec_implem.cmo \
+	thread_implem.cmo \
 	rml_machine.cmo \
 
 
@@ -75,8 +75,8 @@ rmllib.cmxa: $(OBJ_OPT)
 lco_rewrite.cmo: OCAMLFLAGS += -rectypes
 lco_rewrite.cmx: OCAMLOPTFLAGS += -rectypes
 
-rec_implantation.cmo: OCAMLFLAGS += -rectypes
-rec_implantation.cmx: OCAMLOPTFLAGS += -rectypes
+rec_implem.cmo: OCAMLFLAGS += -rectypes
+rec_implem.cmx: OCAMLOPTFLAGS += -rectypes
 
 lco_ctrl_tree_thread_safe.cmo: OCAMLFLAGS += $(THEAD_TYPE)
 lco_ctrl_tree_thread_safe.cmx: OCAMLOPTFLAGS += -thread
@@ -84,8 +84,8 @@ lco_ctrl_tree_thread_safe.cmx: OCAMLOPTFLAGS += -thread
 lk_threaded.cmo: OCAMLFLAGS += $(THEAD_TYPE)
 lk_threaded.cmx: OCAMLOPTFLAGS += -thread
 
-thread_implantation.cmo: OCAMLFLAGS += $(THEAD_TYPE)
-thread_implantation.cmx: OCAMLOPTFLAGS += -thread
+thread_implem.cmo: OCAMLFLAGS += $(THEAD_TYPE)
+thread_implem.cmx: OCAMLOPTFLAGS += -thread
 
 include .depend
 

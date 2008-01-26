@@ -17,15 +17,12 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: rmltop_machine_controller.ml *)
+(* file: rmltop_controller.ml *)
 (* author: Louis Mandel *)
 (* created: 2005-09-23  *)
 
 
-signal suspend, resume
-    default () 
-    gather (fun () () -> ());;
-
+signal suspend, resume default () gather (fun () () -> ());;
 signal step default 1 gather (fun x y -> x);;
 
 let ref_to_sig ref_s s = 
@@ -35,36 +32,51 @@ let ref_to_sig ref_s s =
       ref_s := None; 
       emit s v
 
-let to_run_to_add () =
-  List.iter 
-    (fun p -> Rmltop_reactive_machine.emit_add p) 
-    !Rmltop_global.to_run;
-  Rmltop_global.to_run := []
-  
+let get_to_run () =
+  Rmltop_global.lock();
+  let proc_list = !Rmltop_global.to_run in
+  Rmltop_global.to_run := [];
+  Rmltop_global.unlock();
+  proc_list
+
 let process generate_signals =
   loop
     Rmltop_global.lock();
     ref_to_sig Rmltop_global.suspend suspend;
     ref_to_sig Rmltop_global.resume resume;
     ref_to_sig Rmltop_global.step step;
-    to_run_to_add ();
     Rmltop_global.unlock();
     pause;
+  end
+
+let process sampled = 
+  loop 
+    Rmltop_reactive_machine.rml_react(get_to_run()); 
+    pause 
+  end
+
+let process step_by_step = 
+  loop 
+    await step(n) in 
+    do
+      for i = 1 to n do 
+        Rmltop_reactive_machine.rml_react(get_to_run()); 
+	pause
+      done 
+    until suspend done
   end
 
 let process machine_controller =
   loop
     do 
-      loop Rmltop_reactive_machine.rml_react(); pause end
+      run sampled 
     until suspend done;
     do 
-      loop 
-        await step(n) in 
-        for i = 1 to n do Rmltop_reactive_machine.rml_react() done 
-      end
+      run step_by_step 
     until resume done
   end
 
+let set_suspend () = emit suspend
 
 let process controller =
   run machine_controller

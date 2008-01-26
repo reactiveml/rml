@@ -21,6 +21,4 @@
 (* created: 2007-12-03  *)
 (* author: Louis Mandel *)
 
-val rml_react: unit -> unit
-val emit_add: unit Rmltop_global.rml_process -> unit
-
+val rml_react: unit Rmltop_global.rml_process list -> unit

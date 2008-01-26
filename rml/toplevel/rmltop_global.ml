@@ -21,7 +21,7 @@
 (* author: Louis Mandel *)
 (* created: 2005-09-23  *)
 
-type 'a rml_process = 'a Implantation.Lco_ctrl_tree_record.process
+type 'a rml_process = 'a Implem.Lco_ctrl_tree_record.process
 
 let global_mutex = Mutex.create ()
 let lock () = Mutex.lock global_mutex
@@ -33,3 +33,4 @@ let step = ref None
 let to_run = ref []
 let sampling = ref 0.01
 
+let print_prompt () = print_string "# "

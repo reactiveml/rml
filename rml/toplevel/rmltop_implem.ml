@@ -17,7 +17,7 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: rmltop_implantation.ml *)
+(* file: rmltop_implem.ml *)
 (* author: Louis Mandel *)
 (* created: 2005-10-25  *)
 

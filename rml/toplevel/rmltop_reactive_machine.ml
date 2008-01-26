@@ -21,12 +21,14 @@
 (* created: 2007-12-03  *)
 (* author: Louis Mandel *)
 
-let rml_react = 
-  let step =
-    Implantation.Lco_ctrl_tree_record.rml_make Rmltop_machine_body.exec_process
-  in
-  (fun () -> ignore (step()))
+let rml_react_unsafe = 
+  Implem.Lco_ctrl_tree_record.rml_make_exec_process 
+    Rmltop_machine_body.main
 
-let emit_add p = 
-  Implantation.Lco_ctrl_tree_record.rml_expr_emit_val
-    Rmltop_machine_body.add p
+
+let rml_react x =
+  Rmltop_global.lock();
+  begin try rml_react_unsafe x
+  with e -> Rmltop_global.unlock(); raise e
+  end;
+  Rmltop_global.unlock()

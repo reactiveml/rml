@@ -997,5 +997,26 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       in
       rml_react, rml_add_process
 
+(**************************************************)
+(* rml_make_exec_process                          *)
+(**************************************************)
+    let rml_make_exec_process (p: unit process) = 
+      let current = ref (p()) in
+      let rml_add_process p =
+	current := rml_par (p()) !current
+      in
+      let rml_react proc_list =
+	List.iter rml_add_process proc_list;
+	match sched !current with
+	| STOP, p' -> 
+	    Event.next ();
+	    current := p';
+	    eoi := false;
+	    move := false;
+	    ()
+	| TERM v, _ -> assert false
+	| SUSP, _ -> assert false
+      in 
+      rml_react
 
   end (* Module Rml_interpreter *)

@@ -21,7 +21,7 @@
 (* author: Louis Mandel *)
 (* created: 2005-09-23  *)
 
-type 'a rml_process = 'a Implantation.Lco_ctrl_tree_record.process
+type 'a rml_process = 'a Implem.Lco_ctrl_tree_record.process
 
 val sampling : float ref
 
@@ -33,3 +33,4 @@ val to_run : unit rml_process list ref
 val lock : unit -> unit
 val unlock : unit -> unit
 
+val print_prompt : unit -> unit

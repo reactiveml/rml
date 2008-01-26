@@ -21,9 +21,4 @@
 (* created: 2007-12-03  *)
 (* author: Louis Mandel *)
 
-signal add: (unit process , unit process) event default process () 
-            gather (fun p q -> process (run p || run q));;
-
-let rec process exec_process = 
-  await add(p) in run exec_process || run p
-;;
+let process main = halt

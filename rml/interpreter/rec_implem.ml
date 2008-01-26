@@ -19,15 +19,8 @@
 (**********************************************************************)
 
 (* author: Louis Mandel *)
-(* created: 2005-09-13  *)
-(* file: implantation.ml *)
+(* created: 2006-12-06  *)
+(* file: rec_implem.ml *)
 
-
-module Lco_ctrl_tree_record = Lco_ctrl_tree.Rml_interpreter(Sig_env.Record)
-(* module Lco_rewrite_record = Lco_rewrite.Rml_interpreter(Sig_env.Record) *)
-
-module Lco_ctrl_tree_class = Lco_ctrl_tree.Rml_interpreter(Sig_env.Class)
-
-module Lk_record = Lk_implantation.Lk_interpreter(Sig_env.Record)
-
+module Lco_rewrite_record = Lco_rewrite.Rml_interpreter(Sig_env.Record)
 

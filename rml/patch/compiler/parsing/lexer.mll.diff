@@ -1,5 +1,5 @@
---- compiler/parsing/lexer.mll	2007-12-06 16:38:27.000000000 +0100
-+++ ../compiler/parsing/lexer.mll	2007-12-06 16:38:26.000000000 +0100
+--- compiler/parsing/lexer.mll	2008-01-27 15:23:28.000000000 +0100
++++ ../compiler/parsing/lexer.mll	2008-01-27 15:23:28.000000000 +0100
 @@ -1,4 +1,30 @@
 -(* This file was lexer.mll from Objective Caml *)
 +(**********************************************************************)
@@ -173,3 +173,12 @@
    | ">"  { GREATER }
    | ">]" { GREATERRBRACKET }
    | "}"  { RBRACE }
+@@ -389,7 +427,7 @@
+             { INFIXOP4(Lexing.lexeme lexbuf) }
+   | ['*' '/' '%'] symbolchar *
+             { INFIXOP3(Lexing.lexeme lexbuf) }
+-  | eof { EOF }
++  | eof     { EOF }
+   | _
+       { raise (Error(Illegal_character (Lexing.lexeme_char lexbuf 0),
+                      Location.curr lexbuf))

@@ -505,6 +505,7 @@ let print_impl_item item =
   | Cimpl_expr e ->
       open_box 2;
       print 0 e;
+      print_newline();
       print_string ";;";
       close_box ()
   | Cimpl_let(flag, l) ->

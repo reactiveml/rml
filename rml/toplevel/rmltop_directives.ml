@@ -26,12 +26,8 @@ let set ref n =
   ref := Some n;
   Rmltop_global.unlock()
 
-let set_sampling n =  Rmltop_global.sampling := n
-
 let set_suspend = set Rmltop_global.suspend
 let set_resume = set Rmltop_global.resume 
 let set_step = set Rmltop_global.step 
-let set_add p = 
-  Rmltop_global.lock();
-  Rmltop_global.to_run := p :: !Rmltop_global.to_run;
-  Rmltop_global.unlock()
+
+let set_sampling n =  Rmltop_global.sampling := n

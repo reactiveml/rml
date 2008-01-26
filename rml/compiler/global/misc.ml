@@ -47,7 +47,7 @@ let pervasives_module = "Pervasives"
 let interpreter_module = ref "Lco_ctrl_tree_record" 
 (* let interpreter_module = ref "Lk_record" *)
 let interpreter_intf = ref "Lco_interpreter"
-let interpreter_impl = ref "Implantation"
+let interpreter_impl = ref "Implem"
 
 
 let standard_lib = Version.stdlib 

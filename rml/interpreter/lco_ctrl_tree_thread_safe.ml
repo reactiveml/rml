@@ -1567,6 +1567,58 @@ let rml_loop p =
 
       rml_react, add_process
 
+(**************************************************)
+(* rml_make_exec_process                          *)
+(**************************************************)
+
+    let rml_make_exec_process (p: unit process) = 
+
+      (* creates the scheduler *)
+      let sched = new_scheduler () in
+
+      (* Function to create the last continuation of a toplevel process *)
+      let join_end =
+	let term_cpt = ref 0 in
+	fun () ->
+	  incr term_cpt;
+	  let f sched x =
+	    decr term_cpt;
+	    if !term_cpt > 0 then
+	      schedule sched
+	    else
+	      raise End
+	  in f
+      in
+
+      (* the add_process function*)
+      let add_process p =
+	let f =  p () (join_end()) sched.top in
+	sched.current <- f :: sched.current
+      in
+
+      (* the main step function *)
+      let f = p () (join_end ()) sched.top in
+      sched.current <- [f];
+
+      (* the react function *)
+      let rml_react proc_list =
+	try 
+	  List.iter add_process proc_list;
+	  schedule sched;
+	  sched.eoi <- true;
+	  wakeUp sched sched.weoi;
+	  wakeUpAll sched;
+	  schedule sched;
+	  eval_control sched;
+	  next_to_current sched sched.top;
+	  Event.next ();
+	  sched.eoi <- false;
+	  ()
+	with 
+	| End -> assert false
+      in 
+
+      rml_react
 
 
   end (* Module Rml_interpreter *)

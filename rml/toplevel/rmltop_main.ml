@@ -17,7 +17,7 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: rmltop_directives.ml *)
+(* file: rmltop_main.ml *)
 (* author: Louis Mandel *)
 (* created: 2005-10-25  *)
 
@@ -26,8 +26,8 @@ let exec_machine_controller () =
   let debut = ref 0.0 in
   let sleep = ref 0.0 in
   let react = 
-    Rmltop_implantation.Machine_controler_machine.rml_make 
-      Rmltop_machine_controller.controller
+    Rmltop_implem.Machine_controler_machine.rml_make 
+      Rmltop_controller.controller
   in
   while true do
     let _ = debut := Sys.time() in
@@ -43,4 +43,4 @@ let exec_machine_controller () =
 let start () =
   Thread.create exec_machine_controller ()
 
-let machine = start ()
+let controller = start ()

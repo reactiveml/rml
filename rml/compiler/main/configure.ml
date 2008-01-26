@@ -97,22 +97,22 @@ let set_runtime s =
   match s with
   | "Lco_rewrite" ->
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Rec_implantation";
+      set_interpreter_impl "Rec_implem";
       set_interpreter_module "Lco_rewrite_record";
       set_translation Lco
   | "Lco_ctrl_tree" | "Lco" -> 
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implantation";
+      set_interpreter_impl "Implem";
       set_interpreter_module "Lco_ctrl_tree_record";
       set_translation Lco
   | "Lco_ctrl_tree_class" -> 
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implantation";
+      set_interpreter_impl "Implem";
       set_interpreter_module "Lco_ctrl_tree_class";
       set_translation Lco
   | "Lco_ctrl_tree_thread_safe" -> 
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Thread_implantation";
+      set_interpreter_impl "Thread_implem";
       set_interpreter_module "Lco_ctrl_tree_thread_safe_record";
       set_translation Lco
 (*
@@ -123,19 +123,19 @@ let set_runtime s =
 *)
   | "Lk" ->
       set_interpreter_intf "Lk_interpreter";
-      set_interpreter_impl "Implantation";
+      set_interpreter_impl "Implem";
       set_interpreter_module "Lk_record";
       set_translation Lk
 
   | "Lk_threaded" ->
       set_interpreter_intf "Lk_interpreter";
-      set_interpreter_impl "Thread_implantation";
+      set_interpreter_impl "Thread_implem";
       set_interpreter_module "Lk_threaded_record";
       set_translation Lk
 
   | "Rmltop" ->
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Rmltop_implantation";
+      set_interpreter_impl "Rmltop_implem";
       set_interpreter_module "Machine_controler_machine";
       set_translation Lco
 
@@ -154,7 +154,7 @@ let set_interactive () =
   interpreter_module := "Rml_interactive";
 *)
   set_interpreter_intf "Lco_interpreter";
-  set_interpreter_impl "Implantation";
+  set_interpreter_impl "Implem";
   set_interpreter_module "Lco_ctrl_tree_record";
   interactive := true
 

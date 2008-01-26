@@ -20,7 +20,11 @@
 
 (* author: Louis Mandel *)
 (* created: 2006-12-06  *)
-(* file: rec_implantation.ml *)
+(* file: thread_implem.ml *)
 
-module Lco_rewrite_record = Lco_rewrite.Rml_interpreter(Sig_env.Record)
+module Lco_ctrl_tree_thread_safe_record = 
+  Lco_ctrl_tree_thread_safe.Rml_interpreter(Sig_env.Record)
+
+module Lk_threaded_record = Lk_threaded.Lk_interpreter(Sig_env.Record)
+
 

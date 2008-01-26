@@ -53,13 +53,14 @@ let compile () =
   (* Compilation loop *)
   while true do
     begin
-      try 
-	Location.init lexbuf ""; 
+      try
+(* 	Location.init lexbuf ""; *)
+	Lexer.update_loc lexbuf None 1 true 0;
 	let decl_list = Parse.interactive lexbuf in 
 	compile_decl_list module_name itf info_chan out_chan decl_list
       with x ->
 	Errors.report_error Format.err_formatter x;
-	output_string out_chan "();;\n"
+	output_string out_chan "let () = ();;\n"
     end;
     flush out_chan;
     flush info_chan

@@ -1431,6 +1431,55 @@ let rml_loop p =
 
       rml_react, add_process
 
+(**************************************************)
+(* rml_make_exec_process                          *)
+(**************************************************)
+
+    let rml_make_exec_process (p: unit process) = 
+
+      (* Function to create the last continuation of a toplevel process *)
+      let join_end =
+	let term_cpt = ref 0 in
+	fun () ->
+	  incr term_cpt;
+	  let f x =
+	    decr term_cpt;
+	    if !term_cpt > 0 then
+	      sched()
+	    else
+	      raise End
+	  in f
+      in
+
+      (* the add_process function*)
+      let add_process p =
+	let f =  p () (join_end()) top in
+	current := f :: !current
+      in
+
+      (* the main step function *)
+      let f = p () (join_end()) top in
+      current := [f];
+
+      (* the react function *)
+      let rml_react proc_list =
+	try 
+	  List.iter add_process proc_list;
+	  sched ();
+	  eoi := true;
+	  wakeUp weoi;
+	  wakeUpAll ();
+	  sched ();
+	  eval_control_and_next_to_current ();
+	  Event.next ();
+	  eoi := false;
+	  ()
+	with 
+	| End -> assert false
+      in 
+
+      rml_react
+
 
 
   end (* Module Rml_interpreter *)

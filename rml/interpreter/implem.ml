@@ -19,12 +19,15 @@
 (**********************************************************************)
 
 (* author: Louis Mandel *)
-(* created: 2006-12-06  *)
-(* file: thread_implantation.ml *)
+(* created: 2005-09-13  *)
+(* file: implem.ml *)
 
-module Lco_ctrl_tree_thread_safe_record = 
-  Lco_ctrl_tree_thread_safe.Rml_interpreter(Sig_env.Record)
 
-module Lk_threaded_record = Lk_threaded.Lk_interpreter(Sig_env.Record)
+module Lco_ctrl_tree_record = Lco_ctrl_tree.Rml_interpreter(Sig_env.Record)
+(* module Lco_rewrite_record = Lco_rewrite.Rml_interpreter(Sig_env.Record) *)
+
+module Lco_ctrl_tree_class = Lco_ctrl_tree.Rml_interpreter(Sig_env.Class)
+
+module Lk_record = Lk_implem.Lk_interpreter(Sig_env.Record)
 
 

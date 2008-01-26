@@ -8,8 +8,8 @@ global/initialization.cmo: typing/types.cmo global/modules.cmo \
 global/initialization.cmx: typing/types.cmx global/modules.cmx \
     global/misc.cmx global/ident.cmx global/global_ident.cmx \
     global/global.cmx typing/def_types.cmx 
-global/misc.cmo: global/version.cmo parsing/location.cmo 
-global/misc.cmx: global/version.cmx parsing/location.cmx 
+global/misc.cmo: parsing/location.cmo 
+global/misc.cmx: parsing/location.cmx 
 global/modules.cmo: parsing/parse_ident.cmo global/misc.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo typing/def_types.cmo 
 global/modules.cmx: parsing/parse_ident.cmx global/misc.cmx global/ident.cmx \
@@ -225,12 +225,12 @@ main/errors.cmo: global/warnings.cmo parsing/syntaxerr.cmo global/misc.cmo \
     parsing/location.cmo parsing/lexer.cmo 
 main/errors.cmx: global/warnings.cmx parsing/syntaxerr.cmx global/misc.cmx \
     parsing/location.cmx parsing/lexer.cmx 
-main/interactive.cmo: parsing/parse.cmo global/modules.cmo \
-    parsing/location.cmo global/initialization.cmo external/external.cmo \
-    main/errors.cmo main/compiler.cmo 
-main/interactive.cmx: parsing/parse.cmx global/modules.cmx \
-    parsing/location.cmx global/initialization.cmx external/external.cmx \
-    main/errors.cmx main/compiler.cmx 
+main/interactive.cmo: parsing/parse.cmo global/modules.cmo parsing/lexer.cmo \
+    global/initialization.cmo external/external.cmo main/errors.cmo \
+    main/compiler.cmo 
+main/interactive.cmx: parsing/parse.cmx global/modules.cmx parsing/lexer.cmx \
+    global/initialization.cmx external/external.cmx main/errors.cmx \
+    main/compiler.cmx 
 main/main.cmo: global/modules.cmo global/misc.cmo main/interactive.cmo \
     main/errors.cmo main/compiler.cmo 
 main/main.cmx: global/modules.cmx global/misc.cmx main/interactive.cmx \
