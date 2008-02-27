@@ -1,5 +1,5 @@
---- compiler/global/modules.ml	2008-01-27 15:23:28.000000000 +0100
-+++ ../compiler/global/modules.ml	2008-01-27 15:23:28.000000000 +0100
+--- compiler/global/modules.ml	2008-02-28 20:10:02.000000000 +0100
++++ ../compiler/global/modules.ml	2008-02-28 20:10:01.000000000 +0100
 @@ -1,274 +1,240 @@
 -(* This file was modules.ml from Caml Light *)
 -

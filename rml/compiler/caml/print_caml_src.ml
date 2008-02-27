@@ -254,7 +254,7 @@ let rec print pri e =
       print_string ".";
       print_global gl
   | Cexpr_record_update(e1, gl, e2) ->
-      print pri_e e1;
+      print (pri_e + 2) e1;
       print_string ".";
       print_global gl;
       print_space ();

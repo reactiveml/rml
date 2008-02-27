@@ -1,5 +1,5 @@
---- compiler/parsing/parser.mly	2008-01-27 15:23:28.000000000 +0100
-+++ ../compiler/parsing/parser.mly	2008-01-27 15:23:28.000000000 +0100
+--- compiler/parsing/parser.mly	2008-02-28 20:10:02.000000000 +0100
++++ ../compiler/parsing/parser.mly	2008-02-28 20:10:01.000000000 +0100
 @@ -1,4 +1,30 @@
 -/* This file was parser.mly from Objective Caml */
 +/**********************************************************************/
@@ -1108,7 +1108,7 @@
    | expr INFIXOP0 expr
        { mkinfix $1 $2 $3 }
    | expr INFIXOP1 expr
-@@ -855,143 +548,185 @@
+@@ -855,143 +548,197 @@
        { mkinfix $1 ">" $3 }
    | expr OR expr
        { mkinfix $1 "or" $3 }
@@ -1290,11 +1290,23 @@
 +  | SHARP ident
 +      { match $2 with
 +        | "suspend" -> 
-+	    mkexpr (Pexpr_apply 
-+		      (mkexpr (Pexpr_ident 
-+				 (mkident (Pdot("Rmltop_controller",
-+						"set_suspend")) 2)), 
-+		       [mkexpr (Pexpr_constant Const_unit)])) 
++	    mkexpr 
++	      (Pexpr_apply 
++		 (mkexpr (Pexpr_ident 
++			    (mkident (Pdot("Rmltop_controller",
++					   "set_suspend")) 2)), 
++		  [mkexpr (Pexpr_constant Const_unit)]))
++(* !!!!!!!!!!
++	    mkexpr 
++	      (Pexpr_seq
++		 (mkexpr 
++		    (Pexpr_apply 
++		       (mkexpr (Pexpr_ident 
++				  (mkident (Pdot("Rmltop_controller",
++						 "set_suspend")) 2)), 
++			[mkexpr (Pexpr_constant Const_unit)])),
++		  mkexpr Pexpr_pause))
++!!!!!!!!!! *) 
 +	| _ -> raise (Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2))) }
 +;
 +pre_expr:
@@ -1381,7 +1393,7 @@
  ;
  match_cases:
      pattern match_action                        { [$1, $2] }
-@@ -999,20 +734,28 @@
+@@ -999,20 +746,28 @@
  ;
  fun_def:
      match_action                                { $1 }
@@ -1416,7 +1428,7 @@
  ;
  lbl_expr_list:
      label_longident EQUAL expr
-@@ -1020,22 +763,29 @@
+@@ -1020,22 +775,29 @@
    | lbl_expr_list SEMI label_longident EQUAL expr
        { ($3, $5) :: $1 }
  ;
@@ -1456,7 +1468,7 @@
  ;
  
  /* Patterns */
-@@ -1044,54 +794,48 @@
+@@ -1044,54 +806,48 @@
      simple_pattern
        { $1 }
    | pattern AS val_ident
@@ -1528,7 +1540,7 @@
    | LPAREN pattern COLON core_type error
        { unclosed "(" 1 ")" 5 }
  ;
-@@ -1124,37 +868,20 @@
+@@ -1124,37 +880,20 @@
  ;
  
  type_declaration:
@@ -1575,7 +1587,7 @@
  ;
  type_parameters:
      /*empty*/                                   { [] }
-@@ -1162,12 +889,7 @@
+@@ -1162,12 +901,7 @@
    | LPAREN type_parameter_list RPAREN           { List.rev $2 }
  ;
  type_parameter:
@@ -1589,7 +1601,7 @@
  ;
  type_parameter_list:
      type_parameter                              { [$1] }
-@@ -1181,152 +903,52 @@
+@@ -1181,152 +915,52 @@
      constr_ident constructor_arguments          { ($1, $2) }
  ;
  constructor_arguments:
@@ -1762,7 +1774,7 @@
  ;
  core_type_comma_list:
      core_type                                   { [$1] }
-@@ -1336,16 +958,8 @@
+@@ -1336,16 +970,8 @@
      simple_core_type                            { [$1] }
    | core_type_list STAR simple_core_type        { $3 :: $1 }
  ;
@@ -1780,7 +1792,7 @@
  ;
  
  /* Constants */
-@@ -1355,18 +969,16 @@
+@@ -1355,18 +981,16 @@
    | CHAR                                        { Const_char $1 }
    | STRING                                      { Const_string $1 }
    | FLOAT                                       { Const_float $1 }
@@ -1804,7 +1816,7 @@
  /* Identifiers and long identifiers */
  
  ident:
-@@ -1374,13 +986,13 @@
+@@ -1374,13 +998,13 @@
    | LIDENT                                      { $1 }
  ;
  val_ident:
@@ -1823,7 +1835,7 @@
  ;
  operator:
      PREFIXOP                                    { $1 }
-@@ -1397,77 +1009,56 @@
+@@ -1397,77 +1021,56 @@
    | LESS                                        { "<" }
    | GREATER                                     { ">" }
    | OR                                          { "or" }
@@ -1931,7 +1943,7 @@
  rec_flag:
      /* empty */                                 { Nonrecursive }
    | REC                                         { Recursive }
-@@ -1476,18 +1067,28 @@
+@@ -1476,18 +1079,28 @@
      TO                                          { Upto }
    | DOWNTO                                      { Downto }
  ;
@@ -1968,7 +1980,7 @@
  opt_bar:
      /* empty */                                 { () }
    | BAR                                         { () }
-@@ -1500,4 +1101,39 @@
+@@ -1500,4 +1113,39 @@
    | MINUS                                       { "-" }
    | MINUSDOT                                    { "-." }
  ;

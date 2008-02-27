@@ -106,7 +106,7 @@ let rec get_process_status =
 
 let static_expr_list static_expr filter ctx l =
   match l with
-  | [] -> assert false
+  | [] -> Static
   | [x] -> static_expr ctx (filter x)
   | x::l ->
       let ty = static_expr ctx (filter x) in

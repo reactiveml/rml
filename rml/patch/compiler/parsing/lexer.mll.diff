@@ -1,5 +1,5 @@
---- compiler/parsing/lexer.mll	2008-01-27 15:23:28.000000000 +0100
-+++ ../compiler/parsing/lexer.mll	2008-01-27 15:23:28.000000000 +0100
+--- compiler/parsing/lexer.mll	2008-02-28 20:10:02.000000000 +0100
++++ ../compiler/parsing/lexer.mll	2008-02-28 20:10:01.000000000 +0100
 @@ -1,4 +1,30 @@
 -(* This file was lexer.mll from Objective Caml *)
 +(**********************************************************************)
