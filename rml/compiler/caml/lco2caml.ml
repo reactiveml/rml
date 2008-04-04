@@ -474,64 +474,108 @@ and translate_proc e =
 	  (make_instruction "rml_until_conf",
 	   [translate_conf s;
 	    translate_proc k])
+
+(************)
+    | Coproc_until ({coconf_desc = Coconf_present s}, k, 
+		    Some(patt, {coproc_desc = Coproc_when_match(e1,kh)})) ->
+	let cpatt = translate_pattern patt in
+	Cexpr_apply
+	  (make_instruction 
+	     (if Lco_misc.is_value s then "rml_until_handler_match'"
+	     else "rml_until_handler_match"),
+	   if Caml_misc.partial_match cpatt then
+	     [translate_ml s;
+	      make_expr
+	        (Cexpr_function 
+		   [cpatt, translate_ml e1;
+		    make_patt Cpatt_any Location.none, 
+		    make_expr 
+                      (Cexpr_constant (Const_bool false)) Location.none ])
+	      Location.none;
+	      translate_proc k;
+	      make_expr
+	        (Cexpr_function 
+		   [(cpatt, translate_proc kh);
+		    (make_patt Cpatt_any Location.none, make_raise_RML())])
+	        Location.none;]
+	   else
+	     [translate_ml s;
+	      make_expr
+	        (Cexpr_function [cpatt, translate_ml e1])
+                Location.none;
+	      translate_proc k;
+	      make_expr
+	        (Cexpr_function [(cpatt, translate_proc kh);]) Location.none;])
+    | Coproc_until 
+	({coconf_desc = Coconf_present s}, k, 
+	 Some(patt, ({coproc_desc = Coproc_compute 
+		       { coexpr_desc = Coexpr_when_match(e1,e2); }} as kh))) ->
+	let cpatt = translate_pattern patt in
+	Cexpr_apply
+	  (make_instruction 
+	     (if Lco_misc.is_value s then "rml_until_handler_match'"
+	     else "rml_until_handler_match"),
+	   if Caml_misc.partial_match cpatt then
+	   [translate_ml s;
+	    make_expr
+	      (Cexpr_function 
+		 [cpatt, translate_ml e1; 
+		  make_patt Cpatt_any Location.none, 
+		  make_expr 
+		    (Cexpr_constant (Const_bool false)) Location.none;])
+	      Location.none;
+	    translate_proc k;
+	    make_expr
+	      (Cexpr_function 
+		 [(cpatt, 
+		   translate_proc { kh with coproc_desc = Coproc_compute (e2)});
+		  (make_patt Cpatt_any Location.none, make_raise_RML())])
+	      Location.none;]
+         else
+	   [translate_ml s;
+	    make_expr (Cexpr_function [cpatt, translate_ml e1;]) Location.none;
+	    translate_proc k;
+	    make_expr
+	      (Cexpr_function 
+		 [(cpatt, 
+		   translate_proc { kh with coproc_desc = Coproc_compute (e2)});
+		  ])
+	      Location.none;])
+(************)
     | Coproc_until ({coconf_desc = Coconf_present s}, k, Some(patt, kh)) ->
 	let cpatt = translate_pattern patt in
 	if Caml_misc.partial_match cpatt then
-	  if Lco_misc.is_value s then
-	    Cexpr_apply
-	      (make_instruction "rml_until_handler_match'",
-	       [translate_ml s;
-		make_expr
-		  (Cexpr_function 
-		     [cpatt, 
-		      make_expr 
-			(Cexpr_constant (Const_bool true)) Location.none;
-		      make_patt Cpatt_any Location.none, 
-		      make_expr 
-			(Cexpr_constant (Const_bool false)) Location.none;])
-		  Location.none;
-		translate_proc k;
-		make_expr
-		  (Cexpr_function 
-		     [(cpatt, translate_proc kh);
-		      (make_patt Cpatt_any Location.none, make_raise_RML())])
-		  Location.none;])
-	  else
-	    Cexpr_apply
-	      (make_instruction "rml_until_handler_match",
-	       [embed_ml s;
-		make_expr
-		  (Cexpr_function 
-		     [cpatt, 
-		      make_expr 
-			(Cexpr_constant (Const_bool true)) Location.none;
-		      make_patt Cpatt_any Location.none, 
-		      make_expr 
-			(Cexpr_constant (Const_bool false)) Location.none;])
-		  Location.none;
-		translate_proc k;
-		make_expr
-		  (Cexpr_function 
-		     [(cpatt, translate_proc kh);
-		      (make_patt Cpatt_any Location.none, make_raise_RML())])
-		  Location.none;])
+	  Cexpr_apply
+	    (make_instruction 
+	       (if Lco_misc.is_value s then "rml_until_handler_match'"
+	       else "rml_until_handler_match"),
+	     [translate_ml s;
+	      make_expr
+		(Cexpr_function 
+		   [cpatt, 
+		    make_expr 
+		      (Cexpr_constant (Const_bool true)) Location.none;
+		    make_patt Cpatt_any Location.none, 
+		    make_expr 
+		      (Cexpr_constant (Const_bool false)) Location.none;])
+		Location.none;
+	      translate_proc k;
+	      make_expr
+		(Cexpr_function 
+		   [(cpatt, translate_proc kh);
+		    (make_patt Cpatt_any Location.none, make_raise_RML())])
+		Location.none;])
 	else
-	  if Lco_misc.is_value s then
-	    Cexpr_apply
-	      (make_instruction "rml_until_handler'",
-	       [translate_ml s;
-		translate_proc k;
-		make_expr
-		  (Cexpr_function [cpatt, translate_proc kh])
-		  Location.none;])
-	  else
-	    Cexpr_apply
-	      (make_instruction "rml_until_handler",
-	       [embed_ml s;
-		translate_proc k;
-		make_expr
-		  (Cexpr_function [cpatt, translate_proc kh])
-		  Location.none;])
+	  Cexpr_apply
+	    (make_instruction 
+	       (if Lco_misc.is_value s then "rml_until_handler'" 
+	       else "rml_until_handler"),
+	     [translate_ml s;
+	      translate_proc k;
+	      make_expr
+		(Cexpr_function [cpatt, translate_proc kh])
+		Location.none;])
+
     | Coproc_until _ ->
 	raise 
 	  (Internal (e.coproc_loc, "Lco2caml.translate_proc: Coproc_until"))

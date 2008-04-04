@@ -299,7 +299,7 @@ let rec print pri e =
   | Cexpr_assert e ->
       print_string "assert";
       print_space ();
-      print pri_e e
+      print (pri_e + 1) e
   | Cexpr_while (e1,e2) ->
       print_string "while";
       print_space ();
@@ -347,11 +347,13 @@ and print_te pri typ =
   | Ctype_any -> print_string "_"
   | Ctype_var s -> print_type_var s
   | Ctype_arrow (t1,t2) ->
+      print_string "(";
       print_te (pri_e + 1) t1;
       print_space ();
       print_string "->";
       print_space ();
       print_te pri_e t2;
+      print_string ")";
   | Ctype_product l ->
       print_string "(";
       print_list (print_te (pri_e - 1)) (fun () -> print_string " *") l;
