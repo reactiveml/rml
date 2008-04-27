@@ -1,0 +1,7 @@
+(* 27/05/2007 *)
+(* Pas de verificaions entre les *.mli et *.ml                *)
+(* Perte des abstractions faites dans les .mli                *)
+(*                                                            *)
+(* Ex :                                                       *)
+(* Dans a.rmli : type t = int                                 *)
+(* Dans a.rml  : type t = string                              *)

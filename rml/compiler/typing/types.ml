@@ -156,8 +156,8 @@ let rec gen_ty is_gen ty =
 	  notgeneric ty_list
   | Type_link(link) ->
       ty.type_level <- gen_ty is_gen link
-  | Type_process(ty, _) ->
-      ty.type_level <- gen_ty is_gen ty
+  | Type_process(ty_body, _) ->
+      ty.type_level <- min generic (gen_ty is_gen ty_body)
   end;
   ty.type_level
 

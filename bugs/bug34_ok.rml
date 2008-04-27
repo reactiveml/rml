@@ -1,0 +1,9 @@
+(* 26/04/2008 *)
+(* Probleme dans le typeur:                                          *)
+(*   val id : 'a -> 'a process                                       *)
+(*   val p1 : int process                                            *)
+(*   val p2 : int process                                            *)
+
+let process id x = x 
+let p1 = id 1 
+let p2 = id p1

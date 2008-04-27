@@ -1,5 +1,5 @@
---- compiler/global/warnings.ml	2008-04-05 02:27:50.000000000 +0200
-+++ ../compiler/global/warnings.ml	2008-04-05 02:27:50.000000000 +0200
+--- compiler/global/warnings.ml	2006-12-18 18:05:21.000000000 +0100
++++ ../compiler/global/warnings.ml	2006-12-08 18:16:06.000000000 +0100
 @@ -1,4 +1,30 @@
 -(* This file was warnings.ml from Objective Caml *)
 +(**********************************************************************)

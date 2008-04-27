@@ -1,0 +1,6 @@
+(* 30/06/2005 *)
+(* Bug dans le typage de assert                         *)
+
+let f x = assert false;;
+(* val f :  'a -> bool *)
+

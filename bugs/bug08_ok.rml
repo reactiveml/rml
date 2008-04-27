@@ -1,0 +1,8 @@
+(* 20/07/2004 *)
+(* Pb message d'erreur *)
+
+let process a s =
+  while 0 = pre ?s do
+    await immediate one s (pp) in
+    pause;
+  done

@@ -1,0 +1,10 @@
+(* 24/08/2004 *)
+(* probleme d'affichage des erreurs de nom globaux :
+     File "bug11.rml", line 7, characters 0-6:
+     Unbound value List.s2.
+  Sol : bug dans parsing/parse_ident (string_of_parseident)
+ *)
+
+List.a
+
+

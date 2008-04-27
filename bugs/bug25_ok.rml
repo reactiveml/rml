@@ -1,0 +1,47 @@
+(* 13/05-2007 *)
+(* Bug trouvé dans le simulateur ELIP.                                 *)
+(* les do/until et control/with recommence avec un instant de retard   *)
+(* dans les control/with.                                              *)
+
+
+let process main =
+  signal suspend, kill, pres in
+  control
+    loop
+      print_string "+";
+      pause
+    end
+    ||
+    do
+      loop
+	print_string "-";
+	pause
+      end
+    until kill done
+    ||
+    control
+      loop
+	print_string "&";
+	pause
+      end
+    with kill
+      ||
+    do
+      loop
+	print_string "@";
+	pause
+      end
+    when pres
+  with suspend
+  ||
+  for i = 0 to 3 do pause done;
+  print_string "SUSP"; emit suspend;
+  for i = 3 to 5 do pause done;
+  print_string "SUSP"; emit suspend;
+  ()
+  ||
+  loop
+    emit pres;
+    pause
+  end
+

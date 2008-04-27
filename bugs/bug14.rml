@@ -1,0 +1,6 @@
+(* 02/09/2004 *)
+(* Faire : pattern-matching is not exhaustive *)
+
+let f = function
+  | None -> 1
+

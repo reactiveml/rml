@@ -377,7 +377,7 @@ let rec type_of_expression env expr =
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
 	instance typ_sch
-
+  
     | Rexpr_global (n) ->
 	instance (Global.info n).value_typ 
 
@@ -392,6 +392,7 @@ let rec type_of_expression env expr =
 	List.iter 
 	  (fun (p,e) ->
 	    let gl_env, loc_env = type_of_pattern [] [] p ty_arg in
+	    assert (gl_env = []);
 	    let new_env =
 	      List.fold_left 
 		(fun env (x, ty) -> Env.add x (forall [] ty) env) 
@@ -490,6 +491,7 @@ let rec type_of_expression env expr =
 	List.iter
 	  (fun (p,e) ->
 	    let gl_env, loc_env = type_of_pattern [] [] p type_exn in
+	    assert (gl_env = []);
 	    let new_env =
 	      List.fold_left 
 		(fun env (x, ty) -> Env.add x (forall [] ty) env) 
@@ -515,6 +517,7 @@ let rec type_of_expression env expr =
 	List.iter 
 	  (fun (p,e) ->
 	    let gl_env, loc_env = type_of_pattern [] [] p ty_body in
+	    assert (gl_env = []);
 	    let new_env =
 	      List.fold_left 
 		(fun env (x, ty) -> Env.add x (forall [] ty) env) 
@@ -551,8 +554,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_process(e) ->
 	let ty = type_of_expression env e in
-	process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow)); }
-
+        process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow)); }
 
     | Rexpr_pre (Status, s) ->
 	let ty_s = type_of_expression env s in
@@ -694,6 +696,7 @@ let rec type_of_expression env expr =
 		opt_iter
 		  (fun (patt,proc) ->
 		    let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+		    assert (gl_env = []);
 		    let new_env =
 		      List.fold_left 
 			(fun env (x, ty) -> Env.add x (forall [] ty) env) 
@@ -725,6 +728,7 @@ let rec type_of_expression env expr =
 	    non_event_err s
 	in
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+	assert (gl_env = []);
 	let new_env =
 	  List.fold_left 
 	    (fun env (x, ty) -> Env.add x (forall [] ty) env) 
@@ -751,6 +755,7 @@ let rec type_of_expression env expr =
 	    non_event_err s
 	in
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+	assert (gl_env = []);
 	let new_env =
 	  List.fold_left 
 	    (fun env (x, ty) -> Env.add x (forall [] ty) env) 
@@ -770,6 +775,7 @@ let rec type_of_expression env expr =
 	     [ty_emit; (constr_notabbrev list_ident [ty_emit])])
 	  ty_s;
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_emit in
+	assert (gl_env = []);
 	let new_env =
 	  List.fold_left 
 	    (fun env (x, ty) -> Env.add x (forall [] ty) env) 

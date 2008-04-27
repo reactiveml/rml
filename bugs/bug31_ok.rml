@@ -1,0 +1,35 @@
+(* 15/04/2008 *)
+(* Probleme dans le typeur. Le process suspendable_killable2 n'est   *)
+(* pas typé alors que suspendable_killable1 l'est !                  *)
+
+signal kill: (int, int list) event ;;
+
+let process killable' id p =
+  do
+    let v = run p in Some v
+  until kill -> None done
+;;
+
+let process suspendable' id p =
+  signal suspend_me in
+  signal kill_me default None gather (fun x y -> assert (y = None); Some x) in
+  do
+    begin
+      control let v = run p in emit kill_me(v) with suspend_me
+    end;
+    assert false
+  until kill_me(Some x) -> x done
+;;
+
+let killable_suspendable p =
+  killable' 0 (suspendable' 0 p)
+;;
+
+(* let suspendable_killable1 p = *)
+(*   let p' = killable' 0 p in *)
+(*   suspendable' 0 p' *)
+(* ;; *)
+
+let suspendable_killable2 p =
+  suspendable' 0 (killable' 0 p)
+;;

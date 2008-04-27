@@ -1,0 +1,7 @@
+(* 07/06/2004 *)
+(* f a le type t -> 'a -> int alors qu'il y a un pb de type *)
+
+type t = C of int 
+
+let f = fun C x -> 1
+

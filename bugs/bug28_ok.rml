@@ -1,0 +1,7 @@
+(* 13/06/2007 *)
+(* Bug dans l'utilisation de valeurs du module Pervasives apres leur    *)
+(* redefinition.                                                        *)
+
+let (+) x y = x - y
+
+let _ = print_int (Pervasives.(+) ((+) 1 1) 1) 
