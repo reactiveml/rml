@@ -597,7 +597,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	    else
 	      (STOP, until evt p hdl)
 	  else
-	    (STOP, until_star evt p hdl)
+	    (SUSP, until_star evt p hdl)
       in until 		  
 
     let rml_until_handler expr_evt p hdl =
@@ -627,7 +627,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	    else
 	      (STOP, until evt matching p hdl)
 	  else
-	    (STOP, until_star evt matching p hdl)
+	    (SUSP, until_star evt matching p hdl)
       in until 		  
 
     let rml_until_handler_match expr_evt matching p hdl =
