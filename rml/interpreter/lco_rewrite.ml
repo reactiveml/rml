@@ -638,14 +638,14 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 (**************************************)
 (* control                            *)
 (**************************************)
-    let rml_control' =
+    let rml_control_aux cond =
       let rec active evt p =
 	fun () ->
 	  match p () with
 	  | TERM v, _ -> TERM v, rml_compute (fun () -> v)
 	  | SUSP, p' ->
 	      if !eoi then
-		if Event.status evt 
+		if cond evt 
 		then
 		  (STOP, suspended evt p')
 		else
@@ -654,7 +654,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 		(SUSP, active evt p')
 	  | STOP, p' ->
 	      if !eoi then
-		if Event.status evt 
+		if cond evt 
 		then
 		  (STOP, suspended evt p')
 		else
@@ -664,7 +664,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       and active_await evt p =
 	fun () ->
 	  if !eoi then
-	    if (Event.status evt)
+	    if cond evt
 	    then
 	      (STOP, suspended evt p)
 	    else
@@ -673,7 +673,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
       and suspended evt p =
 	fun () ->
 	  if !eoi then
-	    if (Event.status evt)
+	    if cond evt
 	    then
 	      (STOP, active evt p)
 	    else
@@ -681,10 +681,26 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	  else (SUSP, suspended evt p)
       in active
 
+    let rml_control' evt p = 
+      rml_control_aux (fun evt -> Event.status evt) evt p
+
     let rml_control expr_evt p =
       fun () -> 
 	let evt = expr_evt () in
 	rml_control' evt p ()
+
+
+(**************************************)
+(* control_match                      *)
+(**************************************)
+    let rml_control_match' evt matching p = 
+      rml_control_aux 
+	(fun evt -> Event.status evt && matching (Event.value evt)) evt p
+
+    let rml_control_match expr_evt matching p =
+      fun () -> 
+	let evt = expr_evt () in
+	rml_control_match' evt matching p ()
 
 (**************************************)
 (* control_conf                       *)

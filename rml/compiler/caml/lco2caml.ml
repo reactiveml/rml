@@ -598,7 +598,7 @@ and translate_proc e =
 	   [translate_conf s;
 	    translate_proc k])
 
-    | Coproc_control ({coconf_desc = Coconf_present s}, k) ->
+    | Coproc_control ({coconf_desc = Coconf_present s}, None, k) ->
 	if Lco_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_control'",
@@ -609,11 +609,43 @@ and translate_proc e =
 	    (make_instruction "rml_control",
 	     [embed_ml s;
 	      translate_proc k])
-    | Coproc_control (s, k) ->
+    | Coproc_control ({coconf_desc = Coconf_present s}, Some(p,e), k) ->
+	let cpatt = translate_pattern p in
+	let matching =
+	  if Caml_misc.partial_match cpatt then
+	    make_expr
+	      (Cexpr_function
+		 [cpatt, translate_ml e;
+		  make_patt Cpatt_any Location.none, 
+		  make_expr 
+		    (Cexpr_constant (Const_bool false)) Location.none;])
+	      Location.none
+	  else
+	    make_expr
+	      (Cexpr_function [cpatt, translate_ml e])
+	      Location.none
+	in
+	if Lco_misc.is_value s then
+	  Cexpr_apply
+	    (make_instruction "rml_control_match'",
+	     [translate_ml s;
+	      matching;
+	      translate_proc k])
+	else
+	  Cexpr_apply
+	    (make_instruction "rml_control_match",
+	     [embed_ml s;
+	      matching;
+	      translate_proc k])
+
+    | Coproc_control (s, None, k) ->
 	Cexpr_apply
 	  (make_instruction "rml_control_conf",
 	   [translate_conf s;
 	    translate_proc k])
+
+    | Coproc_control (s, Some _, k) ->
+	not_yet_implemented "Lco2caml.translate_proc Coproc_control"
 
     | Coproc_get (s, patt, k) ->
 	Cexpr_apply

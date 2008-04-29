@@ -489,9 +489,14 @@ let instantaneous_loop_expr =
 	  let ty = analyse vars e in
 	  Env.append ty_config ty
 	    
-      | Rexpr_control (config, e) ->
+      | Rexpr_control (config, None, e) ->
 	  let ty_config = config_analyse vars config in
 	  let ty = analyse vars e in
+	  Env.append ty_config ty
+      | Rexpr_control (config, Some(p,e1), e) ->
+	  let ty_config = config_analyse vars config in
+	  let ty = analyse vars e in
+	  let _ = analyse Env.empty e1 in
 	  Env.append ty_config ty
 	    
       | Rexpr_get (e,patt,e1) ->

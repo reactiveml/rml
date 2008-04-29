@@ -300,9 +300,14 @@ let expr_free_vars e =
 	config_free_vars vars config;
 	expr_free_vars vars e
 	  
-    | Rexpr_control (config, e) ->
+    | Rexpr_control (config, None, e) ->
 	config_free_vars vars config;
 	expr_free_vars vars e
+    | Rexpr_control (config, Some(p,e1), e) ->
+	config_free_vars vars config;
+	expr_free_vars vars e;
+	let vars' = (vars_of_patt p) @ vars in
+	expr_free_vars vars' e1
 	  
     | Rexpr_get (e,patt,e1) ->
 	expr_free_vars vars e;

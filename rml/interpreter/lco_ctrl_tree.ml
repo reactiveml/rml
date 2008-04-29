@@ -1066,6 +1066,28 @@ let rml_loop p =
 	start_ctrl f_k ctrl f new_ctrl 
 
 (**************************************)
+(* control_match                      *)
+(**************************************)
+    let rml_control_match expr_evt matching p =
+      fun f_k ctrl ->
+	let new_ctrl = new_ctrl Susp in
+	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
+	let f_control =
+	  fun _ ->
+	    let (n, _, _) = expr_evt () in
+	    new_ctrl.cond <- 
+	      (fun () -> Event.status n && matching (Event.value n));
+	    start_ctrl f_k ctrl f new_ctrl ()
+	in f_control
+	  
+    let rml_control_match' (n, _, _) matching p =
+      fun f_k ctrl ->
+	let new_ctrl = new_ctrl Susp in
+	let f = p (end_ctrl f_k new_ctrl) new_ctrl in
+	new_ctrl.cond <- (fun () -> Event.status n && matching (Event.value n));
+	start_ctrl f_k ctrl f new_ctrl 
+
+(**************************************)
 (* control_conf                       *)
 (**************************************)
 

@@ -146,7 +146,10 @@ let rec add_expr bv exp =
       add_expr bv e1;
       Misc.opt_iter (fun (p,e) -> add_pattern bv p; add_expr bv e) ope
   | Pexpr_when(e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pexpr_control(e1, e2) -> add_expr bv e1; add_expr bv e2
+  | Pexpr_control(e1, ope, e2) -> 
+      add_expr bv e1; 
+      Misc.opt_iter (fun (p,e) -> add_pattern bv p; add_expr bv e) ope;
+      add_expr bv e2
   | Pexpr_get(e1) -> add_expr bv e1
   | Pexpr_present(e1, e2, e3) -> add_expr bv e1; add_expr bv e2; add_expr bv e3
   | Pexpr_await(_, e1) -> add_expr bv e1

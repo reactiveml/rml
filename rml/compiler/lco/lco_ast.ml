@@ -100,7 +100,7 @@ and process_desc =
   | Coproc_run of expression 
   | Coproc_until of event_config * process * (pattern * process) option
   | Coproc_when of event_config * process
-  | Coproc_control of event_config * process
+  | Coproc_control of event_config * (pattern * expression) option * process
   | Coproc_get of expression * pattern * process
   | Coproc_present of event_config * process * process
   | Coproc_ifthenelse of expression * process * process

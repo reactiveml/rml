@@ -267,11 +267,18 @@ let expr_map  =
 	  let e' = expr_map f e in
 	  f (make_expr_all (Rexpr_when (config',e')) typ static reactivity loc)
 	    
-      | Rexpr_control (config, e) ->
+      | Rexpr_control (config, None, e) ->
 	  let config' = config_map f config in
 	  let e' = expr_map f e in
 	  f (make_expr_all
-	       (Rexpr_control (config', e')) typ static reactivity loc)
+	       (Rexpr_control (config', None, e')) typ static reactivity loc)
+      | Rexpr_control (config, Some(p,e1), e) ->
+	  let config' = config_map f config in
+	  let e1' = expr_map f e1 in
+	  let e' = expr_map f e in
+	  f (make_expr_all
+	       (Rexpr_control (config', Some(p,e1'), e')) 
+	       typ static reactivity loc)
 	    
       | Rexpr_get (e,patt,e1) ->
 	  let e' = expr_map f e in

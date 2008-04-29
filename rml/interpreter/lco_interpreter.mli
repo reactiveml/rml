@@ -117,6 +117,9 @@ module type S =
 	  'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_control': ('a, 'b) event -> 'c expr -> 'c expr
     val rml_control: (unit -> ('a, 'b) event) -> 'c expr -> 'c expr
+    val rml_control_match': ('a, 'b) event -> ('b -> bool) -> 'c expr -> 'c expr
+    val rml_control_match: 
+	(unit -> ('a, 'b) event) -> ('b -> bool) -> 'c expr -> 'c expr
     val rml_control_conf: event_cfg -> 'c expr -> 'c expr
     val rml_when': ('a, 'b) event -> 'c expr -> 'c expr
     val rml_when: (unit -> ('a, 'b) event) -> 'c expr -> 'c expr

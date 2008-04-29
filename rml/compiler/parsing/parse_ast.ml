@@ -85,7 +85,7 @@ and expression_desc =
       event_config * expression * (pattern * expression) option 
   (* signal        * body       * handler *)
   | Pexpr_when of event_config * expression
-  | Pexpr_control of event_config * expression
+  | Pexpr_control of event_config * (pattern * expression) option * expression
   | Pexpr_get of expression 
   | Pexpr_present of event_config * expression * expression
   | Pexpr_await of immediate_flag * event_config

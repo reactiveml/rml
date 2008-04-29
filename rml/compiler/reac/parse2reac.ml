@@ -470,8 +470,11 @@ let rec translate env e =
 	Rexpr_when (translate_conf env s,
 		    translate env expr)
 
-    | Pexpr_control (s, expr) ->
+    | Pexpr_control (s, patt_expr_opt, expr) ->
 	Rexpr_control (translate_conf env s,
+		       opt_map 
+			 (translate_patt_expr env)
+			 patt_expr_opt,
 		       translate env expr)
 
     | Pexpr_present (s, e1, e2) ->

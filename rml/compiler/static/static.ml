@@ -406,11 +406,16 @@ let rec static_expr ctx e =
 	else
 	  expr_wrong_static_err e
 
-    | Rexpr_control (s, p) ->
+    | Rexpr_control (s, p_e_opt, p) ->
 	if ctx = Process
 	then 
 	  (static_conf s;
 	   let typ1 = static_expr Process p in
+	   Misc.opt_iter
+	     (fun (_,e) -> 
+	       if static_expr ML e <> Static
+	       then expr_wrong_static_err e) 
+	     p_e_opt;
 	   begin match typ1 with
 	   | Static -> Dynamic Instantaneous
 	   | _ -> typ1

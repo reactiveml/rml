@@ -586,10 +586,12 @@ expr:
       { mkexpr(Pexpr_signal(List.rev $2, Some($4, $6), $8)) }
   | DO par_expr UNTIL opt_bar until_cases DONE
       { mkexpr_until $2 (List.rev $5) }
-  | DO par_expr WHEN simple_expr
+  | DO par_expr WHEN simple_expr DONE
       { mkexpr(Pexpr_when($4, $2)) }
-  | CONTROL par_expr WITH simple_expr
-      { mkexpr(Pexpr_control($4, $2)) }
+  | CONTROL par_expr WITH simple_expr DONE
+      { mkexpr(Pexpr_control($4, None, $2)) }
+  | CONTROL par_expr WITH simple_expr LPAREN pattern RPAREN WHEN par_expr DONE
+      { mkexpr(Pexpr_control($4, Some ($6, $9), $2)) }
 
   | PRESENT par_expr THEN expr ELSE expr
       { mkexpr(Pexpr_present($2, $4, $6)) }

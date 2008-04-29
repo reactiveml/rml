@@ -91,7 +91,7 @@ and expression_desc =
   | Rexpr_run of expression 
   | Rexpr_until of event_config * expression * (pattern * expression) option
   | Rexpr_when of event_config * expression
-  | Rexpr_control of event_config * expression
+  | Rexpr_control of event_config * (pattern * expression) option * expression
   | Rexpr_get of expression * pattern * expression
   | Rexpr_present of event_config * expression * expression
   | Rexpr_await of immediate_flag * event_config

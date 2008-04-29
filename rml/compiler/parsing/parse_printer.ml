@@ -314,9 +314,10 @@ let rec expression i ppf x =
       line i ppf "Pexpr_when\n";
       expression i ppf s;
       expression i ppf e;
-  | Pexpr_control (s,e) ->
+  | Pexpr_control (s, peo, e) ->
       line i ppf "Pexpr_control\n";
       expression i ppf s;
+      option i pattern_x_expression_case ppf peo;
       expression i ppf e;
   | Pexpr_get (e) ->
       line i ppf "Pexpr_values\n";

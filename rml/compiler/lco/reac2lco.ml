@@ -400,8 +400,13 @@ and translate_proc p =
 	| Rexpr_when (s, proc) ->
 	    Coproc_when (translate_conf s, translate_proc proc)
 		
-	| Rexpr_control (s, proc) ->
-	    Coproc_control (translate_conf s, translate_proc proc)
+	| Rexpr_control (s, patt_proc_opt, proc) ->
+	    Coproc_control (translate_conf s, 
+			    opt_map
+			      (fun (patt, proc) -> 
+				translate_pattern patt, translate_ml proc)
+			      patt_proc_opt,
+			    translate_proc proc)
 	      
 	| Rexpr_get (s, patt, proc) ->
 	    Coproc_get (translate_ml s, 

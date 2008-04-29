@@ -502,7 +502,7 @@ and translate_proc e k (ctrl: ident) =
 		      (ctrl_id, translate_proc proc end_when ctrl_id)))
 		 Location.none)
 	      
-	| Rexpr_control (s, proc) ->
+	| Rexpr_control (s, None, proc) ->
             let k_id = make_var "k" in
 	    let k_var = make_proc (Kproc_var k_id) Location.none in
 	    let k_patt = 
@@ -521,7 +521,9 @@ and translate_proc e k (ctrl: ident) =
 		    (ctrl, translate_conf s,
 		     (ctrl_id, translate_proc proc end_control ctrl_id)))
 		 Location.none)
-	      
+
+	| Rexpr_control (s, Some _, proc) ->
+	    Misc.not_yet_implemented "Reac2lk.translate_proc Rexpr_control"
 
 (* C_k[let s<x> in p] =                                                    *)
 (*   bind K = k in let s<x> in C_K[p]                                      *)

@@ -160,8 +160,10 @@ let rec is_nonexpansive expr =
       is_nonexpansive_conf c && is_nonexpansive e && is_nonexpansive e'
   | Rexpr_when (c, e) -> 
       is_nonexpansive_conf c && is_nonexpansive e
-  | Rexpr_control (c, e) -> 
+  | Rexpr_control (c, None, e) -> 
       is_nonexpansive_conf c && is_nonexpansive e
+  | Rexpr_control (c, Some (_,  e'), e) -> 
+      is_nonexpansive_conf c && is_nonexpansive e' && is_nonexpansive e
   | Rexpr_par e_list ->
       List.for_all is_nonexpansive e_list
   | Rexpr_merge (e1, e2) ->
@@ -715,9 +717,32 @@ let rec type_of_expression env expr =
 	type_of_event_config env s;
 	type_of_expression env p
 	  
-    | Rexpr_control (s,p) ->
+    | Rexpr_control (s, None, p) ->
 	type_of_event_config env s;
 	type_of_expression env p
+    | Rexpr_control (s, (Some (patt, e)), p) ->
+	begin match s.conf_desc with
+	| Rconf_present s ->
+	    let ty_s = type_of_expression env s in
+	    let ty_emit, ty_get = 
+	      try 
+		filter_event ty_s
+	      with Unify ->
+		non_event_err s
+	    in
+	    let ty_body = type_of_expression env p in
+	    let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+	    assert (gl_env = []);
+	    let new_env =
+	      List.fold_left 
+		(fun env (x, ty) -> Env.add x (forall [] ty) env) 
+		env loc_env 
+	    in
+	    type_expect new_env e type_bool;
+	    ty_body
+	| _ -> 
+	    non_event_err2 s
+	end
 	  
     | Rexpr_get (s,patt,p) ->
 	let ty_s = type_of_expression env s in
