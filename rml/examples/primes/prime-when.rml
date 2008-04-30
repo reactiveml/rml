@@ -30,7 +30,7 @@ let rec process filter  =
   prime := !global;
   output !prime;
   signal next in
-    (do run filter  when next
+    (do run filter when next done
     ||
      loop
        pause;
@@ -43,5 +43,5 @@ let process main =
   signal start in
   run (producer start)
   ||
-  do run filter  when start
+  do run filter  when start done
 ;;

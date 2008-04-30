@@ -56,6 +56,9 @@ $(FILE).opt: $(FILE).cmx
 	$(RMLC) -c $<
 
 
-clean :
-	rm -f *.cm* *.annot *.rzi $(FILE).ml $(FILE) $(FILE).opt *.o \
-	      *~ 
+clean:
+	rm -f *.cm* *.annot *.rzi $(FILE).ml *.o 
+
+realclean: clean
+	rm -f $(FILE) $(FILE).opt *~ 
+cleanall: realclean

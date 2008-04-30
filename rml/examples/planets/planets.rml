@@ -237,7 +237,7 @@ let process systeme =
 	   p)
     ||
     run (add 4 new_planet kill p)
-  with suspend
+  with suspend done
 ;;
 
 (****************************************************************************)

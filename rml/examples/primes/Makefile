@@ -60,5 +60,8 @@ $(FILE).opt: $(FILE).cmx
 
 
 clean :
-	rm -f *.cm* *.o *.annot *.rzi $(FILE).ml $(FILE) $(FILE).opt \
-	      *~ 
+	rm -f *.cm* *.o *.annot *.rzi $(FILE).ml  
+
+realclean: clean
+	rm -f $(FILE) $(FILE).opt *~
+cleanall: realclean

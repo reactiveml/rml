@@ -1,7 +1,7 @@
 RMLC=rmlc
 RMLFLAGS=
 N=-1
-SAMPLING=-1.0
+SAMPLING=0.01
 INTERPRETERDIR=`rmlc -where`
 INTERPRETER=rmllib.cma
 OCAMLC=ocamlc
@@ -16,8 +16,11 @@ planets : planets.cmo
 
 clean :
 	rm -f *.cm* *.annot *.rzi *.?annot \
-	      planets planets.ml \
-	      *~ 
+	      planets.ml \
+
+realclean: clean
+	rm -f planets *~
+cleanall: realclean
 
 # implicit rules
 .SUFFIXES : .rml .mli .ml .cmi .cmo .rzi

@@ -211,7 +211,7 @@ let process draw_simul draw suspend new_node kill =
       all_infos := all;
       emit refresh
     end
-  with suspend
+  with suspend done
   ||
   loop
     pause;
