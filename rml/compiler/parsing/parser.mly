@@ -606,7 +606,14 @@ expr:
   | AWAIT await_flag simple_expr LPAREN pattern RPAREN IN par_expr
       { match $2 with 
         | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
-	| im, k ->  mkexpr(Pexpr_await_val(im, k, $3, $5, $8)) }
+	| im, k -> mkexpr(Pexpr_await_val(im, k, $3, $5, $8)) }
+  | AWAIT await_flag simple_expr LPAREN pattern RPAREN WHEN par_expr IN par_expr
+      { match $2 with 
+        | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
+	| im, k -> 
+	    mkexpr(Pexpr_await_val(im, k, $3, $5, 
+				   { pexpr_desc = Pexpr_when_match($8, $10);
+				     pexpr_loc = Location.none; })) }
   | PROCESS proc_def 
       { $2 }
   | RUN simple_expr 

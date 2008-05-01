@@ -735,6 +735,100 @@ and translate_proc e =
 	  | All -> "_all"
 	in
 	let cpatt = translate_pattern patt in
+	begin match Caml_misc.partial_match cpatt, k.coproc_desc with
+	| partial_match, Coproc_when_match (e1, k) ->
+	    if flag2 = One then not_yet_implemented "await_one_match";
+	    let matching =
+	      make_expr
+		(Cexpr_function 
+		   [cpatt, 
+		    make_expr
+		      (Cexpr_when_match(translate_ml e1,
+					make_expr 
+					  (Cexpr_constant (Const_bool true)) 
+					  Location.none))
+		      Location.none;
+		    make_patt Cpatt_any Location.none, 
+		    make_expr 
+		      (Cexpr_constant (Const_bool false)) Location.none;])
+		Location.none
+	    in
+	    Cexpr_apply
+	      (make_instruction ("rml_await"^im^kind^"_match"),
+	       [embed_ml s;
+		matching;
+		make_expr
+		  (Cexpr_function 
+		     ((cpatt, translate_proc k)::
+		      if partial_match then
+			[(make_patt Cpatt_any Location.none, make_raise_RML())]
+		      else
+			[]))
+		  Location.none])
+	| partial_match, 
+	    Coproc_compute { coexpr_desc = Coexpr_when_match (e1, e2); } 
+	  ->
+	    if flag2 = One then not_yet_implemented "await_one_match";
+	    let matching =
+	      make_expr
+		(Cexpr_function 
+		   [cpatt, 
+		    make_expr
+		      (Cexpr_when_match(translate_ml e1,
+					make_expr 
+					  (Cexpr_constant (Const_bool true)) 
+					  Location.none))
+		      Location.none;
+		    make_patt Cpatt_any Location.none, 
+		    make_expr 
+		      (Cexpr_constant (Const_bool false)) Location.none;])
+		Location.none
+	    in
+	    Cexpr_apply
+	      (make_instruction ("rml_await"^im^kind^"_match"),
+	       [embed_ml s;
+		matching;
+		make_expr
+		  (Cexpr_function 
+		     ((cpatt, 
+		       translate_proc { coproc_desc = Coproc_compute e2;
+					coproc_loc = e2.coexpr_loc })::
+		      if partial_match then
+			[(make_patt Cpatt_any Location.none, make_raise_RML())]
+		      else
+			[]))
+		  Location.none])
+	| true, _ ->
+	    if flag2 = One then not_yet_implemented "await_one_match";
+	    let matching =
+	      make_expr
+		(Cexpr_function 
+		   [cpatt, 
+		    make_expr 
+		      (Cexpr_constant (Const_bool true)) Location.none;
+		    make_patt Cpatt_any Location.none, 
+		    make_expr 
+		      (Cexpr_constant (Const_bool false)) Location.none;])
+		Location.none
+	    in
+	    Cexpr_apply
+	      (make_instruction ("rml_await"^im^kind^"_match"),
+	       [embed_ml s;
+		matching;
+		make_expr
+		  (Cexpr_function 
+		     [(cpatt, translate_proc k);
+		      (make_patt Cpatt_any Location.none, make_raise_RML())])
+		  Location.none])
+	| false, _ ->
+	    Cexpr_apply
+	      (make_instruction ("rml_await"^im^kind),
+	       [embed_ml s;
+		make_expr
+		  (Cexpr_function [cpatt, translate_proc k])
+		  Location.none])
+	end
+(* XXXXXX
 	if Caml_misc.partial_match cpatt then 
 	  begin
 	    if flag2 = One then not_yet_implemented "await_one_match";
@@ -763,6 +857,7 @@ and translate_proc e =
 	      make_expr
 		(Cexpr_function [cpatt, translate_proc k])
 		Location.none])
+*)
   in
   make_expr cexpr e.coproc_loc
 
