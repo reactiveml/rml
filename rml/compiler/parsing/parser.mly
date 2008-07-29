@@ -590,6 +590,10 @@ expr:
       { mkexpr(Pexpr_when($4, $2)) }
   | CONTROL par_expr WITH simple_expr DONE
       { mkexpr(Pexpr_control($4, None, $2)) }
+  | CONTROL par_expr WITH simple_expr LPAREN pattern RPAREN DONE
+      { mkexpr(Pexpr_control($4, 
+			     Some($6, mkexpr (Pexpr_constant(Const_bool true))),
+			     $2)) }
   | CONTROL par_expr WITH simple_expr LPAREN pattern RPAREN WHEN par_expr DONE
       { mkexpr(Pexpr_control($4, Some ($6, $9), $2)) }
 
@@ -772,7 +776,8 @@ match_action:
 							   ($2, $4)) }
 ;
 until_action:
-    MINUSGREATER par_expr                       { $2 }
+    /* empty */                     { mkexpr Pexpr_nothing }
+  | MINUSGREATER par_expr                       { $2 }
   | WHEN par_expr   
       { mkexpr(Pexpr_when_match($2, { pexpr_desc = Pexpr_nothing;  
 				      pexpr_loc = Location.none; })) }
