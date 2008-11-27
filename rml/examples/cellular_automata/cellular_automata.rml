@@ -388,7 +388,7 @@ let configure () =
 let process main =
   Random.self_init();
   configure();
-  if ! nox then ()
+  if !nox then ()
   else
     begin
       Graphics.open_graph (" "^(string_of_int (!maxx * !zoom))^"x"^

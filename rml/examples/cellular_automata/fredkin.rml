@@ -36,7 +36,10 @@ let new_cell x y activation status =
     cell_neighborhood = [];
   }
 
+let nox = ref false
 let zoom = ref 2
+
+let no_draw c = () 
 
 let draw_cell_gen color_of_cell c =
   Graphics.set_color (color_of_cell c);
@@ -217,6 +220,7 @@ let configure () =
   and doc_width = "<n> set the number of cells in the width"
   and doc_height = "<n> set the number of cells in the height"
   and doc_behavior = "<s> select the behavior of the automaton"
+  and doc_nox = "disable graphical output"
   and errmsg = "Options are:"
   in
   Arg.parse
@@ -226,6 +230,7 @@ let configure () =
       ("-height", Arg.Set_int maxy, doc_height);
       ("-h", Arg.Set_int maxy, doc_height);
       ("-b", Arg.Set_string behavior, doc_behavior);
+      ("-nox", Arg.Set nox, doc_nox);
     ]
     (fun s -> raise (Invalid_argument s))
     errmsg
@@ -233,32 +238,48 @@ let configure () =
 let process main =
   Random.self_init();
   configure();
-  Graphics.open_graph (" "^(string_of_int (!maxx * !zoom))^"x"^
-			    (string_of_int (!maxy * !zoom)));
-  Graphics.auto_synchronize false;
+  if !nox then ()
+  else
+    begin
+      Graphics.open_graph (" "^(string_of_int (!maxx * !zoom))^"x"^
+			       (string_of_int (!maxy * !zoom)));
+      Graphics.auto_synchronize false
+    end;
   signal tmp default 0 gather fun x y -> y + 1 in
   begin
     begin match !behavior with
     | "gol" ->
 	let cell_array = cell_array_create tmp in
+	let draw = 
+	  if ! nox then no_draw 
+	  else draw_cell_gen color_of_status
+	in
 	run (cellular_automaton_start 
-	       (draw_cell_gen color_of_status)
+	       draw
 	       get_moore_neighbors_circular
 	       get_status_center_line_wall
 	       game_of_life
 	       cell_array);
     | "fredkin" ->
 	let cell_array = cell_array_create tmp in
+	let draw = 
+	  if ! nox then no_draw 
+	  else draw_cell_gen color_of_status
+	in
 	run (cellular_automaton_start 
-	       (draw_cell_gen color_of_status)
+	       draw
 	       get_moore_neighbors_circular
 	       get_status_center 
 	       fredkin
 	       cell_array);
     | "fredkin2" ->
 	let cell_array = cell_array_create tmp in
+	let draw = 
+	  if ! nox then no_draw 
+	  else draw_cell_gen color_of_status
+	in
 	run (cellular_automaton_start 
-	       (draw_cell_gen color_of_status)
+	       draw
 	       get_von_neumann_neighbors
 	       get_status_center
 	       fredkin
@@ -266,9 +287,11 @@ let process main =
     | s -> raise (Invalid_argument s)
     end
     ||
-    loop 
-      Graphics.synchronize (); 
-      pause;
-    end
+    if !nox then ()
+    else
+      loop 
+	Graphics.synchronize (); 
+	pause;
+      end
   end
 

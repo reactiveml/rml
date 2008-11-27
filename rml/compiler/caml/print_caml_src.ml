@@ -458,6 +458,7 @@ and print_pattern pri pat =
       print_string "|";
       print_pattern pri_e pat2
   | Cpatt_alias(pat, s) ->
+      print_string "(";
       print_pattern pri_e pat;
       print_space ();
       print_string "as";
@@ -466,7 +467,8 @@ and print_pattern pri pat =
 	match s with
 	| Cvarpatt_local id -> print_name (Ident.unique_name id)
 	| Cvarpatt_global gl -> print_global gl
-      end
+      end;
+      print_string ")"
   | Cpatt_any -> print_string "_"
   | Cpatt_array l ->
       print_string "[|";
