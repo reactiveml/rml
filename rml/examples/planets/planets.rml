@@ -59,7 +59,7 @@ let compute_pos =
     let d2 = distance2 p1.pos p2.pos in
     let d = sqrt d2 in
     if (d <> 0.0) then 
-      let  f12 = g *. (p1.masse *. p2.masse) /. d2 in
+      let  f12 = g *. ( (* p1.masse *. *) p2.masse) /. d2 in
       (f12 *. (p2.pos.x -. p1.pos.x) /. d,
        f12 *. (p2.pos.y -. p1.pos.y) /. d,
        f12 *. (p2.pos.z -. p1.pos.z) /. d)
@@ -92,7 +92,7 @@ let compute_pos =
 ;;
 
 let maj_aff all =
-  Graphics.clear_graph();
+(*  Graphics.clear_graph();
   let max_x_2 = (Graphics.size_x()) / 2 in
   let max_y_2 = (Graphics.size_y()) / 2 in
   List.iter 
@@ -104,7 +104,7 @@ let maj_aff all =
 	(*3*)
 	(if (-200.0 < p.pos.z) & (p.pos.z < 5000.0) then 
 	  5+(int_of_float p.pos.z / 50) 
-	else 1))
+	else 1)) *)
     all
 ;;
 
@@ -207,6 +207,12 @@ let rec process add_aux id new_planet kill kill_new p =
 let process add id new_planet kill p =
   run (add_aux id new_planet kill kill p)
 
+let process initial n p =
+  for i = 0 to n dopar
+      run (planet (i+5) 1.0 { x = (float_of_int i); y = -. 200.0; z = 0.0 }
+	     { x = 30.0; y = 0.0; z = 0.0 } p)
+  done
+
 let process systeme =
   signal p in
   signal new_planet in
@@ -237,6 +243,8 @@ let process systeme =
 	   p)
     ||
     run (add 4 new_planet kill p)
+    ||
+    run (initial 400 p)
   with suspend done
 ;;
 
