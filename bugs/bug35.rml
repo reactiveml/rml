@@ -1,9 +1,0 @@
-(* 21/11/2008 *)
-(* il faudrait un warning *)
-
-let process foo =
-  loop
-    match true with 
-      true -> pause 
-    | false -> ();
-  end
