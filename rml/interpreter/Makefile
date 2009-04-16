@@ -6,6 +6,7 @@ SRC=	sig_env.ml \
 	lco_interpreter.mli \
 	lco_ctrl_tree.ml \
 	lco_ctrl_tree_thread_safe.ml \
+	lco_ctrl_tree_n.ml \
 	lco_rewrite.ml \
 	lk_interpreter.mli \
 	lk_implem.ml \
@@ -18,6 +19,7 @@ SRC=	sig_env.ml \
 OBJ=	sig_env.cmo \
 	lco_ctrl_tree.cmo \
 	lco_ctrl_tree_thread_safe.cmo \
+	lco_ctrl_tree_n.cmo \
 	lco_rewrite.cmo \
 	lk_implem.cmo \
 	lk_threaded.cmo \
