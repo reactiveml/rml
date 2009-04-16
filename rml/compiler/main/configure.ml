@@ -115,6 +115,11 @@ let set_runtime s =
       set_interpreter_impl "Thread_implem";
       set_interpreter_module "Lco_ctrl_tree_thread_safe_record";
       set_translation Lco
+  | "Lco_ctrl_tree_n" | "Lco_n" -> 
+      set_interpreter_intf "Lco_interpreter";
+      set_interpreter_impl "Implem";
+      set_interpreter_module "Lco_ctrl_tree_n_record";
+      set_translation Lco
 (*
   | "ctrl_tree_debug" -> 
       set_interpreter_intf "Lco_interpreter";

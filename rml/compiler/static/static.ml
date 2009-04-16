@@ -64,7 +64,7 @@ let unify expected_k actual_k =
 
 let max_instantaneous k1 k2 =
   match k1, k2 with
-  | Instantaneous, Instantaneous -> Instantaneous
+(*   | Instantaneous, Instantaneous -> Instantaneous *)
   | Instantaneous, k | k, Instantaneous -> k
   | Dontknow, Dontknow -> Dontknow
   | _ -> Noninstantaneous
@@ -76,6 +76,7 @@ let max typ1 typ2 =
   | Dynamic k, Static -> Dynamic k
   | Dynamic k1, Dynamic k2 -> 
       Dynamic (max_instantaneous k1 k2)
+
 
 (* Compress type path *)
 let rec get_type ty = 
@@ -104,14 +105,14 @@ let rec get_process_status =
     | _ -> assert false
 	
 
-let static_expr_list static_expr filter ctx l =
+let static_expr_list static_expr combine filter ctx l =
   match l with
   | [] -> Static
   | [x] -> static_expr ctx (filter x)
   | x::l ->
       let ty = static_expr ctx (filter x) in
       List.fold_left
-	(fun typ x -> max typ (static_expr ctx (filter x)))
+	(fun typ x -> combine (* max *) typ (static_expr ctx (filter x)))
 	ty l
 
 
@@ -125,28 +126,28 @@ let rec static_expr ctx e =
     | Rexpr_constant im -> Static
 
     | Rexpr_let (Recursive, patt_expr_list, e1) ->
-	if static_expr_list static_expr snd ML patt_expr_list = Static
+	if static_expr_list static_expr max snd ML patt_expr_list = Static
 	then static_expr ctx e1 
 	else expr_wrong_static_err e
     | Rexpr_let (Nonrecursive, patt_expr_list, e1) ->
-	let typ1 = static_expr_list static_expr snd ctx patt_expr_list in
+	let typ1 = static_expr_list static_expr max snd ctx patt_expr_list in
 	let typ2 = static_expr ctx e1 in
 	max typ1 typ2
 
     | Rexpr_function patt_expr_list ->
-	if static_expr_list static_expr snd ML patt_expr_list = Static
+	if static_expr_list static_expr max snd ML patt_expr_list = Static
 	then Static
 	else expr_wrong_static_err e
 
     | Rexpr_apply (e1, expr_list) ->
 	let typ1 = static_expr ML e1 in
-	let typ2 = static_expr_list static_expr id ML expr_list in
+	let typ2 = static_expr_list static_expr max id ML expr_list in
 	if max typ1 typ2 = Static
 	then Static
 	else expr_wrong_static_err e
 
     | Rexpr_tuple expr_list ->
-	if static_expr_list static_expr id ML expr_list = Static
+	if static_expr_list static_expr max id ML expr_list = Static
 	then Static
 	else expr_wrong_static_err e
 
@@ -157,12 +158,12 @@ let rec static_expr ctx e =
 	else expr_wrong_static_err e
 
     | Rexpr_array expr_list ->
-	if static_expr_list static_expr id ML expr_list = Static
+	if static_expr_list static_expr max id ML expr_list = Static
 	then Static
 	else expr_wrong_static_err e
 
     | Rexpr_record ide_expr_list ->
-	if static_expr_list static_expr snd ML ide_expr_list = Static
+	if static_expr_list static_expr max snd ML ide_expr_list = Static
 	then Static
 	else expr_wrong_static_err e
 
@@ -185,7 +186,7 @@ let rec static_expr ctx e =
 
     | Rexpr_trywith (e1, patt_expr_list) ->
 	let typ1 = static_expr ML e1 in
-	let typ2 = static_expr_list static_expr snd ML patt_expr_list in
+	let typ2 = static_expr_list static_expr max snd ML patt_expr_list in
 	if max typ1 typ2 = Static
 	then Static
 	else expr_wrong_static_err e
@@ -216,7 +217,23 @@ let rec static_expr ctx e =
 
     | Rexpr_match (e1, patt_expr_list) ->
 	let _typ1 = static_expr ML e1 in
-	let typ2 = static_expr_list static_expr snd ctx patt_expr_list in
+	let typ2 = 
+	  let combine typ1 typ2 =
+	    begin match typ1, typ2 with
+	    | Static, Static -> Static 
+	    | Static, Dynamic Instantaneous 
+	    | Dynamic Instantaneous, Static -> Dynamic Instantaneous 
+	    | Static, Dynamic _
+	    | Dynamic _, Static -> Dynamic Dontknow
+	    | Dynamic Instantaneous, Dynamic Instantaneous -> 
+		Dynamic Instantaneous
+	    | Dynamic Noninstantaneous, Dynamic Noninstantaneous -> 
+		Dynamic Noninstantaneous
+	    | Dynamic _, Dynamic _ -> Dynamic Dontknow
+	    end
+	  in
+	  static_expr_list static_expr combine snd ctx patt_expr_list 
+	in
 	typ2
 
     | Rexpr_when_match (e1,e2) ->
@@ -251,7 +268,7 @@ let rec static_expr ctx e =
 	else expr_wrong_static_err e
 
     | Rexpr_seq e_list ->
-	static_expr_list static_expr id ctx e_list
+	static_expr_list static_expr max id ctx e_list
 
     | Rexpr_nothing ->
 	if ctx = Process
@@ -311,7 +328,7 @@ let rec static_expr ctx e =
     | Rexpr_par e_list ->
 	if ctx = Process
 	then 
-	  let ty = static_expr_list static_expr id ctx e_list in
+	  let ty = static_expr_list static_expr max id ctx e_list in
 	  begin match ty with
 	  | Static -> Dynamic Instantaneous
 	  | _ -> ty
@@ -520,7 +537,7 @@ let static info_chan impl =
     match impl.impl_desc with
     | Rimpl_expr e -> static_expr ML e
     | Rimpl_let (_, l) -> 
-	static_expr_list static_expr snd ML l
+	static_expr_list static_expr max snd ML l
     | Rimpl_signal (s_list) ->
 	List.iter
 	  (fun (_, combine) ->
