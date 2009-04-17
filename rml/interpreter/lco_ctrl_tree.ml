@@ -70,6 +70,10 @@ module Rml_interpreter : Lco_interpreter.S =
     and 'a process = unit -> 'a expr
 
 
+    let rec rev_app x1 x2 =
+      match x1 with
+      | [] -> x2
+      | f :: x1' -> rev_app x1' (f::x2)
 	
 (* liste des processus a executer dans l'instant *)
     let current = ref []
@@ -79,7 +83,7 @@ module Rml_interpreter : Lco_interpreter.S =
     let wakeUpAll () = 
       List.iter
 	(fun wp ->
-	  current := List.rev_append !wp !current;
+	  current := rev_app !wp !current;
 	  wp := [])
 	!toWakeUp;
       toWakeUp := []
@@ -101,11 +105,6 @@ module Rml_interpreter : Lco_interpreter.S =
       List.iter set_kill p.children;
       p.children <- []
 
-
-    let rec rev_app x1 x2 =
-      match x1 with
-      | [] -> x2
-      | f :: x1' -> rev_app x1' (f::x2)
 
 (* calculer le nouvel etat de l'arbre de control *)
 (* et deplacer dans la liste current les processus qui sont dans  *)
@@ -185,14 +184,14 @@ module Rml_interpreter : Lco_interpreter.S =
 (* les listes next *)
     let rec next_to_current p =
       if p.alive && not p.susp then 
-	(current := List.rev_append p.next !current;
+	(current := rev_app p.next !current;
 	 p.next <- [];
 	 List.iter next_to_current p.children)
       else ()
 
 (* debloquer les processus en attent d'un evt *)
     let wakeUp w =
-      current := List.rev_append !w !current;
+      current := rev_app !w !current;
       w := []
 
 
@@ -255,14 +254,14 @@ module Rml_interpreter : Lco_interpreter.S =
 	let is_true1, evt_list1 = c1 is_long_wait in
 	let is_true2, evt_list2 = c2 is_long_wait in
 	(fun () -> is_true1() && is_true2()),
-	List.rev_append evt_list1 evt_list2
+	rev_app evt_list1 evt_list2
 
     let cfg_or c1 c2 =
       fun is_long_wait ->
 	let is_true1, evt_list1 = c1 is_long_wait in
 	let is_true2, evt_list2 = c2 is_long_wait in
 	(fun () -> is_true1() || is_true2()),
-	List.rev_append evt_list1 evt_list2
+	rev_app evt_list1 evt_list2
 
 
 
@@ -301,6 +300,13 @@ module Rml_interpreter : Lco_interpreter.S =
 	in f_pause
 
 (**************************************)
+(* pause_kboi                         *)
+(**************************************)
+    let rml_pause_kboi =
+      fun f_k ctrl ->
+	fun _ -> raise RML
+
+(**************************************)
 (* halt                               *)
 (**************************************)
     let rml_halt =
@@ -309,6 +315,11 @@ module Rml_interpreter : Lco_interpreter.S =
 	  fun _ ->
 	    sched ()
 	in f_halt
+
+(**************************************)
+(* halt_kboi                          *)
+(**************************************)
+    let rml_halt_kboi = rml_halt
 
 (**************************************)
 (* emit                               *)
@@ -1365,7 +1376,7 @@ let rml_loop p =
 	let f_par_n =
 	  fun _ ->
 	    cpt := nb;
-	    current := List.rev_append f_list !current;
+	    current := rev_app f_list !current;
 	    sched()
 	in f_par_n
 

@@ -78,8 +78,8 @@ and process =
     coproc_loc: Location.t;}
 and process_desc =
   | Coproc_nothing
-  | Coproc_pause
-  | Coproc_halt
+  | Coproc_pause of continue_begin_of_instant
+  | Coproc_halt of continue_begin_of_instant
   | Coproc_compute of expression
   | Coproc_emit of expression
   | Coproc_emit_val of expression * expression

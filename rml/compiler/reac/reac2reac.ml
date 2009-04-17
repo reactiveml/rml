@@ -197,10 +197,10 @@ let expr_map  =
       | Rexpr_nothing ->
 	  f expr
 	    
-      | Rexpr_pause ->
+      | Rexpr_pause _ ->
 	  f expr
 
-      | Rexpr_halt ->
+      | Rexpr_halt _ ->
 	  f expr
 	    
       | Rexpr_emit (e, None) ->
@@ -498,9 +498,77 @@ let for2loop_n expr =
   end
 
 
+(* Print static information *)
 let print_static e = 
   Location.print_oc stderr e.expr_loc;
   prerr_string (Def_static.string_of_static e.expr_static);
   prerr_newline ();
   e
 
+
+(* Check left branche of |> operator and annotate pause statement *)
+let translate_merge =
+  let merge_error exp =
+    Printf.eprintf 
+      "%aThis expression is not allowed on the left of a |> operator.\n"
+      Location.print_oc exp.expr_loc;
+    raise Misc.Error
+  in
+
+  let annotate_pause expr =
+    begin match expr.expr_desc with
+    | Rexpr_pause _ ->
+	{ expr with expr_desc = Rexpr_pause K_boi }
+    | Rexpr_halt _ ->
+	{ expr with expr_desc = Rexpr_halt K_boi }
+    | Rexpr_local _
+    | Rexpr_global _
+    | Rexpr_constant _
+    | Rexpr_let _
+    | Rexpr_function _
+    | Rexpr_apply _
+    | Rexpr_tuple _
+    | Rexpr_construct _
+    | Rexpr_array _
+    | Rexpr_record _
+    | Rexpr_record_access _
+    | Rexpr_record_update _
+    | Rexpr_constraint _ 
+    | Rexpr_trywith _
+    | Rexpr_assert _
+    | Rexpr_ifthenelse _
+    | Rexpr_match _
+    | Rexpr_when_match _
+    | Rexpr_while _
+    | Rexpr_for _
+    | Rexpr_seq _
+    | Rexpr_process _
+    | Rexpr_pre _
+    | Rexpr_last _
+    | Rexpr_default _
+    | Rexpr_nothing _
+    | Rexpr_emit _
+    | Rexpr_loop _
+    | Rexpr_fordopar _
+    | Rexpr_par _
+    | Rexpr_merge _
+    | Rexpr_signal _ ->
+	expr
+    | Rexpr_run _
+    | Rexpr_until _
+    | Rexpr_when _
+    | Rexpr_control _
+    | Rexpr_present _
+    | Rexpr_await _
+    | Rexpr_await_val _ ->
+	merge_error expr
+    | Rexpr_get _ ->
+	merge_error expr
+    end
+  in
+  fun expr -> 
+    begin match expr.expr_desc with
+    | Rexpr_merge (e1, e2) ->
+	{ expr with expr_desc = Rexpr_merge (expr_map annotate_pause e1, e2) }
+    | _ -> expr
+    end  

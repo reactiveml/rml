@@ -287,9 +287,9 @@ and translate_proc e k (ctrl: ident) =
 	begin match e.expr_desc with
 	| Rexpr_nothing -> k.kproc_desc
 	    
-	| Rexpr_pause -> Kproc_pause (k, ctrl)
+	| Rexpr_pause kboi -> Kproc_pause (kboi, k, ctrl)
 
-	| Rexpr_halt -> Kproc_halt
+	| Rexpr_halt kboi -> Kproc_halt kboi
 
 	| Rexpr_emit (s, None) -> Kproc_emit (translate_ml s, k)
 

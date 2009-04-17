@@ -289,9 +289,9 @@ and translate_proc p =
 	begin match p.expr_desc with
 	| Rexpr_nothing -> Coproc_nothing
 	      
-	| Rexpr_pause -> Coproc_pause 
+	| Rexpr_pause kboi -> Coproc_pause kboi
 	      
-	| Rexpr_halt -> Coproc_halt
+	| Rexpr_halt kboi -> Coproc_halt kboi
 	      
 	| Rexpr_emit (s, None) -> Coproc_emit (translate_ml s)
 	      

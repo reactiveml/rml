@@ -19,8 +19,8 @@
 (**********************************************************************)
 
 (* author: Louis Mandel *)
-(* created: 2004-06-04  *)
-(* file: lco_ctrl_tree *)
+(* created: 2009-03-03  *)
+(* file: lco_ctrl_tree_n *)
 
 (* Remark: taken from                                         *)
 (*            interpreter_without_scope_extrusion_control.ml  *)
@@ -53,7 +53,8 @@ module Rml_interpreter : Lco_interpreter.S =
 	  mutable susp: bool;
 	  mutable cond: (unit -> bool);
 	  mutable children: control_tree list;
-	  mutable next: next; }
+	  mutable next: next; 
+	  mutable next_boi: next; }
     and control_type = 
 	Top 
       | Kill of unit step 
@@ -69,6 +70,10 @@ module Rml_interpreter : Lco_interpreter.S =
     and 'a process = unit -> 'a expr
 
 
+    let rec rev_app x1 x2 =
+      match x1 with
+      | [] -> x2
+      | f :: x1' -> rev_app x1' (f::x2)
 	
 (* liste des processus a executer dans l'instant *)
     let current = ref []
@@ -78,7 +83,7 @@ module Rml_interpreter : Lco_interpreter.S =
     let wakeUpAll () = 
       List.iter
 	(fun wp ->
-	  current := List.rev_append !wp !current;
+	  current := rev_app !wp !current;
 	  wp := [])
 	!toWakeUp;
       toWakeUp := []
@@ -90,21 +95,17 @@ module Rml_interpreter : Lco_interpreter.S =
 	susp = false;
 	children = [];
 	cond = (fun () -> false);
-	next = []; }
+	next = []; 
+	next_boi = []; }
 
 (* tuer un arbre p *)
     let rec set_kill p =
       p.alive <- true;
       p.susp <- false;
       p.next <- [];
+      p.next_boi <- [];
       List.iter set_kill p.children;
       p.children <- []
-
-
-    let rec rev_app x1 x2 =
-      match x1 with
-      | [] -> x2
-      | f :: x1' -> rev_app x1' (f::x2)
 
 (* calculer le nouvel etat de l'arbre de control *)
 (* et deplacer dans la liste current les processus qui sont dans  *)
@@ -171,10 +172,14 @@ module Rml_interpreter : Lco_interpreter.S =
 
       and next_to_current node =
 	current := rev_app node.next !current;
-	node.next <- []
+	node.next <- [];
+	current := rev_app node.next_boi !current;
+	node.next_boi <- []
       and next_to_father pere node =
 	pere.next <- rev_app node.next pere.next;
-	node.next <- []
+	node.next <- [];
+	pere.next_boi <- List.append pere.next_boi node.next_boi;
+	node.next_boi <- []
       in
       fun () ->
 	top.children <- eval_children top top.children true [];
@@ -184,14 +189,16 @@ module Rml_interpreter : Lco_interpreter.S =
 (* les listes next *)
     let rec next_to_current p =
       if p.alive && not p.susp then 
-	(current := List.rev_append p.next !current;
+	(current := rev_app p.next !current;
 	 p.next <- [];
-	 List.iter next_to_current p.children)
+	 List.iter next_to_current p.children;
+	 current := rev_app p.next_boi !current;
+	 p.next_boi <- [];)
       else ()
 
 (* debloquer les processus en attent d'un evt *)
     let wakeUp w =
-      current := List.rev_append !w !current;
+      current := rev_app !w !current;
       w := []
 
 
@@ -254,14 +261,14 @@ module Rml_interpreter : Lco_interpreter.S =
 	let is_true1, evt_list1 = c1 is_long_wait in
 	let is_true2, evt_list2 = c2 is_long_wait in
 	(fun () -> is_true1() && is_true2()),
-	List.rev_append evt_list1 evt_list2
+	rev_app evt_list1 evt_list2
 
     let cfg_or c1 c2 =
       fun is_long_wait ->
 	let is_true1, evt_list1 = c1 is_long_wait in
 	let is_true2, evt_list2 = c2 is_long_wait in
 	(fun () -> is_true1() || is_true2()),
-	List.rev_append evt_list1 evt_list2
+	rev_app evt_list1 evt_list2
 
 
 
@@ -300,6 +307,17 @@ module Rml_interpreter : Lco_interpreter.S =
 	in f_pause
 
 (**************************************)
+(* pause_kboi                         *)
+(**************************************)
+    let rml_pause_kboi =
+      fun f_k ctrl jp ->
+	let f_pause =
+	  fun _ ->
+	    ctrl.next_boi <- f_k :: ctrl.next_boi;
+	    sched ()
+	in f_pause
+
+(**************************************)
 (* halt                               *)
 (**************************************)
     let rml_halt =
@@ -308,6 +326,11 @@ module Rml_interpreter : Lco_interpreter.S =
 	  fun _ ->
 	    sched ()
 	in f_halt
+
+(**************************************)
+(* halt_kboi                          *)
+(**************************************)
+    let rml_halt_kboi = rml_halt
 
 (**************************************)
 (* emit                               *)
@@ -741,9 +764,10 @@ module Rml_interpreter : Lco_interpreter.S =
 (* merge                              *)
 (**************************************)
 
-    let rml_merge p_1 p_2 =
-      fun f_k ctrl ->
-	fun _ -> raise RML
+    let rml_merge = rml_par
+(*     let rml_merge p_1 p_2 = *)
+(*       fun f_k ctrl jp -> *)
+(* 	fun _ -> raise RML *)
 
 
 (**************************************)
@@ -918,7 +942,8 @@ let rml_loop p =
 	susp = false;
 	children = [];
 	cond = (fun () -> false);
-	next = [] }
+	next = [];
+	next_boi = []; }
 
     let start_ctrl f_k ctrl f new_ctrl =
       let f_ctrl =
@@ -929,7 +954,8 @@ let rml_loop p =
 	  else
 	    (new_ctrl.alive <- true;
 	     new_ctrl.susp <- false;
-	     new_ctrl.next <- []);
+	     new_ctrl.next <- [];
+	     new_ctrl.next_boi <- []);
 	  f unit_value
       in f_ctrl
 
@@ -1137,15 +1163,18 @@ let rml_loop p =
 	  else
 	    (new_ctrl.alive <- true;
 	     new_ctrl.susp <- false;
-	     new_ctrl.next <- []);
+	     new_ctrl.next <- [];
+	     new_ctrl.next_boi <- []);
 	  if Event.status n
 	  then 
 	    (new_ctrl.susp <- false;
 	     new_ctrl.next <- [];
+	     new_ctrl.next_boi <- [];
 	     f unit_value)
 	  else 
 	    (new_ctrl.susp <- true;
 	     new_ctrl.next <- [f];
+	     new_ctrl.next_boi <- [];
 	     w := f_when :: !w;
 	     if ctrl.kind <> Top then toWakeUp := w :: !toWakeUp;
 	     sched())
@@ -1362,7 +1391,7 @@ let rml_loop p =
 	let f_par_n =
 	  fun _ ->
 	    cpt := !cpt + nb;
-	    current := List.rev_append f_list !current;
+	    current := rev_app f_list !current;
 	    sched()
 	in f_par_n
 

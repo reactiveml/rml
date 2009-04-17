@@ -290,9 +290,17 @@ and translate_proc e =
     match e.coproc_desc with 
     | Coproc_nothing -> (make_instruction "rml_nothing").cexpr_desc
 
-    | Coproc_pause -> (make_instruction "rml_pause").cexpr_desc
+    | Coproc_pause K_not_boi -> 
+	(make_instruction "rml_pause").cexpr_desc
 
-    | Coproc_halt -> (make_instruction "rml_halt").cexpr_desc
+    | Coproc_pause K_boi -> 
+	(make_instruction "rml_pause_kboi").cexpr_desc
+
+    | Coproc_halt K_not_boi -> 
+	(make_instruction "rml_halt").cexpr_desc
+
+    | Coproc_halt K_boi -> 
+	(make_instruction "rml_halt_kboi").cexpr_desc
 
     | Coproc_compute (expr) ->
 	Cexpr_apply 

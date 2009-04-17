@@ -77,8 +77,8 @@ and process =
   { kproc_desc: process_desc;
     kproc_loc: Location.t;}
 and process_desc =
-  | Kproc_pause of process * ident
-  | Kproc_halt
+  | Kproc_pause of continue_begin_of_instant * process * ident
+  | Kproc_halt of continue_begin_of_instant
   | Kproc_compute of expression * process
   | Kproc_emit of expression * process
   | Kproc_emit_val of expression * expression * process

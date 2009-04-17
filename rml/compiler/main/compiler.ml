@@ -72,6 +72,7 @@ let compile_implementation_front_end info_chan itf impl_list =
     (* producing rml code (and openning of modules) *)
     Parse2reac_timer.start();
     let rml_code = Parse2reac.translate_impl_item info_chan impl in
+    let rml_code = Reac2reac.impl_map Reac2reac.translate_merge rml_code in
     Parse2reac_timer.time();
 
     Optimization_timer.start();

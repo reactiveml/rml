@@ -341,17 +341,23 @@ and translate_proc e =
 
     | Kproc_var k -> Cexpr_local k
 	  
-    | Kproc_pause (k, ctrl) ->
+    | Kproc_pause (K_not_boi, k, ctrl) ->
 	Cexpr_apply 
 	  (make_instruction "rml_pause",
-	   [translate_proc k;
-	    make_expr_var_local ctrl])
+	   [ translate_proc k;
+	     make_expr_var_local ctrl ])
 
-    | Kproc_halt ->
-(* 	Cexpr_apply  *)
-(* 	  (make_instruction "rml_halt", *)
-(* 	   [translate_proc k]) *)
+    | Kproc_pause (K_boi, k, ctrl) ->
+	Cexpr_apply 
+	  (make_instruction "rml_pause_kboi",
+	   [ translate_proc k;
+	     make_expr_var_local ctrl ])
+
+    | Kproc_halt K_boi ->
 	(make_instruction "rml_halt").cexpr_desc
+
+    | Kproc_halt K_not_boi ->
+	(make_instruction "rml_halt_kboi").cexpr_desc
 	  
     | Kproc_compute (expr, k) ->
 	if Lk_misc.is_value expr then

@@ -308,12 +308,12 @@ let rec static_expr ctx e =
 	then Dynamic Instantaneous
 	else expr_wrong_static_err e
 
-    | Rexpr_pause ->
+    | Rexpr_pause _ ->
 	if ctx = Process
 	then Dynamic Noninstantaneous
 	else expr_wrong_static_err e
 
-    | Rexpr_halt ->
+    | Rexpr_halt _ ->
 	if ctx = Process
 	then Dynamic Noninstantaneous
 	else expr_wrong_static_err e

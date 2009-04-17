@@ -144,8 +144,8 @@ let rec is_nonexpansive expr =
   | Rexpr_last e -> is_nonexpansive e
   | Rexpr_default e -> is_nonexpansive e
   | Rexpr_nothing -> true
-  | Rexpr_pause -> true
-  | Rexpr_halt -> true
+  | Rexpr_pause _ -> true
+  | Rexpr_halt _ -> true
   | Rexpr_emit (e, None) -> is_nonexpansive e
   | Rexpr_emit (e1, Some e2) -> is_nonexpansive e1 && is_nonexpansive e2
   | Rexpr_present (e,e1,e2) ->
@@ -643,9 +643,9 @@ let rec type_of_expression env expr =
 	  
     | Rexpr_nothing -> type_unit
 	  
-    | Rexpr_pause -> type_unit
+    | Rexpr_pause _ -> type_unit
 	  
-    | Rexpr_halt -> new_var()
+    | Rexpr_halt _ -> new_var()
 
     | Rexpr_loop (None, p) ->
 	type_statement env p;

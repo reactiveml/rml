@@ -421,9 +421,9 @@ let instantaneous_loop_expr =
 	    
       | Rexpr_nothing -> Env.empty
 	    
-      | Rexpr_pause -> Env.empty
+      | Rexpr_pause _ -> Env.empty
 
-      | Rexpr_halt -> Env.empty
+      | Rexpr_halt _ -> Env.empty
 	    
       | Rexpr_emit (e, None) ->
 	  analyse vars e

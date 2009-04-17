@@ -193,7 +193,8 @@ and doc_runtime =
 (*"<interpreter> select the runtime according to <interpreter>:\n"*)
    "(undocumented)\n" ^
    "\t Lco_rewrite\n" ^
-   "\t Lco_ctrl_tree (default)\n" ^
+   "\t Lco_ctrl_tree | Lco (default)\n" ^
+   "\t Lco_ctrl_tree_n | Lco_n \n" ^
    "\t Lco_ctrl_tree_class\n" ^
    "\t Lk"
 

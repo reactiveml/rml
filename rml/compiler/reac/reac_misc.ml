@@ -247,9 +247,9 @@ let expr_free_vars e =
 	  
     | Rexpr_nothing -> ()
 	  
-    | Rexpr_pause -> ()
+    | Rexpr_pause _ -> ()
 
-    | Rexpr_halt -> ()
+    | Rexpr_halt _ -> ()
 	  
     | Rexpr_emit (e, None) ->
 	expr_free_vars vars e

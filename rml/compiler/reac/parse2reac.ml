@@ -441,9 +441,9 @@ let rec translate env e =
 
     | Pexpr_nothing -> Rexpr_nothing
 
-    | Pexpr_pause -> Rexpr_pause
+    | Pexpr_pause -> Rexpr_pause K_not_boi
 
-    | Pexpr_halt -> Rexpr_halt
+    | Pexpr_halt -> Rexpr_halt K_not_boi
 
     | Pexpr_loop expr ->
 	Rexpr_loop (None, translate env expr)

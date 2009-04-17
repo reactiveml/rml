@@ -121,6 +121,14 @@ let make_list c_list =
 let make_unit () = 
   make_expr (Cexpr_constant Const_unit) Location.none
 
+(* Creates the expression "true" *)
+let make_true () = 
+  make_expr (Cexpr_constant (Const_bool true)) Location.none
+
+(* Creates the expression "false" *)
+let make_false () = 
+  make_expr (Cexpr_constant (Const_bool false)) Location.none
+
 (* Creates the expression "ref e" *)
 let make_ref e =
   make_expr

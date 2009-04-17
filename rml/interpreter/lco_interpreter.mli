@@ -59,6 +59,8 @@ module type S =
     val rml_compute: (unit -> 'a) -> 'a expr
     val rml_pause: unit expr 
     val rml_halt: 'a expr 
+    val rml_pause_kboi: unit expr 
+    val rml_halt_kboi: 'a expr 
     val rml_emit': (unit, 'b) event -> unit expr 
     val rml_emit: (unit -> (unit, 'b) event) -> unit expr 
     val rml_emit_val': ('a, 'b) event -> (unit -> 'a) -> unit expr

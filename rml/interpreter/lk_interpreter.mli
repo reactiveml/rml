@@ -51,6 +51,9 @@ module type S =
       val rml_pause: unit step -> control_tree -> 'a step
       val rml_halt: 'a step
 
+      val rml_pause_kboi: unit step -> control_tree -> 'a step
+      val rml_halt_kboi: 'a step
+
       val rml_emit:
         (unit -> ('a, 'b) event) -> (unit -> 'a) -> unit step -> 'c step
       val rml_emit_v_e:

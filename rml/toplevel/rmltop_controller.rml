@@ -67,7 +67,8 @@ let process step_by_step =
   end
 
 let process machine_controller =
-  loop
+  loop 
+    pause ||
     do 
       run sampled 
     until suspend done;
