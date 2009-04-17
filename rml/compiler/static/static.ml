@@ -246,11 +246,28 @@ let rec static_expr ctx e =
 	let typ2 = static_expr ctx e2 in
 	typ2
 
-    | Rexpr_for (_, e1, e2, _, e3) ->
+    | Rexpr_for (_, e1, e2, dir, e3) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in
 	if max typ1 typ2 = Static
-	then static_expr ctx e3
+	then 
+	  begin match static_expr ctx e3 with
+	  | Dynamic Noninstantaneous ->
+	      begin match e1.expr_desc, e2.expr_desc with
+	      | Rexpr_constant (Const_int n1), Rexpr_constant (Const_int n2) ->
+		  let cmp = 
+		    begin match dir with 
+		    | Upto -> (<=)
+		    | Downto -> (>=)
+		    end
+		  in
+		  if cmp n1 n2 then Dynamic Noninstantaneous
+		  else Dynamic Dontknow
+	      | _ -> 
+		  Dynamic Dontknow
+	      end
+	  | ty -> ty
+	  end
 	else expr_wrong_static_err e
 
     | Rexpr_fordopar (_, e1, e2, _, e3) ->
