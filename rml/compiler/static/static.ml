@@ -254,7 +254,8 @@ let rec static_expr ctx e =
 	  begin match static_expr ctx e3 with
 	  | Dynamic Noninstantaneous ->
 	      begin match e1.expr_desc, e2.expr_desc with
-	      | Rexpr_constant (Const_int n1), Rexpr_constant (Const_int n2) ->
+	      | Rexpr_constant (Const_int n1), 
+		Rexpr_constant (Const_int n2) ->
 		  let cmp = 
 		    begin match dir with 
 		    | Upto -> (<=)
@@ -270,7 +271,7 @@ let rec static_expr ctx e =
 	  end
 	else expr_wrong_static_err e
 
-    | Rexpr_fordopar (_, e1, e2, _, e3) ->
+    | Rexpr_fordopar (_, e1, e2, dir, e3) ->
 	if ctx = Process
 	then
 	  let typ1 = static_expr ML e1 in
@@ -279,6 +280,21 @@ let rec static_expr ctx e =
 	  then 
 	    begin match static_expr Process e3 with
 	    | Static -> Dynamic Instantaneous
+	    | Dynamic Noninstantaneous ->
+		begin match e1.expr_desc, e2.expr_desc with
+		| Rexpr_constant (Const_int n1), 
+		  Rexpr_constant (Const_int n2) ->
+		    let cmp = 
+		      begin match dir with 
+		      | Upto -> (<=)
+		      | Downto -> (>=)
+		      end
+		    in
+		    if cmp n1 n2 then Dynamic Noninstantaneous
+		    else Dynamic Dontknow
+		| _ -> 
+		    Dynamic Dontknow
+		end
 	    | ty -> ty
 	    end
 	  else expr_wrong_static_err e
