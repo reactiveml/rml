@@ -1,0 +1,7 @@
+(* 16/04/2009 *)
+(* il ne faudrait pas un warning *)
+
+let process p =
+  loop
+    for i = 1 downto 0 do pause done
+  end
