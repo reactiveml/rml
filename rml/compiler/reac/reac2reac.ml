@@ -546,7 +546,7 @@ let translate_merge =
     | Rexpr_pre _
     | Rexpr_last _
     | Rexpr_default _
-    | Rexpr_nothing _
+    | Rexpr_nothing 
     | Rexpr_emit _
     | Rexpr_loop _
     | Rexpr_fordopar _
