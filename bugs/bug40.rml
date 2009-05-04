@@ -1,0 +1,9 @@
+(* 04/05/2009 *)
+(* il faudrait un warning *)
+
+let rec f _ =
+  (fun x -> process (run (f ()))) 0
+
+let process main =
+  run (f ())
+
