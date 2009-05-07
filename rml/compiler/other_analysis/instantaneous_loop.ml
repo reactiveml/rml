@@ -208,7 +208,8 @@ let instantaneous_loop_expr =
 	  end
 	    
       | Rexpr_constant _ -> Env.empty
-	    
+
+(*	    
       | Rexpr_let (Nonrecursive, patt_expr_list, expr) ->
 	  let patt_ty_list =
 	    List.map 
@@ -314,6 +315,89 @@ let instantaneous_loop_expr =
 	      let ty_let = Env.append ty_expr ty_prod in
 	      List.fold_left Env.remove ty_let rec_patt
 	  end 
+*)
+      | Rexpr_let (is_rec, patt_expr_list, expr) ->
+	  let let_patt, vars_rec =
+	    List.fold_left
+	      (fun (let_patt', vars') (p, _) -> 
+		let let_patt = vars_of_patt p in
+		let vars'' = 
+		  List.fold_left
+		    (fun vars'' x -> Env.add vars'' x 0)
+		    vars'
+		    let_patt
+		in
+		(List.rev_append let_patt let_patt', vars''))
+	      ([], vars)
+	      patt_expr_list
+	  in
+
+	  let patt_ty_min_list =
+	    List.map 
+	      (fun (p, e) -> 
+		let patt = vars_of_patt p in 
+		let ty = 
+		  begin match is_rec with
+		  | Nonrecursive -> analyse vars e
+		  | Recursive -> 
+		      (* typage de "rec p = e" *)
+		      let ty_aux = analyse vars_rec e in
+		      List.fold_left Env.remove ty_aux patt
+		  end
+		in
+		let n_opt = Env.min ty in
+		(patt, ty, n_opt))
+	      patt_expr_list
+	  in
+	  begin match 
+	    static_of_list (fun (_, e) -> e.expr_static) patt_expr_list 
+	  with
+	  | Dynamic Noninstantaneous -> 
+	      let _ = analyse Env.empty expr in
+	      List.fold_left 
+		(fun ty_res (_, ty, _) -> Env.append ty ty_res)
+		Env.empty
+		patt_ty_min_list
+	  | _ -> 
+	      let vars_right =
+		List.fold_left 
+		  (fun vars (p_list, ty, n_opt) ->
+		    begin match n_opt with
+		    | None -> vars
+		    | Some n -> 
+			let vars' =
+			  List.fold_left
+			    (fun vars x -> Env.add vars x n)
+			    vars p_list
+			in
+			vars'
+		    end)
+		  vars
+		  patt_ty_min_list
+	      in
+	      let ty_expr = analyse vars_right expr in
+	      List.fold_left 
+		(fun ty_res (p_list, ty, n1_opt) ->
+		  let n2_opt =
+		    List.fold_left 
+		      (fun res x -> 
+			begin match res, Env.get ty_expr x with	
+			| _, None -> res
+			| None, v2_opt -> v2_opt
+			| Some v1, Some v2 -> Some (min v1 v2)
+			end)
+		      None p_list
+		  in
+		  let diff =
+		    begin match n1_opt, n2_opt with
+		    | Some n1, Some n2 -> max 0 (n1 - n2)
+		    | _ -> 0
+		    end
+		  in
+		  Env.append (Env.plus ty (- diff)) ty_res)
+		(List.fold_left Env.remove ty_expr let_patt)
+		patt_ty_min_list
+	  end 
 	    
       | Rexpr_function patt_expr_list ->
 	  instantaneous_loop_expr_list analyse snd vars patt_expr_list
@@ -346,6 +430,7 @@ let instantaneous_loop_expr =
       | Rexpr_record_update (e1, lbl, e2) ->
 	  let ty1 = analyse vars e1 in
 	  let ty2 = analyse vars e2 in
+	  if not (Env.equal Env.empty ty2) then rec_warning expr;
 	  Env.append ty1 ty2
 	    
       | Rexpr_constraint (e, ty) ->

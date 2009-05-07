@@ -16,15 +16,15 @@ opt : planets.opt
 planets : planets.cmo 
 	 $(OCAMLC) $(FLAGS) -o planets -I $(INTERPRETERDIR) unix.cma graphics.cma $(INTERPRETER) planets.cmo 
 
-planets : planets.cmx 
+planets.opt : planets.cmx 
 	 $(OCAMLOPT) $(FLAGS) -o planets.opt -I $(INTERPRETERDIR) unix.cmxa graphics.cmxa $(INTERPRETERX) planets.cmx 
 
 clean :
-	rm -f *.cm* *.annot *.rzi *.?annot \
+	rm -f *.cm* *.annot *.rzi *.?annot *.o \
 	      planets.ml \
 
 realclean: clean
-	rm -f planets *~
+	rm -f planets planets.opt *~
 cleanall: realclean
 
 # implicit rules

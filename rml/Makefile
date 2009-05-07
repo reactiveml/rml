@@ -90,6 +90,7 @@ clean:
 	(cd man; make clean)
 	(cd doc; make clean)
 	(cd patch; make clean)
+	(cd examples; make clean)
 
 realclean: clean-distrib
 	(cd compiler;make realclean)
@@ -100,6 +101,7 @@ realclean: clean-distrib
 	(cd man; make realclean)
 	(cd doc; make realclean)
 	(cd patch; make realclean)
+	(cd examples; make realclean)
 	rm -rf META
 	rm -rf config distrib/rml/rmlc.in distrib/rml/Makefile *~
 	touch config 
