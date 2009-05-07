@@ -1,0 +1,8 @@
+(* 06/05/2009 *)
+(* il faudrait un warning *)
+
+let rec process y =
+  let p = 
+    let x = process y in run x
+  in
+  run p
