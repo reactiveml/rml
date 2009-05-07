@@ -191,7 +191,7 @@ let instantaneous_loop_expr =
 	  let id = Varpatt_local x in
 	  begin match Env.get vars id with
 	  | Some n -> 
-	      if n <= 0 then rec_warning expr;
+(* 	      if n <= 0 then rec_warning expr; *)
 	      Env.create id n
 	  | None -> 
 	      Env.empty
@@ -202,7 +202,7 @@ let instantaneous_loop_expr =
 	  let id = Varpatt_global x in
 	  begin match Env.get vars id with
 	  | Some n -> 
-	      if n <= 0 then rec_warning expr;
+(* 	      if n <= 0 then rec_warning expr; *)
 	      Env.create id n
 	  | None -> Env.empty
 	  end
@@ -316,19 +316,16 @@ let instantaneous_loop_expr =
 	  end 
 	    
       | Rexpr_function patt_expr_list ->
-	  let vars' = Env.plus vars 1 in
-	  instantaneous_loop_expr_list analyse snd vars' patt_expr_list
+	  instantaneous_loop_expr_list analyse snd vars patt_expr_list
 	    
       | Rexpr_apply (e, expr_list) ->
 	  let ty = analyse vars e in
-	  let ty' = Env.plus ty (- List.length expr_list) in
- 	  (*if not (Env.positive ty') then rec_warning expr; *)
-          let ty'' = Env.remove_zero ty' in (* si bug demander a Florence*)
+          let ty' = Env.remove_zero ty in (* si bug demander a Florence*)
 	  let ty_args = 
 	    instantaneous_loop_expr_list analyse id vars expr_list 
 	  in
 	  if not (Env.equal Env.empty ty_args) then rec_warning expr;
-	  ty''
+	  ty'
 	    
       | Rexpr_tuple expr_list ->
 	  instantaneous_loop_expr_list analyse id vars expr_list
