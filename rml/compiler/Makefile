@@ -46,6 +46,8 @@ TYPING = typing/def_types.ml \
 	typing/typing_errors.ml \
 
 OTHER_ANALYSIS = other_analysis/instantaneous_loop.ml \
+	other_analysis/wf_rec.ml \
+
 
 LCO =	lco/lco_ast.ml \
 	lco/lco_misc.ml \
@@ -106,6 +108,7 @@ OBJ =	global/version.cmo \
 	static/static_printer.cmo \
 	static/static_errors.cmo \
 	static/static.cmo \
+	other_analysis/wf_rec.cmo \
 	other_analysis/instantaneous_loop.cmo \
 	reac/annot.cmo \
 	typing/typing_errors.cmo \

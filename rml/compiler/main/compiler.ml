@@ -105,6 +105,7 @@ let compile_implementation_front_end info_chan itf impl_list =
 
     (* Instantaneous loop *)
     Other_analysis_timer.start();
+    Wf_rec.check rml_code;
     if !instantaneous_loop_warning then 
       Instantaneous_loop.instantaneous_loop rml_code;
     Other_analysis_timer.time();
