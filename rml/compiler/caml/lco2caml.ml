@@ -829,12 +829,20 @@ and translate_proc e =
 		      (make_patt Cpatt_any Location.none, make_raise_RML())])
 		  Location.none])
 	| false, _ ->
-	    Cexpr_apply
-	      (make_instruction ("rml_await"^im^kind),
-	       [embed_ml s;
-		make_expr
-		  (Cexpr_function [cpatt, translate_proc k])
-		  Location.none])
+	    if Lco_misc.is_value s then
+	      Cexpr_apply
+		(make_instruction ("rml_await"^im^kind^"'"),
+		 [translate_ml s;
+		  make_expr
+		    (Cexpr_function [cpatt, translate_proc k])
+		    Location.none])
+	    else
+	      Cexpr_apply
+		(make_instruction ("rml_await"^im^kind),
+		 [embed_ml s;
+		  make_expr
+		    (Cexpr_function [cpatt, translate_proc k])
+		    Location.none])
 	end
 (* XXXXXX
 	if Caml_misc.partial_match cpatt then 

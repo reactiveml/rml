@@ -16,5 +16,9 @@ lk_threaded.cmo: sig_env.cmo lk_interpreter.cmi
 lk_threaded.cmx: sig_env.cmx lk_interpreter.cmi 
 rec_implem.cmo: sig_env.cmo lco_rewrite.cmo 
 rec_implem.cmx: sig_env.cmx lco_rewrite.cmx 
+rml_machine.cmo: 
+rml_machine.cmx: 
+sig_env.cmo: 
+sig_env.cmx: 
 thread_implem.cmo: sig_env.cmo lk_threaded.cmo lco_ctrl_tree_thread_safe.cmo 
 thread_implem.cmx: sig_env.cmx lk_threaded.cmx lco_ctrl_tree_thread_safe.cmx 

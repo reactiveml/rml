@@ -72,13 +72,18 @@ module type S =
     val rml_await_immediate': ('a, 'b) event -> unit expr
     val rml_await_immediate: (unit -> ('a, 'b) event) -> unit expr
     val rml_await_immediate_conf: event_cfg -> unit expr
+    val rml_await_all': ('a, 'b) event -> ('b -> 'c expr) -> 'c expr
     val rml_await_all: (unit -> ('a, 'b) event) -> ('b -> 'c expr) -> 'c expr
     val rml_await_all_match': 
 	('a, 'b) event -> ('b -> bool) -> ('b -> 'c expr) -> 'c expr
     val rml_await_all_match: 
 	(unit -> ('a, 'b) event) -> ('b -> bool) -> ('b -> 'c expr) -> 'c expr
+    val rml_await_one': 
+	('a , 'a list) event -> ('a -> 'c expr) -> 'c expr 
     val rml_await_one: 
 	(unit -> ('a , 'a list) event) -> ('a -> 'c expr) -> 'c expr 
+    val rml_await_immediate_one': 
+	('a , 'a list) event -> ('a -> 'c expr) -> 'c expr 
     val rml_await_immediate_one: 
 	(unit -> ('a , 'a list) event) -> ('a -> 'c expr) -> 'c expr 
     val rml_present': ('a, 'b) event -> 'c expr -> 'c expr -> 'c expr

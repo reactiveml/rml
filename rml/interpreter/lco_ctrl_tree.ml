@@ -1330,7 +1330,7 @@ let rml_loop p =
 
     let rml_await_all' evt p =
       fun f_k ctrl ->
-	rml_await_immediate evt (rml_get evt p f_k ctrl) ctrl
+	rml_await_immediate' evt (rml_get' evt p f_k ctrl) ctrl
 
     let rml_await_one expr_evt p =
       let pause_p x =

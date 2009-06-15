@@ -404,7 +404,7 @@ let instantaneous_loop_expr =
 	    
       | Rexpr_apply (e, expr_list) ->
 	  let ty = analyse vars e in
-          let ty' = Env.remove_zero ty in (* si bug demander a Florence*)
+          let ty' = (* Env.remove_zero ty *) ty in (* si bug demander a Florence*)
 	  let ty_args = 
 	    instantaneous_loop_expr_list analyse id vars expr_list 
 	  in

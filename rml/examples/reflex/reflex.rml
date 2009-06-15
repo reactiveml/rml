@@ -70,7 +70,8 @@ let process game_controller
     =
   signal error, end_measure in
   loop 
-
+    pause
+    ||
     await immediate coin;
     (* game initialization *)
     emit go_off;

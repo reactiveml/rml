@@ -943,7 +943,7 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	rml_seq (rml_await_immediate' evt) (rml_get' evt p) ()
 
     let rml_await_all' evt p =
-      rml_seq (rml_await_immediate evt) (rml_get evt p)
+      rml_seq (rml_await_immediate' evt) (rml_get' evt p)
 
     let rml_await_one expr_evt p =
       let pause_p x =
