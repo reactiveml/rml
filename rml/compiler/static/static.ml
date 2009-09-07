@@ -239,7 +239,14 @@ let rec static_expr ctx e =
     | Rexpr_when_match (e1,e2) ->
 	let _typ1 = static_expr ML e1 in
 	let typ2 = static_expr ctx e2 in
-	typ2
+	begin match ctx with
+	| ML -> typ2 
+	| Process -> 
+	    begin match typ2 with
+	    | Static -> Dynamic Instantaneous
+	    | Dynamic _ -> typ2
+	    end
+	end
 
     | Rexpr_while (e1,e2) ->
 	let _typ1 = static_expr ML e1 in
