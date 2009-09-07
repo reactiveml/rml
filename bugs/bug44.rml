@@ -1,0 +1,13 @@
+(* 12/05/2009 *)
+(* il faudrait un warning *)
+
+type 'a recc = In of ('a recc -> 'a)
+let out (In x) = x
+ 
+let y f = (fun x a -> f (out x x) a) (In (fun x a -> f (out x x) a))
+
+let process main =
+  let f = 
+    (fun p -> fun v -> process (print_endline "xxx"; run (p v))) 
+  in
+  run (y f ())

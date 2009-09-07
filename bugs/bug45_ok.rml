@@ -1,0 +1,6 @@
+(* 03/09/2009 *)
+(* Bug dans le code OCaml généré par "rmlc -runtime Lk bug45.rml"  *)
+
+let process bug i = match i with
+ | 42 when true -> pause; 1
+ | _ -> i
