@@ -26,5 +26,5 @@ module Lco_ctrl_tree_thread_safe_record =
   Lco_ctrl_tree_thread_safe.Rml_interpreter(Sig_env.Record)
 
 module Lk_threaded_record = Lk_threaded.Lk_interpreter(Sig_env.Record)
-
+module Lk_record = Lk_threaded_record
 
