@@ -492,7 +492,7 @@ and translate_proc e =
 	     (if Lco_misc.is_value s then "rml_until_handler_match'"
 	     else "rml_until_handler_match"),
 	   if Caml_misc.partial_match cpatt then
-	     [translate_ml s;
+	     [if Lco_misc.is_value s then translate_ml s else embed_ml s;
 	      make_expr
 	        (Cexpr_function 
 		   [cpatt, translate_ml e1;
@@ -507,7 +507,7 @@ and translate_proc e =
 		    (make_patt Cpatt_any Location.none, make_raise_RML())])
 	        Location.none;]
 	   else
-	     [translate_ml s;
+	     [if Lco_misc.is_value s then translate_ml s else embed_ml s;
 	      make_expr
 	        (Cexpr_function [cpatt, translate_ml e1])
                 Location.none;
@@ -524,7 +524,7 @@ and translate_proc e =
 	     (if Lco_misc.is_value s then "rml_until_handler_match'"
 	     else "rml_until_handler_match"),
 	   if Caml_misc.partial_match cpatt then
-	   [translate_ml s;
+	   [if Lco_misc.is_value s then translate_ml s else embed_ml s;
 	    make_expr
 	      (Cexpr_function 
 		 [cpatt, translate_ml e1; 
@@ -540,7 +540,7 @@ and translate_proc e =
 		  (make_patt Cpatt_any Location.none, make_raise_RML())])
 	      Location.none;]
          else
-	   [translate_ml s;
+	   [if Lco_misc.is_value s then translate_ml s else embed_ml s;
 	    make_expr (Cexpr_function [cpatt, translate_ml e1;]) Location.none;
 	    translate_proc k;
 	    make_expr
@@ -557,7 +557,7 @@ and translate_proc e =
 	    (make_instruction 
 	       (if Lco_misc.is_value s then "rml_until_handler_match'"
 	       else "rml_until_handler_match"),
-	     [translate_ml s;
+	     [if Lco_misc.is_value s then translate_ml s else embed_ml s;
 	      make_expr
 		(Cexpr_function 
 		   [cpatt, 
@@ -578,7 +578,7 @@ and translate_proc e =
 	    (make_instruction 
 	       (if Lco_misc.is_value s then "rml_until_handler'" 
 	       else "rml_until_handler"),
-	     [translate_ml s;
+	     [if Lco_misc.is_value s then translate_ml s else embed_ml s;
 	      translate_proc k;
 	      make_expr
 		(Cexpr_function [cpatt, translate_proc kh])
