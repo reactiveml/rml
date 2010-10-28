@@ -65,6 +65,13 @@ let report_error ppf exn =
   fprintf ppf "@[%a@]@." report exn
 
 let unbound_main main =
-  eprintf "The process %s is unbound" main;
+  eprintf "The main process \"%s\" is unbound" main;
+  raise Misc.Error
+
+let bad_type_main main main_ty =
+  eprintf 
+    "The main process \"%s\" must have type unit process.\n" 
+	  main;
+(*   Types_printer.output main_ty.Def_types.value_typ.Def_types.ts_desc; *)
   raise Misc.Error
 

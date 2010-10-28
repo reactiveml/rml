@@ -87,6 +87,14 @@ let filter_multi_event ty =
 					  constr_notabbrev list_ident [ty1]]);
   ty1
 
+let is_unit_process desc =
+  let sch = desc.value_typ in
+  let ty = instance sch in
+  let unit_process = process type_unit { proc_static = None } in 
+  try 
+    unify unit_process ty;
+    true
+  with Unify -> false
 
 (* Typing environment *)
 module Env = Symbol_table.Make (Ident)

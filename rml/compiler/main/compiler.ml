@@ -306,6 +306,8 @@ let compile_implementation module_name filename =
 		unbound_main !simulation_process
 	    in
 	    let main_id = Ident.name main.Global.gi.Global_ident.id in
+ 	    if not (Typing.is_unit_process (Global.info main)) then
+	      bad_type_main !simulation_process (Global.info main);	      
 	    match !number_of_instant >= 0, !sampling >= 0.0 with
 	    | true, true -> 
 		output_string out_chan
