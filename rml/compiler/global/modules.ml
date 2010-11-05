@@ -141,7 +141,8 @@ let reset_opened_modules () =
 (* Open a module and add its definitions to the table of opened modules. *)
 
 let add_table t1 t2 =
-  Hashtbl.iter (Hashtbl.add t2) t1 
+  let rev_t1 = Hashtbl.fold (fun k x acc -> (k,x)::acc) t1 [] in
+  List.iter (fun (k, x) -> Hashtbl.add t2 k x) rev_t1 
 
     
 let open_module modname =
