@@ -1,0 +1,8 @@
+(* 20/10/2010 *)
+(* Bug dans le match d'expression qui peuvent prenre du temps. *)
+
+let process q = ()
+
+let process p =
+  match run q with
+  | () -> ()
