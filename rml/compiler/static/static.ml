@@ -216,7 +216,8 @@ let rec static_expr ctx e =
 	else expr_wrong_static_err e
 
     | Rexpr_match (e1, patt_expr_list) ->
-	let _typ1 = static_expr ML e1 in
+	let typ1 = static_expr ML e1 in
+	if typ1 <> Static then expr_wrong_static_err e1;
 	let typ2 = 
 	  let combine typ1 typ2 =
 	    begin match typ1, typ2 with
