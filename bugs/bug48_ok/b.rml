@@ -1,0 +1,5 @@
+(* 05/11/2010 *)
+(* bug dans l'ordre de chargement des types lors des open *)
+
+open A 
+let _ = f 0
