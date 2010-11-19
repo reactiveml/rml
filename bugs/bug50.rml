@@ -1,0 +1,20 @@
+(* 19/11/2010 *)
+(* Si on défini squirrel avant squirrel_state ou si on inline sa définition,
+   le programme type, mais pas dans ce cas.
+*)
+
+let opt_send s v = match s with
+| None -> assert false
+| Some (x, _) -> ignore (x = v)
+
+
+type squirrel_state = {
+    s_forest : 
+(*       (unit * unit) option; *)
+      squirrel option;
+  }
+
+and squirrel = (unit * unit)
+
+let squirrel_init self state =
+  opt_send state.s_forest ()
