@@ -33,28 +33,28 @@ let nb_threads = 4
 module Lk_interpreter: Lk_interpreter.S =
   functor (Event: Sig_env.S) ->
   struct
-   
+
     exception RML
- 
-    type ('a, 'b) event = 
+
+    type ('a, 'b) event =
 	('a,'b) Event.t * unit step list ref * unit step list ref  * event_ctrl
 
     and event_ctrl = Mutex.t
 
     and event_cfg = bool -> (unit -> bool) * unit step list ref list
 
-    and control_tree = 
+    and control_tree =
 	{ kind: control_type;
 	  mutable alive: bool;
 	  mutable susp: bool;
 	  mutable cond: (unit -> bool);
 	  mutable children: control_tree list;
-	  mutable next: next; 
+	  mutable next: next;
 	  lock: Mutex.t }
-    and control_type = 
-	Top 
+    and control_type =
+	Top
       | Kill of (unit -> unit step)
-      | Susp 
+      | Susp
       | When of unit step ref
 
     and 'a step = 'a -> unit
@@ -68,7 +68,7 @@ module Lk_interpreter: Lk_interpreter.S =
     let new_event_ctrl = Mutex.create
 
 (* ------------------------------------------------------------------------ *)
-	
+
 (* liste des processus a executer dans l'instant *)
     let current_lock = Mutex.create ()
     let current = ref ([]: current)
@@ -88,9 +88,9 @@ module Lk_interpreter: Lk_interpreter.S =
 	  else
 	    current := curr
 
-    let add_current = 
+    let add_current =
       let rec aux l1 l2 =
-	match l1 with 
+	match l1 with
 	| [] -> l2
 	| [f] -> f::l2
 	| f::l1' -> aux l1' (f::l2)
@@ -98,7 +98,7 @@ module Lk_interpreter: Lk_interpreter.S =
       fun c ->
 	Mutex.lock current_lock;
 	match !current with
-	| [] -> 
+	| [] ->
 	  if !running < nb_threads then
 	    begin
 	      spawn_threads c;
@@ -109,14 +109,14 @@ module Lk_interpreter: Lk_interpreter.S =
 	      current := c;
 	      Mutex.unlock current_lock
 	    end
-	| curr -> 
+	| curr ->
 	    current := aux c curr;
 	    Mutex.unlock current_lock
 
     let add_one_current f =
       Mutex.lock current_lock;
       match !current with
-      | [] -> 
+      | [] ->
 	  if !running < nb_threads then
 	    begin
 	      incr running;
@@ -128,7 +128,7 @@ module Lk_interpreter: Lk_interpreter.S =
 	      current := [f];
 	      Mutex.unlock current_lock
 	    end
-      | curr -> 
+      | curr ->
 	  current := f :: !current;
 	  Mutex.unlock current_lock
 
@@ -136,7 +136,7 @@ module Lk_interpreter: Lk_interpreter.S =
     let sched () =
       Mutex.lock current_lock;
       match !current with
-      | f :: c -> 
+      | f :: c ->
 	  current := c;
 	  Mutex.unlock current_lock;
 	  f ()
@@ -161,18 +161,18 @@ module Lk_interpreter: Lk_interpreter.S =
 	    Condition.wait sched_condition current_lock
 	  done;
 	  Mutex.unlock current_lock
-	  
-	    
+
+
 
 
 
 (* ------------------------------------------------------------------------ *)
-    
+
 
 (* liste des listes de processus a revillier a la fin d'instant *)
     let toWakeUp_lock = Mutex.create()
     let toWakeUp = ref []
-    let wakeUpAll () = 
+    let wakeUpAll () =
       List.iter
 	(fun wp ->
 	  current := List.rev_append !wp !current;
@@ -194,7 +194,7 @@ module Lk_interpreter: Lk_interpreter.S =
 	susp = false;
 	children = [];
 	cond = (fun () -> false);
-	next = []; 
+	next = [];
 	lock = Mutex.create(); }
 
     let rec rev_app x1 x2 =
@@ -210,9 +210,9 @@ module Lk_interpreter: Lk_interpreter.S =
 	if p.alive then
 	  match p.kind with
 	  | Top -> raise RML
-	  | Kill handler -> 
-	      if p.cond() 
-	      then 
+	  | Kill handler ->
+	      if p.cond()
+	      then
 		(pere.next <- (handler()) :: pere.next;
 		 false)
 	      else
@@ -220,37 +220,37 @@ module Lk_interpreter: Lk_interpreter.S =
 		 if active then next_to_current p
 		 else next_to_father pere p;
 		 true)
-	  | Susp -> 
+	  | Susp ->
 	      let pre_susp = p.susp in
 	      if p.cond() then p.susp <- not pre_susp;
 	      let active = active && not p.susp in
 	      if pre_susp
-	      then 
+	      then
 		(if active then next_to_current p;
 		 true)
-	      else 
+	      else
 		(p.children <- eval_children p p.children active [];
 		 if active then next_to_current p
 		 else if not p.susp then next_to_father pere p;
 		 true)
 	  | When f_when ->
-	      if p.susp 
+	      if p.susp
 	      then true
 	      else
 		(p.susp <- true;
 		 pere.next <- !f_when :: pere.next;
 		 p.children <- eval_children p p.children false [];
 		 true)
-	else 
+	else
 	  false
 
       and eval_children p nodes active acc =
-	match nodes with 
+	match nodes with
 	| [] -> acc
 	| node :: nodes ->
 	    if eval p node active
 	    then eval_children p nodes active (node :: acc)
-	    else eval_children p nodes active acc 
+	    else eval_children p nodes active acc
 
       and next_to_current node =
 	current := rev_app node.next !current;
@@ -266,7 +266,7 @@ module Lk_interpreter: Lk_interpreter.S =
 (* deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
     let rec next_to_current p =
-      if p.alive && not p.susp then 
+      if p.alive && not p.susp then
 	(Mutex.lock p.lock;
 	 add_current p.next;
 	 p.next <- [];
@@ -289,12 +289,12 @@ module Lk_interpreter: Lk_interpreter.S =
 
 (* ------------------------------------------------------------------------ *)
 
-    let rml_pre_status (n, _, _, _) = Event.pre_status n 
-	  
+    let rml_pre_status (n, _, _, _) = Event.pre_status n
+
     let rml_pre_value (n, _, _, _) = Event.pre_value n
- 
+
     let rml_last (n, _, _, _) = Event.last n
- 
+
     let rml_default (n, _, _, _) = Event.default n
 
 
@@ -356,13 +356,13 @@ module Lk_interpreter: Lk_interpreter.S =
       k ()
 
     let rml_emit_v_e v1 e2 k _ =
-      rml_emit_v_v v1 (e2()) k () 
+      rml_emit_v_v v1 (e2()) k ()
 
     let rml_emit_e_v e1 v2 k _ =
-      rml_emit_v_v (e1()) v2 k () 
+      rml_emit_v_v (e1()) v2 k ()
 
     let rml_emit_e_e e1 e2 k _ =
-      rml_emit_v_v (e1()) (e2()) k () 
+      rml_emit_v_v (e1()) (e2()) k ()
 
     let rml_emit = rml_emit_e_e
 
@@ -419,13 +419,13 @@ module Lk_interpreter: Lk_interpreter.S =
       in self
 
     let rml_await_immediate_v evt k ctrl _ =
-      if ctrl.kind = Top then 
+      if ctrl.kind = Top then
 	step_await_immediate_top evt k ()
       else
 	step_await_immediate evt k ctrl ()
 
     let rml_await_immediate expr_evt k ctrl _ =
-      let evt = expr_evt() in 
+      let evt = expr_evt() in
       rml_await_immediate_v evt k ctrl ()
 
 (**************************************)
@@ -442,15 +442,15 @@ module Lk_interpreter: Lk_interpreter.S =
       ctrl.next <- step :: ctrl.next;
       Mutex.unlock ctrl.lock;
       sched()
-	
+
     let step_get (n,_,_,_) f ctrl _ =
-      let step = step_get_eoi n f ctrl in 
+      let step = step_get_eoi n f ctrl in
       Mutex.lock weoi_lock;
       weoi := step :: !weoi;
       Mutex.unlock weoi_lock;
       sched ()
-      
-    let rml_get_v = step_get 
+
+    let rml_get_v = step_get
 
     let rml_get expr_evt f ctrl _ =
       step_get (expr_evt()) f ctrl ()
@@ -461,8 +461,8 @@ module Lk_interpreter: Lk_interpreter.S =
     let step_await_immediate_one_top (n, wa, _, evt_lock) f =
       let rec self _ =
 	Mutex.lock evt_lock;
-	if Event.status n 
-	then 
+	if Event.status n
+	then
 	  (Mutex.unlock evt_lock;
 	   let v = Event.one n in
 	   f v ())
@@ -498,36 +498,36 @@ module Lk_interpreter: Lk_interpreter.S =
       in self
 
     let rml_await_immediate_one expr_evt f ctrl _ =
-      if ctrl.kind = Top then 
+      if ctrl.kind = Top then
 	step_await_immediate_one_top (expr_evt()) f ()
       else
 	step_await_immediate_one (expr_evt()) f ctrl ()
 
     let rml_await_immediate_one_v evt f ctrl _ =
-      if ctrl.kind = Top then 
+      if ctrl.kind = Top then
 	step_await_immediate_one_top evt f ()
       else
 	step_await_immediate_one evt f ctrl ()
 
 (**************************************)
 (* present                            *)
-(**************************************)    
+(**************************************)
     let step_present ctrl (n,_,wp,evt_lock) k_1 k_2 =
       let rec self _ =
 	Mutex.lock evt_lock;
 	if Event.status n
-	then 
+	then
 	  (Mutex.unlock evt_lock;
 	   k_1 ())
 	else
 	  if !eoi
-	  then 
+	  then
 	    (Mutex.unlock evt_lock;
 	     Mutex.lock ctrl.lock;
 	     ctrl.next <- k_2 :: ctrl.next;
 	     Mutex.unlock ctrl.lock;
 	     sched ())
-	  else 
+	  else
 	    (wp := self :: !wp;
 	     Mutex.unlock evt_lock;
 	     Mutex.lock toWakeUp_lock;
@@ -553,7 +553,7 @@ module Lk_interpreter: Lk_interpreter.S =
 	if !eoi then
 	  let v = Event.value n in
 	  if Event.status n && matching v
-	  then 
+	  then
 	    (Mutex.unlock evt_lock;
 	     let f_body = f v in
 	     Mutex.lock ctrl.lock;
@@ -615,15 +615,15 @@ module Lk_interpreter: Lk_interpreter.S =
 	     sched())
       in self
 
-    let rml_await_all_match_v evt matching k ctrl _ = 
-      if ctrl.kind = Top then 
+    let rml_await_all_match_v evt matching k ctrl _ =
+      if ctrl.kind = Top then
 	step_await_all_match_top evt matching k ctrl ()
       else
 	step_await_all_match evt matching k ctrl ()
 
-    let rml_await_all_match expr_evt matching k ctrl _ = 
+    let rml_await_all_match expr_evt matching k ctrl _ =
       let evt = expr_evt () in
-      if ctrl.kind = Top then 
+      if ctrl.kind = Top then
 	step_await_all_match_top evt matching k ctrl ()
       else
 	step_await_all_match evt matching k ctrl ()
@@ -639,18 +639,18 @@ module Lk_interpreter: Lk_interpreter.S =
       let f = p evt in
       f ()
 
-    let rml_signal_combine_v_v default comb p _ = 
+    let rml_signal_combine_v_v default comb p _ =
       let evt = new_evt_combine default comb in
       let f = p evt in
       f ()
 
-    let rml_signal_combine_v_e default comb p _ = 
+    let rml_signal_combine_v_e default comb p _ =
       rml_signal_combine_v_v default (comb()) p ()
 
-    let rml_signal_combine_e_v default comb p _ = 
+    let rml_signal_combine_e_v default comb p _ =
       rml_signal_combine_v_v (default()) comb p ()
 
-    let rml_signal_combine default comb p _ = 
+    let rml_signal_combine default comb p _ =
       rml_signal_combine_v_v (default()) (comb()) p ()
 
 (**************************************)
@@ -694,20 +694,20 @@ module Lk_interpreter: Lk_interpreter.S =
       let f_loop = p (fun _ -> !f_1 ()) in
       f_1 := f_loop;
       f_loop
-	
+
 (**************************************)
 (* loop_n                             *)
 (**************************************)
     let rml_loop_n_v n p k =
       let cpt = ref 0 in
       let f_1 = ref dummy_step in
-      let f_loop = 
-	p 
-	  (fun _ -> 
-	    if !cpt > 0 then 
-	      (decr cpt; !f_1 ()) 
-	    else 
-	      k ()) 
+      let f_loop =
+	p
+	  (fun _ ->
+	    if !cpt > 0 then
+	      (decr cpt; !f_1 ())
+	    else
+	      k ())
 	in
 	f_1 := f_loop;
 	fun _ ->
@@ -747,7 +747,7 @@ module Lk_interpreter: Lk_interpreter.S =
 (**************************************)
 (* if                                 *)
 (**************************************)
-	    
+
     let rml_if_v e k_1 k_2 _ =
       if e then
 	k_1 ()
@@ -782,7 +782,7 @@ module Lk_interpreter: Lk_interpreter.S =
 	let rec f_for i v2 =
 	  fun _ ->
 	    incr i;
-	    if cmp !i v2 
+	    if cmp !i v2
 	    then p !i (f_for i v2) ()
 	    else k ()
 	in
@@ -814,7 +814,7 @@ module Lk_interpreter: Lk_interpreter.S =
 	    begin
 	      for i = max downto min do
 		let f = p (j, j_lock) i in
-		add_one_current f 
+		add_one_current f
 	      done;
 	      sched()
 	    end
@@ -854,11 +854,11 @@ module Lk_interpreter: Lk_interpreter.S =
 (**************************************)
     let rml_start_until_v ctrl evt p k _ =
       let (n,_,_,evt_lock) = evt in
-      let new_ctrl = 
-	new_ctrl 
-	  (Kill (fun () -> let v = Event.value n in k v)) 
-	  (fun () -> Event.status n) 
-          (* Il n'est pas necessaite de proteger cette lecture 
+      let new_ctrl =
+	new_ctrl
+	  (Kill (fun () -> let v = Event.value n in k v))
+	  (fun () -> Event.status n)
+          (* Il n'est pas necessaite de proteger cette lecture
              car cette condition est evaluee a la fin d'instant *)
       in
       Mutex.lock ctrl.lock;
@@ -878,10 +878,10 @@ module Lk_interpreter: Lk_interpreter.S =
 (**************************************)
    let rml_start_control_v ctrl evt p _ =
       let (n,_,_,evt_lock) = evt in
-      let new_ctrl = 
-	new_ctrl 
+      let new_ctrl =
+	new_ctrl
 	  Susp
-	  (fun () -> Event.status n) 
+	  (fun () -> Event.status n)
       in
       Mutex.lock ctrl.lock;
       ctrl.children <- new_ctrl :: ctrl.children;
@@ -895,7 +895,7 @@ module Lk_interpreter: Lk_interpreter.S =
       new_ctrl.alive <- false;
       k x
 
- 
+
 (**************************************)
 (* when                               *)
 (**************************************)
@@ -909,7 +909,7 @@ module Lk_interpreter: Lk_interpreter.S =
 	     new_ctrl.susp <- false;
 	     next_to_current new_ctrl;
 	     sched())
-	  else 
+	  else
 	    if !eoi
 	    then
 	      (Mutex.unlock evt_lock;
@@ -920,22 +920,22 @@ module Lk_interpreter: Lk_interpreter.S =
 	    else
 	      (w := f_when :: !w;
 	       Mutex.unlock evt_lock;
-	       if ctrl.kind <> Top then 
+	       if ctrl.kind <> Top then
 		 (Mutex.lock toWakeUp_lock;
 		  toWakeUp := w :: !toWakeUp;
 		  Mutex.unlock toWakeUp_lock);
 	       sched())
       in f_when
-      
+
     let rml_start_when_v ctrl evt p _ =
       let (n,wa,wp,evt_lock) = evt in
       let dummy = ref (fun _ -> assert false) in
-      let new_ctrl = 
-	new_ctrl 
+      let new_ctrl =
+	new_ctrl
 	  (When dummy)
-	  (fun () -> Event.status n) 
+	  (fun () -> Event.status n)
       in
-      let f_when = 
+      let f_when =
 	step_when ctrl new_ctrl n (if ctrl.kind = Top then wa else wp) evt_lock
       in
       dummy := f_when;
@@ -943,7 +943,7 @@ module Lk_interpreter: Lk_interpreter.S =
       Mutex.lock ctrl.lock;
       ctrl.children <- new_ctrl :: ctrl.children;
       Mutex.unlock ctrl.lock;
-      f_when ()      
+      f_when ()
 
     let rml_start_when ctrl expr_evt p _ =
       rml_start_when_v ctrl (expr_evt()) p ()
@@ -952,7 +952,7 @@ module Lk_interpreter: Lk_interpreter.S =
       new_ctrl.alive <- false;
       k x
 
-      
+
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
@@ -973,20 +973,20 @@ module Lk_interpreter: Lk_interpreter.S =
       rml_await_immediate_v evt (step_get evt p ctrl) ctrl ()
 
     let rml_await_one expr_evt p ctrl _ =
-      let pause_p x = 
+      let pause_p x =
 	rml_pause (fun () -> p x ()) ctrl
       in
       rml_await_immediate_one expr_evt pause_p ctrl ()
 
     let rml_await_one_v evt p ctrl _ =
-      let pause_p x = 
+      let pause_p x =
 	rml_pause (fun () -> p x ()) ctrl
       in
       rml_await_immediate_one_v evt pause_p ctrl ()
 
 
 (* ------------------------------------------------------------------------ *)
-    exception End 
+    exception End
 
 (**************************************************)
 (* rml_make                                       *)
@@ -994,11 +994,12 @@ module Lk_interpreter: Lk_interpreter.S =
     let rml_make p =
       let result = ref None in
       (* the main step function *)
-      let f = p (fun x -> result := Some x; raise End) top in
+      let f = p (fun x ->
+        result := Some x;
+        sched () (*schedule to see that current is empty*) ) top in
       current := [f];
       (* the react function *)
       let rml_react () =
-	try 
 	  exec_sched ();
 	  eoi := true;
           (* -- wakeUp weoi; -- *)
@@ -1010,10 +1011,8 @@ module Lk_interpreter: Lk_interpreter.S =
 	  eval_control_and_next_to_current ();
 	  Event.next ();
 	  eoi := false;
-	  None
-	with 
-	| End -> !result
-      in 
+	  !result
+      in
       rml_react
 
   end
