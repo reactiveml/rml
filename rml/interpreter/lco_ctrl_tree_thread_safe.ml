@@ -1495,7 +1495,7 @@ let rml_loop p =
       (* creates the scheduler *)
       let sched = new_scheduler () in
       (* the main step function *)
-      let f = p () (fun x -> result := Some x; raise End) sched.top in
+      let f = p () (fun _ x -> result := Some x; raise End) sched.top in
       sched.current <- [f];
       (* the react function *)
       let rml_react () =
