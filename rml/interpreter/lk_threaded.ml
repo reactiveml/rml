@@ -477,7 +477,7 @@ module Lk_interpreter: Lk_interpreter.S =
 	Mutex.lock evt_lock;
 	if Event.status n
 	then
-	  (Mutex.lock evt_lock;
+	  (Mutex.unlock evt_lock;
 	   let v = Event.one n in
 	   f v ())
 	else
