@@ -377,7 +377,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (* present                            *)
 (**************************************)    
     let step_present ctrl (n,_,wp) k_1 k_2 =
-      let rec self _ =
+      let rec self (* : 'a. 'a -> unit *) = fun _ -> 
 	if Event.status n
 	then 
 	  k_1 ()
@@ -387,12 +387,14 @@ module Lk_interpreter: Lk_interpreter.S  =
 	    (ctrl.next <- k_2 :: ctrl.next;
 	     sched ())
 	  else 
-	    (wp := (Obj.magic self : unit step) :: !wp;(* Polymiphic recursion*)
+	    (wp := self :: !wp;
+	     (*wp := (Obj.magic self: unit step)::!wp;*)(*Polymiphic recursion*)
 	     toWakeUp := wp :: !toWakeUp;
 	     sched ())
-      in self
+      in (*self*)
+      fun _ -> self ()
 
-    let rml_present_v = step_present
+    let rml_present_v = step_present 
 
     let rml_present ctrl expr_evt k_1 k_2 _ =
       let evt = expr_evt () in
