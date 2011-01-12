@@ -22,9 +22,14 @@
 (* author: Louis Mandel *)
 
 let rml_react_unsafe = 
-  Implem.Lco_ctrl_tree_record.rml_make_exec_process 
-    Rmltop_machine_body.main
-
+  let react = 
+    Implem.Lco_ctrl_tree_record.rml_make_exec_process 
+      Rmltop_machine_body.main
+  in
+  fun l ->
+    match react l with
+    | None -> ()
+    | Some () -> assert false
 
 let rml_react x =
   Rmltop_global.lock();

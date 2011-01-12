@@ -29,7 +29,7 @@
 (* $Id: lco_rewrite.ml,v 1.1 2005/04/30 16:49:15 mandel Exp $ *)
 
 
-module Rml_interpreter (*: Lco_interpreter.S*) =
+module Rml_interpreter : Lco_interpreter.S =
   functor (Event: Sig_env.S) ->
   struct
     exception RML
@@ -1039,8 +1039,8 @@ module Rml_interpreter (*: Lco_interpreter.S*) =
 	    current := p';
 	    eoi := false;
 	    move := false;
-	    ()
-	| TERM v, _ -> assert false
+	    None
+	| TERM v, _ -> Some ()
 	| SUSP, _ -> assert false
       in 
       rml_react

@@ -37,7 +37,8 @@ module type S =
     val rml_make: 'a process -> (unit -> 'a option)
     val rml_make_unit: 
 	unit process -> (unit -> unit option) * (unit process -> unit)
-    val rml_make_exec_process: unit process -> (unit process list -> unit)
+    val rml_make_exec_process: 
+	unit process -> (unit process list -> unit option)
   
     val rml_pre_status: ('a, 'b) event -> bool
     val rml_pre_value: ('a, 'b) event -> 'b

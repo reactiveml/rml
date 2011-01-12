@@ -1506,9 +1506,9 @@ let rml_loop p =
 	  eval_control_and_next_to_current ();
 	  Event.next ();
 	  eoi := false;
-	  ()
+	  None
 	with 
-	| End -> assert false
+	| End -> Some ()
       in 
 
       rml_react
