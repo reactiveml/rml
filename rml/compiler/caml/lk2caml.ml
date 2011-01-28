@@ -1016,21 +1016,21 @@ and translate_proc e =
 	  | All -> "_all"
 	in
 	let cpatt = translate_pattern patt in
-  match Caml_misc.partial_match cpatt, k.kproc_desc with
-	  | partial_match, Kproc_when_match (e1, _) ->
-    if flag2 = One then not_yet_implemented "await_one_match";
-    Cexpr_apply
+	begin match Caml_misc.partial_match cpatt, k.kproc_desc with
+	| partial_match, Kproc_when_match (e1, _) ->
+	    if flag2 = One then not_yet_implemented "await_one_match";
+	    Cexpr_apply
 	      (make_instruction ("rml_await"^im^kind^"_match"),
 	       [embed_ml s;
 		make_expr
 		  (Cexpr_function
 		     [cpatt,
-		    make_expr
-		      (Cexpr_when_match(translate_ml e1,
-					make_expr
-					  (Cexpr_constant (Const_bool true))
-					  Location.none))
-		      Location.none;
+		      make_expr
+			(Cexpr_when_match(translate_ml e1,
+					  make_expr
+					    (Cexpr_constant (Const_bool true))
+					    Location.none))
+			Location.none;
 		      make_patt Cpatt_any Location.none,
 		      make_expr
 			(Cexpr_constant (Const_bool false)) Location.none;])
@@ -1045,8 +1045,8 @@ and translate_proc e =
 
   (*  | partial_match,
 	      Kproc_compute ({ kexpr_desc = Kexpr_when_match (e1, e2) }, _) -> *)
-    | true, _ ->
-      if flag2 = One then not_yet_implemented "await_one_match";
+	| true, _ ->
+	    if flag2 = One then not_yet_implemented "await_one_match";
 	    Cexpr_apply
 	      (make_instruction ("rml_await"^im^kind^"_match"),
 	       [embed_ml s;
@@ -1066,23 +1066,23 @@ and translate_proc e =
 		  Location.none;
 		make_expr_var_local ctrl])
 
-    | false, _ ->
-     if Lk_misc.is_value s then
-	    Cexpr_apply
-	      (make_instruction ("rml_await"^im^kind^"_v"),
-	       [translate_ml s;
-		make_expr
-		  (Cexpr_function [cpatt, translate_proc k])
-		  Location.none;
-		make_expr_var_local ctrl])
-	  else
-	    Cexpr_apply
-	      (make_instruction ("rml_await"^im^kind),
-	       [embed_ml s;
-		make_expr
-		  (Cexpr_function [cpatt, translate_proc k])
-		  Location.none;
-		make_expr_var_local ctrl])
+	| false, _ ->
+	    if Lk_misc.is_value s then
+	      Cexpr_apply
+		(make_instruction ("rml_await"^im^kind^"_v"),
+		 [translate_ml s;
+		  make_expr
+		    (Cexpr_function [cpatt, translate_proc k])
+		    Location.none;
+		  make_expr_var_local ctrl])
+	    else
+	      Cexpr_apply
+		(make_instruction ("rml_await"^im^kind),
+		 [embed_ml s;
+		  make_expr
+		    (Cexpr_function [cpatt, translate_proc k])
+		    Location.none;
+		  make_expr_var_local ctrl])
 (*
 	if Caml_misc.partial_match cpatt then
 	  begin
@@ -1124,6 +1124,7 @@ and translate_proc e =
 		  Location.none;
 		make_expr_var_local ctrl])
     *)
+	end
   in
   make_expr cexpr e.kproc_loc
 
