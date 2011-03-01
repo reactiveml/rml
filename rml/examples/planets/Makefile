@@ -1,7 +1,7 @@
 RMLC=rmlc
 RMLFLAGS=
-N=10000
-SAMPLING=0
+N=-1
+SAMPLING=0.01
 INTERPRETERDIR=`rmlc -where`
 INTERPRETER=rmllib.cma
 INTERPRETERX=rmllib.cmxa
@@ -31,8 +31,7 @@ cleanall: realclean
 .SUFFIXES : .rml .mli .ml .cmi .cmo .cmx .rzi
 
 .rml.ml:
-	$(RMLC) $(RMLFLAGS) -n $(N) -s $(MAIN) $<
-# -sampling $(SAMPLING) 
+	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING)  -s $(MAIN) $<
 .ml.cmo:
 	$(OCAMLC) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) $(INCLUDES) $<
 
