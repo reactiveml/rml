@@ -31,9 +31,10 @@
 (* Printing a type expression *)
 
 open Format
+open Misc
+open Compiler_options
 open Def_types
 open Asttypes
-open Misc
 open Ident
 open Modules
 open Global_ident
@@ -43,7 +44,7 @@ open Global
 (* if it is different from the current module *)
 (* or if it is from the standard module *)
 let print_qualified_ident q =
-  if (compiled_module_name () <> q.qual) & 
+  if (compiled_module_name () <> q.qual) &
     (pervasives_module <> q.qual) &
     (!interpreter_module <> q.qual)
   then begin print_string q.qual;print_string "." end;
@@ -108,7 +109,7 @@ and print_list priority sep l =
 	printrec rest in
   printrec l
 
-let print ty = 
+let print ty =
   type_name#reset;
   print 0 ty
 let print_scheme { ts_desc = ty } = print ty
@@ -119,7 +120,7 @@ let print_value_type_declaration global =
   open_box 2;
   print_string prefix;
   print_space ();
-  if is_an_infix_or_prefix_operator name 
+  if is_an_infix_or_prefix_operator name
   then begin print_string "( "; print_string name; print_string " )" end
   else print_string name;
   print_space ();
@@ -143,7 +144,7 @@ let print_type_name tc ta =
       print_string ",";
       printrec (n+1)
     end in
-  if ta = 0 then () else if ta = 1 
+  if ta = 0 then () else if ta = 1
   then
     begin
       print_one_type_variable 0;
@@ -158,7 +159,7 @@ let print_type_name tc ta =
   print_string (Ident.name tc.id)
 
 (* prints one variant *)
-let print_one_variant global = 
+let print_one_variant global =
   print_space ();
   print_string "|";
   open_box 3;
@@ -168,7 +169,7 @@ let print_one_variant global =
   begin
     match type_of_constr_arg global with
     | None -> ()
-    | Some typ -> 
+    | Some typ ->
 	print_space ();
 	print_string "of";
 	print_space ();
@@ -188,15 +189,15 @@ let print_one_label global =
 
 let rec print_label_list = function
     [] -> ()
-  | h::t -> 
+  | h::t ->
       print_one_label h;
       if t <> [] then
 	begin
 	  print_string "; ";
 	  print_label_list t
 	end
-	
-let print_type_declaration gl = 
+
+let print_type_declaration gl =
   let q = Global.gi gl in
   let { type_kind = td;
 	type_arity = ta; } = Global.info gl in
@@ -204,7 +205,7 @@ let print_type_declaration gl =
   print_type_name q ta;
   begin match td with
   | Type_abstract -> ()
-  | Type_variant global_list -> 
+  | Type_variant global_list ->
       print_string " =";
       open_hvbox 0;
       List.iter print_one_variant global_list;
@@ -247,12 +248,12 @@ let print_list_of_type_declarations global_list =
 (* the main printing functions *)
 set_max_boxes max_int
 
-let output oc ty = 
+let output oc ty =
   set_formatter_out_channel oc;
 (*   print_string "  "; *)
   print ty;
   print_flush ()
- 
+
 let output_value_type_declaration oc global_list =
   set_formatter_out_channel oc;
   List.iter print_value_type_declaration global_list
@@ -272,7 +273,7 @@ let output_exception_declaration oc gl =
   begin
     match type_of_constr_arg gl with
     | None -> ()
-    | Some typ -> 
+    | Some typ ->
 	print_space ();
 	print_string "of";
 	print_space ();

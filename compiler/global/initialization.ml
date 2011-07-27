@@ -31,28 +31,29 @@
 (* the initial module *)
 
 open Misc
+open Compiler_options
 open Ident
 open Global_ident
 open Def_types
 open Global
 
 
-let pervasives_type id = 
+let pervasives_type id =
   { qual = pervasives_module;
     id = Ident.create Ident.gen_type id Ident.Type }
-let interpreter_type id = 
+let interpreter_type id =
   { qual = !interpreter_module;
     id = Ident.create Ident.gen_type id Ident.Type }
-let pervasives_constr id = 
+let pervasives_constr id =
   { qual = pervasives_module;
     id = Ident.create Ident.gen_constr id Ident.Constr }
-let pervasives_val id = 
+let pervasives_val id =
   { qual = pervasives_module;
     id = Ident.create Ident.gen_var id Ident.Val_ML }
 
 
-let abstract_type id = { type_constr = 
-			 { gi = id; 
+let abstract_type id = { type_constr =
+			 { gi = id;
 			   info = Some { constr_abbr = Constr_notabbrev}};
 			 type_kind = Type_abstract;
 			 type_arity = 0; }
@@ -76,7 +77,7 @@ let type_desc_float = type_desc float_ident
 let type_float = Types.constr_notabbrev float_ident []
 
 (* char *)
-let char_ident = pervasives_type "char" 
+let char_ident = pervasives_type "char"
 let type_desc_char = type_desc char_ident
 let type_char = Types.constr_notabbrev char_ident []
 
@@ -97,7 +98,7 @@ let type_exn = Types.constr_notabbrev exn_ident []
 
 (* array *)
 let array_ident = pervasives_type "array"
-let type_desc_array = 
+let type_desc_array =
   { gi = array_ident;
     info = Some { type_constr = { gi = array_ident;
 				  info = Some { constr_abbr=Constr_notabbrev} };
@@ -115,7 +116,7 @@ let type_desc_event =
 				  info = Some{ constr_abbr=Constr_notabbrev} };
 		  type_kind = Type_abstract;
 		  type_arity = 2; } }
-let type_event = Types.constr_notabbrev event_ident [Types.new_generic_var(); 
+let type_event = Types.constr_notabbrev event_ident [Types.new_generic_var();
 						     Types.new_generic_var(); ]
 
 
@@ -133,7 +134,7 @@ let nil_constr_desc =
     info = Some nil_constr; }
 
 let cons_ident = pervasives_constr "::"
-let cons_constr_desc = 
+let cons_constr_desc =
   let var = Types.new_generic_var() in
   let var_list = Types.constr_notabbrev list_ident [var] in
   let cons_constr =
@@ -151,7 +152,7 @@ let type_desc_list =
 		  type_arity = 1; } }
 
 let type_list = Types.constr_notabbrev list_ident [Types.new_generic_var()]
-    
+
 (* option *)
 let option_ident = pervasives_type "option"
 
@@ -166,7 +167,7 @@ let none_constr_desc =
     info = Some none_constr; }
 
 let some_ident = pervasives_constr "Some"
-let some_constr_desc = 
+let some_constr_desc =
   let var = Types.new_generic_var() in
   let some_constr =
     { cstr_arg = Some var;
@@ -181,7 +182,7 @@ let type_desc_option =
 				  info = Some { constr_abbr=Constr_notabbrev} };
 		  type_kind = Type_variant [none_constr_desc; some_constr_desc];
 		  type_arity = 1; } }
-   
+
 let type_option = Types.constr_notabbrev option_ident [Types.new_generic_var()]
 
 
@@ -192,10 +193,10 @@ let list_of_type_desc =
     type_desc_char;
     type_desc_string;
     type_desc_unit;
-    type_desc_exn; 
+    type_desc_exn;
     type_desc_array;
     type_desc_list;
-    type_desc_option; 
+    type_desc_option;
     type_desc_event;
 ]
 

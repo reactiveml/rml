@@ -38,7 +38,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *) 
+(* $Id$ *)
 
 
 (* Recording and dumping (partial) type information *)
@@ -58,29 +58,29 @@ open Reac_ast;;
 type type_info =
     Ti_patt of pattern
   | Ti_expr of expression
-	    
+
 let get_location ti =
   match ti with
     Ti_patt p -> p.patt_loc
   | Ti_expr e -> e.expr_loc
 
-module Annot(T: sig 
+module Annot(T: sig
   type t
   val get_type: type_info -> t
   val output: out_channel -> t -> unit
 end) =
-  struct	    
+  struct
 
     let type_info = ref ([] : type_info list)
     let phrases = ref ([] : Location.t list)
-	
+
     let record ti =
-      if !Misc.save_types && not (get_location ti).Location.loc_ghost then
-	type_info := ti :: !type_info
+      if !Compiler_options.save_types && not (get_location ti).Location.loc_ghost then
+        type_info := ti :: !type_info
 
 
     let record_phrase loc =
-      if !Misc.save_types then phrases := loc :: !phrases
+      if !Compiler_options.save_types then phrases := loc :: !phrases
 
 
     (* comparison order:
@@ -98,20 +98,20 @@ end) =
 
 
     let print_position pp pos =
-      fprintf pp "%S %d %d %d" 
-	pos.pos_fname pos.pos_lnum pos.pos_bol pos.pos_cnum
+      fprintf pp "%S %d %d %d"
+        pos.pos_fname pos.pos_lnum pos.pos_bol pos.pos_cnum
 
 
     let sort_filter_phrases () =
       let ph = List.sort (fun x y -> cmp_loc_inner_first y x) !phrases in
       let rec loop accu cur l =
-	match l with
-	| [] -> accu
-	| loc :: t ->
-	    if cur.loc_start.pos_cnum <= loc.loc_start.pos_cnum
-		&& cur.loc_end.pos_cnum >= loc.loc_end.pos_cnum
-	    then loop accu cur t
-	    else loop (loc :: accu) loc t
+        match l with
+        | [] -> accu
+        | loc :: t ->
+            if cur.loc_start.pos_cnum <= loc.loc_start.pos_cnum
+                && cur.loc_end.pos_cnum >= loc.loc_end.pos_cnum
+            then loop accu cur t
+            else loop (loc :: accu) loc t
       in
       phrases := loop [] Location.none ph
 
@@ -132,18 +132,18 @@ let rec printtyp_reset_maybe loc =
       match ti with
       | Ti_patt {patt_loc = loc;}
       | Ti_expr {expr_loc = loc;} ->
-	  let typ = T.get_type ti in
-	  print_position pp loc.loc_start;
-	  fprintf pp " ";
-	  print_position pp loc.loc_end;
-	  fprintf pp "@.type(@.  ";
+          let typ = T.get_type ti in
+          print_position pp loc.loc_start;
+          fprintf pp " ";
+          print_position pp loc.loc_end;
+          fprintf pp "@.type(@.  ";
 (*
       printtyp_reset_maybe loc;
       Printtyp.mark_loops typ;
       Printtyp.type_expr pp typ;
 *)
-	  T.output oc typ;
-	  fprintf pp "@.)@."
+          T.output oc typ;
+          fprintf pp "@.)@."
 
 
     let get_info () =
@@ -153,15 +153,15 @@ let rec printtyp_reset_maybe loc =
 
 
     let dump filename =
-      if !Misc.save_types then begin
-	let info = get_info () in
-	let oc = open_out filename in
-	let pp = formatter_of_out_channel oc in
-	sort_filter_phrases ();
-	List.iter (print_info oc pp) info;
-	phrases := [];
+      if !Compiler_options.save_types then begin
+        let info = get_info () in
+        let oc = open_out filename in
+        let pp = formatter_of_out_channel oc in
+        sort_filter_phrases ();
+        List.iter (print_info oc pp) info;
+        phrases := [];
       end else begin
-	type_info := [];
+        type_info := [];
       end
 
   end
@@ -177,7 +177,7 @@ module Stypes =
       end
 
 (*     let output = Types_printer.output *)
-    let output oc ty = 
+    let output oc ty =
       set_formatter_out_channel oc;
       print_string "  ";
       Types_printer.print ty;
@@ -197,7 +197,11 @@ module Sstatic =
 
     let output oc (k, pi) =
       Static_printer.output oc k;
-      Printf.fprintf oc " / %s" (Instantaneous_loop.Env.string_of_t pi);
+      (*Printf.fprintf oc " / %s" (Instantaneous_loop.Env.string_of_t pi); *)
       flush oc
 
   end)
+
+
+let impl p =
+  Reac2reac.impl_map (fun e ->  Sstatic.record (Ti_expr e); e) p

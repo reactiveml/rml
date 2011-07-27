@@ -31,16 +31,17 @@
 (** Printing [Caml] code *)
 
 open Misc
+open Compiler_options
 open Format
 open Caml_ast
 open Asttypes
 open Global
 open Global_ident
 
-  
+
 let current_module = ref ""
-    
-(** Generic printing of a list. 
+
+(** Generic printing of a list.
     This function seems to appear in several places... *)
 let print_list print print_sep l =
   let rec printrec l =
@@ -57,13 +58,13 @@ let print_list print print_sep l =
 	close_box () in
   printrec l
 
-(** Prints an immediate. A patch is needed on float number for 
+(** Prints an immediate. A patch is needed on float number for
     [ocaml] < 3.05. *)
 let print_immediate i =
   match i with
   | Const_unit -> print_string "()"
   | Const_bool(b) -> print_string (if b then "true" else "false")
-  | Const_int(i) -> 
+  | Const_int(i) ->
       if i < 0 then
 	(print_string "(";
 	 print_int i;
@@ -79,31 +80,31 @@ let print_immediate i =
 	(* if (fst (modf f)) = 0.0 then print_string ".0" *)
   | Const_char(c) -> print_char '\''; print_char c; print_char '\''
   | Const_string(s) -> print_string ("\""^(String.escaped s)^"\"")
-	
+
 (** Prints a name. Infix chars are surrounded by parenthesis *)
 let print_name s =
   let c = String.get s 0 in
-  let s = 
-    if s = "or" or s = "mod" or s = "lxor" or s = "lnot" or s = "lsl" 
+  let s =
+    if s = "or" or s = "mod" or s = "lxor" or s = "lnot" or s = "lsl"
 	or s = "lsr" or s = "asr"
     then "(" ^ s ^ ")"
-    else 
-      if c >= 'a' & c <= 'z' or c >= 'A' & c <= 'Z' or c = '_' 
+    else
+      if c >= 'a' & c <= 'z' or c >= 'A' & c <= 'Z' or c = '_'
       then s
-      else if c = '*' then "( " ^ s ^ " )" 
+      else if c = '*' then "( " ^ s ^ " )"
 	else
-	"(" ^ s ^ ")" 
+	"(" ^ s ^ ")"
   in
   print_string s
 
 (** Prints pervasives values *)
 let print_pervasives n =
-  match n with 
-  | "int" | "char" | "string" | "float" | "bool" | "unit" | "exn" | 
-    "array" | "list" | "option" | "int32" | "int64" | "nativeint" | 
+  match n with
+  | "int" | "char" | "string" | "float" | "bool" | "unit" | "exn" |
+    "array" | "list" | "option" | "int32" | "int64" | "nativeint" |
     "format4" | "lazy_t" |
-    "[]" | "::" | 
-    "None" | "Some" | 
+    "[]" | "::" |
+    "None" | "Some" |
     "Match_failure" | "Assert_failure" | "Invalid_argument" | "Failure" |
     "Not_found" | "Out_of_memory" | "Stack_overflow" | "Sys_error" |
     "End_of_file" | "Division_by_zero" | "Sys_blocked_io" |
@@ -117,17 +118,17 @@ let print_pervasives n =
 
 (** Prints a global name *)
 let print_global ({ gi = {qual=q; id=n} } as gl) =
-  if gl.gi = Initialization.event_ident then 
+  if gl.gi = Initialization.event_ident then
     (* special case for event type *)
     begin
       print_string !interpreter_module;
       print_string ".";
       print_name (Ident.name n)
-    end    
+    end
   else if q = pervasives_module then
     (* special case for values imported from the standard library *)
     print_pervasives (Ident.name n)
-  else if q = !current_module then 
+  else if q = !current_module then
     print_name (Ident.name n)
   else
     begin
@@ -142,29 +143,29 @@ let print_type_var s = print_string ("'"^s)
 
 let priority exp =
   match exp with
-    (Cexpr_let _ | Cexpr_function _ | Cexpr_fun _ | Cexpr_match _ 
+    (Cexpr_let _ | Cexpr_function _ | Cexpr_fun _ | Cexpr_match _
   | Cexpr_trywith _ ) -> 0
   | Cexpr_seq _  -> 1
   | Cexpr_ifthenelse _ -> 2
   | Cexpr_record_update _ -> 3
-  | (Cexpr_record _  | Cexpr_construct (_,None) | Cexpr_local _ 
-  | Cexpr_global _ | Cexpr_constant _ | Cexpr_array _  | Cexpr_constraint _ ) 
+  | (Cexpr_record _  | Cexpr_construct (_,None) | Cexpr_local _
+  | Cexpr_global _ | Cexpr_constant _ | Cexpr_array _  | Cexpr_constraint _ )
     -> 5
   | (Cexpr_record_access _ | Cexpr_tuple _) -> 6
   | _ -> 4
 
 let priority_pattern p =
   match p with
-    (Cpatt_construct _ | Cpatt_constant _ | Cpatt_var _ 
+    (Cpatt_construct _ | Cpatt_constant _ | Cpatt_var _
   | Cpatt_tuple _ | Cpatt_record _) -> 2
   | _ -> 1
 
 let priority_te t =
-  match t with 
+  match t with
   | Ctype_arrow _ -> 0
   | Ctype_product _ -> 1
   | _ -> 2
-	
+
 (** Emission of code *)
 let rec print pri e =
   open_box 2;
@@ -189,7 +190,7 @@ let rec print pri e =
   | Cexpr_construct(gl,Some e1) ->
       print_global gl;
       print_space ();
-      print (1 + pri_e) e1 
+      print (1 + pri_e) e1
   | Cexpr_apply(f,l) ->
       print pri_e f;
       print_space ();
@@ -198,9 +199,9 @@ let rec print pri e =
       print_string "function";
       print_space ();
       List.iter
-	(fun patt_expr -> 
+	(fun patt_expr ->
 	  print_string "| ";
-	  print_patt_expr 
+	  print_patt_expr
             (fun () -> print_string " ->"; print_space ()) patt_expr)
 	patt_expr_list
   | Cexpr_fun(param_list,e1) ->
@@ -213,12 +214,12 @@ let rec print pri e =
       print 0 e1
   | Cexpr_let(flag, l, e) ->
       print_string (if flag = Recursive then "let rec " else "let ");
-      print_list (print_patt_expr 
-		    (fun () -> 
+      print_list (print_patt_expr
+		    (fun () ->
 		      print_space();
 		      print_string "=";
 		      print_space ()))
-	(fun () -> 
+	(fun () ->
 	  print_space ();
 	  print_string "and")
         l;
@@ -226,7 +227,7 @@ let rec print pri e =
       print_string "in";
       print_space ();
       print 0 e
-  | Cexpr_ifthenelse(e1,e2,e3) -> 
+  | Cexpr_ifthenelse(e1,e2,e3) ->
       print_string "if";
       print_space ();
       print (pri_e - 1) e1;
@@ -273,12 +274,12 @@ let rec print pri e =
       print_string " with";
       print_space ();
       List.iter
-	(fun pat_expr -> 
+	(fun pat_expr ->
 	  print_string "| ";
-	  print_patt_expr 
+	  print_patt_expr
             (fun () -> print_string " ->"; print_space ()) pat_expr)
 	l
-  | Cexpr_seq (e1,e2) -> 
+  | Cexpr_seq (e1,e2) ->
       print pri_e e1;
       print_string ";";
       print_space ();
@@ -291,9 +292,9 @@ let rec print pri e =
       print_string " with";
       print_space ();
       List.iter
-	(fun pat_expr -> 
+	(fun pat_expr ->
 	  print_string "| ";
-	  print_patt_expr 
+	  print_patt_expr
             (fun () -> print_string " ->"; print_space ()) pat_expr)
 	l
   | Cexpr_assert e ->
@@ -374,20 +375,20 @@ and print_type_decl typ =
   open_box 2;
   match typ with
   | Ctype_abstract -> ()
-  | Ctype_rebind t -> 
+  | Ctype_rebind t ->
       print_string "=";
       print_space ();
       print_te 0 t
   | Ctype_variant l ->
       print_string "=";
       print_space ();
-      print_list 
+      print_list
 	(fun (c,typ_opt) ->
 	  print_global c;
 	  begin
 	    match typ_opt with
 	    | None -> ()
-	    | Some typ -> 
+	    | Some typ ->
 		print_space ();
 		print_string "of";
 		print_space ();
@@ -407,7 +408,7 @@ and print_type_decl typ =
 	  print_global lab;
 	  print_string ":";
 	  print_space ();
-	  print_te 0 typ;) 
+	  print_te 0 typ;)
 	(fun () -> print_space (); print_string "; ")
 	l;
       print_string "}"
@@ -419,9 +420,9 @@ and print_pattern pri pat =
   if pri > pri_e then print_string "(";
   begin match pat.cpatt_desc with
     Cpatt_constant(i) -> print_immediate i
-  | Cpatt_var(Cvarpatt_local v) -> 
+  | Cpatt_var(Cvarpatt_local v) ->
       print_name (Ident.unique_name v)
-  | Cpatt_var(Cvarpatt_global gl) -> 
+  | Cpatt_var(Cvarpatt_global gl) ->
       print_global gl
   | Cpatt_construct(gl, None) -> print_global gl
   | Cpatt_construct(gl,Some patt) when (Ident.name gl.gi.id = "::") ->
@@ -446,8 +447,8 @@ and print_pattern pri pat =
       print_string ")"
   | Cpatt_record(l) ->
       print_string "{";
-      print_list 
-	(fun (gl, pat) -> 
+      print_list
+	(fun (gl, pat) ->
 	  print_global gl;
           print_string "=";
 	  print_pattern (pri_e - 1) pat)
@@ -463,7 +464,7 @@ and print_pattern pri pat =
       print_space ();
       print_string "as";
       print_space ();
-      begin 
+      begin
 	match s with
 	| Cvarpatt_local id -> print_name (Ident.unique_name id)
 	| Cvarpatt_global gl -> print_global gl
@@ -483,7 +484,7 @@ and print_pattern pri pat =
       print_string ")"
   end;
   if pri > pri_e then print_string ")";
-  close_box ()  
+  close_box ()
 
 and print_patt_expr print_sep (pat, expr) =
   open_box 2;
@@ -498,7 +499,7 @@ and print_patt_expr print_sep (pat, expr) =
       print 1 e2;
       close_box ();
       print_space ()
-  | _ -> 
+  | _ ->
       print_sep ();
       print 1 expr;
       close_box ();
@@ -514,12 +515,12 @@ let print_impl_item item =
       close_box ()
   | Cimpl_let(flag, l) ->
       print_string (if flag = Recursive then "let rec " else "let ");
-      print_list (print_patt_expr 
-		    (fun () -> 
+      print_list (print_patt_expr
+		    (fun () ->
 		      print_space ();
 		      print_string "=";
 		      print_space ();))
-	(fun () -> 
+	(fun () ->
 	  print_space ();
 	  print_string "and")
         l;
@@ -527,15 +528,15 @@ let print_impl_item item =
       print_string ";;"
   | Cimpl_type l ->
       print_string "type ";
-      print_list 
+      print_list
 	(fun (n,param_list,typ) ->
 	  begin
 	    match param_list with
 	    | [] -> ()
 	    | [s] -> print_type_var s;
-	    | l -> 
+	    | l ->
 		print_string "(";
-		print_list print_type_var 
+		print_list print_type_var
 		  (fun () -> print_string ","; print_space ())
 		  l;
 		print_string ")";
@@ -544,18 +545,18 @@ let print_impl_item item =
 	  print_global n;
 	  print_space ();
 	  print_type_decl typ)
-	(fun () -> 
+	(fun () ->
 	  print_space ();
 	  print_string "and")
         l;
       print_space ();
       print_string ";;"
-  | Cimpl_exn (n,None) -> 
+  | Cimpl_exn (n,None) ->
       print_string "exception ";
       print_global n;
       print_space ();
       print_string ";;"
-  | Cimpl_exn (n, Some typ) -> 
+  | Cimpl_exn (n, Some typ) ->
       print_string "exception ";
       print_global n;
       print_space ();
@@ -594,15 +595,15 @@ let print_intf_item item =
 
   | Cintf_type l ->
       print_string "type ";
-      print_list 
+      print_list
 	(fun (n,param_list,typ) ->
 	  begin
 	    match param_list with
 	    | [] -> ()
 	    | [s] -> print_type_var s;
-	    | l -> 
+	    | l ->
 		print_string "(";
-		print_list print_type_var 
+		print_list print_type_var
 		  (fun () -> print_string ","; print_space ())
 		  l;
 		print_string ")";
@@ -611,18 +612,18 @@ let print_intf_item item =
 	  print_global n;
 	  print_space ();
 	  print_type_decl typ)
-	(fun () -> 
+	(fun () ->
 	  print_space ();
 	  print_string "and")
         l;
       print_space ();
       print_string ";;"
-  | Cintf_exn (n,None) -> 
+  | Cintf_exn (n,None) ->
       print_string "exception ";
       print_global n;
       print_space ();
       print_string ";;"
-  | Cintf_exn (n, Some typ) -> 
+  | Cintf_exn (n, Some typ) ->
       print_string "exception ";
       print_global n;
       print_space ();

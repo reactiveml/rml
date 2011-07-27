@@ -1,0 +1,2 @@
+
+let impl p = p

@@ -30,6 +30,7 @@
 
 (* The type synthesizer *)
 
+open Compiler_options
 open Def_types
 open Types
 open Typing_errors
@@ -45,53 +46,53 @@ let unify_expr expr expected_ty actual_ty =
   try
     unify expected_ty actual_ty
   with
-    Unify -> expr_wrong_type_err expr actual_ty expected_ty 
+    Unify -> expr_wrong_type_err expr actual_ty expected_ty
 
 let unify_patt pat expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> patt_wrong_type_err pat actual_ty expected_ty 
+  with Unify -> patt_wrong_type_err pat actual_ty expected_ty
 
 let unify_event evt expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> event_wrong_type_err evt actual_ty expected_ty 
+  with Unify -> event_wrong_type_err evt actual_ty expected_ty
 
 let unify_emit loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> emit_wrong_type_err loc actual_ty expected_ty 
+  with Unify -> emit_wrong_type_err loc actual_ty expected_ty
 
 let unify_run loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> run_wrong_type_err loc actual_ty expected_ty 
+  with Unify -> run_wrong_type_err loc actual_ty expected_ty
 
 let unify_var loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> var_wrong_type_err loc actual_ty expected_ty 
-      
+  with Unify -> var_wrong_type_err loc actual_ty expected_ty
+
 (* special cases of unification *)
 let filter_event ty =
-  let ty = type_repr ty in 
+  let ty = type_repr ty in
   let ty1 = new_var() in
   let ty2 = new_var() in
   unify ty (constr_notabbrev event_ident [ty1;ty2]);
   ty1, ty2
 
 let filter_multi_event ty =
-  let ty = type_repr ty in 
+  let ty = type_repr ty in
   let ty1 = new_var() in
-  unify ty (constr_notabbrev event_ident [ty1; 
+  unify ty (constr_notabbrev event_ident [ty1;
 					  constr_notabbrev list_ident [ty1]]);
   ty1
 
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
-  let unit_process = process type_unit { proc_static = None } in 
-  try 
+  let unit_process = process type_unit { proc_static = None } in
+  try
     unify unit_process ty;
     true
   with Unify -> false
@@ -109,7 +110,7 @@ let check_type_constr_defined loc gl arity =
   if arity' <> arity
   then type_constr_arity_err name arity' arity loc;
   ty_desc.type_constr
- 
+
 (* find the type of the constructor C *)
 let get_type_of_constructor c loc =
   constr_instance (Global.info c)
@@ -158,26 +159,26 @@ let rec is_nonexpansive expr =
   | Rexpr_emit (e1, Some e2) -> is_nonexpansive e1 && is_nonexpansive e2
   | Rexpr_present (e,e1,e2) ->
       is_nonexpansive_conf e && is_nonexpansive e1 && is_nonexpansive e2
-  | Rexpr_await (_, e) -> 
+  | Rexpr_await (_, e) ->
       is_nonexpansive_conf e
-  | Rexpr_await_val (_, _, s, _, e) -> 
+  | Rexpr_await_val (_, _, s, _, e) ->
       is_nonexpansive s && is_nonexpansive e
   | Rexpr_until (c, e, None) ->
       is_nonexpansive_conf c && is_nonexpansive e
   | Rexpr_until (c, e, Some (_, e')) ->
       is_nonexpansive_conf c && is_nonexpansive e && is_nonexpansive e'
-  | Rexpr_when (c, e) -> 
+  | Rexpr_when (c, e) ->
       is_nonexpansive_conf c && is_nonexpansive e
-  | Rexpr_control (c, None, e) -> 
+  | Rexpr_control (c, None, e) ->
       is_nonexpansive_conf c && is_nonexpansive e
-  | Rexpr_control (c, Some (_,  e'), e) -> 
+  | Rexpr_control (c, Some (_,  e'), e) ->
       is_nonexpansive_conf c && is_nonexpansive e' && is_nonexpansive e
   | Rexpr_par e_list ->
       List.for_all is_nonexpansive e_list
   | Rexpr_merge (e1, e2) ->
       is_nonexpansive e1 && is_nonexpansive e2
   | _ -> false
- 
+
 and is_nonexpansive_conf c =
   match c.conf_desc with
   | Rconf_present e ->
@@ -204,7 +205,7 @@ let type_of_type_expression typ_vars typexp =
   let rec type_of typexp =
     match typexp.te_desc with
     | Rtype_var s ->
-	begin try 
+	begin try
 	  List.assoc s typ_vars
 	with
 	  Not_found -> unbound_typ_err s typexp.te_loc
@@ -217,8 +218,8 @@ let type_of_type_expression typ_vars typexp =
 	product (List.map type_of l)
 
     | Rtype_constr (s, ty_list) ->
-	let name = 
-	  check_type_constr_defined typexp.te_loc s (List.length ty_list) 
+	let name =
+	  check_type_constr_defined typexp.te_loc s (List.length ty_list)
 	in
 	constr name (List.map type_of ty_list)
 
@@ -233,9 +234,9 @@ let free_of_type ty =
     match ty.te_desc with
       Rtype_var(x) -> if List.mem x v then v else x::v
     | Rtype_arrow(t1,t2) -> vars (vars v t1) t2
-    | Rtype_product(t) -> 
+    | Rtype_product(t) ->
 	List.fold_left vars v t
-    | Rtype_constr(_,t) -> 
+    | Rtype_constr(_,t) ->
 	List.fold_left vars v t
     | Rtype_process (t, _) -> vars v t
   in vars [] ty
@@ -252,7 +253,7 @@ let rec type_of_pattern global_env local_env patt ty =
   patt.patt_type <- ty;
   Stypes.record (Ti_patt patt);
   match patt.patt_desc with
-  | Rpatt_any -> 
+  | Rpatt_any ->
       (global_env, local_env)
 
   | Rpatt_var (Varpatt_global gl) ->
@@ -261,7 +262,7 @@ let rec type_of_pattern global_env local_env patt ty =
       gl.info <- Some { value_typ = forall [] ty };
       (gl::global_env, local_env)
   | Rpatt_var (Varpatt_local x) ->
-      if List.mem_assoc x local_env 
+      if List.mem_assoc x local_env
       then non_linear_pattern_err patt (Ident.name x);
       global_env, (x,ty)::local_env
 
@@ -271,7 +272,7 @@ let rec type_of_pattern global_env local_env patt ty =
       gl.info <- Some { value_typ = forall [] ty };
       type_of_pattern (gl::global_env) local_env p ty
   | Rpatt_alias (p,Varpatt_local x) ->
-      if List.mem_assoc x local_env 
+      if List.mem_assoc x local_env
       then non_linear_pattern_err patt (Ident.name x);
       type_of_pattern global_env ((x,ty)::local_env) p ty
 
@@ -287,17 +288,17 @@ let rec type_of_pattern global_env local_env patt ty =
   | Rpatt_construct (c, None) ->
       begin
 	let { cstr_arg = ty_arg_opt;
-	      cstr_res = actual_ty } = get_type_of_constructor c patt.patt_loc 
+	      cstr_res = actual_ty } = get_type_of_constructor c patt.patt_loc
 	in
 	unify_patt patt ty actual_ty;
 	match ty_arg_opt with
-	| None -> global_env, local_env 
+	| None -> global_env, local_env
 	| Some _ -> constr_arity_err c.gi patt.patt_loc
       end
   | Rpatt_construct (c, Some arg_patt) ->
       begin
 	let { cstr_arg = ty_arg_opt;
-	      cstr_res = ty_res; } = get_type_of_constructor c patt.patt_loc 
+	      cstr_res = ty_res; } = get_type_of_constructor c patt.patt_loc
 	in
 	unify_patt patt ty ty_res;
 	match ty_arg_opt with
@@ -307,33 +308,33 @@ let rec type_of_pattern global_env local_env patt ty =
       end
 
   | Rpatt_or (p1,p2) ->
-      let global_env1, local_env1 = 
-	type_of_pattern global_env local_env p1 ty 
+      let global_env1, local_env1 =
+	type_of_pattern global_env local_env p1 ty
       in
-      let global_env2, local_env2 = 
+      let global_env2, local_env2 =
 	type_of_pattern global_env local_env p2 ty
       in
-      List.iter 
-	(fun gl1 -> 
+      List.iter
+	(fun gl1 ->
 	  let gl2 =
-	    try 
+	    try
 	      List.find (fun gl -> (gl1.gi.id = gl.gi.id)) global_env2
-	    with 
+	    with
 	    | Not_found -> orpat_vars p2.patt_loc (Ident.name gl1.gi.id)
 	  in
-	  unify_var p2.patt_loc 
-	    (Global.info gl1).value_typ.ts_desc 
-	    (Global.info gl2).value_typ.ts_desc) 
+	  unify_var p2.patt_loc
+	    (Global.info gl1).value_typ.ts_desc
+	    (Global.info gl2).value_typ.ts_desc)
 	global_env1;
-      List.iter 
-	(fun (x1,ty1) -> 
+      List.iter
+	(fun (x1,ty1) ->
 	  let (x2,ty2) =
-	    try 
+	    try
 	      List.find (fun (x,ty) -> (x1 = x)) local_env2
-	    with 
+	    with
 	    | Not_found -> orpat_vars p2.patt_loc (Ident.name x1)
 	  in
-	  unify_var p2.patt_loc ty1 ty2) 
+	  unify_var p2.patt_loc ty1 ty2)
 	local_env1;
       (* A faire: Verifier si les 2 env sont egaux *)
       global_env2, local_env2
@@ -344,25 +345,25 @@ let rec type_of_pattern global_env local_env patt ty =
 	  [] -> global_env, local_env
 	| (label,label_pat) :: label_pat_list ->
 	    let { lbl_arg = ty_arg;
-		  lbl_res = ty_res } = get_type_of_label label patt.patt_loc 
+		  lbl_res = ty_res } = get_type_of_label label patt.patt_loc
 	    in
 	    (* check that the label appears only once *)
-	    if List.mem label label_list 
+	    if List.mem label label_list
 	    then non_linear_record_err label.gi patt.patt_loc;
 	    unify_patt patt ty ty_arg;
-	    let global_env, local_env = 
-	      type_of_pattern global_env local_env label_pat ty_res 
+	    let global_env, local_env =
+	      type_of_pattern global_env local_env label_pat ty_res
 	    in
-	    type_of_record 
-	      global_env local_env (label :: label_list) label_pat_list 
+	    type_of_record
+	      global_env local_env (label :: label_list) label_pat_list
       in
       type_of_record global_env local_env [] label_patt_list
 
   | Rpatt_array (l) ->
       let ty_var = new_var () in
       unify_patt patt ty (constr_notabbrev array_ident [ty_var]);
-      List.fold_left 
-	(fun (gl_env,lc_env) p -> type_of_pattern gl_env lc_env p ty_var) 
+      List.fold_left
+	(fun (gl_env,lc_env) p -> type_of_pattern gl_env lc_env p ty_var)
 	(global_env,local_env) l
 
   | Rpatt_constraint (p,t) ->
@@ -377,7 +378,7 @@ and type_of_pattern_list global_env local_env patt_list ty_list =
       let global_env, local_env = type_of_pattern global_env local_env p t in
       type_of_pattern_list global_env local_env patt_list ty_list
   | _ -> raise (Internal (Location.none, "type_of_pattern_list"))
-      
+
 (* Typing of expressions *)
 let rec type_of_expression env expr =
   let t =
@@ -387,9 +388,9 @@ let rec type_of_expression env expr =
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
 	instance typ_sch
-  
+
     | Rexpr_global (n) ->
-	instance (Global.info n).value_typ 
+	instance (Global.info n).value_typ
 
     | Rexpr_let (flag, patt_expr_list, e) ->
 	let gl_env, new_env = type_let (flag = Recursive) env patt_expr_list in
@@ -399,14 +400,14 @@ let rec type_of_expression env expr =
 	let ty_arg = new_var() in
 	let ty_res = new_var() in
 	let ty = arrow ty_arg ty_res in
-	List.iter 
+	List.iter
 	  (fun (p,e) ->
 	    let gl_env, loc_env = type_of_pattern [] [] p ty_arg in
 	    assert (gl_env = []);
 	    let new_env =
-	      List.fold_left 
-		(fun env (x, ty) -> Env.add x (forall [] ty) env) 
-		env loc_env 
+	      List.fold_left
+		(fun env (x, ty) -> Env.add x (forall [] ty) env)
+		env loc_env
 	    in
 	    type_expect new_env e ty_res)
 	  matching;
@@ -418,7 +419,7 @@ let rec type_of_expression env expr =
 	  | [] -> ty_res
 	  | arg :: args ->
 	      let t1, t2 =
-		try 
+		try
 		  filter_arrow ty_res
 		with Unify ->
 		  application_of_non_function_err fct ty_fct
@@ -433,7 +434,7 @@ let rec type_of_expression env expr =
     | Rexpr_construct(c,None) ->
 	begin
 	  let { cstr_arg = ty_arg_opt;
-		cstr_res = ty } = get_type_of_constructor c expr.expr_loc 
+		cstr_res = ty } = get_type_of_constructor c expr.expr_loc
 	  in
 	  match ty_arg_opt with
 	  | None -> ty
@@ -442,7 +443,7 @@ let rec type_of_expression env expr =
     | Rexpr_construct (c, Some arg) ->
 	begin
 	  let { cstr_arg = ty_arg_opt;
-		cstr_res = ty_res; } = get_type_of_constructor c expr.expr_loc 
+		cstr_res = ty_res; } = get_type_of_constructor c expr.expr_loc
 	  in
 	  match ty_arg_opt with
 	  | None -> constr_arity_err_2 c.gi expr.expr_loc
@@ -463,10 +464,10 @@ let rec type_of_expression env expr =
 	    [] -> ()
 	  | (label,label_expr) :: label_expr_list ->
 	      let { lbl_arg = ty_arg;
-		    lbl_res = ty_res } = get_type_of_label label expr.expr_loc 
+		    lbl_res = ty_res } = get_type_of_label label expr.expr_loc
 	      in
 	      (* check that the label appears only once *)
-	      if List.mem label label_list 
+	      if List.mem label label_list
 	      then non_linear_record_err label.gi expr.expr_loc;
 	      type_expect env label_expr ty_res;
 	      unify_expr expr ty ty_arg;
@@ -476,15 +477,15 @@ let rec type_of_expression env expr =
 	ty
 
     | Rexpr_record_access (e, label) ->
-	let { lbl_arg = ty_arg; lbl_res = ty_res } = 
-	  get_type_of_label label expr.expr_loc 
+	let { lbl_arg = ty_arg; lbl_res = ty_res } =
+	  get_type_of_label label expr.expr_loc
 	in
 	type_expect env e ty_arg;
 	ty_res
 
     | Rexpr_record_update (e1, label, e2) ->
-	let { lbl_arg = ty_arg; lbl_res = ty_res; lbl_mut = mut } = 
-	  get_type_of_label label expr.expr_loc 
+	let { lbl_arg = ty_arg; lbl_res = ty_res; lbl_mut = mut } =
+	  get_type_of_label label expr.expr_loc
 	in
 	if mut = Immutable then label_not_mutable_err expr label.gi;
 	type_expect env e1 ty_arg;
@@ -503,9 +504,9 @@ let rec type_of_expression env expr =
 	    let gl_env, loc_env = type_of_pattern [] [] p type_exn in
 	    assert (gl_env = []);
 	    let new_env =
-	      List.fold_left 
-		(fun env (x, ty) -> Env.add x (forall [] ty) env) 
-		env loc_env 
+	      List.fold_left
+		(fun env (x, ty) -> Env.add x (forall [] ty) env)
+		env loc_env
 	    in
 	    type_expect new_env e ty)
 	  matching;
@@ -524,14 +525,14 @@ let rec type_of_expression env expr =
     | Rexpr_match (body,matching) ->
 	let ty_body = type_of_expression env body in
 	let ty_res = new_var() in
-	List.iter 
+	List.iter
 	  (fun (p,e) ->
 	    let gl_env, loc_env = type_of_pattern [] [] p ty_body in
 	    assert (gl_env = []);
 	    let new_env =
-	      List.fold_left 
-		(fun env (x, ty) -> Env.add x (forall [] ty) env) 
-		env loc_env 
+	      List.fold_left
+		(fun env (x, ty) -> Env.add x (forall [] ty) env)
+		env loc_env
 	    in
 	    type_expect new_env e ty_res)
 	  matching;
@@ -554,10 +555,10 @@ let rec type_of_expression env expr =
 
     | Rexpr_seq e_list ->
 	let rec f l =
-	  match l with 
+	  match l with
 	  | [] -> assert false
 	  | [e] -> type_of_expression env e
-	  | e::l -> 
+	  | e::l ->
 	      type_statement env e;
 	      f l
 	in f e_list
@@ -568,8 +569,8 @@ let rec type_of_expression env expr =
 
     | Rexpr_pre (Status, s) ->
 	let ty_s = type_of_expression env s in
-	let _, _ty = 
-	  try 
+	let _, _ty =
+	  try
 	    filter_event ty_s
 	  with Unify ->
 	  non_event_err s
@@ -577,8 +578,8 @@ let rec type_of_expression env expr =
 	type_bool
     | Rexpr_pre (Value, s) ->
 	let ty_s = type_of_expression env s in
-	let _, ty = 
-	  try 
+	let _, ty =
+	  try
 	    filter_event ty_s
 	  with Unify ->
 	  non_event_err s
@@ -587,8 +588,8 @@ let rec type_of_expression env expr =
 
     | Rexpr_last s ->
 	let ty_s = type_of_expression env s in
-	let _, ty = 
-	  try 
+	let _, ty =
+	  try
 	    filter_event ty_s
 	  with Unify ->
 	  non_event_err s
@@ -597,29 +598,29 @@ let rec type_of_expression env expr =
 
     | Rexpr_default s ->
 	let ty_s = type_of_expression env s in
-	let _, ty = 
-	  try 
+	let _, ty =
+	  try
 	    filter_event ty_s
 	  with Unify ->
 	  non_event_err s
 	in
 	ty
 
-    | Rexpr_emit (s, None) -> 
+    | Rexpr_emit (s, None) ->
 	let ty_s = type_of_expression env s in
-	let ty, _ = 
-	  try 
+	let ty, _ =
+	  try
 	    filter_event ty_s
 	  with Unify ->
 	    non_event_err s
 	in
 	unify_emit expr.expr_loc type_unit ty;
 	type_unit
-	  
+
     | Rexpr_emit (s, Some e) ->
 	let ty_s = type_of_expression env s in
-	let ty, _ = 
-	  try 
+	let ty, _ =
+	  try
 	    filter_event ty_s
 	  with Unify ->
 	    non_event_err s
@@ -627,20 +628,20 @@ let rec type_of_expression env expr =
 	let ty_e = type_of_expression env e in
 	unify_emit e.expr_loc ty ty_e;
 	type_unit
-	  
+
     | Rexpr_signal ((s,te_opt), combine_opt, e) ->
 	let ty_emit = new_var() in
-	let ty_get = new_var() in 
+	let ty_get = new_var() in
 	let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in
-	opt_iter 
-	  (fun te -> 
-	    unify_event s (instance (full_type_of_type_expression te)) ty_s) 
+	opt_iter
+	  (fun te ->
+	    unify_event s (instance (full_type_of_type_expression te)) ty_s)
 	  te_opt;
 	begin
 	  match combine_opt with
 	  | None ->
-	      unify_event s 
-		(constr_notabbrev event_ident 
+	      unify_event s
+		(constr_notabbrev event_ident
 		   [ty_emit; (constr_notabbrev list_ident [ty_emit])])
 		ty_s
 	  | Some (default,comb) ->
@@ -648,44 +649,44 @@ let rec type_of_expression env expr =
 	      type_expect env comb (arrow ty_emit (arrow ty_get ty_get))
 	end;
 	type_of_expression (Env.add s (forall [] ty_s) env) e
-	  
+
     | Rexpr_nothing -> type_unit
-	  
+
     | Rexpr_pause _ -> type_unit
-	  
+
     | Rexpr_halt _ -> new_var()
 
     | Rexpr_loop (None, p) ->
 	type_statement env p;
 	type_unit
-	  
+
     | Rexpr_loop (Some n, p) ->
 	type_expect env n type_int;
 	type_statement env p;
 	type_unit
-	  
+
     | Rexpr_fordopar(i,e1,e2,flag,p) ->
 	type_expect env e1 type_int;
 	type_expect env e2 type_int;
 	type_statement (Env.add i (forall [] type_int) env) p;
 	type_unit
-	  
+
     | Rexpr_par p_list ->
 	List.iter (fun p -> ignore (type_statement env p)) p_list;
 	type_unit
-	  
+
     | Rexpr_merge (p1,p2) ->
 	type_statement env p1;
 	type_statement env p2;
 	type_unit
-	  
+
     | Rexpr_run (e) ->
-	let ty_e = type_of_expression env e in 
+	let ty_e = type_of_expression env e in
 	let ty = new_var() in
-	unify_run e.expr_loc 
+	unify_run e.expr_loc
 	  ty_e (process ty { proc_static = None; });
 	ty
-	  
+
     | Rexpr_until (s,p,patt_proc_opt) ->
 	begin match patt_proc_opt with
 	| None ->
@@ -696,8 +697,8 @@ let rec type_of_expression env expr =
 	    begin match s.conf_desc with
 	    | Rconf_present s ->
 		let ty_s = type_of_expression env s in
-		let ty_emit, ty_get = 
-		  try 
+		let ty_emit, ty_get =
+		  try
 		    filter_event ty_s
 		  with Unify ->
 		    non_event_err s
@@ -708,23 +709,23 @@ let rec type_of_expression env expr =
 		    let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
 		    assert (gl_env = []);
 		    let new_env =
-		      List.fold_left 
-			(fun env (x, ty) -> Env.add x (forall [] ty) env) 
-			env loc_env 
+		      List.fold_left
+			(fun env (x, ty) -> Env.add x (forall [] ty) env)
+			env loc_env
 		    in
 		    type_expect new_env proc ty_body)
 		  patt_proc_opt;
 		ty_body
-	    | _ -> 
+	    | _ ->
 		non_event_err2 s
 	    end
 	end
-	  
+
 
     | Rexpr_when (s,p) ->
 	type_of_event_config env s;
 	type_of_expression env p
-	  
+
     | Rexpr_control (s, None, p) ->
 	type_of_event_config env s;
 	type_of_expression env p
@@ -732,8 +733,8 @@ let rec type_of_expression env expr =
 	begin match s.conf_desc with
 	| Rconf_present s ->
 	    let ty_s = type_of_expression env s in
-	    let ty_emit, ty_get = 
-	      try 
+	    let ty_emit, ty_get =
+	      try
 		filter_event ty_s
 	      with Unify ->
 		non_event_err s
@@ -742,20 +743,20 @@ let rec type_of_expression env expr =
 	    let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
 	    assert (gl_env = []);
 	    let new_env =
-	      List.fold_left 
-		(fun env (x, ty) -> Env.add x (forall [] ty) env) 
-		env loc_env 
+	      List.fold_left
+		(fun env (x, ty) -> Env.add x (forall [] ty) env)
+		env loc_env
 	    in
 	    type_expect new_env e type_bool;
 	    ty_body
-	| _ -> 
+	| _ ->
 	    non_event_err2 s
 	end
-	  
+
     | Rexpr_get (s,patt,p) ->
 	let ty_s = type_of_expression env s in
-	let _, ty_get = 
-	  try 
+	let _, ty_get =
+	  try
 	    filter_event ty_s
 	  with Unify ->
 	    non_event_err s
@@ -763,26 +764,26 @@ let rec type_of_expression env expr =
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
 	assert (gl_env = []);
 	let new_env =
-	  List.fold_left 
-	    (fun env (x, ty) -> Env.add x (forall [] ty) env) 
-	    env loc_env 
+	  List.fold_left
+	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
+	    env loc_env
 	in
 	type_of_expression new_env p
-	  
+
     | Rexpr_present (s,p1,p2) ->
 	type_of_event_config env s;
 	let ty = type_of_expression env p1 in
 	type_expect env p2 ty;
 	ty
-	  
+
     | Rexpr_await (_,s) ->
 	type_of_event_config env s;
 	type_unit
-	  
+
     | Rexpr_await_val (_,All,s,patt,p) ->
 	let ty_s = type_of_expression env s in
-	let _, ty_get = 
-	  try 
+	let _, ty_get =
+	  try
 	    filter_event ty_s
 	  with Unify ->
 	    non_event_err s
@@ -790,29 +791,29 @@ let rec type_of_expression env expr =
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
 	assert (gl_env = []);
 	let new_env =
-	  List.fold_left 
-	    (fun env (x, ty) -> Env.add x (forall [] ty) env) 
-	    env loc_env 
+	  List.fold_left
+	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
+	    env loc_env
 	in
 	type_of_expression new_env p
     | Rexpr_await_val (_,One,s,patt,p) ->
 	let ty_s = type_of_expression env s in
-	let ty_emit, ty_get = 
-	  try 
+	let ty_emit, ty_get =
+	  try
 	    filter_event ty_s
 	  with Unify ->
 	    non_event_err s
 	in
 	unify_expr s
-	  (constr_notabbrev event_ident 
+	  (constr_notabbrev event_ident
 	     [ty_emit; (constr_notabbrev list_ident [ty_emit])])
 	  ty_s;
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_emit in
 	assert (gl_env = []);
 	let new_env =
-	  List.fold_left 
-	    (fun env (x, ty) -> Env.add x (forall [] ty) env) 
-	    env loc_env 
+	  List.fold_left
+	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
+	    env loc_env
 	in
 	type_of_expression new_env p
 
@@ -827,8 +828,8 @@ and type_of_event_config env conf =
   match conf.conf_desc with
   | Rconf_present s ->
       let ty = type_of_expression env s in
-      let _ = 
-	try 
+      let _ =
+	try
 	  filter_event ty
 	with Unify ->
 	  non_event_err s
@@ -851,14 +852,14 @@ and type_let is_rec env patt_expr_list =
   let global_env, local_env =
     type_of_pattern_list [] [] (List.map fst patt_expr_list) ty_list
   in
-  let add_env = 
-    List.fold_left 
-      (fun env (x, ty) -> Env.add x (forall [] ty) env) 
-      Env.empty local_env 
+  let add_env =
+    List.fold_left
+      (fun env (x, ty) -> Env.add x (forall [] ty) env)
+      Env.empty local_env
   in
   let let_env =
     if is_rec
-    then Env.append add_env env 
+    then Env.append add_env env
     else env
   in
   List.iter2
@@ -870,14 +871,14 @@ and type_let is_rec env patt_expr_list =
     (fun (_,expr) ty -> if not (is_nonexpansive expr) then non_gen ty)
     patt_expr_list
     ty_list;
-  let _ = 
-    List.iter 
-      (fun gl -> 
+  let _ =
+    List.iter
+      (fun gl ->
 	gl.info <- Some { value_typ = gen (Global.info gl).value_typ.ts_desc })
-      global_env 
+      global_env
   in
   let gen_env = Env.map (fun ty -> gen ty.ts_desc) add_env in
-  global_env, Env.append gen_env env 
+  global_env, Env.append gen_env env
 
 
 (* Typing of an expression with an expected type *)
@@ -894,21 +895,21 @@ and type_statement env expr =
   | Type_constr (c, _) ->
       begin match type_unit.type_desc with
       | Type_constr (c_unit, _) ->
-	  if not (same_type_constr c c_unit) then 
-	    not_unit_type_warning expr 
+	  if not (same_type_constr c c_unit) then
+	    not_unit_type_warning expr
       | _ -> assert false
       end
-  | _ -> 
-      not_unit_type_warning expr 
+  | _ ->
+      not_unit_type_warning expr
 
 
 (* Checks multiple occurrences *)
-let check_no_repeated_constructor loc l = 
+let check_no_repeated_constructor loc l =
   let rec checkrec cont l =
     match l with
       [] -> ()
     | ({ gi = name }, _) :: l ->
-	if List.mem name.id.Ident.id cont 
+	if List.mem name.id.Ident.id cont
 	then repeated_constructor_definition_err name.id.Ident.name loc
 	else checkrec (name.id.Ident.id :: cont) l
   in
@@ -918,18 +919,18 @@ let check_no_repeated_label loc l =
   let rec checkrec cont l =
     match l with
       [] -> ()
-    | ({ gi = name },_ , _) :: l -> 
-	if List.mem name.id.Ident.id cont 
+    | ({ gi = name },_ , _) :: l ->
+	if List.mem name.id.Ident.id cont
 	then repeated_label_definition_err name.id.Ident.name loc
-	else checkrec (name.id.Ident.id :: cont) l 
+	else checkrec (name.id.Ident.id :: cont) l
   in
   checkrec [] l
 
 (* Typing of type declatations *)
 let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
   let typ_vars = List.map (fun v -> (v,new_generic_var ())) typ_params in
-  let final_typ = 
-    constr_notabbrev type_gl.gi (List.map snd typ_vars) 
+  let final_typ =
+    constr_notabbrev type_gl.gi (List.map snd typ_vars)
   in
   let type_desc, abbr =
     match type_decl with
@@ -940,7 +941,7 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 	let cstr_list =
 	  List.rev_map
 	    (fun (gl_cstr,te_opt) ->
-	      let ty_arg_opt = 
+	      let ty_arg_opt =
 		opt_map (type_of_type_expression typ_vars) te_opt
 	      in
 	      gl_cstr.info <- Some { cstr_arg = ty_arg_opt;
@@ -953,7 +954,7 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
     | Rtype_record label_decl_list ->
 	check_no_repeated_label loc label_decl_list;
 	let lbl_list =
-	  List.rev_map 
+	  List.rev_map
 	    (fun (gl_lbl, mut, te) ->
 	      let ty_res = type_of_type_expression typ_vars te in
 	      gl_lbl.info <- Some { lbl_res = ty_res;
@@ -969,8 +970,8 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 	Type_rebind (ty_te),
 	Constr_abbrev (List.map snd typ_vars, ty_te)
 
-  in 
-  type_gl.info <- 
+  in
+  type_gl.info <-
     Some { type_constr = {gi = type_gl.gi;
 			  info = Some {constr_abbr = abbr}};
 	   type_kind = type_desc;
@@ -985,8 +986,8 @@ let check_nongen_values impl_item_list =
     (fun impl_item ->
       match impl_item.impl_desc with
       | Rimpl_let (_, patt_expr_list) ->
-	  List.iter (fun (patt,expr) -> 
-	    if free_type_vars notgeneric expr.expr_type != [] 
+	  List.iter (fun (patt,expr) ->
+	    if free_type_vars notgeneric expr.expr_type != []
 	    then
               cannot_generalize_err expr)
 	    patt_expr_list
@@ -994,94 +995,98 @@ let check_nongen_values impl_item_list =
     impl_item_list
 
 (* Typing of implementation items *)
-let type_impl_item info_chan item =
-  match item.impl_desc with
+let impl info_chan item =
+  (match item.impl_desc with
   | Rimpl_expr (e) ->
       ignore (type_of_expression Env.empty e)
 
   | Rimpl_let (flag, patt_expr_list) ->
-      let global_env, local_env = 
-	type_let (flag = Recursive) Env.empty patt_expr_list 
-      in 
+      let global_env, local_env =
+	type_let (flag = Recursive) Env.empty patt_expr_list
+      in
       (* verbose mode *)
-      if !print_type 
+      if !print_type
       then Types_printer.output_value_type_declaration info_chan global_env
-	
+
   | Rimpl_signal (l) ->
-      List.iter 
+      List.iter
 	(fun ((s,te_opt), combine_opt) ->
 	  let ty_emit = new_var() in
-	  let ty_get = new_var() in 
+	  let ty_get = new_var() in
 	  let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in
-	  opt_iter 
-	    (fun te -> 
-	      unify_event s.gi.id 
-		(instance (full_type_of_type_expression te)) ty_s) 
+	  opt_iter
+	    (fun te ->
+	      unify_event s.gi.id
+		(instance (full_type_of_type_expression te)) ty_s)
 	    te_opt;
 	  begin
 	    match combine_opt with
 	    | None ->
-		unify_event s.gi.id 
+		unify_event s.gi.id
 		  (constr_notabbrev list_ident [ty_emit])
 		  ty_get
 	    | Some (default,comb) ->
 		type_expect Env.empty default ty_get;
-		type_expect Env.empty comb 
+		type_expect Env.empty comb
 		  (arrow ty_emit (arrow ty_get ty_get))
 	  end;
 	  s.info <- Some { value_typ = forall [] ty_s };
 	  (* verbose mode *)
-	  if !print_type 
+	  if !print_type
 	  then Types_printer.output_value_type_declaration info_chan [s])
 	l
   | Rimpl_type (l) ->
       let global_env =
-	List.map (type_of_type_declaration item.impl_loc) l	
+	List.map (type_of_type_declaration item.impl_loc) l
       in
       (* verbose mode *)
-      if !print_type 
+      if !print_type
       then Types_printer.output_type_declaration info_chan global_env
- 
+
   | Rimpl_exn (gl_cstr, te_opt) ->
-      gl_cstr.info <- 
+      gl_cstr.info <-
 	Some {cstr_arg = opt_map (type_of_type_expression []) te_opt;
 	      cstr_res = type_exn; };
       (* verbose mode *)
-      if !print_type 
+      if !print_type
       then Types_printer.output_exception_declaration info_chan gl_cstr
 
   | Rimpl_exn_rebind (gl_cstr1, gl_cstr2) ->
       gl_cstr1.info <- Some (Global.info gl_cstr2);
       (* verbose mode *)
-      if !print_type 
+      if !print_type
       then Types_printer.output_exception_declaration info_chan gl_cstr1
 
   | Rimpl_open _ -> ()
+  );
+  item
 
 (* Typing of interface items *)
-let type_intf_item info_chan item =
-  match item.intf_desc with
+let intf info_chan item =
+  (match item.intf_desc with
   | Rintf_val (gl, te) ->
-      gl.info <- 
+      gl.info <-
 	Some { value_typ = gen (full_type_of_type_expression te).ts_desc };
       (* verbose mode *)
-      if !print_type 
+      if !print_type
       then Types_printer.output_value_type_declaration info_chan [gl]
 
   | Rintf_type l ->
-      let global_env = 
+      let global_env =
 	List.map (type_of_type_declaration item.intf_loc) l
       in
       (* verbose mode *)
-      if !print_type 
+      if !print_type
       then Types_printer.output_type_declaration info_chan global_env
- 
+
   | Rintf_exn (gl_cstr, te_opt) ->
       gl_cstr.info <-
 	Some {cstr_arg = opt_map (type_of_type_expression []) te_opt;
 	      cstr_res = type_exn; };
       (* verbose mode *)
-      if !print_type 
+      if !print_type
       then Types_printer.output_exception_declaration info_chan gl_cstr
 
   | Rintf_open _ -> ()
+  );
+  item

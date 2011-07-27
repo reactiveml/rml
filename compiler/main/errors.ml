@@ -45,22 +45,22 @@ open Format
 let report_error ppf exn =
   let report ppf = function
     | Lexer.Error(err, loc) ->
-	Location.print ppf loc;
-	Lexer.report_error ppf err
+        Location.print ppf loc;
+        Lexer.report_error ppf err
     | Syntaxerr.Error err ->
-	Syntaxerr.report_error ppf err
+        Syntaxerr.report_error ppf err
 
     | Misc.Error -> ()
-(*	fprintf ppf "@.Error." *)
+(*      fprintf ppf "@.Error." *)
     | Misc.Internal (loc,msg) ->
-	if loc = Location.none 
-      	then fprintf ppf "@.Internal error: %s. \nPlease report it." msg
-	else 
-	  fprintf ppf "@.%aInternal error: %s. \nPlease report it." 
-	    Location.print loc msg
+        if loc = Location.none
+        then fprintf ppf "@.Internal error: %s. \nPlease report it." msg
+        else
+          fprintf ppf "@.%aInternal error: %s. \nPlease report it."
+            Location.print loc msg
     | Warnings.Errors (n) ->
-	fprintf ppf "@.Error: %d error-enabled warnings occurred." n
-    | x -> fprintf ppf "@]"; raise x 
+        fprintf ppf "@.Error: %d error-enabled warnings occurred." n
+    | x -> fprintf ppf "@]"; raise x
   in
   fprintf ppf "@[%a@]@." report exn
 
@@ -69,9 +69,9 @@ let unbound_main main =
   raise Misc.Error
 
 let bad_type_main main main_ty =
-  eprintf 
-    "The main process \"%s\" must have type unit process.\n" 
-	  main;
+  eprintf
+    "The main process \"%s\" must have type unit process.\n"
+          main;
 (*   Types_printer.output main_ty.Def_types.value_typ.Def_types.ts_desc; *)
   raise Misc.Error
 

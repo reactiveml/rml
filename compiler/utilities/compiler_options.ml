@@ -17,13 +17,85 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: main.ml *)
-(* created: 2006-08-07  *)
-(* author: Louis Mandel *)
+(* version of the compiler *)
+let version = "0.1"
 
-(* $Id$ *)
+(* standard module *)
+let pervasives_module = "Pervasives"
+let interpreter_module = ref "Lco_ctrl_tree_record"
+(* let interpreter_module = ref "Lk_record" *)
+let interpreter_intf = ref "Lco_interpreter"
+let interpreter_impl = ref "Implem"
 
-open Misc
+
+let standard_lib = "lib"
+
+(* List of file to compile *)
+let to_compile = ref ([] : string list)
+
+let default_used_modules = ref ([] : string list)
+
+(* interpreter *)
+let set_interpreter_intf s = interpreter_intf := s
+let set_interpreter_impl s = interpreter_impl := s
+let set_interpreter_module s = interpreter_module := s
+
+(* different translations *)
+type translations = Lco
+
+let translation = ref Lco
+
+let set_translation t = translation := t
+
+(* load paths *)
+let load_path = ref ([] : string list)
+
+(* no link *)
+let no_link = ref false
+
+(* simulation process *)
+let simulation_process = ref ""
+
+(* number_of_instant to execute *)
+let number_of_instant = ref (-1)
+
+(* samplin rate *)
+let sampling = ref (-. 1.0)
+
+(* verbose *)
+let verbose = ref false
+let print_type = ref false
+let save_types = ref false
+let instantaneous_loop_warning = ref true
+
+(* dparse *)
+let dparse = ref false
+
+(* dtime *)
+let dtime = ref false
+
+(*
+let display_time =
+  let last = ref 0.0 in
+  fun s ->
+    if !dtime then
+      let current = Sys.time() in
+      Printf.printf "%s\t%f\t%f\n"
+	s
+	(current -. !last)
+	current;
+      last := current
+*)
+
+(* interactive *)
+let interactive = ref false
+
+(* optimization *)
+let nary_optimization = ref true
+let static_optimization = ref true
+let for_optimization = ref true
+let const_optimization = ref true
+
 
 (* add a file in the list of file to compile. *)
 let add_to_compile file =
@@ -44,13 +116,13 @@ let locate_stdlib () =
   try
     Sys.getenv "RMLLIB"
   with
-    Not_found -> standard_lib 
+    Not_found -> standard_lib
 
 (* standard pervasives module *)
 let set_init_pervasives () =
   default_used_modules := [pervasives_module]
 
-let set_no_pervasives () = 
+let set_no_pervasives () =
   default_used_modules := []
 
 (* show version *)
@@ -95,57 +167,13 @@ let unset_instantaneous_loop_warning () =
 (* Select the runtime *)
 let set_runtime s =
   match s with
-  | "Lco_rewrite" ->
-      set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Rec_implem";
-      set_interpreter_module "Lco_rewrite_record";
-      set_translation Lco
-  | "Lco_ctrl_tree" | "Lco" -> 
+    | "Lco" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implem";
       set_interpreter_module "Lco_ctrl_tree_record";
       set_translation Lco
-  | "Lco_ctrl_tree_class" -> 
-      set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implem";
-      set_interpreter_module "Lco_ctrl_tree_class";
-      set_translation Lco
-  | "Lco_ctrl_tree_thread_safe" -> 
-      set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Thread_implem";
-      set_interpreter_module "Lco_ctrl_tree_thread_safe_record";
-      set_translation Lco
-  | "Lco_ctrl_tree_n" | "Lco_n" -> 
-      set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implem";
-      set_interpreter_module "Lco_ctrl_tree_n_record";
-      set_translation Lco
-(*
-  | "ctrl_tree_debug" -> 
-      set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Lco_ctrl_tree_debug";
-      set_translation Lco
-*)
-  | "Lk" ->
-      set_interpreter_intf "Lk_interpreter";
-      set_interpreter_impl "Implem";
-      set_interpreter_module "Lk_record";
-      set_translation Lk
 
-  | "Lk_threaded" ->
-      set_interpreter_intf "Lk_interpreter";
-      set_interpreter_impl "Thread_implem";
-      set_interpreter_module "Lk_threaded_record";
-      set_translation Lk
-
-  | "Rmltop" ->
-      set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Rmltop_implem";
-      set_interpreter_module "Machine_controler_machine";
-      set_translation Lco
-
-
-  | _ -> raise (Arg.Bad ("don't know what to do with " ^ s))
+    | _ -> raise (Arg.Bad ("don't know what to do with " ^ s))
 
 (* sets the display of the parse code *)
 let set_dparse () = dparse := true
@@ -154,7 +182,7 @@ let set_dparse () = dparse := true
 let set_dtime () = dtime := true
 
 (* sets the interactive mode *)
-let set_interactive () = 
+let set_interactive () =
 (*
   interpreter_module := "Rml_interactive";
 *)
@@ -189,7 +217,7 @@ and doc_verbose = "Print types"
 and doc_save_types = "Save type information in <filename>.?annot"
 and doc_no_loop_warning = "Remove instantaneous loop and recursion warnings"
 and doc_interactive = "Read programs on stdin and output on stdout"
-and doc_runtime = 
+and doc_runtime =
 (*"<interpreter> select the runtime according to <interpreter>:\n"*)
    "(undocumented)\n" ^
    "\t Lco_rewrite\n" ^
@@ -200,7 +228,7 @@ and doc_runtime =
 
 and doc_dparse = "(undocumented)"
 and doc_dtime = "(undocumented)"
-and errmsg = 
+and errmsg =
 "\nrmlc - The Reactive ML Compiler
 Usage: rmlc [options] -s <process> <file>.rml
   <process> : name of the main process
@@ -212,42 +240,32 @@ Usage: rmlc [options] -s <process> <file>.rml
 Options are:"
 
 (* the main function: parse the command line *)
-let configure () =
-  set_init_stdlib ();
-  set_init_pervasives ();
-  try
-    Arg.parse 
+let parse_cli () =
+    Arg.parse
       [ "-stdlib", Arg.String set_stdlib, doc_stdlib;
-	"-v", Arg.Unit show_v, doc_v;    
-	"-version", Arg.Unit show_version, doc_version;
-	"-where", Arg.Unit show_where, doc_where;
-	"-c",Arg.Set no_link, doc_compilation;
-	"-I",Arg.String add_include,doc_libraries;
-	"-s", Arg.String set_simulation_process, doc_simulation;
-	"-n", Arg.Int set_number_of_instant, doc_number_of_instant;
-	"-sampling", Arg.Float set_sampling, doc_sampling;
-	"-i", Arg.Unit set_verbose, doc_verbose;
-	"-dtypes", Arg.Unit set_save_types, doc_save_types;
-	"-no_loop_warning", Arg.Unit unset_instantaneous_loop_warning, doc_no_loop_warning;
-	"-runtime", Arg.String set_runtime, doc_runtime;
-	"-interactive", Arg.Unit set_interactive, doc_interactive;
-	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;
-	"-no_nary_opt", Arg.Unit set_no_nary, doc_no_nary;
-	"-no_static_opt", Arg.Unit set_no_static, doc_no_static;
-	"-no_for_opt", Arg.Unit set_no_for, doc_no_for;
-	"-no_const_opt", Arg.Clear const_optimization, doc_no_const_opt; 
-	"-dparse", Arg.Unit set_dparse, doc_dparse;
-	"-dtime", Arg.Unit set_dtime, doc_dtime;
-      ]	
+        "-v", Arg.Unit show_v, doc_v;
+        "-version", Arg.Unit show_version, doc_version;
+        "-where", Arg.Unit show_where, doc_where;
+        "-c",Arg.Set no_link, doc_compilation;
+        "-I",Arg.String add_include,doc_libraries;
+        "-s", Arg.String set_simulation_process, doc_simulation;
+        "-n", Arg.Int set_number_of_instant, doc_number_of_instant;
+        "-sampling", Arg.Float set_sampling, doc_sampling;
+        "-i", Arg.Unit set_verbose, doc_verbose;
+        "-dtypes", Arg.Unit set_save_types, doc_save_types;
+        "-no_loop_warning", Arg.Unit unset_instantaneous_loop_warning, doc_no_loop_warning;
+        "-runtime", Arg.String set_runtime, doc_runtime;
+        "-interactive", Arg.Unit set_interactive, doc_interactive;
+        "-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;
+        "-no_nary_opt", Arg.Unit set_no_nary, doc_no_nary;
+        "-no_static_opt", Arg.Unit set_no_static, doc_no_static;
+        "-no_for_opt", Arg.Unit set_no_for, doc_no_for;
+        "-no_const_opt", Arg.Clear const_optimization, doc_no_const_opt;
+        "-dparse", Arg.Unit set_dparse, doc_dparse;
+        "-dtime", Arg.Unit set_dtime, doc_dtime;
+      ]
       add_to_compile
       errmsg;
-  with x ->
-    Errors.report_error Format.err_formatter x;
-    exit 2
-;;
+  to_compile := List.rev !to_compile;
 
-
-let _ = 
-  Printexc.catch configure ();
-  to_compile := List.rev !to_compile
 
