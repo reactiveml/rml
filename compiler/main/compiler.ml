@@ -61,7 +61,7 @@ let compile_implementation_front_end info_chan itf impl_list =
     let rml_code = silent_pass "Typing" true (Typing.impl info_chan) rml_code in
 
     (* static analysis *)
-    let rml_code = silent_pass "Static analysis" true (Static.impl info_chan) rml_code in
+    let rml_code = silent_pass "Static analysis" true (Static_analysis.impl info_chan) rml_code in
 
     let rml_code = silent_pass "Static optimization"
       !static_optimization Dynamic2static.impl rml_code in

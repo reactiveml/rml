@@ -53,7 +53,7 @@
 open Format;;
 open Lexing;;
 open Location;;
-open Reac_ast;;
+open Reac;;
 
 type type_info =
     Ti_patt of pattern
@@ -62,7 +62,7 @@ type type_info =
 let get_location ti =
   match ti with
     Ti_patt p -> p.patt_loc
-  | Ti_expr e -> e.expr_loc
+  | Ti_expr e -> e.e_loc
 
 module Annot(T: sig
   type t
@@ -131,7 +131,7 @@ let rec printtyp_reset_maybe loc =
     let print_info oc pp ti =
       match ti with
       | Ti_patt {patt_loc = loc;}
-      | Ti_expr {expr_loc = loc;} ->
+      | Ti_expr {e_loc = loc;} ->
           let typ = T.get_type ti in
           print_position pp loc.loc_start;
           fprintf pp " ";
@@ -168,12 +168,12 @@ let rec printtyp_reset_maybe loc =
 
 module Stypes =
   Annot(struct
-    type t = Def_types.type_expression
+    type t = Types.type_expression
 
     let get_type ti =
       begin match ti with
       | Ti_patt {patt_type = typ;}
-      | Ti_expr {expr_type = typ;} -> typ
+      | Ti_expr {e_type = typ;} -> typ
       end
 
 (*     let output = Types_printer.output *)
@@ -187,12 +187,12 @@ module Stypes =
 
 module Sstatic =
   Annot(struct
-    type t = Def_static.static * (varpatt * int) list
+    type t = Static.static * (varpatt * int) list
 
     let get_type ti =
       begin match ti with
-      | Ti_patt _ -> (Def_static.Static, [])
-      | Ti_expr {expr_static = typ; expr_reactivity = pi; } -> (typ, pi)
+      | Ti_patt _ -> (Static.Static, [])
+      | Ti_expr {e_static = typ; e_reactivity = pi; } -> (typ, pi)
       end
 
     let output oc (k, pi) =
@@ -204,4 +204,5 @@ module Sstatic =
 
 
 let impl p =
-  Reac2reac.impl_map (fun e ->  Sstatic.record (Ti_expr e); e) p
+  (*Reac2reac.impl_map (fun e ->  Sstatic.record (Ti_expr e); e) p *)
+  p

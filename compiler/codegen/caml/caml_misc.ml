@@ -28,7 +28,7 @@
 open Misc
 open Compiler_options
 open Asttypes
-open Def_types
+open Types
 open Caml_ast
 open Global
 open Global_ident

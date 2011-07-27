@@ -37,16 +37,16 @@ open Global
 type type_scheme =
     { ts_binders: type_expression list;        (* generalised variables *)
       ts_desc: type_expression;                (* the type *)
-    } 
-      
+    }
+
 and type_expression =
     { mutable type_desc: type_expression_desc;
       mutable type_level: int;
       type_index: int; }
 and type_expression_desc =
-    Type_var 
-  | Type_arrow of type_expression * type_expression 
-  | Type_product of type_expression list                  
+    Type_var
+  | Type_arrow of type_expression * type_expression
+  | Type_product of type_expression list
   | Type_constr of type_constr global * type_expression list
   | Type_link of type_expression
   | Type_process of type_expression * process_info
@@ -55,17 +55,17 @@ and process_info =
     { mutable proc_static: process_static option }
 
 and process_static =
-  | Proc_def of Def_static.instantaneous ref
+  | Proc_def of Static.instantaneous ref
   | Proc_link of process_static
   | Proc_unify of process_static * process_static
 
 (* Type constructors *)
 and type_constr =
     { mutable constr_abbr: type_abbrev }      (* Abbreviation or not *)
-      
+
 and type_abbrev =
   | Constr_notabbrev
-  | Constr_abbrev of 
+  | Constr_abbrev of
       type_expression list * type_expression  (* Parameters and body *)
 
 (* Varibable kind *)
@@ -80,12 +80,12 @@ and value_type_description =
 
 
 (* Constructor descriptions *)
-      
-and constructor_type_description = 
+
+and constructor_type_description =
     { cstr_arg: type_expression option;
       cstr_res: type_expression; }
-      
-      
+
+
 (* Record label descriptions *)
 (* type t_arg = {e.label: t_res;...} *)
 and label_type_description =
@@ -93,25 +93,25 @@ and label_type_description =
       lbl_arg: type_expression;          (* Argument type *)
       lbl_mut: mutable_flag;             (* Mutable or not *)
     }
-      
+
 (* Type definitions *)
-      
+
 and type_description =
     { type_constr: type_constr global;
       type_kind: type_kind;
       type_arity: int; }
-      
+
 and type_kind =
     Type_abstract
   | Type_rebind of type_expression
   | Type_variant of constructor_type_description global list
   | Type_record of label_type_description global list
-	
+
 type exception_declaration = type_expression list
 
 let generic = (-1)
 and notgeneric = 0
 
 let type_of_global g = (info g).value_typ
-let type_of_constr_arg g = (info g).cstr_arg 
+let type_of_constr_arg g = (info g).cstr_arg
 let type_of_label_res g = (info g).lbl_res

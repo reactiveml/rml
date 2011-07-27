@@ -24,7 +24,7 @@
 (* $Id$ *)
 
 open Misc
-open Reac_ast
+open Reac
 
 (* Printing of error messages during the "static" analysis *)
 
@@ -32,7 +32,7 @@ let expr_wrong_static_err expr =
   Format.eprintf
 (*  "%aThis expression is not static but it is used in a static context.\n" *)
     "%aThis expression must be instantaneous.\n"
-    Location.print expr.expr_loc;
+    Location.print expr.e_loc;
   raise Error
 
 let impl_wrong_static_err impl =
@@ -44,10 +44,10 @@ let impl_wrong_static_err impl =
 
 (* Type clash *)
 let unify_err exp actual_k expected_k =
-  Printf.eprintf 
+  Printf.eprintf
     "%aThis expression is a %s process,\n\
     but it should be a %s process.\n"
-    Location.print_oc exp.expr_loc
-    (Def_static.string_of_instantaneous actual_k)
-    (Def_static.string_of_instantaneous expected_k);
+    Location.print_oc exp.e_loc
+    (Static.string_of_instantaneous actual_k)
+    (Static.string_of_instantaneous expected_k);
   raise Error

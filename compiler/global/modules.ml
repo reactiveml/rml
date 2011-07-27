@@ -31,7 +31,7 @@
 open Misc
 open Compiler_options
 open Global_ident
-open Def_types
+open Types
 open Global
 open Parse_ident
 

@@ -66,6 +66,16 @@ let opt_iter f = function
     Some x -> f x
   | None -> ()
 
+let mapfold f acc l =
+  let l,acc = List.fold_left
+                (fun (l,acc) e -> let e,acc = f acc e in e::l, acc)
+                ([],acc) l in
+  List.rev l, acc
+
+let optional_wacc f acc = function
+  | None -> None, acc
+  | Some x -> let x, acc = f acc x in Some x, acc
+
 (* association table with memoization *)
 class name_assoc_table f =
   object

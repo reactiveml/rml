@@ -33,7 +33,7 @@
 open Format
 open Misc
 open Compiler_options
-open Def_types
+open Types
 open Asttypes
 open Ident
 open Modules
