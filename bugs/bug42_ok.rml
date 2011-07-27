@@ -1,7 +1,0 @@
-(* 07/05/2009 *)
-(* il faudrait un warning *)
-
-let rec process p =
-  let r =ref (process ()) in
-  r.contents <- p;
-  run !r

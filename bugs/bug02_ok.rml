@@ -1,9 +1,0 @@
-(* 04/06/2004 *)
-(* pb dans l'utilisation de l'indice de boucle *)
-
-let process p {} =
-  for i = 0 to 10 do
-    print_int i;
-    print_newline();
-    pause;
-  done

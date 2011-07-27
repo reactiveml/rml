@@ -1,7 +1,0 @@
-(* 03/03/2005 *)
-(* Bug dans le typeur.                                      *)
-(* Il ne faut pas accepter les expressions                  *)
-(* de type '_a a top level                                  *)
-
-let x = ref []
-signal s default [] gather fun x y -> x :: y;;

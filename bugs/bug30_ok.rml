@@ -1,4 +1,0 @@
-(* 28/02/2008 *)
-(* Probleme dans static.ml pour les tableaux vides.         *)
-
-let _ = [||]

@@ -1,4 +1,0 @@
-(* 22/07/2004 *)
-(* probleme d'aafichage du type process{} *)
-
-type t = process{}

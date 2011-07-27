@@ -1,8 +1,0 @@
-(* 22/08/2005 *)
-(* Bug dans la generalisation du let/and/in "dynamique"      *)
-(* pour le code ML genere                                    *)
-
-let process main =
-  let id x = x 
-  and _ = pause in
-  (id 1, id true)

@@ -1,6 +1,0 @@
-(* 15/06/2004 *)
-
-(* Bug dans le parser : il faut tjs fermer les strings (meme dans    *)
-(* les commentaires )                                                *)
-
-(* " *)

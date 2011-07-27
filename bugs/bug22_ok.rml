@@ -1,7 +1,0 @@
-(* 04/08/2005 *)
-(* Bug dans la verification des patterns             *)
-
-let process f x = 
-  match x with
-  | [ x ] | [ _; x ] -> 0
-  | x | y -> 1

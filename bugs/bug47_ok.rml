@@ -1,8 +1,0 @@
-(* 20/10/2010 *)
-(* Bug dans le code Caml généré *)
-
-type t = { s : (unit, unit) event }
-
-let process p x =
-  do 42
-  until x.s -> 4012 done

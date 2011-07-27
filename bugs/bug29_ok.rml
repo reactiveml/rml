@@ -1,8 +1,0 @@
-(* 27/02/2008 *)
-(* Bug dans l'affichage du "record_update" (mauvaise priorites)         *)
-
-type t = { mutable x: int }
-
-let tab = [| { x = 1 } |]
-
-let a = (tab.(0)).x <- 3

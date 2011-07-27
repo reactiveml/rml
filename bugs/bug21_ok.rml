@@ -1,7 +1,0 @@
-(* 26/07/2005 *)
-(* Bug dans le when du match quand la partie droite  *)
-(* est reactive                                      *)
-
-let process f x = 
-  match x with
-  | a when true -> pause

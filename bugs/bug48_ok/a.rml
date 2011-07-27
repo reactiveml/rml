@@ -1,5 +1,0 @@
-(* 05/11/2010 *)
-(* bug dans l'ordre de chargement des types lors des open *)
-
-let f x = not x
-let f x = x + 1

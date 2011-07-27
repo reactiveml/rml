@@ -1,5 +1,0 @@
-#!/bin/sh
-
-RMLLIB=PREFIX/lib/rml
-export RMLLIB
-exec PREFIX/bin/rmlc.opt $@

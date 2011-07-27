@@ -1,2 +1,0 @@
-rmldep.cmo: depend.cmo 
-rmldep.cmx: depend.cmx 
