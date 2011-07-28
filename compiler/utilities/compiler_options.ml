@@ -28,7 +28,7 @@ let interpreter_intf = ref "Lco_interpreter"
 let interpreter_impl = ref "Implem"
 
 
-let standard_lib = "lib"
+let standard_lib = "../lib"
 
 (* List of file to compile *)
 let to_compile = ref ([] : string list)
