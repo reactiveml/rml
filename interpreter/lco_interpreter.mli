@@ -24,14 +24,15 @@
 
 
 module type S =
-    functor (R : Runtime.R) ->
+  functor (Step : Runtime.STEP with type 'a t = 'a -> unit) ->
+    functor (R : Runtime.R with module Step = Step) ->
   sig
     type event_cfg
 
     type 'a expr
     and 'a process = unit -> 'a expr
 
-    val rml_make: 'a option ref -> 'a process -> unit R.step
+    val rml_make: 'a option ref -> 'a process -> unit Step.t
 
     val rml_pre_status: ('a, 'b) R.event -> bool
     val rml_pre_value: ('a, 'b) R.event -> 'b

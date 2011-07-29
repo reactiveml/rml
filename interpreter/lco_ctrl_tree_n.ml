@@ -38,13 +38,14 @@
 (*   Gestion du parallele n-aire                                      *)
 
 module Rml_interpreter : Lco_interpreter.S =
-  functor (R : Runtime.R) ->
+  functor (Step : Runtime.STEP with type 'a t = 'a -> unit) ->
+    functor (R : Runtime.R with module Step = Step) ->
   struct
 
     type event_cfg = bool -> (unit -> bool) * R.waiting_list list
 
     type join_point = int ref option
-    and 'a expr = 'a R.step -> R.control_tree -> join_point -> unit R.step
+    and 'a expr = 'a Step.t -> R.control_tree -> join_point -> unit Step.t
     and 'a process = unit -> 'a expr
 
     let unit_value = ()
@@ -194,7 +195,7 @@ module Rml_interpreter : Lco_interpreter.S =
     let step_await_immediate f_k ctrl (n,wa,wp) =
       let w = if ctrl.kind = Top then wa else wp in
       if ctrl.kind = Top then
-        let rec f_await_top : unit R.step =
+        let rec f_await_top =
           fun _ ->
             if R.Event.status n
             then

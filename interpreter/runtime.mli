@@ -1,5 +1,5 @@
 
-module type Step =
+module type STEP =
 sig
   type 'a t
   val exec : unit t -> unit
@@ -8,9 +8,10 @@ end
 
 module type R =
 sig
+  module Step : STEP
   module Event : Sig_env.S
 
-  type 'a step = 'a -> unit
+  type 'a step = 'a Step.t
   type current
   type waiting_list
   type next

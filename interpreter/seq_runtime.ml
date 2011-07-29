@@ -1,9 +1,10 @@
 
-module SeqListRuntime (Event: Sig_env.S) : Runtime.R =
+module SeqListRuntime (S : Runtime.STEP) (Event: Sig_env.S) =
 struct
+    module Step = S
     module Event = Event
 
-    type 'a step = 'a -> unit
+    type 'a step = 'a S.t
     type next = unit step list ref
     type current = unit step list ref
     type waiting_list = unit step list ref
@@ -212,7 +213,7 @@ struct
       match !current with
       | f :: c ->
         current := c;
-        f ()
+        Step.exec f
       | [] -> ()
       in
       ssched ();
@@ -233,7 +234,6 @@ struct
       main_context.cd_eoi := false
 end
 
-(*
 module SimpleStep =
 struct
   type 'a t = 'a -> unit
@@ -241,12 +241,11 @@ struct
   let exec p =
     p ()
 end
-  *)
 
 module LcoSeqI (Interpreter:Lco_interpreter.S) =
 struct
-  module R = SeqListRuntime(Sig_env.Record)
-  module I = Interpreter(R)
+  module R = SeqListRuntime(SimpleStep)(Sig_env.Record)
+  module I = Interpreter(SimpleStep)(R)
 
   let rml_make p =
     let result = ref None in
@@ -262,8 +261,8 @@ end
 
 module LkSeqI (Interpreter:Lk_interpreter.S) =
 struct
-  module R = SeqListRuntime(Sig_env.Record)
-  module I = Interpreter(R)
+  module R = SeqListRuntime(SimpleStep)(Sig_env.Record)
+  module I = Interpreter(SimpleStep)(R)
 
   let rml_make p =
     let result = ref None in
