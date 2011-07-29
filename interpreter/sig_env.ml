@@ -56,8 +56,9 @@ module Record  (*: S*)  =
 
     let absent = -2
 
-    let create default combine =
-      { status = absent;
+    let create ck default combine =
+      { clock = ck;
+        status = absent;
         value = default;
         pre_status = absent;
         last = default;
@@ -66,28 +67,28 @@ module Record  (*: S*)  =
 
 (* -------------------------- Access functions -------------------------- *)
     let default n = n.default
-    let status n = n.status = n.clock
+    let status n = n.status = !(n.clock)
 
     let value n = n.value
 
     let pre_status n =
-      if n.status = n.clock
-      then n.pre_status = n.clock - 1
-      else n.status = n.clock - 1
+      if n.status = !(n.clock)
+      then n.pre_status = !(n.clock) - 1
+      else n.status = !(n.clock) - 1
 
     let last n =
-      if n.status = n.clock
+      if n.status = !(n.clock)
       then n.last
       else n.value
 
     let pre_value n =
-      if n.status = n.clock
+      if n.status = !(n.clock)
       then
-        if n.pre_status = n.clock - 1
+        if n.pre_status = !(n.clock) - 1
         then n.last
         else n.default
       else
-        if n.status = n.clock - 1
+        if n.status = !(n.clock) - 1
         then n.value
         else n.default
 
@@ -97,11 +98,11 @@ module Record  (*: S*)  =
       | _ -> assert false
 
     let emit n v =
-      if n.status <> n.clock
+      if n.status <> !(n.clock)
       then
         (n.pre_status <- n.status;
          n.last <- n.value;
-         n.status <- n.clock;
+         n.status <- !(n.clock);
          n.value <- n.combine v n.default)
       else
         n.value <- n.combine v n.value
