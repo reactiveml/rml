@@ -71,11 +71,6 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* configurations                     *)
 (**************************************)
-    let rec rev_app x1 x2 =
-      match x1 with
-      | [] -> x2
-      | f :: x1' -> rev_app x1' (f::x2)
-
     let cfg_present' (n,wa,wp) =
       fun is_long_wait ->
         (fun () -> Event.status n),
@@ -91,14 +86,14 @@ module Rml_interpreter : Lco_interpreter.S =
         let is_true1, evt_list1 = c1 is_long_wait in
         let is_true2, evt_list2 = c2 is_long_wait in
         (fun () -> is_true1() && is_true2()),
-        rev_app evt_list1 evt_list2
+        List.rev_append evt_list1 evt_list2
 
     let cfg_or c1 c2 =
       fun is_long_wait ->
         let is_true1, evt_list1 = c1 is_long_wait in
         let is_true2, evt_list2 = c2 is_long_wait in
         (fun () -> is_true1() || is_true2()),
-        rev_app evt_list1 evt_list2
+        List.rev_append evt_list1 evt_list2
 
 
 
@@ -735,15 +730,6 @@ let rml_loop p =
 (* until                              *)
 (**************************************)
 (* ---------- Misc functions for until, control and when ---------- *)
-    let new_ctrl kind =
-      { kind = kind;
-        alive = true;
-        susp = false;
-        children = [];
-        cond = (fun () -> false);
-        next = R.mk_next ();
-        next_boi = R.mk_next (); }
-
     let start_ctrl f_k ctrl f new_ctrl =
       let f_ctrl =
         fun _ ->
@@ -1213,7 +1199,7 @@ let rml_loop p =
           let f x =
             decr term_cpt;
             if !term_cpt <= 0 then
-              result := x
+              result := Some x
           in f
       in
       p () (join_end()) R.top jp

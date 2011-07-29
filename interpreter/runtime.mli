@@ -35,6 +35,7 @@ sig
     | When of unit step ref
     (*| Clock_domain of clock_domain*)
   (* functions on the control tree *)
+  val new_ctrl : ?cond: (unit -> bool) -> control_type -> control_tree
   val set_kill : control_tree -> unit
   val next_to_current : context -> control_tree -> unit
 

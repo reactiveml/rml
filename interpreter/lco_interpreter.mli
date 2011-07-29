@@ -31,7 +31,7 @@ module type S =
     type 'a expr
     and 'a process = unit -> 'a expr
 
-    val rml_make: 'a ref -> 'a process -> unit R.step
+    val rml_make: 'a option ref -> 'a process -> unit R.step
 
     val rml_pre_status: ('a, 'b) R.event -> bool
     val rml_pre_value: ('a, 'b) R.event -> 'b

@@ -39,21 +39,16 @@ struct
 
     type context = clock_domain
 
-    let rec rev_app x1 x2 =
-      match x1 with
-      | [] -> x2
-      | f :: x1' -> rev_app x1' (f::x2)
-
     let mk_current () = ref ([] : unit step list)
     let add_current p ctx =
       ctx.cd_current := p :: !(ctx.cd_current)
     let add_current_list pl ctx =
-      ctx.cd_current := rev_app pl !(ctx.cd_current)
+      ctx.cd_current := List.rev_append pl !(ctx.cd_current)
     let add_current_waiting_list w ctx =
-      ctx.cd_current := rev_app !w !(ctx.cd_current);
+      ctx.cd_current := List.rev_append !w !(ctx.cd_current);
       w := []
     let add_current_next next ctx =
-      ctx.cd_current := rev_app !next !(ctx.cd_current);
+      ctx.cd_current := List.rev_append !next !(ctx.cd_current);
       next := []
     let mk_waiting_list () = ref ([]:unit step list)
     let add_waiting p w =
@@ -62,7 +57,7 @@ struct
     let add_next p next =
       next := p :: !next
     let add_next_next n1 n2 =
-      n2 := rev_app !n1 !n2
+      n2 := List.rev_append !n1 !n2
     let clear_next next =
       next := []
 
@@ -84,6 +79,15 @@ struct
     let wake_up_all ck =
       List.iter (fun wp -> add_current_waiting_list wp ck) ck.cd_wake_up;
       ck.cd_wake_up <- []
+
+    let new_ctrl ?(cond = (fun () -> false)) kind =
+      { kind = kind;
+        alive = true;
+        susp = false;
+        children = [];
+        cond = cond;
+        next = mk_next ();
+        next_boi = mk_next (); }
 
     (* racine de l'arbre de control *)
     let top =
@@ -239,7 +243,7 @@ struct
 end
   *)
 
-module SeqInterpreter (Interpreter:Lco_interpreter.S) =
+module LcoSeqI (Interpreter:Lco_interpreter.S) =
 struct
   module R = SeqListRuntime(Sig_env.Record)
   module I = Interpreter(R)
@@ -256,4 +260,22 @@ struct
     react
 end
 
-module LcoSeqInterpreter = SeqInterpreter(Lco_ctrl_tree_n.Rml_interpreter)
+module LkSeqI (Interpreter:Lk_interpreter.S) =
+struct
+  module R = SeqListRuntime(Sig_env.Record)
+  module I = Interpreter(R)
+
+  let rml_make p =
+    let result = ref None in
+    let step = I.rml_make result p in
+    (*R.init ();*)
+    R.add_step step;
+    let react () =
+      R.react ();
+      !result
+    in
+    react
+end
+
+module LcoSeqInterpreter = LcoSeqI(Lco_ctrl_tree_n.Rml_interpreter)
+module LkSeqInterpreter = LkSeqI(Lk_implem.Rml_interpreter)
