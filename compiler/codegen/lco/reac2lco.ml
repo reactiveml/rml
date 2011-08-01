@@ -74,13 +74,13 @@ let rec translate_te typ =
     match typ.te_desc with
     | Tvar x -> Cotype_var x
     | Tarrow (t1, t2) ->
-	Cotype_arrow (translate_te t1, translate_te t2)
+        Cotype_arrow (translate_te t1, translate_te t2)
     | Tproduct typ_list ->
-	Cotype_product (List.map translate_te typ_list)
+        Cotype_product (List.map translate_te typ_list)
     | Tconstr (cstr, te_list) ->
-	Cotype_constr (cstr, List.map translate_te te_list)
+        Cotype_constr (cstr, List.map translate_te te_list)
     | Tprocess (t, _) ->
-	Cotype_process (translate_te t)
+        Cotype_process (translate_te t)
   in
   make_te cotyp typ.te_loc
 
@@ -91,23 +91,23 @@ let rec translate_type_decl typ =
   | Trebind typ -> Cotype_rebind (translate_te typ)
   | Tvariant constr_te_list ->
       let l =
-	List.map
-	  (fun (c, typ_opt) ->
-	    let typ_opt =
-	      match typ_opt with
-	      | None -> None
-	      | Some typ -> Some (translate_te typ)
-	    in
-	    (c, typ_opt))
-	  constr_te_list
+        List.map
+          (fun (c, typ_opt) ->
+            let typ_opt =
+              match typ_opt with
+              | None -> None
+              | Some typ -> Some (translate_te typ)
+            in
+            (c, typ_opt))
+          constr_te_list
       in
       Cotype_variant l
   | Trecord l ->
       let l =
-	List.map
-	  (fun (lab, flag, typ) ->
-	    (lab, flag, translate_te typ))
-	  l
+        List.map
+          (fun (lab, flag, typ) ->
+            (lab, flag, translate_te typ))
+          l
       in
       Cotype_record l
 
@@ -118,39 +118,39 @@ let rec translate_pattern p =
     | Pany -> Copatt_any
 
     | Pvar x ->
-	begin
-	  match x with
-	  | Vglobal gl -> Copatt_var (Covarpatt_global gl)
-	  | Vlocal id -> Copatt_var (Covarpatt_local id)
-	end
+        begin
+          match x with
+          | Vglobal gl -> Copatt_var (Covarpatt_global gl)
+          | Vlocal id -> Copatt_var (Covarpatt_local id)
+        end
 
     | Palias (patt, x) ->
-	let vp =
-	  match x with
-	  | Vglobal gl -> Covarpatt_global gl
-	  | Vlocal id ->  Covarpatt_local id
-	in
-	Copatt_alias (translate_pattern patt, vp)
+        let vp =
+          match x with
+          | Vglobal gl -> Covarpatt_global gl
+          | Vlocal id ->  Covarpatt_local id
+        in
+        Copatt_alias (translate_pattern patt, vp)
 
     | Pconstant im -> Copatt_constant im
 
     | Ptuple l ->
-	Copatt_tuple (List.map translate_pattern l)
+        Copatt_tuple (List.map translate_pattern l)
 
     | Pconstruct (constr, patt_opt) ->
-	Copatt_construct (constr, opt_map translate_pattern patt_opt)
+        Copatt_construct (constr, opt_map translate_pattern patt_opt)
 
     | Por (p1, p2) ->
-	Copatt_or (translate_pattern p1, translate_pattern p2)
+        Copatt_or (translate_pattern p1, translate_pattern p2)
 
     | Precord l ->
-	Copatt_record (List.map (fun (l,p) -> (l,translate_pattern p)) l)
+        Copatt_record (List.map (fun (l,p) -> (l,translate_pattern p)) l)
 
     | Parray l ->
-	Copatt_array (List.map translate_pattern l)
+        Copatt_array (List.map translate_pattern l)
 
     | Pconstraint (patt, typ) ->
-	Copatt_constraint (translate_pattern patt, translate_te typ)
+        Copatt_constraint (translate_pattern patt, translate_te typ)
 
   in
   make_patt copatt p.patt_loc
@@ -166,115 +166,115 @@ let rec translate_ml e =
     | Econstant im -> Coexpr_constant im
 
     | Elet (flag, patt_expr_list, expr) ->
-	Coexpr_let (flag,
-		    List.map
-		      (fun (p,e) -> (translate_pattern p, translate_ml e))
-		      patt_expr_list,
-		    translate_ml expr)
+        Coexpr_let (flag,
+                    List.map
+                      (fun (p,e) -> (translate_pattern p, translate_ml e))
+                      patt_expr_list,
+                    translate_ml expr)
 
     | Efunction  patt_expr_list ->
-	Coexpr_function (List.map
-			   (fun (p,e) -> (translate_pattern p, translate_ml e))
-			   patt_expr_list)
+        Coexpr_function (List.map
+                           (fun (p,e) -> (translate_pattern p, translate_ml e))
+                           patt_expr_list)
 
     | Eapply (expr, expr_list) ->
-	Coexpr_apply (translate_ml expr,
-		      List.map translate_ml expr_list)
+        Coexpr_apply (translate_ml expr,
+                      List.map translate_ml expr_list)
 
     | Etuple expr_list ->
-	Coexpr_tuple (List.map translate_ml expr_list)
+        Coexpr_tuple (List.map translate_ml expr_list)
 
     | Econstruct (c, expr_opt) ->
-	Coexpr_construct (c, opt_map translate_ml expr_opt)
+        Coexpr_construct (c, opt_map translate_ml expr_opt)
 
     | Earray l ->
-	Coexpr_array (List.map translate_ml l)
+        Coexpr_array (List.map translate_ml l)
 
     | Erecord l ->
-	Coexpr_record (List.map (fun (lab,e) -> lab, translate_ml e) l)
+        Coexpr_record (List.map (fun (lab,e) -> lab, translate_ml e) l)
 
     | Erecord_access (expr, label) ->
-	Coexpr_record_access (translate_ml expr, label)
+        Coexpr_record_access (translate_ml expr, label)
 
     | Erecord_update (e1, label, e2) ->
-	Coexpr_record_update (translate_ml e1, label, translate_ml e2)
+        Coexpr_record_update (translate_ml e1, label, translate_ml e2)
 
     | Econstraint (expr, typ) ->
-	Coexpr_constraint (translate_ml expr, translate_te typ)
+        Coexpr_constraint (translate_ml expr, translate_te typ)
 
     | Etrywith (expr, l) ->
-	Coexpr_trywith (translate_ml expr,
-			List.map
-			  (fun (p,e) -> translate_pattern p, translate_ml e)
-			  l)
+        Coexpr_trywith (translate_ml expr,
+                        List.map
+                          (fun (p,e) -> translate_pattern p, translate_ml e)
+                          l)
     | Eassert expr -> Coexpr_assert (translate_ml expr)
 
     | Eifthenelse (e1, e2, e3) ->
-	Coexpr_ifthenelse (translate_ml e1,
-			   translate_ml e2,
-			   translate_ml e3)
+        Coexpr_ifthenelse (translate_ml e1,
+                           translate_ml e2,
+                           translate_ml e3)
 
     | Ematch (expr, l) ->
-	Coexpr_match (translate_ml expr,
-		      List.map
-			(fun (p,e) -> translate_pattern p, translate_ml e)
-			l)
+        Coexpr_match (translate_ml expr,
+                      List.map
+                        (fun (p,e) -> translate_pattern p, translate_ml e)
+                        l)
 
     | Ewhen_match (e1, e2) ->
-	Coexpr_when_match (translate_ml e1, translate_ml e2)
+        Coexpr_when_match (translate_ml e1, translate_ml e2)
 
     | Ewhile(e1, e2) ->
-	Coexpr_while (translate_ml e1, translate_ml e2)
+        Coexpr_while (translate_ml e1, translate_ml e2)
 
     | Efor (id, e1, e2, flag, e3) ->
-	Coexpr_for (id,
-		    translate_ml e1,
-		    translate_ml e2,
-		    flag,
-		    translate_ml e3)
+        Coexpr_for (id,
+                    translate_ml e1,
+                    translate_ml e2,
+                    flag,
+                    translate_ml e3)
 
     | Eseq (e1::e_list) ->
-	let rec f acc l =
-	  match l with
-	  | [] -> assert false
-	  | [e] ->
-	      Coexpr_seq (acc, translate_ml e)
-	  | e::l' ->
-	      let acc' =
-		make_expr
-		  (Coexpr_seq (acc, translate_ml e))
-		  Location.none
-	      in
-	      f acc' l'
-	in f (translate_ml e1) e_list
+        let rec f acc l =
+          match l with
+          | [] -> assert false
+          | [e] ->
+              Coexpr_seq (acc, translate_ml e)
+          | e::l' ->
+              let acc' =
+                make_expr
+                  (Coexpr_seq (acc, translate_ml e))
+                  Location.none
+              in
+              f acc' l'
+        in f (translate_ml e1) e_list
 
     | Eprocess (p) ->
-	Coexpr_process (translate_proc p)
+        Coexpr_process (translate_proc p)
 
     | Epre (flag,s) ->
-	Coexpr_pre (flag, translate_ml s)
+        Coexpr_pre (flag, translate_ml s)
 
     | Elast s ->
-	Coexpr_last (translate_ml s)
+        Coexpr_last (translate_ml s)
 
     | Edefault s ->
-	Coexpr_default (translate_ml s)
+        Coexpr_default (translate_ml s)
 
     | Eemit (s, None) -> Coexpr_emit (translate_ml s)
 
     | Eemit (s, Some e) ->
-	Coexpr_emit_val (translate_ml s, translate_ml e)
+        Coexpr_emit_val (translate_ml s, translate_ml e)
 
     | Esignal ((s,typ), comb, e) ->
-	Coexpr_signal ((s, opt_map translate_te typ),
-		       opt_map
-			 (fun (e1,e2) ->
-			   translate_ml e1, translate_ml e2) comb,
-		       translate_ml e)
+        Coexpr_signal ((s, opt_map translate_te typ),
+                       opt_map
+                         (fun (e1,e2) ->
+                           translate_ml e1, translate_ml e2) comb,
+                       translate_ml e)
 
     | _ ->
-	raise (Internal (e.e_loc,
-			 "Reac2lco.translate_ml: expr"))
+        raise (Internal (e.e_loc,
+                         "Reac2lco.translate_ml: expr"))
 
   in
   make_expr coexpr e.e_loc
@@ -284,96 +284,96 @@ and translate_proc p =
   let coproc =
     begin match p.e_static with
     | Static.Static ->
-	Coproc_compute (translate_ml p)
+        Coproc_compute (translate_ml p)
     | Static.Dynamic _ ->
-	begin match p.e_desc with
-	| Enothing -> Coproc_nothing
+        begin match p.e_desc with
+        | Enothing -> Coproc_nothing
 
-	| Epause kboi -> Coproc_pause kboi
+        | Epause kboi -> Coproc_pause kboi
 
-	| Ehalt kboi -> Coproc_halt kboi
+        | Ehalt kboi -> Coproc_halt kboi
 
-	| Eemit (s, None) -> Coproc_emit (translate_ml s)
+        | Eemit (s, None) -> Coproc_emit (translate_ml s)
 
-	| Eemit (s, Some e) ->
-	    Coproc_emit_val (translate_ml s, translate_ml e)
+        | Eemit (s, Some e) ->
+            Coproc_emit_val (translate_ml s, translate_ml e)
 
-	| Eloop (n_opt, proc) ->
-	    Coproc_loop (opt_map translate_ml n_opt, translate_proc proc)
+        | Eloop (n_opt, proc) ->
+            Coproc_loop (opt_map translate_ml n_opt, translate_proc proc)
 
-	| Ewhile (expr, proc) ->
-	    Coproc_while (translate_ml expr, translate_proc proc)
+        | Ewhile (expr, proc) ->
+            Coproc_while (translate_ml expr, translate_proc proc)
 
-	| Efor (i, e1, e2, flag, proc) ->
-	    Coproc_for(i,
-		       translate_ml e1,
-		       translate_ml e2,
-		       flag,
-		       translate_proc proc)
+        | Efor (i, e1, e2, flag, proc) ->
+            Coproc_for(i,
+                       translate_ml e1,
+                       translate_ml e2,
+                       flag,
+                       translate_proc proc)
 
-	| Efordopar (i, e1, e2, flag, proc) ->
-	    Coproc_fordopar(i,
-			    translate_ml e1,
-			    translate_ml e2,
-			    flag,
-			    translate_proc proc)
+        | Efordopar (i, e1, e2, flag, proc) ->
+            Coproc_fordopar(i,
+                            translate_ml e1,
+                            translate_ml e2,
+                            flag,
+                            translate_proc proc)
 
-	| Eseq (p1::p_list) ->
-	    let rec f acc l =
-	      match l with
-	      | [] -> assert false
-	      | [p] ->
-		  Coproc_seq (acc, translate_proc p)
-	      | p::l' ->
-		  let acc' =
-		    make_proc
-		      (Coproc_seq (acc, translate_proc p))
-		      Location.none
-		  in
-		  f acc' l'
-	    in f (translate_proc p1) p_list
+        | Eseq (p1::p_list) ->
+            let rec f acc l =
+              match l with
+              | [] -> assert false
+              | [p] ->
+                  Coproc_seq (acc, translate_proc p)
+              | p::l' ->
+                  let acc' =
+                    make_proc
+                      (Coproc_seq (acc, translate_proc p))
+                      Location.none
+                  in
+                  f acc' l'
+            in f (translate_proc p1) p_list
 
 (*
       | Epar p_list ->
-	  let p_list' =
-	    List.map (fun p -> translate_proc p) p_list
-	  in
-	  Coproc_par p_list'
+          let p_list' =
+            List.map (fun p -> translate_proc p) p_list
+          in
+          Coproc_par p_list'
 *)
-	| Epar [p1; p2] ->
-	    Coproc_par [translate_proc p1; translate_proc p2]
-	| Epar p_list ->
-	    let p_list' =
-	      List.map
-		(fun p ->
-		  if p.e_type = Initialization.type_unit then
-		    translate_proc p
-		  else
-		    if p.e_static = Static.Static then
-		      make_proc
-			(Coproc_compute
-			   (make_expr
-			      (Coexpr_seq (translate_ml p, make_unit()))
-			      Location.none))
-			Location.none
-		    else
-		      make_proc
-			(Coproc_seq (translate_proc p, make_nothing()))
-			Location.none)
-		p_list
-	    in
-	    Coproc_par p_list'
+        | Epar [p1; p2] ->
+            Coproc_par [translate_proc p1; translate_proc p2]
+        | Epar p_list ->
+            let p_list' =
+              List.map
+                (fun p ->
+                  if p.e_type = Initialization.type_unit then
+                    translate_proc p
+                  else
+                    if p.e_static = Static.Static then
+                      make_proc
+                        (Coproc_compute
+                           (make_expr
+                              (Coexpr_seq (translate_ml p, make_unit()))
+                              Location.none))
+                        Location.none
+                    else
+                      make_proc
+                        (Coproc_seq (translate_proc p, make_nothing()))
+                        Location.none)
+                p_list
+            in
+            Coproc_par p_list'
 
-	| Emerge (p1, p2) ->
-	    Coproc_merge (translate_proc p1,
-			  translate_proc p2)
+        | Emerge (p1, p2) ->
+            Coproc_merge (translate_proc p1,
+                          translate_proc p2)
 
-	| Esignal ((s,typ), comb, proc) ->
-	    Coproc_signal ((s, opt_map translate_te typ),
-			   opt_map
-			     (fun (e1,e2) ->
-			       translate_ml e1, translate_ml e2) comb,
-			   translate_proc proc)
+        | Esignal ((s,typ), comb, proc) ->
+            Coproc_signal ((s, opt_map translate_te typ),
+                           opt_map
+                             (fun (e1,e2) ->
+                               translate_ml e1, translate_ml e2) comb,
+                           translate_proc proc)
 
 (*
    | Elet (Nonrecursive,[(patt, expr)], proc) ->
@@ -383,69 +383,69 @@ and translate_proc p =
    Coproc_def (translate_proc_let flag patt_expr_list,
    translate_proc proc)
  *)
-	| Elet (flag, patt_expr_list, proc) ->
-	    translate_proc_let flag patt_expr_list proc
+        | Elet (flag, patt_expr_list, proc) ->
+            translate_proc_let flag patt_expr_list proc
 
-	| Erun (expr) ->
-	    Coproc_run (translate_ml expr)
+        | Erun (expr) ->
+            Coproc_run (translate_ml expr)
 
-	| Euntil (s, proc, patt_proc_opt) ->
-	    Coproc_until (translate_conf s,
-			  translate_proc proc,
-			  opt_map
-			    (fun (patt, proc) ->
-			      translate_pattern patt, translate_proc proc)
-			    patt_proc_opt)
+        | Euntil (s, proc, patt_proc_opt) ->
+            Coproc_until (translate_conf s,
+                          translate_proc proc,
+                          opt_map
+                            (fun (patt, proc) ->
+                              translate_pattern patt, translate_proc proc)
+                            patt_proc_opt)
 
-	| Ewhen (s, proc) ->
-	    Coproc_when (translate_conf s, translate_proc proc)
+        | Ewhen (s, proc) ->
+            Coproc_when (translate_conf s, translate_proc proc)
 
-	| Econtrol (s, patt_proc_opt, proc) ->
-	    Coproc_control (translate_conf s,
-			    opt_map
-			      (fun (patt, proc) ->
-				translate_pattern patt, translate_ml proc)
-			      patt_proc_opt,
-			    translate_proc proc)
+        | Econtrol (s, patt_proc_opt, proc) ->
+            Coproc_control (translate_conf s,
+                            opt_map
+                              (fun (patt, proc) ->
+                                translate_pattern patt, translate_ml proc)
+                              patt_proc_opt,
+                            translate_proc proc)
 
-	| Eget (s, patt, proc) ->
-	    Coproc_get (translate_ml s,
-			translate_pattern patt,
-			translate_proc proc)
+        | Eget (s, patt, proc) ->
+            Coproc_get (translate_ml s,
+                        translate_pattern patt,
+                        translate_proc proc)
 
-	| Epresent (s, p1, p2) ->
-	    Coproc_present (translate_conf s,
-			    translate_proc p1,
-			    translate_proc p2)
+        | Epresent (s, p1, p2) ->
+            Coproc_present (translate_conf s,
+                            translate_proc p1,
+                            translate_proc p2)
 
-	| Eifthenelse (expr, p1, p2) ->
-	    Coproc_ifthenelse (translate_ml expr,
-			       translate_proc p1,
-			       translate_proc p2)
+        | Eifthenelse (expr, p1, p2) ->
+            Coproc_ifthenelse (translate_ml expr,
+                               translate_proc p1,
+                               translate_proc p2)
 
-	| Ematch (expr, l) ->
-	    Coproc_match (translate_ml expr,
-			  List.map
-			    (fun (p,e) ->
-			      (translate_pattern p, translate_proc e))
-			    l)
+        | Ematch (expr, l) ->
+            Coproc_match (translate_ml expr,
+                          List.map
+                            (fun (p,e) ->
+                              (translate_pattern p, translate_proc e))
+                            l)
 
-	| Ewhen_match (e1, e2) ->
-	    Coproc_when_match (translate_ml e1, translate_proc e2)
+        | Ewhen_match (e1, e2) ->
+            Coproc_when_match (translate_ml e1, translate_proc e2)
 
-	| Eawait (flag, s) -> Coproc_await (flag, translate_conf s)
+        | Eawait (flag, s) -> Coproc_await (flag, translate_conf s)
 
-	| Eawait_val (flag1, flag2, s, patt, proc) ->
-	    Coproc_await_val (flag1,
-			      flag2,
-			      translate_ml s,
-			      translate_pattern patt,
-			      translate_proc proc)
+        | Eawait_val (flag1, flag2, s, patt, proc) ->
+            Coproc_await_val (flag1,
+                              flag2,
+                              translate_ml s,
+                              translate_pattern patt,
+                              translate_proc proc)
 
-	| _ ->
-	    raise (Internal (p.e_loc,
-			     "Reac2lco.translate_proc: expr"))
-	end
+        | _ ->
+            raise (Internal (p.e_loc,
+                             "Reac2lco.translate_proc: expr"))
+        end
     end
   in
   make_proc coproc p.e_loc
@@ -457,10 +457,10 @@ and translate_conf conf =
     | Cpresent e -> Coconf_present (translate_ml e)
 
     | Cand (c1,c2) ->
-	Coconf_and (translate_conf c1, translate_conf c2)
+        Coconf_and (translate_conf c1, translate_conf c2)
 
     | Cor (c1,c2) ->
-	Coconf_or (translate_conf c1, translate_conf c2)
+        Coconf_or (translate_conf c1, translate_conf c2)
 
   in
   make_conf coconf conf.conf_loc
@@ -471,69 +471,69 @@ and translate_proc_let =
     match patt_expr_list with
     | [] -> true
     | (_, expr) :: tl ->
-	if expr.e_static <> Static.Static then
-	  false
-	else
-	  is_static tl
+        if expr.e_static <> Static.Static then
+          false
+        else
+          is_static tl
   in
   fun rec_flag patt_expr_list proc ->
     if is_static patt_expr_list then
       begin match rec_flag, patt_expr_list with
       | Nonrecursive, [(patt, expr)] ->
-	  Coproc_def ((translate_pattern patt, translate_ml expr),
-		      translate_proc proc)
+          Coproc_def ((translate_pattern patt, translate_ml expr),
+                      translate_proc proc)
       | _ ->
           (* x, C y = e1 and z = e2                              *)
           (* is translated in                                    *)
           (* x,y,z = let x, C y = e1 and z = e2 in x,y,z         *)
-	  let vars =
-	    List.fold_left
-	      (fun vars (patt,_) -> (Reac_utils.vars_of_patt patt) @ vars)
-	      [] patt_expr_list
-	  in
-	  let rexpr_and_copatt_of_var x =
-	    match x with
-	    | Vlocal id ->
-		Reac_utils.make_expr (Elocal id) Location.none,
-		make_patt (Copatt_var (Covarpatt_local id)) Location.none
-	    | Vglobal gl -> assert false
-	  in
-	  let rexpr_of_vars, copatt_of_vars =
-	    List.fold_left
-	      (fun (el,pl) var ->
-		let e, p = rexpr_and_copatt_of_var var in
-		e::el, p::pl)
-	      ([],[])
-	      vars
-	  in
-	  let body =
-	    translate_ml
-	      (Reac_utils.make_expr
-		 (Elet(rec_flag,
-			    patt_expr_list,
-			    Reac_utils.make_expr
-			      (Etuple rexpr_of_vars)
-			      Location.none))
-		 Location.none)
-	  in
-	  Coproc_def
-	    ((make_patt (Copatt_tuple copatt_of_vars) Location.none, body),
-	     translate_proc proc)
+          let vars =
+            List.fold_left
+              (fun vars (patt,_) -> (Reac_utils.vars_of_patt patt) @ vars)
+              [] patt_expr_list
+          in
+          let rexpr_and_copatt_of_var x =
+            match x with
+            | Vlocal id ->
+                Reac_utils.make_expr (Elocal id) Location.none,
+                make_patt (Copatt_var (Covarpatt_local id)) Location.none
+            | Vglobal gl -> assert false
+          in
+          let rexpr_of_vars, copatt_of_vars =
+            List.fold_left
+              (fun (el,pl) var ->
+                let e, p = rexpr_and_copatt_of_var var in
+                e::el, p::pl)
+              ([],[])
+              vars
+          in
+          let body =
+            translate_ml
+              (Reac_utils.make_expr
+                 (Elet(rec_flag,
+                            patt_expr_list,
+                            Reac_utils.make_expr
+                              (Etuple rexpr_of_vars)
+                              Location.none))
+                 Location.none)
+          in
+          Coproc_def
+            ((make_patt (Copatt_tuple copatt_of_vars) Location.none, body),
+             translate_proc proc)
       end
     else
       begin match patt_expr_list with
       | [(patt, expr)] ->
-	  Coproc_def_dyn
-	    ((translate_pattern patt, translate_proc expr),
-	     translate_proc proc)
+          Coproc_def_dyn
+            ((translate_pattern patt, translate_proc expr),
+             translate_proc proc)
       | _ ->
 (*
-	  Coproc_def_and_dyn
-	    (List.map
-	       (fun (patt,expr) ->
-		 (translate_pattern patt, translate_proc expr))
-	       patt_expr_list,
-	     translate_proc proc)
+          Coproc_def_and_dyn
+            (List.map
+               (fun (patt,expr) ->
+                 (translate_pattern patt, translate_proc expr))
+               patt_expr_list,
+             translate_proc proc)
 *)
           (*  let x1 = e1                                  *)
           (*  and x2 = e2                                  *)
@@ -550,150 +550,150 @@ and translate_proc_let =
           (*    | Some v1, Some v2 -> v1, v2               *)
           (*    | _ -> assert false                        *)
           (*  in e                                         *)
-	  let ref_global =
-	    Modules.find_value_desc (Initialization.pervasives_val "ref")
-	  in
-	  let set_global =
-	    Modules.find_value_desc (Initialization.pervasives_val ":=")
-	  in
-	  let deref_global =
-	    Modules.find_value_desc (Initialization.pervasives_val "!")
-	  in
-	  let id_array =
-	    Array.init (List.length patt_expr_list)
-	      (fun i -> Ident.create Ident.gen_var ("v"^(string_of_int i))
-		  Ident.Internal)
-	  in
-	  let par =
-	    Coproc_par
-	      (List.fold_right2
-		 (fun id (_, expr) expr_list ->
-		   let local_id =
-		     Ident.create Ident.gen_var "x" Ident.Internal
-		   in
-		   make_proc
-		     (Coproc_def_dyn
-			( (* let x_i = e_i *)
-			 (make_patt
-			    (Copatt_var (Covarpatt_local local_id))
-			    Location.none,
-			  translate_proc expr),
-			  (* in ref_i := Some x1*)
-			 make_proc
-			   (Coproc_compute
-			      (make_expr
-				 (Coexpr_apply
-				    (make_expr
-				       (Coexpr_global set_global)
-				       Location.none,
-				     [make_expr (Coexpr_local id)
-					Location.none;
-				      make_expr
-					(Coexpr_construct
-					   (Initialization.some_constr_desc,
-					    Some
-					      (make_expr
-						 (Coexpr_local local_id)
-						 Location.none)))
-					Location.none;]))
-				 Location.none))
-			   Location.none))
-		     Location.none
-		   :: expr_list)
-		 (Array.to_list id_array) patt_expr_list [])
-	  in
-	  let let_match =
-	    Coproc_def
-	      ((make_patt
-		  (Copatt_tuple
-		     (List.fold_right
-			(fun (patt, _) patt_list ->
-			  (translate_pattern patt) :: patt_list)
-			patt_expr_list []))
-		  Location.none,
+          let ref_global =
+            Modules.find_value_desc (Initialization.pervasives_val "ref")
+          in
+          let set_global =
+            Modules.find_value_desc (Initialization.pervasives_val ":=")
+          in
+          let deref_global =
+            Modules.find_value_desc (Initialization.pervasives_val "!")
+          in
+          let id_array =
+            Array.init (List.length patt_expr_list)
+              (fun i -> Ident.create Ident.gen_var ("v"^(string_of_int i))
+                  Ident.Internal)
+          in
+          let par =
+            Coproc_par
+              (List.fold_right2
+                 (fun id (_, expr) expr_list ->
+                   let local_id =
+                     Ident.create Ident.gen_var "x" Ident.Internal
+                   in
+                   make_proc
+                     (Coproc_def_dyn
+                        ( (* let x_i = e_i *)
+                         (make_patt
+                            (Copatt_var (Covarpatt_local local_id))
+                            Location.none,
+                          translate_proc expr),
+                          (* in ref_i := Some x1*)
+                         make_proc
+                           (Coproc_compute
+                              (make_expr
+                                 (Coexpr_apply
+                                    (make_expr
+                                       (Coexpr_global set_global)
+                                       Location.none,
+                                     [make_expr (Coexpr_local id)
+                                        Location.none;
+                                      make_expr
+                                        (Coexpr_construct
+                                           (Initialization.some_constr_desc,
+                                            Some
+                                              (make_expr
+                                                 (Coexpr_local local_id)
+                                                 Location.none)))
+                                        Location.none;]))
+                                 Location.none))
+                           Location.none))
+                     Location.none
+                   :: expr_list)
+                 (Array.to_list id_array) patt_expr_list [])
+          in
+          let let_match =
+            Coproc_def
+              ((make_patt
+                  (Copatt_tuple
+                     (List.fold_right
+                        (fun (patt, _) patt_list ->
+                          (translate_pattern patt) :: patt_list)
+                        patt_expr_list []))
+                  Location.none,
 
-		make_expr
-		  (Coexpr_match
-		     ((make_expr
-			 (Coexpr_tuple
-			    (Array.fold_right
-			       (fun id expr_list ->
-				 make_expr
-				   (Coexpr_apply
-				      ((make_expr
-					  (Coexpr_global deref_global)
-					  Location.none,
-					[make_expr (Coexpr_local id)
-					   Location.none])))
-				   Location.none
-				 :: expr_list)
-			       id_array []))
-			 Location.none),
-		      [(make_patt
-			  (Copatt_tuple
-			     (Array.fold_right
-				(fun id patt_list ->
-				  make_patt
-				    (Copatt_construct
-				       (Initialization.some_constr_desc,
-					Some
-					  (make_patt
-					     (Copatt_var (Covarpatt_local id))
-					     Location.none)))
-				    Location.none
-				  :: patt_list)
-				id_array []))
-			  Location.none,
-			make_expr
-			  (Coexpr_tuple
-			     (Array.fold_right
-				(fun id expr_list ->
-				  make_expr (Coexpr_local id) Location.none
-				  :: expr_list)
-				id_array []))
-			  Location.none);
-		       (make_patt (Copatt_any) Location.none,
-			make_expr (Coexpr_assert
-				     (make_expr (Coexpr_constant
-						   (Const_bool false))
-					Location.none))
-			  Location.none)]))
-		  Location.none),
-	       translate_proc proc)
-	  in
-	  Coproc_def
-	    ((make_patt
-		(Copatt_tuple
-		   (Array.fold_right
-		      (fun id patt_list ->
-			(make_patt
-			   (Copatt_var (Covarpatt_local id))
-			   Location.none)
-			:: patt_list)
-		      id_array []))
-		Location.none,
-	      make_expr
-		(Coexpr_tuple
-		   (Array.fold_left
-		      (fun expr_list id ->
-			(make_expr
-			   (Coexpr_apply
-			      (make_expr
-				 (Coexpr_global ref_global)
-				 Location.none,
-			       [ make_expr
-				   (Coexpr_construct
-				      (Initialization.none_constr_desc, None))
-				   Location.none ]))
-			   Location.none)
-			:: expr_list)
-		      [] id_array))
-		Location.none),
-	     make_proc
-	       (Coproc_seq
-		  (make_proc par Location.none,
-		   make_proc let_match Location.none))
-	       Location.none)
+                make_expr
+                  (Coexpr_match
+                     ((make_expr
+                         (Coexpr_tuple
+                            (Array.fold_right
+                               (fun id expr_list ->
+                                 make_expr
+                                   (Coexpr_apply
+                                      ((make_expr
+                                          (Coexpr_global deref_global)
+                                          Location.none,
+                                        [make_expr (Coexpr_local id)
+                                           Location.none])))
+                                   Location.none
+                                 :: expr_list)
+                               id_array []))
+                         Location.none),
+                      [(make_patt
+                          (Copatt_tuple
+                             (Array.fold_right
+                                (fun id patt_list ->
+                                  make_patt
+                                    (Copatt_construct
+                                       (Initialization.some_constr_desc,
+                                        Some
+                                          (make_patt
+                                             (Copatt_var (Covarpatt_local id))
+                                             Location.none)))
+                                    Location.none
+                                  :: patt_list)
+                                id_array []))
+                          Location.none,
+                        make_expr
+                          (Coexpr_tuple
+                             (Array.fold_right
+                                (fun id expr_list ->
+                                  make_expr (Coexpr_local id) Location.none
+                                  :: expr_list)
+                                id_array []))
+                          Location.none);
+                       (make_patt (Copatt_any) Location.none,
+                        make_expr (Coexpr_assert
+                                     (make_expr (Coexpr_constant
+                                                   (Const_bool false))
+                                        Location.none))
+                          Location.none)]))
+                  Location.none),
+               translate_proc proc)
+          in
+          Coproc_def
+            ((make_patt
+                (Copatt_tuple
+                   (Array.fold_right
+                      (fun id patt_list ->
+                        (make_patt
+                           (Copatt_var (Covarpatt_local id))
+                           Location.none)
+                        :: patt_list)
+                      id_array []))
+                Location.none,
+              make_expr
+                (Coexpr_tuple
+                   (Array.fold_left
+                      (fun expr_list id ->
+                        (make_expr
+                           (Coexpr_apply
+                              (make_expr
+                                 (Coexpr_global ref_global)
+                                 Location.none,
+                               [ make_expr
+                                   (Coexpr_construct
+                                      (Initialization.none_constr_desc, None))
+                                   Location.none ]))
+                           Location.none)
+                        :: expr_list)
+                      [] id_array))
+                Location.none),
+             make_proc
+               (Coproc_seq
+                  (make_proc par Location.none,
+                   make_proc let_match Location.none))
+               Location.none)
       end
 
 let translate_impl_item info_chan item =
@@ -701,33 +701,33 @@ let translate_impl_item info_chan item =
     match item.impl_desc with
     | Iexpr e -> Coimpl_expr (translate_ml e)
     | Ilet (flag, l) ->
-	Coimpl_let (flag,
-		   List.map
-		     (fun (p,e) -> (translate_pattern p, translate_ml e))
-		     l)
+        Coimpl_let (flag,
+                   List.map
+                     (fun (p,e) -> (translate_pattern p, translate_ml e))
+                     l)
     | Isignal (l) ->
-	Coimpl_signal
-	  (List.map
-	     (fun ((s, ty_opt), comb_opt) ->
-	       (s, opt_map translate_te ty_opt),
-	       opt_map
-		 (fun (e1,e2) ->(translate_ml e1, translate_ml e2))
-		 comb_opt)
-	     l)
+        Coimpl_signal
+          (List.map
+             (fun ((s, ty_opt), comb_opt) ->
+               (s, opt_map translate_te ty_opt),
+               opt_map
+                 (fun (e1,e2) ->(translate_ml e1, translate_ml e2))
+                 comb_opt)
+             l)
     | Itype l ->
-	let l =
-	  List.map
-	    (fun (name, param, typ) ->
-	      (name, param, translate_type_decl typ))
-	    l
-	in
-	Coimpl_type l
+        let l =
+          List.map
+            (fun (name, param, typ) ->
+              (name, param, translate_type_decl typ))
+            l
+        in
+        Coimpl_type l
     | Iexn (name, typ) ->
-	Coimpl_exn (name, opt_map translate_te typ)
+        Coimpl_exn (name, opt_map translate_te typ)
     | Iexn_rebind (name, gl_name) ->
-	Coimpl_exn_rebind(name, gl_name)
+        Coimpl_exn_rebind(name, gl_name)
     | Iopen s ->
-	Coimpl_open s
+        Coimpl_open s
   in
   make_impl coitem item.impl_loc
 
@@ -737,16 +737,16 @@ let translate_intf_item info_chan item =
     | Dval (gl, typ) -> Cointf_val (gl, translate_te typ)
 
     | Dtype l ->
-	let l =
-	  List.map
-	    (fun (name, param, typ) ->
-	      (name, param, translate_type_decl typ))
-	    l
-	in
-	Cointf_type l
+        let l =
+          List.map
+            (fun (name, param, typ) ->
+              (name, param, translate_type_decl typ))
+            l
+        in
+        Cointf_type l
 
     | Dexn (name, typ) ->
-	Cointf_exn (name, opt_map translate_te typ)
+        Cointf_exn (name, opt_map translate_te typ)
 
     | Dopen m -> Cointf_open m
 
