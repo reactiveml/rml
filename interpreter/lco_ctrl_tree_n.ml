@@ -44,7 +44,7 @@ module Rml_interpreter =
     type event_cfg = bool -> (unit -> bool) * R.waiting_list list
 
     type join_point = int ref option
-    and 'a expr = 'a R.Step.t -> R.control_tree -> join_point -> R.context -> unit R.Step.t
+    and 'a expr = 'a R.Step.t -> R.control_tree -> join_point -> R.clock_domain -> unit R.Step.t
     and 'a process = unit -> 'a expr
 
     let unit_value = ()
@@ -191,8 +191,8 @@ module Rml_interpreter =
 (* await_immediate                    *)
 (**************************************)
     let step_await_immediate f_k ctrl cd (n,wa,wp) =
-      let w = if ctrl.kind = Top then wa else wp in
-      if ctrl.kind = Top then
+      let w = if R.is_toplevel ctrl then wa else wp in
+      if R.is_toplevel ctrl then
         let rec f_await_top =
           fun _ ->
             if R.Event.status n
@@ -235,7 +235,7 @@ module Rml_interpreter =
 (**************************************)
     let rml_await_immediate_conf expr_cfg =
       fun f_k ctrl jp cd ->
-        if ctrl.kind = Top then
+        if R.is_toplevel ctrl then
           let f_await_top =
             fun _ ->
               let is_true, w_list = expr_cfg true in
@@ -335,9 +335,9 @@ module Rml_interpreter =
 (* await_immediate_one                *)
 (**************************************)
     let step_await_immediate_one f_k ctrl jp cd (n,wa,wp) p =
-      let w = if ctrl.kind = Top then wa else wp in
+      let w = if R.is_toplevel ctrl then wa else wp in
       let f_await_one =
-        if ctrl.kind = Top then
+        if R.is_toplevel ctrl then
           let rec f_await_one_top =
             fun _ ->
               if R.Event.status n
@@ -381,9 +381,9 @@ module Rml_interpreter =
 (* await_all_match                    *)
 (**************************************)
     let step_await_all_match f_k ctrl jp cd (n,wa,wp) matching p =
-      let w = if ctrl.kind = Top then wa else wp in
+      let w = if R.is_toplevel ctrl then wa else wp in
       let f_await_all_match =
-        if ctrl.kind = Top then
+        if R.is_toplevel ctrl then
           let rec f_await_top =
             fun _ ->
               if is_eoi cd
@@ -920,7 +920,7 @@ let rml_loop p =
 (**************************************)
 
     let step_when f_k ctrl cd (n,wa,wp) f new_ctrl dummy =
-      let w = if ctrl.kind = Top then wa else wp in
+      let w = if R.is_toplevel ctrl then wa else wp in
       new_ctrl.cond <- (fun () -> R.Event.status n);
       let rec f_when =
         fun _ ->
@@ -934,7 +934,7 @@ let rml_loop p =
               R.add_next f_when ctrl.next
             else
               (R.add_waiting f_when w;
-               if ctrl.kind <> Top then add_weoi_waiting_list cd w)
+               if not (R.is_toplevel ctrl) then add_weoi_waiting_list cd w)
       in
       let start_when =
         fun _ ->
@@ -958,7 +958,7 @@ let rml_loop p =
              R.add_next f new_ctrl.next;
              R.clear_next new_ctrl.next_boi;
              R.add_waiting f_when w;
-             if ctrl.kind <> Top then add_weoi_waiting_list cd w)
+             if not (R.is_toplevel ctrl) then add_weoi_waiting_list cd w)
       in
       dummy := f_when;
       start_when
@@ -1187,6 +1187,35 @@ let rml_loop p =
             fold p_list f_k ctrl jp cd
           in f
 
+    (* clock domain *)
+    let eoi_clock_domain cd () =
+      R.eoi cd
+
+    let step_clock_domain cd new_cd new_ctrl =
+      let rec f_cd () =
+        R.schedule new_cd;
+        if R.macro_step_done new_cd then (
+          R.add_weoi cd (eoi_clock_domain new_cd);
+          R.add_next f_cd cd.cd_top.next;
+        ) else (
+          R.eoi new_cd;
+          (* execute again in the same step but yield for now*)
+          R.add_current f_cd cd
+        )
+      in
+      f_cd
+
+    let end_clock_domain f_k new_ctrl x =
+      end_ctrl f_k new_ctrl ();
+      f_k x
+
+    let rml_clock_domain p f_k =
+      fun ctrl jp cd ->
+        let new_cd = R.mk_clock_domain () in
+        let new_ctrl = new_cd.cd_top in
+        let f = p (end_clock_domain f_k new_ctrl) new_ctrl None new_cd in
+        add_current f new_cd;
+        step_clock_domain cd new_cd new_ctrl
 
     let rml_make cd result p =
      (* Function to create the last continuation of a toplevel process *)
@@ -1201,7 +1230,7 @@ let rml_loop p =
               result := Some x
           in f
       in
-      p () (join_end()) R.top jp cd
+      p () (join_end()) cd.cd_top jp cd
 
 
 end (* Module Rml_interpreter *)

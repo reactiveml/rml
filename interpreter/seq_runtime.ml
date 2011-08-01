@@ -21,12 +21,11 @@ struct
           next: next;
           next_boi: next; }
     and control_type =
-        Top
+      | Clock_domain of clock_domain
       | Kill of unit step
       | Kill_handler of (unit -> unit step)
       | Susp
       | When of unit step ref
-      (*| Clock_domain of clock_domain *)
 
     and clock_domain =
         { cd_current : current;
@@ -36,9 +35,8 @@ struct
           mutable cd_wake_up : waiting_list list;
           (* waiting lists to wake up at the end of the instant*)
           cd_clock : Event.clock;
+          mutable cd_top : control_tree;
         }
-
-    type context = clock_domain
 
     let mk_current () = ref ([] : unit step list)
     let add_current p ctx =
@@ -62,24 +60,6 @@ struct
     let clear_next next =
       next := []
 
-    let mk_context () =
-      { cd_current = mk_current ();
-        cd_pause_clock = ref false;
-        cd_eoi = ref false;
-        cd_weoi = mk_waiting_list ();
-        cd_wake_up = [];
-        cd_clock = Event.init_clock ();
-      }
-    let main_context = mk_context ()
-    let is_eoi context = !(context.cd_eoi)
-    let add_weoi context p =
-      add_waiting p context.cd_weoi
-    let add_weoi_waiting_list context w =
-      context.cd_wake_up <- w :: context.cd_wake_up
-
-    let wake_up_all ck =
-      List.iter (fun wp -> add_current_waiting_list wp ck) ck.cd_wake_up;
-      ck.cd_wake_up <- []
 
     let new_ctrl ?(cond = (fun () -> false)) kind =
       { kind = kind;
@@ -87,16 +67,6 @@ struct
         susp = false;
         children = [];
         cond = cond;
-        next = mk_next ();
-        next_boi = mk_next (); }
-
-    (* racine de l'arbre de control *)
-    let top =
-      { kind = Top;
-        alive = true;
-        susp = false;
-        children = [];
-        cond = (fun () -> false);
         next = mk_next ();
         next_boi = mk_next (); }
 
@@ -109,16 +79,21 @@ struct
       List.iter set_kill p.children;
       p.children <- []
 
+    let is_toplevel ctrl = match ctrl.kind with
+      | Clock_domain _ -> true
+      | _ -> false
 
 (* calculer le nouvel etat de l'arbre de control *)
 (* et deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
-    let eval_control_and_next_to_current =
+    let eval_control_and_next_to_current cd =
       let rec eval pere p active =
         if p.alive then
           match p.kind with
-          | Top -> raise RML
-          | Kill f_k ->
+            | Clock_domain cd' ->
+              p.children <- eval_children p p.children active [];
+              true
+            | Kill f_k ->
               if p.cond()
               then
                 (add_next f_k pere.next;
@@ -126,7 +101,7 @@ struct
                  false)
               else
                 (p.children <- eval_children p p.children active [];
-                 if active then next_to_current main_context p
+                 if active then next_to_current cd p
                  else next_to_father pere p;
                  true)
           | Kill_handler handler ->
@@ -137,7 +112,7 @@ struct
                  false)
               else
                 (p.children <- eval_children p p.children active [];
-                 if active then next_to_current main_context p
+                 if active then next_to_current cd p
                  else next_to_father pere p;
                  true)
           | Susp ->
@@ -146,11 +121,11 @@ struct
               let active = active && not p.susp in
               if pre_susp
               then
-                (if active then next_to_current main_context p;
+                (if active then next_to_current cd p;
                  true)
               else
                 (p.children <- eval_children p p.children active [];
-                 if active then next_to_current main_context p
+                 if active then next_to_current cd p
                  else if not p.susp then next_to_father pere p;
                  true)
           | When f_when ->
@@ -180,22 +155,45 @@ struct
         add_next_next node.next pere.next;
         add_next_next node.next_boi pere.next_boi;
       in
-      fun () ->
-        top.children <- eval_children top top.children true [];
-        next_to_current main_context top
+        cd.cd_top.children <- eval_children cd.cd_top cd.cd_top.children true [];
+        next_to_current cd cd.cd_top
 
 (* deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
-    let rec next_to_current ck p =
+    let rec next_to_current cd p =
       if p.alive && not p.susp then
-        (add_current_next p.next ck;
-         List.iter (next_to_current main_context) p.children;
-         add_current_next p.next_boi ck)
+        (add_current_next p.next cd;
+         List.iter (next_to_current cd) p.children;
+         add_current_next p.next_boi cd)
+
+
+    let mk_clock_domain () =
+      let cd = { cd_current = mk_current ();
+                 cd_pause_clock = ref false;
+                 cd_eoi = ref false;
+                 cd_weoi = mk_waiting_list ();
+                 cd_wake_up = [];
+                 cd_clock = Event.init_clock ();
+                 cd_top = new_ctrl Susp; (* use a phony value*)
+               }
+      in
+      cd.cd_top <- new_ctrl (Clock_domain cd); (*and set the correct value here*)
+      cd
+
+    let main_context = mk_clock_domain ()
+    let is_eoi cd = !(cd.cd_eoi)
+    let add_weoi cd p =
+      add_waiting p cd.cd_weoi
+    let add_weoi_waiting_list cd w =
+      cd.cd_wake_up <- w :: cd.cd_wake_up
 
 (* debloquer les processus en attent d'un evt *)
     let wake_up ck w =
       add_current_waiting_list w ck
 
+    let wake_up_all ck =
+      List.iter (fun wp -> add_current_waiting_list wp ck) ck.cd_wake_up;
+      ck.cd_wake_up <- []
 
 (* creation d'evenements *)
     let new_evt_combine cd default combine =
@@ -208,30 +206,35 @@ struct
     let add_step p =
       add_current p main_context
 
-    let schedule current =
+    let schedule cd =
       let ssched () =
-      match !current with
+      match !(cd.cd_current) with
       | f :: c ->
-        current := c;
+        cd.cd_current := c;
         Step.exec f
       | [] -> ()
       in
       ssched ();
-      while !current <> [] do
+      while !(cd.cd_current) <> [] do
         ssched ();
       done
 
+    let eoi cd =
+      cd.cd_eoi := true;
+      wake_up cd cd.cd_weoi;
+      wake_up_all cd;
+      schedule cd;
+      eval_control_and_next_to_current cd;
+      Event.next cd.cd_clock;
+      cd.cd_eoi := false
+
+    let macro_step_done cd =
+      !(cd.cd_top.next) = []
 
     (* the react function *)
     let react () =
-      schedule main_context.cd_current;
-      main_context.cd_eoi := true;
-      wake_up main_context main_context.cd_weoi;
-      wake_up_all main_context;
-      schedule main_context.cd_current;
-      eval_control_and_next_to_current ();
-      Event.next main_context.cd_clock;
-      main_context.cd_eoi := false
+      schedule main_context;
+      eoi main_context
 end
 
 module SimpleStep =
@@ -248,7 +251,7 @@ struct
   module I = Interpreter(R)
 
   let rml_make p =
-    let ctx = R.mk_context () in
+    let ctx = R.mk_clock_domain () in
     let result = ref None in
     let step = I.rml_make ctx result p in
     (*R.init ();*)

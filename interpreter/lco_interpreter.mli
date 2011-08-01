@@ -31,18 +31,18 @@ module type S =
     type 'a expr
     and 'a process = unit -> 'a expr
 
-    val rml_make: R.context -> 'a option ref -> 'a process -> unit R.Step.t
+    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.Step.t
 
     val rml_pre_status: ('a, 'b) R.event -> bool
     val rml_pre_value: ('a, 'b) R.event -> 'b
     val rml_last: ('a, 'b) R.event -> 'b
     val rml_default: ('a, 'b) R.event -> 'b
 
-    val rml_expr_emit: R.context -> (unit, 'b) R.event -> unit
-    val rml_expr_emit_val: R.context -> ('a, 'b) R.event -> 'a -> unit
+    val rml_expr_emit: R.clock_domain -> (unit, 'b) R.event -> unit
+    val rml_expr_emit_val: R.clock_domain -> ('a, 'b) R.event -> 'a -> unit
 
-    val rml_global_signal: R.context -> ('a, 'a list) R.event
-    val rml_global_signal_combine: R.context -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
+    val rml_global_signal: R.clock_domain -> ('a, 'a list) R.event
+    val rml_global_signal_combine: R.clock_domain -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
 
     val cfg_present': ('a,'b) R.event -> event_cfg
     val cfg_present: (unit -> ('a,'b) R.event) -> event_cfg
@@ -50,7 +50,7 @@ module type S =
     val cfg_or: event_cfg -> event_cfg -> event_cfg
 
     val rml_nothing: unit expr
-    val rml_compute: (R.context -> unit -> 'a) -> 'a expr
+    val rml_compute: (R.clock_domain -> unit -> 'a) -> 'a expr
     val rml_pause: unit expr
     val rml_halt: 'a expr
     val rml_pause_kboi: unit expr

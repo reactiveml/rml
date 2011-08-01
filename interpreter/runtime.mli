@@ -16,7 +16,6 @@ sig
   type waiting_list
   type next
   type ('a, 'b) event = ('a, 'b) Event.t * waiting_list * waiting_list
-  type context
 
   exception RML
 
@@ -29,29 +28,42 @@ sig
         next: next;
         next_boi: next; }
   and control_type =
-      Top
+    | Clock_domain of clock_domain
     | Kill of unit step
     | Kill_handler of (unit -> unit step)
     | Susp
     | When of unit step ref
-    (*| Clock_domain of clock_domain*)
+  and clock_domain =
+      { cd_current : current;
+        cd_pause_clock: bool ref; (* end of macro instant *)
+        cd_eoi : bool ref; (* is it the eoi of this clock *)
+        cd_weoi : waiting_list; (* processes waiting for eoi *)
+        mutable cd_wake_up : waiting_list list;
+          (* waiting lists to wake up at the end of the instant*)
+        cd_clock : Event.clock;
+        mutable cd_top : control_tree;
+      }
+
   (* functions on the control tree *)
   val new_ctrl : ?cond: (unit -> bool) -> control_type -> control_tree
+  val is_toplevel : control_tree -> bool
   val set_kill : control_tree -> unit
-  val next_to_current : context -> control_tree -> unit
+  val next_to_current : clock_domain -> control_tree -> unit
 
   (* functions on the current data structure *)
   val mk_current : unit -> current
-  val add_current : unit step -> context -> unit
-  val add_current_list : unit step list -> context -> unit
+  val add_current : unit step -> clock_domain -> unit
+  val add_current_list : unit step list -> clock_domain -> unit
   (* Adds all elements of a waiting list or next to current and empty it. *)
-  val add_current_waiting_list : waiting_list -> context -> unit
-  val add_current_next : next -> context -> unit
+  val add_current_waiting_list : waiting_list -> clock_domain -> unit
+  val add_current_next : next -> clock_domain -> unit
 
   (* scheduling *)
   val add_step : unit step -> unit
   val react : unit -> unit
-  val schedule : current -> unit
+  val schedule : clock_domain -> unit
+  val eoi : clock_domain -> unit
+  val macro_step_done : clock_domain -> bool
 
   (*functions on waiting list*)
   val mk_waiting_list : unit -> waiting_list
@@ -64,14 +76,12 @@ sig
   val clear_next : next -> unit
 
   (* events *)
-  val new_evt : context -> ('a, 'a list) event
-  val new_evt_combine : context -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+  val new_evt : clock_domain -> ('a, 'a list) event
+  val new_evt_combine : clock_domain -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
 
   (* various functions on the context *)
-  val mk_context : unit -> context
-  val is_eoi : context -> bool
-  val add_weoi : context -> unit step -> unit
-  val add_weoi_waiting_list : context -> waiting_list -> unit
-
-  val top : control_tree
+  val mk_clock_domain : unit -> clock_domain
+  val is_eoi : clock_domain -> bool
+  val add_weoi : clock_domain -> unit step -> unit
+  val add_weoi_waiting_list : clock_domain -> waiting_list -> unit
 end
