@@ -104,6 +104,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "module", MODULE;
     "mutable", MUTABLE;
     "new", NEW;
+    "newclock", NEWCLOCK;
     "nothing", NOTHING;
     "object", OBJECT;
     "of", OF;

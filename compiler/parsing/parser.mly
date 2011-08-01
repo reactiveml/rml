@@ -272,6 +272,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token MUTABLE             /* "mutable" */
 %token <nativeint> NATIVEINT
 %token NEW                 /* "new" */
+%token NEWCLOCK            /* "newclock" */
 %token NOTHING             /* "nothing" */
 %token OBJECT              /* "object" */
 %token OF                  /* "of" */
@@ -348,7 +349,7 @@ The precedences must be listed from low to high.
 %nonassoc BARBAR BARGRATER              /* below SEMI e; e || e*/
 %nonassoc below_SEMI
 %nonassoc SEMI                          /* below EQUAL ({lbl=...; lbl=...}) */
-%nonassoc LET SIGNAL DO DOPAR           /* above SEMI ( ...; let ... in ...) */
+%nonassoc LET SIGNAL DO DOPAR NEWCLOCK  /* above SEMI ( ...; let ... in ...) */
 %nonassoc below_WITH
 %nonassoc FUNCTION WITH                 /* below BAR  (match ... with ...) */
 %nonassoc AND             /* above WITH (module rec A: SIG with ... and ...) */
@@ -622,6 +623,8 @@ expr:
       { $2 }
   | RUN simple_expr
       { mkexpr(Pexpr_run($2)) }
+  | NEWCLOCK LIDENT IN par_expr
+      { mkexpr (Pexpr_newclock (mksimple $2 2, $4)) }
 ;
 simple_expr:
     val_longident

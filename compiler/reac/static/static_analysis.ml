@@ -550,6 +550,13 @@ let rec static_expr ctx e =
           else expr_wrong_static_err s
         else
           expr_wrong_static_err p
+
+    | Enewclock (id, p) ->
+        if ctx = Process
+        then
+          let _typ = static_expr ctx p in
+          Dynamic Dontknow
+        else expr_wrong_static_err e
   in
   e.e_static <- t;
   t

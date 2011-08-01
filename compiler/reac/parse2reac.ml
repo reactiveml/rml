@@ -495,6 +495,12 @@ let rec translate env e =
                          rpatt,
                          translate new_env expr)
 
+    | Pexpr_newclock (x, e) ->
+      let id = Ident.create Ident.gen_var x.psimple_id Ident.Val_ML in
+      let env = Env.add x.psimple_id id env in
+      Enewclock (id, translate env e)
+
+
     | Pexpr_get _ ->
         raise (Internal (e.pexpr_loc,
                          "Parse2reac.translate: expr"))

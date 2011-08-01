@@ -1188,6 +1188,9 @@ let rml_loop p =
           in f
 
     (* clock domain *)
+    let rml_new_clock_domain () =
+      R.mk_clock_domain ()
+
     let eoi_clock_domain cd () =
       R.eoi cd
 
@@ -1206,16 +1209,15 @@ let rml_loop p =
       f_cd
 
     let end_clock_domain f_k new_ctrl x =
-      end_ctrl f_k new_ctrl ();
-      f_k x
+      end_ctrl f_k new_ctrl x
 
-    let rml_clock_domain p f_k =
-      fun ctrl jp cd ->
-        let new_cd = R.mk_clock_domain () in
+    let rml_at_clock_domain new_cd p =
+      fun f_k ctrl jp cd ->
         let new_ctrl = new_cd.cd_top in
         let f = p (end_clock_domain f_k new_ctrl) new_ctrl None new_cd in
         add_current f new_cd;
         step_clock_domain cd new_cd new_ctrl
+
 
     let rml_make cd result p =
      (* Function to create the last continuation of a toplevel process *)

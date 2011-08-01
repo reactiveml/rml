@@ -36,6 +36,8 @@ open Misc
 let make_var s = Ident.create Ident.gen_var s Ident.Internal
 let null_ident = make_var "FAKE_VAR"
 
+let unit_value = make_expr (Cexpr_constant Const_unit) Location.none
+
 (* Translation of type expressions *)
 let rec translate_te typ =
   let ctyp =
@@ -877,6 +879,20 @@ and translate_proc e =
                 (Cexpr_function [cpatt, translate_proc k])
                 Location.none])
 *)
+
+    | Coproc_newclock (id, p) ->
+      let newck =
+        make_expr
+          (Cexpr_apply (make_instruction "rml_new_clock_domain", [unit_value]))
+          Location.none
+      in
+      let atck =
+        make_expr
+          (Cexpr_apply (make_instruction "rml_at_clock_domain",
+                        [make_expr_var_local id; translate_proc p]))
+          Location.none
+      in
+      Cexpr_let (Nonrecursive, [(make_patt_var_local id, newck)], atck)
   in
   make_expr cexpr e.coproc_loc
 

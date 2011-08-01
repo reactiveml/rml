@@ -94,6 +94,8 @@ and expression_desc =
   | Pexpr_pre of pre_kind * expression
   | Pexpr_last of expression
   | Pexpr_default of expression
+  (*reparml related expreessions *)
+  | Pexpr_newclock of simple_ident * expression
 (* event configuration *)
   | Pconf_present of expression
   | Pconf_and of event_config * event_config

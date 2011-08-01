@@ -442,6 +442,9 @@ and translate_proc p =
                               translate_pattern patt,
                               translate_proc proc)
 
+        | Enewclock (id, e) ->
+          Coproc_newclock (id, translate_proc e)
+
         | _ ->
             raise (Internal (p.e_loc,
                              "Reac2lco.translate_proc: expr"))

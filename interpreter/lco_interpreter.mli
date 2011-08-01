@@ -132,4 +132,6 @@ module type S =
     val rml_seq_n : expr list -> expr
 *)
 
+    val rml_new_clock_domain : unit -> R.clock_domain
+    val rml_at_clock_domain : R.clock_domain -> 'b expr -> 'b expr
   end

@@ -97,6 +97,8 @@ and expression_desc =
   | Eawait of immediate_flag * event_config
   | Eawait_val of
       immediate_flag * await_kind * expression * pattern * expression
+(*reparml related expressions*)
+  | Enewclock of ident * expression
 
 (* event configuration *)
 and event_config =

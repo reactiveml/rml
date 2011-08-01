@@ -817,6 +817,8 @@ let rec type_of_expression env expr =
         in
         type_of_expression new_env p
 
+    | Enewclock (id, e) -> type_of_expression env e
+
   in
   expr.e_type <- t;
   Stypes.record (Ti_expr expr);
