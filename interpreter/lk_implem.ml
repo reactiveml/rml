@@ -25,12 +25,11 @@
 
 
 module Rml_interpreter: Lk_interpreter.S  =
-  functor (Step : Runtime.STEP with type 'a t = 'a -> unit) ->
-    functor (R : Runtime.R with module Step = Step) ->
+  functor (R : Runtime.R with type 'a Step.t = 'a -> unit) ->
   struct
 
     type event_cfg = bool -> (unit -> bool) * R.waiting_list list
-    and 'a process = 'a Step.t -> R.control_tree -> unit Step.t
+    and 'a process = 'a R.Step.t -> R.control_tree -> unit R.Step.t
     and join_point = int ref
 
     let dummy_step _ = ()

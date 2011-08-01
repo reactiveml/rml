@@ -24,8 +24,7 @@
 
 
 module type S =
-  functor (Step : Runtime.STEP with type 'a t = 'a -> unit) ->
-    functor (R : Runtime.R with module Step = Step) ->
+  functor (R : Runtime.R with type 'a Step.t = 'a -> unit) ->
     sig
       type event_cfg
       and 'a process = 'a R.step -> R.control_tree -> unit R.step

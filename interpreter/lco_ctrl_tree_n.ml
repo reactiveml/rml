@@ -38,14 +38,13 @@
 (*   Gestion du parallele n-aire                                      *)
 
 module Rml_interpreter : Lco_interpreter.S =
-  functor (Step : Runtime.STEP with type 'a t = 'a -> unit) ->
-    functor (R : Runtime.R with module Step = Step) ->
+  functor (R : Runtime.R with type 'a Step.t = 'a -> unit) ->
   struct
 
     type event_cfg = bool -> (unit -> bool) * R.waiting_list list
 
     type join_point = int ref option
-    and 'a expr = 'a Step.t -> R.control_tree -> join_point -> unit Step.t
+    and 'a expr = 'a R.Step.t -> R.control_tree -> join_point -> unit R.Step.t
     and 'a process = unit -> 'a expr
 
     let unit_value = ()

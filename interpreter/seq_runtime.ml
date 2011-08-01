@@ -245,7 +245,7 @@ end
 module LcoSeqI (Interpreter:Lco_interpreter.S) =
 struct
   module R = SeqListRuntime(SimpleStep)(Sig_env.Record)
-  module I = Interpreter(SimpleStep)(R)
+  module I = Interpreter(R)
 
   let rml_make p =
     let result = ref None in
@@ -262,7 +262,7 @@ end
 module LkSeqI (Interpreter:Lk_interpreter.S) =
 struct
   module R = SeqListRuntime(SimpleStep)(Sig_env.Record)
-  module I = Interpreter(SimpleStep)(R)
+  module I = Interpreter(R)
 
   let rml_make p =
     let result = ref None in
