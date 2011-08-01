@@ -198,11 +198,11 @@ struct
 
 
 (* creation d'evenements *)
-    let new_evt_combine default combine =
-      (Event.create main_context.cd_clock default combine, mk_waiting_list (), mk_waiting_list ())
+    let new_evt_combine cd default combine =
+      (Event.create cd.cd_clock default combine, mk_waiting_list (), mk_waiting_list ())
 
-    let new_evt() =
-      new_evt_combine [] (fun x y -> x :: y)
+    let new_evt cd =
+      new_evt_combine cd [] (fun x y -> x :: y)
 (* ------------------------------------------------------------------------ *)
 
     let add_step p =
@@ -248,8 +248,9 @@ struct
   module I = Interpreter(R)
 
   let rml_make p =
+    let ctx = R.mk_context () in
     let result = ref None in
-    let step = I.rml_make result p in
+    let step = I.rml_make ctx result p in
     (*R.init ();*)
     R.add_step step;
     let react () =
@@ -258,7 +259,7 @@ struct
     in
     react
 end
-
+(*
 module LkSeqI (Interpreter:Lk_interpreter.S) =
 struct
   module R = SeqListRuntime(SimpleStep)(Sig_env.Record)
@@ -275,6 +276,6 @@ struct
     in
     react
 end
-
+*)
 module LcoSeqInterpreter = LcoSeqI(Lco_ctrl_tree_n.Rml_interpreter)
-module LkSeqInterpreter = LkSeqI(Lk_implem.Rml_interpreter)
+(*module LkSeqInterpreter = LkSeqI(Lk_implem.Rml_interpreter)*)

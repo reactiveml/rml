@@ -64,8 +64,8 @@ sig
   val clear_next : next -> unit
 
   (* events *)
-  val new_evt : unit -> ('a, 'a list) event
-  val new_evt_combine : 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+  val new_evt : context -> ('a, 'a list) event
+  val new_evt_combine : context -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
 
   (* various functions on the context *)
   val mk_context : unit -> context
@@ -73,6 +73,5 @@ sig
   val add_weoi : context -> unit step -> unit
   val add_weoi_waiting_list : context -> waiting_list -> unit
 
-  val main_context : context
   val top : control_tree
 end
