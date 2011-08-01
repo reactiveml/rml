@@ -261,9 +261,7 @@ let rec translate_ml cd e =
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_global_signal",
-                          [make_expr
-                             (Cexpr_constant Const_unit)
-                             Location.none]))
+                          [make_expr_var_local cd]))
                       Location.none],
                    translate_ml cd e)
 
@@ -273,7 +271,8 @@ let rec translate_ml cd e =
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_global_signal_combine",
-                          [translate_ml cd e1;
+                          [make_expr_var_local cd;
+                           translate_ml cd e1;
                            translate_ml cd e2;]))
                       Location.none],
                    translate_ml cd e)

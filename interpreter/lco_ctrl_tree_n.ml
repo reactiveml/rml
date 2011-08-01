@@ -37,7 +37,7 @@
 (*   Suppression de exec                                              *)
 (*   Gestion du parallele n-aire                                      *)
 
-module Rml_interpreter : Lco_interpreter.S =
+module Rml_interpreter =
   functor (R : Runtime.R with type 'a Step.t = 'a -> unit) ->
   struct
 

@@ -58,14 +58,14 @@ let make_intf it loc =
 let make_instruction s =
   make_expr
     (Cexpr_global
-       { gi = { qual = !interpreter_module;
+       { gi = { qual = "Interpreter";
 		id = Ident.create Ident.gen_var s Ident.Internal };
 	 info = no_info(); })
     Location.none
 
 let make_rml_type s ty_list =
   make_te
-    (Ctype_constr ({ gi = { qual = !interpreter_module;
+    (Ctype_constr ({ gi = { qual = "Interpreter";
 			    id = Ident.create Ident.gen_type s Ident.Type };
 		     info = no_info(); }, ty_list))
     Location.none

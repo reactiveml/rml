@@ -22,10 +22,10 @@ let version = "0.1"
 
 (* standard module *)
 let pervasives_module = "Pervasives"
-let interpreter_module = ref "Lco_ctrl_tree_record"
+let interpreter_module = ref "Seq_runtime.LcoSeqInterpreter"
 (* let interpreter_module = ref "Lk_record" *)
 let interpreter_intf = ref "Lco_interpreter"
-let interpreter_impl = ref "Implem"
+let interpreter_impl = ref "I"
 
 
 let standard_lib = "../lib"
