@@ -79,8 +79,10 @@ sig
   val new_evt_combine : clock_domain -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
 
   (* various functions on the context *)
+  val top_clock_domain : clock_domain
   val mk_clock_domain : unit -> clock_domain
   val is_eoi : clock_domain -> bool
+  val set_pauseclock : clock_domain -> unit
   val add_weoi : clock_domain -> unit step -> unit
   val add_weoi_waiting_list : clock_domain -> waiting_list -> unit
 end

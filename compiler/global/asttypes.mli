@@ -63,3 +63,5 @@ type immediate =
   | Const_float of float
   | Const_char of char
   | Const_string of string
+
+type 'a clock = CkTop | CkLocal | CkExpr of 'a

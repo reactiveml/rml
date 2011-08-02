@@ -78,7 +78,7 @@ and process =
     coproc_loc: Location.t;}
 and process_desc =
   | Coproc_nothing
-  | Coproc_pause of continue_begin_of_instant
+  | Coproc_pause of continue_begin_of_instant * expression Asttypes.clock
   | Coproc_halt of continue_begin_of_instant
   | Coproc_compute of expression
   | Coproc_emit of expression
@@ -110,6 +110,7 @@ and process_desc =
   | Coproc_await_val of
       immediate_flag * await_kind * expression * pattern * process
   | Coproc_newclock of ident * process
+  | Coproc_pauseclock of expression
 
 (* event configuration *)
 and event_config =

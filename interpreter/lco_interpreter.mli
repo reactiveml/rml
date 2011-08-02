@@ -52,6 +52,9 @@ module type S =
     val rml_nothing: unit expr
     val rml_compute: (R.clock_domain -> unit -> 'a) -> 'a expr
     val rml_pause: unit expr
+    val rml_pause_top: unit expr
+    val rml_pause_at : (unit -> R.clock_domain) -> unit expr
+    val rml_pause_at' : R.clock_domain -> unit expr
     val rml_halt: 'a expr
     val rml_pause_kboi: unit expr
     val rml_halt_kboi: 'a expr
@@ -134,4 +137,7 @@ module type S =
 
     val rml_new_clock_domain : unit -> R.clock_domain
     val rml_at_clock_domain : R.clock_domain -> 'b expr -> 'b expr
+
+    val rml_pauseclock : (unit -> R.clock_domain) -> unit expr
+    val rml_pauseclock' : R.clock_domain -> unit expr
   end

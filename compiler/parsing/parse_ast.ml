@@ -69,7 +69,7 @@ and expression_desc =
       simple_ident * expression * expression * direction_flag * expression
   | Pexpr_seq of expression * expression
   | Pexpr_nothing
-  | Pexpr_pause
+  | Pexpr_pause of expression Asttypes.clock
   | Pexpr_halt
   | Pexpr_emit of expression
   | Pexpr_emit_val of expression * expression
@@ -96,6 +96,7 @@ and expression_desc =
   | Pexpr_default of expression
   (*reparml related expreessions *)
   | Pexpr_newclock of simple_ident * expression
+  | Pexpr_pauseclock of expression
 (* event configuration *)
   | Pconf_present of expression
   | Pconf_and of event_config * event_config

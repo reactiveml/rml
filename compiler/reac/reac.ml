@@ -77,7 +77,7 @@ and expression_desc =
   | Elast of expression
   | Edefault of expression
   | Enothing
-  | Epause of continue_begin_of_instant
+  | Epause of continue_begin_of_instant * expression Asttypes.clock
   | Ehalt of continue_begin_of_instant
   | Eemit of expression * expression option
   | Eloop of expression option * expression
@@ -99,6 +99,7 @@ and expression_desc =
       immediate_flag * await_kind * expression * pattern * expression
 (*reparml related expressions*)
   | Enewclock of ident * expression
+  | Epauseclock of expression
 
 (* event configuration *)
 and event_config =

@@ -441,7 +441,12 @@ let rec translate env e =
 
     | Pexpr_nothing -> Enothing
 
-    | Pexpr_pause -> Epause K_not_boi
+    | Pexpr_pause ck ->
+      let tr_ck = match ck with
+        | CkTop -> CkTop
+        | CkLocal -> CkLocal
+        | CkExpr e -> CkExpr (translate env e) in
+      Epause (K_not_boi, tr_ck)
 
     | Pexpr_halt -> Ehalt K_not_boi
 
@@ -500,6 +505,8 @@ let rec translate env e =
       let env = Env.add x.psimple_id id env in
       Enewclock (id, translate env e)
 
+    | Pexpr_pauseclock e ->
+      Epauseclock (translate env e)
 
     | Pexpr_get _ ->
         raise (Internal (e.pexpr_loc,

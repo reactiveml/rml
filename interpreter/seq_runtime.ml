@@ -182,8 +182,10 @@ struct
       (*cd.cd_top <- new_ctrl (Clock_domain cd);*) (*and set the correct value here*)
       cd
 
-    let main_context = mk_clock_domain ()
+    let top_clock_domain = mk_clock_domain ()
     let is_eoi cd = !(cd.cd_eoi)
+    let set_pauseclock cd =
+      cd.cd_pause_clock := true
     let add_weoi cd p =
       add_waiting p cd.cd_weoi
     let add_weoi_waiting_list cd w =
@@ -226,10 +228,11 @@ struct
       schedule cd;
       eval_control_and_next_to_current cd;
       Event.next cd.cd_clock;
-      cd.cd_eoi := false
+      cd.cd_eoi := false;
+      cd.cd_pause_clock := false
 
     let macro_step_done cd =
-      !(cd.cd_top.next) = []
+      !(cd.cd_pause_clock) || !(cd.cd_top.next) = []
 
     (* the react function *)
     let react cd =
@@ -253,13 +256,12 @@ struct
   type 'a process = 'a I.process
 
   let rml_make p =
-    let ctx = R.mk_clock_domain () in
     let result = ref None in
-    let step = I.rml_make ctx result p in
+    let step = I.rml_make R.top_clock_domain result p in
     (*R.init ();*)
-    R.add_current step ctx;
+    R.add_current step R.top_clock_domain;
     let react () =
-      R.react ctx;
+      R.react R.top_clock_domain;
       !result
     in
     react

@@ -316,9 +316,15 @@ let rec static_expr ctx e =
         then Dynamic Instantaneous
         else expr_wrong_static_err e
 
-    | Epause _ ->
+    | Epause (_, e1) ->
         if ctx = Process
-        then Dynamic Noninstantaneous
+        then
+           (match e1 with
+             | CkTop | CkLocal -> Dynamic Noninstantaneous
+             | CkExpr e1 ->
+               if static_expr ML e1 = Static
+               then Dynamic Noninstantaneous
+               else expr_wrong_static_err e1)
         else expr_wrong_static_err e
 
     | Ehalt _ ->
@@ -557,6 +563,15 @@ let rec static_expr ctx e =
           let _typ = static_expr ctx p in
           Dynamic Dontknow
         else expr_wrong_static_err e
+
+    | Epauseclock e1 ->
+        if ctx = Process
+        then
+          if static_expr ML e1 = Static
+          then Dynamic Noninstantaneous
+          else expr_wrong_static_err e1
+        else expr_wrong_static_err e
+
   in
   e.e_static <- t;
   t

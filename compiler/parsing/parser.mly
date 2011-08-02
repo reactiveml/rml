@@ -283,6 +283,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 /* %token OUT */                 /* "out" */
 /* %token PARSER */
 %token PAUSE               /* "pause" */
+%token PAUSECLOCK          /* "pauseclock" */
 %token PLUS                /* "+" */
 %token PRE                 /* "pre" */
 %token <string> PREFIXOP
@@ -309,6 +310,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token THEN                /* "then" */
 %token TILDE               /* "~" */
 %token TO                  /* "to" */
+%token TOPCK               /* "topck" */
 %token TRUE                /* "true" */
 %token TRY                 /* "try" */
 %token TYPE                /* "type" */
@@ -382,7 +384,7 @@ The precedences must be listed from low to high.
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
-          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE LOOP
+          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCk LOOP
 
 
 /* Entry points */
@@ -675,8 +677,10 @@ simple_expr:
       { mkexpr(Pexpr_apply(mkoperator $1 1, [$2])) }
   | NOTHING
       { mkexpr Pexpr_nothing }
-  | PAUSE
-      { mkexpr Pexpr_pause }
+  | PAUSE clock_expr
+      { mkexpr (Pexpr_pause $2) }
+  | PAUSECLOCK simple_expr
+      { mkexpr (Pexpr_pauseclock $2) }
   | HALT
       { mkexpr Pexpr_halt }
   | LOOP par_expr END
@@ -715,6 +719,10 @@ simple_expr_list:
   | simple_expr_list simple_expr
       { $2 :: $1 }
 ;
+clock_expr:
+    /* empty */ { CkLocal }
+  | simple_expr { CkExpr $1 }
+  | TOPCK       { CkTop }
 let_bindings:
     let_binding                                 { [$1] }
   | let_bindings AND let_binding                { $3 :: $1 }

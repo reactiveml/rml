@@ -272,8 +272,11 @@ let rec expression i ppf x =
       expression i ppf e;
   | Pexpr_nothing ->
       line i ppf "Pexpr_nothing\n";
-  | Pexpr_pause ->
+  | Pexpr_pause e ->
       line i ppf "Pexpr_pause\n";
+      (match e with
+        | CkExpr e -> expression i ppf e
+        | CkTop | CkLocal -> ())
   | Pexpr_halt ->
       line i ppf "Pexpr_halt\n";
   | Pexpr_emit (e) ->
@@ -344,6 +347,9 @@ let rec expression i ppf x =
   | Pexpr_default s ->
       line i ppf "Pexpr_default\n";
       expression i ppf s;
+  | Pexpr_newclock (id, e) ->
+      line i ppf "Pexpr_newclock %a\n" fmt_simple id;
+      expression i ppf e
   | Pconf_present (e) ->
       line i ppf "Pconf_present\n";
       expression i ppf e

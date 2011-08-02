@@ -295,11 +295,20 @@ and translate_proc e =
     match e.coproc_desc with
     | Coproc_nothing -> (make_instruction "rml_nothing").cexpr_desc
 
-    | Coproc_pause K_not_boi ->
-        (make_instruction "rml_pause").cexpr_desc
+    | Coproc_pause (K_not_boi, CkLocal) ->
+      (make_instruction "rml_pause").cexpr_desc
 
-    | Coproc_pause K_boi ->
-        (make_instruction "rml_pause_kboi").cexpr_desc
+    | Coproc_pause (K_not_boi, CkTop) ->
+      (make_instruction "rml_pause_top").cexpr_desc
+
+    | Coproc_pause (K_not_boi, CkExpr e) ->
+      if Lco_misc.is_value e then
+        Cexpr_apply (make_instruction "rml_pause_at'", [translate_ml null_ident e])
+      else
+        Cexpr_apply (make_instruction "rml_pause_at", [embed_ml e])
+
+    | Coproc_pause (K_boi, _) ->
+      (make_instruction "rml_pause_kboi").cexpr_desc
 
     | Coproc_halt K_not_boi ->
         (make_instruction "rml_halt").cexpr_desc
@@ -893,6 +902,14 @@ and translate_proc e =
           Location.none
       in
       Cexpr_let (Nonrecursive, [(make_patt_var_local id, newck)], atck)
+
+    | Coproc_pauseclock e ->
+      if Lco_misc.is_value e then
+        Cexpr_apply (make_instruction "rml_pauseclock'", [translate_ml null_ident e])
+      else
+        Cexpr_apply (make_instruction "rml_pauseclock", [embed_ml e])
+
+
   in
   make_expr cexpr e.coproc_loc
 

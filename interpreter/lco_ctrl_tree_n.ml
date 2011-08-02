@@ -122,6 +122,19 @@ module Rml_interpreter =
 (**************************************)
 (* pause                              *)
 (**************************************)
+    let rml_pause_at' pause_cd =
+      fun f_k ctrl jp cd ->
+        let add_next () = R.add_next f_k ctrl.next in
+        let f_pause _ =
+          R.add_weoi pause_cd add_next
+        in f_pause
+
+    let rml_pause_at e =
+      rml_pause_at' (e ())
+
+    let rml_pause_top f_k ctrl jp cd =
+      rml_pause_at' R.top_clock_domain f_k ctrl jp cd
+
     let rml_pause =
       fun f_k ctrl jp cd ->
         let f_pause =
@@ -1209,15 +1222,29 @@ let rml_loop p =
       in
       f_cd
 
-    let end_clock_domain f_k new_ctrl x =
-      end_ctrl f_k new_ctrl x
+    let end_clock_domain f_k ctrl x =
+      end_ctrl f_k ctrl x
 
     let rml_at_clock_domain new_cd p =
       fun f_k ctrl jp cd ->
         let new_ctrl = new_cd.cd_top in
-        let f = p (end_clock_domain f_k new_ctrl) new_ctrl None new_cd in
+        let f = p (end_clock_domain f_k ctrl) new_ctrl None new_cd in
         add_current f new_cd;
         step_clock_domain cd new_cd new_ctrl
+
+
+(**************************************)
+(* pauseclock                         *)
+(**************************************)
+    let rml_pauseclock' pause_cd =
+      fun f_k ctrl jp cd ->
+        let f_pause _ =
+          R.set_pauseclock pause_cd;
+          rml_pause_at' pause_cd f_k ctrl jp cd ()
+        in f_pause
+
+    let rml_pauseclock e =
+      rml_pauseclock' (e ())
 
 
     let rml_make cd result p =

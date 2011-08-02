@@ -114,6 +114,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
 (*    "out", OUT;*)
 (*  "parser", PARSER; *)
     "pause", PAUSE;
+    "pauseclock", PAUSECLOCK;
     "pre", PRE;
     "present", PRESENT;
     "private", PRIVATE;
@@ -125,6 +126,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "struct", STRUCT;
     "then", THEN;
     "to", TO;
+    "topck", TOPCK;
     "true", TRUE;
     "try", TRY;
     "type", TYPE;

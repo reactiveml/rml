@@ -153,7 +153,7 @@ let rec is_nonexpansive expr =
   | Elast e -> is_nonexpansive e
   | Edefault e -> is_nonexpansive e
   | Enothing -> true
-  | Epause _ -> true
+  | Epause (_, _) -> true
   | Ehalt _ -> true
   | Eemit (e, None) -> is_nonexpansive e
   | Eemit (e1, Some e2) -> is_nonexpansive e1 && is_nonexpansive e2
@@ -652,7 +652,7 @@ let rec type_of_expression env expr =
 
     | Enothing -> type_unit
 
-    | Epause _ -> type_unit
+    | Epause (_, _) -> type_unit
 
     | Ehalt _ -> new_var()
 
@@ -818,6 +818,8 @@ let rec type_of_expression env expr =
         type_of_expression new_env p
 
     | Enewclock (id, e) -> type_of_expression env e
+
+    | Epauseclock _ -> type_unit
 
   in
   expr.e_type <- t;
