@@ -25,19 +25,20 @@
 module type S =
   sig
     type clock
-    type ('a, 'b) t
+    type ('a, 'b, 'cd) t
 
-    val create: clock -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) t
-    val status: ('a, 'b) t -> bool
-    val value: ('a, 'b) t -> 'b
-    val pre_status: ('a, 'b) t -> bool
-    val pre_value: ('a, 'b) t -> 'b
-    val last: ('a, 'b) t -> 'b
-    val default: ('a, 'b) t -> 'b
-    val one: ('a, 'a list) t -> 'a
+    val create: 'cd -> clock -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b, 'cd) t
+    val status: ('a, 'b, _) t ->bool
+    val value: ('a, 'b, _) t -> 'b
+    val pre_status: ('a, 'b, _) t -> bool
+    val pre_value: ('a, 'b, _) t -> 'b
+    val last: ('a, 'b, _) t -> 'b
+    val default: ('a, 'b, _) t -> 'b
+    val one: ('a, 'a list, _) t -> 'a
 
-    val emit: ('a, 'b) t -> 'a -> unit
+    val emit: ('a, 'b, _) t -> 'a -> unit
 
+    val clock_domain : ('a, 'b, 'cd) t -> 'cd
     val init_clock : unit -> clock
     val next: clock -> unit
   end
@@ -45,8 +46,9 @@ module type S =
 module Record  (*: S*)  =
   struct
     type clock = int ref
-    type ('a, 'b) t =
+    type ('a, 'b, 'cd) t =
         { clock : clock;
+          clock_domain : 'cd;
           mutable status: int;
           mutable value: 'b;
           mutable pre_status: int;
@@ -56,8 +58,9 @@ module Record  (*: S*)  =
 
     let absent = -2
 
-    let create ck default combine =
+    let create cd ck default combine =
       { clock = ck;
+        clock_domain = cd;
         status = absent;
         value = default;
         pre_status = absent;
@@ -106,6 +109,9 @@ module Record  (*: S*)  =
          n.value <- n.combine v n.default)
       else
         n.value <- n.combine v n.value
+
+    let clock_domain n =
+      n.clock_domain
 
     let init_clock () =
       ref 0

@@ -8,7 +8,6 @@ struct
     type next = unit step list ref
     type current = unit step list ref
     type waiting_list = unit step list ref
-    type ('a, 'b) event = ('a,'b) Event.t * waiting_list * waiting_list
 
     exception RML
 
@@ -37,6 +36,8 @@ struct
           cd_clock : Event.clock;
           mutable cd_top : control_tree;
         }
+
+    type ('a, 'b) event = ('a,'b, clock_domain) Event.t * waiting_list * waiting_list
 
     let mk_current () = ref ([] : unit step list)
     let add_current p ctx =
@@ -201,7 +202,7 @@ struct
 
 (* creation d'evenements *)
     let new_evt_combine cd default combine =
-      (Event.create cd.cd_clock default combine, mk_waiting_list (), mk_waiting_list ())
+      (Event.create cd cd.cd_clock default combine, mk_waiting_list (), mk_waiting_list ())
 
     let new_evt cd =
       new_evt_combine cd [] (fun x y -> x :: y)

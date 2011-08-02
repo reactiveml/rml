@@ -40,6 +40,7 @@
 module Rml_interpreter =
   functor (R : Runtime.R with type 'a Step.t = 'a -> unit) ->
   struct
+    exception RML = R.RML
 
     type event_cfg = bool -> (unit -> bool) * R.waiting_list list
 
@@ -230,6 +231,32 @@ module Rml_interpreter =
                  add_weoi_waiting_list cd w)
         in f_await_not_top
 
+(*
+    let step_await_immediate f_k ctrl cd (n,wa,wp) =
+      let rec wake_up _ =
+        if ctrl.alive && not ctrl.susp then
+          (*ctrl is activated, run continuation*)
+          f_k unit_value
+        else ((*ctrl is not active, wait end of instant*)
+          R.add_waiting eoi_await ctrl.wp;
+          R.add_weoi_waiting_list cd ctrl.wp
+        )
+      and eoi_await _ =
+        if is_eoi cd then
+          (*ctrl was not activated, await the signal again *)
+          R.add_waiting wake_up wa
+        else (* ctrl was activated, signal is present*)
+          f_k unit_value
+      in
+      let rec await _ =
+        if R.Event.status n then
+          f_k unit_value
+        else
+          R.add_waiting wake_up wa
+      in
+      await
+*)
+
     let rml_await_immediate expr_evt =
       fun f_k ctrl jp cd ->
         let f_await =
@@ -396,11 +423,12 @@ module Rml_interpreter =
 (**************************************)
     let step_await_all_match f_k ctrl jp cd (n,wa,wp) matching p =
       let w = if R.is_toplevel ctrl then wa else wp in
+      let sig_cd = R.Event.clock_domain n in
       let f_await_all_match =
         if R.is_toplevel ctrl then
           let rec f_await_top =
             fun _ ->
-              if is_eoi cd
+              if is_eoi sig_cd
               then
                 let v = R.Event.value n in
                 if R.Event.status n && matching v
@@ -413,7 +441,7 @@ module Rml_interpreter =
               else
                 if R.Event.status n
                 then
-                  R.add_weoi cd f_await_top
+                  R.add_weoi sig_cd f_await_top
                 else
                   R.add_waiting f_await_top w
           in f_await_top
@@ -423,7 +451,7 @@ module Rml_interpreter =
               if is_eoi cd
               then
                 let v = R.Event.value n in
-                if R.Event.status n && matching v
+                if is_eoi sig_cd && R.Event.status n && matching v
                 then
                   let x = v in
                   let f_body = p x f_k ctrl jp cd in

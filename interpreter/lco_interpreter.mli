@@ -31,6 +31,8 @@ module type S =
     type 'a expr
     and 'a process = unit -> 'a expr
 
+    exception RML
+
     val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.Step.t
 
     val rml_pre_status: ('a, 'b) R.event -> bool

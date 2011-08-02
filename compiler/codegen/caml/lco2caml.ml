@@ -283,11 +283,15 @@ let rec translate_ml cd e =
   make_expr cexpr e.coexpr_loc
 
 (* Embedding of ML expressions in a process *)
-and embed_ml e =
+and embed_ml ?(with_cd=false) e =
   let cd = make_var "cd" in
-  make_expr
-    (Cexpr_fun ([make_patt_var_local cd; make_patt_unit ()], translate_ml cd e))
-    e.coexpr_loc
+  let arg_list =
+    if with_cd then
+      [make_patt_var_local cd; make_patt_unit ()]
+    else
+      [make_patt_unit ()]
+  in
+  make_expr (Cexpr_fun (arg_list, translate_ml cd e)) e.coexpr_loc
 
 (* Translation of process *)
 and translate_proc e =
@@ -319,7 +323,7 @@ and translate_proc e =
     | Coproc_compute (expr) ->
         Cexpr_apply
           (make_instruction "rml_compute",
-           [embed_ml expr;])
+           [embed_ml ~with_cd:true expr])
 
     | Coproc_emit (s) ->
         if Lco_misc.is_value s then

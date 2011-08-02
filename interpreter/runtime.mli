@@ -15,7 +15,6 @@ sig
   type current
   type waiting_list
   type next
-  type ('a, 'b) event = ('a, 'b) Event.t * waiting_list * waiting_list
 
   exception RML
 
@@ -43,6 +42,8 @@ sig
         cd_clock : Event.clock;
         mutable cd_top : control_tree;
       }
+
+  type ('a, 'b) event = ('a, 'b, clock_domain) Event.t * waiting_list * waiting_list
 
   (* functions on the control tree *)
   val new_ctrl : ?cond: (unit -> bool) -> control_type -> control_tree
