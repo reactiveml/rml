@@ -126,6 +126,7 @@ module Rml_interpreter =
       fun f_k ctrl jp cd ->
         let f_pause =
           fun _ ->
+            (* Format.eprintf "Pause @."; *)
             R.add_next f_k ctrl.next
         in f_pause
 

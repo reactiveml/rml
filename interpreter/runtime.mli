@@ -28,7 +28,7 @@ sig
         next: next;
         next_boi: next; }
   and control_type =
-    | Clock_domain of clock_domain
+    | Clock_domain
     | Kill of unit step
     | Kill_handler of (unit -> unit step)
     | Susp
@@ -59,8 +59,7 @@ sig
   val add_current_next : next -> clock_domain -> unit
 
   (* scheduling *)
-  val add_step : unit step -> unit
-  val react : unit -> unit
+  val react : clock_domain -> unit
   val schedule : clock_domain -> unit
   val eoi : clock_domain -> unit
   val macro_step_done : clock_domain -> bool

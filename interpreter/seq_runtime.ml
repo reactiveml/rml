@@ -21,7 +21,7 @@ struct
           next: next;
           next_boi: next; }
     and control_type =
-      | Clock_domain of clock_domain
+      | Clock_domain (*of clock_domain*)
       | Kill of unit step
       | Kill_handler of (unit -> unit step)
       | Susp
@@ -55,6 +55,7 @@ struct
     let mk_next () = ref ([]:unit step list)
     let add_next p next =
       next := p :: !next
+      (*Format.eprintf "Adding to next: %d@." (List.length !next)*)
     let add_next_next n1 n2 =
       n2 := List.rev_append !n1 !n2
     let clear_next next =
@@ -90,7 +91,7 @@ struct
       let rec eval pere p active =
         if p.alive then
           match p.kind with
-            | Clock_domain cd' ->
+            | Clock_domain _ ->
               p.children <- eval_children p p.children active [];
               true
             | Kill f_k ->
@@ -149,6 +150,7 @@ struct
             else eval_children p nodes active acc
 
       and next_to_current ck node =
+        (*Format.eprintf "Adding %d elets@." (List.length !(node.next));*)
         add_current_next node.next ck;
         add_current_next node.next_boi ck;
       and next_to_father pere node =
@@ -174,10 +176,10 @@ struct
                  cd_weoi = mk_waiting_list ();
                  cd_wake_up = [];
                  cd_clock = Event.init_clock ();
-                 cd_top = new_ctrl Susp; (* use a phony value*)
+                 cd_top = new_ctrl Clock_domain; (* use a phony value*)
                }
       in
-      cd.cd_top <- new_ctrl (Clock_domain cd); (*and set the correct value here*)
+      (*cd.cd_top <- new_ctrl (Clock_domain cd);*) (*and set the correct value here*)
       cd
 
     let main_context = mk_clock_domain ()
@@ -203,9 +205,6 @@ struct
       new_evt_combine cd [] (fun x y -> x :: y)
 (* ------------------------------------------------------------------------ *)
 
-    let add_step p =
-      add_current p main_context
-
     let schedule cd =
       let ssched () =
       match !(cd.cd_current) with
@@ -214,6 +213,7 @@ struct
         Step.exec f
       | [] -> ()
       in
+      (*Format.eprintf "Exec %d elts@." (List.length !(cd.cd_current));*)
       ssched ();
       while !(cd.cd_current) <> [] do
         ssched ();
@@ -232,9 +232,9 @@ struct
       !(cd.cd_top.next) = []
 
     (* the react function *)
-    let react () =
-      schedule main_context;
-      eoi main_context
+    let react cd =
+      schedule cd;
+      eoi cd
 end
 
 module SimpleStep =
@@ -250,14 +250,16 @@ struct
   module R = SeqListRuntime(SimpleStep)(Sig_env.Record)
   module I = Interpreter(R)
 
+  type 'a process = 'a I.process
+
   let rml_make p =
     let ctx = R.mk_clock_domain () in
     let result = ref None in
     let step = I.rml_make ctx result p in
     (*R.init ();*)
-    R.add_step step;
+    R.add_current step ctx;
     let react () =
-      R.react ();
+      R.react ctx;
       !result
     in
     react
