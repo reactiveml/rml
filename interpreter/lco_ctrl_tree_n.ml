@@ -1233,17 +1233,19 @@ let rml_loop p =
     let rml_new_clock_domain () =
       R.mk_clock_domain ()
 
-    let eoi_clock_domain cd () =
-      R.eoi cd
+    let next_instant_clock_domain cd () =
+      R.next_instant cd
 
     let step_clock_domain cd new_cd new_ctrl =
       let rec f_cd () =
+        Format.printf "@.Step clock domain@.";
         R.schedule new_cd;
+        R.eoi new_cd;
         if R.macro_step_done new_cd then (
-          R.add_weoi cd (eoi_clock_domain new_cd);
+          R.add_weoi cd (next_instant_clock_domain new_cd);
           R.add_next f_cd (control_tree cd).next;
         ) else (
-          R.eoi new_cd;
+          R.next_instant new_cd;
           (* execute again in the same step but yield for now*)
           R.add_current f_cd cd
         )

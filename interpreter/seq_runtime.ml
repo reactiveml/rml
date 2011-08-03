@@ -229,19 +229,41 @@ struct
       cd.cd_eoi := true;
       wake_up cd cd.cd_weoi;
       wake_up_all cd;
-      schedule cd;
+      schedule cd
+
+    let next_instant cd =
       eval_control_and_next_to_current cd;
       Event.next cd.cd_clock;
       cd.cd_eoi := false;
       cd.cd_pause_clock := false
 
+    let rec has_next ctrl =
+      if not ctrl.alive then
+        false
+      else
+        match ctrl.kind with
+          | Clock_domain -> has_next_children ctrl
+          | Kill _ | Kill_handler _ ->
+            ctrl.cond () || has_next_children ctrl
+          | Susp ->
+            let active = (ctrl.susp && ctrl.cond ()) || (not ctrl.susp && not (ctrl.cond ())) in
+              active && has_next_children ctrl
+          | When _ ->
+            not ctrl.susp && has_next_children ctrl
+    and has_next_children ctrl =
+      !(ctrl.next) <> [] || List.exists has_next ctrl.children
+
     let macro_step_done cd =
-      !(cd.cd_pause_clock) || !(cd.cd_top.next) = []
+      !(cd.cd_pause_clock) || not (has_next cd.cd_top)
 
     (* the react function *)
     let react cd =
+      Format.printf "React top cd@.";
       schedule cd;
-      eoi cd
+      Format.printf "Eoi cd@.";
+      eoi cd;
+      Format.printf "Next_instant cd@.";
+      next_instant cd
 end
 
 module SimpleStep =

@@ -54,6 +54,7 @@ sig
   (* scheduling *)
   val react : clock_domain -> unit
   val schedule : clock_domain -> unit
+  val next_instant : clock_domain -> unit
   val eoi : clock_domain -> unit
   val macro_step_done : clock_domain -> bool
 
