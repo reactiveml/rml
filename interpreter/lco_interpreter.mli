@@ -23,9 +23,22 @@
 (* created: 2004-06-04  *)
 
 
-module type S =
-  functor (R : Runtime.R with type 'a Step.t = 'a -> unit) ->
+module type LCO_RUNTIME =
   sig
+    module Step : Runtime.STEP
+
+    type clock_domain
+    type ('a, 'b) event
+
+    val top_clock_domain : clock_domain
+    val react : clock_domain -> unit
+    val add_current : unit Step.t -> clock_domain -> unit
+  end
+
+module type S =
+  sig
+    module R : LCO_RUNTIME
+
     type event_cfg
 
     type 'a expr
@@ -143,3 +156,6 @@ module type S =
     val rml_pauseclock : (unit -> R.clock_domain) -> unit expr
     val rml_pauseclock' : R.clock_domain -> unit expr
   end
+
+
+

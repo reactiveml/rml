@@ -22,7 +22,23 @@
 (* created: 2005-09-13  *)
 (* file: rml_machine.ml *)
 
+module LcoInterpreter(I:Lco_interpreter.S) =
+struct
+  type 'a process = 'a I.process
 
+  let rml_make p =
+    let result = ref None in
+    let step = I.rml_make I.R.top_clock_domain result p in
+    (*R.init ();*)
+    I.R.add_current step I.R.top_clock_domain;
+    let react () =
+      I.R.react I.R.top_clock_domain;
+      !result
+    in
+    react
+end
+
+module LcoSeqInterpreter = LcoInterpreter(Lco_ctrl_tree_n.Lco_ctrl_tree_seq_interpreter)
 
 module type Interpretor_type =
   sig
@@ -45,11 +61,12 @@ module M =
     let rml_exec_n p n =
       let react = Interpretor.rml_make p in
       let rec exec n =
-        if n > 0 then
+        if n > 0 then (
+          Format.printf "@.@.*******************  New step ********************@.";
           match react () with
-          | None ->Format.printf "@.@.New step@."; exec (n-1)
+          | None -> exec (n-1)
           | v -> v
-        else
+        ) else
           None
       in exec n
 

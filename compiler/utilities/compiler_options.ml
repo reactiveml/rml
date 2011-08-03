@@ -22,7 +22,7 @@ let version = "0.1"
 
 (* standard module *)
 let pervasives_module = "Pervasives"
-let interpreter_module = ref "Seq_runtime.LcoSeqInterpreter"
+let interpreter_module = ref "Rml_machine.LcoSeqInterpreter"
 (* let interpreter_module = ref "Lk_record" *)
 let interpreter_intf = ref "Lco_interpreter"
 let interpreter_impl = ref "I"

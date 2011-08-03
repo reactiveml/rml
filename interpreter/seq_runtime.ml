@@ -274,24 +274,6 @@ struct
     p ()
 end
 
-module LcoSeqI (Interpreter:Lco_interpreter.S) =
-struct
-  module R = SeqListRuntime(SimpleStep)(Sig_env.Record)
-  module I = Interpreter(R)
-
-  type 'a process = 'a I.process
-
-  let rml_make p =
-    let result = ref None in
-    let step = I.rml_make R.top_clock_domain result p in
-    (*R.init ();*)
-    R.add_current step R.top_clock_domain;
-    let react () =
-      R.react R.top_clock_domain;
-      !result
-    in
-    react
-end
 (*
 module LkSeqI (Interpreter:Lk_interpreter.S) =
 struct
@@ -310,5 +292,5 @@ struct
     react
 end
 *)
-module LcoSeqInterpreter = LcoSeqI(Lco_ctrl_tree_n.Rml_interpreter)
+
 (*module LkSeqInterpreter = LkSeqI(Lk_implem.Rml_interpreter)*)

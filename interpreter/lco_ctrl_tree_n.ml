@@ -38,7 +38,7 @@
 (*   Gestion du parallele n-aire                                      *)
 
 module Rml_interpreter =
-  functor (R : Runtime.R with type 'a Step.t = 'a -> unit) ->
+  functor (R : Runtime.CONTROL_TREE_R with type 'a Step.t = 'a -> unit) ->
   struct
     exception RML = R.RML
 
@@ -1292,5 +1292,10 @@ let rml_loop p =
       in
       p () (join_end()) (control_tree cd) jp cd
 
+    module R = R
 
 end (* Module Rml_interpreter *)
+
+
+module Lco_ctrl_tree_seq_interpreter =
+  Rml_interpreter(Seq_runtime.SeqListRuntime(Seq_runtime.SimpleStep)(Sig_env.Record))

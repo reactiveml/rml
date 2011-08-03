@@ -6,7 +6,7 @@ sig
 end
 
 
-module type R =
+module type CONTROL_TREE_R =
 sig
   module Step : STEP
   module Event : Sig_env.S
