@@ -169,6 +169,8 @@ struct
          List.iter (next_to_current cd) p.children;
          add_current_next p.next_boi cd)
 
+    let is_active ctrl =
+      ctrl.alive && not ctrl.susp
 
     let mk_clock_domain () =
       let cd = { cd_current = mk_current ();
@@ -187,6 +189,7 @@ struct
     let is_eoi cd = !(cd.cd_eoi)
     let set_pauseclock cd =
       cd.cd_pause_clock := true
+    let control_tree cd = cd.cd_top
     let add_weoi cd p =
       add_waiting p cd.cd_weoi
     let add_weoi_waiting_list cd w =

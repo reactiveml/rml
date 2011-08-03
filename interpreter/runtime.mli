@@ -32,22 +32,14 @@ sig
     | Kill_handler of (unit -> unit step)
     | Susp
     | When of unit step ref
-  and clock_domain =
-      { cd_current : current;
-        cd_pause_clock: bool ref; (* end of macro instant *)
-        cd_eoi : bool ref; (* is it the eoi of this clock *)
-        cd_weoi : waiting_list; (* processes waiting for eoi *)
-        mutable cd_wake_up : waiting_list list;
-          (* waiting lists to wake up at the end of the instant*)
-        cd_clock : Event.clock;
-        mutable cd_top : control_tree;
-      }
+  and clock_domain
 
   type ('a, 'b) event = ('a, 'b, clock_domain) Event.t * waiting_list * waiting_list
 
   (* functions on the control tree *)
   val new_ctrl : ?cond: (unit -> bool) -> control_type -> control_tree
   val is_toplevel : control_tree -> bool
+  val is_active : control_tree -> bool
   val set_kill : control_tree -> unit
   val next_to_current : clock_domain -> control_tree -> unit
 
@@ -84,6 +76,7 @@ sig
   val mk_clock_domain : unit -> clock_domain
   val is_eoi : clock_domain -> bool
   val set_pauseclock : clock_domain -> unit
+  val control_tree : clock_domain -> control_tree
   val add_weoi : clock_domain -> unit step -> unit
   val add_weoi_waiting_list : clock_domain -> waiting_list -> unit
 end

@@ -1241,7 +1241,7 @@ let rml_loop p =
         R.schedule new_cd;
         if R.macro_step_done new_cd then (
           R.add_weoi cd (eoi_clock_domain new_cd);
-          R.add_next f_cd cd.cd_top.next;
+          R.add_next f_cd (control_tree cd).next;
         ) else (
           R.eoi new_cd;
           (* execute again in the same step but yield for now*)
@@ -1255,7 +1255,7 @@ let rml_loop p =
 
     let rml_at_clock_domain new_cd p =
       fun f_k ctrl jp cd ->
-        let new_ctrl = new_cd.cd_top in
+        let new_ctrl = control_tree new_cd in
         let f = p (end_clock_domain f_k ctrl) new_ctrl None new_cd in
         add_current f new_cd;
         step_clock_domain cd new_cd new_ctrl
@@ -1288,7 +1288,7 @@ let rml_loop p =
               result := Some x
           in f
       in
-      p () (join_end()) cd.cd_top jp cd
+      p () (join_end()) (control_tree cd) jp cd
 
 
 end (* Module Rml_interpreter *)
