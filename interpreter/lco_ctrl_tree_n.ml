@@ -396,8 +396,6 @@ module Rml_interpreter =
                else
                   raise Wait_again)
           in
-          (*TODO: il faut trouver le cd le plus lent des signaux utilises pour
-          attendre la fin de cet instant *)
           List.iter (fun (w,sig_cd) ->
             do_when_ctrl_and_w_at_eoi sig_cd ctrl w f unit_value) w_list
 
@@ -794,7 +792,6 @@ let rml_loop p =
         let f_until =
           fun _ ->
             let cond, _ = expr_cfg true in
-            (*TODO: calculer le min des cd pour savoir quel eoi il faut attendre*)
             new_ctrl.cond <- cond;
             start_ctrl ctrl new_ctrl;
             f unit_value
@@ -936,7 +933,6 @@ let rml_loop p =
         let f = p (end_ctrl f_k new_ctrl) new_ctrl None cd in
         fun _ ->
           let cond, _ = expr_cfg true in
-          (*TODO: quel eoi faut-il attendre ?*)
           new_ctrl.cond <- cond;
           start_ctrl ctrl new_ctrl;
           f unit_value
@@ -1017,6 +1013,7 @@ let rml_loop p =
         let f = p (end_clock_domain f_k ctrl) new_ctrl None new_cd in
         fun _ ->
           add_current f new_cd;
+          start_ctrl new_ctrl ctrl;
           step_clock_domain cd new_cd new_ctrl unit_value
 
 

@@ -95,9 +95,7 @@ struct
       let rec eval pere p active =
         if p.alive then
           match p.kind with
-            | Clock_domain _ ->
-              p.children <- eval_children p p.children active [];
-              true
+            | Clock_domain _ -> true
             | Kill f_k ->
               if p.cond()
               then
