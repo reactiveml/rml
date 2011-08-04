@@ -25,6 +25,7 @@ sig
         mutable cond: (unit -> bool);
         mutable children: control_tree list;
         next: next;
+        next_tmp : next;
         next_boi: next; }
   and control_type =
     | Clock_domain
@@ -80,4 +81,5 @@ sig
   val control_tree : clock_domain -> control_tree
   val add_weoi : clock_domain -> unit step -> unit
   val add_weoi_waiting_list : clock_domain -> waiting_list -> unit
+  val add_weoi_next : clock_domain -> next -> unit
 end

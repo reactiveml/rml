@@ -71,8 +71,6 @@ module type S =
     val rml_pause_at : (unit -> R.clock_domain) -> unit expr
     val rml_pause_at' : R.clock_domain -> unit expr
     val rml_halt: 'a expr
-    val rml_pause_kboi: unit expr
-    val rml_halt_kboi: 'a expr
     val rml_emit': (unit, 'b) R.event -> unit expr
     val rml_emit: (unit -> (unit, 'b) R.event) -> unit expr
     val rml_emit_val': ('a, 'b) R.event -> (unit -> 'a) -> unit expr
@@ -103,7 +101,6 @@ module type S =
     val rml_present_conf: event_cfg -> 'a expr -> 'a expr -> 'a expr
     val rml_seq: 'a expr -> 'b expr -> 'b expr
     val rml_par: 'a expr -> 'b expr -> unit expr
-    val rml_merge: 'a expr -> 'b expr -> unit expr
     val rml_loop: 'a expr -> unit expr
     val rml_loop_n: (unit -> int) -> 'a expr -> unit expr
     val rml_while: (unit -> bool) -> 'a expr -> unit expr

@@ -18,6 +18,7 @@ struct
           mutable cond: (unit -> bool);
           mutable children: control_tree list;
           next: next;
+          next_tmp : next;
           next_boi: next; }
     and control_type =
       | Clock_domain (*of clock_domain*)
@@ -32,6 +33,7 @@ struct
           cd_eoi : bool ref; (* is it the eoi of this clock *)
           cd_weoi : waiting_list; (* processes waiting for eoi *)
           mutable cd_wake_up : waiting_list list;
+          mutable cd_wake_up_next : next list;
           (* waiting lists to wake up at the end of the instant*)
           cd_clock : Event.clock;
           mutable cd_top : control_tree;
@@ -70,6 +72,7 @@ struct
         children = [];
         cond = cond;
         next = mk_next ();
+        next_tmp = mk_next ();
         next_boi = mk_next (); }
 
     (* tuer un arbre p *)
@@ -166,6 +169,7 @@ struct
     let rec next_to_current cd p =
       if p.alive && not p.susp then
         (add_current_next p.next cd;
+         add_current_next p.next_tmp cd;
          List.iter (next_to_current cd) p.children;
          add_current_next p.next_boi cd)
 
@@ -178,6 +182,7 @@ struct
                  cd_eoi = ref false;
                  cd_weoi = mk_waiting_list ();
                  cd_wake_up = [];
+                 cd_wake_up_next =  [];
                  cd_clock = Event.init_clock ();
                  cd_top = new_ctrl Clock_domain; (* use a phony value*)
                }
@@ -194,6 +199,8 @@ struct
       add_waiting p cd.cd_weoi
     let add_weoi_waiting_list cd w =
       cd.cd_wake_up <- w :: cd.cd_wake_up
+    let add_weoi_next cd n =
+      cd.cd_wake_up_next <- n :: cd.cd_wake_up_next
 
 (* debloquer les processus en attent d'un evt *)
     let wake_up ck w =
