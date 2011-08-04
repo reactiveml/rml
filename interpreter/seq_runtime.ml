@@ -208,6 +208,10 @@ struct
       List.iter (fun wp -> add_current_waiting_list wp ck) ck.cd_wake_up;
       ck.cd_wake_up <- []
 
+    let wake_up_all_next cd =
+      List.iter (fun n -> add_current_next n cd) cd.cd_wake_up_next;
+      cd.cd_wake_up_next <- []
+
 (* creation d'evenements *)
     let new_evt_combine cd default combine =
       (Event.create cd cd.cd_clock default combine, mk_waiting_list (), mk_waiting_list ())
@@ -234,6 +238,7 @@ struct
       cd.cd_eoi := true;
       wake_up cd cd.cd_weoi;
       wake_up_all cd;
+      wake_up_all_next cd;
       schedule cd
 
     let next_instant cd =
