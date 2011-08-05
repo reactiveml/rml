@@ -612,8 +612,7 @@ let rml_loop p =
 (* until handler                      *)
 (**************************************)
 
-    let rml_until_handler_local
-        (expr_evt: unit -> ('a, 'b) event) matching_opt p p_handler =
+    let rml_until_handler_local expr_evt matching_opt p p_handler =
       fun f_k ctrl jp cd ->
         let evt = ref (Obj.magic() : ('a, 'b) event) in
         let handler _ =
