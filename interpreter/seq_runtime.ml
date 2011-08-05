@@ -1,15 +1,14 @@
 
-module SeqListRuntime (S : Runtime.STEP) (Event: Sig_env.S) =
+module SeqListRuntime (S : Runtime.STEP with type 'a t = 'a -> unit) (E: Sig_env.S) =
 struct
     module Step = S
-    module Event = Event
+
+    exception RML
 
     type 'a step = 'a S.t
     type next = unit step list ref
     type current = unit step list ref
     type waiting_list = unit step list ref
-
-    exception RML
 
     type control_tree =
         { kind: control_type;
@@ -35,11 +34,14 @@ struct
           mutable cd_wake_up : waiting_list list;
           mutable cd_wake_up_next : next list;
           (* waiting lists to wake up at the end of the instant*)
-          cd_clock : Event.clock;
+          cd_clock : E.clock;
           mutable cd_top : control_tree;
         }
 
-    type ('a, 'b) event = ('a,'b, clock_domain) Event.t * waiting_list * waiting_list
+    type ('a, 'b) event = ('a,'b, clock_domain) E.t * waiting_list * waiting_list
+    type event_cfg = bool -> (bool -> bool) * (waiting_list * clock_domain) list
+
+    let unit_value = ()
 
     let mk_current () = ref ([] : unit step list)
     let add_current p ctx =
@@ -65,6 +67,74 @@ struct
       next := []
 
 
+  module type RUNTIME_EVENT =
+    sig
+      val status: ?only_at_eoi:bool -> ('a, 'b) event -> bool
+
+      val value: ('a, 'b) event -> 'b
+      val one: ('a, 'a list) event -> 'a
+      val pre_status: ('a, 'b) event -> bool
+      val pre_value: ('a, 'b) event -> 'b
+      val last: ('a, 'b) event -> 'b
+      val default: ('a, 'b) event -> 'b
+
+      val emit: ('a, 'b) event -> 'a -> unit
+      val clock_domain : ('a, 'b) event -> clock_domain
+
+      val cfg_present : ('a, 'b) event -> event_cfg
+      val cfg_or : event_cfg -> event_cfg -> event_cfg
+      val cfg_and : event_cfg -> event_cfg -> event_cfg
+      val cfg_status: ?only_at_eoi:bool -> event_cfg -> bool
+    end
+
+    module Event =
+      struct
+        let status ?(only_at_eoi=false) (n,_,_) =
+          E.status n && (not only_at_eoi || !((E.clock_domain n).cd_eoi))
+
+        let value (n,_,_) =
+          if E.status n then
+            E.value n
+          else
+            raise RML
+
+        let one (n,_,_) = E.one n
+        let pre_status (n,_,_) = E.pre_status n
+        let pre_value (n,_,_) = E.pre_value n
+        let last (n,_,_) = E.last n
+        let default (n,_,_) = E.default n
+        let clock_domain (n,_,_) = E.clock_domain n
+
+        let emit (n,wa,wp) v =
+          E.emit n v;
+          let sig_cd = E.clock_domain n in
+          add_current_waiting_list wa sig_cd;
+          add_current_waiting_list wp sig_cd
+
+        let cfg_present ((n,wa,wp) as evt) is_long_wait =
+          (fun eoi -> status ~only_at_eoi:eoi evt),
+          [ (if is_long_wait then wa else wp), E.clock_domain n ]
+
+        let cfg_and c1 c2 is_long_wait =
+          let is_true1, evt_list1 = c1 is_long_wait in
+          let is_true2, evt_list2 = c2 is_long_wait in
+          (fun eoi -> is_true1 eoi && is_true2 eoi),
+          List.rev_append evt_list1 evt_list2
+
+        let cfg_or c1 c2 is_long_wait =
+          let is_true1, evt_list1 = c1 is_long_wait in
+          let is_true2, evt_list2 = c2 is_long_wait in
+          (fun eoi -> is_true1 eoi || is_true2 eoi),
+          List.rev_append evt_list1 evt_list2
+
+        let cfg_status ?(only_at_eoi=false) expr_cfg =
+          let is_true, _ = expr_cfg true in
+          is_true only_at_eoi
+      end
+
+(**************************************)
+(* control tree                       *)
+(**************************************)
     let new_ctrl ?(cond = (fun () -> false)) kind =
       { kind = kind;
         alive = true;
@@ -84,9 +154,19 @@ struct
       List.iter set_kill p.children;
       p.children <- []
 
-    let is_toplevel ctrl = match ctrl.kind with
-      | Clock_domain _ -> true
-      | _ -> false
+    let start_ctrl ctrl new_ctrl =
+      if new_ctrl.alive then
+        ctrl.children <- new_ctrl :: ctrl.children
+      else (* reset new_ctrl *)
+        (new_ctrl.alive <- true;
+         new_ctrl.susp <- false;
+         clear_next new_ctrl.next;
+         clear_next new_ctrl.next_boi)
+
+    let end_ctrl new_ctrl f_k x =
+      set_kill new_ctrl;
+      new_ctrl.alive <- false;
+      f_k x
 
 (* calculer le nouvel etat de l'arbre de control *)
 (* et deplacer dans la liste current les processus qui sont dans  *)
@@ -171,8 +251,18 @@ struct
          List.iter (next_to_current cd) p.children;
          add_current_next p.next_boi cd)
 
+    let wake_up_ctrl new_ctrl cd =
+      new_ctrl.susp <- false;
+      next_to_current cd new_ctrl
+
     let is_active ctrl =
       ctrl.alive && not ctrl.susp
+
+    let set_suspended ctrl v =
+      ctrl.susp <- v
+
+    let set_condition ctrl c =
+      ctrl.cond <- c
 
     let mk_clock_domain () =
       let cd = { cd_current = mk_current ();
@@ -181,7 +271,7 @@ struct
                  cd_weoi = mk_waiting_list ();
                  cd_wake_up = [];
                  cd_wake_up_next =  [];
-                 cd_clock = Event.init_clock ();
+                 cd_clock = E.init_clock ();
                  cd_top = new_ctrl Clock_domain; (* use a phony value*)
                }
       in
@@ -214,11 +304,202 @@ struct
 
 (* creation d'evenements *)
     let new_evt_combine cd default combine =
-      (Event.create cd cd.cd_clock default combine, mk_waiting_list (), mk_waiting_list ())
+      (E.create cd cd.cd_clock default combine, mk_waiting_list (), mk_waiting_list ())
 
     let new_evt cd =
       new_evt_combine cd [] (fun x y -> x :: y)
 (* ------------------------------------------------------------------------ *)
+
+    exception Wait_again
+
+    let on_current_instant cd f = add_current f cd
+    let on_current_instant_list cd fl = add_current_list fl cd
+    let on_next_instant ctrl f = add_next f ctrl.next
+
+    (** [on_eoi cd f] executes 'f ()' during the eoi of cd. *)
+    let on_eoi cd f =
+      if is_eoi cd then
+        f unit_value
+      else
+        add_weoi cd f
+
+  (** [on_event_or_next evt f_w v_w cd ctrl f_next] executes 'f_w v_w' if
+      evt is emitted before the end of instant of cd.
+      Otherwise, executes 'f_next ()' during the next instant. *)
+    let _on_event_or_next (_,_,w) f_w v_w cd ctrl f_next =
+      let act _ =
+        if is_eoi cd then
+          (*eoi was reached, launch fallback*)
+          add_next f_next ctrl.next
+        else
+          (* signal activated *)
+          f_w v_w
+      in
+      add_waiting act w;
+      add_weoi_waiting_list cd w
+
+    let on_event_or_next evt f_w v_w cd ctrl f_next =
+      if Event.status evt then
+        f_w v_w
+      else
+        _on_event_or_next evt f_w v_w cd ctrl f_next
+
+  (** [on_event_cfg_or_next evt_cfg f_w v_w cd ctrl f_next] executes 'f_w v_w' if
+      evt_cfg is true before the end of instant of cd.
+      Otherwise, executes 'f_next ()' during the next instant. *)
+    let on_event_cfg_or_next evt_cfg f_w v_w cd ctrl f_next =
+      let is_true, w_list = evt_cfg false in
+      if is_true false then
+        f_w v_w
+      else
+        let is_fired = ref false in
+        let try_fire _ =
+          if not !is_fired then
+            if is_eoi cd then
+              (is_fired := true;
+               add_next f_next ctrl.next)
+            else
+              (if is_true false then
+                  (is_fired := true;
+                   f_w v_w))
+        in
+        List.iter
+          (fun (w,_) -> add_waiting try_fire w; add_weoi_waiting_list cd w) w_list
+
+
+    (** [on_event evt ctrl f v] executes 'f v' if evt is emmitted and
+        ctrl is active in the same step.
+        It waits for the next activation of w otherwise,
+        or if the call raises Wait_again *)
+    let _on_event w sig_cd ctrl f v =
+      let rec self _ =
+        if is_active ctrl then
+            (*ctrl is activated, run continuation*)
+          (try
+            f v
+          with
+            | Wait_again -> add_waiting self w)
+        else ((*ctrl is not active, wait end of instant*)
+          let is_fired = ref false in
+          add_next (ctrl_await is_fired) ctrl.next;
+          add_weoi sig_cd (eoi_await is_fired)
+        )
+      and eoi_await is_fired _ =
+        if not !is_fired then
+            (*ctrl was not activated, await the signal again *)
+          (is_fired := true;
+           add_waiting self w)
+      and ctrl_await is_fired _ =
+        if not !is_fired then
+          (* ctrl was activated, signal is present*)
+          (try
+             is_fired := true; f v
+           with
+             | Wait_again -> add_waiting self w)
+      in
+      add_waiting self w
+
+    let on_event (n,w,_) ctrl f v =
+      if E.status n then
+        (try
+           f v
+         with
+           | Wait_again -> _on_event w (E.clock_domain n) ctrl f v)
+      else
+        _on_event w (E.clock_domain n) ctrl f v
+
+    (** [on_event_cfg evt_cfg ctrl f v] executes 'f v' if evt_cfg is true and
+        ctrl is active in the same step.
+        It waits for the next activation of w otherwise,
+        or if the call raises Wait_again *)
+    let on_event_cfg evt_cfg ctrl f v  =
+      let is_true, w_list = evt_cfg true in
+      let wait_event_cfg () =
+        let is_fired = ref false in
+        let try_fire _ =
+          if not !is_fired then
+            (if is_true false then
+                (is_fired := true;
+                 f v)
+             else
+                raise Wait_again)
+        in
+        List.iter (fun (w,cd) -> _on_event w cd ctrl try_fire unit_value) w_list
+      in
+      if is_true false then
+        (try
+           f v
+         with
+           | Wait_again -> wait_event_cfg ())
+      else
+        wait_event_cfg ()
+
+    (** [on_event_at_eoi evt ctrl f] executes 'f ()' during the eoi
+        (of evt's clock domain) if ctrl is active in the same step.
+        Waits for the next activation of evt otherwise, or if the call
+        raises Wait_again *)
+    let _on_event_at_eoi sig_cd ctrl w f =
+      let rec self _ =
+        if is_active ctrl then
+            (*ctrl is activated, run continuation*)
+          add_weoi sig_cd eoi_work
+        else ((*ctrl is not active, wait end of instant*)
+          let is_fired = ref false in
+          add_next (ctrl_await is_fired) ctrl.next;
+          add_weoi sig_cd (eoi_await is_fired)
+        )
+      and eoi_await is_fired _ =
+        if not !is_fired then
+          (*ctrl was not activated, await the signal again *)
+          (is_fired := true;
+           add_waiting self w)
+      and ctrl_await is_fired _ =
+        if not !is_fired then
+         (* ctrl was activated, signal is present*)
+          (is_fired :=  true;
+           add_weoi sig_cd eoi_work)
+      and eoi_work _ =
+          (try
+            f unit_value
+          with
+            | Wait_again -> add_waiting self w)
+      in
+      add_waiting self w
+
+     let on_event_at_eoi (n,wa,_) ctrl f =
+       let sig_cd = E.clock_domain n in
+       if E.status n then
+         let eoi_work _ =
+           (try
+              f unit_value
+            with
+              | Wait_again -> _on_event_at_eoi sig_cd ctrl wa f)
+         in
+         add_weoi sig_cd eoi_work
+       else
+         _on_event_at_eoi sig_cd ctrl wa f
+
+    (** [on_event_cfg_at_eoi evt ctrl f] executes 'f ()' during the eoi
+        (of evt_cfg's clock domain) if ctrl is active in the same step.
+        Waits for the next activation of evt otherwise. *)
+     let on_event_cfg_at_eoi evt_cfg ctrl f =
+       let is_true, w_list = evt_cfg true in
+       if is_true false then
+         (* TODO: trouver le bon cd sur lequel attendre *)
+         add_weoi (snd (List.hd w_list)) f
+       else
+         let is_fired = ref false in
+         let f sig_cd _ =
+           if not !is_fired then
+             (if is_true false then
+                 (is_fired := true;
+                  add_weoi sig_cd f)
+              else
+                 raise Wait_again)
+         in
+         List.iter (fun (w,sig_cd) -> _on_event w sig_cd ctrl (f sig_cd) unit_value) w_list
+
+
 
     let schedule cd =
       let ssched () =
@@ -238,12 +519,11 @@ struct
       cd.cd_eoi := true;
       wake_up cd cd.cd_weoi;
       wake_up_all cd;
-      wake_up_all_next cd;
       schedule cd
 
     let next_instant cd =
       eval_control_and_next_to_current cd;
-      Event.next cd.cd_clock;
+      E.next cd.cd_clock;
       cd.cd_eoi := false;
       cd.cd_pause_clock := false
 

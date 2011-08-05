@@ -9,24 +9,12 @@ end
 module type CONTROL_TREE_R =
 sig
   module Step : STEP
-  module Event : Sig_env.S
 
   type 'a step = 'a Step.t
-  type current
-  type waiting_list
-  type next
 
   exception RML
 
-  type control_tree =
-      { kind: control_type;
-        mutable alive: bool;
-        mutable susp: bool;
-        mutable cond: (unit -> bool);
-        mutable children: control_tree list;
-        next: next;
-        next_tmp : next;
-        next_boi: next; }
+  type control_tree
   and control_type =
     | Clock_domain
     | Kill of unit step
@@ -35,39 +23,37 @@ sig
     | When of unit step ref
   and clock_domain
 
-  type ('a, 'b) event = ('a, 'b, clock_domain) Event.t * waiting_list * waiting_list
+  type ('a, 'b) event
+  type event_cfg
+  module type RUNTIME_EVENT =
+    sig
+      val status: ?only_at_eoi:bool -> ('a, 'b) event -> bool
+
+      val value: ('a, 'b) event -> 'b
+      val one: ('a, 'a list) event -> 'a
+      val pre_status: ('a, 'b) event -> bool
+      val pre_value: ('a, 'b) event -> 'b
+      val last: ('a, 'b) event -> 'b
+      val default: ('a, 'b) event -> 'b
+
+      val emit: ('a, 'b) event -> 'a -> unit
+      val clock_domain : ('a, 'b) event -> clock_domain
+
+      val cfg_present : ('a, 'b) event -> event_cfg
+      val cfg_or : event_cfg -> event_cfg -> event_cfg
+      val cfg_and : event_cfg -> event_cfg -> event_cfg
+      val cfg_status: ?only_at_eoi:bool -> event_cfg -> bool
+    end
+  module Event : RUNTIME_EVENT
 
   (* functions on the control tree *)
   val new_ctrl : ?cond: (unit -> bool) -> control_type -> control_tree
-  val is_toplevel : control_tree -> bool
-  val is_active : control_tree -> bool
+  val start_ctrl : control_tree -> control_tree -> unit
+  val end_ctrl : control_tree -> 'a step -> 'a -> unit
+  val wake_up_ctrl : control_tree -> clock_domain -> unit
   val set_kill : control_tree -> unit
-  val next_to_current : clock_domain -> control_tree -> unit
-
-  (* functions on the current data structure *)
-  val mk_current : unit -> current
-  val add_current : unit step -> clock_domain -> unit
-  val add_current_list : unit step list -> clock_domain -> unit
-  (* Adds all elements of a waiting list or next to current and empty it. *)
-  val add_current_waiting_list : waiting_list -> clock_domain -> unit
-  val add_current_next : next -> clock_domain -> unit
-
-  (* scheduling *)
-  val react : clock_domain -> unit
-  val schedule : clock_domain -> unit
-  val next_instant : clock_domain -> unit
-  val eoi : clock_domain -> unit
-  val macro_step_done : clock_domain -> bool
-
-  (*functions on waiting list*)
-  val mk_waiting_list : unit -> waiting_list
-  val add_waiting : unit step -> waiting_list -> unit
-
-  (* functions on next lists *)
-  val mk_next : unit -> next
-  val add_next : unit step -> next -> unit
-  val add_next_next : next -> next -> unit
-  val clear_next : next -> unit
+  val set_condition : control_tree -> (unit -> bool) -> unit
+  val set_suspended : control_tree -> bool -> unit
 
   (* events *)
   val new_evt : clock_domain -> ('a, 'a list) event
@@ -79,7 +65,47 @@ sig
   val is_eoi : clock_domain -> bool
   val set_pauseclock : clock_domain -> unit
   val control_tree : clock_domain -> control_tree
-  val add_weoi : clock_domain -> unit step -> unit
-  val add_weoi_waiting_list : clock_domain -> waiting_list -> unit
-  val add_weoi_next : clock_domain -> next -> unit
+
+  (* step scheduling *)
+  exception Wait_again
+
+  val on_current_instant : clock_domain -> unit step -> unit
+  val on_current_instant_list : clock_domain -> unit step list -> unit
+  val on_next_instant : control_tree -> unit step -> unit
+  (** [on_eoi cd f v] executes 'f v' during the eoi of cd. *)
+  val on_eoi : clock_domain -> unit step -> unit
+
+  (** [on_event evt ctrl f v] executes 'f v' if evt is emmitted and
+      ctrl is active in the same step.
+      It waits for the next activation of w otherwise,
+      or if the call raises Wait_again *)
+  val on_event : ('a, 'b) event -> control_tree -> 'c step -> 'c -> unit
+  (** [on_event evt_cfg ctrl f v] executes 'f v' if evt_cfg is true and
+      ctrl is active in the same step.
+      It waits for the next activation of w otherwise,
+      or if the call raises Wait_again *)
+  val on_event_cfg : event_cfg -> control_tree -> 'a step -> 'a -> unit
+  (** [on_event_at_eoi evt ctrl f] executes 'f ()' during the eoi
+      (of evt's clock domain) if ctrl is active in the same step.
+      Waits for the next activation of evt otherwise, or if the call
+      raises Wait_again *)
+  val on_event_at_eoi : ('a, 'b) event -> control_tree -> unit step -> unit
+  val on_event_cfg_at_eoi : event_cfg -> control_tree -> unit step -> unit
+  (** [on_event_or_next evt f_w v_w cd ctrl f_next] executes 'f_w v_w' if
+      evt is emitted before the end of instant of cd.
+      Otherwise, executes 'f_next ()' during the next instant. *)
+  val on_event_or_next : ('a, 'b) event -> 'c step -> 'c ->
+    clock_domain -> control_tree -> unit step -> unit
+ (** [on_event_cfg_or_next evt_cfg f_w v_w cd ctrl f_next] executes 'f_w v_w' if
+      evt_cfg is true before the end of instant of cd.
+      Otherwise, executes 'f_next ()' during the next instant. *)
+  val on_event_cfg_or_next : event_cfg -> 'c step -> 'c ->
+    clock_domain -> control_tree -> unit step -> unit
+
+  (* scheduling *)
+  val react : clock_domain -> unit
+  val schedule : clock_domain -> unit
+  val next_instant : clock_domain -> unit
+  val eoi : clock_domain -> unit
+  val macro_step_done : clock_domain -> bool
 end
