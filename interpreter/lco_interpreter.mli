@@ -58,10 +58,11 @@ module type S =
     val rml_global_signal: R.clock_domain -> ('a, 'a list) R.event
     val rml_global_signal_combine: R.clock_domain -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
 
-    val cfg_present': ('a,'b) R.event -> R.event_cfg
-    val cfg_present: (unit -> ('a,'b) R.event) -> R.event_cfg
-    val cfg_and: R.event_cfg -> R.event_cfg -> R.event_cfg
-    val cfg_or: R.event_cfg -> R.event_cfg -> R.event_cfg
+    type event_cfg_gen = unit -> R.event_cfg
+    val cfg_present': ('a,'b) R.event -> event_cfg_gen
+    val cfg_present: (unit -> ('a,'b) R.event) -> event_cfg_gen
+    val cfg_and: event_cfg_gen -> event_cfg_gen -> event_cfg_gen
+    val cfg_or: event_cfg_gen -> event_cfg_gen -> event_cfg_gen
 
     val rml_nothing: unit expr
     val rml_compute: (R.clock_domain -> unit -> 'a) -> 'a expr
@@ -77,10 +78,10 @@ module type S =
     val rml_get: (unit -> ('a, 'b) R.event) -> ('b -> 'c expr) -> 'c expr
     val rml_await': ('a, 'b) R.event -> unit expr
     val rml_await: (unit -> ('a, 'b) R.event) -> unit expr
-    val rml_await_conf: R.event_cfg -> unit expr
+    val rml_await_conf: event_cfg_gen -> unit expr
     val rml_await_immediate': ('a, 'b) R.event -> unit expr
     val rml_await_immediate: (unit -> ('a, 'b) R.event) -> unit expr
-    val rml_await_immediate_conf: R.event_cfg -> unit expr
+    val rml_await_immediate_conf: event_cfg_gen -> unit expr
     val rml_await_all': ('a, 'b) R.event -> ('b -> 'c expr) -> 'c expr
     val rml_await_all: (unit -> ('a, 'b) R.event) -> ('b -> 'c expr) -> 'c expr
     val rml_await_all_match':
@@ -97,7 +98,7 @@ module type S =
         (unit -> ('a , 'a list) R.event) -> ('a -> 'c expr) -> 'c expr
     val rml_present': ('a, 'b) R.event -> 'c expr -> 'c expr -> 'c expr
     val rml_present: (unit -> ('a, 'b) R.event) -> 'c expr -> 'c expr -> 'c expr
-    val rml_present_conf: R.event_cfg -> 'a expr -> 'a expr -> 'a expr
+    val rml_present_conf: event_cfg_gen -> 'a expr -> 'a expr -> 'a expr
     val rml_seq: 'a expr -> 'b expr -> 'b expr
     val rml_par: 'a expr -> 'b expr -> unit expr
     val rml_loop: 'a expr -> unit expr
@@ -120,7 +121,7 @@ module type S =
     val rml_run: (unit -> 'a process) -> 'a expr
     val rml_until': ('a, 'b) R.event -> unit expr -> unit expr
     val rml_until: (unit -> ('a, 'b) R.event) -> unit expr -> unit expr
-    val rml_until_conf: R.event_cfg -> unit expr -> unit expr
+    val rml_until_conf: event_cfg_gen -> unit expr -> unit expr
     val rml_until_handler':
         ('a, 'b) R.event -> 'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_until_handler:
@@ -135,10 +136,10 @@ module type S =
     val rml_control_match': ('a, 'b) R.event -> ('b -> bool) -> 'c expr -> 'c expr
     val rml_control_match:
         (unit -> ('a, 'b) R.event) -> ('b -> bool) -> 'c expr -> 'c expr
-    val rml_control_conf: R.event_cfg -> 'c expr -> 'c expr
+    val rml_control_conf: event_cfg_gen -> 'c expr -> 'c expr
     val rml_when': ('a, 'b) R.event -> 'c expr -> 'c expr
     val rml_when: (unit -> ('a, 'b) R.event) -> 'c expr -> 'c expr
-    val rml_when_conf: R.event_cfg -> 'c expr -> 'c expr
+    val rml_when_conf: event_cfg_gen -> 'c expr -> 'c expr
     val rml_if: (unit -> bool) -> 'a expr -> 'a expr -> 'a expr
 
     val rml_par_n : unit expr list -> unit expr

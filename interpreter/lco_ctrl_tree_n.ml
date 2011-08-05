@@ -45,6 +45,7 @@ module Rml_interpreter =
     type join_point = int ref option
     and 'a expr = 'a R.Step.t -> R.control_tree -> join_point -> R.clock_domain -> unit R.Step.t
     and 'a process = unit -> 'a expr
+    type event_cfg_gen = unit -> R.event_cfg
 
     let unit_value = ()
     let dummy_step _ = ()
@@ -67,12 +68,15 @@ module Rml_interpreter =
 
 (* ------------------------------------------------------------------------ *)
 
-    let cfg_present' evt = R.Event.cfg_present evt
-    let cfg_present expr_evt =
+    let cfg_present' evt _ =
+      R.Event.cfg_present evt
+    let cfg_present expr_evt _ =
       let evt = expr_evt () in
       R.Event.cfg_present evt
-    let cfg_and = R.Event.cfg_and
-    let cfg_or = R.Event.cfg_or
+    let cfg_and ev1 ev2 _ =
+      R.Event.cfg_and (ev1 ()) (ev2 ())
+    let cfg_or ev1 ev2 _ =
+      R.Event.cfg_or (ev1 ()) (ev2 ())
 
 (**************************************)
 (* nothing                            *)
@@ -156,7 +160,7 @@ module Rml_interpreter =
 
     let rml_await_immediate_conf expr_cfg =
       fun f_k ctrl jp cd _ ->
-        on_event_cfg expr_cfg ctrl f_k unit_value
+        on_event_cfg (expr_cfg ()) ctrl f_k unit_value
 
 (**************************************)
 (* get                                *)
@@ -246,9 +250,9 @@ module Rml_interpreter =
         let evt = expr_evt () in
         rml_await_one' evt p f_k ctrl jp cd unit_value
 
-    let rml_await_conf evt_cfg =
+    let rml_await_conf expr_cfg =
       fun f_k ctrl jp cd _ ->
-        R.on_event_cfg_at_eoi evt_cfg ctrl (fun () -> R.on_next_instant ctrl f_k)
+        R.on_event_cfg_at_eoi (expr_cfg ()) ctrl (fun () -> R.on_next_instant ctrl f_k)
 
 (**************************************)
 (* present                            *)
@@ -270,12 +274,12 @@ module Rml_interpreter =
 (* present_conf                       *)
 (**************************************)
 
-    let rml_present_conf evt_cfg p_1 p_2 =
+    let rml_present_conf expr_cfg p_1 p_2 =
       fun f_k ctrl jp cd ->
         let f_1 = p_1 f_k ctrl jp cd in
         let f_2 = p_2 f_k ctrl jp cd in
         fun () ->
-          on_event_cfg_or_next evt_cfg f_1 unit_value cd ctrl f_2
+          on_event_cfg_or_next (expr_cfg ()) f_1 unit_value cd ctrl f_2
 
 (**************************************)
 (* seq                                *)
@@ -594,11 +598,12 @@ let rml_loop p =
           start_ctrl ctrl new_ctrl;
           f unit_value
 
-    let rml_until_conf evt_cfg p =
+    let rml_until_conf expr_cfg p =
       fun f_k ctrl jp cd ->
         let new_ctrl = new_ctrl (Kill f_k) in
         let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
         fun _ ->
+          let evt_cfg = expr_cfg () in
           R.set_condition new_ctrl (fun () -> R.Event.cfg_status ~only_at_eoi:true evt_cfg);
           start_ctrl ctrl new_ctrl;
           f unit_value
@@ -703,9 +708,9 @@ let rml_loop p =
       in
       step_control cond p
 
-    let rml_control_conf evt_cfg p =
+    let rml_control_conf expr_cfg p =
       let cond () =
-        (**TODO: evaluer l'evt cfg au bon moment*)
+        let evt_cfg = expr_cfg () in
         fun () -> R.Event.cfg_status ~only_at_eoi:true evt_cfg
       in
       step_control cond p

@@ -39,7 +39,11 @@ struct
         }
 
     type ('a, 'b) event = ('a,'b, clock_domain) E.t * waiting_list * waiting_list
-    type event_cfg = bool -> (bool -> bool) * (waiting_list * clock_domain) list
+    type event_cfg =
+      | Cevent of (bool -> bool) * clock_domain * waiting_list * waiting_list
+      (* status, cd, wa, wp*)
+      | Cand of event_cfg * event_cfg
+      | Cor of event_cfg * event_cfg
 
     let unit_value = ()
 
@@ -111,25 +115,28 @@ struct
           add_current_waiting_list wa sig_cd;
           add_current_waiting_list wp sig_cd
 
-        let cfg_present ((n,wa,wp) as evt) is_long_wait =
-          (fun eoi -> status ~only_at_eoi:eoi evt),
-          [ (if is_long_wait then wa else wp), E.clock_domain n ]
+        let cfg_present ((n,wa,wp) as evt) =
+          Cevent ((fun eoi -> status ~only_at_eoi:eoi evt), E.clock_domain n, wa, wp)
+        let cfg_or ev1 ev2 =
+          Cor (ev1, ev2)
+        let cfg_and ev1 ev2 =
+          Cand (ev1, ev2)
 
-        let cfg_and c1 c2 is_long_wait =
-          let is_true1, evt_list1 = c1 is_long_wait in
-          let is_true2, evt_list2 = c2 is_long_wait in
-          (fun eoi -> is_true1 eoi && is_true2 eoi),
-          List.rev_append evt_list1 evt_list2
+        let cfg_status ?(only_at_eoi=false) evt_cfg =
+          let rec status k = match k with
+            | Cevent (c, _, _, _) -> c only_at_eoi
+            | Cand (cfg1, cfg2) -> status cfg1 && status cfg2
+            | Cor (cfg1, cfg2) -> status cfg1 || status cfg2
+          in
+          status evt_cfg
 
-        let cfg_or c1 c2 is_long_wait =
-          let is_true1, evt_list1 = c1 is_long_wait in
-          let is_true2, evt_list2 = c2 is_long_wait in
-          (fun eoi -> is_true1 eoi || is_true2 eoi),
-          List.rev_append evt_list1 evt_list2
-
-        let cfg_status ?(only_at_eoi=false) expr_cfg =
-          let is_true, _ = expr_cfg true in
-          is_true only_at_eoi
+        let cfg_events evt_cfg long_wait =
+          let rec events k = match k with
+            | Cevent (_, cd, wa, wp) -> [(if long_wait then wa else wp), cd]
+            | Cand (cfg1, cfg2) | Cor (cfg1, cfg2) ->
+              List.rev_append (events cfg1) (events cfg2)
+          in
+          events evt_cfg
       end
 
 (**************************************)
@@ -348,8 +355,7 @@ struct
       evt_cfg is true before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
     let on_event_cfg_or_next evt_cfg f_w v_w cd ctrl f_next =
-      let is_true, w_list = evt_cfg false in
-      if is_true false then
+      if Event.cfg_status evt_cfg then
         f_w v_w
       else
         let is_fired = ref false in
@@ -359,10 +365,11 @@ struct
               (is_fired := true;
                add_next f_next ctrl.next)
             else
-              (if is_true false then
+              (if Event.cfg_status evt_cfg then
                   (is_fired := true;
                    f_w v_w))
         in
+        let w_list = Event.cfg_events evt_cfg false in
         List.iter
           (fun (w,_) -> add_waiting try_fire w; add_weoi_waiting_list cd w) w_list
 
@@ -413,20 +420,20 @@ struct
         It waits for the next activation of w otherwise,
         or if the call raises Wait_again *)
     let on_event_cfg evt_cfg ctrl f v  =
-      let is_true, w_list = evt_cfg true in
       let wait_event_cfg () =
         let is_fired = ref false in
         let try_fire _ =
           if not !is_fired then
-            (if is_true false then
+            (if Event.cfg_status evt_cfg then
                 (is_fired := true;
                  f v)
              else
                 raise Wait_again)
         in
+        let w_list = Event.cfg_events evt_cfg true in
         List.iter (fun (w,cd) -> _on_event w cd ctrl try_fire unit_value) w_list
       in
-      if is_true false then
+      if Event.cfg_status evt_cfg then
         (try
            f v
          with
@@ -483,20 +490,21 @@ struct
         (of evt_cfg's clock domain) if ctrl is active in the same step.
         Waits for the next activation of evt otherwise. *)
      let on_event_cfg_at_eoi evt_cfg ctrl f =
-       let is_true, w_list = evt_cfg true in
-       if is_true false then
+       if Event.cfg_status evt_cfg then
          (* TODO: trouver le bon cd sur lequel attendre *)
+         let w_list = Event.cfg_events evt_cfg true in
          add_weoi (snd (List.hd w_list)) f
        else
          let is_fired = ref false in
          let f sig_cd _ =
            if not !is_fired then
-             (if is_true false then
+             (if Event.cfg_status evt_cfg then
                  (is_fired := true;
                   add_weoi sig_cd f)
               else
                  raise Wait_again)
          in
+         let w_list = Event.cfg_events evt_cfg true in
          List.iter (fun (w,sig_cd) -> _on_event w sig_cd ctrl (f sig_cd) unit_value) w_list
 
 
