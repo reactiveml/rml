@@ -2,7 +2,35 @@
 module type STEP =
 sig
   type 'a t
-  val exec : unit t -> unit
+  (*val exec : unit t -> unit*)
+end
+
+module type SEQ_DATA_STRUCT = functor (Step:STEP) ->
+sig
+  type next
+  type current
+  type waiting_list
+
+  exception Empty_current
+  (* functions on the current data structure *)
+  val mk_current : unit -> current
+  val take_current : current -> unit Step.t
+  val add_current : unit Step.t -> current -> unit
+  val add_current_list : unit Step.t list -> current -> unit
+  (* Adds all elements of a waiting list or next to current and empty it. *)
+  val add_current_waiting_list : waiting_list -> current -> unit
+  val add_current_next : next -> current -> unit
+
+  (*functions on waiting list*)
+  val mk_waiting_list : unit -> waiting_list
+  val add_waiting : unit Step.t -> waiting_list -> unit
+
+  (* functions on next lists *)
+  val mk_next : unit -> next
+  val add_next : unit Step.t -> next -> unit
+  val add_next_next : next -> next -> unit
+  val clear_next : next -> unit
+  val is_empty_next : next -> bool
 end
 
 
