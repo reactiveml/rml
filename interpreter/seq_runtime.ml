@@ -1,16 +1,13 @@
 
-module SimpleStep =
-struct
-  type 'a t = 'a -> unit
-end
-
 module Make (D: Runtime.SEQ_DATA_STRUCT) (E: Sig_env.S) =
 struct
-  include D(SimpleStep)
+  include D(struct
+    type 'a t = 'a -> unit
+  end)
 
     exception RML
 
-    type 'a step = 'a SimpleStep.t
+    type 'a step = 'a -> unit
 
     type control_tree =
         { kind: control_type;

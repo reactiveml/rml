@@ -24,33 +24,33 @@
 
 
 
-module Rml_interpreter: Lk_interpreter.S  =
-  functor (R : Runtime.R with type 'a Step.t = 'a -> unit) ->
+module Rml_interpreter =
+  functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
   struct
 
-    type event_cfg = bool -> (unit -> bool) * R.waiting_list list
-    and 'a process = 'a R.Step.t -> R.control_tree -> unit R.Step.t
+    type 'b expr = R.control_tree -> 'b R.step
+    and 'a process = 'a R.step -> unit expr
     and join_point = int ref
 
     let dummy_step _ = ()
-    let current = R.main_context
 
     open R
 
 (* ------------------------------------------------------------------------ *)
-    let rml_pre_status (n, _, _) = Event.pre_status n
+    let rml_pre_status evt = R.Event.pre_status evt
 
-    let rml_pre_value (n, _, _) = Event.pre_value n
+    let rml_pre_value evt = R.Event.pre_value evt
 
-    let rml_last (n, _, _) = Event.last n
+    let rml_last evt = R.Event.last evt
 
-    let rml_default (n, _, _) = Event.default n
+    let rml_default evt = R.Event.default evt
 
 
 (* ------------------------------------------------------------------------ *)
-    let rml_global_signal = new_evt
+    let rml_global_signal () = R.Event.new_evt R.top_clock_domain
 
-    let rml_global_signal_combine =  new_evt_combine
+    let rml_global_signal_combine def comb =
+        R.Event.new_evt_combine R.top_clock_domain def comb
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
@@ -67,7 +67,7 @@ module Rml_interpreter: Lk_interpreter.S  =
 (* pause                              *)
 (**************************************)
     let rml_pause k ctrl _ =
-      R.add_next k ctrl.next
+      R.on_next_instant ctrl k
 
 (**************************************)
 (* pause_kboi                         *)
@@ -90,13 +90,8 @@ module Rml_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* emit                               *)
 (**************************************)
-    let set_emit (n,wa,wp) v =
-      Event.emit n v;
-      R.add_current_waiting_list wa current;
-      R.add_current_waiting_list wp current
-
     let rml_emit_v_v v1 v2 k _ =
-      set_emit v1 v2;
+      R.Event.emit v1 v2;
       k ()
 
     let rml_emit_v_e v1 e2 k _ =
@@ -118,7 +113,8 @@ module Rml_interpreter: Lk_interpreter.S  =
 
     let rml_emit_pure = rml_emit_pure_e
 
-    let rml_expr_emit = set_emit
+    let rml_expr_emit evt v =
+       R.Event.emit evt v
 
     let rml_expr_emit_pure evt = rml_expr_emit evt ()
 
@@ -126,35 +122,9 @@ module Rml_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* await_immediate                    *)
 (**************************************)
-    let step_await_immediate_top (n,wa,_) k =
-      let rec self _ =
-        if R.Event.status n
-        then
-          k ()
-        else
-          R.add_waiting k wa
-      in self
-
-    let step_await_immediate (n,_,wp) k ctrl =
-      let rec self _ =
-        if R.Event.status n
-        then
-          k ()
-        else
-          if is_eoi current
-          then
-            R.add_next self ctrl.next
-          else
-            (R.add_waiting self wp;
-             R.add_weoi_waiting_list current wp)
-      in self
-
 
     let rml_await_immediate_v evt k ctrl _ =
-      if ctrl.kind = Top then
-        step_await_immediate_top evt k ()
-      else
-        step_await_immediate evt k ctrl ()
+      on_event evt ctrl k ()
 
     let rml_await_immediate expr_evt k ctrl _ =
       let evt = expr_evt() in
@@ -163,16 +133,13 @@ module Rml_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* get                                *)
 (**************************************)
-    let step_get_eoi n f ctrl _ =
-      let v =
-        if R.Event.status n
-        then R.Event.value n
-        else R.Event.default n
-      in
-      R.add_next (f v) ctrl.next
 
-    let step_get (n,_,_) f ctrl _ =
-      R.add_weoi current (step_get_eoi n f ctrl)
+    let step_get evt f ctrl _ =
+      let step_get_eoi _ =
+        let v = if R.Event.status evt then R.Event.value evt else R.Event.default evt in
+        R.on_next_instant ctrl (f v)
+      in
+      R.on_eoi R.top_clock_domain step_get_eoi
 
     let rml_get_v = step_get
 
@@ -182,123 +149,44 @@ module Rml_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* await_immediate_one                *)
 (**************************************)
-    let step_await_immediate_one_top (n, wa, _) f =
-      let rec self _ =
-        if R.Event.status n
-        then
-          let v = R.Event.one n in
-          f v ()
-        else
-          R.add_waiting self wa
-      in self
-
-    let step_await_immediate_one (n, _, wp) f ctrl =
-      let rec self _ =
-        if R.Event.status n
-        then
-          let v = R.Event.one n in
-          f v ()
-        else
-          if is_eoi current
-          then
-            R.add_next self ctrl.next
-          else
-            (R.add_waiting self wp;
-             R.add_weoi_waiting_list current wp)
-      in self
-
-    let rml_await_immediate_one expr_evt f ctrl _ =
-      if ctrl.kind = Top then
-        step_await_immediate_one_top (expr_evt()) f ()
-      else
-        step_await_immediate_one (expr_evt()) f ctrl ()
 
     let rml_await_immediate_one_v evt f ctrl _ =
-      if ctrl.kind = Top then
-        step_await_immediate_one_top evt f ()
-      else
-        step_await_immediate_one evt f ctrl ()
+      let f _ =
+        let x = R.Event.one evt in
+        f x ()
+      in
+      R.on_event evt ctrl f ()
+
+    let rml_await_immediate_one expr_evt f ctrl _ =
+      rml_await_immediate_one_v (expr_evt()) f ctrl ()
 
 
 (**************************************)
 (* present                            *)
 (**************************************)
-    let step_present ctrl (n,_,wp) k_1 k_2 =
-      let rec self (* : 'a. 'a -> unit *) = fun _ ->
-        if R.Event.status n
-        then
-          k_1 ()
-        else
-          if is_eoi current
-          then
-            R.add_next k_2 ctrl.next
-          else
-            (R.add_waiting self wp;
-             (*wp := (Obj.magic self: unit step)::!wp;*)(*Polymiphic recursion*)
-             R.add_weoi_waiting_list current wp)
-      in (*self*)
-      fun _ -> self ()
+    let rml_present_v evt k_1 k_2 ctrl _ =
+      on_event_or_next evt k_1 () R.top_clock_domain ctrl k_2
 
-    let rml_present_v = step_present
-
-    let rml_present ctrl expr_evt k_1 k_2 _ =
-      let evt = expr_evt () in
-      step_present ctrl evt k_1 k_2 ()
+    let rml_present expr_evt k_1 k_2 ctrl _ =
+      rml_present_v (expr_evt ()) k_1 k_2 ctrl ()
 
 
 (**************************************)
 (* await_all_match                    *)
 (**************************************)
-    let step_await_all_match_top (n, wa, _) matching f ctrl =
-      let rec self _ =
-        if is_eoi current then
-          let v = R.Event.value n in
-          if R.Event.status n && matching v
-          then
-            let f_body = f v in
-            R.add_next f_body ctrl.next
-          else
-            R.add_waiting self wa
-        else
-          if R.Event.status n
-          then
-            R.add_weoi current self
-          else
-            R.add_waiting self wa
-      in self
-
-
-    let step_await_all_match (n,_,wp) matching f ctrl =
-      let rec self _ =
-        if is_eoi current then
-          let v = R.Event.value n in
-          if R.Event.status n && matching v
-          then
-            let f_body = f v in
-            R.add_next f_body ctrl.next
-          else
-            R.add_next self ctrl.next
-        else
-          if R.Event.status n
-          then
-            R.add_weoi current self
-          else
-            (R.add_waiting self wp;
-             R.add_weoi_waiting_list current wp)
-      in self
-
     let rml_await_all_match_v evt matching k ctrl _ =
-      if ctrl.kind = Top then
-        step_await_all_match_top evt matching k ctrl ()
-      else
-        step_await_all_match evt matching k ctrl ()
+      let await_eoi _ =
+        let v = R.Event.value evt in
+        if matching v then
+          R.on_next_instant ctrl (k v)
+        else
+          raise Wait_again
+      in
+      R.on_event_at_eoi evt ctrl await_eoi
+
 
     let rml_await_all_match expr_evt matching k ctrl _ =
-      let evt = expr_evt () in
-      if ctrl.kind = Top then
-        step_await_all_match_top evt matching k ctrl ()
-      else
-        step_await_all_match evt matching k ctrl ()
+      rml_await_all_match_v (expr_evt ()) matching k ctrl ()
 
 
 (**************************************)
@@ -306,14 +194,10 @@ module Rml_interpreter: Lk_interpreter.S  =
 (**************************************)
 
     let rml_signal p _ =
-      let evt = new_evt() in
-      let f = p evt in
-      f ()
+      p (R.Event.new_evt R.top_clock_domain) ()
 
     let rml_signal_combine_v_v default comb p _ =
-      let evt = new_evt_combine default comb in
-      let f = p evt in
-      f ()
+      p (R.Event.new_evt_combine R.top_clock_domain default comb) ()
 
     let rml_signal_combine_v_e default comb p _ =
       rml_signal_combine_v_v default (comb()) p ()
@@ -331,7 +215,7 @@ module Rml_interpreter: Lk_interpreter.S  =
     let rml_split_par n f _ =
       let j = ref n in
       let k_list = f j in
-      R.add_current_list k_list current
+      R.on_current_instant_list R.top_clock_domain k_list
 
     let rml_join_par j k _ =
       decr j;
@@ -473,7 +357,7 @@ module Rml_interpreter: Lk_interpreter.S  =
             begin
               for i = max downto min do
                 let f = p j i in
-                add_current f current
+                R.on_current_instant R.top_clock_domain f
               done
             end
         end
@@ -488,7 +372,7 @@ module Rml_interpreter: Lk_interpreter.S  =
             begin
               for i = min to max do
                 let f = p j i in
-                add_current f current
+                R.on_current_instant R.top_clock_domain f
               done
             end
         end
@@ -496,77 +380,51 @@ module Rml_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* until                              *)
 (**************************************)
-    let rml_start_until_v ctrl (n,_,_) p k _ =
+    let rml_start_until_v evt p k ctrl _ =
       let new_ctrl =
-        new_ctrl ~cond:(fun () -> R.Event.status n)
-          (Kill_handler (fun () -> let v = R.Event.value n in k v))
+        new_ctrl ~cond:(fun () -> R.Event.status evt)
+          (Kill_handler (fun () -> let v = R.Event.value evt in k v))
       in
-      ctrl.children <- new_ctrl :: ctrl.children;
+      R.start_ctrl ctrl new_ctrl;
       p new_ctrl ()
 
-    let rml_start_until ctrl expr_evt p k _ =
-      rml_start_until_v ctrl (expr_evt ()) p k ()
+    let rml_start_until expr_evt p k ctrl _ =
+      rml_start_until_v (expr_evt ()) p k ctrl ()
 
-    let rml_end_until new_ctrl k x =
-      new_ctrl.alive <- false;
-      k x
+    let rml_end_until = R.end_ctrl
 
 (**************************************)
 (* control                            *)
 (**************************************)
-   let rml_start_control_v ctrl (n, _, _) p _ =
-      let new_ctrl =
-        new_ctrl ~cond:(fun () -> R.Event.status n)
-          Susp
-      in
-      ctrl.children <- new_ctrl :: ctrl.children;
+   let rml_start_control_v evt p ctrl _ =
+      let new_ctrl = new_ctrl ~cond:(fun () -> R.Event.status evt) Susp in
+      R.start_ctrl ctrl new_ctrl;
       p new_ctrl ()
 
-   let rml_start_control ctrl expr_evt p _ =
-     rml_start_control_v ctrl (expr_evt()) p ()
+   let rml_start_control expr_evt p ctrl _ =
+     rml_start_control_v (expr_evt()) p ctrl ()
 
-    let rml_end_control new_ctrl k x =
-      new_ctrl.alive <- false;
-      k x
+   let rml_end_control = R.end_ctrl
 
 
 (**************************************)
 (* when                               *)
 (**************************************)
-    let step_when ctrl new_ctrl n w =
-      let rec f_when =
-        fun _ ->
-          if R.Event.status n
-          then
-            (new_ctrl.susp <- false;
-             R.next_to_current current new_ctrl)
-          else
-            if is_eoi current
-            then
-              R.add_next f_when ctrl.next
-            else
-              (R.add_waiting f_when w;
-               if ctrl.kind <> Top then R.add_weoi_waiting_list current w)
-      in f_when
-
-    let rml_start_when_v ctrl (n,wa,wp) p _ =
+    let rml_start_when_v evt p ctrl _ =
       let dummy = ref (fun _ -> assert false) in
-      let new_ctrl = new_ctrl ~cond:(fun () -> R.Event.status n) (When dummy) in
-      let _ = new_ctrl.susp <- true in
-      let f_when =
-        step_when ctrl new_ctrl n (if ctrl.kind = Top then wa else wp)
-      in
+      let new_ctrl = R.new_ctrl ~cond:(fun () -> R.Event.status evt) (When dummy) in
+      let when_act _ = R.wake_up_ctrl new_ctrl R.top_clock_domain in
+      let rec f_when _ = R.on_event evt ctrl when_act () in
       dummy := f_when;
-      R.add_next (p new_ctrl) new_ctrl.next;
-      ctrl.children <- new_ctrl :: ctrl.children;
+      R.start_ctrl ctrl new_ctrl;
+      R.set_suspended new_ctrl true;
+      R.on_next_instant new_ctrl (p new_ctrl);
       f_when ()
 
-    let rml_start_when ctrl expr_evt p _ =
-      rml_start_when_v ctrl (expr_evt()) p ()
+    let rml_start_when expr_evt p ctrl _ =
+      rml_start_when_v (expr_evt()) p ctrl ()
 
-    let rml_end_when new_ctrl k x =
-      new_ctrl.alive <- false;
-      k x
+    let rml_end_when = R.end_ctrl
 
 
 
@@ -605,6 +463,12 @@ module Rml_interpreter: Lk_interpreter.S  =
 (* rml_make                                       *)
 (**************************************************)
     let rml_make result p =
-      p (fun x -> result := Some x) top
+      p (fun x -> result := Some x) (R.control_tree R.top_clock_domain)
 
+
+    exception RML
+    module R = R
   end
+
+module Lk_seq_interpreter =
+  Rml_interpreter(Seq_runtime.SeqRuntime)

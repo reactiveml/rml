@@ -40,7 +40,7 @@ module type S =
     module R : LCO_RUNTIME
 
     type 'a expr
-    and 'a process = unit -> 'a expr
+    and 'a process
 
     exception RML
 

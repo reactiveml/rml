@@ -37,8 +37,26 @@ struct
     in
     react
 end
-
 module LcoSeqInterpreter = LcoInterpreter(Lco_ctrl_tree_n.Lco_ctrl_tree_seq_interpreter)
+
+
+module LkInterpreter(I:Lk_interpreter.S) =
+struct
+  type 'a process = 'a I.process
+
+  let rml_make p =
+    let result = ref None in
+    let step = I.rml_make result p in
+    (*R.init ();*)
+    I.R.on_current_instant I.R.top_clock_domain step;
+    let react () =
+      I.R.react I.R.top_clock_domain;
+      !result
+    in
+    react
+end
+module LkSeqInterpreter = LkInterpreter(Lk_implem.Lk_seq_interpreter)
+
 
 module type Interpretor_type =
   sig
