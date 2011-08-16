@@ -62,9 +62,9 @@ module Rml_interpreter =
     let rml_default evt = R.Event.default evt
 
 (* ------------------------------------------------------------------------ *)
-    let rml_global_signal = R.new_evt
+    let rml_global_signal = R.Event.new_evt
 
-    let rml_global_signal_combine = R.new_evt_combine
+    let rml_global_signal_combine = R.Event.new_evt_combine
 
 (* ------------------------------------------------------------------------ *)
 
@@ -377,11 +377,11 @@ let rml_loop p =
 
     let rml_signal p =
       fun f_k ctrl jp cd _ ->
-        p (new_evt cd) f_k ctrl jp cd unit_value
+        p (R.Event.new_evt cd) f_k ctrl jp cd unit_value
 
     let rml_signal_combine default comb p =
       fun f_k ctrl jp cd _ ->
-        let evt = new_evt_combine cd (default()) (comb()) in
+        let evt = R.Event.new_evt_combine cd (default()) (comb()) in
         p evt f_k ctrl jp cd unit_value
 
 (**************************************)
@@ -720,13 +720,13 @@ let rml_loop p =
 
     let step_when f_k ctrl jp cd p evt =
       let dummy = ref dummy_step in
-      let new_ctrl = new_ctrl (When dummy) in
+      let new_ctrl = R.new_ctrl (When dummy) in
       let when_act _ = R.wake_up_ctrl new_ctrl cd in
-      let rec f_when _ = on_event evt ctrl when_act unit_value in
-      let f = p (end_ctrl new_ctrl f_k) new_ctrl None cd in
+      let rec f_when _ = R.on_event evt ctrl when_act unit_value in
+      let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
       dummy := f_when;
       fun () ->
-        start_ctrl ctrl new_ctrl;
+        R.start_ctrl ctrl new_ctrl;
         R.set_condition new_ctrl (fun () -> R.Event.status evt);
         R.set_suspended new_ctrl true;
         R.on_next_instant new_ctrl f;
