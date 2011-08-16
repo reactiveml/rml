@@ -24,8 +24,7 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
 
 
 let gen_main_fun out_chan =
-  output_string out_chan ("module Rml_machine = Rml_machine.M("^
-                             !interpreter_module ^");;\n");
+  output_string out_chan ("module Rml_machine = Rml_machine.M(Interpreter);;\n");
   let main =
     try
       Modules.pfind_value_desc
@@ -63,7 +62,7 @@ let compile_impl info_chan filename module_name intermediate_code =
         "*)\n\n");
         (* selection of the interpreter *)
   output_string out_chan ("module Interpreter = "^ !interpreter_module ^"."^ !interpreter_impl^"\n");
-  output_string out_chan ("module Machine = Rml_machine.M("^ !interpreter_module^")\n");
+  output_string out_chan ("module Machine = Rml_machine.M(Interpreter)\n");
 
   (* the implementation *)
   compile_implementation_back_end info_chan out_chan module_name intermediate_code;

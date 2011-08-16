@@ -22,54 +22,38 @@
 (* created: 2005-09-13  *)
 (* file: rml_machine.ml *)
 
-module LcoInterpreter(I:Lco_interpreter.S) =
-struct
-  type 'a process = 'a I.process
-
-  let rml_make p =
-    let result = ref None in
-    let step = I.rml_make I.R.top_clock_domain result p in
-    (*R.init ();*)
-    I.R.on_current_instant I.R.top_clock_domain step;
-    let react () =
-      I.R.react I.R.top_clock_domain;
-      !result
-    in
-    react
-end
-module LcoSeqInterpreter = LcoInterpreter(Lco_ctrl_tree_n.Lco_ctrl_tree_seq_interpreter)
-
-
-module LkInterpreter(I:Lk_interpreter.S) =
-struct
-  type 'a process = 'a I.process
-
-  let rml_make p =
-    let result = ref None in
-    let step = I.rml_make result p in
-    (*R.init ();*)
-    I.R.on_current_instant I.R.top_clock_domain step;
-    let react () =
-      I.R.react I.R.top_clock_domain;
-      !result
-    in
-    react
-end
-module LkSeqInterpreter = LkInterpreter(Lk_implem.Lk_seq_interpreter)
-
-
-module type Interpretor_type =
+module type INTERPRETER =
   sig
     type 'a process
-    val rml_make: 'a process -> (unit -> 'a option)
+    module R :
+     (sig
+       type clock_domain
+       type ('a, 'b) event
+       type 'a step
+       type control_tree
+
+       val top_clock_domain : clock_domain
+       val react : clock_domain -> unit
+       val on_current_instant : clock_domain -> unit step -> unit
+      end)
+
+    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
   end
 
-module M =
-  functor (Interpretor: Interpretor_type) ->
+module M = functor (I : INTERPRETER) ->
   struct
+    let rml_make p =
+      let result = ref None in
+      let step = I.rml_make I.R.top_clock_domain result p in
+      I.R.on_current_instant I.R.top_clock_domain step;
+      let react () =
+        I.R.react I.R.top_clock_domain;
+        !result
+      in
+      react
 
     let rml_exec p =
-      let react = Interpretor.rml_make p in
+      let react = rml_make p in
       let rec exec () =
         match react () with
         | None -> Format.printf "@.@.New step@."; exec()
@@ -77,7 +61,7 @@ module M =
       in exec ()
 
     let rml_exec_n p n =
-      let react = Interpretor.rml_make p in
+      let react = rml_make p in
       let rec exec n =
         if n > 0 then (
           Format.printf "@.@.*******************  New step ********************@.";
@@ -93,7 +77,7 @@ module M =
       let debut = ref 0.0 in
       let fin = ref 0.0 in
       let diff = ref 0.0 in
-      let react = Interpretor.rml_make p in
+      let react = rml_make p in
       let rec exec () =
         let _ = debut := Sys.time() in
         let v = react () in
@@ -119,7 +103,7 @@ module M =
       let fin = ref 0.0 in
       let diff = ref 0.0 in
       let instant = ref 0 in
-      let react = Interpretor.rml_make p in
+      let react = rml_make p in
       let rec exec n =
         if n > 0 then
           let _ =
