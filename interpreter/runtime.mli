@@ -8,9 +8,7 @@ end
 
 module type CONTROL_TREE_R =
 sig
-  module Step : STEP
-
-  type 'a step = 'a Step.t
+  type 'a step
 
   exception RML
 

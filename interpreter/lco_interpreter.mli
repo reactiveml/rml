@@ -25,15 +25,14 @@
 
 module type LCO_RUNTIME =
   sig
-    module Step : Runtime.STEP
-
     type clock_domain
     type ('a, 'b) event
     type event_cfg
+    type 'a step
 
     val top_clock_domain : clock_domain
     val react : clock_domain -> unit
-    val on_current_instant : clock_domain -> unit Step.t -> unit
+    val on_current_instant : clock_domain -> unit step -> unit
   end
 
 module type S =
@@ -45,7 +44,7 @@ module type S =
 
     exception RML
 
-    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.Step.t
+    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
 
     val rml_pre_status: ('a, 'b) R.event -> bool
     val rml_pre_value: ('a, 'b) R.event -> 'b

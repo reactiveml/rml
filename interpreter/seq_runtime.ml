@@ -1,8 +1,6 @@
 
-module type SEQ_DATA_STRUCT =
+module type SEQ_DATA_STRUCT = functor (Step:Runtime.STEP) ->
 sig
-  module Step : Runtime.STEP
-
   type next
   type current
   type waiting_list
@@ -29,10 +27,10 @@ sig
   val is_empty_next : next -> bool
 end
 
-module Make
-  (D: SEQ_DATA_STRUCT with type 'a Step.t = 'a -> unit) (E: Sig_env.S) =
+module Make (Step:Runtime.STEP with type 'a t = 'a -> unit)
+  (D: SEQ_DATA_STRUCT) (E: Sig_env.S) =
 struct
-  include D
+  include D(Step)
 
     exception RML
 
@@ -598,4 +596,4 @@ struct
     !next = []
 end
 
-module SeqRuntime = Make(ListDataStruct(SimpleStep))(Sig_env.Record)
+module SeqRuntime = Make(SimpleStep)(ListDataStruct)(Sig_env.Record)

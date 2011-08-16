@@ -38,12 +38,12 @@
 (*   Gestion du parallele n-aire                                      *)
 
 module Rml_interpreter =
-  functor (R : Runtime.CONTROL_TREE_R with type 'a Step.t = 'a -> unit) ->
+  functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
   struct
     exception RML = R.RML
 
     type join_point = int ref option
-    and 'a expr = 'a R.Step.t -> R.control_tree -> join_point -> R.clock_domain -> unit R.Step.t
+    and 'a expr = 'a R.step -> R.control_tree -> join_point -> R.clock_domain -> unit R.step
     and 'a process = unit -> 'a expr
     type event_cfg_gen = unit -> R.event_cfg
 
