@@ -821,6 +821,5 @@ let rml_loop p =
 
 end (* Module Rml_interpreter *)
 
-
 module Lco_ctrl_tree_seq_interpreter =
-  Rml_interpreter(Seq_runtime.SeqListRuntime(Seq_runtime.SimpleStep)(Sig_env.Record))
+  Rml_interpreter(Seq_runtime.SeqRuntime)

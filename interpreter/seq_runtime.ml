@@ -1,14 +1,42 @@
 
-module SeqListRuntime (S : Runtime.STEP with type 'a t = 'a -> unit) (E: Sig_env.S) =
+module type SEQ_DATA_STRUCT =
+sig
+  module Step : Runtime.STEP
+
+  type next
+  type current
+  type waiting_list
+
+  exception Empty_current
+  (* functions on the current data structure *)
+  val mk_current : unit -> current
+  val take_current : current -> unit Step.t
+  val add_current : unit Step.t -> current -> unit
+  val add_current_list : unit Step.t list -> current -> unit
+  (* Adds all elements of a waiting list or next to current and empty it. *)
+  val add_current_waiting_list : waiting_list -> current -> unit
+  val add_current_next : next -> current -> unit
+
+  (*functions on waiting list*)
+  val mk_waiting_list : unit -> waiting_list
+  val add_waiting : unit Step.t -> waiting_list -> unit
+
+  (* functions on next lists *)
+  val mk_next : unit -> next
+  val add_next : unit Step.t -> next -> unit
+  val add_next_next : next -> next -> unit
+  val clear_next : next -> unit
+  val is_empty_next : next -> bool
+end
+
+module Make
+  (D: SEQ_DATA_STRUCT with type 'a Step.t = 'a -> unit) (E: Sig_env.S) =
 struct
-    module Step = S
+  include D
 
     exception RML
 
-    type 'a step = 'a S.t
-    type next = unit step list ref
-    type current = unit step list ref
-    type waiting_list = unit step list ref
+    type 'a step = 'a Step.t
 
     type control_tree =
         { kind: control_type;
@@ -47,29 +75,6 @@ struct
 
     let unit_value = ()
 
-    let mk_current () = ref ([] : unit step list)
-    let add_current p ctx =
-      ctx.cd_current := p :: !(ctx.cd_current)
-    let add_current_list pl ctx =
-      ctx.cd_current := List.rev_append pl !(ctx.cd_current)
-    let add_current_waiting_list w ctx =
-      ctx.cd_current := List.rev_append !w !(ctx.cd_current);
-      w := []
-    let add_current_next next ctx =
-      ctx.cd_current := List.rev_append !next !(ctx.cd_current);
-      next := []
-    let mk_waiting_list () = ref ([]:unit step list)
-    let add_waiting p w =
-      w := p :: ! w
-    let mk_next () = ref ([]:unit step list)
-    let add_next p next =
-      next := p :: !next
-      (*Format.eprintf "Adding to next: %d@." (List.length !next)*)
-    let add_next_next n1 n2 =
-      n2 := List.rev_append !n1 !n2
-    let clear_next next =
-      next := []
-
 
     module Event =
       struct
@@ -98,8 +103,8 @@ struct
         let emit (n,wa,wp) v =
           E.emit n v;
           let sig_cd = E.clock_domain n in
-          add_current_waiting_list wa sig_cd;
-          add_current_waiting_list wp sig_cd
+          add_current_waiting_list wa sig_cd.cd_current;
+          add_current_waiting_list wp sig_cd.cd_current
 
         let cfg_present ((n,wa,wp) as evt) =
           Cevent ((fun eoi -> status ~only_at_eoi:eoi evt), E.clock_domain n, wa, wp)
@@ -226,8 +231,8 @@ struct
 
       and next_to_current ck node =
         (*Format.eprintf "Adding %d elets@." (List.length !(node.next));*)
-        add_current_next node.next ck;
-        add_current_next node.next_boi ck;
+        add_current_next node.next ck.cd_current;
+        add_current_next node.next_boi ck.cd_current;
       and next_to_father pere node =
         add_next_next node.next pere.next;
         add_next_next node.next_boi pere.next_boi;
@@ -246,7 +251,7 @@ struct
 
     let wake_up_ctrl new_ctrl cd =
       new_ctrl.susp <- false;
-      next_to_current cd new_ctrl
+      next_to_current cd.cd_current new_ctrl
 
     let is_active ctrl =
       ctrl.alive && not ctrl.susp
@@ -285,22 +290,22 @@ struct
 
 (* debloquer les processus en attent d'un evt *)
     let wake_up ck w =
-      add_current_waiting_list w ck
+      add_current_waiting_list w ck.cd_current
 
     let wake_up_all ck =
-      List.iter (fun wp -> add_current_waiting_list wp ck) ck.cd_wake_up;
+      List.iter (fun wp -> add_current_waiting_list wp ck.cd_current) ck.cd_wake_up;
       ck.cd_wake_up <- []
 
     let wake_up_all_next cd =
-      List.iter (fun n -> add_current_next n cd) cd.cd_wake_up_next;
+      List.iter (fun n -> add_current_next n cd.cd_current) cd.cd_wake_up_next;
       cd.cd_wake_up_next <- []
 
 (* ------------------------------------------------------------------------ *)
 
     exception Wait_again
 
-    let on_current_instant cd f = add_current f cd
-    let on_current_instant_list cd fl = add_current_list fl cd
+    let on_current_instant cd f = add_current f cd.cd_current
+    let on_current_instant_list cd fl = add_current_list fl cd.cd_current
     let on_next_instant ctrl f = add_next f ctrl.next
 
     (** [on_eoi cd f] executes 'f ()' during the eoi of cd. *)
@@ -492,16 +497,15 @@ struct
 
     let schedule cd =
       let ssched () =
-      match !(cd.cd_current) with
-      | f :: c ->
-        cd.cd_current := c;
-        Step.exec f
-      | [] -> ()
+        try
+          let f = take_current cd.cd_current in
+          Step.exec f; false
+        with
+            Empty_current -> true
       in
       (*Format.eprintf "Exec %d elts@." (List.length !(cd.cd_current));*)
-      ssched ();
-      while !(cd.cd_current) <> [] do
-        ssched ();
+      while not (ssched ()) do
+        ()
       done
 
     let eoi cd =
@@ -530,7 +534,7 @@ struct
           | When _ ->
             not ctrl.susp && has_next_children ctrl
     and has_next_children ctrl =
-      !(ctrl.next) <> [] || List.exists has_next ctrl.children
+      not (is_empty_next ctrl.next) || List.exists has_next ctrl.children
 
     let macro_step_done cd =
       !(cd.cd_pause_clock) || not (has_next cd.cd_top)
@@ -553,23 +557,45 @@ struct
     p ()
 end
 
-(*
-module LkSeqI (Interpreter:Lk_interpreter.S) =
+module ListDataStruct (S: Runtime.STEP) =
 struct
-  module R = SeqListRuntime(SimpleStep)(Sig_env.Record)
-  module I = Interpreter(R)
+  module Step = S
 
-  let rml_make p =
-    let result = ref None in
-    let step = I.rml_make result p in
-    (*R.init ();*)
-    R.add_step step;
-    let react () =
-      R.react ();
-      !result
-    in
-    react
+  type next = unit Step.t list ref
+  type current = unit Step.t list ref
+  type waiting_list = unit Step.t list ref
+
+  let mk_current () = ref ([] : unit Step.t list)
+  let add_current p c =
+    c := p :: !c
+  let add_current_list pl c =
+    c := List.rev_append pl !c
+  let add_current_waiting_list w c =
+    c := List.rev_append !w !c;
+    w := []
+  let add_current_next next c =
+    c := List.rev_append !next !c;
+    next := []
+
+  exception Empty_current
+  let take_current c = match !c with
+    | f :: l -> c := l; f
+    | [] -> raise Empty_current
+
+  let mk_waiting_list () = ref ([]:unit Step.t list)
+  let add_waiting p w =
+    w := p :: ! w
+
+  let mk_next () = ref ([]:unit Step.t list)
+  let add_next p next =
+    next := p :: !next
+    (*Format.eprintf "Adding to next: %d@." (List.length !next)*)
+  let add_next_next n1 n2 =
+    n2 := List.rev_append !n1 !n2
+  let clear_next next =
+    next := []
+  let is_empty_next next =
+    !next = []
 end
-*)
 
-(*module LkSeqInterpreter = LkSeqI(Lk_implem.Rml_interpreter)*)
+module SeqRuntime = Make(ListDataStruct(SimpleStep))(Sig_env.Record)
