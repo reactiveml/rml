@@ -1,0 +1,6 @@
+open Rmltest_utils
+
+let process test p expected n =
+  signal abort in
+  let act = mk_checker expected n in
+  run (p act)

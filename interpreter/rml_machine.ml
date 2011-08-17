@@ -48,6 +48,7 @@ module M = functor (I : INTERPRETER) ->
       I.R.on_current_instant I.R.top_clock_domain step;
       let react () =
         I.R.react I.R.top_clock_domain;
+        Rmltest_utils.step ();
         !result
       in
       react
