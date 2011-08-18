@@ -152,7 +152,7 @@ struct
                  set_kill p;
                  false)
               else
-                (p.children <- eval_children p p.children active [];
+                (p.children <- eval_children p p.children active;
                  if active then next_to_current cd p
                  else next_to_father pere p;
                  true)
@@ -163,7 +163,7 @@ struct
                  set_kill p;
                  false)
               else
-                (p.children <- eval_children p p.children active [];
+                (p.children <- eval_children p p.children active;
                  if active then next_to_current cd p
                  else next_to_father pere p;
                  true)
@@ -176,7 +176,7 @@ struct
                 (if active then next_to_current cd p;
                  true)
               else
-                (p.children <- eval_children p p.children active [];
+                (p.children <- eval_children p p.children active;
                  if active then next_to_current cd p
                  else if not p.susp then next_to_father pere p;
                  true)
@@ -186,19 +186,20 @@ struct
               else
                 (p.susp <- true;
                  add_next !f_when pere.next;
-                 p.children <- eval_children p p.children false [];
+                 p.children <- eval_children p p.children false;
                  true)
         else
           (set_kill p;
            false)
 
-      and eval_children p nodes active acc =
-        match nodes with
+      and eval_children p nodes active =
+        List.filter (fun node -> eval p node active) nodes
+        (*match nodes with
         | [] -> acc
         | node :: nodes ->
             if eval p node active
             then eval_children p nodes active (node :: acc)
-            else eval_children p nodes active acc
+            else eval_children p nodes active acc*)
 
       and next_to_current ck node =
         (*Format.eprintf "Adding %d elets@." (List.length !(node.next));*)
@@ -208,7 +209,7 @@ struct
         add_next_next node.next pere.next;
         add_next_next node.next_boi pere.next_boi;
       in
-        cd.cd_top.children <- eval_children cd.cd_top cd.cd_top.children true [];
+        cd.cd_top.children <- eval_children cd.cd_top cd.cd_top.children true;
         next_to_current cd cd.cd_top
 
 (* deplacer dans la liste current les processus qui sont dans  *)
@@ -234,18 +235,16 @@ struct
       ctrl.cond <- c
 
     let mk_clock_domain () =
-      let cd = { cd_current = mk_current ();
-                 cd_pause_clock = ref false;
-                 cd_eoi = ref false;
-                 cd_weoi = mk_waiting_list ();
-                 cd_wake_up = [];
-                 cd_wake_up_next =  [];
-                 cd_clock = E.init_clock ();
-                 cd_top = new_ctrl Clock_domain; (* use a phony value*)
-               }
-      in
-      (*cd.cd_top <- new_ctrl (Clock_domain cd);*) (*and set the correct value here*)
-      cd
+      { cd_current = mk_current ();
+        cd_pause_clock = ref false;
+        cd_eoi = ref false;
+        cd_weoi = mk_waiting_list ();
+        cd_wake_up = [];
+        cd_wake_up_next =  [];
+        cd_clock = E.init_clock ();
+        cd_top = new_ctrl Clock_domain;
+      }
+
 
     let top_clock_domain = mk_clock_domain ()
     let is_eoi cd = !(cd.cd_eoi)
