@@ -1,0 +1,27 @@
+(* [P [O 2; O 3]; O 1; O 2] *)
+let process par_seq act =
+  ((act 2; pause) || (act 3; pause));
+  act 1; pause; act 2
+
+(* [O 8; O 7; O 8] *)
+let process simple_loop act =
+  loop
+    act 8; pause; act 7; pause
+  end
+
+(* [N; O 0] *)
+let process await_match act =
+  signal s default 0 gather (+) in
+  emit s 0
+  ||
+  await s(0) in act 0
+
+open Rmltest
+open Rmltest_utils
+
+let process test =
+  run (Rmltest.test "par_seq" par_seq [P [O 2; O 3]; O 1; O 2])
+  ||
+  run (Rmltest.test "simple_loop" simple_loop [O 8; O 7; O 8])
+  ||
+  run (Rmltest.test "await_match" await_match [N; O 0])

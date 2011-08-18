@@ -1,0 +1,101 @@
+(*[O 0]*)
+let process ck_one_step act =
+  newclock ck in
+    pause ck; act 0
+
+(* let ck = S (O 0, S (O 1, O 2)) in  [ck; ck] *)
+let process ck_loop_pauseck act =
+  (newclock ck in
+    loop
+      act 0; pause; act 1; pause; act 2; pauseclock ck
+    end)
+
+(* let ck = S (O 0, S (O 1, O 2)) in  [ck; ck] *)
+let process ck_loop_pause_topck act =
+  (newclock ck in
+    loop
+      act 0; pause; act 1; pause; act 2; pause topck
+    end)
+
+(* let ck = S (O 0, S (O 1, O 2)) in  [P [ck; O 8]; P [ck; O 7]] *)
+let process ck_loop_pauseck_par act =
+  (newclock ck in
+    loop
+      act 0; pause; act 1; pause; act 2; pauseclock ck
+    end)
+||
+  loop
+    act 8; pause; act 7; pause
+  end
+
+(* [O 0] *)
+let process await_match_ck act =
+  newclock ck in
+    signal s default 0 gather (+) in
+    emit s 0
+    ||
+    await s(0) in act 0
+
+(* [O 0; O 0] *)
+let process await_match_both act =
+  (
+   signal s default 0 gather (+) in
+   emit s 0
+   ||
+   await s(0) in act 0
+  )
+  ||
+  (
+   newclock ck in
+     signal s default 0 gather (+) in
+     emit s 0
+     ||
+     await s(0) in act 0
+  )
+
+(* let ck = S (O 0, S (O 1, O 2)) in [ck; P [ck; O 8; O 5]] *)
+let process await_match_slow act =
+  signal s default 0 gather (+) in
+  emit s 0; pause; act 8
+  ||
+  newclock ck in
+    (loop
+      act 0; pause; act 1; pause; act 2; pause topck
+    end
+    ||
+    await s(0) in act 5)
+
+(* let ck = S (O 0, S (O 1, O 2)) in [P [ck; O 5]; P [ck; O 8]] *)
+let process await_match_fast act =
+  pause; act 8
+  ||
+  newclock ck in
+  signal s default 0 gather (+) in
+    (loop
+      act 0; pause; act 1; pause; act 2; pause; act 3; pauseclock ck
+    end
+    ||
+    (await s(0) in act 5)
+    ||
+    (pause; emit s 0))
+
+open Rmltest
+open Rmltest_utils
+
+let process test =
+  let ck = S (O 0, S (O 1, O 2)) in
+   run (Rmltest.test "ck_one_step" ck_one_step [O 0])
+   ||
+   run (Rmltest.test "ck_loop_pauseck_par" ck_loop_pauseck_par [P [ck; O 8]; P [ck; O 7]])
+   ||
+   run (Rmltest.test "ck_loop_pauseck" ck_loop_pauseck  [ck; ck])
+   ||
+   run (Rmltest.test "ck_loop_pause_topck" ck_loop_pause_topck  [ck; ck])
+   ||
+   run (Rmltest.test "await_match_ck" await_match_ck [O 0])
+   ||
+   run (Rmltest.test "await_match_both" await_match_both [O 0; O 0])
+   ||
+   run (Rmltest.test "await_match_slow" await_match_slow [ck; P [ck; O 8; O 5]])
+   ||
+   run (Rmltest.test "await_match_fast" await_match_fast [P [ck; O 5]; P [ck; O 8]])
