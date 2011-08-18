@@ -57,8 +57,8 @@ module M = functor (I : INTERPRETER) ->
       let react = rml_make p in
       let rec exec () =
         match react () with
-        | None -> Format.printf "@.@.New step@."; exec()
-        | Some v -> v
+        | None -> exec()
+        | Some v -> Rmltest_utils.end_program (); v
       in exec ()
 
     let rml_exec_n p n =
