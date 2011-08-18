@@ -791,7 +791,7 @@ let rml_loop p =
         let f = p (end_clock_domain new_ctrl f_k) new_ctrl None new_cd in
         fun _ ->
           R.on_current_instant new_cd f;
-          R.start_ctrl new_ctrl ctrl;
+          R.start_ctrl ctrl new_ctrl;
           step_clock_domain ctrl cd new_cd new_ctrl unit_value
 
 
