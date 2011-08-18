@@ -26,6 +26,6 @@ val add_to_stack : int stack -> int behaviour -> unit
 val step_stack : int stack -> bool
 val assoc_rm : 'a -> ('a * 'b) list -> ('a * 'b) list * 'b list
 val act : int stack -> int -> unit
-val mk_checker : string -> int behaviour list -> int -> int -> unit
+val mk_checker : string -> int behaviour list -> (int -> unit) * int
 val step : unit -> unit
 val end_program : unit -> unit

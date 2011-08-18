@@ -37,7 +37,7 @@ let status_int st s n =
 let checkers = ref ([]: 'a stack list)
 
 let mk_stack s b n =
-  { s_name = s; s_stack = []; s_next_b = b; s_ttl = n }
+  { s_name = s; s_stack = []; s_next_b = b; s_ttl = n + 1 }
 
 let check_empty s = match s.s_stack with
 | [] -> debug s "List empty; Step OK"
@@ -92,11 +92,12 @@ let act s r =
       if error_on_unexpected then
         (status_int s "*********** ERROR: Unexpected result" r; exit unexpected_error_code)
 
-let mk_checker name b n =
+let mk_checker name b =
+  let n =  List.length b in
   let s = mk_stack name b n in
   checkers := s :: !checkers;
   ignore (step_stack s);
-  act s
+  act s, n
 
 let step () =
   checkers := List.filter step_stack !checkers

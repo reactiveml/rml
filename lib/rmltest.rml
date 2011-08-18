@@ -1,5 +1,13 @@
 open Rmltest_utils
 
-let process test name p expected n =
-  let act = mk_checker name expected n in
-  run (p act)
+let process test name p expected =
+  signal abort in
+  let act, n = mk_checker name expected in
+  do
+    run (p act)
+  until abort done
+  ||
+  for i = 1 to n-1 do
+    pause
+  done;
+  emit abort
