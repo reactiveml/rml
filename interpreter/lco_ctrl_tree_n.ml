@@ -308,7 +308,7 @@ module Rml_interpreter =
         let cpt, f_1, f_2 =
           match jp with
             | None ->
-              let cpt = ref 0 in
+              let cpt = ref 2 in
               let j = join_n cpt f_k ctrl jp cd in
               let f_1 = p_1 (Obj.magic j: 'a step) ctrl (Some cpt) cd in
               let f_2 = p_2 (Obj.magic j: 'b step) ctrl (Some cpt) cd in
@@ -316,10 +316,10 @@ module Rml_interpreter =
             | Some cpt ->
               let f_1 = p_1 f_k ctrl (Some cpt) cd in
               let f_2 = p_2 f_k ctrl (Some cpt) cd in
+              incr cpt;
               cpt, f_1, f_2
         in
         fun () ->
-          cpt := !cpt + 2;
           R.on_current_instant cd f_2;
           f_1 unit_value
 
@@ -556,16 +556,16 @@ let rml_loop p =
         let cpt, f_list =
           match jp with
             | None ->
-              let cpt = ref 0 in
+              let cpt = ref nb in
               let j = join_n cpt f_k ctrl jp cd in
               let f_list = List.rev_map (fun p -> p j ctrl (Some cpt) cd) p_list in
               cpt, f_list
             | Some cpt ->
               let f_list = List.rev_map (fun p -> p f_k ctrl (Some cpt) cd) p_list in
+              cpt := !cpt + nb - 1;
               cpt, f_list
         in
         fun _ ->
-          cpt := !cpt + nb;
           R.on_current_instant_list cd f_list
 
     let rml_seq_n =
@@ -817,6 +817,7 @@ let rml_loop p =
         let term_cpt = ref 0 in
         Some term_cpt,
         fun () ->
+          incr term_cpt;
           let f x =
             decr term_cpt;
             if !term_cpt <= 0 then
