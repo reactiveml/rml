@@ -10,7 +10,7 @@ type 'a stack = { s_name : string;
                   mutable s_next_b : 'a behaviour list;
                   mutable s_ttl : int }
 
-let error_on_unexpected = false
+let error_on_unexpected = true
 let unexpected_error_code = 3
 let error_on_unfired = true
 let unfired_error_code = 10
@@ -61,7 +61,9 @@ let step_stack s =
   check_empty s;
   s.s_ttl <- s.s_ttl - 1;
   if s.s_ttl = 0 then (
-    status s "Test OK"; false
+    check_empty s;
+    status s "Test OK";
+    false
   ) else
     (match s.s_next_b with
       | [] -> true

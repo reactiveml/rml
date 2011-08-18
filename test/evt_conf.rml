@@ -1,0 +1,34 @@
+(* [N; N; O 0] *)
+let process await_immediate_conf_or act =
+  signal s1, s2 in
+  pause; pause; emit s1
+  ||
+  await immediate (s1 \/ s2); act 0
+
+(* [N; N; O 0] *)
+let process await_immediate_conf_and act =
+  signal s1, s2 in
+  pause; emit s1; pause; emit s1
+  ||
+  emit s2; pause; pause; emit s2
+  ||
+  await immediate (s1 /\ s2); act 0
+
+(* [N; N; O 0] *)
+let process await_immediate_conf_and_or act =
+  signal s1, s2, s3 in
+  pause; emit s1; pause; emit s1
+  ||
+  emit s2; pause; pause; emit s2
+  ||
+  await immediate (s1 /\ (s3 \/ s2)); act 0
+
+open Rmltest
+open Rmltest_utils
+
+let process test =
+  run (Rmltest.test "await_immediate_conf_or" await_immediate_conf_or [N; N; O 0])
+  ||
+  run (Rmltest.test "await_immediate_conf_and" await_immediate_conf_and [N; N; O 0])
+  ||
+  run (Rmltest.test "await_immediate_conf_and_or" await_immediate_conf_and_or [N; N; O 0])

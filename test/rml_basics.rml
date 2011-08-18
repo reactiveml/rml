@@ -16,6 +16,50 @@ let process await_match act =
   ||
   await s(0) in act 0
 
+(* [N; O 0] *)
+let process await_norm act =
+  signal s in
+  emit s
+  ||
+  await s; act 0
+
+(* [N; O 8] *)
+let process await_all act =
+  signal s default 0 gather (+) in
+  emit s 5
+  ||
+  emit s 3
+  ||
+  await s(v) in act v
+
+(* [N; N; O 0] *)
+let process await_immediate act =
+  signal s in
+  pause; pause; emit s
+  ||
+  await immediate s; act 0
+
+(* [O 0] *)
+let process await_immediate_2 act =
+  signal s in
+    await immediate s; act 0
+    ||
+    emit s
+
+(* [N; N; O 9] *)
+let process await_immediate_one act =
+  signal s in
+  pause; pause; emit s 9
+  ||
+  await immediate one s(v) in act v
+
+(* [N; N; N; O 9] *)
+let process await_one act =
+  signal s in
+  pause; pause; emit s 9
+  ||
+  await one s(v) in act v
+
 open Rmltest
 open Rmltest_utils
 
@@ -25,3 +69,15 @@ let process test =
   run (Rmltest.test "simple_loop" simple_loop [O 8; O 7; O 8])
   ||
   run (Rmltest.test "await_match" await_match [N; O 0])
+  ||
+  run (Rmltest.test "await_norm" await_norm [N; O 0])
+  ||
+  run (Rmltest.test "await_all" await_all [N; O 8])
+  ||
+  run (Rmltest.test "await_immediate" await_immediate [N; N; O 0] )
+  ||
+  run (Rmltest.test "await_immediate_2" await_immediate_2 [O 0] )
+  ||
+  run (Rmltest.test "await_immediate_one" await_immediate_one [N; N; O 9] )
+  ||
+  run (Rmltest.test "await_one" await_one [N; N; N; O 9] )

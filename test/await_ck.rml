@@ -1,0 +1,65 @@
+(* [O 0] *)
+let process await_match_ck act =
+  newclock ck in
+    signal s default 0 gather (+) in
+    emit s 0
+    ||
+    await s(0) in act 0
+
+(* [O 0; O 0] *)
+let process await_match_both act =
+  (
+   signal s default 0 gather (+) in
+   emit s 0
+   ||
+   await s(0) in act 0
+  )
+  ||
+  (
+   newclock ck in
+     signal s default 0 gather (+) in
+     emit s 0
+     ||
+     await s(0) in act 0
+  )
+
+(* let ck = S (O 0, S (O 1, O 2)) in [ck; P [ck; O 8; O 5]] *)
+let process await_match_slow act =
+  signal s default 0 gather (+) in
+  emit s 0; pause; act 8
+  ||
+  newclock ck in
+    (loop
+      act 0; pause; act 1; pause; act 2; pause topck
+    end
+    ||
+    await s(0) in act 5)
+
+(* let ck = S (O 0, S (O 1, O 2)) in [P [ck; O 5]; P [ck; O 8]] *)
+let process await_match_fast act =
+  pause; act 8
+  ||
+  newclock ck in
+  signal s default 0 gather (+) in
+    (loop
+      act 0; pause; act 1; pause; act 2; pauseclock ck
+    end
+    ||
+    (await s(0) in act 5)
+    ||
+    (pause; emit s 0))
+
+
+
+open Rmltest
+open Rmltest_utils
+
+let process test =
+  let ck = S (O 0, S (O 1, O 2)) in
+   run (Rmltest.test "await_match_ck" await_match_ck [O 0])
+   ||
+   run (Rmltest.test "await_match_both" await_match_both [O 0; O 0])
+   ||
+   run (Rmltest.test "await_match_slow" await_match_slow [ck; P [ck; O 8; O 5]])
+   ||
+   run (Rmltest.test "await_match_fast" await_match_fast [P [ck; O 5]; P [ck; O 8]])

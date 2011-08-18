@@ -1,0 +1,125 @@
+
+(*[O 1; O 2; O 8]*)
+let process until_simple act =
+  signal s in
+  do
+   loop
+     act 1; pause; act 2; pause
+   end
+  until s done;
+  act 8
+  ||
+  pause; emit s
+
+(*[O 1; S (O 2, O 8)]*)
+let process until_done act =
+  signal s in
+  do
+    act 1; pause; act 2
+  until s done;
+  act 8
+  ||
+  pause; pause; emit s
+
+
+(*[O 1; O 2; S(O 3, O 8)]*)
+let process until_handler act =
+  signal s default 0 gather (+) in
+  do
+   loop
+     act 1; pause; act 2; pause
+   end
+  until s(x) -> act x done;
+  act 8
+  ||
+  pause; emit s 3
+
+(*[O 1; O 2; S(O 3, O 8)]*)
+let process until_handler_match act =
+  signal s default 0 gather (+) in
+  do
+   loop
+     act 1; pause; act 2; pause
+   end
+  until s(3) -> act 3 done;
+  act 8
+  ||
+  emit s 0; pause; emit s 3
+
+(*[O 1; O 2; O 3; N]*)
+let process until_nested act =
+  signal s1, s2 in
+  do
+    do
+      loop
+        act 1; pause; act 2; pause
+      end
+    until s1 done;
+    act 9
+  until s2 done;
+  act 3
+  ||
+  pause; emit s2; pause; emit s1
+
+(* [O 1; O 2; O 5] *)
+let process until_await act =
+  signal s1, s2 in
+  do
+    loop
+      act 1; pause; act 2; pause
+    end
+    ||
+    await s1; act 9
+  until s2 done;
+  act 5
+  ||
+  pause; emit s2; pause; emit s1
+
+(* [O 1; O 2; O 5] *)
+let process until_await_2 act =
+  signal s1, s2 in
+  do
+    loop
+      act 1; pause; act 2; pause
+    end
+    ||
+    await s1; act 9
+  until s2 done;
+  act 5
+  ||
+  pause; emit s2; emit s1
+
+(* [O 1; P [O 2; O 4]; O 5] *)
+let process until_await_immediate act =
+  signal s1, s2 in
+  do
+    loop
+      act 1; pause; act 2; pause
+    end
+    ||
+    await immediate s1; act 4
+  until s2 done;
+  act 5
+  ||
+  pause; emit s2; emit s1
+
+
+open Rmltest
+open Rmltest_utils
+
+let process test =
+  run (Rmltest.test "until_simple" until_simple [O 1; O 2; O 8])
+  ||
+  run (Rmltest.test "until_done" until_done [O 1; P [O 2; O 8]])
+  ||
+  run (Rmltest.test "until_handler" until_handler [O 1; O 2; S(O 3, O 8)])
+  ||
+  run (Rmltest.test "until_handler_match" until_handler_match [O 1; O 2; S(O 3, O 8)])
+  ||
+  run (Rmltest.test "until_nested" until_nested [O 1; O 2; O 3; N])
+  ||
+  run (Rmltest.test "until_await" until_await [O 1; O 2; O 5])
+  ||
+  run (Rmltest.test "until_await_2" until_await_2 [O 1; O 2; O 5])
+  ||
+  run (Rmltest.test "until_await_immediate" until_await_immediate [O 1; P [O 2; O 4]; O 5])

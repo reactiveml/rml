@@ -1,0 +1,38 @@
+(* [S(O 1, S(O 2, O 8))] *)
+let process until_simple_ck act =
+  newclock ck in
+  signal s in
+  do
+   loop
+     act 1; pause; act 2; pause
+   end
+  until s done;
+  act 8
+  ||
+  pause; emit s
+
+(* [S(O 1, O 2); S(O 1, O 2); O 8] *)
+let process until_slow act =
+  signal s in
+   pause; emit s
+  ||
+  newclock ck in
+   do
+     loop
+       act 1; pause; act 2; pause
+     end
+   until s done;
+   act 8
+   ||
+   loop
+     pause; pauseclock ck
+   end
+
+
+open Rmltest
+open Rmltest_utils
+
+let process test =
+  run (Rmltest.test "until_simple_ck" until_simple_ck [S(O 1, S(O 2, O 8))] )
+  ||
+  run (Rmltest.test "until_slow" until_slow [S(O 1, O 2); S(O 1, O 2); O 8] )
