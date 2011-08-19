@@ -553,7 +553,8 @@ struct
     next := p :: !next
     (*Format.eprintf "Adding to next: %d@." (List.length !next)*)
   let add_next_next n1 n2 =
-    n2 := List.rev_append !n1 !n2
+    n2 := List.rev_append !n1 !n2;
+    n1 := []
   let clear_next next =
     next := []
   let is_empty_next next =
