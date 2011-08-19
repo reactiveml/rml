@@ -191,15 +191,8 @@ struct
 
       and eval_children p nodes active =
         List.filter (fun node -> eval p node active) nodes
-        (*match nodes with
-        | [] -> acc
-        | node :: nodes ->
-            if eval p node active
-            then eval_children p nodes active (node :: acc)
-            else eval_children p nodes active acc*)
 
       and next_to_current ck node =
-        (*Format.eprintf "Adding %d elets@." (List.length !(node.next));*)
         add_current_next node.next ck.cd_current;
         add_current_next node.next_boi ck.cd_current;
       and next_to_father pere node =
@@ -469,7 +462,6 @@ struct
         with
             Empty_current -> true
       in
-      (*Format.eprintf "Exec %d elts@." (List.length !(cd.cd_current));*)
       while not (ssched ()) do
         ()
       done
@@ -507,11 +499,8 @@ struct
 
     (* the react function *)
     let react cd =
-      Format.printf "React top cd@.";
       schedule cd;
-      Format.printf "Eoi cd@.";
       eoi cd;
-      Format.printf "Next_instant cd@.";
       next_instant cd
 end
 
@@ -547,7 +536,6 @@ struct
   let mk_next () = ref ([]:unit Step.t list)
   let add_next p next =
     next := p :: !next
-    (*Format.eprintf "Adding to next: %d@." (List.length !next)*)
   let add_next_next n1 n2 =
     n2 := List.rev_append !n1 !n2;
     n1 := []

@@ -15,7 +15,7 @@ let unexpected_error_code = 3
 let error_on_unfired = true
 let unfired_error_code = 10
 
-let print_debug = true
+let print_debug = false
 let print_status = true
 
 let debug st s =
@@ -85,9 +85,9 @@ let assoc_rm x l =
 
 let act s r =
   try
+    debug_int s "Raising " r;
     let new_stack, bl = assoc_rm r s.s_stack in
     s.s_stack <- new_stack;
-    debug_int s "Raising " r;
     List.iter (add_to_stack s) bl
   with
   | Not_found ->

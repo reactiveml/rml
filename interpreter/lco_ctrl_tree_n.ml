@@ -41,7 +41,6 @@ module Rml_interpreter =
   functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
   struct
     exception RML = R.RML
-
     type join_point = int ref option
     and 'a expr = 'a R.step -> R.control_tree -> join_point -> R.clock_domain -> unit R.step
     and 'a process = unit -> 'a expr
@@ -109,7 +108,6 @@ module Rml_interpreter =
 
     let rml_pause =
       fun f_k ctrl jp cd _ ->
-        (* Format.eprintf "Pause @."; *)
         R.on_next_instant ctrl f_k
 
 (**************************************)
@@ -645,8 +643,8 @@ let rml_loop p =
     let rml_until_handler_local' evt matching_opt p p_handler =
       fun f_k ctrl jp cd ->
         let handler _ =
-            let x = R.Event.value evt in
-            p_handler x f_k ctrl jp cd
+          let x = R.Event.value evt in
+          p_handler x f_k ctrl jp cd
         in
         let new_ctrl = new_ctrl (Kill_handler handler) in
         let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
@@ -731,7 +729,6 @@ let rml_loop p =
       let dummy = ref dummy_step in
       let new_ctrl = R.new_ctrl When in
       let rec when_act _ =
-        Format.eprintf "Activating when@.";
         R.wake_up_ctrl new_ctrl cd;
         R.on_next_instant ctrl f_when
       and f_when _ =
@@ -773,7 +770,6 @@ let rml_loop p =
 
     let step_clock_domain ctrl cd new_cd new_ctrl =
       let rec f_cd () =
-        Format.printf "@.Step clock domain@.";
         R.schedule new_cd;
         R.eoi new_cd;
         if R.macro_step_done new_cd then (
