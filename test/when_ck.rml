@@ -1,0 +1,74 @@
+(* Auxiliary processes *)
+let process counter act =
+  let i = ref 0 in
+  loop
+    act !i; pause; incr i
+  end
+
+let process half s =
+  loop
+    emit s; pause; pause
+  end
+
+
+(* [S (O 0, O 1); O 2] *)
+let process when_simple_ck act =
+  newclock ck in
+  signal s in
+  do
+    run (counter act)
+  when s done
+  ||
+  run (half s)
+  ||
+  loop
+    pause; pause; pauseclock ck
+  end
+
+(* [S (O 0, O 1); O 2; O 9] *)
+let process when_until_ck act =
+  signal s2 in
+  pause; emit s2
+  ||
+  newclock ck in
+    loop
+      pause; pause; pauseclock ck
+    end
+    ||
+    signal s1 in
+    do
+      do
+        run (counter act)
+      when s1 done
+    until s2 done;
+    act 9
+    ||
+    run (half s1)
+
+
+(* [N; O 5] *)
+let process when_await_ck act =
+  signal s2 default 0 gather (+) in
+  newclock ck in
+    signal s1 in
+    do
+      await s2(x) in act x
+    when s1 done
+    ||
+    run (half s1)
+    ||
+    pause; emit s2 5
+    ||
+    loop
+      pause; pause; pauseclock ck
+    end
+
+open Rmltest
+open Rmltest_utils
+
+let process test =
+  run (Rmltest.test "when_simple_ck" when_simple_ck [S (O 0, O 1); O 2])
+  ||
+  run (Rmltest.test "when_until_ck" when_until_ck [S (O 0, O 1); O 2; O 9])
+  ||
+  run (Rmltest.test "when_await_ck" when_await_ck [N; O 5])

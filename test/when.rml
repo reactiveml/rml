@@ -1,0 +1,124 @@
+(* Auxiliary processes *)
+let process counter act =
+  let i = ref 0 in
+  loop
+    act !i; pause; incr i
+  end
+
+let process half s =
+  loop
+    emit s; pause; pause
+  end
+
+
+(* [O 0; N; O 1; N; O 2] *)
+let process when_simple act =
+  signal s in
+  do
+    run (counter act)
+  when s done
+  ||
+  run (half s)
+
+(* [O 0; N; O 1; N; O 2] *)
+let process when_simple_2 act =
+  signal s in
+  run (half s)
+  ||
+  do
+    run (counter act)
+  when s done
+
+(* [O 1; N; S (O 2; O 3)] *)
+let process when_done act =
+  signal s in
+  do
+    act 1; pause; act 2
+  when s done;
+  act 3
+  ||
+  run (half s)
+
+(* [O 0; N; N; N; O 1] *)
+let process when_nested act =
+  signal s1, s2 in
+  do
+    do
+      run (counter act)
+    when s2 done
+  when s1 done
+  ||
+  run (half s1)
+  ||
+  emit s2; pause; emit s2; pause; pause; pause; emit s2
+
+(* [N; N; O 2; N] *)
+let process when_await_immediate act =
+  signal s1, s2 in
+  do
+    await immediate s2; act 2
+  when s1 done
+  ||
+  run (half s1)
+  ||
+  pause; emit s2 (*ignored*); pause; emit s2
+
+(* [N; N; N; N; O 3] *)
+let process when_await act =
+  signal s1 in
+  signal s2 default 0 gather (+) in
+  do
+    await s2(x) in act x
+  when s1 done
+  ||
+  run (half s1)
+  ||
+  pause; emit s2 0(*ignored*); pause; emit s2 3
+
+(* [O 0; N; O 1; O 9] *)
+let process when_until act =
+  signal s1, s2 in
+  do
+    do
+      run (counter act)
+    when s1 done
+  until s2 done;
+  act 9
+  ||
+  run (half s1)
+  ||
+  pause; pause; emit s2
+
+(* [O 0; N; O 1; N; O 9] *)
+let process until_when act =
+  signal s1, s2 in
+  do
+    do
+      run (counter act)
+    until s2 done
+  when s1 done;
+  act 9
+  ||
+  run (half s1)
+  ||
+  pause; emit s2 (*ignored*); pause; emit s2
+
+open Rmltest
+open Rmltest_utils
+
+let process test =
+  run (Rmltest.test "when_simple" when_simple [O 0; N; O 1; N; O 2])
+  ||
+  run (Rmltest.test "when_simple_2" when_simple_2 [O 0; N; O 1; N; O 2])
+  ||
+  run (Rmltest.test "when_done" when_done [O 1; N; S (O 2, O 3)])
+  ||
+  run (Rmltest.test "when_nested" when_nested [O 0; N; N; N; O 1])
+  ||
+  run (Rmltest.test "when_await_immediate" when_await_immediate [N; N; O 2; N])
+  ||
+  run (Rmltest.test "when_await" when_await [N; N; N; N; O 3])
+  ||
+  run (Rmltest.test "when_until" when_until [O 0; N; O 1; O 9])
+  ||
+  run (Rmltest.test "until_when" until_when [O 0; N; O 1; N; O 9])

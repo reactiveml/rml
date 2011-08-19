@@ -50,6 +50,13 @@ let process await_match_fast act =
     (pause; emit s 0))
 
 
+(* [N; O 0] *)
+let process await_immediate_ck act =
+  newclock ck in
+  signal s in
+  pause; pause; pauseclock ck; emit s
+  ||
+  await immediate s; act 0
 
 open Rmltest
 open Rmltest_utils
@@ -63,3 +70,5 @@ let process test =
    run (Rmltest.test "await_match_slow" await_match_slow [ck; P [ck; O 8; O 5]])
    ||
    run (Rmltest.test "await_match_fast" await_match_fast [P [ck; O 5]; P [ck; O 8]])
+   ||
+   run (Rmltest.test "await_immediate_ck" await_immediate_ck [N; O 0])

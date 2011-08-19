@@ -60,6 +60,21 @@ let process await_one act =
   ||
   await one s(v) in act v
 
+(* this test launches a lot of awair simultaneously to try
+   all interleavings in a parallel backend*)
+(* [O 2] *)
+let process many_await act =
+  signal s in
+    loop
+      for i = 1 to 1000 dopar
+        if i mod 565 = 109 then
+          emit s
+        else
+          await immediate s
+      done;
+      act 2; pause
+    end
+
 open Rmltest
 open Rmltest_utils
 
@@ -81,3 +96,5 @@ let process test =
   run (Rmltest.test "await_immediate_one" await_immediate_one [N; N; O 9] )
   ||
   run (Rmltest.test "await_one" await_one [N; N; N; O 9] )
+  ||
+  run (Rmltest.test "many_await" many_await [O 2] )
