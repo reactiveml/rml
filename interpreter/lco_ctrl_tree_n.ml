@@ -729,9 +729,14 @@ let rml_loop p =
 
     let step_when f_k ctrl jp cd p evt =
       let dummy = ref dummy_step in
-      let new_ctrl = R.new_ctrl (When dummy) in
-      let when_act _ = R.wake_up_ctrl new_ctrl cd in
-      let rec f_when _ = R.on_event evt ctrl when_act unit_value in
+      let new_ctrl = R.new_ctrl When in
+      let rec when_act _ =
+        Format.eprintf "Activating when@.";
+        R.wake_up_ctrl new_ctrl cd;
+        R.on_next_instant ctrl f_when
+      and f_when _ =
+        R.on_event evt ctrl when_act unit_value
+      in
       let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
       dummy := f_when;
       fun () ->

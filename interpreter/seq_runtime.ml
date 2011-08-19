@@ -16,14 +16,13 @@ struct
           mutable cond: (unit -> bool);
           mutable children: control_tree list;
           next: next;
-          next_tmp : next;
           next_boi: next; }
     and control_type =
       | Clock_domain (*of clock_domain*)
       | Kill of unit step
       | Kill_handler of (unit -> unit step)
       | Susp
-      | When of unit step ref
+      | When
 
     and clock_domain =
         { cd_current : current;
@@ -111,7 +110,6 @@ struct
         children = [];
         cond = cond;
         next = mk_next ();
-        next_tmp = mk_next ();
         next_boi = mk_next (); }
 
     (* tuer un arbre p *)
@@ -180,12 +178,11 @@ struct
                  if active then next_to_current cd p
                  else if not p.susp then next_to_father pere p;
                  true)
-          | When f_when ->
+          | When ->
               if p.susp
               then true
               else
                 (p.susp <- true;
-                 add_next !f_when pere.next;
                  p.children <- eval_children p p.children false;
                  true)
         else
@@ -217,7 +214,6 @@ struct
     let rec next_to_current cd p =
       if p.alive && not p.susp then
         (add_current_next p.next cd;
-         add_current_next p.next_tmp cd;
          List.iter (next_to_current cd) p.children;
          add_current_next p.next_boi cd)
 
@@ -501,7 +497,7 @@ struct
           | Susp ->
             let active = (ctrl.susp && ctrl.cond ()) || (not ctrl.susp && not (ctrl.cond ())) in
               active && has_next_children ctrl
-          | When _ ->
+          | When ->
             not ctrl.susp && has_next_children ctrl
     and has_next_children ctrl =
       not (is_empty_next ctrl.next) || List.exists has_next ctrl.children

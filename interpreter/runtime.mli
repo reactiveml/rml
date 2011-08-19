@@ -46,7 +46,7 @@ sig
     | Kill of unit step
     | Kill_handler of (unit -> unit step)
     | Susp
-    | When of unit step ref
+    | When
   and clock_domain
 
   type ('a, 'b) event

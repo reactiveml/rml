@@ -412,9 +412,13 @@ module Rml_interpreter =
 (**************************************)
     let rml_start_when_v evt p ctrl _ =
       let dummy = ref (fun _ -> assert false) in
-      let new_ctrl = R.new_ctrl ~cond:(fun () -> R.Event.status evt) (When dummy) in
-      let when_act _ = R.wake_up_ctrl new_ctrl R.top_clock_domain in
-      let rec f_when _ = R.on_event evt ctrl when_act () in
+      let new_ctrl = R.new_ctrl ~cond:(fun () -> R.Event.status evt) When in
+      let rec when_act _ =
+        R.wake_up_ctrl new_ctrl R.top_clock_domain;
+        R.on_next_instant ctrl f_when
+      and f_when _ =
+        R.on_event evt ctrl when_act ()
+      in
       dummy := f_when;
       R.start_ctrl ctrl new_ctrl;
       R.set_suspended new_ctrl true;
