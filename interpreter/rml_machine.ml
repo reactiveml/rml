@@ -30,7 +30,6 @@ module type INTERPRETER =
        type clock_domain
        type ('a, 'b) event
        type 'a step
-       type control_tree
 
        val top_clock_domain : clock_domain
        val react : clock_domain -> unit

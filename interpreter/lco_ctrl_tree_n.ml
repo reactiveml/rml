@@ -45,6 +45,7 @@ module Rml_interpreter =
     and 'a expr = 'a R.step -> R.control_tree -> join_point -> R.clock_domain -> unit R.step
     and 'a process = unit -> 'a expr
     type event_cfg_gen = unit -> R.event_cfg
+    type clock_expr = R.clock_domain Types.clock
 
     let unit_value = ()
     let dummy_step _ = ()
@@ -316,8 +317,8 @@ module Rml_interpreter =
               let f_2 = p_2 (Obj.magic j: 'b step) ctrl (Some cpt) cd in
               cpt, f_1, f_2
             | Some cpt ->
-              let f_1 = p_1 f_k ctrl (Some cpt) cd in
-              let f_2 = p_2 f_k ctrl (Some cpt) cd in
+              let f_1 = p_1 (Obj.magic f_k: 'a step) ctrl (Some cpt) cd in
+              let f_2 = p_2 (Obj.magic f_k: 'b step) ctrl (Some cpt) cd in
               incr cpt;
               cpt, f_1, f_2
         in
@@ -837,7 +838,14 @@ let rml_loop p =
 
     module R = R
 
-end (* Module Rml_interpreter *)
+  end  (* Module Rml_interpreter *)
+
+(* This module declaration is only used to check that the module is compatible
+   with the signature Lco_interpreter.S. It should not be used. *)
+module Fake =
+  (Rml_interpreter :
+     (functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
+       Lco_interpreter.S))
 
 module Lco_ctrl_tree_seq_interpreter =
   Rml_interpreter(Seq_runtime.SeqRuntime)
