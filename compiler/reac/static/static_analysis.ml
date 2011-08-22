@@ -395,13 +395,23 @@ let rec static_expr ctx e =
         else
           expr_wrong_static_err e
 
-    | Esignal (_, None, p) ->
-        static_expr ctx p
+    | Esignal (_, ck, None, p) ->
+      (match ck with
+        | CkExpr e1 ->
+          if static_expr ML e1 <> Static then
+            expr_wrong_static_err e1
+        | _ -> ());
+      static_expr ctx p
 
-    | Esignal (_, Some(e1,e2), p) ->
+    | Esignal (_, ck, Some(e1,e2), p) ->
         let typ1 = static_expr ML e1 in
         let typ2 = static_expr ML e2 in
         let typ3 = static_expr ctx p in
+        (match ck with
+          | CkExpr e1 ->
+            if static_expr ML e1 <> Static then
+              expr_wrong_static_err e1
+          | _ -> ());
         if max typ1 typ2 = Static
         then typ3
         else expr_wrong_static_err e

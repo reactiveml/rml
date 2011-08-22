@@ -41,6 +41,8 @@ module type S =
 
     type 'a expr
     and 'a process
+    and clock_expr = R.clock_domain Types.clock
+
 
     exception RML
 
@@ -109,9 +111,9 @@ module type S =
     val rml_fordopar:
         (unit -> int) -> (unit -> int) -> bool -> (int -> 'a expr) ->
           unit expr
-    val rml_signal: (('a, 'a list) R.event -> 'b expr) -> 'b expr
+    val rml_signal: clock_expr -> (('a, 'a list) R.event -> 'b expr) -> 'b expr
     val rml_signal_combine:
-        (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
+        clock_expr -> (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
           (('a, 'b) R.event -> 'c expr) -> 'c expr
     val rml_def: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
     val rml_def_dyn: 'a expr -> ('a -> 'b expr) -> 'b expr
@@ -151,6 +153,8 @@ module type S =
 
     val rml_pauseclock : (unit -> R.clock_domain) -> unit expr
     val rml_pauseclock' : R.clock_domain -> unit expr
+
+    val rml_top_clock_domain : unit -> R.clock_domain
   end
 
 

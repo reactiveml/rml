@@ -274,9 +274,7 @@ let rec expression i ppf x =
       line i ppf "Pexpr_nothing\n";
   | Pexpr_pause e ->
       line i ppf "Pexpr_pause\n";
-      (match e with
-        | CkExpr e -> expression i ppf e
-        | CkTop | CkLocal -> ())
+      clock_expr false i ppf e
   | Pexpr_halt ->
       line i ppf "Pexpr_halt\n";
   | Pexpr_emit (e) ->
@@ -297,8 +295,9 @@ let rec expression i ppf x =
       line i ppf "Pexpr_merge\n";
       expression i ppf e1;
       expression i ppf e2;
-  | Pexpr_signal (l, eeo, e) ->
+  | Pexpr_signal (l, ck, eeo, e) ->
       line i ppf "Pexpr_signal\n";
+      clock_expr true i ppf ck;
       list i string_x_type_expression_option ppf l;
       option i expression_x_expression ppf eeo;
       expression i ppf e;
@@ -361,6 +360,18 @@ let rec expression i ppf x =
       line i ppf "Pconf_or\n";
       expression i ppf e1;
       expression i ppf e2
+
+and clock_expr with_at i ppf e = match e with
+  | CkLocal -> ()
+  | CkTop ->
+    if with_at then
+      line i ppf "at topck\n"
+    else
+      line i ppf "topck\n"
+  | CkExpr e1 ->
+    if with_at then
+      line i ppf "at ";
+    expression i ppf e1
 
 and pattern_x_expression_case i ppf (p, e) =
   line i ppf "<case>\n";

@@ -18,6 +18,7 @@
 (**********************************************************************)
 
 open Compiler_options
+open Asttypes
 
 exception Error
 
@@ -57,6 +58,11 @@ let find_in_path filename =
         let b = Filename.concat a filename in
           if Sys.file_exists b then b else find rest
     in find !load_path
+
+let clock_map f x = match x with
+  | CkTop -> CkTop
+  | CkLocal -> CkLocal
+  | CkExpr e -> CkExpr (f e)
 
 let opt_map f = function
     Some x -> Some (f x)

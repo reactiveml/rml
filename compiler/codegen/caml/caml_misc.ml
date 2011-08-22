@@ -59,8 +59,17 @@ let make_instruction s =
   make_expr
     (Cexpr_global
        { gi = { qual = "Interpreter";
-		id = Ident.create Ident.gen_var s Ident.Internal };
-	 info = no_info(); })
+                id = Ident.create Ident.gen_var s Ident.Internal };
+         info = no_info(); })
+    Location.none
+
+let make_constr s e =
+  make_expr
+    (Cexpr_construct
+       ({ gi = { qual = "Types";
+                 id = Ident.create Ident.gen_constr s Ident.Constr };
+           info = no_info(); },
+        e))
     Location.none
 
 let make_rml_type s ty_list =

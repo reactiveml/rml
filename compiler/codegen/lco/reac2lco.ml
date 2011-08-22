@@ -265,8 +265,14 @@ let rec translate_ml e =
     | Eemit (s, Some e) ->
         Coexpr_emit_val (translate_ml s, translate_ml e)
 
-    | Esignal ((s,typ), comb, e) ->
+    | Esignal ((s,typ), ck, comb, e) ->
+      let ck = match ck with
+        | CkExpr e -> CkExpr (translate_ml e)
+        | CkLocal -> CkLocal
+        | CkTop -> CkTop
+      in
         Coexpr_signal ((s, opt_map translate_te typ),
+                       ck,
                        opt_map
                          (fun (e1,e2) ->
                            translate_ml e1, translate_ml e2) comb,
@@ -373,8 +379,9 @@ and translate_proc p =
             Coproc_merge (translate_proc p1,
                           translate_proc p2)
 
-        | Esignal ((s,typ), comb, proc) ->
+        | Esignal ((s,typ), ck, comb, proc) ->
             Coproc_signal ((s, opt_map translate_te typ),
+                           clock_map translate_ml ck,
                            opt_map
                              (fun (e1,e2) ->
                                translate_ml e1, translate_ml e2) comb,

@@ -192,6 +192,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token AND                 /* "and" */
 %token AS                  /* "as" */
 %token ASSERT              /* "assert" */
+%token AT                  /* "at" */
 %token AWAIT               /* "await" */
 %token BACKQUOTE           /* "`" */
 %token BACKSLASHSLASH      /* " \/ " */
@@ -583,10 +584,10 @@ expr:
       { mkexpr(Pexpr_emit $2 ) }
   | EMIT simple_expr simple_expr
       { mkexpr(Pexpr_emit_val($2, $3)) }
-  | SIGNAL signal_comma_list IN par_expr
-      { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
-  | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr
-      { mkexpr(Pexpr_signal(List.rev $2, Some($4, $6), $8)) }
+  | SIGNAL signal_comma_list opt_at_expr IN par_expr
+      { mkexpr(Pexpr_signal(List.rev $2, $3, None, $5)) }
+  | SIGNAL signal_comma_list opt_at_expr DEFAULT par_expr GATHER par_expr IN par_expr
+      { mkexpr(Pexpr_signal(List.rev $2, $3, Some($5, $7), $9)) }
   | DO par_expr UNTIL opt_bar until_cases DONE
       { mkexpr_until $2 (List.rev $5) }
   | DO par_expr WHEN simple_expr DONE
@@ -1101,7 +1102,11 @@ signal_comma_list:
     signal_decl                                 { [$1] }
   | signal_comma_list COMMA signal_decl         { $3 :: $1}
 ;
-
+opt_at_expr:
+    /* empty */       { CkLocal }
+  | AT TOPCK             { CkTop }
+  | AT simple_expr    { CkExpr $2 }
+;
 /* Miscellaneous */
 
 rec_flag:

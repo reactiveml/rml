@@ -86,7 +86,7 @@ and expression_desc =
   | Epar of expression list
   | Emerge of expression * expression
   | Esignal of
-      (ident * type_expression option)
+      (ident * type_expression option) * expression Asttypes.clock
         * (expression * expression) option * expression
   | Erun of expression
   | Euntil of event_config * expression * (pattern * expression) option

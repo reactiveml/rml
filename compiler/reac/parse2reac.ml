@@ -424,11 +424,13 @@ let rec translate env e =
         Eemit (translate env s,
                     Some (translate env expr))
 
-    | Pexpr_signal (sig_typ_list, None, expr) ->
-        (translate_signal env sig_typ_list None expr).e_desc
-    | Pexpr_signal (sig_typ_list, Some(e1,e2), expr) ->
-        let comb = Some(translate env e1, translate env e2) in
-        (translate_signal env sig_typ_list comb expr).e_desc
+    | Pexpr_signal (sig_typ_list, ck, comb, expr) ->
+      let ck = Misc.clock_map (translate env) ck in
+      let comb = match comb with
+        | None -> None
+        | Some (e1, e2) -> Some (translate env e1, translate env e2)
+      in
+        (translate_signal env sig_typ_list ck comb expr).e_desc
 
     | Pexpr_fordopar (i, e1, e2, flag, e3) ->
         let id = Ident.create Ident.gen_var i.psimple_id Ident.Val_RML in
@@ -578,7 +580,7 @@ and translate_record env lab_expr_list =
     lab_expr_list
 
 
-and translate_signal env sig_typ_list comb expr =
+and translate_signal env sig_typ_list ck comb expr =
   match sig_typ_list with
   | [] -> translate env expr
   | (s,typ) :: sig_typ_list ->
@@ -590,8 +592,8 @@ and translate_signal env sig_typ_list comb expr =
       make_expr
         (Esignal
            ((id, rtyp),
-            comb,
-            translate_signal env sig_typ_list comb expr))
+            ck, comb,
+            translate_signal env sig_typ_list ck comb expr))
         Location.none
 
 (* Add a varpatt in the environment *)

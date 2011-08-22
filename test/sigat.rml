@@ -1,0 +1,38 @@
+let process f =
+  newclock ck in
+  signal ss in
+  signal sss default 0 gather (+) in
+  signal s at ck in
+  signal s3 at topck in
+  signal s2 at topck default 0 gather (+) in
+  signal s2 at ck default 0 gather (+) in
+    emit s
+
+let process g =
+  newclock ck in
+  signal ss in
+  signal sss default 0 gather (+) in
+  signal s at ck in
+  signal s3 at topck in
+  signal s2 at topck default 0 gather (+) in
+  signal s2 at ck default 0 gather (+) in
+    pause; emit s
+
+(* [N; O 3] *)
+let process sigat act =
+  newclock ck in
+  signal s at topck default 0 gather (+) in
+    loop
+      pause; pauseclock ck
+    end
+    ||
+    emit s 3
+    ||
+    await s(v) in act v
+
+
+open Rmltest
+open Rmltest_utils
+
+let process test =
+  run (Rmltest.test "sigat" sigat [N; O 3])

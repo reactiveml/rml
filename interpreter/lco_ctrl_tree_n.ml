@@ -50,6 +50,7 @@ module Rml_interpreter =
     let dummy_step _ = ()
 
     open R
+    open Types
 
 (* ------------------------------------------------------------------------ *)
     let rml_pre_status evt = R.Event.pre_status evt
@@ -61,6 +62,9 @@ module Rml_interpreter =
     let rml_default evt = R.Event.default evt
 
 (* ------------------------------------------------------------------------ *)
+
+    let rml_top_clock_domain () = R.top_clock_domain
+
     let rml_global_signal = R.Event.new_evt
 
     let rml_global_signal_combine = R.Event.new_evt_combine
@@ -377,14 +381,18 @@ let rml_loop p =
 (**************************************)
 (* signal                             *)
 (**************************************)
+    let eval_clock_expr current_cd ce = match ce with
+      | CkLocal -> current_cd
+      | CkTop -> R.top_clock_domain
+      | CkExpr e -> e
 
-    let rml_signal p =
+    let rml_signal ce p =
       fun f_k ctrl jp cd _ ->
-        p (R.Event.new_evt cd) f_k ctrl jp cd unit_value
+        p (R.Event.new_evt (eval_clock_expr cd ce)) f_k ctrl jp cd unit_value
 
-    let rml_signal_combine default comb p =
+    let rml_signal_combine ce default comb p =
       fun f_k ctrl jp cd _ ->
-        let evt = R.Event.new_evt_combine cd (default()) (comb()) in
+        let evt = R.Event.new_evt_combine (eval_clock_expr cd ce) (default()) (comb()) in
         p evt f_k ctrl jp cd unit_value
 
 (**************************************)
