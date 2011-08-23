@@ -6,6 +6,7 @@ type 'a behaviour =
   | N
 
 type 'a stack = { s_name : string;
+                  mutable s_active : bool;
                   mutable s_stack : ('a * 'a behaviour) list ;
                   mutable s_next_b : 'a behaviour list;
                   mutable s_ttl : int }
@@ -37,7 +38,7 @@ let status_int st s n =
 let checkers = ref ([]: 'a stack list)
 
 let mk_stack s b n =
-  { s_name = s; s_stack = []; s_next_b = b; s_ttl = n + 1 }
+  { s_name = s; s_active = true; s_stack = []; s_next_b = b; s_ttl = n + 1 }
 
 let check_empty s = match s.s_stack with
 | [] -> debug s "List empty; Step OK"
@@ -62,6 +63,7 @@ let step_stack s =
   s.s_ttl <- s.s_ttl - 1;
   if s.s_ttl = 0 then (
     status s "Test OK";
+    s.s_active <- false;
     false
   ) else
     (match s.s_next_b with
@@ -83,15 +85,17 @@ let assoc_rm x l =
     newl, res
 
 let act s r =
-  try
-    debug_int s "Raising " r;
-    let new_stack, bl = assoc_rm r s.s_stack in
-    s.s_stack <- new_stack;
-    List.iter (add_to_stack s) bl
-  with
-  | Not_found ->
-      if error_on_unexpected then
-        (status_int s "*********** ERROR: Unexpected result" r; exit unexpected_error_code)
+  if s.s_active then (
+    try
+      debug_int s "Raising " r;
+      let new_stack, bl = assoc_rm r s.s_stack in
+      s.s_stack <- new_stack;
+      List.iter (add_to_stack s) bl
+    with
+      | Not_found ->
+        if error_on_unexpected then
+          (status_int s "*********** ERROR: Unexpected result" r; exit unexpected_error_code)
+  )
 
 let mk_checker name b =
   let n =  List.length b in
