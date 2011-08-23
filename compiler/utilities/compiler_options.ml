@@ -59,6 +59,9 @@ let simulation_process = ref ""
 (* number_of_instant to execute *)
 let number_of_instant = ref (-1)
 
+(* test definition *)
+let test_name = ref ""
+
 (* samplin rate *)
 let sampling = ref (-. 1.0)
 
@@ -147,6 +150,7 @@ let set_number_of_instant n = number_of_instant := n
 (* sets the sampling rate *)
 let set_sampling n = sampling := n
 
+let set_test_name n = test_name := n
 
 (* print information *)
 let set_print_info s =
@@ -213,6 +217,7 @@ and doc_libraries = "<dir> Add <dir> to the list of include directories"
 and doc_simulation = "<proc> Executes the process <proc>."
 and doc_number_of_instant = "<n> Executes the main process <n> instants"
 and doc_sampling = "<rate> Sets the sampling rate to <rate> seconds"
+and doc_test_name = "<name> Sets the name of the unit test"
 and doc_verbose = "Print types"
 and doc_save_types = "Save type information in <filename>.?annot"
 and doc_no_loop_warning = "Remove instantaneous loop and recursion warnings"
@@ -251,6 +256,7 @@ let parse_cli () =
         "-s", Arg.String set_simulation_process, doc_simulation;
         "-n", Arg.Int set_number_of_instant, doc_number_of_instant;
         "-sampling", Arg.Float set_sampling, doc_sampling;
+        "-t", Arg.String set_test_name, doc_test_name;
         "-i", Arg.Unit set_verbose, doc_verbose;
         "-dtypes", Arg.Unit set_save_types, doc_save_types;
         "-no_loop_warning", Arg.Unit unset_instantaneous_loop_warning, doc_no_loop_warning;

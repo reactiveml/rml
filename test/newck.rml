@@ -60,20 +60,13 @@ let process ck_done act =
 
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
+let test =
   let ck = S (O 0, S (O 1, O 2)) in
-   run (Rmltest.test "ck_one_step" ck_one_step [O 0])
-   ||
-   run (Rmltest.test "ck_macro_pauseck_par" ck_macro_pauseck_par [P [ck; O 8]; P [ck; O 7]])
-   ||
-   run (Rmltest.test "ck_macro_pauseck" ck_macro_pauseck  [ck; ck])
-   ||
-   run (Rmltest.test "ck_macro_await_slow" ck_macro_await_slow  [N; N; O 5])
-   ||
-   run (Rmltest.test "ck_macro_multi" ck_macro_multi [ck; ck; P[ck; O 5]])
-   ||
-   run (Rmltest.test "ck_loop_pause_topck" ck_macro_pause_topck  [ck; ck])
-   ||
-   run (Rmltest.test "ck_done" ck_done  [ck])
+   [ (ck_one_step, "ck_one_step", [O 0]);
+     (ck_macro_pauseck_par, "ck_macro_pauseck_par", [P [ck; O 8]; P [ck; O 7]]);
+     (ck_macro_pauseck, "ck_macro_pauseck", [ck; ck]);
+     (ck_macro_await_slow, "ck_macro_await_slow", [N; N; O 5]);
+     (ck_macro_multi, "ck_macro_multi", [ck; ck; P[ck; O 5]]);
+     (ck_macro_pause_topck, "ck_macro_pause_topck", [ck; ck]);
+     (ck_done, "ck_done", [ck]) ]

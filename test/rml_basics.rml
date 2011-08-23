@@ -76,25 +76,16 @@ let process many_await act =
     end
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
-  run (Rmltest.test "par_seq" par_seq [P [O 2; O 3]; O 1; O 2])
-  ||
-  run (Rmltest.test "simple_loop" simple_loop [O 8; O 7; O 8])
-  ||
-  run (Rmltest.test "await_match" await_match [N; O 0])
-  ||
-  run (Rmltest.test "await_norm" await_norm [N; O 0])
-  ||
-  run (Rmltest.test "await_all" await_all [N; O 8])
-  ||
-  run (Rmltest.test "await_immediate" await_immediate [N; N; O 0] )
-  ||
-  run (Rmltest.test "await_immediate_2" await_immediate_2 [O 0] )
-  ||
-  run (Rmltest.test "await_immediate_one" await_immediate_one [N; N; O 9] )
-  ||
-  run (Rmltest.test "await_one" await_one [N; N; N; O 9] )
-  ||
-  run (Rmltest.test "many_await" many_await [O 2] )
+let test =
+  [ (par_seq, "par_seq", [P [O 2; O 3]; O 1; O 2]);
+    (simple_loop, "simple_loop", [O 8; O 7; O 8]);
+    (await_match, "await_match", [N; O 0]);
+    (await_norm, "await_norm", [N; O 0]);
+    (await_all, "await_all", [N; O 8]);
+    (await_immediate, "await_immediate", [N; N; O 0]);
+    (await_immediate_2, "await_immediate_2", [O 0]);
+    (await_immediate_one, "await_immediate_one", [N; N; O 9]);
+    (await_one, "await_one", [N; N; N; O 9]);
+    (many_await, "many_await", [O 2]) ]
+

@@ -836,6 +836,20 @@ let rml_loop p =
       in
       p () (join_end()) (control_tree cd) jp cd
 
+    let rml_make_n cd result pl =
+      let jp, join_end =
+        let term_cpt = ref 0 in
+        Some term_cpt,
+        fun () ->
+          term_cpt := !term_cpt + (List.length pl) - 1;
+          let f x =
+            decr term_cpt;
+            if !term_cpt <= 0 then
+              result := Some x
+          in f
+      in
+      List.map (fun p -> p () (join_end ()) (control_tree cd) jp cd) pl
+
     module R = R
 
   end  (* Module Rml_interpreter *)

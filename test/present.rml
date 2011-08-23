@@ -36,15 +36,10 @@ let process present_conf_then act =
 
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
-  run (Rmltest.test "present_else" present_else [N; O 2])
-  ||
-  run (Rmltest.test "present_then" present_then [O 1])
-  ||
-  run (Rmltest.test "present_then_2" present_then_2 [O 1])
-  ||
-  run (Rmltest.test "present_conf_else" present_conf_else [N; O 2])
-  ||
-  run (Rmltest.test "present_conf_then" present_conf_then [O 1])
+let test =
+  [ (present_else, "present_else", [N; O 2]);
+    (present_then, "present_then", [O 1]);
+    (present_then_2, "present_then_2", [O 1]);
+    (present_conf_else, "present_conf_else", [N; O 2]);
+    (present_conf_then, "present_conf_then", [O 1]) ]

@@ -104,21 +104,13 @@ let process until_when act =
   pause; emit s2 (*ignored*); pause; emit s2
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
-  run (Rmltest.test "when_simple" when_simple [O 0; N; O 1; N; O 2])
-  ||
-  run (Rmltest.test "when_simple_2" when_simple_2 [O 0; N; O 1; N; O 2])
-  ||
-  run (Rmltest.test "when_done" when_done [O 1; N; S (O 2, O 3)])
-  ||
-  run (Rmltest.test "when_nested" when_nested [O 0; N; N; N; O 1])
-  ||
-  run (Rmltest.test "when_await_immediate" when_await_immediate [N; N; O 2; N])
-  ||
-  run (Rmltest.test "when_await" when_await [N; N; N; N; O 3])
-  ||
-  run (Rmltest.test "when_until" when_until [O 0; N; O 1; O 9])
-  ||
-  run (Rmltest.test "until_when" until_when [O 0; N; O 1; N; O 9])
+let test =
+  [ (when_simple, "when_simple", [O 0; N; O 1; N; O 2]);
+    (when_simple_2, "when_simple_2", [O 0; N; O 1; N; O 2]);
+    (when_done, "when_done", [O 1; N; S (O 2, O 3)]);
+    (when_nested, "when_nested", [O 0; N; N; N; O 1]);
+    (when_await_immediate, "when_await_immediate", [N; N; O 2; N]);
+    (when_await, "when_await", [N; N; N; N; O 3]);
+    (when_until, "when_until", [O 0; N; O 1; O 9]);
+    (until_when, "until_when", [O 0; N; O 1; N; O 9]) ]

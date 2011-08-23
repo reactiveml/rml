@@ -61,7 +61,6 @@ let step_stack s =
   check_empty s;
   s.s_ttl <- s.s_ttl - 1;
   if s.s_ttl = 0 then (
-    check_empty s;
     status s "Test OK";
     false
   ) else
@@ -102,7 +101,12 @@ let mk_checker name b =
   act s, n
 
 let step () =
-  checkers := List.filter step_stack !checkers
+  checkers := List.filter step_stack !checkers;
+  if !checkers = [] then (
+    if print_status then
+      Format.printf "All tests OK@.";
+    exit 0
+  )
 
 let end_program () =
   List.iter check_empty !checkers

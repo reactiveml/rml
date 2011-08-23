@@ -59,16 +59,11 @@ let process await_immediate_ck act =
   await immediate s; act 0
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
+let test =
   let ck = S (O 0, S (O 1, O 2)) in
-   run (Rmltest.test "await_match_ck" await_match_ck [O 0])
-   ||
-   run (Rmltest.test "await_match_both" await_match_both [O 0; O 0])
-   ||
-   run (Rmltest.test "await_match_slow" await_match_slow [ck; P [ck; O 8; O 5]])
-   ||
-   run (Rmltest.test "await_match_fast" await_match_fast [P [ck; O 5]; P [ck; O 8]])
-   ||
-   run (Rmltest.test "await_immediate_ck" await_immediate_ck [N; O 0])
+  [ (await_match_ck, "await_match_ck",  [O 0]);
+    (await_match_both, "await_match_both", [O 0; O 0]);
+    (await_match_slow, "await_match_slow", [ck; P [ck; O 8; O 5]]);
+    (await_match_fast, "await_match_fast", [P [ck; O 5]; P [ck; O 8]]);
+    (await_immediate_ck, "await_immediate_ck", [N; O 0]) ]

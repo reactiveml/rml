@@ -53,6 +53,11 @@ let gen_main_fun out_chan =
       output_string out_chan
         ("let _ = Rml_machine.rml_exec "^main_id^"\n")
 
+let gen_test_fun out_chan =
+  output_string out_chan ("module Rml_machine = Rml_machine.M(Interpreter);;\n");
+  output_string out_chan
+    ("let _ = Rml_machine.rml_test "^ !Compiler_options.test_name)
+
 let compile_impl info_chan filename module_name intermediate_code =
   let obj_name = filename ^ ".ml" in
   let out_chan = open_out obj_name in
@@ -68,7 +73,9 @@ let compile_impl info_chan filename module_name intermediate_code =
   compile_implementation_back_end info_chan out_chan module_name intermediate_code;
 
   (* main process *)
-  if !simulation_process <> "" then
+  if !Compiler_options.test_name <> "" then
+    gen_test_fun out_chan
+  else if !simulation_process <> "" then
     gen_main_fun out_chan;
   close_out out_chan
 

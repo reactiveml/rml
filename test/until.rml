@@ -105,21 +105,13 @@ let process until_await_immediate act =
 
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
-  run (Rmltest.test "until_simple" until_simple [O 1; O 2; O 8])
-  ||
-  run (Rmltest.test "until_done" until_done [O 1; P [O 2; O 8]])
-  ||
-  run (Rmltest.test "until_handler" until_handler [O 1; O 2; S(O 3, O 8)])
-  ||
-  run (Rmltest.test "until_handler_match" until_handler_match [O 1; O 2; S(O 3, O 8)])
-  ||
-  run (Rmltest.test "until_nested" until_nested [O 1; O 2; O 3; N])
-  ||
-  run (Rmltest.test "until_await" until_await [O 1; O 2; O 5])
-  ||
-  run (Rmltest.test "until_await_2" until_await_2 [O 1; O 2; O 5])
-  ||
-  run (Rmltest.test "until_await_immediate" until_await_immediate [O 1; P [O 2; O 4]; O 5])
+let test =
+  [ (until_simple, "until_simple", [O 1; O 2; O 8]);
+    (until_done, "until_done", [O 1; P [O 2; O 8]]);
+    (until_handler, "until_handler", [O 1; O 2; S(O 3, O 8)]);
+    (until_handler_match, "until_handler_match", [O 1; O 2; S(O 3, O 8)]);
+    (until_nested, "until_nested", [O 1; O 2; O 3; N]);
+    (until_await, "until_await", [O 1; O 2; O 5]);
+    (until_await_2, "until_await_2", [O 1; O 2; O 5]);
+    (until_await_immediate, "until_await_immediate", [O 1; P [O 2; O 4]; O 5]) ]

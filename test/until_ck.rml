@@ -77,16 +77,11 @@ let process until_handler_match_slow act =
    end
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
-  run (Rmltest.test "until_simple_ck" until_simple_ck [S(O 1, S(O 2, O 8))] )
-  ||
-  run (Rmltest.test "until_handler_ck" until_handler_ck [S(O 1, S(O 2, S(O 3, O 8)))] )
-  ||
-  run (Rmltest.test "until_slow" until_slow [S(O 1, O 2); S(O 1, O 2); O 8] )
-  ||
-  run (Rmltest.test "until_handler_slow" until_handler_slow [S(O 1, O 2); S(O 1, O 2); S(O 3, O 8)] )
-  ||
-  run (Rmltest.test "until_handler_match_slow" until_handler_match_slow
-         [S(O 1, O 2); S(O 1, O 2); S(O 3, O 8)] )
+let test =
+  [ (until_simple_ck, "until_simple_ck", [S(O 1, S(O 2, O 8))]);
+    (until_handler_ck, "until_handler_ck", [S(O 1, S(O 2, S(O 3, O 8)))]);
+    (until_slow, "until_slow", [S(O 1, O 2); S(O 1, O 2); O 8]);
+    (until_handler_slow, "until_handler_slow", [S(O 1, O 2); S(O 1, O 2); S(O 3, O 8)]);
+    (until_handler_match_slow, "until_handler_match_slow",
+         [S(O 1, O 2); S(O 1, O 2); S(O 3, O 8)]) ]

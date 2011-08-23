@@ -65,11 +65,8 @@ let process when_await_ck act =
 
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
-  run (Rmltest.test "when_simple_ck" when_simple_ck [S (O 0, O 1); O 2])
-  ||
-  run (Rmltest.test "when_until_ck" when_until_ck [S (O 0, O 1); O 2; O 9])
-  ||
-  run (Rmltest.test "when_await_ck" when_await_ck [N; O 5])
+let test =
+  [ (when_simple_ck, "when_simple_ck", [S (O 0, O 1); O 2]);
+    (when_until_ck, "when_until_ck", [S (O 0, O 1); O 2; O 9]);
+    (when_await_ck, "when_await_ck", [N; O 5]) ]

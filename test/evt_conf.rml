@@ -24,11 +24,8 @@ let process await_immediate_conf_and_or act =
   await immediate (s1 /\ (s3 \/ s2)); act 0
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
-  run (Rmltest.test "await_immediate_conf_or" await_immediate_conf_or [N; N; O 0])
-  ||
-  run (Rmltest.test "await_immediate_conf_and" await_immediate_conf_and [N; N; O 0])
-  ||
-  run (Rmltest.test "await_immediate_conf_and_or" await_immediate_conf_and_or [N; N; O 0])
+let test =
+  [ (await_immediate_conf_or, "await_immediate_conf_or", [N; N; O 0]);
+    (await_immediate_conf_and, "await_immediate_conf_and", [N; N; O 0]);
+    (await_immediate_conf_and_or, "await_immediate_conf_and_or", [N; N; O 0]) ]

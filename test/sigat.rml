@@ -30,9 +30,6 @@ let process sigat act =
     ||
     await s(v) in act v
 
-
 open Rmltest
-open Rmltest_utils
 
-let process test =
-  run (Rmltest.test "sigat" sigat [N; O 3])
+let test = [(sigat, "sigat", [N; O 3])]

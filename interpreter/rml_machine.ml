@@ -37,6 +37,7 @@ module type INTERPRETER =
       end)
 
     val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
+    val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
   end
 
 module M = functor (I : INTERPRETER) ->
@@ -47,7 +48,6 @@ module M = functor (I : INTERPRETER) ->
       I.R.on_current_instant I.R.top_clock_domain step;
       let react () =
         I.R.react I.R.top_clock_domain;
-        Rmltest_utils.step ();
         !result
       in
       react
@@ -55,17 +55,15 @@ module M = functor (I : INTERPRETER) ->
     let rml_exec p =
       let react = rml_make p in
       let rec exec () =
-        Format.printf "@.@.*******************  New step ********************@.@.";
         match react () with
         | None -> exec()
-        | Some v -> Rmltest_utils.end_program (); v
+        | Some v -> v
       in exec ()
 
     let rml_exec_n p n =
       let react = rml_make p in
       let rec exec n =
         if n > 0 then (
-          Format.printf "@.@.*******************  New step ********************@.";
           match react () with
           | None -> exec (n-1)
           | v -> v
@@ -139,6 +137,31 @@ module M = functor (I : INTERPRETER) ->
           None
       in exec n
 
+
+    let rml_make_test pl =
+      let result = ref None in
+      let steps = I.rml_make_n I.R.top_clock_domain result pl in
+      List.iter (fun step -> I.R.on_current_instant I.R.top_clock_domain step) steps;
+      let react () =
+        I.R.react I.R.top_clock_domain;
+        Rmltest.step ();
+        !result
+      in
+      react
+
+    let rml_test test_list =
+      let mk_test (p, name, expected) =
+        let act, n = Rmltest.mk_checker name expected in
+        p act
+      in
+      let pl = List.map mk_test test_list in
+      let react = rml_make_test pl in
+      let rec exec () =
+        Format.printf "@.@.*******************  New step ********************@.@.";
+        match react () with
+        | None -> exec()
+        | Some v -> Rmltest.end_program (); v
+      in exec ()
 
   end
 

@@ -40,15 +40,10 @@ let process present_conf_ck_then act =
     present (s1 /\ s2) then act 1 else act 2
 
 open Rmltest
-open Rmltest_utils
 
-let process test =
-  run (Rmltest.test "present_ck_else" present_else [O 2])
-  ||
-  run (Rmltest.test "present_ck_then" present_then [O 1])
-  ||
-  run (Rmltest.test "present_ck_then_2" present_then_2 [O 1])
-  ||
-  run (Rmltest.test "present_conf_ck_else" present_conf_ck_else [O 2])
-  ||
-  run (Rmltest.test "present_conf_ck_then" present_conf_ck_then [O 1])
+let test =
+  [ (present_else, "present_else", [O 2]);
+    (present_then, "present_then", [O 1]);
+    (present_then_2, "present_then_2", [O 1]);
+    (present_conf_ck_else, "present_conf_ck_else", [O 2]);
+    (present_conf_ck_then, "present_conf_ck_then", [O 1]) ]
