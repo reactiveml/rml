@@ -16,6 +16,8 @@ struct
           mutable cond: (unit -> bool);
           mutable children: control_tree list;
           next: next;
+          next_control : next; (* contains control processes that should not be
+                                  taken into account to see if macro step is done *)
           next_boi: next; }
     and control_type =
       | Clock_domain (*of clock_domain*)
@@ -110,6 +112,7 @@ struct
         children = [];
         cond = cond;
         next = mk_next ();
+        next_control = mk_next ();
         next_boi = mk_next (); }
 
     (* tuer un arbre p *)
@@ -194,9 +197,11 @@ struct
 
       and next_to_current ck node =
         add_current_next node.next ck.cd_current;
+        add_current_next node.next_control ck.cd_current;
         add_current_next node.next_boi ck.cd_current;
       and next_to_father pere node =
         add_next_next node.next pere.next;
+        add_next_next node.next_control pere.next_control;
         add_next_next node.next_boi pere.next_boi;
       in
         cd.cd_top.children <- eval_children cd.cd_top cd.cd_top.children true;
@@ -207,6 +212,7 @@ struct
     let rec next_to_current cd p =
       if p.alive && not p.susp then
         (add_current_next p.next cd;
+         add_current_next p.next_control cd;
          List.iter (next_to_current cd) p.children;
          add_current_next p.next_boi cd)
 
@@ -332,7 +338,7 @@ struct
             | Wait_again -> add_waiting self w)
         else ((*ctrl is not active, wait end of instant*)
           let is_fired = ref false in
-          add_next (ctrl_await is_fired) ctrl.next;
+          add_next (ctrl_await is_fired) ctrl.next_control;
           add_weoi sig_cd (eoi_await is_fired)
         )
       and eoi_await is_fired _ =
@@ -396,7 +402,7 @@ struct
           add_weoi sig_cd eoi_work
         else ((*ctrl is not active, wait end of instant*)
           let is_fired = ref false in
-          add_next (ctrl_await is_fired) ctrl.next;
+          add_next (ctrl_await is_fired) ctrl.next_control;
           add_weoi sig_cd (eoi_await is_fired)
         )
       and eoi_await is_fired _ =
@@ -496,6 +502,22 @@ struct
 
     let macro_step_done cd =
       !(cd.cd_pause_clock) || not (has_next cd.cd_top)
+
+    let step_clock_domain ctrl new_ctrl cd new_cd =
+      let next_instant_clock_domain _ = next_instant new_cd in
+      let rec f_cd () =
+        schedule new_cd;
+        eoi new_cd;
+        if macro_step_done new_cd then (
+          add_weoi cd next_instant_clock_domain;
+          add_next f_cd ctrl.next_control;
+        ) else (
+          next_instant new_cd;
+          (* execute again in the same step but yield for now*)
+          add_current f_cd cd.cd_current
+        )
+      in
+      f_cd
 
     (* the react function *)
     let react cd =

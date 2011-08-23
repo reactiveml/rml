@@ -774,24 +774,6 @@ let rml_loop p =
     let rml_new_clock_domain () =
       R.mk_clock_domain ()
 
-    let next_instant_clock_domain cd () =
-      R.next_instant cd
-
-    let step_clock_domain ctrl cd new_cd new_ctrl =
-      let rec f_cd () =
-        R.schedule new_cd;
-        R.eoi new_cd;
-        if R.macro_step_done new_cd then (
-          R.on_eoi cd (next_instant_clock_domain new_cd);
-          R.on_next_instant ctrl f_cd;
-        ) else (
-          R.next_instant new_cd;
-          (* execute again in the same step but yield for now*)
-          R.on_current_instant cd f_cd
-        )
-      in
-      f_cd
-
     let end_clock_domain f_k new_ctrl x =
       R.end_ctrl f_k new_ctrl x
 
@@ -802,7 +784,7 @@ let rml_loop p =
         fun _ ->
           R.on_current_instant new_cd f;
           R.start_ctrl ctrl new_ctrl;
-          step_clock_domain ctrl cd new_cd new_ctrl unit_value
+          R.step_clock_domain ctrl new_ctrl cd new_cd unit_value
 
 
 (**************************************)
@@ -841,7 +823,7 @@ let rml_loop p =
         let term_cpt = ref 0 in
         Some term_cpt,
         fun () ->
-          term_cpt := !term_cpt + (List.length pl) - 1;
+          term_cpt := !term_cpt + (List.length pl);
           let f x =
             decr term_cpt;
             if !term_cpt <= 0 then

@@ -135,8 +135,8 @@ sig
 
   (* scheduling *)
   val react : clock_domain -> unit
-  val schedule : clock_domain -> unit
-  val next_instant : clock_domain -> unit
-  val eoi : clock_domain -> unit
-  val macro_step_done : clock_domain -> bool
+  (** [step_clock_domain ctrl new_ctrl cd new_cd] creates the step
+      function of the new clock domain [new_cd]. *)
+  val step_clock_domain :
+    control_tree -> control_tree -> clock_domain -> clock_domain -> unit -> unit
 end

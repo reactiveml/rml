@@ -52,6 +52,16 @@ let process ck_macro_multi act =
      act 0; pause; act 1; pause; act 2; pause topck
    end)
 
+(* [N; O 3] *)
+let process ck_macro_nested act =
+  signal s default 0 gather (+) in
+  emit s 3
+  ||
+  newclock ck1 in (
+    newclock ck2 in
+      await s(v) in act v
+  )
+
 (* S (O 0, S (O 1, O 2)) *)
 let process ck_done act =
   (newclock ck in
@@ -63,10 +73,11 @@ open Rmltest
 
 let test =
   let ck = S (O 0, S (O 1, O 2)) in
-   [ (ck_one_step, "ck_one_step", [O 0]);
+   [  (ck_one_step, "ck_one_step", [O 0]);
      (ck_macro_pauseck_par, "ck_macro_pauseck_par", [P [ck; O 8]; P [ck; O 7]]);
      (ck_macro_pauseck, "ck_macro_pauseck", [ck; ck]);
      (ck_macro_await_slow, "ck_macro_await_slow", [N; N; O 5]);
      (ck_macro_multi, "ck_macro_multi", [ck; ck; P[ck; O 5]]);
      (ck_macro_pause_topck, "ck_macro_pause_topck", [ck; ck]);
-     (ck_done, "ck_done", [ck]) ]
+     (ck_macro_nested, "ck_macro_nested", [N; O 3]);
+     (ck_done, "ck_done", [ck])  ]
