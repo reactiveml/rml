@@ -1,0 +1,82 @@
+#!/bin/bash
+
+VERBOSE=
+
+LOG_FILE=test_log.txt
+
+COMPILER_FILE=rpmlc.byte
+COMPILER_DIR=../../compiler
+COMPILER_OPTIONS=
+
+OCAMLC=ocamlc
+OCAMLC_OPTIONS="-g -I ../../interpreter/_build -I ../../lib/ unix.cma rpmllib.cma"
+
+build_compiler () {
+    cd $COMPILER_DIR
+    ocamlbuild $COMPILER_FILE >/dev/null 2>&1
+    cd -
+}
+
+compile () {
+    if [ $VERBOSE ]; then
+        echo "    ** Building $1"
+    fi
+    $COMPILER_DIR/$COMPILER_FILE -I ../../lib -t test $1.rml >/dev/null 2>&1 && $OCAMLC $OCAMLC_OPTIONS $1.ml >/dev/null 2>&1
+
+    rc=$?
+    if [ $rc != 0 ]; then
+        echo "Error building test $1";
+        exit $rc
+    fi
+}
+
+clean() {
+    rm *.rzi *.ml *.cmi a.out
+}
+
+check() {
+    echo "Building compiler"
+   # build_compiler
+
+    echo "Starting tests"
+
+    for f in *.rml ; do
+        bn=`basename $f .rml`
+        if [ $VERBOSE ]; then
+            echo "  ** Test $bn:"
+        fi
+
+        compile $bn
+        if [ $VERBOSE ]; then
+            echo "    ** Launching $bn"
+        fi
+        if ./a.out >/dev/null 2>&1; then
+            {
+                if [ $VERBOSE ]; then
+                    echo "    ** Test $bn passed successfully"
+                fi
+            }
+
+        else
+            echo "!!!!!!!! Test $bn failed !!!!!!!!!"
+            exit 1
+        fi
+    done
+
+    clean
+    echo "All tests OK"
+}
+
+
+# body of the script
+while [ $# -gt 0 ]; do
+  case $1 in
+      "-v" )
+          VERBOSE=1
+          shift;;
+      *)
+          echo "Unknown option $1"
+          exit
+  esac
+done
+check
