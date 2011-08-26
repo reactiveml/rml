@@ -29,6 +29,13 @@ let unit_vector v1 v2 =
     v_y = (v2.v_y -. v1.v_y) /. d;
     v_z = (v2.v_z -. v1.v_z) /. d }
 
+let normal_unit_vector v1 v2 =
+  let d2 = dist2 v1 v2 in
+  let d = sqrt d2 in
+  { v_x = -. (v2.v_y -. v1.v_y) /. d;
+    v_y = (v2.v_x -. v1.v_x) /. d;
+    v_z = (v2.v_z -. v1.v_z) /. d }
+
 let add_vector v1 v2 =
   { v_x = v1.v_x +. v2.v_x;
     v_y = v1.v_y +. v2.v_y;
@@ -105,8 +112,8 @@ let process body_sprite st sp =
 
 let process window =
   if enable_graphics then (
-    Rmlsdl.create_window 500 500;
-    Rmlsdl.create_world 1000 1000 Rmlsdl.Black;
+    Rmlsdl.create_fullscreen_window ();
+    Rmlsdl.create_world 3200 2000 Rmlsdl.Black;
     loop
       Rmlsdl.process_events ();
       Rmlsdl.update None;
@@ -115,18 +122,19 @@ let process window =
    )
 
 let process simple_system =
+  let center = mk_vector 1600.0 1000.0 0.0 in
   let process sun dt env =
-    let st = mk_body (mk_vector 500.0 500.0 0.0) zero_vector 8000.0 in
+    let st = mk_body center zero_vector 8000.0 in
     let sp = Rmlsdl.create_sprite_from_file "sun.png" in
     run (fixed_body st dt env)
     ||
     run (body_sprite st sp)
   in
   let process planet dt env =
-   let st = mk_body
-       (random_vector 200.0 200.0 800.0 800.0)
-       (random_vector (-. 10.0) (-. 10.0) 10.0 10.0)
-       (random_float 5.0 50.0)
+   let pos = random_vector 1000.0 1000.0 2200.0 1400.0 in
+   let st = mk_body pos
+     (scalar_mult 5.0 (normal_unit_vector pos center))
+     (random_float 8.0 12.0)
    in
    (*let sp = Rmlsdl.create_sprite_circle 5 Rmlsdl.Blue in*)
     let sp = Rmlsdl.create_sprite_from_file "earth.png" in
@@ -140,7 +148,7 @@ let process simple_system =
   run (sun dt env)
   ||
   pause;
-  for i = 1 to 8 dopar
+  for i = 1 to 15 dopar
     run (planet dt env)
   done
   ||
