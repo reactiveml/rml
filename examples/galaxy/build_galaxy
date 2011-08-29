@@ -1,3 +1,3 @@
-../../compiler/rpmlc.byte -I ../../lib -I ./galaxy -s simple_system -n 2000 galaxies.rml
+../../compiler/rpmlc.byte -I ../../lib -I ./galaxy -s main -n 2000 galaxies.rml
 
 ocamlc -custom -I +sdl -I ./rmlsdl bigarray.cma sdl.cma sdlloader.cma sdlgfx.cma -I ./rmlsdl/_build rmlsdl.cma -I ../../interpreter/_build unix.cma rpmllib.cma galaxies.ml -o galaxy
