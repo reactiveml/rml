@@ -278,6 +278,8 @@ let rec translate_ml e =
                            translate_ml e1, translate_ml e2) comb,
                        translate_ml e)
 
+    | Etopck -> Coexpr_topck
+
     | _ ->
         raise (Internal (e.e_loc,
                          "Reac2lco.translate_ml: expr"))

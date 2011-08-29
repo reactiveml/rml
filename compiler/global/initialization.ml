@@ -119,6 +119,16 @@ let type_desc_event =
 let type_event = Types_utils.constr_notabbrev event_ident [Types_utils.new_generic_var();
 						     Types_utils.new_generic_var(); ]
 
+(* clock *)
+let clock_ident = pervasives_type "clock"
+
+let type_desc_clock =
+  { gi = clock_ident;
+    info = Some { type_constr = { gi = clock_ident;
+                                  info = Some{ constr_abbr=Constr_notabbrev} };
+                  type_kind = Type_abstract;
+                  type_arity = 0; } }
+let type_clock = Types_utils.constr_notabbrev clock_ident []
 
 (* list *)
 let list_ident = pervasives_type "list"
@@ -198,6 +208,7 @@ let list_of_type_desc =
     type_desc_list;
     type_desc_option;
     type_desc_event;
+    type_desc_clock;
 ]
 
 let list_of_constr_desc =

@@ -510,6 +510,8 @@ let rec translate env e =
     | Pexpr_pauseclock e ->
       Epauseclock (translate env e)
 
+    | Pexpr_topck -> Etopck
+
     | Pexpr_get _ ->
         raise (Internal (e.pexpr_loc,
                          "Parse2reac.translate: expr"))

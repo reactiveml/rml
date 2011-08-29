@@ -71,6 +71,7 @@ and expression_desc =
   | Coexpr_signal of
       (ident * type_expression option) * expression Asttypes.clock
     * (expression * expression) option * expression
+  | Coexpr_topck
 
 (* Process expressions *)
 and process =

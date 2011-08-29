@@ -582,6 +582,8 @@ let rec static_expr ctx e =
           else expr_wrong_static_err e1
         else expr_wrong_static_err e
 
+    | Etopck -> Static
+
   in
   e.e_static <- t;
   t

@@ -652,7 +652,11 @@ let rec type_of_expression env expr =
 
     | Enothing -> type_unit
 
-    | Epause (_, _) -> type_unit
+    | Epause (_, ck) ->
+      (match ck with
+        | CkExpr e -> type_expect env e type_clock
+        | _ -> ());
+      type_unit
 
     | Ehalt _ -> new_var()
 
@@ -817,9 +821,15 @@ let rec type_of_expression env expr =
         in
         type_of_expression new_env p
 
-    | Enewclock (id, e) -> type_of_expression env e
+    | Enewclock (id, e) ->
+      let env = Env.add id (forall [] type_clock) env in
+      type_of_expression env e
 
-    | Epauseclock _ -> type_unit
+    | Epauseclock ck ->
+      type_expect env ck type_clock;
+      type_unit
+
+    | Etopck -> type_clock
 
   in
   expr.e_type <- t;

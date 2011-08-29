@@ -97,6 +97,7 @@ and expression_desc =
   (*reparml related expreessions *)
   | Pexpr_newclock of simple_ident * expression
   | Pexpr_pauseclock of expression
+  | Pexpr_topck
 (* event configuration *)
   | Pconf_present of expression
   | Pconf_and of event_config * event_config

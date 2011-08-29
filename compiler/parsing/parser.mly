@@ -682,6 +682,8 @@ simple_expr:
       { mkexpr (Pexpr_pause $2) }
   | PAUSECLOCK simple_expr
       { mkexpr (Pexpr_pauseclock $2) }
+  | TOPCK
+      { mkexpr Pexpr_topck }
   | HALT
       { mkexpr Pexpr_halt }
   | LOOP par_expr END

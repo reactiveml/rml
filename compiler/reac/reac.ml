@@ -100,6 +100,7 @@ and expression_desc =
 (*reparml related expressions*)
   | Enewclock of ident * expression
   | Epauseclock of expression
+  | Etopck
 
 (* event configuration *)
 and event_config =

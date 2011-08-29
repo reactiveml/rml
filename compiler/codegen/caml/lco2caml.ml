@@ -279,6 +279,8 @@ let rec translate_ml cd e =
                       Location.none],
                    translate_ml cd e)
 
+    | Coexpr_topck ->
+      Cexpr_apply (make_instruction "rml_top_clock_domain", [unit_value])
   in
   make_expr cexpr e.coexpr_loc
 
