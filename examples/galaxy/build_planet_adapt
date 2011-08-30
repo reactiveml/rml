@@ -1,0 +1,4 @@
+../../compiler/rpmlc.byte -I ../../lib utils.rml
+../../compiler/rpmlc.byte -I ../../lib -s main -n 2000 planets_adapt.rml
+
+ocamlc -custom -I +sdl -I ./rmlsdl bigarray.cma sdl.cma sdlloader.cma sdlgfx.cma -I ./rmlsdl/_build rmlsdl.cma -I ../../interpreter/_build unix.cma rpmllib.cma utils.ml planets_adapt.ml -o planets_adapt
