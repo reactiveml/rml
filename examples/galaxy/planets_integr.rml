@@ -1,0 +1,197 @@
+(****************************************************)
+(** RK4 version *************************************)
+(****************************************************)
+(****************************************************)
+
+open Rmlsdl
+open Utils
+
+let enable_graphics = true
+
+
+let process no_compute dt env x_t v_t w =
+  (x_t, v_t)
+
+let process compute_a env x w =
+  let add_force f body = add_vector (force x body) f in
+  emit env(x, w);
+  await env(all) in
+  List.fold_left add_force zero_vector all
+
+let process compute_rk4 dt env x_t v_t w =
+  (* step 1 *)
+  let k1_v = run (compute_a env x_t w) in
+  let k1_p = v_t in
+  (* step 2 *)
+  let k2_p = add_vector v_t (scalar_mult (dt /. 2.0) k1_v) in
+  let x_2 = add_vector x_t (scalar_mult (dt /. 2.0) k1_p) in
+  let k2_v = run (compute_a env x_2 w) in
+  (* step 2 *)
+  let k3_p = add_vector v_t (scalar_mult (dt /. 2.0) k2_v) in
+  let x_3 = add_vector x_t (scalar_mult (dt /. 2.0) k2_p) in
+  let k3_v = run (compute_a env x_3 w) in
+  (* step 4 *)
+  let k4_p = add_vector v_t (scalar_mult dt k3_v) in
+  let x_4 = add_vector x_t (scalar_mult dt k3_p) in
+  let k4_v = run (compute_a env x_4 w) in
+  (* final result *)
+  let v_tp =
+    add_vector v_t (scalar_mult (dt /. 6.0)
+                      (add_vector k1_v (add_vector (scalar_mult 2.0 k2_v)
+                                          (add_vector (scalar_mult 2.0 k3_v) k4_v))))
+  in
+  let x_tp =
+    add_vector x_t (scalar_mult (dt /. 6.0)
+                      (add_vector k1_p (add_vector (scalar_mult 2.0 k2_p)
+                                          (add_vector (scalar_mult 2.0 k3_p) k4_p))))
+  in
+  (x_tp, v_tp)
+
+
+
+let process compute_heun dt env x_t v_t w =
+  let a_t = run (compute_a env x_t w) in
+
+  let v_int = add_vector v_t (scalar_mult dt a_t) in
+  let x_int = add_vector x_t (scalar_mult dt v_t) in
+  let a_int = run (compute_a env x_int w) in
+
+  let v_tp = add_vector v_t (scalar_mult (dt /. 2.0) (add_vector a_t a_int)) in
+  let x_tp = add_vector x_t (scalar_mult (dt /. 2.0) (add_vector v_t v_int)) in
+  (x_tp, v_tp)
+
+
+let process compute_euler dt env x_t v_t w  =
+  let a_t = run (compute_a env x_t w) in
+
+  let v_tp = add_vector v_t (scalar_mult dt a_t) in
+  let x_tp = add_vector x_t (scalar_mult dt v_t) in
+  (x_tp, v_tp)
+
+
+let process compute_euler_semi_implicit dt env x_t v_t w =
+  let a_t = run (compute_a env x_t w) in
+
+  let v_tp = add_vector v_t (scalar_mult dt a_t) in
+  let x_tp = add_vector x_t (scalar_mult dt v_tp) in
+  (x_tp, v_tp)
+
+
+let process compute_verlet dt env x_t v_t w =
+  let a_t = run (compute_a env x_t w) in
+
+  let v_half = add_vector v_t (scalar_mult (dt /. 2.0) a_t) in
+  let x_tp = add_vector x_t (scalar_mult dt v_half) in
+  let a_tp = run (compute_a env x_tp w) in
+  let v_tp = add_vector v_half (scalar_mult (dt /. 2.0) a_tp) in
+  (x_tp, v_tp)
+
+
+let process compute_leapfrog dt env x_t v_t w =
+  let a_t = run (compute_a env x_t w) in
+
+  let x_tp = add_vector x_t (add_vector (scalar_mult dt v_t) (scalar_mult (dt *. dt /. 2.0) a_t)) in
+  let a_tp = run (compute_a env x_tp w) in
+  let v_tp = add_vector v_t (scalar_mult (dt /.2.0) (add_vector a_t a_tp)) in
+  (x_tp, v_tp)
+
+
+(** Body processes *)
+let process body st pck reconfigure dt env =
+  let rec process aux compute =
+    do
+      loop
+        let x_tp, v_tp = run (compute (pre? dt) env st.b_pos st.b_vel st.b_weight) in
+        st.b_pos <- x_tp;
+        st.b_vel <- v_tp;
+        pause pck
+      end
+    until reconfigure(compute) -> run (aux compute) done
+  in
+  await reconfigure(compute) in
+  run (aux compute)
+
+let process container time_step p reconfigure pck =
+  signal dt default 0.0 gather (+.) in
+  loop
+    emit dt (0.1);
+    pause
+  end
+  ||
+  newclock ck in
+    signal env in
+    run (p pck reconfigure dt env)
+
+
+
+let random_pos_planet c_x c_y dmin dmax =
+  let rand_away z d =
+    if Random.bool () then z +. d else z -. d
+  in
+  let d = random_float dmin dmax in
+  let x = random_float (c_x -. d) (c_x +. d) in
+  let dy = sqrt ( (d *. d) -. ((x -. c_x) *. (x -. c_x)) ) in
+  let y = rand_away c_y dy in
+  mk_vector x y 0.0
+
+let process body_sprite st sp pck =
+  if enable_graphics then (
+    loop
+      Rmlsdl.set_sprite_pos sp st.b_pos.v_x st.b_pos.v_y;
+      Rmlsdl.draw_sprite sp;
+      pause pck
+    end
+   )
+
+let process planet center vp pck reconfigure dt env =
+  let pos = random_pos_planet center.v_x center.v_y 100.0 200.0 in
+  let st = mk_body pos
+      (scalar_mult 10.0 (normal_unit_vector pos center))
+      (random_float 0.01 0.01)
+  in
+  (*let sp = Rmlsdl.create_sprite_circle 5 Rmlsdl.Blue in*)
+  let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "earth.png" in
+  run (body st pck reconfigure dt env)
+  ||
+  run (body_sprite st sp pck)
+
+let process sun center vp pck reconfigure dt env =
+  let st = mk_body center zero_vector 8000.0 in
+  let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "sun.png" in
+  run (body st pck reconfigure dt env)
+  ||
+  run (body_sprite st sp pck)
+
+let process window =
+  if enable_graphics then (
+    Rmlsdl.create_window 800 600;
+    ignore (Rmlsdl.create_world 1680 1050 Rmlsdl.Black);
+    loop
+      Rmlsdl.process_events ();
+      Rmlsdl.update None;
+      pause
+    end
+   )
+
+let process main =
+  let vp_rect = mk_rect 0.0 0.0 1000.0 1000.0 in
+  let sc_rect = mk_rect 0 0 1680 1050 in
+  let center = center_float vp_rect in
+  let vp = Rmlsdl.create_float_viewport vp_rect sc_rect in
+  let process p pck reconfigure dt env =
+    run (sun center vp pck reconfigure dt env)
+    ||
+    pause;
+    for i = 1 to 10 dopar
+      run (planet center vp pck reconfigure dt env)
+    done
+  in
+  run window
+  ||
+  signal reconfigure default no_compute gather (fun x _ -> x) in
+  run (container 0.1 p reconfigure topck)
+  ||
+  emit reconfigure (compute_heun)
+(*  run (wait 100);
+  print_endline "Reconfiguring method for Vertlet";
+  emit reconfigure (compute_verlet) *)
