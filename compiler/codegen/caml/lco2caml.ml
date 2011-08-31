@@ -248,13 +248,12 @@ let rec translate_ml cd e =
     | Coexpr_emit (s) ->
         Cexpr_apply
           (make_instruction "rml_expr_emit",
-           [make_expr_var_local cd; translate_ml cd s;])
+           [translate_ml cd s;])
 
     | Coexpr_emit_val (s, e) ->
         Cexpr_apply
           (make_instruction "rml_expr_emit_val",
-           [make_expr_var_local cd;
-            translate_ml cd s;
+           [translate_ml cd s;
             translate_ml cd e;])
 
     | Coexpr_signal (s, ck, None, e) ->

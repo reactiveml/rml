@@ -138,11 +138,11 @@ module Rml_interpreter =
     let rml_emit expr_evt = rml_emit_val expr_evt (fun() -> ())
     let rml_emit' evt = rml_emit_val' evt (fun() -> ())
 
-    let rml_expr_emit_val cd evt v =
+    let rml_expr_emit_val evt v =
       R.Event.emit evt v
 
-    let rml_expr_emit cd evt =
-      rml_expr_emit_val cd evt ()
+    let rml_expr_emit evt =
+      rml_expr_emit_val evt ()
 
 (**************************************)
 (* await_immediate                    *)

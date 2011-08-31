@@ -54,8 +54,8 @@ module type S =
     val rml_last: ('a, 'b) R.event -> 'b
     val rml_default: ('a, 'b) R.event -> 'b
 
-    val rml_expr_emit: R.clock_domain -> (unit, 'b) R.event -> unit
-    val rml_expr_emit_val: R.clock_domain -> ('a, 'b) R.event -> 'a -> unit
+    val rml_expr_emit: (unit, 'b) R.event -> unit
+    val rml_expr_emit_val: ('a, 'b) R.event -> 'a -> unit
 
     val rml_global_signal: R.clock_domain -> ('a, 'a list) R.event
     val rml_global_signal_combine: R.clock_domain -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
