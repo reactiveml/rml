@@ -39,7 +39,8 @@ let read_depends file =
     else (
       let i = String.index l ':' in
       let names = split_string (String.sub l (i+1) (String.length l - i - 1)) ' ' in
-      List.map (fun s -> [Pathname.basename (Pathname.update_extension "rzi" (Pathname.mk s))]) names
+      List.map (fun s -> [Pathname.basename
+                             (Pathname.update_extension "rzi" (Pathname.mk s))]) names
     )
   with
     | _ -> []
@@ -187,7 +188,12 @@ let rmlbuild_after_rules () =
 
       ocaml_lib ~extern:true ~dir:!stdlib_dir ~tag_name:"rmllib" "rmllib";
 
-      flag ["rml"; "compile"; "annot"] (A "-dtypes")
+      flag ["rml"; "compile"; "annot"] (A "-dtypes");
+      flag ["rml"; "compile"; "lco_rewrite"] (S ([A "-runtime"; A "Lco_rewrite"]));
+      flag ["rml"; "compile"; "lco"] (S ([A "-runtime"; A "Lco"]));
+      flag ["rml"; "compile"; "lco_ctrl_tree"] (S ([A "-runtime"; A "Lco_ctrl_tree"]));
+      flag ["rml"; "compile"; "lco_ctrl_tree_n"] (S ([A "-runtime"; A "Lco_ctrl_tree_n"]));
+      flag ["rml"; "compile"; "lk"] (S ([A "-runtime"; A "Lk"]))
 ;;
 
 
