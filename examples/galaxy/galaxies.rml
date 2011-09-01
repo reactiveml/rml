@@ -4,6 +4,7 @@
 (****************************************************)
 (****************************************************)
 
+open Mlsdl
 open Rmlsdl
 open Utils
 
@@ -26,13 +27,13 @@ let process fixed_body st dt env =
 let process body_sprite st sp =
   if enable_graphics then (
     loop
-      Rmlsdl.set_sprite_pos sp st.b_pos.v_x st.b_pos.v_y;
-      Rmlsdl.draw_sprite sp;
+      Mlsdl.set_sprite_pos sp st.b_pos.v_x st.b_pos.v_y;
+      Mlsdl.draw_sprite sp;
       pause
     end
    )
 
-let choose_number_steps _ = 10
+let choose_number_steps _ = 30
 
 let compute_weight all =
   List.fold_left (fun t (_, w) -> w +. t) 0.0 all
@@ -90,14 +91,14 @@ let process planet center vp dt env =
       (random_float 0.01 0.01)
   in
   (*let sp = Rmlsdl.create_sprite_circle 5 Rmlsdl.Blue in*)
-  let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "earth.png" in
+  let sp = Mlsdl.create_sprite_from_file vp null_float_pos "earth.png" in
   run (body st dt env)
   ||
   run (body_sprite st sp)
 
 let process sun center vp dt env =
   let st = mk_body center zero_vector 8000.0 in
-  let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "sun.png" in
+  let sp = Mlsdl.create_sprite_from_file vp null_float_pos "sun.png" in
   run (body st dt env)
   ||
   run (body_sprite st sp)
@@ -109,49 +110,40 @@ let process solar_system center sc_rect vp dt env =
       8000.0
   in
   let vp_rect = mk_rect 0.0 0.0 800.0 500.0 in
-  let local_vp = Rmlsdl.create_float_viewport vp_rect sc_rect in
+  let local_vp = Mlsdl.create_float_viewport vp_rect sc_rect in
   let center = center_float vp_rect in
   let process p local_dt local_env =
     run (sun center local_vp local_dt local_env)
     ||
-    for i = 1 to 20 dopar
+    for i = 1 to 10 dopar
       run (planet center local_vp local_dt local_env)
     done
+    ||
+    loop
+      Mlsdl.update None;
+      pause; pause; pause; pause; pause; pause
+    end
   in
   run (composed_body topck p st dt env)
   ||
-  let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "sun.png" in
+  let sp = Mlsdl.create_sprite_from_file vp null_float_pos "sun.png" in
   run (body_sprite st sp)
-  ||
-  loop
-    Rmlsdl.update None;
-    pause
-  end
 
 let process black_hole pos vp dt env =
   let st = mk_body pos zero_vector 8000000.0 in
-  let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "blackhole.png" in
+  let sp = Mlsdl.create_sprite_from_file vp null_float_pos "blackhole.png" in
   run (fixed_body st dt env)
   ||
   run (body_sprite st sp)
 
-
-let process window =
-  if enable_graphics then (
-    Rmlsdl.create_fullscreen_window ();
-    ignore (Rmlsdl.create_world 1680 1050 Rmlsdl.Black);
-    loop
-      Rmlsdl.process_events ();
-      Rmlsdl.update None;
-      pause
-    end
-   )
+let _ = Random.self_init ()
 
 let process main =
   let vp_rect = mk_rect 0.0 0.0 8e6 5e6 in
   let sc_rect = mk_rect 0 525 800 500 in
   let center = center_float vp_rect in
-  let vp = Rmlsdl.create_float_viewport vp_rect sc_rect in
+  let _, window_p = Rmlsdl.window Fullscreen 1680 1050 Black in
+  let vp = Mlsdl.create_float_viewport vp_rect sc_rect in
   let process p dt env =
     let sc_rect = mk_rect 840 0 800 500 in
     run (solar_system center sc_rect vp dt env)
@@ -163,7 +155,7 @@ let process main =
   in
   pause; run (container 1.0 p)
   ||
-  run window
+  run window_p
 
 (* n >= 2 *)
 (*

@@ -3,6 +3,7 @@
 (****************************************************)
 (****************************************************)
 
+open Mlsdl
 open Rmlsdl
 open Utils
 
@@ -106,8 +107,8 @@ let process container time_step error_threshold p pck =
 let process body_sprite st sp pck =
   if enable_graphics then (
     loop
-      Rmlsdl.set_sprite_pos sp st.b_pos.v_x st.b_pos.v_y;
-      Rmlsdl.draw_sprite sp;
+      Mlsdl.set_sprite_pos sp st.b_pos.v_x st.b_pos.v_y;
+      Mlsdl.draw_sprite sp;
       pause pck
     end
    )
@@ -119,34 +120,24 @@ let process planet center vp compute env error adapt_ck =
       (random_float 0.01 0.01)
   in
   (*let sp = Rmlsdl.create_sprite_circle 5 Rmlsdl.Blue in*)
-  let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "earth.png" in
+  let sp = Mlsdl.create_sprite_from_file vp null_float_pos "earth.png" in
   run (body st compute env error adapt_ck)
   ||
   run (body_sprite st sp adapt_ck)
 
 let process sun center vp compute env error adapt_ck =
   let st = mk_body center zero_vector 8000.0 in
-  let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "sun.png" in
+  let sp = Mlsdl.create_sprite_from_file vp null_float_pos "sun.png" in
   run (body st compute env error adapt_ck)
   ||
   run (body_sprite st sp adapt_ck)
-
-let process window =
-  if enable_graphics then (
-    Rmlsdl.create_window 800 600;
-    ignore (Rmlsdl.create_world 1680 1050 Rmlsdl.Black);
-    loop
-      Rmlsdl.process_events ();
-      Rmlsdl.update None;
-      pause
-    end
-   )
 
 let process main =
   let vp_rect = mk_rect 0.0 0.0 1000.0 1000.0 in
   let sc_rect = mk_rect 0 0 1680 1050 in
   let center = center_float vp_rect in
-  let vp = Rmlsdl.create_float_viewport vp_rect sc_rect in
+  let _, window_p = Rmlsdl.window Fullscreen 1680 1050 Black in
+  let vp = Mlsdl.create_float_viewport vp_rect sc_rect in
   let process p compute env error adapt_ck =
     run (sun center vp compute env error adapt_ck)
     ||
@@ -155,6 +146,6 @@ let process main =
       run (planet center vp compute env error adapt_ck)
     done
   in
-  run window
+  run window_p
   ||
   run (container 1.0 1e-6 p topck)

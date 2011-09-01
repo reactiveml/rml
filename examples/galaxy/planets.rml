@@ -4,6 +4,7 @@
 (****************************************************)
 (****************************************************)
 
+open Mlsdl
 open Rmlsdl
 open Utils
 
@@ -28,19 +29,8 @@ let enable_graphics = true
 let process body_sprite st sp =
   if enable_graphics then (
     loop
-      Rmlsdl.set_sprite_pos sp st.b_pos.v_x st.b_pos.v_y;
-      Rmlsdl.draw_sprite sp;
-      pause
-    end
-   )
-
-let process window =
-  if enable_graphics then (
-    Rmlsdl.create_fullscreen_window ();
-    ignore (Rmlsdl.create_world 1680 1050 Rmlsdl.Black);
-    loop
-      Rmlsdl.process_events ();
-      Rmlsdl.update None;
+      Mlsdl.set_sprite_pos sp st.b_pos.v_x st.b_pos.v_y;
+      Mlsdl.draw_sprite sp;
       pause
     end
    )
@@ -56,16 +46,16 @@ let random_pos_planet c_x c_y dmin dmax =
   mk_vector x y 0.0
 
 let process solar_system main_viewport vp_rect sc_rect env dt =
-  let vp = Rmlsdl.create_float_viewport vp_rect sc_rect in
+  let vp = Mlsdl.create_float_viewport vp_rect sc_rect in
   let center = center_float vp_rect in
   let process sun dt env =
     let st = mk_body center zero_vector 8000.0 in
-    let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "sun.png" in
+    let sp = Mlsdl.create_sprite_from_file vp null_float_pos "sun.png" in
     run (body st dt env)
     ||
     run (body_sprite st sp)
     ||
-    let sp = Rmlsdl.create_sprite_from_file main_viewport null_float_pos "sun.png" in
+    let sp = Mlsdl.create_sprite_from_file main_viewport null_float_pos "sun.png" in
     run (body_sprite st sp)
   in
   let process planet dt env =
@@ -75,7 +65,7 @@ let process solar_system main_viewport vp_rect sc_rect env dt =
      (random_float 0.01 0.01)
    in
    (*let sp = Rmlsdl.create_sprite_circle 5 Rmlsdl.Blue in*)
-    let sp = Rmlsdl.create_sprite_from_file vp null_float_pos "earth.png" in
+    let sp = Mlsdl.create_sprite_from_file vp null_float_pos "earth.png" in
     run (body st dt env)
     ||
     run (body_sprite st sp)
@@ -97,7 +87,8 @@ let process main =
   let huge_dist = 1e4 in
   let vp_rect = mk_rect (-. huge_dist) (-. huge_dist) (3.0 *. huge_dist) (3.0 *. huge_dist) in
   let sc_rect = mk_rect 840 525 800 500 in
-  let main_viewport = Rmlsdl.create_float_viewport vp_rect sc_rect in
+  let _, window_p = Rmlsdl.window Fullscreen 1680 1050 Black in
+  let main_viewport = Mlsdl.create_float_viewport vp_rect sc_rect in
   (* create solar systems *)
   let vp_rect = mk_rect 0.0 0.0 800.0 500.0 in
   let sc_rect = mk_rect 0 0 800 500 in
@@ -120,5 +111,4 @@ let process main =
     pause
   end
   ||
-  run window
-
+  run window_p

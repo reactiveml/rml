@@ -1,3 +1,4 @@
+open Mlsdl
 open Rmlsdl
 
 let random_int min max =
