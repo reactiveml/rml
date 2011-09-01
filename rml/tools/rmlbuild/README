@@ -1,0 +1,29 @@
+(* Description *)
+rmlbuild is a plugin for ocamlbuild that allows to build rml programs more easily.
+
+(* Usage *)
+- Copy 'myocamlbuild.ml' and 'myocamlbuild_config.ml' to the directory where your files are.
+- For a program:
+    * Create a foo.rmlsim file with the following contents:
+******************************** START HERE
+file: bar.rml
+sim: main
+sampling: 0.1
+n : 100
+******************************** END HERE
+
+This will tell the RML compiler that the main process of your program is the 'main' process
+in the file "bar.rml". 'n' and 'sampling' can be omitted and have the same meaning
+as in the command line.
+
+    * To use an external libray, modify the myocamlbuild.ml file to add:
+      Myocamlbuild_config.rml_lib ~dir:mylib_dir "mylib";
+and then add 'use_mylib' to the tag of the .ml and .byte files, just as for 'ocaml_lib'.
+
+    * Run 'ocamlbuild foo.byte' to build the program
+
+- For a library:
+    * Create a mylib.mllib file, containing the names of modules to add to the library (as
+    for an ocaml library). You also need to add 'use_unix,rpmllib' tags to the mylib.cma file.
+
+    * Run 'ocamlbuild mylib.cma'
