@@ -4,9 +4,10 @@ open Command;;
 let source_dir = "/Users/ccpasteur/Documents/work/git/reparml"
 
 let rmlc = A (source_dir^"/compiler/rpmlc.byte");;
-let rmldep = A (source_dir^"/tools/rpmldep/rmldep.byte");;
+let rmldep = A (source_dir^"/tools/rpmldep/rpmldep.byte");;
 let rpmllib_dir = source_dir^"/interpreter/_build"
 let stdlib_dir = source_dir^"/lib"
+let stdlib_path = Pathname.mk stdlib_dir
 
 let rec input_backslash_lines inc s =
   try
@@ -42,7 +43,8 @@ let read_depends file =
     else (
       let i = String.index l ':' in
       let names = split_string (String.sub l (i+1) (String.length l - i - 1)) ' ' in
-      List.map (fun s -> [Pathname.basename (Pathname.update_extension "rzi" (Pathname.mk s))]) names
+      let names = List.map (fun s -> (Pathname.update_extension "rzi" (Pathname.mk s))) names in
+      List.map (fun s -> [Pathname.basename s]) names
     )
   with
     | _ -> []
@@ -92,22 +94,36 @@ let mk_includes dir =
 ;;
 
 let rmlbuild_after_rules () =
-  ocaml_lib ~extern:true ~dir:stdlib_dir ~tag_name:"rmllib" "rmllib";
-
       rule "rmldep: rml -> rmldepends"
         ~prod:"%.rml.depends"
         ~dep:"%.rml"
       begin fun env _build ->
-        Cmd(S[rmldep; A "-I"; A stdlib_dir; A"-I"; A (Pathname.to_string Pathname.pwd);
-              Px(env "%.rml"); Sh ">"; Px(env "%.rml.depends")])
+        let file = env "%.rml" in
+        let includes = mk_includes (Pathname.dirname file) in
+        Cmd(S ([rmldep] @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
       end;
 
       rule "rmldep: mli -> rmldepends"
         ~prod:"%.rml.depends"
         ~dep:"%.mli"
       begin fun env _build ->
-        Cmd(S[rmldep; A "-I"; A stdlib_dir; A"-I"; A (Pathname.to_string Pathname.pwd);
-              Px(env "%.mli"); Sh ">"; Px(env "%.rml.depends")])
+        let file = env "%.mli" in
+        let includes = mk_includes (Pathname.dirname file) in
+        Cmd(S ([rmldep] @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
+      end;
+
+      rule "rml: mli -> rzi"
+        ~prods:["%.rzi"]
+        ~deps:["%.rml.depends"; "%.mli"]
+      begin fun env _build ->
+        let dep_file = env "%.rml.depends" in
+        let depends = read_depends dep_file in
+        if depends <> [] then
+          List.iter Outcome.ignore_good (_build depends);
+
+        let file = env "%.mli" in
+        let includes = mk_includes (Pathname.dirname file) in
+        Cmd(S ([rmlc] @ includes @ [A "-I"; A stdlib_dir; P file]))
       end;
 
       rule "rml: rml -> ml, rzi"
@@ -120,25 +136,12 @@ let rmlbuild_after_rules () =
           List.iter Outcome.ignore_good (_build depends);
 
         let gen_file = env "%.ml" in
-        tag_file gen_file ["rmllib"];
+        tag_file gen_file ["rpmllib"];
 
         let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmlc; A "-I"; A stdlib_dir]
                @includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
-      end;
-
-
-      rule "rml: mli -> rzi"
-        ~prods:["%.rzi"]
-        ~deps:["%.rml.depends"; "%.mli"]
-      begin fun env _build ->
-        let dep_file = env "%.rml.depends" in
-        let depends = read_depends dep_file in
-        if depends <> [] then
-          List.iter Outcome.ignore_good (_build depends);
-
-        Cmd(S[rmlc; A "-I"; A stdlib_dir; P(env "%.mli")])
       end;
 
       rule "rml: rmlsim -> byte"
@@ -148,10 +151,37 @@ let rmlbuild_after_rules () =
         let rmlsim_file = env "%.rmlsim" in
         let main_file = read_rmlsim rmlsim_file in
         let byte_file = Pathname.update_extension "byte" main_file in
-        tag_file byte_file ["rmllib"; "use_unix"];
+        tag_file byte_file ["rpmllib"; "use_unix"];
         List.iter Outcome.ignore_good (_build [[byte_file]]);
         ln_s byte_file (env "%.byte")
       end;
 
+      ocaml_lib ~extern:true ~dir:rpmllib_dir ~tag_name:"rpmllib" "rpmllib";
+
       flag ["rml"; "compile"; "annot"] (A "-dtypes")
+;;
+
+let rml_lib ?(byte=true) ?(native=true) ?dir ?tag_name libpath =
+  let add_dir x =
+    match dir with
+    | Some dir -> S[A"-I"; P dir; x]
+    | None -> x
+  in
+  let tag_name =
+    match tag_name with
+    | Some x -> x
+    | None -> "use_" ^ Pathname.basename libpath
+  in
+  let flag_and_dep tags lib =
+    flag tags (add_dir (A lib))
+  in
+  if byte then
+    flag_and_dep ["ocaml"; tag_name; "link"; "byte"] (libpath^".cma");
+  if native then
+    flag_and_dep ["ocaml"; tag_name; "link"; "native"] (libpath^".cmxa");
+  match dir with
+  | None -> ()
+  | Some dir ->
+    flag ["rml"; "compile"; tag_name] (S[A"-I"; P dir]);
+    flag ["ocaml"; "compile"; tag_name] (S[A"-I"; P dir])
 
