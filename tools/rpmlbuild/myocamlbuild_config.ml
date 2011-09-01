@@ -104,6 +104,16 @@ let rmlbuild_after_rules () =
                @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
       end;
 
+      rule "rmldep: rmli -> rmldepends"
+        ~prod:"%.rml.depends"
+        ~dep:"%.rmli"
+      begin fun env _build ->
+        let file = env "%.rmli" in
+        let includes = mk_includes (Pathname.dirname file) in
+        Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
+               @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
+      end;
+
       rule "rmldep: mli -> rmldepends"
         ~prod:"%.rml.depends"
         ~dep:"%.mli"
@@ -124,6 +134,20 @@ let rmlbuild_after_rules () =
           List.iter Outcome.ignore_good (_build depends);
 
         let file = env "%.mli" in
+        let includes = mk_includes (Pathname.dirname file) in
+        Cmd(S ([rmlc] @ includes @ [A "-I"; A stdlib_dir; P file]))
+      end;
+
+      rule "rml: rmli -> rzi"
+        ~prods:["%.rzi"]
+        ~deps:["%.rml.depends"; "%.rmli"]
+      begin fun env _build ->
+        let dep_file = env "%.rml.depends" in
+        let depends = read_depends dep_file in
+        if depends <> [] then
+          List.iter Outcome.ignore_good (_build depends);
+
+        let file = env "%.rmli" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmlc] @ includes @ [A "-I"; A stdlib_dir; P file]))
       end;
