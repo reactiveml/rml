@@ -100,7 +100,8 @@ let rmlbuild_after_rules () =
       begin fun env _build ->
         let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmldep] @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
+        Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
+               @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
       end;
 
       rule "rmldep: mli -> rmldepends"
@@ -109,7 +110,8 @@ let rmlbuild_after_rules () =
       begin fun env _build ->
         let file = env "%.mli" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmldep] @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
+        Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
+               @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
       end;
 
       rule "rml: mli -> rzi"
