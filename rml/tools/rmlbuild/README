@@ -1,4 +1,4 @@
-(* Description *) 
+(* Description *)
 rmlbuild is a plugin for ocamlbuild that allows to build ReactiveML
 programs more easily.
 
@@ -27,8 +27,7 @@ omitted and have the same meaning as in the command line.
     * Run 'ocamlbuild foo.byte' to build the program
 
 - For a library:
-    * Create a mylib.mllib file, containing the names of modules to
-      add to the library (as for an ocaml library). You also need to
-      add 'use_unix,rmllib' tags to the mylib.cma file.
+    * Create a mylib.rmllib file, containing the names of modules to
+      add to the library (as for an ocaml library).
 
     * Run 'ocamlbuild mylib.cma'

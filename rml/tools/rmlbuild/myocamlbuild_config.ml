@@ -186,6 +186,17 @@ let rmlbuild_after_rules () =
         ln_s byte_file (env "%.byte")
       end;
 
+      rule "rml: rmllib -> mllib"
+        ~prod:"%.mllib"
+        ~dep:"%.rmllib"
+      begin fun env _build ->
+        let file = env "%.rmllib" in
+        let mllib_file = Pathname.update_extension "mllib" (Pathname.basename file) in
+        let cma_file = Pathname.update_extension "cma" file in
+        tag_file cma_file ["rmllib"; "use_unix"];
+        cp file mllib_file
+      end;
+
       ocaml_lib ~extern:true ~dir:!stdlib_dir ~tag_name:"rmllib" "rmllib";
 
       flag ["rml"; "compile"; "annot"] (A "-dtypes");
