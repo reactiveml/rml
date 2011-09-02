@@ -175,15 +175,17 @@ let rmlbuild_after_rules () =
       end;
 
       rule "rml: rmlsim -> byte"
-        ~prod:"%.byte"
+        ~prod:"%.rml.byte"
         ~dep:"%.rmlsim"
       begin fun env _build ->
         let rmlsim_file = env "%.rmlsim" in
         let main_file = read_rmlsim rmlsim_file in
         let byte_file = Pathname.update_extension "byte" main_file in
+        let rml_byte_file = env "%.rml.byte" in
         tag_file byte_file ["rmllib"; "use_unix"];
+        tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
         List.iter Outcome.ignore_good (_build [[byte_file]]);
-        ln_s byte_file (env "%.byte")
+        ln_s byte_file rml_byte_file
       end;
 
       rule "rml: rmllib -> mllib"
