@@ -69,18 +69,23 @@ let read_rmlsim file =
   close_in inc;
   let filename = Pathname.mk (List.assoc "file" cmds) in
   tag_file filename ["simulation_file"];
-  let specs = [A "-s"; A (List.assoc "sim" cmds)] in
   let specs =
-    if List.mem_assoc "sampling" cmds then
-      specs@[A "-sampling"; A (List.assoc "sampling" cmds)]
+    if List.mem_assoc "test" cmds then
+      [A "-t"; A (List.assoc "test" cmds)]
     else
-      specs
-  in
-  let specs =
-    if List.mem_assoc "n" cmds then
-      specs@[A "-n"; A (List.assoc "n" cmds)]
-    else
-      specs
+      let specs = [A "-s"; A (List.assoc "sim" cmds)] in
+      let specs =
+        if List.mem_assoc "sampling" cmds then
+          specs@[A "-sampling"; A (List.assoc "sampling" cmds)]
+        else
+          specs
+      in
+      let specs =
+        if List.mem_assoc "n" cmds then
+          specs@[A "-n"; A (List.assoc "n" cmds)]
+        else
+          specs
+      in specs
   in
   flag ["rml";"compile";"simulation_file"] (S specs);
   filename

@@ -11,6 +11,8 @@ COMPILER_OPTIONS=
 OCAMLC=ocamlc
 OCAMLC_OPTIONS="-g -I ../../interpreter/_build -I ../../lib/ unix.cma rpmllib.cma"
 
+OCAMLBUILD=ocamlbuild
+
 build_compiler () {
     cd $COMPILER_DIR
     ocamlbuild $COMPILER_FILE >/dev/null 2>&1
@@ -21,7 +23,8 @@ compile () {
     if [ $VERBOSE ]; then
         echo "    ** Building $1"
     fi
-    $COMPILER_DIR/$COMPILER_FILE -I ../../lib -t test $1.rml >/dev/null 2>&1 && $OCAMLC $OCAMLC_OPTIONS $1.ml >/dev/null 2>&1
+    #$COMPILER_DIR/$COMPILER_FILE -I ../../lib -t test $1.rml >/dev/null 2>&1 && $OCAMLC $OCAMLC_OPTIONS $1.ml >/dev/null 2>&1
+    $OCAMLBUILD $1.rml.byte >/dev/null 2>&1
 
     rc=$?
     if [ $rc != 0 ]; then
@@ -31,7 +34,8 @@ compile () {
 }
 
 clean() {
-    rm *.rzi *.ml *.cmi a.out
+    $OCAMLBUILD -clean >/dev/null 2>&1
+    rm *.byte >/dev/null 2>&1
 }
 
 check() {
@@ -40,8 +44,8 @@ check() {
 
     echo "Starting tests"
 
-    for f in *.rml ; do
-        bn=`basename $f .rml`
+    for f in *.rmlsim ; do
+        bn=`basename $f .rmlsim`
         if [ $VERBOSE ]; then
             echo "  ** Test $bn:"
         fi
@@ -50,7 +54,7 @@ check() {
         if [ $VERBOSE ]; then
             echo "    ** Launching $bn"
         fi
-        if ./a.out >/dev/null 2>&1; then
+        if ./$bn.rml.byte >/dev/null 2>&1; then
             {
                 if [ $VERBOSE ]; then
                     echo "    ** Test $bn passed successfully"

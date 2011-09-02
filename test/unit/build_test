@@ -1,2 +1,0 @@
-echo "\nBuilding $1...\n"
-../compiler/rpmlc.byte -t $2 $1.rml && ocamlc -g -I ../interpreter/_build -I ../lib/ unix.cma rpmllib.cma $1.ml
