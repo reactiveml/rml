@@ -96,8 +96,20 @@ let find_rml_stdlib_dir () =
   stdlib_dir := String.sub s 0 (String.length s - 1)
 ;;
 
+let link_rml extension env _build =
+  let rmlsim_file = env "%.rmlsim" in
+  let main_file = read_rmlsim rmlsim_file in
+  let byte_file = Pathname.update_extension extension main_file in
+  let rml_byte_file = env ("%.rml."^extension) in
+  tag_file byte_file ["use_rmllib"; "use_unix"];
+  tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
+  List.iter Outcome.ignore_good (_build [[byte_file]]);
+  ln_s byte_file rml_byte_file
+;;
+
 let rmlbuild_after_rules () =
       find_rml_stdlib_dir ();
+      ocaml_lib ~extern:true ~native:true ~dir:!stdlib_dir "rmllib";
 
       rule "rmldep: rml -> rmldepends"
         ~prod:"%.rml.depends"
@@ -167,7 +179,7 @@ let rmlbuild_after_rules () =
           List.iter Outcome.ignore_good (_build depends);
 
         let gen_file = env "%.ml" in
-        tag_file gen_file ["rmllib"];
+        tag_file gen_file ["use_rmllib"];
 
         let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
@@ -177,16 +189,22 @@ let rmlbuild_after_rules () =
       rule "rml: rmlsim -> byte"
         ~prod:"%.rml.byte"
         ~dep:"%.rmlsim"
-      begin fun env _build ->
-        let rmlsim_file = env "%.rmlsim" in
-        let main_file = read_rmlsim rmlsim_file in
-        let byte_file = Pathname.update_extension "byte" main_file in
-        let rml_byte_file = env "%.rml.byte" in
-        tag_file byte_file ["rmllib"; "use_unix"];
-        tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
-        List.iter Outcome.ignore_good (_build [[byte_file]]);
-        ln_s byte_file rml_byte_file
-      end;
+        (link_rml "byte");;
+
+      rule "rml: rmlsim -> d.byte"
+        ~prod:"%.rml.d.byte"
+        ~dep:"%.rmlsim"
+        (link_rml "d.byte");;
+
+      rule "rml: rmlsim -> native"
+        ~prod:"%.rml.native"
+        ~dep:"%.rmlsim"
+        (link_rml "native");;
+
+      rule "rml: rmlsim -> p.native"
+        ~prod:"%.rml.native"
+        ~dep:"%.rmlsim"
+        (link_rml "p.native");;
 
       rule "rml: rmllib -> mllib"
         ~prod:"%.mllib"
@@ -195,11 +213,15 @@ let rmlbuild_after_rules () =
         let file = env "%.rmllib" in
         let mllib_file = Pathname.update_extension "mllib" (Pathname.basename file) in
         let cma_file = Pathname.update_extension "cma" file in
-        tag_file cma_file ["rmllib"; "use_unix"];
+        tag_file cma_file ["use_rmllib"; "use_unix"];
+        let cma_file = Pathname.update_extension "d.cma" file in
+        tag_file cma_file ["use_rmllib"; "use_unix"];
+        let cmxa_file = Pathname.update_extension "cmxa" file in
+        tag_file cmxa_file ["use_rmllib"; "use_unix"];
+        let cmxa_file = Pathname.update_extension "p.cmxa" file in
+        tag_file cmxa_file ["use_rmllib"; "use_unix"];
         cp file mllib_file
       end;
-
-      ocaml_lib ~extern:true ~dir:!stdlib_dir ~tag_name:"rmllib" "rmllib";
 
       flag ["rml"; "compile"; "annot"] (A "-dtypes");
       flag ["rml"; "compile"; "lco_rewrite"] (S ([A "-runtime"; A "Lco_rewrite"]));
