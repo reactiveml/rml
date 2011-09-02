@@ -170,16 +170,29 @@ let rmlbuild_after_rules () =
                @includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
-      rule "rml: rmlsim -> byte"
-        ~prod:"%.byte"
+      rule "rml: rmlsim -> rml.byte"
+        ~prod:"%.rml.byte"
         ~dep:"%.rmlsim"
       begin fun env _build ->
         let rmlsim_file = env "%.rmlsim" in
         let main_file = read_rmlsim rmlsim_file in
         let byte_file = Pathname.update_extension "byte" main_file in
+        let rml_byte_file = env "%.rml.byte" in
         tag_file byte_file ["rpmllib"; "use_unix"];
+        tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
         List.iter Outcome.ignore_good (_build [[byte_file]]);
-        ln_s byte_file (env "%.byte")
+        ln_s byte_file rml_byte_file
+      end;
+
+      rule "rml: rmllib -> mllib"
+        ~prod:"%.mllib"
+        ~dep:"%.rmllib"
+      begin fun env _build ->
+        let file = env "%.rmllib" in
+        let mllib_file = Pathname.update_extension "mllib" (Pathname.basename file) in
+        let cma_file = Pathname.update_extension "cma" file in
+        tag_file cma_file ["rpmllib"; "use_unix"];
+        cp file mllib_file
       end;
 
       ocaml_lib ~extern:true ~dir:rpmllib_dir ~tag_name:"rpmllib" "rpmllib";
