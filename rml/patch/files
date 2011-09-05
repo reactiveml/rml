@@ -13,4 +13,8 @@ compiler/parsing/parser.mly
 compiler/reac/reac_ast.ml
 compiler/parsing/syntaxerr.ml
 compiler/global/warnings.ml
-tools/rmlbuild/rmlbuild/*
+tools/rmlbuild/rmlbuild/Makefile
+tools/rmlbuild/rmlbuild/main.ml
+tools/rmlbuild/rmlbuild/ocamlbuild_pack.mlpack
+tools/rmlbuild/rmlbuild/ocamlbuild_plugin.ml
+tools/rmlbuild/rmlbuild/start.sh
