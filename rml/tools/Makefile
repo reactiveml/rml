@@ -1,8 +1,8 @@
-DIRECTORIES=rmldep
+DIRECTORIES=rmldep rmlbuild
 
 TARGET=byte
 
-all: 
+all:
 	(for d in $(DIRECTORIES); \
 	 do (cd $$d ; make $(TARGET)) ; \
 	 done)
@@ -14,7 +14,7 @@ byte: TARGET := byte
 byte: all
 
 
-install: 
+install:
 	(for d in $(DIRECTORIES); \
 	 do (cd $$d ; make install) ; \
 	 done)
