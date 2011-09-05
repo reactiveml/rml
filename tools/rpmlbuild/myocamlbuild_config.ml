@@ -112,40 +112,40 @@ let rmlbuild_after_rules () =
       ocaml_lib ~extern:true ~dir:rpmllib_dir "rpmllib";
 
       rule "rmldep: rml -> rmldepends"
-        ~prod:"%.rml.depends"
+        ~prod:"%.rmldepends"
         ~dep:"%.rml"
       begin fun env _build ->
         let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
-               @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
+               @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
       end;
 
       rule "rmldep: rmli -> rmldepends"
-        ~prod:"%.rml.depends"
+        ~prod:"%.rmldepends"
         ~dep:"%.rmli"
       begin fun env _build ->
         let file = env "%.rmli" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
-               @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
+               @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
       end;
 
       rule "rmldep: mli -> rmldepends"
-        ~prod:"%.rml.depends"
+        ~prod:"%.rmldepends"
         ~dep:"%.mli"
       begin fun env _build ->
         let file = env "%.mli" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
-               @ includes @ [Px file; Sh ">"; Px(env "%.rml.depends")]))
+               @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
       end;
 
       rule "rml: mli -> rzi"
         ~prods:["%.rzi"]
-        ~deps:["%.rml.depends"; "%.mli"]
+        ~deps:["%.mli"; "%.rmldepends"]
       begin fun env _build ->
-        let dep_file = env "%.rml.depends" in
+        let dep_file = env "%.rmldepends" in
         let depends = read_depends dep_file in
         if depends <> [] then
           List.iter Outcome.ignore_good (_build depends);
@@ -157,9 +157,9 @@ let rmlbuild_after_rules () =
 
       rule "rml: rmli -> rzi"
         ~prods:["%.rzi"]
-        ~deps:["%.rml.depends"; "%.rmli"]
+        ~deps:["%.rmli"; "%.rmldepends"]
       begin fun env _build ->
-        let dep_file = env "%.rml.depends" in
+        let dep_file = env "%.rmldepends" in
         let depends = read_depends dep_file in
         if depends <> [] then
           List.iter Outcome.ignore_good (_build depends);
@@ -171,9 +171,9 @@ let rmlbuild_after_rules () =
 
       rule "rml: rml -> ml, rzi"
         ~prods:["%.ml"; "%.rzi"]
-        ~deps:["%.rml.depends"; "%.rml"]
+        ~deps:["%.rml"; "%.rmldepends"]
       begin fun env _build ->
-        let dep_file = env "%.rml.depends" in
+        let dep_file = env "%.rmldepends" in
         let depends = read_depends dep_file in
         if depends <> [] then
           List.iter Outcome.ignore_good (_build depends);
