@@ -10,6 +10,12 @@ open Utils
 
 let enable_graphics = true
 
+let compute_pos dt st all =
+  let add_force f body = add_vector (force body st.b_pos) f in
+  let f = List.fold_left add_force zero_vector all in
+  st.b_vel <- add_vector st.b_vel (scalar_mult dt f);
+  st.b_pos <- add_vector st.b_pos (scalar_mult dt st.b_vel)
+
 (** Body processes *)
 let process body st dt env =
   loop

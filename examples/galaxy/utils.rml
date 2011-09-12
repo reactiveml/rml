@@ -88,7 +88,7 @@ let mk_body pos v weight =
 (* Computing forces *)
 let g = 3.0
 
-let force pos1 (pos2, w2) =
+let force (pos2, w2) pos1 =
   let d2 = dist2 pos1 pos2 in
   if (d2 <> 0.0) then
     let f12 = (g *. w2) /. d2 in
@@ -97,13 +97,21 @@ let force pos1 (pos2, w2) =
   else
     zero_vector
 
+let process env_signal =
+  let add_force f_new f =
+    fun (pos: vector) ->
+      add_vector (f_new pos) (f pos)
+  in
+  signal env default (fun _ -> zero_vector) gather add_force in
+  env
+
 (**This is semi implicit Euler method *)
-let compute_pos dt st all =
+(*let compute_pos dt st all =
   let add_force f body = add_vector (force st.b_pos body) f in
   let f = List.fold_left add_force zero_vector all in
   st.b_vel <- add_vector st.b_vel (scalar_mult dt f);
   st.b_pos <- add_vector st.b_pos (scalar_mult dt st.b_vel)
-
+*)
 
 (* various functions to create examples *)
 let random_pos_planet c_x c_y dmin dmax =

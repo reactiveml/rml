@@ -14,11 +14,9 @@ let process no_compute env x_t v_t w =
   (x_t, v_t, 0.0)
 
 let process compute_a env x w =
-  let add_force f body = add_vector (force x body) f in
-  emit env(x, w);
-  await env(all) in
-  List.fold_left add_force zero_vector all
-
+  emit env (force (x, w));
+  await env(f) in
+  f x
 
 
 let process compute_bogacki_shampine dt env x_t v_t w =
@@ -100,7 +98,7 @@ let process container time_step error_threshold p pck =
     end
     ||
     newclock computation_ck in
-      signal env in
+      let env = run env_signal in
       run (p compute env error adapt_ck)
 
 

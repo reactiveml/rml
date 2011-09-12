@@ -8,17 +8,23 @@ open Mlsdl
 open Rmlsdl
 open Utils
 
+
+(**This is semi implicit Euler method *)
+let compute_pos dt st f =
+  st.b_vel <- add_vector st.b_vel (scalar_mult dt f);
+  st.b_pos <- add_vector st.b_pos (scalar_mult dt st.b_vel)
+
 (** Body processes *)
 let process body st dt env =
   loop
-    emit env(st.b_pos, st.b_weight);
-    await env(all) in
-    compute_pos (pre? dt) st all
+    emit env (force (st.b_pos, st.b_weight));
+    await env(f) in
+    compute_pos (pre? dt) st (f st.b_pos)
   end
 
 let process fixed_body st dt env =
   loop
-    emit env(st.b_pos, st.b_weight);
+    emit env (force (st.b_pos, st.b_weight));
     pause;
   end
 
@@ -83,7 +89,7 @@ let _ = Random.self_init ()
 
 let process main =
   signal dt default 0.0 gather (+.) in
-  signal env in
+  let env = run env_signal in
   let huge_dist = 1e4 in
   let vp_rect = mk_rect (-. huge_dist) (-. huge_dist) (3.0 *. huge_dist) (3.0 *. huge_dist) in
   let sc_rect = mk_rect 840 525 800 500 in
