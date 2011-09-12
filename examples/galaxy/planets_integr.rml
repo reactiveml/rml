@@ -95,6 +95,7 @@ let process compute_leapfrog dt env x_t v_t w =
   let v_tp = add_vector v_t (scalar_mult (dt /.2.0) (add_vector a_t a_tp)) in
   (x_tp, v_tp)
 
+type approx = Stopped | Euler | EulerSemiImplicit | Heun | Verlet | Leapfrog | RK4
 
 (** Body processes *)
 let process body st pck reconfigure dt env =
@@ -162,6 +163,56 @@ let process sun center vp pck reconfigure dt env =
   ||
   run (body_sprite st sp pck)
 
+let process method_selector current_method keys =
+  loop
+    await keys(v) in
+    match v with
+    | ["r"] -> emit current_method RK4
+    | ["e"] -> emit current_method Euler
+    | ["h"] -> emit current_method Heun
+    | ["s"] -> emit current_method EulerSemiImplicit
+    | ["v"] -> emit current_method Verlet
+    | ["l"] -> emit current_method Leapfrog
+    | ["p"] -> emit current_method Stopped
+    | _ -> ()
+  end
+
+let rec process update_compute current_method reconfigure =
+  loop
+    await current_method(v) in
+    let compute = match v with
+    | Stopped -> no_compute
+    | Euler -> compute_euler
+    | EulerSemiImplicit -> compute_euler_semi_implicit
+    | Heun -> compute_heun
+    | Verlet -> compute_verlet
+    | Leapfrog -> compute_leapfrog
+    | RK4 -> compute_rk4
+    in
+    emit reconfigure (compute)
+  end
+
+let rec process show_method current_method =
+  let label = ref "" in
+  loop
+    await current_method(v) in
+    let s = match v with
+    | Stopped -> "Simulation is paused"
+    | Euler -> "Euler"
+    | EulerSemiImplicit -> "Semi-implicit Euler"
+    | Heun -> "Heun"
+    | Verlet -> "Verlet"
+    | Leapfrog -> "Leap frog"
+    | RK4 -> "Runge-Kutta 4th order"
+    in
+    label := s
+  end
+  ||
+  loop
+    draw_info_box !label;
+    pause
+  end
+
 let process main =
   let vp_rect = mk_rect 0.0 0.0 1000.0 1000.0 in
   let sc_rect = mk_rect 0 0 1680 1050 in
@@ -181,7 +232,13 @@ let process main =
   signal reconfigure default no_compute gather (fun x _ -> x) in
   run (container 0.1 p reconfigure topck)
   ||
-  emit reconfigure (compute_heun)
-(*  run (wait 100);
-  print_endline "Reconfiguring method for Vertlet";
-  emit reconfigure (compute_verlet) *)
+  let keys, key_p = Rmlsdl.keyboard topck in
+  run key_p
+  ||
+  signal current_method default Stopped gather (fun x _ -> x) in
+  emit current_method EulerSemiImplicit;
+  run (method_selector current_method keys)
+  ||
+  run (show_method current_method)
+  ||
+  run (update_compute current_method reconfigure)
