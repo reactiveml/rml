@@ -1,6 +1,5 @@
 *.cmi
 *.cmo
 *.rzi
-*.ml
 */_build
 *.byte
