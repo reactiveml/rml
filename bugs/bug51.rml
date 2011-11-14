@@ -1,0 +1,7 @@
+(* 14/11/2011 *)
+(* Problème de compilation du code généré avec -runtime Lk *)
+(* Le type du process id n'est pas généralisé. *)
+
+let process p =
+  let process id x = pause; x in
+  run (id 1) || run (id true)
