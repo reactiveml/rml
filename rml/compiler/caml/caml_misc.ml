@@ -55,16 +55,16 @@ let make_intf it loc =
     cintf_loc = loc; }
 
 let make_instruction s =
-  make_expr 
-    (Cexpr_global 
-       { gi = { qual = !interpreter_module; 
+  make_expr
+    (Cexpr_global
+       { gi = { qual = !interpreter_module;
 		id = Ident.create Ident.gen_var s Ident.Internal };
 	 info = no_info(); })
     Location.none
 
 let make_rml_type s ty_list =
   make_te
-    (Ctype_constr ({ gi = { qual = !interpreter_module; 
+    (Ctype_constr ({ gi = { qual = !interpreter_module;
 			    id = Ident.create Ident.gen_type s Ident.Type };
 		     info = no_info(); }, ty_list))
     Location.none
@@ -83,59 +83,59 @@ let make_expr_var_local id =
   make_expr (Cexpr_local id) Location.none
 
 let make_raise_RML () =
-  make_expr 
-    (Cexpr_apply 
+  make_expr
+    (Cexpr_apply
        (make_expr
-	  (Cexpr_global 
+	  (Cexpr_global
 	     { gi = { qual = pervasives_module;
 		      id = Ident.create Ident.gen_var "raise" Ident.Val_ML };
 	       info = no_info(); })
 	  Location.none,
 	[make_expr
-	   (Cexpr_construct 
+	   (Cexpr_construct
 	      ({ gi = { qual = !interpreter_module;
-			id = Ident.create Ident.gen_constr 
+			id = Ident.create Ident.gen_constr
 			  "RML" Ident.Internal };
 		 info = no_info(); },
 	       None))
-	   Location.none])) 
+	   Location.none]))
     Location.none
 
 let make_list c_list =
   List.fold_right
-    (fun e acc -> 
+    (fun e acc ->
       make_expr
 	(Cexpr_construct
-	   (Initialization.cons_constr_desc, 
-	    Some 
+	   (Initialization.cons_constr_desc,
+	    Some
 	      (make_expr
 		 (Cexpr_tuple [e; acc])
 		 Location.none)))
 	Location.none)
     c_list
-    (make_expr 
-       (Cexpr_construct (Initialization.nil_constr_desc, None)) 
+    (make_expr
+       (Cexpr_construct (Initialization.nil_constr_desc, None))
        Location.none)
-    
+
 (* Creates the expression "()" *)
-let make_unit () = 
+let make_unit () =
   make_expr (Cexpr_constant Const_unit) Location.none
 
 (* Creates the expression "true" *)
-let make_true () = 
+let make_true () =
   make_expr (Cexpr_constant (Const_bool true)) Location.none
 
 (* Creates the expression "false" *)
-let make_false () = 
+let make_false () =
   make_expr (Cexpr_constant (Const_bool false)) Location.none
 
 (* Creates the expression "ref e" *)
 let make_ref e =
   make_expr
     (Cexpr_apply
-       (make_expr 
-	  (Cexpr_global 
-	     { gi = { qual = "Pervasives"; 
+       (make_expr
+	  (Cexpr_global
+	     { gi = { qual = "Pervasives";
 		      id = Ident.create Ident.gen_var "ref" Ident.Internal };
 	       info = no_info(); })
 	  Location.none,
@@ -146,9 +146,9 @@ let make_ref e =
 let deref vref =
   make_expr
     (Cexpr_apply
-       (make_expr 
-	  (Cexpr_global 
-	     { gi = { qual = "Pervasives"; 
+       (make_expr
+	  (Cexpr_global
+	     { gi = { qual = "Pervasives";
 		      id = Ident.create Ident.gen_var "!" Ident.Internal };
 	       info = no_info(); })
 	  Location.none,
@@ -159,15 +159,15 @@ let deref vref =
 (* Creates the expression "Obj.magic ()" *)
 let make_magic () =
   Cexpr_apply
-    (make_expr 
-       (Cexpr_global 
-	  { gi = { qual="Obj"; 
+    (make_expr
+       (Cexpr_global
+	  { gi = { qual="Obj";
 		   id=Ident.create Ident.gen_var "magic" Ident.Internal };
 	    info = no_info(); })
        Location.none,
      [make_unit()])
 
-let make_magic_expr () = 
+let make_magic_expr () =
   make_expr (make_magic ()) Location.none
 
 
@@ -184,9 +184,9 @@ let rec ctype_expr_of_type_expr typ =
 	Ctype_product (List.map ctype_expr_of_type_expr typ_list)
 
     | Type_constr (cstr, te_list) ->
-	let cstr_desc = 
+	let cstr_desc =
 	  try
-	    Modules.find_type_desc cstr.gi 
+	    Modules.find_type_desc cstr.gi
 	  with Modules.Desc_not_found -> assert false
 	in
 	Ctype_constr (cstr_desc, List.map ctype_expr_of_type_expr te_list)
@@ -195,7 +195,7 @@ let rec ctype_expr_of_type_expr typ =
 	let proc_type = make_rml_type "process" [ctype_expr_of_type_expr t] in
 	proc_type.cte_desc
 
-    | Type_link t -> 
+    | Type_link t ->
 	(ctype_expr_of_type_expr t).cte_desc
 
   in
@@ -212,15 +212,15 @@ let rec make_dummy t =
 	Cexpr_function
 	  [make_patt Cpatt_any Location.none,
 	   make_expr
-	     (Cexpr_assert 
+	     (Cexpr_assert
 		(make_expr (Cexpr_constant (Const_bool false)) Location.none))
 	     Location.none]
-       
+
     | Type_product te_list ->
 	Cexpr_tuple (List.map make_dummy te_list)
 
     | Type_constr (cstr, te_list)  ->
-	begin try 
+	begin try
 	  let type_desc = Modules.find_type_desc cstr.gi in
 	  if type_desc = Initialization.type_desc_int then
 	    Cexpr_constant (Const_int 4012)
@@ -230,7 +230,7 @@ let rec make_dummy t =
 
 	  else if type_desc = Initialization.type_desc_float then
 	    Cexpr_constant (Const_float 4012.0)
-	      
+
 	  else if type_desc = Initialization.type_desc_char then
 	    Cexpr_constant (Const_char '?')
 
@@ -241,8 +241,8 @@ let rec make_dummy t =
 	    Cexpr_constant (Const_unit)
 
 	  else if type_desc = Initialization.type_desc_exn then
-	    Cexpr_construct 
-	      ({ gi = 
+	    Cexpr_construct
+	      ({ gi =
 		 { qual = !interpreter_module;
 		   id = Ident.create Ident.gen_constr "RML" Ident.Internal };
 		 info = no_info(); },
@@ -250,20 +250,20 @@ let rec make_dummy t =
 
 	  else if type_desc = Initialization.type_desc_array then
 	    Cexpr_array []
-	      
+
 	  else if type_desc = Initialization.type_desc_event then
 	    Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
 
 	  else if type_desc = Initialization.type_desc_list then
 	    Cexpr_construct (Initialization.nil_constr_desc, None)
-	    
+
 	  else if type_desc = Initialization.type_desc_option then
 	    Cexpr_construct (Initialization.none_constr_desc, None)
-	    
+
 	  else
 	    Cexpr_constraint (dummy_of_type_description type_desc,
 			      ctype_expr_of_type_expr t)
-	with _ -> 
+	with _ ->
 	  Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
 	end
 
@@ -280,11 +280,11 @@ and dummy_of_type_description t =
 
     | Type_rebind te -> make_dummy te
 
-    | Type_variant (_::_ as cstr_list) -> 
-	let cstr = 
-	  try 
-	    List.find 
-	      (fun cstr -> (Global.info cstr).cstr_arg = None) 
+    | Type_variant (_::_ as cstr_list) ->
+	let cstr =
+	  try
+	    List.find
+	      (fun cstr -> (Global.info cstr).cstr_arg = None)
 	      cstr_list
 	  with Not_found -> List.hd cstr_list
 	in
@@ -302,7 +302,7 @@ and dummy_of_type_description t =
 	  List.map
 	    (fun lbl -> (lbl, make_dummy (Global.info lbl).lbl_res))
 	    lbl_list
-	in 
+	in
 	make_expr (Cexpr_record body) Location.none
     end
   in
@@ -313,7 +313,7 @@ and dummy_of_type_description t =
 let rec is_value e =
   match e.cexpr_desc with
   | Cexpr_local _  | Cexpr_global _ | Cexpr_constant _
-  | Cexpr_function _ | Cexpr_fun _ -> 
+  | Cexpr_function _ | Cexpr_fun _ ->
       true
 
   | Cexpr_let(_, patt_expr_list, expr) ->
@@ -328,7 +328,7 @@ let rec is_value e =
   | Cexpr_construct (_, Some expr) -> is_value expr
 
   | Cexpr_constraint (expr, _) -> is_value expr
-      
+
   | Cexpr_trywith (expr, patt_expr_list) ->
       (is_value expr)
 	&&
@@ -337,7 +337,7 @@ let rec is_value e =
   | Cexpr_assert expr -> is_value expr
 
   | Cexpr_ifthenelse (e1, e2, e3) ->
-      (is_value e1) && (is_value e2) && (is_value e3) 
+      (is_value e1) && (is_value e2) && (is_value e3)
 
   | Cexpr_match (expr, patt_expr_list) ->
       (is_value expr)
@@ -358,12 +358,12 @@ let rec is_constant e =
   | Cexpr_construct (_, Some expr) -> is_constant expr
 
   | Cexpr_constraint (expr, _) -> is_constant expr
-      
+
   | _ -> false
 
 
 (* Test is a pattern is a partial matching *)
-let rec partial_match patt = 
+let rec partial_match patt =
   match patt.cpatt_desc with
   | Cpatt_any -> false
   | Cpatt_var _ -> false

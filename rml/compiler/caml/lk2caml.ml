@@ -359,17 +359,49 @@ and translate_proc e =
     | Kproc_halt K_not_boi ->
 	(make_instruction "rml_halt_kboi").cexpr_desc
 
+    | Kproc_seq (expr, k) ->
+        begin match !version with
+          | Combinator ->
+	      if Lk_misc.is_value expr then
+	        Cexpr_apply
+	          (make_instruction "rml_compute_v",
+	          [translate_ml expr;
+	           translate_proc k])
+	      else
+	        Cexpr_apply
+	          (make_instruction "rml_compute",
+	          [embed_ml expr;
+	           translate_proc k])
+          | Inline ->
+              let apply_k =
+                make_expr
+                  (Cexpr_apply (translate_proc k, [make_expr_unit ()]))
+                  Location.none
+              in
+              let e =
+                make_step_function (Cexpr_seq (translate_ml expr, apply_k)) Location.none
+              in e.cexpr_desc
+        end
+
     | Kproc_compute (expr, k) ->
-	if Lk_misc.is_value expr then
-	  Cexpr_apply
-	    (make_instruction "rml_compute_v",
-	     [translate_ml expr;
-	      translate_proc k])
-	else
-	  Cexpr_apply
-	    (make_instruction "rml_compute",
-	     [embed_ml expr;
-	      translate_proc k])
+        begin match !version with
+          | Combinator ->
+	      if Lk_misc.is_value expr then
+	        Cexpr_apply
+	          (make_instruction "rml_compute_v",
+	          [translate_ml expr;
+	           translate_proc k])
+	      else
+	        Cexpr_apply
+	          (make_instruction "rml_compute",
+	          [embed_ml expr;
+	           translate_proc k])
+          | Inline ->
+              let e =
+                make_step_function (Cexpr_apply (translate_proc k,
+                                                [translate_ml expr])) Location.none
+              in e.cexpr_desc
+        end
 
     | Kproc_emit (s, k) ->
 	if Lk_misc.is_value s then
@@ -519,10 +551,14 @@ and translate_proc e =
 
 
     | Kproc_join_par (j_id, k) ->
-	Cexpr_apply
-	  (make_instruction "rml_join_par",
-	   [ make_expr_var_local j_id;
-	     translate_proc k ])
+        let e =
+          make_step_function
+	    (Cexpr_apply
+	        (make_instruction "rml_join_par",
+	        [ make_expr_var_local j_id;
+	          translate_proc k; make_expr_unit () ]))
+            Location.none
+        in e.cexpr_desc
 
     | Kproc_signal (s, None, k) ->
 	begin match !version with
