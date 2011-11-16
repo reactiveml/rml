@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "rpmllib", "rpml\rpmllib.fsproj", "{5CB99DB9-128A-4958-A272-5BE02E2AED05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "myconcurrent", "myconcurrent\myconcurrent.csproj", "{FDCE33C3-3DA7-4174-AA9A-2C30EDCEAC2A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|x64.ActiveCfg = Release|Any CPU
+		{FDCE33C3-3DA7-4174-AA9A-2C30EDCEAC2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDCE33C3-3DA7-4174-AA9A-2C30EDCEAC2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDCE33C3-3DA7-4174-AA9A-2C30EDCEAC2A}.Debug|x64.ActiveCfg = Debug|x64
+		{FDCE33C3-3DA7-4174-AA9A-2C30EDCEAC2A}.Debug|x64.Build.0 = Debug|x64
+		{FDCE33C3-3DA7-4174-AA9A-2C30EDCEAC2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDCE33C3-3DA7-4174-AA9A-2C30EDCEAC2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDCE33C3-3DA7-4174-AA9A-2C30EDCEAC2A}.Release|x64.ActiveCfg = Release|x64
+		{FDCE33C3-3DA7-4174-AA9A-2C30EDCEAC2A}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
