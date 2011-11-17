@@ -45,6 +45,9 @@
   <ItemGroup>
     <Compile Include="caml_compat.fs" />
     <Compile Include="graphics.fs" />
+    <Compile Include="sig_env.fs" />
+    <Compile Include="types.fsi" />
+    <Compile Include="lco_ctrl_tree_n.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\myconcurrent\myconcurrent.csproj">
