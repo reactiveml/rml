@@ -1,9 +1,9 @@
 
 module Make (D: Runtime.SEQ_DATA_STRUCT) (E: Sig_env.S) =
 struct
-  include D(struct
-    type 'a t = 'a -> unit
-  end)
+    module D = D(struct
+      type 'a t = 'a -> unit
+    end)
 
     exception RML
 
@@ -15,10 +15,10 @@ struct
           mutable susp: bool;
           mutable cond: (unit -> bool);
           mutable children: control_tree list;
-          next: next;
-          next_control : next; (* contains control processes that should not be
+          next: D.next;
+          next_control : D.next; (* contains control processes that should not be
                                   taken into account to see if macro step is done *)
-          next_boi: next; }
+          next_boi: D.next; }
     and control_type =
       | Clock_domain (*of clock_domain*)
       | Kill of unit step
@@ -27,20 +27,20 @@ struct
       | When
 
     and clock_domain =
-        { cd_current : current;
+        { cd_current : D.current;
           cd_pause_clock: bool ref; (* end of macro instant *)
           cd_eoi : bool ref; (* is it the eoi of this clock *)
-          cd_weoi : waiting_list; (* processes waiting for eoi *)
-          mutable cd_wake_up : waiting_list list;
-          mutable cd_wake_up_next : next list;
+          cd_weoi : D.waiting_list; (* processes waiting for eoi *)
+          mutable cd_wake_up : D.waiting_list list;
+          mutable cd_wake_up_next : D.next list;
           (* waiting lists to wake up at the end of the instant*)
           cd_clock : E.clock;
           mutable cd_top : control_tree;
         }
 
-    type ('a, 'b) event = ('a,'b, clock_domain) E.t * waiting_list * waiting_list
+    type ('a, 'b) event = ('a,'b, clock_domain) E.t * D.waiting_list * D.waiting_list
     type event_cfg =
-      | Cevent of (bool -> bool) * clock_domain * waiting_list * waiting_list
+      | Cevent of (bool -> bool) * clock_domain * D.waiting_list * D.waiting_list
       (* status, cd, wa, wp*)
       | Cand of event_cfg * event_cfg
       | Cor of event_cfg * event_cfg
@@ -51,7 +51,7 @@ struct
     module Event =
       struct
         let new_evt_combine cd default combine =
-          (E.create cd cd.cd_clock default combine, mk_waiting_list (), mk_waiting_list ())
+          (E.create cd cd.cd_clock default combine, D.mk_waiting_list (), D.mk_waiting_list ())
 
         let new_evt cd =
           new_evt_combine cd [] (fun x y -> x :: y)
@@ -75,8 +75,8 @@ struct
         let emit (n,wa,wp) v =
           E.emit n v;
           let sig_cd = E.clock_domain n in
-          add_current_waiting_list wa sig_cd.cd_current;
-          add_current_waiting_list wp sig_cd.cd_current
+          D.add_current_waiting_list wa sig_cd.cd_current;
+          D.add_current_waiting_list wp sig_cd.cd_current
 
         let cfg_present ((n,wa,wp) as evt) =
           Cevent ((fun eoi -> status ~only_at_eoi:eoi evt), E.clock_domain n, wa, wp)
@@ -111,16 +111,16 @@ struct
         susp = false;
         children = [];
         cond = cond;
-        next = mk_next ();
-        next_control = mk_next ();
-        next_boi = mk_next (); }
+        next = D.mk_next ();
+        next_control = D.mk_next ();
+        next_boi = D.mk_next (); }
 
     (* tuer un arbre p *)
     let rec set_kill p =
       p.alive <- true;
       p.susp <- false;
-      clear_next p.next;
-      clear_next p.next_boi;
+      D.clear_next p.next;
+      D.clear_next p.next_boi;
       List.iter set_kill p.children;
       p.children <- []
 
@@ -130,8 +130,8 @@ struct
       else (* reset new_ctrl *)
         (new_ctrl.alive <- true;
          new_ctrl.susp <- false;
-         clear_next new_ctrl.next;
-         clear_next new_ctrl.next_boi)
+         D.clear_next new_ctrl.next;
+         D.clear_next new_ctrl.next_boi)
 
     let end_ctrl new_ctrl f_k x =
       set_kill new_ctrl;
@@ -149,7 +149,7 @@ struct
             | Kill f_k ->
               if p.cond()
               then
-                (add_next f_k pere.next;
+                (D.add_next f_k pere.next;
                  set_kill p;
                  false)
               else
@@ -160,7 +160,7 @@ struct
           | Kill_handler handler ->
               if p.cond()
               then
-                (add_next (handler()) pere.next;
+                (D.add_next (handler()) pere.next;
                  set_kill p;
                  false)
               else
@@ -196,13 +196,13 @@ struct
         List.filter (fun node -> eval p node active) nodes
 
       and next_to_current ck node =
-        add_current_next node.next ck.cd_current;
-        add_current_next node.next_control ck.cd_current;
-        add_current_next node.next_boi ck.cd_current;
+        D.add_current_next node.next ck.cd_current;
+        D.add_current_next node.next_control ck.cd_current;
+        D.add_current_next node.next_boi ck.cd_current;
       and next_to_father pere node =
-        add_next_next node.next pere.next;
-        add_next_next node.next_control pere.next_control;
-        add_next_next node.next_boi pere.next_boi;
+        D.add_next_next node.next pere.next;
+        D.add_next_next node.next_control pere.next_control;
+        D.add_next_next node.next_boi pere.next_boi;
       in
         cd.cd_top.children <- eval_children cd.cd_top cd.cd_top.children true;
         next_to_current cd cd.cd_top
@@ -211,10 +211,10 @@ struct
 (* les listes next *)
     let rec next_to_current cd p =
       if p.alive && not p.susp then
-        (add_current_next p.next cd;
-         add_current_next p.next_control cd;
+        (D.add_current_next p.next cd;
+         D.add_current_next p.next_control cd;
          List.iter (next_to_current cd) p.children;
-         add_current_next p.next_boi cd)
+         D.add_current_next p.next_boi cd)
 
     let wake_up_ctrl new_ctrl cd =
       new_ctrl.susp <- false;
@@ -230,10 +230,10 @@ struct
       ctrl.cond <- c
 
     let mk_clock_domain () =
-      { cd_current = mk_current ();
+      { cd_current = D.mk_current ();
         cd_pause_clock = ref false;
         cd_eoi = ref false;
-        cd_weoi = mk_waiting_list ();
+        cd_weoi = D.mk_waiting_list ();
         cd_wake_up = [];
         cd_wake_up_next =  [];
         cd_clock = E.init_clock ();
@@ -247,7 +247,7 @@ struct
       cd.cd_pause_clock := true
     let control_tree cd = cd.cd_top
     let add_weoi cd p =
-      add_waiting p cd.cd_weoi
+      D.add_waiting p cd.cd_weoi
     let add_weoi_waiting_list cd w =
       cd.cd_wake_up <- w :: cd.cd_wake_up
     let add_weoi_next cd n =
@@ -255,23 +255,23 @@ struct
 
 (* debloquer les processus en attent d'un evt *)
     let wake_up ck w =
-      add_current_waiting_list w ck.cd_current
+      D.add_current_waiting_list w ck.cd_current
 
     let wake_up_all ck =
-      List.iter (fun wp -> add_current_waiting_list wp ck.cd_current) ck.cd_wake_up;
+      List.iter (fun wp -> D.add_current_waiting_list wp ck.cd_current) ck.cd_wake_up;
       ck.cd_wake_up <- []
 
     let wake_up_all_next cd =
-      List.iter (fun n -> add_current_next n cd.cd_current) cd.cd_wake_up_next;
+      List.iter (fun n -> D.add_current_next n cd.cd_current) cd.cd_wake_up_next;
       cd.cd_wake_up_next <- []
 
 (* ------------------------------------------------------------------------ *)
 
     exception Wait_again
 
-    let on_current_instant cd f = add_current f cd.cd_current
-    let on_current_instant_list cd fl = add_current_list fl cd.cd_current
-    let on_next_instant ctrl f = add_next f ctrl.next
+    let on_current_instant cd f = D.add_current f cd.cd_current
+    let on_current_instant_list cd fl = D.add_current_list fl cd.cd_current
+    let on_next_instant ctrl f = D.add_next f ctrl.next
 
     (** [on_eoi cd f] executes 'f ()' during the eoi of cd. *)
     let on_eoi cd f =
@@ -287,12 +287,12 @@ struct
       let act _ =
         if is_eoi cd then
           (*eoi was reached, launch fallback*)
-          add_next f_next ctrl.next
+          D.add_next f_next ctrl.next
         else
           (* signal activated *)
           f_w v_w
       in
-      add_waiting act w;
+      D.add_waiting act w;
       add_weoi_waiting_list cd w
 
     let on_event_or_next evt f_w v_w cd ctrl f_next =
@@ -313,7 +313,7 @@ struct
           if not !is_fired then
             if is_eoi cd then
               (is_fired := true;
-               add_next f_next ctrl.next)
+               D.add_next f_next ctrl.next)
             else
               (if Event.cfg_status evt_cfg then
                   (is_fired := true;
@@ -321,7 +321,7 @@ struct
         in
         let w_list = Event.cfg_events evt_cfg false in
         List.iter
-          (fun (w,_) -> add_waiting try_fire w; add_weoi_waiting_list cd w) w_list
+          (fun (w,_) -> D.add_waiting try_fire w; add_weoi_waiting_list cd w) w_list
 
 
     (** [on_event evt ctrl f v] executes 'f v' if evt is emitted and
@@ -335,26 +335,26 @@ struct
           (try
             f v
           with
-            | Wait_again -> add_waiting self w)
+            | Wait_again -> D.add_waiting self w)
         else ((*ctrl is not active, wait end of instant*)
           let is_fired = ref false in
-          add_next (ctrl_await is_fired) ctrl.next_control;
+          D.add_next (ctrl_await is_fired) ctrl.next_control;
           add_weoi sig_cd (eoi_await is_fired)
         )
       and eoi_await is_fired _ =
         if not !is_fired then
             (*ctrl was not activated, await the signal again *)
           (is_fired := true;
-           add_waiting self w)
+           D.add_waiting self w)
       and ctrl_await is_fired _ =
         if not !is_fired then
           (* ctrl was activated, signal is present*)
           (try
              is_fired := true; f v
            with
-             | Wait_again -> add_waiting self w)
+             | Wait_again -> D.add_waiting self w)
       in
-      add_waiting self w
+      D.add_waiting self w
 
     let on_event (n,w,_) ctrl f v =
       if E.status n then
@@ -402,14 +402,14 @@ struct
           add_weoi sig_cd eoi_work
         else ((*ctrl is not active, wait end of instant*)
           let is_fired = ref false in
-          add_next (ctrl_await is_fired) ctrl.next_control;
+          D.add_next (ctrl_await is_fired) ctrl.next_control;
           add_weoi sig_cd (eoi_await is_fired)
         )
       and eoi_await is_fired _ =
         if not !is_fired then
           (*ctrl was not activated, await the signal again *)
           (is_fired := true;
-           add_waiting self w)
+           D.add_waiting self w)
       and ctrl_await is_fired _ =
         if not !is_fired then
          (* ctrl was activated, signal is present*)
@@ -419,9 +419,9 @@ struct
           (try
             f unit_value
           with
-            | Wait_again -> add_waiting self w)
+            | Wait_again -> D.add_waiting self w)
       in
-      add_waiting self w
+      D.add_waiting self w
 
      let on_event_at_eoi (n,wa,_) ctrl f =
        let sig_cd = E.clock_domain n in
@@ -451,7 +451,7 @@ struct
            if not !is_fired then
              (if Event.cfg_status evt_cfg then
                  (is_fired := true;
-                  add_next f ctrl.next)
+                  D.add_next f ctrl.next)
               else
                  raise Wait_again)
          in
@@ -463,10 +463,10 @@ struct
     let schedule cd =
       let ssched () =
         try
-          let f = take_current cd.cd_current in
+          let f = D.take_current cd.cd_current in
           f (); false
         with
-            Empty_current -> true
+            D.Empty_current -> true
       in
       while not (ssched ()) do
         ()
@@ -498,7 +498,7 @@ struct
           | When ->
             not ctrl.susp && has_next_children ctrl
     and has_next_children ctrl =
-      not (is_empty_next ctrl.next) || List.exists has_next ctrl.children
+      not (D.is_empty_next ctrl.next) || List.exists has_next ctrl.children
 
     let macro_step_done cd =
       !(cd.cd_pause_clock) || not (has_next cd.cd_top)
@@ -510,11 +510,11 @@ struct
         eoi new_cd;
         if macro_step_done new_cd then (
           add_weoi cd next_instant_clock_domain;
-          add_next f_cd ctrl.next_control;
+          D.add_next f_cd ctrl.next_control;
         ) else (
           next_instant new_cd;
           (* execute again in the same step but yield for now*)
-          add_current f_cd cd.cd_current
+          D.add_current f_cd cd.cd_current
         )
       in
       f_cd
