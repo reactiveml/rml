@@ -22,6 +22,7 @@ rmldep
 rmltop
 
 # Other generated files (specific to ReactiveML)
+rml/config
 rml/compiler/global/version.ml
 rml/compiler/parsing/lexer.ml
 rml/compiler/parsing/linenum.ml

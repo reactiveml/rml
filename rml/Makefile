@@ -6,12 +6,15 @@ include configure-tools/version
 
 TARGET=byte
 
-all:
+all: config
 	(cd compiler; touch .depend; make depend; make $(TARGET))
 	(cd stdlib; make all)
 	(cd interpreter; touch .depend; make depend; make all)
 	(cd toplevel; make all)
 	(cd tools; make $(TARGET))
+
+config:
+	./configure
 
 toplevel: FORCE
 	(cd toplevel; make all)
