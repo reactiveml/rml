@@ -1,0 +1,34 @@
+# Compilation units and binaries
+*.cm*
+*.rzi
+*.byte
+*.native
+*.o
+*.a
+
+# OCamlbuild stuff
+_build
+*.start
+
+# OCamlYacc stuff
+*.output
+
+# Annot files
+*.annot
+
+# ReactiveML binaries
+rmlc
+rmldep
+rmltop
+
+# Other generated files (specific to ReactiveML)
+rml/compiler/global/version.ml
+rml/compiler/parsing/lexer.ml
+rml/compiler/parsing/linenum.ml
+rml/compiler/parsing/parser.ml
+rml/compiler/parsing/parser.mli
+rml/tools/rmlbuild/rmlbuild/boot/
+rml/toplevel/rmltop_controller.ml
+rml/toplevel/rmltop_lexer.ml
+rml/toplevel/rmltop_machine_body.ml
+rml/toplevel/rmltop_reactive_machine.mli
