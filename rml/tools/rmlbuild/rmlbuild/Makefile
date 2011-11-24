@@ -25,7 +25,7 @@ BUILDDIR := "_build"
 endif
 
 ifndef OCAMLBUILDCMD
-OCAMLBUILDCMD := ./boot/ocamlbuild
+OCAMLBUILDCMD := ./boot/ocamlbuild -classic-display
 endif
 
 ifdef O
