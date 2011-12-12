@@ -25,6 +25,8 @@
 module type INTERPRETER =
   sig
     type 'a process
+    type ('a, 'b) event
+
     module R :
      (sig
        type clock_domain

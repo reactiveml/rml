@@ -44,6 +44,8 @@ module Rml_interpreter =
     type join_point = int ref option
     and 'a expr = 'a R.step -> R.control_tree -> join_point -> R.clock_domain -> unit R.step
     and 'a process = unit -> 'a expr
+
+    type ('a, 'b) event = ('a, 'b) R.event
     type event_cfg_gen = unit -> R.event_cfg
     type clock_expr = R.clock_domain Types.clock
 

@@ -121,8 +121,7 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
   if gl.gi = Initialization.event_ident then
     (* special case for event type *)
     begin
-      print_string !interpreter_module;
-      print_string ".";
+      print_string "Interpreter.";
       print_name (Ident.name n)
     end
   else if q = pervasives_module then
