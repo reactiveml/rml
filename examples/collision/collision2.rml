@@ -1,0 +1,152 @@
+open Process
+open Utils
+
+(*** Definition of types and related functions *)
+
+type ('a, 'state) agent_state =
+    { mutable a_pos : vector;
+      a_kill : (unit, unit list) event;
+      a_relocate : (unit, unit list) event;
+      a_state : 'state }
+
+let mk_state pos st global_area_ck =
+  signal kill at global_area_ck in
+  signal relocate at global_area_ck in
+  { a_pos = pos;
+    a_state = st;
+    a_kill = kill;
+    a_relocate = relocate }
+
+(*** Agents *)
+
+let process agent pos st move global_add global_area_ck area env =
+  let me = mk_state pos st global_area_ck in
+  do
+    do
+      run (move me area env)
+    until me.a_relocate -> emit me.a_kill; emit global_add (me.a_pos, me.a_state, move) done
+  until me.a_kill done
+
+(*** Area *)
+let process forward_child s s_map =
+  run (foreach s (fun b -> let s = Geomap.find_by_pos b.a_pos s_map in emit s b))
+
+let process adder add global_add global_area_ck area env =
+  let process launch_agent (pos, st, move) =
+    run (agent pos st move global_add global_area_ck area env)
+  in
+  run (foreach_p add launch_agent)
+
+let process composed_adder add add_map =
+  let forward ((pos, _, _) as x) =
+    let s = Geomap.find_by_pos pos add_map in
+    emit s x
+  in
+  run (foreach add forward)
+
+(* send to neighbors *)
+let process parent_forwarder r global_add area parent_area =
+  let forward l =
+    let l, outsiders = List.partition (fun b -> is_inside r b.a_pos) l in
+    let in_borders = List.filter (fun b -> is_in_border r b.a_pos) l in
+    List.iter (fun x -> emit parent_area x) in_borders;
+    List.iter (fun x -> emit x.a_relocate) outsiders
+  in
+  run (on_signal area forward)
+
+(* dispatch to child areas *)
+let process dispatcher r area local_areas =
+  let dispatch b =
+    let l = List.map (fun q -> Geomap.find q local_areas) (near_quads_from_pos r b.a_pos) in
+    List.iter (fun area -> emit area b) l
+  in
+  run (foreach area dispatch)
+
+
+let rec process area area_ck global_area_ck agent_ck global_add add env parent level r =
+  signal from_children in
+  (match level with
+  | 0 ->
+      signal local_env at agent_ck in
+      run (forwarder from_children local_env)
+      ||
+      run (forwarder env local_env)
+      ||
+      run (adder add global_add global_area_ck from_children local_env)
+  | _ ->
+      let add_map, env_map, p = init_child_areas area_ck global_area_ck agent_ck global_add level from_children r in
+      run p
+      ||
+      run (dispatcher r from_children env_map)
+      ||
+      run (composed_adder add add_map)
+      ||
+      run (forward_child env env_map)
+  )
+  ||
+  match parent with
+  | None -> ()
+  | Some (parent_area, pos) -> run (parent_forwarder r global_add from_children parent_area)
+
+and init_child_areas area_ck global_area_ck agent_ck global_add level from_children r =
+  let add_area (add_map, env_map, p) q =
+    let add, env, newp = mk_area area_ck global_area_ck agent_ck global_add
+        (Some (from_children, q)) (level - 1) (sub_rect r q) in
+    let add_map = Geomap.add q add add_map in
+    let env_map = Geomap.add q env env_map in
+    let p = process (run p || run newp) in
+    (add_map, env_map, p)
+  in
+  List.fold_left add_area (Geomap.empty r, Geomap.empty r, process ()) [NW;SW;NE;SE]
+
+and mk_area ck global_area_ck agent_ck global_add parent level r =
+  signal add at ck in
+  signal env at ck in
+  let process area_p =
+    newclock area_ck in
+      run (area area_ck global_area_ck agent_ck global_add add env parent level r)
+  in
+  add, env, area_p
+
+let mk_global_area ck agent_ck level r =
+  signal add at ck in
+  let process area_p =
+    newclock area_ck in
+      signal env at area_ck in
+      run (area area_ck area_ck agent_ck add add env None level r)
+  in
+  add, area_p
+
+(** Simple ball *)
+let dt = 0.5
+
+type ball_state =
+    { mutable b_speed : vector }
+
+let compute_pos_ball me others =
+  me.a_pos <- add_vector me.a_pos (scalar_mult dt me.a_state.b_speed)
+
+let process ball me area env =
+  loop
+    emit area(me);
+    await env(others) in
+    compute_pos_ball me others
+  end
+
+(* test case *)
+let nb_balls = 10
+let w = 800.
+let h = 600.
+
+let random_ball_state () =
+  random_vector 0.0 0.0 w h, { b_speed = random_vector (-. 1.) (-. 1.) 1. 1. }
+
+let process main =
+  let top_adder, top_area_p = mk_global_area topck topck 2 (mk_rect 0. 0. w h) in
+  run top_area_p
+  ||
+  for i = 1 to nb_balls do
+    let pos, st = random_ball_state () in
+    emit top_adder (pos, st, ball)
+  done
+

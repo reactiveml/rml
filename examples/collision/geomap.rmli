@@ -1,0 +1,7 @@
+type 'a t
+
+val empty : Utils.rect -> 'a t
+
+val add : Utils.quad -> 'a -> 'a t -> 'a t
+val find : Utils.quad -> 'a t -> 'a
+val find_by_pos : Utils.vector -> 'a t -> 'a

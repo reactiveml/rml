@@ -1,0 +1,32 @@
+(*** Some useful processes *)
+
+let rec process process_iter p l = match l with
+| [] -> ()
+| x::l -> run (p x) || run (process_iter p l)
+
+let rec process foreach_p s p =
+  await s(l) in
+  run (process_iter p l) || run (foreach_p s p)
+
+let process foreach s f =
+  loop
+    await s(l) in
+     List.iter f l
+  end
+
+let process on_signal s f =
+  loop
+    await s(v) in f v
+  end
+
+let process forwarder s1 s2 =
+  run (foreach s1 (fun v -> emit s2 v))
+
+let process forwarder_filter s1 f s2 =
+  run (foreach s1 (fun v -> if f v then emit s2 v))
+
+let process sustain n s v =
+  for i = 1 to n do
+    emit s(v);
+    pause
+  done
