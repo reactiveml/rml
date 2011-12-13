@@ -1,7 +1,7 @@
 open Ocamlbuild_plugin
 open Ocamlbuild_plugin.Options
 
-let rmlsdl_dir = "/Users/ccpasteur/Documents/work/these/dev/rmlsdl/_build"
+let rmlsdl_dir = "/Users/ccpasteur/Documents/work/these/dev/rmlsdl_proc/_build"
 
 let df = function
   | After_rules ->

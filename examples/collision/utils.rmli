@@ -19,6 +19,7 @@ val vector_error : vector -> vector -> float
 (* Rects and quads *)
 type rect = { r_x : float; r_y : float; r_w : float; r_h : float; }
 type quad = SW | SE | NW | NE
+type direction = S | N | E | W
 
 val mk_rect : float -> float -> float -> float -> rect
 val center_float : rect -> vector
@@ -27,3 +28,6 @@ val is_inside : rect -> vector -> bool
 val is_in_border : rect -> vector -> bool
 val quad_from_pos : rect -> vector -> quad
 val near_quads_from_pos : rect -> vector -> quad list
+
+val string_of_quad : quad -> string
+val string_of_rect : rect -> string

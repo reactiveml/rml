@@ -1,7 +1,7 @@
 open Ocamlbuild_plugin;;
 open Command;;
 
-let source_dir = "/Users/ccpasteur/Documents/work/git/reparml"
+let source_dir = "/Users/ccpasteur/Documents/work/git/rml"
 
 let rmlc = A (source_dir^"/compiler/rpmlc.byte");;
 let rmldep = A (source_dir^"/tools/rpmldep/rpmldep.byte");;

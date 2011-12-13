@@ -72,6 +72,8 @@ let vector_error v1 v2 =
 
 type rect = { r_x : float; r_y : float; r_w : float; r_h : float; }
 
+type direction = S | N | E | W
+
 type quad = SW | SE | NW | NE
 
 let mk_rect x y w h =
@@ -131,3 +133,13 @@ let near_quads_from_pos r pos =
       (if is_s then [SW; SE] else (if is_sn then [SW; NW; SE; NE] else [NW; NE]))
     else
       (if is_s then [SE] else (if is_sn then [SE; NE] else [NE]))
+
+let string_of_quad q = match q with
+  | SW -> "SW"
+  | SE -> "SE"
+  | NW -> "NW"
+  | NE -> "NE"
+
+let string_of_rect r =
+  "(" ^ string_of_float r.r_x ^ ", " ^ string_of_float r.r_y ^ ") -> ("
+    ^ string_of_float (r.r_x +. r.r_w) ^ ", " ^ string_of_float (r.r_y +. r.r_h) ^ ")"
