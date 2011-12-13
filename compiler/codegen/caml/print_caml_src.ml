@@ -155,8 +155,9 @@ let priority exp =
 
 let priority_pattern p =
   match p with
-    (Cpatt_construct _ | Cpatt_constant _ | Cpatt_var _
-  | Cpatt_tuple _ | Cpatt_record _) -> 2
+  | Cpatt_tuple _ -> 3
+  | (Cpatt_construct _ | Cpatt_constant _ | Cpatt_var _
+  | Cpatt_record _) -> 2
   | _ -> 1
 
 let priority_te t =
