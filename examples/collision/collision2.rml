@@ -200,12 +200,11 @@ type ball_state =
       b_weight : float; }
 
 let process_collision me s b = match b with
-| Wall bounce ->
-    (match bounce (pre? me.a_pos) s with
-    | None -> s
-    | Some new_s -> (*print_endline "I just hit a wall"; *) new_s)
 | Agent a ->
-    let d2 = dist2 (pre? a.a_pos) (pre? me.a_pos) in
+    let new_pos_a = add_vector (pre? a.a_pos) (scalar_mult dt (pre? a.a_state.b_speed)) in
+    let new_pos_me = add_vector (pre? me.a_pos) (scalar_mult dt (pre? me.a_state.b_speed)) in
+
+    let d2 = dist2 new_pos_a new_pos_me in
     if d2 > 0. && (sqrt d2) < a.a_state.b_rad +. me.a_state.b_rad then (
       print_endline "collision detected";
       (*collision detected*)
@@ -224,9 +223,18 @@ let process_collision me s b = match b with
       s
     ) else
       s
+| Wall _ -> s
+
+let process_wall me s b = match b with
+| Wall bounce ->
+    (match bounce (pre? me.a_pos) s with
+    | None -> s
+    | Some new_s -> new_s)
+| Agent _ -> s
 
 let compute_pos_ball me others =
   let new_speed = List.fold_left (process_collision me) (pre? me.a_state.b_speed) others in
+  let new_speed = List.fold_left (process_wall me) (new_speed) others in
   let new_pos = add_vector (pre? me.a_pos) (scalar_mult dt new_speed) in
   emit me.a_pos new_pos;
   emit me.a_state.b_speed new_speed
@@ -238,17 +246,17 @@ let process ball me area env =
     compute_pos_ball me others
   end
 
-(* test case *)
 
-let nb_balls = 10
+(* test case *)
+let nb_balls = 20
 let max_speed = 0.2
 let w = 800.
 let h = 600.
 
-let sc_w = 800
-let sc_h = 600
+let sc_w = 820
+let sc_h = 620
 
-let _ = Random.self_init ()
+let _ = Random.init 23
 
 let process print_body vp pos =
   let sp = Mlsdl_client.create_sprite_from_file vp Mlsdl_types.null_float_pos 16 16 "ball.png" in
@@ -272,7 +280,7 @@ let process ball vp top_adder =
 let process main =
   (* setup screen *)
   let vp_rect = Mlsdl_types.mk_rect 0.0 0.0 w h in
-  let sc_rect = Mlsdl_types.mk_rect 0 0 sc_w sc_h in
+  let sc_rect = Mlsdl_types.mk_rect 10 10 (sc_w - 10) (sc_h - 10) in
   Mlsdl.fork_screen (Mlsdl_types.Window (sc_w, sc_h)) sc_w sc_h Mlsdl_types.Green 60;
   let vp = Mlsdl_client.create_float_viewport vp_rect sc_rect in
 

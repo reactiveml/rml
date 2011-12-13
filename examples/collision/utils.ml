@@ -103,7 +103,7 @@ let is_inside r pos =
   r.r_x <= pos.v_x && pos.v_x <= r.r_x +. r.r_w
     && r.r_y <= pos.v_y && pos.v_y <= r.r_y +. r.r_w
 
-let delta = 10.0
+let delta = 80.0
 
 let is_in_border r pos =
   pos.v_x -. r.r_x <= delta or (r.r_x +. r.r_w) -. pos.v_x <= delta
