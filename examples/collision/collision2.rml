@@ -33,13 +33,13 @@ let rec only_agents l = match l with
 | Wall _ :: l -> only_agents l
 
 let print_walls_list l =
-let string_of_wall w = match w with
-| S -> "S"
-| N -> "N"
-| E -> "E"
-| W -> "W"
-in
-List.iter (fun w -> print_string ((string_of_wall w)^", ")) l
+  let string_of_wall w = match w with
+  | S -> "S"
+  | N -> "N"
+  | E -> "E"
+  | W -> "W"
+  in
+  List.iter (fun w -> print_string ((string_of_wall w)^", ")) l
 
 let sub_walls walls q =
   let filter_wall wall = match q, wall with
@@ -54,11 +54,28 @@ let sub_walls walls q =
   in
   List.filter filter_wall walls
 
+let wall_thickness = 1.0
+let wall_rect r w = match w with
+| S ->
+    mk_rect (r.r_x -. wall_thickness) (r.r_y -. wall_thickness)
+      (wall_thickness +. r.r_w) (wall_thickness)
+| N ->
+    mk_rect (r.r_x -. wall_thickness) (r.r_y +. r.r_h)
+      (wall_thickness +. r.r_w) wall_thickness
+| W ->
+    mk_rect (r.r_x -. wall_thickness) (r.r_y -. wall_thickness)
+      wall_thickness (wall_thickness +. r.r_h)
+| E ->
+    mk_rect (r.r_x +. r.r_w) (r.r_y -. wall_thickness)
+      wall_thickness (wall_thickness +. r.r_h)
+
 let bounce_wall r w pos sp = match w with
 | S -> if pos.v_y +. (dt *. sp.v_y) < r.r_y then Some (mk_vector sp.v_x (-. sp.v_y)) else None
 | N -> if pos.v_y +. (dt *. sp.v_y) > r.r_y +. r.r_h then Some (mk_vector sp.v_x (-. sp.v_y)) else None
 | W -> if pos.v_x +. (dt *. sp.v_x) < r.r_x then Some (mk_vector (-. sp.v_x) sp.v_y) else None
 | E -> if pos.v_x +. (dt *. sp.v_x) > r.r_x +. r.r_w then Some (mk_vector (-. sp.v_x) sp.v_y) else None
+
+type boundary_kind = Boundary | BrickWall
 
 (*** Agents *)
 let process agent pos st move global_add global_area_ck area env vp =
@@ -75,6 +92,18 @@ let process wall r w area env =
   loop
     emit area(me);
     await env;
+  end
+
+let process draw_wall vp (r, k) =
+  let c = match k with BrickWall-> Mlsdl_types.Red | Boundary -> Mlsdl_types.Grey in
+  let sp =
+    Mlsdl_client.create_sprite_box vp (Mlsdl_types.mk_pos r.r_x r.r_y)
+      (int_of_float r.r_w) (int_of_float r.r_h) c
+  in
+  loop
+    Mlsdl_client.set_sprite_pos sp r.r_x r.r_y;
+    Mlsdl_client.draw_sprite sp;
+    pause topck
   end
 
 (*** Area *)
@@ -125,11 +154,18 @@ let process dispatcher r area local_areas =
   in
   run (foreach area dispatch)
 
-let process local_walls r walls area env =
+let process local_walls r walls area env vp =
   let process wall w =
     run (wall r w area env)
   in
   run (process_iter wall walls)
+  ||
+  let rects =
+    List.map
+      (fun d -> wall_rect r d, if List.mem d walls then BrickWall else Boundary)
+      [N; S; E; W]
+  in
+  run (process_iter (draw_wall vp) rects)
 
 let rec process area area_ck global_area_ck agent_ck global_add add env parent level r walls vp =
   signal from_children in
@@ -142,7 +178,7 @@ let rec process area area_ck global_area_ck agent_ck global_add add env parent l
       ||
       run (adder add global_add global_area_ck from_children local_env vp)
       ||
-      run (local_walls r walls from_children local_env)
+      run (local_walls r walls from_children local_env vp)
   | _ ->
       let add_map, env_map, p =
         init_child_areas area_ck global_area_ck agent_ck global_add level from_children r walls vp in
@@ -284,7 +320,7 @@ let process main =
   Mlsdl.fork_screen (Mlsdl_types.Window (sc_w, sc_h)) sc_w sc_h Mlsdl_types.Green 60;
   let vp = Mlsdl_client.create_float_viewport vp_rect sc_rect in
 
-  let top_adder, top_area_p = mk_global_area topck 1 (mk_rect 0. 0. w h) vp in
+  let top_adder, top_area_p = mk_global_area topck 2 (mk_rect 0. 0. w h) vp in
   run top_area_p
   ||
   for i = 1 to nb_balls dopar
