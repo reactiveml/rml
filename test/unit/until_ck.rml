@@ -76,6 +76,19 @@ let process until_handler_match_slow act =
      pause; pauseclock ck
    end
 
+(* [S(O 1, S(O 2, O 3)); S(S(O 1, O 2), O 9) ] *)
+let process until_nested_clocks act =
+  newclock ck1 in
+    signal s at ck1 in
+    pause topck; emit s
+    ||
+    newclock ck2 in
+      do
+        loop
+          act 1; pause ck2; act 2; pause ck1; act 3; pause topck
+        end
+      until s -> act 9 done
+
 open Rmltest
 
 let test =
@@ -84,4 +97,6 @@ let test =
     (until_slow, "until_slow", [S(O 1, O 2); S(O 1, O 2); O 8]);
     (until_handler_slow, "until_handler_slow", [S(O 1, O 2); S(O 1, O 2); S(O 3, O 8)]);
     (until_handler_match_slow, "until_handler_match_slow",
-         [S(O 1, O 2); S(O 1, O 2); S(O 3, O 8)]) ]
+         [S(O 1, O 2); S(O 1, O 2); S(O 3, O 8)]);
+    (until_nested_clocks, "until_nested_clocks", [S(O 1, S(O 2, O 3)); S(S(O 1, O 2), O 9)])
+  ]

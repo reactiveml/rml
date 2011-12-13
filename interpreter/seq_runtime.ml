@@ -31,6 +31,7 @@ struct
           cd_pause_clock: bool ref; (* end of macro instant *)
           cd_eoi : bool ref; (* is it the eoi of this clock *)
           cd_weoi : D.waiting_list; (* processes waiting for eoi *)
+          cd_next_instant : D.waiting_list; (* processes waiting for the move to next instant *)
           mutable cd_wake_up : D.waiting_list list;
           mutable cd_wake_up_next : D.next list;
           (* waiting lists to wake up at the end of the instant*)
@@ -234,6 +235,7 @@ struct
         cd_pause_clock = ref false;
         cd_eoi = ref false;
         cd_weoi = D.mk_waiting_list ();
+        cd_next_instant = D.mk_waiting_list ();
         cd_wake_up = [];
         cd_wake_up_next =  [];
         cd_clock = E.init_clock ();
@@ -479,6 +481,10 @@ struct
       schedule cd
 
     let next_instant cd =
+      (* next instant of child clock domains *)
+      wake_up cd cd.cd_next_instant;
+      schedule cd;
+      (* next instant of this clock domain *)
       eval_control_and_next_to_current cd;
       E.next cd.cd_clock;
       cd.cd_eoi := false;
@@ -509,7 +515,7 @@ struct
         schedule new_cd;
         eoi new_cd;
         if macro_step_done new_cd then (
-          add_weoi cd next_instant_clock_domain;
+          D.add_waiting next_instant_clock_domain cd.cd_next_instant;
           D.add_next f_cd ctrl.next_control;
         ) else (
           next_instant new_cd;

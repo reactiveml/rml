@@ -32,4 +32,7 @@ let process sigat act =
 
 open Rmltest
 
-let test = [(sigat, "sigat", [N; O 3])]
+let test =
+ [
+   (sigat, "sigat", [N; O 3])
+ ]

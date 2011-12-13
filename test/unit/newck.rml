@@ -68,16 +68,39 @@ let process ck_done act =
     act 0; pause; act 1);
   act 2
 
+(* [ S(P [O 1; O 3], P [O 2; O 4]) ] *)
+let process nested_clocks act =
+  newclock ck1 in (
+    (newclock ck2 in
+      loop
+        act 1; pause ck1; act 2; pause topck
+      end)
+    ||
+    act 3; pause ck1; act 4
+ )
+
+(* [ S(O 1, O 2) ] *)
+let process nested_clocks_direct act =
+  newclock ck1 in (
+    (newclock ck2 in
+      loop
+        act 1; pause ck1; act 2; pause topck
+      end)
+  )
+
 
 open Rmltest
 
 let test =
   let ck = S (O 0, S (O 1, O 2)) in
-   [  (ck_one_step, "ck_one_step", [O 0]);
+   [ (ck_one_step, "ck_one_step", [O 0]);
      (ck_macro_pauseck_par, "ck_macro_pauseck_par", [P [ck; O 8]; P [ck; O 7]]);
      (ck_macro_pauseck, "ck_macro_pauseck", [ck; ck]);
      (ck_macro_await_slow, "ck_macro_await_slow", [N; N; O 5]);
      (ck_macro_multi, "ck_macro_multi", [ck; ck; P[ck; O 5]]);
      (ck_macro_pause_topck, "ck_macro_pause_topck", [ck; ck]);
      (ck_macro_nested, "ck_macro_nested", [N; O 3]);
-     (ck_done, "ck_done", [ck])  ]
+     (ck_done, "ck_done", [ck]);
+     (nested_clocks, "nested_clocks", [ S(P [O 1; O 3], P [O 2; O 4]) ]);
+     (nested_clocks_direct, "nested_clocks_direct", [ S(O 1, O 2) ])
+    ]
