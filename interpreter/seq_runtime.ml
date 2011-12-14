@@ -18,7 +18,7 @@ struct
           next: D.next;
           next_control : D.next; (* contains control processes that should not be
                                   taken into account to see if macro step is done *)
-          next_boi: D.next; }
+        }
     and control_type =
       | Clock_domain (*of clock_domain*)
       | Kill of unit step
@@ -111,15 +111,13 @@ struct
         children = [];
         cond = cond;
         next = D.mk_next ();
-        next_control = D.mk_next ();
-        next_boi = D.mk_next (); }
+        next_control = D.mk_next () }
 
     (* tuer un arbre p *)
     let rec set_kill p =
       p.alive <- true;
       p.susp <- false;
       D.clear_next p.next;
-      D.clear_next p.next_boi;
       List.iter set_kill p.children;
       p.children <- []
 
@@ -129,8 +127,7 @@ struct
       else (* reset new_ctrl *)
         (new_ctrl.alive <- true;
          new_ctrl.susp <- false;
-         D.clear_next new_ctrl.next;
-         D.clear_next new_ctrl.next_boi)
+         D.clear_next new_ctrl.next)
 
     let end_ctrl new_ctrl f_k x =
       set_kill new_ctrl;
@@ -197,11 +194,9 @@ struct
       and next_to_current ck node =
         D.add_current_next node.next ck.cd_current;
         D.add_current_next node.next_control ck.cd_current;
-        D.add_current_next node.next_boi ck.cd_current;
       and next_to_father pere node =
         D.add_next_next node.next pere.next;
-        D.add_next_next node.next_control pere.next_control;
-        D.add_next_next node.next_boi pere.next_boi;
+        D.add_next_next node.next_control pere.next_control
       in
         cd.cd_top.children <- eval_children cd.cd_top cd.cd_top.children true;
         next_to_current cd cd.cd_top
@@ -212,8 +207,7 @@ struct
       if p.alive && not p.susp then
         (D.add_current_next p.next cd;
          D.add_current_next p.next_control cd;
-         List.iter (next_to_current cd) p.children;
-         D.add_current_next p.next_boi cd)
+         List.iter (next_to_current cd) p.children)
 
     let wake_up_ctrl new_ctrl cd =
       new_ctrl.susp <- false;
