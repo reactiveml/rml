@@ -38,7 +38,7 @@ struct
           mutable cd_top : control_tree;
         }
 
-    type ('a, 'b) event = ('a,'b, clock_domain) E.t * D.waiting_list * D.waiting_list
+    type ('a, 'b) event = ('a,'b) E.t * clock_domain * D.waiting_list * D.waiting_list
     type event_cfg =
       | Cevent of (bool -> bool) * clock_domain * D.waiting_list * D.waiting_list
       (* status, cd, wa, wp*)
@@ -51,35 +51,34 @@ struct
     module Event =
       struct
         let new_evt_combine cd default combine =
-          (E.create cd cd.cd_clock default combine, D.mk_waiting_list (), D.mk_waiting_list ())
+          (E.create cd.cd_clock default combine, cd, D.mk_waiting_list (), D.mk_waiting_list ())
 
         let new_evt cd =
           new_evt_combine cd [] (fun x y -> x :: y)
 
-        let status ?(only_at_eoi=false) (n,_,_) =
-          E.status n && (not only_at_eoi || !((E.clock_domain n).cd_eoi))
+        let status ?(only_at_eoi=false) (n,sig_cd,_,_) =
+          E.status n && (not only_at_eoi || !(sig_cd.cd_eoi))
 
-        let value (n,_,_) =
+        let value (n,_,_,_) =
           if E.status n then
             E.value n
           else
             raise RML
 
-        let one (n,_,_) = E.one n
-        let pre_status (n,_,_) = E.pre_status n
-        let pre_value (n,_,_) = E.pre_value n
-        let last (n,_,_) = E.last n
-        let default (n,_,_) = E.default n
-        let clock_domain (n,_,_) = E.clock_domain n
+        let one (n,_,_,_) = E.one n
+        let pre_status (n,_,_,_) = E.pre_status n
+        let pre_value (n,_,_,_) = E.pre_value n
+        let last (n,_,_,_) = E.last n
+        let default (n,_,_,_) = E.default n
+        let clock_domain (_,sig_cd,_,_) = sig_cd
 
-        let emit (n,wa,wp) v =
+        let emit (n,sig_cd,wa,wp) v =
           E.emit n v;
-          let sig_cd = E.clock_domain n in
           D.add_current_waiting_list wa sig_cd.cd_current;
           D.add_current_waiting_list wp sig_cd.cd_current
 
-        let cfg_present ((n,wa,wp) as evt) =
-          Cevent ((fun eoi -> status ~only_at_eoi:eoi evt), E.clock_domain n, wa, wp)
+        let cfg_present ((n,sig_cd,wa,wp) as evt) =
+          Cevent ((fun eoi -> status ~only_at_eoi:eoi evt), sig_cd, wa, wp)
         let cfg_or ev1 ev2 =
           Cor (ev1, ev2)
         let cfg_and ev1 ev2 =
@@ -277,7 +276,7 @@ struct
   (** [on_event_or_next evt f_w v_w cd ctrl f_next] executes 'f_w v_w' if
       evt is emitted before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
-    let _on_event_or_next (_,_,w) f_w v_w cd ctrl f_next =
+    let _on_event_or_next (_,_,_,w) f_w v_w cd ctrl f_next =
       let act _ =
         if is_eoi cd then
           (*eoi was reached, launch fallback*)
@@ -350,14 +349,14 @@ struct
       in
       D.add_waiting self w
 
-    let on_event (n,w,_) ctrl f v =
+    let on_event (n,sig_cd,w,_) ctrl f v =
       if E.status n then
         (try
            f v
          with
-           | Wait_again -> _on_event w (E.clock_domain n) ctrl f v)
+           | Wait_again -> _on_event w sig_cd ctrl f v)
       else
-        _on_event w (E.clock_domain n) ctrl f v
+        _on_event w sig_cd ctrl f v
 
     (** [on_event_cfg evt_cfg ctrl f v] executes 'f v' if evt_cfg is true and
         ctrl is active in the same step.
@@ -417,8 +416,7 @@ struct
       in
       D.add_waiting self w
 
-     let on_event_at_eoi (n,wa,_) ctrl f =
-       let sig_cd = E.clock_domain n in
+     let on_event_at_eoi (n,sig_cd,wa,_) ctrl f =
        if E.status n then
          let eoi_work _ =
            (try
