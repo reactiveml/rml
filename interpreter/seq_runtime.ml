@@ -33,7 +33,6 @@ struct
           cd_weoi : D.waiting_list; (* processes waiting for eoi *)
           cd_next_instant : D.waiting_list; (* processes waiting for the move to next instant *)
           mutable cd_wake_up : D.waiting_list list;
-          mutable cd_wake_up_next : D.next list;
           (* waiting lists to wake up at the end of the instant*)
           cd_clock : E.clock;
           mutable cd_top : control_tree;
@@ -237,7 +236,6 @@ struct
         cd_weoi = D.mk_waiting_list ();
         cd_next_instant = D.mk_waiting_list ();
         cd_wake_up = [];
-        cd_wake_up_next =  [];
         cd_clock = E.init_clock ();
         cd_top = new_ctrl Clock_domain;
       }
@@ -252,8 +250,6 @@ struct
       D.add_waiting p cd.cd_weoi
     let add_weoi_waiting_list cd w =
       cd.cd_wake_up <- w :: cd.cd_wake_up
-    let add_weoi_next cd n =
-      cd.cd_wake_up_next <- n :: cd.cd_wake_up_next
 
 (* debloquer les processus en attent d'un evt *)
     let wake_up ck w =
@@ -262,10 +258,6 @@ struct
     let wake_up_all ck =
       List.iter (fun wp -> D.add_current_waiting_list wp ck.cd_current) ck.cd_wake_up;
       ck.cd_wake_up <- []
-
-    let wake_up_all_next cd =
-      List.iter (fun n -> D.add_current_next n cd.cd_current) cd.cd_wake_up_next;
-      cd.cd_wake_up_next <- []
 
 (* ------------------------------------------------------------------------ *)
 
