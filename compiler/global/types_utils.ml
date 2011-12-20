@@ -35,6 +35,7 @@ open Types
 open Global
 
 exception Unify
+exception Unify_detailed of type_expression * type_expression
 
 
 (* generating fresh names *)
@@ -297,7 +298,7 @@ let expand_abbrev params body args =
   body'
 
 (* unification *)
-let rec unify expected_ty actual_ty =
+let rec _unify expected_ty actual_ty =
   if expected_ty == actual_ty then ()
   else
     let expected_ty = type_repr expected_ty in
@@ -346,6 +347,13 @@ let rec unify expected_ty actual_ty =
 	  unify ty1 ty2
       | _ -> raise Unify
 
+(* If Unify is raised, add the faulty types to the exception.
+   Otherwise just let the exception (already containing the faulty types) go. *)
+and unify expected_ty actual_ty =
+  try
+    _unify expected_ty actual_ty
+  with
+    | Unify -> raise (Unify_detailed (expected_ty, actual_ty))
 
 (* special cases of unification *)
 let rec filter_arrow ty =

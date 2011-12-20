@@ -46,32 +46,34 @@ let unify_expr expr expected_ty actual_ty =
   try
     unify expected_ty actual_ty
   with
-    Unify -> expr_wrong_type_err expr actual_ty expected_ty
+    | Unify -> expr_wrong_type_err expr actual_ty expected_ty
+    | Unify_detailed (expected_sub_ty, actual_sub_ty) ->
+        expr_wrong_type_detailed_err expr actual_ty expected_ty actual_sub_ty expected_sub_ty
 
 let unify_patt pat expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> patt_wrong_type_err pat actual_ty expected_ty
+  with _ -> patt_wrong_type_err pat actual_ty expected_ty
 
 let unify_event evt expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> event_wrong_type_err evt actual_ty expected_ty
+  with _ -> event_wrong_type_err evt actual_ty expected_ty
 
 let unify_emit loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> emit_wrong_type_err loc actual_ty expected_ty
+  with _ -> emit_wrong_type_err loc actual_ty expected_ty
 
 let unify_run loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> run_wrong_type_err loc actual_ty expected_ty
+  with _ -> run_wrong_type_err loc actual_ty expected_ty
 
 let unify_var loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with Unify -> var_wrong_type_err loc actual_ty expected_ty
+  with _ -> var_wrong_type_err loc actual_ty expected_ty
 
 (* special cases of unification *)
 let filter_event ty =
