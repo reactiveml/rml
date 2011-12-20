@@ -774,7 +774,7 @@ let rml_loop p =
 (**************************************)
 
     let rml_new_clock_domain () =
-      R.mk_clock_domain ()
+      R.mk_clock_domain None
 
     let end_clock_domain f_k new_ctrl x =
       R.end_ctrl f_k new_ctrl x
@@ -783,6 +783,7 @@ let rml_loop p =
       fun f_k ctrl jp cd ->
         let new_ctrl = R.control_tree new_cd in
         let f = p (end_clock_domain new_ctrl f_k) new_ctrl None new_cd in
+        set_parent_clock new_cd cd;
         fun _ ->
           R.on_current_instant new_cd f;
           R.start_ctrl ctrl new_ctrl;

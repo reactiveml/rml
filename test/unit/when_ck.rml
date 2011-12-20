@@ -63,10 +63,44 @@ let process when_await_ck act =
       pause; pause; pauseclock ck
     end
 
+(* [N; N; O 2] *)
+let process when_await_ck2 act =
+  signal s2 default 0 gather (+) in
+  (newclock ck in
+    signal s1 in
+    do
+      await s2(x) in act x
+    when s1 done
+    ||
+    loop
+      emit s1; pause; pauseclock ck
+    end
+  )
+  ||
+  pause; emit s2 2
+
+(* [N; N; O 2] *)
+let process when_await_ck3 act =
+  signal s2 default 0 gather (+) in
+  (newclock ck in
+    signal s1 in
+    do
+      await s2(x) in act x
+    when s1 done
+    ||
+    loop
+      emit s1; pause; emit s1; pauseclock ck
+    end
+  )
+  ||
+  pause; emit s2 2
 
 open Rmltest
 
 let test =
   [ (when_simple_ck, "when_simple_ck", [S (O 0, O 1); O 2]);
     (when_until_ck, "when_until_ck", [S (O 0, O 1); O 2; O 9]);
-    (when_await_ck, "when_await_ck", [N; O 5]) ]
+    (when_await_ck, "when_await_ck", [N; O 5]);
+    (when_await_ck2, "when_await_ck2", [N; N; O 2]);
+    (when_await_ck3, "when_await_ck3", [N; N; O 2]);
+  ]

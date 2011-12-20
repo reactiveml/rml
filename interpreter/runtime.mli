@@ -85,10 +85,11 @@ sig
 
   (* various functions on the clock domain *)
   val top_clock_domain : clock_domain
-  val mk_clock_domain : unit -> clock_domain
+  val mk_clock_domain : clock_domain option -> clock_domain
   val is_eoi : clock_domain -> bool
   val set_pauseclock : clock_domain -> unit
   val control_tree : clock_domain -> control_tree
+  val set_parent_clock : clock_domain -> clock_domain -> unit (* TODO: should be done at compilation time*)
 
   (* step scheduling *)
   exception Wait_again

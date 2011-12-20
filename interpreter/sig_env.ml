@@ -40,6 +40,7 @@ module type S =
 
     val init_clock : unit -> clock
     val next: clock -> unit
+    val get : clock -> int
   end
 
 module Record  (*: S*)  =
@@ -112,4 +113,7 @@ module Record  (*: S*)  =
 
     let next ck =
       incr ck
+
+    let get ck = !ck
   end
+

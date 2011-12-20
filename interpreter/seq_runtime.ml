@@ -14,10 +14,12 @@ struct
           mutable alive: bool;
           mutable susp: bool;
           mutable cond: (unit -> bool);
+          mutable cond_v : bool;
           mutable children: control_tree list;
           next: D.next;
           next_control : D.next; (* contains control processes that should not be
                                   taken into account to see if macro step is done *)
+          mutable last_activation : (clock_domain * int) list
         }
     and control_type =
       | Clock_domain (*of clock_domain*)
@@ -36,6 +38,7 @@ struct
           (* waiting lists to wake up at the end of the instant*)
           cd_clock : E.clock;
           mutable cd_top : control_tree;
+          mutable cd_parent : clock_domain option;
         }
 
     type ('a, 'b) event = ('a,'b) E.t * clock_domain * D.waiting_list * D.waiting_list
@@ -110,8 +113,10 @@ struct
         susp = false;
         children = [];
         cond = cond;
+        cond_v = false;
         next = D.mk_next ();
-        next_control = D.mk_next () }
+        next_control = D.mk_next ();
+        last_activation = [] }
 
     (* tuer un arbre p *)
     let rec set_kill p =
@@ -134,6 +139,14 @@ struct
       new_ctrl.alive <- false;
       f_k x
 
+
+    let rec save_clock_state cd =
+      let l = match cd.cd_parent with
+        | None -> []
+        | Some cd -> save_clock_state cd
+      in
+        (cd, E.get cd.cd_clock)::l
+
 (* calculer le nouvel etat de l'arbre de control *)
 (* et deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
@@ -143,7 +156,7 @@ struct
           match p.kind with
             | Clock_domain _ -> true
             | Kill f_k ->
-              if p.cond()
+              if p.cond_v
               then
                 (D.add_next f_k pere.next;
                  set_kill p;
@@ -154,10 +167,9 @@ struct
                  else next_to_father pere p;
                  true)
           | Kill_handler handler ->
-              if p.cond()
+              if p.cond_v
               then
-                (D.add_next (handler()) pere.next;
-                 set_kill p;
+                (set_kill p;
                  false)
               else
                 (p.children <- eval_children p p.children active;
@@ -166,7 +178,7 @@ struct
                  true)
           | Susp ->
               let pre_susp = p.susp in
-              if p.cond() then p.susp <- not pre_susp;
+              if p.cond_v then p.susp <- not pre_susp;
               let active = active && not p.susp in
               if pre_susp
               then
@@ -192,11 +204,14 @@ struct
         List.filter (fun node -> eval p node active) nodes
 
       and next_to_current ck node =
+        node.last_activation <- save_clock_state ck;
         D.add_current_next node.next ck.cd_current;
         D.add_current_next node.next_control ck.cd_current;
-      and next_to_father pere node =
-        D.add_next_next node.next pere.next;
+      and next_to_father pere node = ()
+       (* D.add_next_next node.next pere.next;
         D.add_next_next node.next_control pere.next_control
+        *)
+        (* TODO: ne marche plus si on veut que last_activation soit correct *)
       in
         cd.cd_top.children <- eval_children cd.cd_top cd.cd_top.children true;
         next_to_current cd cd.cd_top
@@ -205,13 +220,35 @@ struct
 (* les listes next *)
     let rec next_to_current cd p =
       if p.alive && not p.susp then
-        (D.add_current_next p.next cd;
-         D.add_current_next p.next_control cd;
+        (D.add_current_next p.next cd.cd_current;
+         D.add_current_next p.next_control cd.cd_current;
+         p.last_activation <- save_clock_state cd;
          List.iter (next_to_current cd) p.children)
+
+    (** Evaluates the condition of control nodes. This can be called several
+        times for a same control node, zhen doing the eoi of several clocks.
+        We can keep the last condition (if it was true for the eoi of the fast clock,
+        it is also true for the eoi of the slow clock), but we have to make sure
+        to fire the handler only once. *)
+    let eoi_control ctrl =
+      let rec _eoi_control pere ctrl =
+        if ctrl.alive then (
+          ctrl.cond_v <- ctrl.cond ();
+          (match ctrl.kind with
+            | Kill_handler handler ->
+                if ctrl.cond_v then (
+                  D.add_next (handler()) pere.next;
+                  set_kill ctrl
+                )
+            | _ -> ());
+          List.iter (_eoi_control ctrl) ctrl.children;
+        )
+      in
+        List.iter (_eoi_control ctrl) ctrl.children
 
     let wake_up_ctrl new_ctrl cd =
       new_ctrl.susp <- false;
-      next_to_current cd.cd_current new_ctrl
+      next_to_current cd new_ctrl
 
     let is_active ctrl =
       ctrl.alive && not ctrl.susp
@@ -222,7 +259,7 @@ struct
     let set_condition ctrl c =
       ctrl.cond <- c
 
-    let mk_clock_domain () =
+    let mk_clock_domain parent =
       { cd_current = D.mk_current ();
         cd_pause_clock = ref false;
         cd_eoi = ref false;
@@ -231,13 +268,16 @@ struct
         cd_wake_up = [];
         cd_clock = E.init_clock ();
         cd_top = new_ctrl Clock_domain;
+        cd_parent = parent;
       }
 
 
-    let top_clock_domain = mk_clock_domain ()
+    let top_clock_domain = mk_clock_domain None
     let is_eoi cd = !(cd.cd_eoi)
     let set_pauseclock cd =
       cd.cd_pause_clock := true
+    let set_parent_clock cd parent_cd =
+      cd.cd_parent <- Some parent_cd
     let control_tree cd = cd.cd_top
     let add_weoi cd p =
       D.add_waiting p cd.cd_weoi
@@ -378,13 +418,26 @@ struct
       else
         wait_event_cfg ()
 
+    let has_been_active ctrl sig_cd =
+      let rec check_last_activation l = match l with
+        | [] -> Format.eprintf "id not find the signal clock@."; false
+        | (cd, ck)::l ->
+            if cd == sig_cd then (
+              Format.eprintf "Comparing clocks %d and %d @." ck  (E.get sig_cd.cd_clock);
+              ck = (E.get sig_cd.cd_clock)
+            ) else
+              check_last_activation l
+      in
+        Format.eprintf "Legth of last_activation: %d@." (List.length ctrl.last_activation);
+        check_last_activation ctrl.last_activation
+
     (** [on_event_at_eoi evt ctrl f] executes 'f ()' during the eoi
         (of evt's clock domain) if ctrl is active in the same step.
         Waits for the next activation of evt otherwise, or if the call
         raises Wait_again *)
     let _on_event_at_eoi sig_cd ctrl w f =
       let rec self _ =
-        if is_active ctrl then
+        if has_been_active ctrl sig_cd then
             (*ctrl is activated, run continuation*)
           add_weoi sig_cd eoi_work
         else ((*ctrl is not active, wait end of instant*)
@@ -460,17 +513,18 @@ struct
 
     let eoi cd =
       cd.cd_eoi := true;
+      eoi_control cd.cd_top;
       wake_up cd cd.cd_weoi;
       wake_up_all cd;
       schedule cd
 
     let next_instant cd =
+      E.next cd.cd_clock;
       (* next instant of child clock domains *)
       wake_up cd cd.cd_next_instant;
       schedule cd;
       (* next instant of this clock domain *)
       eval_control_and_next_to_current cd;
-      E.next cd.cd_clock;
       cd.cd_eoi := false;
       cd.cd_pause_clock := false
 
