@@ -897,18 +897,12 @@ and translate_proc e =
 *)
 
     | Coproc_newclock (id, p) ->
-      let newck =
-        make_expr
-          (Cexpr_apply (make_instruction "rml_new_clock_domain", [unit_value]))
-          Location.none
-      in
-      let atck =
-        make_expr
-          (Cexpr_apply (make_instruction "rml_at_clock_domain",
-                        [make_expr_var_local id; translate_proc p]))
-          Location.none
-      in
-      Cexpr_let (Nonrecursive, [(make_patt_var_local id, newck)], atck)
+        let e =
+          make_expr
+            (Cexpr_function [(make_patt_var_local id, translate_proc p)])
+            Location.none
+        in
+          Cexpr_apply (make_instruction "rml_newclock", [e])
 
     | Coproc_pauseclock e ->
       if Lco_misc.is_value e then

@@ -24,6 +24,7 @@ sig
   (*functions on waiting list*)
   val mk_waiting_list : unit -> waiting_list
   val add_waiting : unit Step.t -> waiting_list -> unit
+  val take_all : waiting_list -> unit Step.t list
 
   (* functions on next lists *)
   val mk_next : unit -> next
@@ -84,12 +85,10 @@ sig
   val set_suspended : control_tree -> bool -> unit
 
   (* various functions on the clock domain *)
-  val top_clock_domain : clock_domain
   val mk_clock_domain : clock_domain option -> clock_domain
   val is_eoi : clock_domain -> bool
   val set_pauseclock : clock_domain -> unit
   val control_tree : clock_domain -> control_tree
-  val set_parent_clock : clock_domain -> clock_domain -> unit (* TODO: should be done at compilation time*)
 
   (* step scheduling *)
   exception Wait_again

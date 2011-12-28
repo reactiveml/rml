@@ -46,7 +46,8 @@ module M = functor (I : INTERPRETER) ->
   struct
     let rml_make p =
       let result = ref None in
-      let step = I.rml_make I.R.top_clock_domain result p in
+      let cd = I.R.mk_clock_domain None in
+      let step = I.rml_make cd result p in
       I.R.on_current_instant I.R.top_clock_domain step;
       let react () =
         I.R.react I.R.top_clock_domain;

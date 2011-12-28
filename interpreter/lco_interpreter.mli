@@ -25,12 +25,12 @@
 
 module type LCO_RUNTIME =
   sig
+    type clock
     type clock_domain
     type ('a, 'b) event
     type event_cfg
     type 'a step
 
-    val top_clock_domain : clock_domain
     val react : clock_domain -> unit
     val on_current_instant : clock_domain -> unit step -> unit
   end
@@ -41,7 +41,7 @@ module type S =
 
     type 'a expr
     and 'a process
-    and clock_expr = R.clock_domain Types.clock
+    and clock_expr = R.clock Types.clock
 
 
     exception RML
@@ -57,8 +57,8 @@ module type S =
     val rml_expr_emit: (unit, 'b) R.event -> unit
     val rml_expr_emit_val: ('a, 'b) R.event -> 'a -> unit
 
-    val rml_global_signal: R.clock_domain -> ('a, 'a list) R.event
-    val rml_global_signal_combine: R.clock_domain -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
+    val rml_global_signal: R.clock -> ('a, 'a list) R.event
+    val rml_global_signal_combine: R.clock -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
 
     type event_cfg_gen = unit -> R.event_cfg
     val cfg_present': ('a,'b) R.event -> event_cfg_gen
@@ -67,11 +67,11 @@ module type S =
     val cfg_or: event_cfg_gen -> event_cfg_gen -> event_cfg_gen
 
     val rml_nothing: unit expr
-    val rml_compute: (R.clock_domain -> unit -> 'a) -> 'a expr
+    val rml_compute: (R.clock -> unit -> 'a) -> 'a expr
     val rml_pause: unit expr
     val rml_pause_top: unit expr
-    val rml_pause_at : (unit -> R.clock_domain) -> unit expr
-    val rml_pause_at' : R.clock_domain -> unit expr
+    val rml_pause_at : (unit -> R.clock) -> unit expr
+    val rml_pause_at' : R.clock -> unit expr
     val rml_halt: 'a expr
     val rml_emit': (unit, 'b) R.event -> unit expr
     val rml_emit: (unit -> (unit, 'b) R.event) -> unit expr
@@ -149,13 +149,12 @@ module type S =
     val rml_seq_n : expr list -> expr
 *)
 
-    val rml_new_clock_domain : unit -> R.clock_domain
-    val rml_at_clock_domain : R.clock_domain -> 'b expr -> 'b expr
+    val rml_newclock : (R.clock -> 'b expr) -> 'b expr
 
-    val rml_pauseclock : (unit -> R.clock_domain) -> unit expr
-    val rml_pauseclock' : R.clock_domain -> unit expr
+    val rml_pauseclock : (unit -> R.clock) -> unit expr
+    val rml_pauseclock' : R.clock -> unit expr
 
-    val rml_top_clock_domain : unit -> R.clock_domain
+    val rml_top_clock : unit -> R.clock
   end
 
 

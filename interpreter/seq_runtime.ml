@@ -19,7 +19,7 @@ struct
           next: D.next;
           next_control : D.next; (* contains control processes that should not be
                                   taken into account to see if macro step is done *)
-          mutable last_activation : (clock_domain * int) list
+          mutable last_activation : (clock_domain * E.clock_index) list
         }
     and control_type =
       | Clock_domain (*of clock_domain*)
@@ -423,7 +423,6 @@ struct
         | [] -> Format.eprintf "id not find the signal clock@."; false
         | (cd, ck)::l ->
             if cd == sig_cd then (
-              Format.eprintf "Comparing clocks %d and %d @." ck  (E.get sig_cd.cd_clock);
               ck = (E.get sig_cd.cd_clock)
             ) else
               check_last_activation l
@@ -598,6 +597,10 @@ struct
   let mk_waiting_list () = ref ([]:unit Step.t list)
   let add_waiting p w =
     w := p :: ! w
+  let take_all w =
+    let l = !w in
+    w := [];
+    l
 
   let mk_next () = ref ([]:unit Step.t list)
   let add_next p next =
