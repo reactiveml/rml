@@ -504,7 +504,7 @@ struct
 
     (** clock domains operations *)
     let mk_clock_domain site clock parent_ctrl =
-      { cd_site = site;
+      let cd = { cd_site = site;
         cd_current = D.mk_current ();
         cd_pause_clock = false;
         cd_eoi = false;
@@ -516,7 +516,9 @@ struct
         cd_remaining_async = ref 0;
         cd_emitted_signals = C.GidSet.empty;
         cd_remotes = C.SiteSet.empty;
-      }
+      } in
+      site.s_clock_domains <- C.GidMap.add clock.ck_gid cd site.s_clock_domains;
+      cd
 
     let is_eoi cd = cd.cd_eoi
     let control_tree cd = cd.cd_top
@@ -683,7 +685,7 @@ struct
       let new_ck = Clock.mk_clock cd.cd_site (Some cd.cd_clock) in
       let new_cd = init_clock_domain cd.cd_site new_ck (Some ctrl) in
       let new_ctrl = control_tree new_cd in
-      let f = p new_cd new_ctrl (end_clock_domain cd new_ctrl f_k) in
+      let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl f_k) in
       fun _ ->
         D.add_current f new_cd.cd_current;
         start_ctrl ctrl new_ctrl;
