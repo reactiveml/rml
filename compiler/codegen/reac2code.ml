@@ -24,7 +24,6 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
 
 
 let gen_main_fun out_chan =
-  output_string out_chan ("module Rml_machine = Rml_machine.M(Interpreter);;\n");
   let main =
     try
       Modules.pfind_value_desc
@@ -38,25 +37,24 @@ let gen_main_fun out_chan =
   match !number_of_instant >= 0, !sampling >= 0.0 with
     | true, true ->
       output_string out_chan
-        ("let _ = Rml_machine.rml_exec_n_sampling "^
+        ("let _ = Machine.rml_exec_n_sampling "^
             main_id^" "^(string_of_int !number_of_instant)^" "^
             (string_of_float !sampling)^"\n")
     | true, false ->
       output_string out_chan
-        ("let _ = Rml_machine.rml_exec_n "^
+        ("let _ = Mmachine.rml_exec_n "^
             main_id^" "^(string_of_int !number_of_instant)^"\n")
     | false, true ->
       output_string out_chan
-        ("let _ = Rml_machine.rml_exec_sampling "^
+        ("let _ = Machine.rml_exec_sampling "^
             main_id^" "^(string_of_float !sampling)^"\n")
     | false, false ->
       output_string out_chan
-        ("let _ = Rml_machine.rml_exec "^main_id^"\n")
+        ("let _ = Machine.rml_exec "^main_id^"\n")
 
 let gen_test_fun out_chan =
-  output_string out_chan ("module Rml_machine = Rml_machine.M(Interpreter);;\n");
   output_string out_chan
-    ("let _ = Rml_machine.rml_test "^ !Compiler_options.test_name)
+    ("let _ = Machine.rml_test "^ !Compiler_options.test_name)
 
 let compile_impl info_chan filename module_name intermediate_code =
   let obj_name = filename ^ ".ml" in
@@ -67,7 +65,7 @@ let compile_impl info_chan filename module_name intermediate_code =
         "*)\n\n");
         (* selection of the interpreter *)
   output_string out_chan ("module Interpreter = "^ !interpreter_module ^"."^ !interpreter_impl^"\n");
-  output_string out_chan ("module Machine = Rml_machine.M(Interpreter)\n");
+  output_string out_chan ("module Machine = Rml_machine."^ !machine_kind ^"(Interpreter)\n");
 
   (* the implementation *)
   compile_implementation_back_end info_chan out_chan module_name intermediate_code;

@@ -23,10 +23,8 @@ let version = "0.1"
 (* standard module *)
 let pervasives_module = "Pervasives"
 let interpreter_module = ref "Lco_ctrl_tree_n"
-(* let interpreter_module = ref "Lk_record" *)
-let interpreter_intf = ref "Lco_interpreter"
 let interpreter_impl = ref "Lco_ctrl_tree_seq_interpreter"
-
+let machine_kind = ref "Seq"
 
 let standard_lib = "../lib"
 
@@ -36,9 +34,9 @@ let to_compile = ref ([] : string list)
 let default_used_modules = ref ([] : string list)
 
 (* interpreter *)
-let set_interpreter_intf s = interpreter_intf := s
 let set_interpreter_impl s = interpreter_impl := s
 let set_interpreter_module s = interpreter_module := s
+let set_machine_kind s = machine_kind := s
 
 (* different translations *)
 type translations = Lco
@@ -172,9 +170,15 @@ let unset_instantaneous_loop_warning () =
 let set_runtime s =
   match s with
     | "Lco" ->
-      set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implem";
-      set_interpreter_module "Lco_ctrl_tree_record";
+      set_interpreter_impl "Lco_ctrl_tree_seq_interpreter";
+      set_interpreter_module "Lco_ctrl_tree_n";
+      set_machine_kind "Seq";
+      set_translation Lco
+
+    | "Lco_mpi" ->
+      set_interpreter_impl "Lco_ctrl_tree_mpi_interpreter";
+      set_interpreter_module "Lco_ctrl_tree_n";
+      set_machine_kind "Distributed";
       set_translation Lco
 
     | _ -> raise (Arg.Bad ("don't know what to do with " ^ s))
@@ -190,7 +194,6 @@ let set_interactive () =
 (*
   interpreter_module := "Rml_interactive";
 *)
-  set_interpreter_intf "Lco_interpreter";
   set_interpreter_impl "Implem";
   set_interpreter_module "Lco_ctrl_tree_record";
   interactive := true
