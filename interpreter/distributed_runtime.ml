@@ -558,6 +558,7 @@ struct
         (* Awaits Mhas_next from all remote clock domains *)
         await_all_children cd;
         cd.cd_pause_clock || not has_next_ctrl || not cd.cd_children_have_next
+        cd.cd_pause_clock || not (has_next_ctrl || cd.cd_children_have_next)
 
     (* cd.cd_current_lock should be locked when calling schedule and is still locked
        when it returns.  *)
