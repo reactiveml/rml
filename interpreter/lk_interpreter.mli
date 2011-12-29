@@ -46,8 +46,9 @@ module type S =
 
       val rml_make: 'a option ref -> 'a process -> unit R.step
 
-      val rml_global_signal: unit -> ('a, 'a list) R.event
-      val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
+(*      val rml_global_signal: unit -> ('a, 'a list) R.event
+      val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event *)
+
       val rml_expr_emit_pure: (unit, 'b) R.event -> unit
       val rml_expr_emit: ('a, 'b) R.event -> 'a -> unit
       val rml_pre_status: ('a, 'b) R.event -> bool

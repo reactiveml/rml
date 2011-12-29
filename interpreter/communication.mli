@@ -12,6 +12,7 @@ module type S = sig
   module SiteMap : (Map.S with type key = site)
   module SiteSet : (Set.S with type elt = site)
 
+  val is_master : unit -> bool
   val available_site : unit -> site
 
   val fresh : unit -> gid

@@ -47,10 +47,10 @@ module Rml_interpreter =
 
 
 (* ------------------------------------------------------------------------ *)
-    let rml_global_signal () = R.Event.new_evt R.top_clock_domain
+  (*  let rml_global_signal () = R.Event.new_evt R.top_clock_domain
 
     let rml_global_signal_combine def comb =
-        R.Event.new_evt_combine R.top_clock_domain def comb
+      R.Event.new_evt_combine R.top_clock_domain def comb *)
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)

@@ -21,6 +21,9 @@ end
 module SiteMap = Map.Make (Site)
 module SiteSet = Set.Make (Site)
 
+let is_master () =
+  Mpi.comm_rank Mpi.comm_world = 0
+
 let available_site () =
   Mpi.comm_rank Mpi.comm_world
 
