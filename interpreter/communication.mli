@@ -6,6 +6,8 @@ module type S = sig
   type lid
   type gid
 
+  val print_gid : Format.formatter -> gid -> unit
+
   module GidMap : (Map.S with type key = gid)
   module GidSet : (Set.S with type elt = gid)
 

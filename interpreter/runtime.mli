@@ -143,4 +143,9 @@ sig
       function of the new clock domain [new_cd]. *)
 (*  val step_clock_domain :
     control_tree -> control_tree -> clock_domain -> clock_domain -> unit -> unit *)
+
+
+  (* Only for distributed runtimes *)
+  val start_slave : unit -> unit
+  val is_master : unit -> bool
 end

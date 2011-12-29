@@ -3,17 +3,20 @@ module type S = sig
   type tag
   type msg
   type msg_queue
-
   type dispatcher
 
   type callback = msg -> unit
+  type callback_kind = Once | Forever
 
-  val add_handler : tag -> callback -> dispatcher -> unit
+  val mk_queue : unit -> msg_queue
+  val dispatch_all : msg_queue -> dispatcher -> unit
+  val await_new_msg : msg_queue -> unit
+
+  val add_callback : ?kind:callback_kind -> tag -> callback -> dispatcher -> unit
+  val remove_callback : tag -> dispatcher -> unit
+
   val mk_dispatcher : unit -> dispatcher
-  val dispatch : dispatcher -> unit
-
-  val is_empty : msg_queue -> bool
-  val dispatch_all : msg_queue -> msg list
+  val receive : msg_queue -> unit
 end
 
 module Make (C : Communication.S) (T : Map.OrderedType) = struct
@@ -27,12 +30,13 @@ module Make (C : Communication.S) (T : Map.OrderedType) = struct
   type msg_queue = {
     q_mutex : Mutex.t;
     q_queue_filled : Condition.t;
-    mutable q_queue : msg list;
+    mutable q_queue : (tag * msg) list;
   }
 
   type callback = C.msg -> unit
+  type callback_kind = Once | Forever
   type dispatcher = {
-    mutable d_handlers : callback MyMap.t;
+    mutable d_handlers : (callback * callback_kind) MyMap.t;
     d_mutex : Mutex.t;
   }
 
@@ -49,12 +53,12 @@ module Make (C : Communication.S) (T : Map.OrderedType) = struct
 
   let call_callback d tag s =
     try
-      let f, kind = MyMap.find k d.d_handlers in
+      let f, kind = MyMap.find tag d.d_handlers in
         if kind = Once then
-          d.d_handlersMyMap.remove k d.d_handlers;
+          d.d_handlers <- MyMap.remove tag d.d_handlers;
         f s
     with
-      | Not_found -> Format.eprintf "Received unexpected key '%a' @." C.print k
+      | Not_found -> Format.eprintf "Received unexpected key@."
 
   let mk_queue () =
   { q_mutex = Mutex.create ();
@@ -70,7 +74,7 @@ module Make (C : Communication.S) (T : Map.OrderedType) = struct
   let await_new_msg q =
     Mutex.lock q.q_mutex;
     if q.q_queue <> [] then
-      Condition.wait q.q_queue_filled;
+      Condition.wait q.q_queue_filled q.q_mutex;
     Mutex.unlock q.q_mutex
 
   let dispatch_all q d =
@@ -80,10 +84,11 @@ module Make (C : Communication.S) (T : Map.OrderedType) = struct
     Mutex.unlock q.q_mutex;
     List.iter (fun (tag, msg) -> call_callback d tag msg) l
 
-  let rec receive queue =
-    let tag, msg = Communication.receive () in
-    Mutex.lock queue.q_mutex;
-    q.q_queue <- (tag, msg) :: q.q_queue;
-    Mutex.unlock queue.q_mutex;
-    receive queue
+  let receive q =
+    while true do
+      let tag, msg = C.receive () in
+      Mutex.lock q.q_mutex;
+      q.q_queue <- (tag, msg) :: q.q_queue;
+      Mutex.unlock q.q_mutex;
+    done
 end

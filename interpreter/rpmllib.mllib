@@ -1,4 +1,9 @@
 Sig_env
+Weak_map
+Callbacks
+Dhandle
+Dhandle_typed
+Mpi_communication
 Distributed_runtime
 Seq_runtime
 Lco_ctrl_tree_n

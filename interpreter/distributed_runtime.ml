@@ -775,6 +775,9 @@ struct
         C.GidMap.iter (fun _ cd -> next_instant cd) site.s_clock_domains
 
     let init_site () =
+      let wrong_m = (module struct
+        let local_value _ v = v
+      end : SignalHandle.LOCAL_VALUE) in
       let rec s = {
         s_clock_domains = C.GidMap.empty;
         (*  s_top_clock_domains = clock_domain list; *)
@@ -783,9 +786,12 @@ struct
         s_waiting = WaitingMap.empty;
         s_msg_thread = None;
         s_clock_cache = GidHandle.mk_cache (fun ck -> ck);
-        s_signal_cache = SignalHandle.mk_cache (fun id s -> s);
+        s_signal_cache = SignalHandle.mk_cache wrong_m;
       } in
-      s.s_signal_cache <- SignalHandle.mk_cache (Event.signal_local_value s);
+      let m = (module struct
+        let local_value id ev = Event.signal_local_value s id ev
+      end : SignalHandle.LOCAL_VALUE) in
+      s.s_signal_cache <- SignalHandle.mk_cache m;
       add_callback s Mnew_cd (create_cd s);
       add_callback s Mstep (start_cd s);
       add_callback s Meoi (receive_eoi s);

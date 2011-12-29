@@ -52,7 +52,5 @@ let receive () =
     tag, msg
 
 
-let print_lid ff lid =
-  Format.fprintf ff "%d" lid
 let print_gid ff gid =
   Format.fprintf ff "%d.%d" gid.g_rank gid.g_id

@@ -588,6 +588,10 @@ struct
       schedule cd;
       eoi cd;
       next_instant cd
+
+    (* Fake functions *)
+    let start_slave _ = ()
+    let is_master _ = true
 end
 
 module ListDataStruct (S: Runtime.STEP) =

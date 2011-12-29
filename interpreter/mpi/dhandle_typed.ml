@@ -1,20 +1,20 @@
-
-
 module type S = sig
   type 'a handle
+  type 'a cache
   type key
 
   val mk_cache : ('a -> 'a) -> 'a cache
 
-  val init : key -> 'a -> 'a handle
+  val init : 'a cache -> key -> 'a -> 'a handle
   val get : 'a cache -> 'a handle -> 'a
 end
+
 
 (** TODO: rendre key visible de l'exterieur ?? *)
 module Make (T : Map.OrderedType) (C : Communication.S) = struct
 
   module MyWeak = Weak_map.Make (struct
-    type t = T.key
+    type t = T.t
     let compare = T.compare
   end)
 
@@ -51,6 +51,7 @@ module Make (T : Map.OrderedType) (C : Communication.S) = struct
                d_valid_for = Mpi.comm_rank Mpi.comm_world;
                d_value = v; }
     in
-    MyWeak.add key dr !memo
+    memo := MyWeak.add key v !memo;
+    dr
 end
 
