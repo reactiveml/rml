@@ -233,28 +233,29 @@ let rec translate_ml cd e =
         in
         Cexpr_apply
           (make_instruction ("rml_pre_"^kind),
-           [translate_ml cd s])
+           [make_expr_var_local cd; translate_ml cd s])
 
     | Coexpr_last (s) ->
         Cexpr_apply
           (make_instruction "rml_last",
-           [translate_ml cd s;])
+           [make_expr_var_local cd; translate_ml cd s;])
 
     | Coexpr_default (s) ->
         Cexpr_apply
           (make_instruction "rml_default",
-           [translate_ml cd s;])
+           [make_expr_var_local cd; translate_ml cd s;])
 
     | Coexpr_emit (s) ->
         Cexpr_apply
           (make_instruction "rml_expr_emit",
-           [translate_ml cd s;])
+           [make_expr_var_local cd; translate_ml cd s])
 
     | Coexpr_emit_val (s, e) ->
         Cexpr_apply
           (make_instruction "rml_expr_emit_val",
-           [translate_ml cd s;
-            translate_ml cd e;])
+           [make_expr_var_local cd;
+            translate_ml cd s;
+            translate_ml cd e])
 
     | Coexpr_signal (s, ck, None, e) ->
         Cexpr_let (Nonrecursive,
