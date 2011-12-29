@@ -137,7 +137,7 @@ struct
       let w = find_waiting site wk in
         D.add_waiting f w
     let wake_up_now site wk =
-      let w = WaitingMap.find wk site.s_waiting in
+      let w = find_waiting site wk in
       List.iter (fun f -> f ()) (D.take_all w)
 
     let add_callback site msg f =
@@ -594,7 +594,7 @@ struct
 
     let rec exec_cd cd () =
       schedule cd;
-      if !(cd.cd_remaining_async) <> 0 then (
+      if !(cd.cd_remaining_async) = 0 then (
         eoi cd;
         match cd.cd_clock.ck_parent with
           | None -> (* top clock domain *)
