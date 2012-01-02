@@ -1,7 +1,7 @@
 open Ocamlbuild_plugin;;
 open Command;;
 
-let source_dir = "/Users/ccpasteur/Documents/work/git/reparml"
+let source_dir = "/Users/ccpasteur/Documents/work/git/rml"
 
 let rmlc = A (source_dir^"/compiler/rpmlc.byte");;
 let rmldep = A (source_dir^"/tools/rpmldep/rpmldep.byte");;
@@ -224,7 +224,8 @@ let rmlbuild_after_rules () =
         cp file mllib_file
       end;
 
-      flag ["rml"; "compile"; "annot"] (A "-dtypes")
+      flag ["rml"; "compile"; "annot"] (A "-dtypes");
+      flag ["rml"; "compile"; "lco_mpi"] (S [A "-runtime"; A "Lco_mpi"]);
 ;;
 
 let rml_lib ?(byte=true) ?(native=true) ?dir ?tag_name libpath =
