@@ -89,6 +89,7 @@ and expression_desc =
       (ident * type_expression option)
 	* (expression * expression) option * expression
   | Rexpr_run of expression
+  | Rexpr_async of expression * expression
   | Rexpr_until of event_config * expression * (pattern * expression) option
   | Rexpr_when of event_config * expression
   | Rexpr_control of event_config * (pattern * expression) option * expression

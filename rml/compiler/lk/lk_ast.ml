@@ -106,6 +106,7 @@ and process_desc =
   | Kproc_def_dyn of pattern * process
   | Kproc_def_and_dyn of pattern list * process
   | Kproc_run of expression  * process * ident
+  | Kproc_async of expression * expression  * process * ident
   | Kproc_start_until of
       ident (* ctrl father *) *
       event_config * (ident * process) * (pattern * process)

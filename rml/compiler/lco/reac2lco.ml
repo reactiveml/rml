@@ -389,6 +389,9 @@ and translate_proc p =
 	| Rexpr_run (expr) ->
 	    Coproc_run (translate_ml expr)
 
+	| Rexpr_async (s, expr) ->
+	    Coproc_async (translate_ml s, translate_ml expr)
+
 	| Rexpr_until (s, proc, patt_proc_opt) ->
 	    Coproc_until (translate_conf s,
 			  translate_proc proc,

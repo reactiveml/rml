@@ -83,6 +83,7 @@ let rec check_patt_expr (patt, expr) =
     | Rexpr_merge _
     | Rexpr_signal _
     | Rexpr_run _
+    | Rexpr_async _
     | Rexpr_until _
     | Rexpr_when _
     | Rexpr_control _

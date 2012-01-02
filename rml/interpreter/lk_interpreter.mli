@@ -158,6 +158,8 @@ module type S =
       val rml_run: (unit -> 'a process) -> 'a step -> control_tree -> 'b step
       val rml_run_v: 'a process -> 'a step -> control_tree -> 'b step
 
+      val rml_async : ('a, 'b) event -> (unit -> 'a) -> unit step -> control_tree -> 'c step
+
       val rml_if: (unit -> bool) -> unit step -> unit step -> 'a step
       val rml_if_v: bool -> unit step -> unit step -> 'a step
 

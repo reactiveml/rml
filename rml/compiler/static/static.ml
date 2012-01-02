@@ -440,6 +440,18 @@ let rec static_expr ctx e =
         (* Dynamic Dontknow *)
 	else expr_wrong_static_err e
 
+    | Rexpr_async (s, e1) ->
+	if static_expr ML e1 = Static
+	then
+	  try
+	    (* XXX !!! TODO !!! XXX *)
+            Dynamic Dontknow
+(*	    get_process_status e1.expr_type *)
+	  with
+	  | Unify_static (k1, k2) -> unify_err e1 k2 k1
+        (* Dynamic Dontknow *)
+	else expr_wrong_static_err e
+
     | Rexpr_until (s, p, p_e_opt) ->
 	if ctx = Process
 	then

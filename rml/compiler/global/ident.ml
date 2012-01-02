@@ -73,7 +73,7 @@ let gen_var = new name_generator
 let gen_constr = new name_generator
 let gen_type = new name_generator
 let gen_label = new name_generator
-
+let gen_async = new name_generator
 
 
 let create gen s k =

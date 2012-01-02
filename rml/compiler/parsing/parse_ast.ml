@@ -81,6 +81,7 @@ and expression_desc =
 	(expression * expression) option * expression
   | Pexpr_process of expression
   | Pexpr_run of expression
+  | Pexpr_async of pattern * ident * expression
   | Pexpr_until of
       event_config * expression * (pattern * expression) option
   (* signal        * body       * handler *)

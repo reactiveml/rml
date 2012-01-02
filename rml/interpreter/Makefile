@@ -4,6 +4,7 @@ include ../configure-tools/Makefile.common
 THEAD_TYPE=-thread
 
 SRC=	sig_env.ml \
+	async.ml \
 	lco_interpreter.mli \
 	lco_ctrl_tree.ml \
 	lco_ctrl_tree_thread_safe.ml \
@@ -18,6 +19,7 @@ SRC=	sig_env.ml \
 	rml_machine.ml \
 
 OBJ=	sig_env.cmo \
+	async.cmo \
 	lco_ctrl_tree.cmo \
 	lco_ctrl_tree_thread_safe.cmo \
 	lco_ctrl_tree_n.cmo \
@@ -75,6 +77,9 @@ rmllib.cmxa: $(OBJ_OPT)
 
 
 # dependencies
+async.cmo: OCAMLFLAGS += $(THEAD_TYPE)
+async.cmx: OCAMLOPTFLAGS += -thread
+
 lco_rewrite.cmo: OCAMLFLAGS += -rectypes
 lco_rewrite.cmx: OCAMLOPTFLAGS += -rectypes
 

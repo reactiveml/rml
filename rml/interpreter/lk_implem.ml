@@ -573,6 +573,15 @@ module Lk_interpreter: Lk_interpreter.S  =
       (e ()) k ctrl ()
 
 (**************************************)
+(* async                              *)
+(**************************************)
+
+    let rml_async s e k ctrl _ =
+      let send = fun v () -> set_emit s v in
+      let _ (* tid *) = Async.run send e in
+      k ()
+
+(**************************************)
 (* if                                 *)
 (**************************************)
 
@@ -806,6 +815,7 @@ module Lk_interpreter: Lk_interpreter.S  =
       (* the react function *)
       let rml_react () =
 	try
+          Async.release ();
 	  sched ();
 	  eoi := true;
 	  wakeUp weoi;

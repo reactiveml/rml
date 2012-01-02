@@ -111,6 +111,7 @@ module type S =
 (*    val rml_def_and_dyn: expr array -> (value array -> expr) -> expr *)
     val rml_match: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
     val rml_run: (unit -> 'a process) -> 'a expr
+    val rml_async : ('a, 'b) event -> (unit -> 'a) -> unit expr
     val rml_until': ('a, 'b) event -> unit expr -> unit expr
     val rml_until: (unit -> ('a, 'b) event) -> unit expr -> unit expr
     val rml_until_conf: event_cfg -> unit expr -> unit expr

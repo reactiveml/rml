@@ -141,6 +141,7 @@ let rec add_expr bv exp =
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
   | Pexpr_run(e1) -> add_expr bv e1
+  | Pexpr_async(_,_,e1) -> add_expr bv e1
   | Pexpr_until(cfg, e1, ope) ->
       add_expr bv cfg;
       add_expr bv e1;

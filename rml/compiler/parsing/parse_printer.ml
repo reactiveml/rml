@@ -305,6 +305,9 @@ let rec expression i ppf x =
   | Pexpr_run (e) ->
       line i ppf "Pexpr_run\n";
       expression i ppf e;
+  | Pexpr_async (_,_,e) ->
+      line i ppf "Pexpr_async\n";
+      expression i ppf e;
   | Pexpr_until (s,e, patt_expr_opt) ->
       line i ppf "Pexpr_until\n";
       expression i ppf s;

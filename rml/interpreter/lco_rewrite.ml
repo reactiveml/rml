@@ -531,6 +531,16 @@ module Rml_interpreter : Lco_interpreter.S =
 	f ()
 
 (**************************************)
+(* async                              *)
+(**************************************)
+
+    let rec rml_async s e =
+      fun () ->
+        let send = fun v () -> Event.emit s v in
+        let _ (* tid *) = Async.run send e in
+        (TERM (), rml_compute (fun () -> ()))
+
+(**************************************)
 (* until                              *)
 (**************************************)
     let rml_until' =
@@ -991,6 +1001,7 @@ module Rml_interpreter : Lco_interpreter.S =
     let rml_make (p: 'a process) =
       let current = ref (p()) in
       let rml_react () =
+        Async.release ();
 	match sched !current with
 	| STOP, p' ->
 	    Event.next ();
@@ -1008,6 +1019,7 @@ module Rml_interpreter : Lco_interpreter.S =
     let rml_make_unit (p: unit process) =
       let current = ref (p()) in
       let rml_react () =
+        Async.release ();
 	match sched !current with
 	| STOP, p' ->
 	    Event.next ();
@@ -1033,6 +1045,7 @@ module Rml_interpreter : Lco_interpreter.S =
       in
       let rml_react proc_list =
 	List.iter rml_add_process proc_list;
+        Async.release ();
 	match sched !current with
 	| STOP, p' ->
 	    Event.next ();

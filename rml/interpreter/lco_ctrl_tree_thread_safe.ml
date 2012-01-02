@@ -989,6 +989,23 @@ let rml_loop p =
 	    f_1 sched unit_value
 	in f_run
 
+(**************************************)
+(* async                              *)
+(**************************************)
+
+    let rml_async (_,s,wa,wp) e =
+      fun f_k ctrl ->
+        let f_async =
+          fun sched _ ->
+            let send = fun v () -> begin
+              Event.emit s v;
+              wakeUp sched wa;
+              wakeUp sched wp
+            end
+            in
+            let _ (* tid *) = Async.run send e in
+            f_k sched ()
+        in f_async
 
 (**************************************)
 (* until                              *)
@@ -1500,6 +1517,7 @@ let rml_loop p =
       (* the react function *)
       let rml_react () =
 	try
+          Async.release ();
 	  schedule sched;
 	  sched.eoi <- true;
 	  wakeUp sched sched.weoi;
@@ -1545,6 +1563,7 @@ let rml_loop p =
       (* the react function *)
       let rml_react () =
 	try
+          Async.release ();
 	  schedule sched;
 	  sched.eoi <- true;
 	  wakeUp sched sched.weoi;
@@ -1604,6 +1623,7 @@ let rml_loop p =
       let rml_react proc_list =
 	try
 	  List.iter add_process proc_list;
+          Async.release ();
 	  schedule sched;
 	  sched.eoi <- true;
 	  wakeUp sched sched.weoi;

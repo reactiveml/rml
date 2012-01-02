@@ -11,14 +11,16 @@ global/initialization.cmo: typing/types.cmo global/modules.cmo \
 global/initialization.cmx: typing/types.cmx global/modules.cmx \
     global/misc.cmx global/ident.cmx global/global_ident.cmx \
     global/global.cmx typing/def_types.cmx
-global/misc.cmo: parsing/location.cmo
-global/misc.cmx: parsing/location.cmx
+global/misc.cmo: global/version.cmo parsing/location.cmo
+global/misc.cmx: global/version.cmx parsing/location.cmx
 global/modules.cmo: parsing/parse_ident.cmo global/misc.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo typing/def_types.cmo
 global/modules.cmx: parsing/parse_ident.cmx global/misc.cmx global/ident.cmx \
     global/global_ident.cmx global/global.cmx typing/def_types.cmx
 global/symbol_table.cmo:
 global/symbol_table.cmx:
+global/version.cmo:
+global/version.cmx:
 global/warnings.cmo:
 global/warnings.cmx:
 parsing/parser.cmi: parsing/parse_ast.cmo
@@ -45,11 +47,11 @@ parsing/parse_printer.cmo: parsing/parse_ident.cmo parsing/parse_ast.cmo \
 parsing/parse_printer.cmx: parsing/parse_ident.cmx parsing/parse_ast.cmx \
     parsing/location.cmx static/def_static.cmx global/asttypes.cmi
 parsing/parser.cmo: parsing/syntaxerr.cmo parsing/parse_ident.cmo \
-    parsing/parse_ast.cmo parsing/location.cmo static/def_static.cmo \
-    global/asttypes.cmi parsing/parser.cmi
+    parsing/parse_ast.cmo parsing/location.cmo global/ident.cmo \
+    static/def_static.cmo global/asttypes.cmi parsing/parser.cmi
 parsing/parser.cmx: parsing/syntaxerr.cmx parsing/parse_ident.cmx \
-    parsing/parse_ast.cmx parsing/location.cmx static/def_static.cmx \
-    global/asttypes.cmi parsing/parser.cmi
+    parsing/parse_ast.cmx parsing/location.cmx global/ident.cmx \
+    static/def_static.cmx global/asttypes.cmi parsing/parser.cmi
 parsing/syntaxerr.cmo: parsing/location.cmo
 parsing/syntaxerr.cmx: parsing/location.cmx
 external/external.cmo: parsing/parse_ast.cmo external/lucky.cmo

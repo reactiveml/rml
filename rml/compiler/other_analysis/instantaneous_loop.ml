@@ -556,6 +556,12 @@ let instantaneous_loop_expr =
 	  if not (Env.positive ty') then rec_warning expr;
 	  Env.remove_zero ty'
 
+      | Rexpr_async (_, e) ->
+	  let ty = analyse vars e in
+	  let ty' = Env.plus ty (-1) in
+	  if not (Env.positive ty') then rec_warning expr;
+	  Env.remove_zero ty'
+
       | Rexpr_until (config, e, None) ->
 	  let ty_config = config_analyse vars config in
 	  let ty = analyse vars e in

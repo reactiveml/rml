@@ -686,6 +686,22 @@ let rec type_of_expression env expr =
 	  ty_e (process ty { proc_static = None; });
 	ty
 
+    | Rexpr_async (s, e) ->
+        let ty_s_expected = type_of_expression env s in
+        let ty_v_expected, _ =
+          try
+            filter_event ty_s_expected
+          with Unify ->
+            non_event_err s
+        in
+        let ty_e = type_of_expression env e in
+        let new_var = new_var() in
+        let ty_v = make_type new_var.type_desc in
+        let ty_e_expected = make_type (Type_arrow (type_unit, new_var)) in
+        unify_expr e ty_e_expected ty_e;
+        unify_expr e ty_v_expected ty_v;
+	ty_v
+
     | Rexpr_until (s,p,patt_proc_opt) ->
 	begin match patt_proc_opt with
 	| None ->

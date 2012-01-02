@@ -452,6 +452,9 @@ and translate_proc e k (ctrl: ident) =
 	| Rexpr_run (expr) ->
 	    Kproc_run (translate_ml expr, k, ctrl)
 
+        | Rexpr_async (signal, expr) ->
+            Kproc_async (translate_ml signal, translate_ml expr, k, ctrl)
+
 (* C_k[do p until s(x) -> p' done] =                                       *)
 (*   bind K = k in                                                         *)
 (*   start ctrl C[s] (fun ctrl' -> C_(end.k, ctrl')[p]) (x -> C_k[p'])     *)

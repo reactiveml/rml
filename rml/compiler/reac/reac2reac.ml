@@ -250,6 +250,10 @@ let expr_map  =
 	  let e' = expr_map f e in
 	  f (make_expr_all (Rexpr_run e') typ static reactivity loc)
 
+      | Rexpr_async (s, e) ->
+	  let e' = expr_map f e in
+	  f (make_expr_all (Rexpr_async (s, e')) typ static reactivity loc)
+
       | Rexpr_until (config, e, None) ->
 	  let config' = config_map f config in
 	  let e' = expr_map f e in
@@ -555,6 +559,7 @@ let translate_merge =
     | Rexpr_signal _ ->
 	expr
     | Rexpr_run _
+    | Rexpr_async _
     | Rexpr_until _
     | Rexpr_when _
     | Rexpr_control _

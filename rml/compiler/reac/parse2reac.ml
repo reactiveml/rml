@@ -459,6 +459,30 @@ let rec translate env e =
     | Pexpr_run (expr) ->
 	Rexpr_run (translate env expr)
 
+    | Pexpr_async (patt, var, expr) ->
+        let signal = Printf.sprintf "asy_s_%d" (Ident.gen_var#name) in
+        let signal = Ident.create Ident.gen_async signal Ident.Sig in
+        let signal_expr = make_expr (Rexpr_local signal) Location.none in
+        let vars, rpatt = translate_pattern false patt in
+        let new_env = add_varpatt env vars in
+        let rvar = translate_ident new_env var in
+        Rexpr_signal
+	  ((signal, None),
+	   None,
+           make_expr (Rexpr_seq [
+             make_expr (Rexpr_async (signal_expr, translate env expr)) Location.none;
+             make_expr (Rexpr_await_val
+                          (Nonimmediate,
+                           One,
+                           make_expr (Rexpr_local signal) Location.none,
+                           rpatt,
+                           make_expr rvar Location.none)
+                       )
+                       Location.none
+             ])
+             Location.none
+          )
+
     | Pexpr_until (s, expr, patt_expr_opt) ->
 	Rexpr_until (translate_conf env s,
 		     translate env expr,
@@ -563,7 +587,6 @@ and translate_record env lab_expr_list =
       in
       (glab, translate env expr))
     lab_expr_list
-
 
 and translate_signal env sig_typ_list comb expr =
   match sig_typ_list with

@@ -466,6 +466,13 @@ and translate_proc e =
 	  (make_instruction "rml_run",
 	   [embed_ml expr;])
 
+    | Coproc_async (s, expr) ->
+	Cexpr_apply
+	  (make_instruction "rml_async",
+	   [translate_ml s;
+            translate_ml expr;
+           ])
+
     | Coproc_until ({coconf_desc = Coconf_present s}, k, None) ->
 	if Lco_misc.is_value s then
 	  Cexpr_apply

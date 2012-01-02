@@ -793,6 +793,14 @@ and translate_proc e =
 	    in f.cexpr_desc
 	end
 
+    | Kproc_async (s, expr, k, ctrl) ->
+      Cexpr_apply
+        (make_instruction "rml_async",
+         [translate_ml s;
+          translate_ml expr;
+          translate_proc k;
+          make_expr_var_local ctrl;
+         ])
 
     | Kproc_start_until(ctrl, {kconf_desc = Kconf_present s},
 			(ctrl', k1), (patt,k2)) ->

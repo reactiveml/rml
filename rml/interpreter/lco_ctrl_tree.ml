@@ -916,6 +916,18 @@ let rml_loop p =
 	    f_1 unit_value
 	in f_run
 
+(**************************************)
+(* async                              *)
+(**************************************)
+
+    let rml_async s e =
+      fun f_k ctrl ->
+        let f_async =
+          fun _ ->
+            let send = fun v () -> rml_expr_emit_val s v in
+            let _ (* tid *) = Async.run send e in
+            f_k ()
+        in f_async
 
 (**************************************)
 (* until                              *)
@@ -1401,6 +1413,7 @@ let rml_loop p =
       (* the react function *)
       let rml_react () =
 	try
+          Async.release ();
 	  sched ();
 	  eoi := true;
 	  wakeUp weoi;
@@ -1443,6 +1456,7 @@ let rml_loop p =
       (* the react function *)
       let rml_react () =
 	try
+          Async.release ();
 	  sched ();
 	  eoi := true;
 	  wakeUp weoi;
@@ -1498,6 +1512,7 @@ let rml_loop p =
       let rml_react proc_list =
 	try
 	  List.iter add_process proc_list;
+          Async.release ();
 	  sched ();
 	  eoi := true;
 	  wakeUp weoi;

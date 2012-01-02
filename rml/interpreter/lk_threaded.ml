@@ -745,6 +745,15 @@ module Lk_interpreter: Lk_interpreter.S =
       body ()
 
 (**************************************)
+(* async                              *)
+(**************************************)
+
+    let rml_async s e k ctrl _ =
+      let send = fun v () -> set_emit s v in
+      let _ (* tid *) = Async.run send e in
+      k ()
+
+(**************************************)
 (* if                                 *)
 (**************************************)
 
@@ -858,7 +867,7 @@ module Lk_interpreter: Lk_interpreter.S =
 	new_ctrl
 	  (Kill (fun () -> let v = Event.value n in k v))
 	  (fun () -> Event.status n)
-          (* Il n'est pas necessaite de proteger cette lecture
+          (* Il n'est pas necessaire de proteger cette lecture
              car cette condition est evaluee a la fin d'instant *)
       in
       Mutex.lock ctrl.lock;
@@ -1000,6 +1009,7 @@ module Lk_interpreter: Lk_interpreter.S =
       current := [f];
       (* the react function *)
       let rml_react () =
+          Async.release ();
 	  exec_sched ();
 	  eoi := true;
           (* -- wakeUp weoi; -- *)

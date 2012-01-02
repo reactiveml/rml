@@ -296,6 +296,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token REC                 /* "rec" */
 %token RPAREN              /* "(" */
 %token RUN                 /* "run" */
+%token ASYNC               /* "async" */
 %token SEMI                /* ";" */
 %token SEMISEMI            /* ";;" */
 %token SHARP               /* "#" */
@@ -622,6 +623,12 @@ expr:
       { $2 }
   | RUN simple_expr
       { mkexpr(Pexpr_run($2)) }
+  | ASYNC simple_expr
+      { let vid = Ident.create Ident.gen_var "asy_x_" Ident.Internal in
+        let sid = Ident.name vid in
+        let pat = ghpatt (Ppatt_var (mksimple_loc sid Location.none)) in
+        let var = mkident_loc (Pident sid) Location.none in
+        mkexpr(Pexpr_async(pat, var, $2)) }
 ;
 simple_expr:
     val_longident

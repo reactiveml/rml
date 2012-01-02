@@ -73,7 +73,7 @@
           "\\|v\\(al\\|irtual\\)\\)\\>")
          'font-lock-type-face)
 ;builtin
-   '("\\<\\(emit\\|last\\|nothing\\|p\\(ause\\|re\\)\\|halt\\|run\\)\\>"
+   '("\\<\\(emit\\|last\\|nothing\\|p\\(ause\\|re\\)\\|halt\\|run\\|\\async)\\>"
     . font-lock-builtin-face)
 ;blocking
    '("\\<\\(begin\\|loop\\|end\\|object\\|s\\(ig\\|truct\\)\\)\\>"

@@ -287,6 +287,9 @@ let expr_free_vars e =
     | Rexpr_run e ->
 	expr_free_vars vars e
 
+    | Rexpr_async (_, e) ->
+	expr_free_vars vars e
+
     | Rexpr_until (config, e, None) ->
 	config_free_vars vars config;
 	expr_free_vars vars e
