@@ -19,13 +19,13 @@ module type S = sig
   val receive : msg_queue -> unit
 end
 
-module Make (C : Communication.S) (T : Map.OrderedType) = struct
+module Make (C : Communication.S) = struct
   module MyMap = Map.Make(struct
-    type t = T.t
+    type t = C.gid C.tag
     let compare = compare
   end)
 
-  type tag = T.t
+  type tag = C.gid C.tag
   type msg = C.msg
   type msg_queue = {
     q_mutex : Mutex.t;

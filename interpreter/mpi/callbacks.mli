@@ -19,5 +19,5 @@ module type S = sig
   val receive : msg_queue -> unit
 end
 
-module Make : functor (C: Communication.S) -> functor (T : Map.OrderedType) ->
-  S with type msg = C.msg and type tag = T.t
+module Make : functor (C: Communication.S) ->
+  S with type msg = C.msg and type tag = C.gid C.tag

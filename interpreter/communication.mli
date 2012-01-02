@@ -1,12 +1,19 @@
 
-module type S = sig
-  type msg
-  type site
+module type TAG_TYPE = sig
+  type 'gid t
+  val print : (Format.formatter -> 'gid -> unit) -> Format.formatter -> 'gid t -> unit
+end
 
+module type S = sig
   type lid
   type gid
 
+  type msg
+  type 'gid tag
+  type site
+
   val print_gid : Format.formatter -> gid -> unit
+  val print_site : Format.formatter -> site -> unit
 
   module GidMap : (Map.S with type key = gid)
   module GidSet : (Set.S with type elt = gid)
@@ -23,7 +30,10 @@ module type S = sig
   val to_msg : 'a -> msg
   val from_msg : msg -> 'a
 
-  val send : site -> 'tag -> 'a -> unit
-  val send_owner : gid -> 'tag -> 'a -> unit
-  val receive : unit -> 'tag * msg
+  val send : site -> gid tag -> 'a -> unit
+  val send_owner : gid -> gid tag -> 'a -> unit
+  val receive : unit -> gid tag * msg
 end
+
+module Make : functor (P : TAG_TYPE) -> S with type 'gid tag = 'gid P.t
+

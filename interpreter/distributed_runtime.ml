@@ -1,35 +1,59 @@
 
 
-module Make (D: Runtime.SEQ_DATA_STRUCT) (C : Communication.S) (E: Sig_env.S) =
+module Make
+  (D: Runtime.SEQ_DATA_STRUCT)
+  (CF : functor (T:Communication.TAG_TYPE) -> Communication.S with type 'gid tag = 'gid T.t)
+  (E: Sig_env.S) =
 struct
     module D = D(struct
       type 'a t = 'a -> unit
     end)
 
-    type site_msg =
-        (* scheduling *)
-        | Mnew_cd
-        | Mcd_created of C.gid
-        | Mstep (* do one global step of the clock domain *)
-        | Mstep_done of C.gid (* a clock domain has finished its step *)
-        | Mdone of C.gid (* global step done *)
-        | Mpauseclock of C.gid
-        | Meoi (* End of instant of clock domain *)
-        | Mnext_instant (* Go to next instant *)
-        | Mreq_has_next of C.gid
-        | Mhas_next of C.gid
+
+    module SiteMsgs = struct
+      type 'gid t =
+          (* scheduling *)
+          | Mnew_cd
+          | Mcd_created of 'gid
+          | Mstep (* do one global step of the clock domain *)
+          | Mstep_done of 'gid (* a clock domain has finished its step *)
+          | Mdone of 'gid (* global step done *)
+          | Mpauseclock of 'gid
+          | Meoi (* End of instant of clock domain *)
+          | Mnext_instant (* Go to next instant *)
+          | Mreq_has_next of 'gid
+          | Mhas_next of 'gid
+              (* Whether there is processes to execute in the next local step *)
+              (* signals *)
+          | Memit of 'gid (* Emit a value *)
+          | Mvalue of 'gid (* Send the value of the signal to child cd *)
+          | Msignal of 'gid (* Send the whole signal *)
+          | Mreq_signal of 'gid (* Request the value of the signal *)
+
+      open Format
+      let print print_gid ff m = match m with
+        | Mnew_cd -> fprintf ff "Mnew_cd"
+        | Mcd_created gid -> fprintf ff "Mcd_created %a" print_gid gid
+        | Mstep -> fprintf ff "Mstep"
+        | Mstep_done gid -> fprintf ff "Mstep_done %a" print_gid gid
+        | Mdone gid -> fprintf ff "Mdone %a" print_gid gid
+        | Mpauseclock gid -> fprintf ff "Mpauseclock %a" print_gid gid
+        | Meoi -> fprintf ff "Meoi"
+        | Mnext_instant -> fprintf ff "Mnext_instant"
+        | Mreq_has_next gid -> fprintf ff "Mreq_has_next %a" print_gid gid
+        | Mhas_next gid -> fprintf ff "Mhas_next %a" print_gid gid
             (* Whether there is processes to execute in the next local step *)
         (* signals *)
-        | Memit of C.gid (* Emit a value *)
-        | Mvalue of C.gid (* Send the value of the signal to child cd *)
-        | Msignal of C.gid (* Send the whole signal *)
-        | Mreq_signal of C.gid (* Request the value of the signal *)
+        | Memit gid -> fprintf ff "Memit %a" print_gid gid
+        | Mvalue gid -> fprintf ff "Mvalue %a" print_gid gid
+        | Msignal gid -> fprintf ff "Msignal %a" print_gid gid
+        | Mreq_signal gid -> fprintf ff "Mreq_signal %a" print_gid gid
+    end
+    open SiteMsgs
 
-    module Callbacks = Callbacks.Make (C) (struct
-      type t = site_msg
-      let compare = compare
-    end)
+    module C = CF(SiteMsgs)
 
+    module Callbacks = Callbacks.Make (C)
 
     module GidHandle = Dhandle_typed.Make (struct
       type t = C.gid
@@ -1047,4 +1071,4 @@ struct
 
 end
 
-module MpiRuntime = Make(Seq_runtime.ListDataStruct)(Mpi_communication)(Sig_env.Record)
+module MpiRuntime = Make(Seq_runtime.ListDataStruct)(Mpi_communication.Make)(Sig_env.Record)
