@@ -1,0 +1,23 @@
+
+(*[N; O 2]*)
+let process present_conf_else act =
+  signal s1,s2 in
+  emit s1
+  ||
+  present (s1 /\ s2) then act 1 else act 2
+
+(*[O 1]*)
+let process present_conf_then act =
+  signal s1,s2 in
+  emit s1
+  ||
+  emit s2
+  ||
+  present (s1 /\ s2) then act 1 else act 2
+
+
+open Rmltest
+
+let test =
+  [ (present_conf_else, "present_conf_else", [N; O 2]);
+    (present_conf_then, "present_conf_then", [O 1]) ]
