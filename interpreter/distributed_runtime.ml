@@ -437,6 +437,7 @@ struct
       if p.alive && not p.susp then
         (D.add_current_next p.next cd.cd_current;
          D.add_current_next p.next_control cd.cd_current;
+         p.last_activation <- Clock.save_clock_state cd.cd_site cd.cd_clock;
          List.iter (next_to_current cd) p.children)
 
 
@@ -557,7 +558,6 @@ struct
       let has_next_ctrl = has_next cd cd.cd_top in
         (* Awaits Mhas_next from all remote clock domains *)
         await_all_children cd;
-        cd.cd_pause_clock || not has_next_ctrl || not cd.cd_children_have_next
         cd.cd_pause_clock || not (has_next_ctrl || cd.cd_children_have_next)
 
     (* cd.cd_current_lock should be locked when calling schedule and is still locked
