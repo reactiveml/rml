@@ -263,7 +263,8 @@ let rec translate_ml cd e =
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_global_signal",
-                          [translate_clock_expr_ml cd ck]))
+                          [make_expr_var_local cd;
+                           translate_clock_expr cd ck]))
                       Location.none],
                    translate_ml cd e)
 
@@ -273,14 +274,15 @@ let rec translate_ml cd e =
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_global_signal_combine",
-                          [translate_clock_expr_ml cd ck;
+                          [make_expr_var_local cd;
+                           translate_clock_expr cd ck;
                            translate_ml cd e1;
                            translate_ml cd e2;]))
                       Location.none],
                    translate_ml cd e)
 
     | Coexpr_topck ->
-      Cexpr_apply (make_instruction "rml_top_clock_domain", [unit_value])
+        (make_instruction "rml_top_clock").cexpr_desc
   in
   make_expr cexpr e.coexpr_loc
 
@@ -305,7 +307,7 @@ and translate_proc e =
       (make_instruction "rml_pause").cexpr_desc
 
     | Coproc_pause (K_not_boi, CkTop) ->
-      (make_instruction "rml_pause_top").cexpr_desc
+        Cexpr_apply (make_instruction "rml_pause_at'", [make_instruction "rml_top_clock"])
 
     | Coproc_pause (K_not_boi, CkExpr e) ->
       if Lco_misc.is_value e then
@@ -420,7 +422,7 @@ and translate_proc e =
     | Coproc_signal (s, ck, None, k) ->
         Cexpr_apply
           (make_instruction "rml_signal",
-           [translate_clock_expr ck;
+           [translate_clock_expr null_ident ck;
             make_expr
               (Cexpr_function [pattern_of_signal s, translate_proc k])
               Location.none])
@@ -428,7 +430,7 @@ and translate_proc e =
     | Coproc_signal (s, ck, Some(e1,e2), k) ->
         Cexpr_apply
           (make_instruction "rml_signal_combine",
-           [translate_clock_expr ck;
+           [translate_clock_expr null_ident ck;
             embed_ml e1;
             embed_ml e2;
             make_expr
@@ -942,21 +944,10 @@ and translate_conf c =
   in
   make_expr cexpr c.coconf_loc
 
-and translate_clock_expr e =
+and translate_clock_expr cd e =
   match e with
-    | CkLocal -> make_constr "CkLocal" None
-    | CkTop -> make_constr "CkTop" None
-    | CkExpr e -> make_constr "CkExpr" (Some (translate_ml null_ident e))
-
-and translate_clock_expr_ml cd e =
-  match e with
-    | CkLocal -> make_expr_var_local cd
-    | CkTop ->
-      make_expr
-        (Cexpr_apply
-           (make_instruction "rml_top_clock_domain",
-            [unit_value]))
-        Location.none
+    | CkLocal -> make_instruction "rml_local_clock"
+    | CkTop -> make_instruction "rml_top_clock"
     | CkExpr e -> translate_ml cd e
 
 let translate_impl_item info_chan item =

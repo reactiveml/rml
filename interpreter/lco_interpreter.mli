@@ -57,9 +57,9 @@ module type S =
     val rml_expr_emit: R.clock_domain -> (unit, 'b) R.event -> unit
     val rml_expr_emit_val: R.clock_domain -> ('a, 'b) R.event -> 'a -> unit
 
-(*    val rml_global_signal: R.clock_domain -> R.clock -> ('a, 'a list) R.event
-    val rml_global_signal_combine: R.clock_domain -> R.clock -> 'b ->
-      ('a -> 'b -> 'b) -> ('a, 'b) R.event  *)
+    val rml_global_signal: R.clock_domain -> clock_expr -> ('a, 'a list) R.event
+    val rml_global_signal_combine: R.clock_domain -> clock_expr -> 'b ->
+      ('a -> 'b -> 'b) -> ('a, 'b) R.event
 
     type event_cfg_gen = unit -> R.event_cfg
     val cfg_present': R.clock_domain -> ('a,'b) R.event -> event_cfg_gen
@@ -70,9 +70,8 @@ module type S =
     val rml_nothing: unit expr
     val rml_compute: (R.clock_domain -> unit -> 'a) -> 'a expr
     val rml_pause: unit expr
-    val rml_pause_top: unit expr
-    val rml_pause_at : (unit -> R.clock) -> unit expr
-    val rml_pause_at' : R.clock -> unit expr
+    val rml_pause_at : (unit -> clock_expr) -> unit expr
+    val rml_pause_at' : clock_expr -> unit expr
     val rml_halt: 'a expr
     val rml_emit': (unit, 'b) R.event -> unit expr
     val rml_emit: (unit -> (unit, 'b) R.event) -> unit expr
@@ -150,12 +149,13 @@ module type S =
     val rml_seq_n : expr list -> expr
 *)
 
-    val rml_newclock : (R.clock -> unit expr) -> unit expr
+    val rml_newclock : (clock_expr -> unit expr) -> unit expr
 
-    val rml_pauseclock : (unit -> R.clock) -> unit expr
-    val rml_pauseclock' : R.clock -> unit expr
+    val rml_pauseclock : (unit -> clock_expr) -> unit expr
+    val rml_pauseclock' : clock_expr -> unit expr
 
-    (*val rml_top_clock : R.clock -> R.clock*)
+    val rml_top_clock : clock_expr
+    val rml_local_clock : clock_expr
   end
 
 

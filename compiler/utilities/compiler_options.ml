@@ -155,7 +155,7 @@ let set_print_info s =
   match s with
     "type" -> print_type := true
   | "all" -> print_type := true
-  | _ -> raise (Arg.Bad ("don't know what to do with " ^ s))
+  | _ -> raise (Arg.Bad ("Invalid print argument " ^ s))
 
 let set_verbose () =
   print_type := true
@@ -181,7 +181,7 @@ let set_runtime s =
       set_machine_kind "Distributed";
       set_translation Lco
 
-    | _ -> raise (Arg.Bad ("don't know what to do with " ^ s))
+    | _ -> raise (Arg.Bad ("Invalid runtime:" ^ s))
 
 (* sets the display of the parse code *)
 let set_dparse () = dparse := true

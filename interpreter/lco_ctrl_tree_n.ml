@@ -55,6 +55,11 @@ module Rml_interpreter =
     open R
     open Types
 
+    let eval_clock_expr current_cd ce = match ce with
+      | CkLocal -> R.clock current_cd
+      | CkTop -> R.top_clock current_cd
+      | CkExpr e -> e
+
 (* ------------------------------------------------------------------------ *)
     let rml_pre_status cd evt = R.Event.pre_status cd evt
 
@@ -66,9 +71,11 @@ module Rml_interpreter =
 
 (* ------------------------------------------------------------------------ *)
 
-   (* let rml_global_signal = R.Event.new_evt
+    let rml_global_signal cd ce =
+      R.Event.new_evt cd (eval_clock_expr cd ce)
 
-    let rml_global_signal_combine = R.Event.new_evt_combine  *)
+    let rml_global_signal_combine cd ce default combine =
+      R.Event.new_evt_combine cd (eval_clock_expr cd ce) default combine
 
 (* ------------------------------------------------------------------------ *)
 
@@ -100,16 +107,15 @@ module Rml_interpreter =
 (**************************************)
 (* pause                              *)
 (**************************************)
-    let rml_pause_at' pause_ck =
+
+    let rml_pause_at' pause_ce =
       fun f_k ctrl jp cd _ ->
+        let pause_ck = eval_clock_expr cd pause_ce in
         R.on_eoi cd pause_ck (fun () -> R.on_next_instant ctrl f_k)
 
     let rml_pause_at e =
       fun f_k ctrl jp cd _ ->
         rml_pause_at' (e ()) f_k ctrl jp cd unit_value
-
-    let rml_pause_top f_k ctrl jp cd =
-      rml_pause_at' (R.top_clock cd) f_k ctrl jp cd
 
     let rml_pause =
       fun f_k ctrl jp cd _ ->
@@ -382,10 +388,6 @@ let rml_loop p =
 (**************************************)
 (* signal                             *)
 (**************************************)
-    let eval_clock_expr current_cd ce = match ce with
-      | CkLocal -> R.clock current_cd
-      | CkTop -> R.top_clock current_cd
-      | CkExpr e -> e
 
     let rml_signal ce p =
       fun f_k ctrl jp cd _ ->
@@ -781,16 +783,19 @@ let rml_loop p =
 
     let rml_newclock p =
       fun f_k ctrl jp cd ->
-        R.new_clock_domain cd ctrl (fun cd ctrl f_k -> p (R.clock cd) f_k ctrl None cd) f_k
+        R.new_clock_domain cd ctrl (fun cd ctrl f_k -> p (CkExpr (R.clock cd)) f_k ctrl None cd) f_k
 
+    let rml_top_clock = CkTop
+    let rml_local_clock = CkLocal
 
 (**************************************)
 (* pauseclock                         *)
 (**************************************)
-    let rml_pauseclock' pause_ck =
+    let rml_pauseclock' pause_ce =
       fun f_k ctrl jp cd _ ->
+        let pause_ck = eval_clock_expr cd pause_ce in
         R.set_pauseclock cd pause_ck;
-        rml_pause_at' pause_ck f_k ctrl jp cd ()
+        rml_pause_at' pause_ce f_k ctrl jp cd ()
 
     let rml_pauseclock e =
       fun f_k ctrl jp cd _ ->
