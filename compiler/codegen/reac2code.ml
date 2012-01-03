@@ -42,7 +42,7 @@ let gen_main_fun out_chan =
             (string_of_float !sampling)^"\n")
     | true, false ->
       output_string out_chan
-        ("let _ = Mmachine.rml_exec_n "^
+        ("let _ = Machine.rml_exec_n "^
             main_id^" "^(string_of_int !number_of_instant)^"\n")
     | false, true ->
       output_string out_chan
