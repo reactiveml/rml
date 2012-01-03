@@ -378,7 +378,8 @@ struct
       List.iter set_kill p.children;
       p.children <- []
 
-    let start_ctrl ctrl new_ctrl =
+    let start_ctrl cd ctrl new_ctrl =
+      new_ctrl.last_activation <- Clock.save_clock_state cd.cd_site cd.cd_clock;
       if new_ctrl.alive then
         ctrl.children <- new_ctrl :: ctrl.children
       else (* reset new_ctrl *)
@@ -553,6 +554,7 @@ struct
         cd_remotes = C.SiteSet.empty;
       } in
       site.s_clock_domains <- C.GidMap.add clock.ck_gid cd site.s_clock_domains;
+      cd.cd_top.last_activation <- Clock.save_clock_state site cd.cd_clock;
       cd
 
     let is_eoi cd = cd.cd_eoi
@@ -743,7 +745,7 @@ struct
       let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl f_k) in
       fun _ ->
         D.add_current f new_cd.cd_current;
-        start_ctrl ctrl new_ctrl;
+        start_ctrl new_cd ctrl new_ctrl;
         exec_cd new_cd ()
 
     (* After receving Mnew_cd *)
@@ -767,7 +769,7 @@ struct
       Callbacks.add_callback ~kind:Callbacks.Once
         (Mdone new_ck.ck_gid) (receive_done_cd cd new_ctrl f_k) cd.cd_site.s_callbacks;
       add_callback cd.cd_site (Mstep_done new_ck.ck_gid) (receive_step_done cd ctrl new_ck.ck_gid);
-      start_ctrl ctrl new_ctrl
+      start_ctrl cd ctrl new_ctrl
 
     let new_remote_clock_domain site remote_site cd ctrl p f_k _ =
       let tmp_id = C.fresh () in

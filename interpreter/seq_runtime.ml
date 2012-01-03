@@ -106,6 +106,13 @@ struct
           events evt_cfg
       end
 
+    let rec save_clock_state cd =
+      let l = match cd.cd_parent with
+        | None -> []
+        | Some cd -> save_clock_state cd
+      in
+        (cd, E.get cd.cd_clock)::l
+
 (**************************************)
 (* control tree                       *)
 (**************************************)
@@ -128,7 +135,8 @@ struct
       List.iter set_kill p.children;
       p.children <- []
 
-    let start_ctrl ctrl new_ctrl =
+    let start_ctrl cd ctrl new_ctrl =
+      new_ctrl.last_activation <- save_clock_state cd;
       if new_ctrl.alive then
         ctrl.children <- new_ctrl :: ctrl.children
       else (* reset new_ctrl *)
@@ -141,13 +149,6 @@ struct
       new_ctrl.alive <- false;
       f_k x
 
-
-    let rec save_clock_state cd =
-      let l = match cd.cd_parent with
-        | None -> []
-        | Some cd -> save_clock_state cd
-      in
-        (cd, E.get cd.cd_clock)::l
 
 (* calculer le nouvel etat de l'arbre de control *)
 (* et deplacer dans la liste current les processus qui sont dans  *)
@@ -273,6 +274,7 @@ struct
         cd_parent = parent;
       } in
       cd.cd_top <- new_ctrl (Clock_domain cd);
+      cd.cd_top.last_activation <- save_clock_state cd;
       cd
 
     let mk_top_clock_domain () =
@@ -581,7 +583,7 @@ struct
       let f = p new_cd new_ctrl (end_clock_domain new_ctrl f_k) in
       fun _ ->
         on_current_instant new_cd f;
-        start_ctrl ctrl new_ctrl;
+        start_ctrl new_cd ctrl new_ctrl;
         step_clock_domain ctrl new_ctrl cd new_cd unit_value
 
     (* the react function *)

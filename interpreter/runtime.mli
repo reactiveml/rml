@@ -77,7 +77,7 @@ sig
 
   (* functions on the control tree *)
   val new_ctrl : ?cond: (unit -> bool) -> control_type -> control_tree
-  val start_ctrl : control_tree -> control_tree -> unit
+  val start_ctrl : clock_domain -> control_tree -> control_tree -> unit
   val end_ctrl : control_tree -> 'a step -> 'a -> unit
   val wake_up_ctrl : control_tree -> clock_domain -> unit
   val set_kill : control_tree -> unit

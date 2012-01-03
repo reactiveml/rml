@@ -604,7 +604,7 @@ let rml_loop p =
         fun _ ->
           let evt = expr_evt () in
           R.set_condition new_ctrl (fun () -> R.Event.status ~only_at_eoi:true cd evt);
-          start_ctrl ctrl new_ctrl;
+          start_ctrl cd ctrl new_ctrl;
           f unit_value
 
     let rml_until' evt p =
@@ -613,7 +613,7 @@ let rml_loop p =
         R.set_condition new_ctrl (fun () -> R.Event.status ~only_at_eoi:true cd evt);
         let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
         fun _ ->
-          start_ctrl ctrl new_ctrl;
+          start_ctrl cd ctrl new_ctrl;
           f unit_value
 
     let rml_until_conf expr_cfg p =
@@ -623,7 +623,7 @@ let rml_loop p =
         fun _ ->
           let evt_cfg = expr_cfg () in
           R.set_condition new_ctrl (fun () -> R.Event.cfg_status ~only_at_eoi:true cd evt_cfg);
-          start_ctrl ctrl new_ctrl;
+          start_ctrl cd ctrl new_ctrl;
           f unit_value
 
 (**************************************)
@@ -649,7 +649,7 @@ let rml_loop p =
                 (fun () -> R.Event.status ~only_at_eoi:true cd !evt
                   && matching (R.Event.value cd !evt))
           end;
-          start_ctrl ctrl new_ctrl;
+          start_ctrl cd ctrl new_ctrl;
           f unit_value
 
     let rml_until_handler_local' evt matching_opt p p_handler =
@@ -669,7 +669,7 @@ let rml_loop p =
                 && matching (R.Event.value cd evt))
         end;
         fun () ->
-          start_ctrl ctrl new_ctrl;
+          start_ctrl cd ctrl new_ctrl;
           f ()
 
     let rml_until_handler expr_evt p p_handler =
@@ -693,7 +693,7 @@ let rml_loop p =
       let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
       R.set_condition new_ctrl cond;
       fun () ->
-        start_ctrl ctrl new_ctrl;
+        start_ctrl cd ctrl new_ctrl;
         f ()
 
     let step_control cond p f_k ctrl jp cd =
@@ -701,7 +701,7 @@ let rml_loop p =
       let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
       fun () ->
         R.set_condition new_ctrl (cond ());
-        start_ctrl ctrl new_ctrl;
+        start_ctrl cd ctrl new_ctrl;
         f ()
 
     let rml_control' evt p =
@@ -748,6 +748,7 @@ let rml_loop p =
       let dummy = ref dummy_step in
       let new_ctrl = R.new_ctrl When in
       let rec when_act _ =
+        Format.eprintf "Waking up when@.";
         R.wake_up_ctrl new_ctrl cd;
         R.on_next_instant ctrl f_when
       and f_when _ =
@@ -756,7 +757,7 @@ let rml_loop p =
       let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
       dummy := f_when;
       fun () ->
-        R.start_ctrl ctrl new_ctrl;
+        R.start_ctrl cd ctrl new_ctrl;
         R.set_condition new_ctrl (fun () -> R.Event.status cd evt);
         R.set_suspended new_ctrl true;
         R.on_next_instant new_ctrl f;
