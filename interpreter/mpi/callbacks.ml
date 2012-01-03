@@ -10,6 +10,7 @@ module type S = sig
 
   val mk_queue : unit -> msg_queue
   val dispatch_all : msg_queue -> dispatcher -> unit
+  val dispatch_given_msg : msg_queue -> dispatcher -> tag -> unit
   val await_new_msg : msg_queue -> unit
 
   val add_callback : ?kind:callback_kind -> tag -> callback -> dispatcher -> unit
@@ -32,7 +33,7 @@ module Make (C : Communication.S) = struct
     mutable q_alive : bool;
     q_mutex : Mutex.t;
     q_queue_filled : Condition.t;
-    q_queue : (tag * msg) Queue.t;
+    mutable q_queue : (tag * msg) list;
   }
 
   type callback = C.msg -> unit
@@ -66,27 +67,49 @@ module Make (C : Communication.S) = struct
   let mk_queue () =
   { q_alive = true;
     q_mutex = Mutex.create ();
-    q_queue = Queue.create ();
+    q_queue = [];
     q_queue_filled = Condition.create () }
 
   let is_empty q =
     Mutex.lock q.q_mutex;
-    let b = Queue.is_empty q.q_queue in
+    let b = q.q_queue = [] in
     Mutex.unlock q.q_mutex;
     b
 
   let await_new_msg q =
     Mutex.lock q.q_mutex;
-    if Queue.is_empty q.q_queue then
+    if q.q_queue = [] then
       Condition.wait q.q_queue_filled q.q_mutex;
     Mutex.unlock q.q_mutex
 
   let dispatch_all q d =
     Mutex.lock q.q_mutex;
-    let l = List.rev (Queue.fold (fun acc x -> x::acc) [] q.q_queue) in
-    Queue.clear q.q_queue;
+    let l = List.rev q.q_queue in
+    q.q_queue <- [];
     Mutex.unlock q.q_mutex;
     List.iter (fun (tag, msg) -> call_callback d tag msg) l
+
+  let dispatch_given_msg q d tag =
+    let rec aux () =
+      if q.q_queue = [] then
+        Condition.wait q.q_queue_filled q.q_mutex;
+      Format.eprintf "Looking for requested tag '%a' @." C.print_tag tag;
+      let found, others = List.partition (fun (t,_) -> t = tag) q.q_queue in
+      match found with
+        | [] ->
+            Format.eprintf "Message not there yet@.";
+            (* wait for a new msg *)
+            Condition.wait q.q_queue_filled q.q_mutex;
+            aux ()
+        | l -> (* found the awaited message *)
+            q.q_queue <- others;
+            snd (List.split l)
+    in
+    Mutex.lock q.q_mutex;
+    let msgs = aux () in
+    Mutex.unlock q.q_mutex;
+    Format.eprintf "Received and dispatching the awaited message with tag '%a'@." C.print_tag tag;
+    List.iter (fun msg -> call_callback d tag msg) msgs
 
   let stop_receiving q =
     q.q_alive <- false
@@ -95,10 +118,10 @@ module Make (C : Communication.S) = struct
     while q.q_alive do
       let tag, msg = C.receive () in
       Mutex.lock q.q_mutex;
-      let was_empty = Queue.is_empty q.q_queue in
-      Queue.push (tag, msg) q.q_queue;
+     (* let was_empty = q.q_queue = [] in*)
+      q.q_queue <- (tag, msg) :: q.q_queue;
       Mutex.unlock q.q_mutex;
-      if was_empty then
-        Condition.signal q.q_queue_filled
+(*      if was_empty then *)
+      Condition.signal q.q_queue_filled
     done
 end
