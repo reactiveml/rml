@@ -46,8 +46,10 @@ module M = functor (I : MACHINE_INTERPRETER) ->
           match react () with
           | None -> exec (n-1)
           | v -> finalize (); v
-        ) else
+        ) else (
+          finalize ();
           None
+        )
       in exec n
 
     let rml_exec_sampling p min =
