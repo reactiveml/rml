@@ -32,7 +32,7 @@ module Make (C : Communication.S) = struct
     mutable q_alive : bool;
     q_mutex : Mutex.t;
     q_queue_filled : Condition.t;
-    mutable q_queue : (tag * msg) list;
+    q_queue : (tag * msg) Queue.t;
   }
 
   type callback = C.msg -> unit
@@ -58,32 +58,33 @@ module Make (C : Communication.S) = struct
       let f, kind = MyMap.find tag d.d_handlers in
         if kind = Once then
           d.d_handlers <- MyMap.remove tag d.d_handlers;
+        Format.eprintf "Calling callback for tag: %a@." C.print_tag tag;
         f s
     with
-      | Not_found -> Format.eprintf "%a: Received unexpected tag: %a@." C.print_here () C.print_tag tag
+      | Not_found -> Format.eprintf "%a: Recefghfghived unexpected tag: %a@." C.print_here () C.print_tag tag
 
   let mk_queue () =
   { q_alive = true;
     q_mutex = Mutex.create ();
-    q_queue = [];
+    q_queue = Queue.create ();
     q_queue_filled = Condition.create () }
 
   let is_empty q =
     Mutex.lock q.q_mutex;
-    let b = q.q_queue = [] in
+    let b = Queue.is_empty q.q_queue in
     Mutex.unlock q.q_mutex;
     b
 
   let await_new_msg q =
     Mutex.lock q.q_mutex;
-    if q.q_queue = [] then
+    if Queue.is_empty q.q_queue then
       Condition.wait q.q_queue_filled q.q_mutex;
     Mutex.unlock q.q_mutex
 
   let dispatch_all q d =
     Mutex.lock q.q_mutex;
-    let l = q.q_queue in
-    q.q_queue <- [];
+    let l = List.rev (Queue.fold (fun acc x -> x::acc) [] q.q_queue) in
+    Queue.clear q.q_queue;
     Mutex.unlock q.q_mutex;
     List.iter (fun (tag, msg) -> call_callback d tag msg) l
 
@@ -94,8 +95,8 @@ module Make (C : Communication.S) = struct
     while q.q_alive do
       let tag, msg = C.receive () in
       Mutex.lock q.q_mutex;
-      let was_empty = q.q_queue = [] in
-      q.q_queue <- (tag, msg) :: q.q_queue;
+      let was_empty = Queue.is_empty q.q_queue in
+      Queue.push (tag, msg) q.q_queue;
       Mutex.unlock q.q_mutex;
       if was_empty then
         Condition.signal q.q_queue_filled
