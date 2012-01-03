@@ -52,7 +52,10 @@ module Make (P : TAG_TYPE) = struct
   module GidMap = Map.Make (Gid)
   module GidSet = Set.Make (Gid)
 
-  type site = Mpi.rank
+  type site = {
+    s_rank : Mpi.rank;
+    mutable s_next_child : Mpi.rank;
+  }
 
   module Site = struct
     type t = site
@@ -69,16 +72,25 @@ module Make (P : TAG_TYPE) = struct
     Format.fprintf ff "%d.%d" gid.g_rank gid.g_id
 
   let print_site ff (site:site) =
-    Format.fprintf ff "%d" site
+    Format.fprintf ff "%d" site.s_rank
 
   let print_tag = P.print print_gid
 
   let is_master () =
     Mpi.comm_rank Mpi.comm_world = 0
 
-  let available_site () =
-    let me = Mpi.comm_rank Mpi.comm_world in
-      ((me + 1) mod (Mpi.comm_size Mpi.comm_world)  : Mpi.rank)
+  let local_site () =
+    let r = Mpi.comm_rank Mpi.comm_world in
+    { s_rank = r;
+      s_next_child = r + 1 }
+
+  let available_site s =
+    let res = { s_rank = s.s_next_child; s_next_child = s.s_next_child } in
+      if s.s_next_child + 1 >= Mpi.comm_size Mpi.comm_world then
+        s.s_next_child <- s.s_rank + 1
+      else
+        s.s_next_child <- s.s_next_child + 1;
+      res
 
   let counter = ref 0
   let fresh () =
@@ -96,13 +108,13 @@ module Make (P : TAG_TYPE) = struct
     Marshal.from_string s 0
 
   let send_owner gid tag d =
-    Format.eprintf "%a: Send '%a' to gid '%a' at site '%a'@."
-      print_here ()  print_tag tag  print_gid gid  print_site gid.g_rank;
+    Format.eprintf "%a: Send '%a' to gid '%a' at site '%d'@."
+      print_here ()  print_tag tag  print_gid gid  gid.g_rank;
     Mpi.send (tag, to_msg d) gid.g_rank 0 Mpi.comm_world
   let send site tag d =
     Format.eprintf "%a: Send '%a' to site '%a'@."
       print_here ()  print_tag tag  print_site site;
-    Mpi.send (tag, to_msg d) site 0 Mpi.comm_world
+    Mpi.send (tag, to_msg d) site.s_rank 0 Mpi.comm_world
 
   let receive () =
     let tag, (msg:msg) = Mpi.receive Mpi.any_source Mpi.any_tag Mpi.comm_world in

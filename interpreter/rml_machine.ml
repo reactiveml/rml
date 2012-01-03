@@ -25,27 +25,27 @@
 module type MACHINE_INTERPRETER = sig
   type 'a process
 
-  val rml_make : 'a process -> (unit -> 'a option)
-  val rml_make_test : 'a process list -> (unit -> 'a option)
+  val rml_make : 'a process -> (unit -> 'a option) * (unit -> unit)
+  val rml_make_test : 'a process list -> (unit -> 'a option) * (unit -> unit)
 end
 
 module M = functor (I : MACHINE_INTERPRETER) ->
   struct
     let rml_exec p =
-      let react = I.rml_make p in
+      let react, finalize = I.rml_make p in
       let rec exec () =
         match react () with
         | None -> exec()
-        | Some v -> v
+        | Some v -> finalize (); v
       in exec ()
 
     let rml_exec_n p n =
-      let react = I.rml_make p in
+      let react, finalize = I.rml_make p in
       let rec exec n =
         if n > 0 then (
           match react () with
           | None -> exec (n-1)
-          | v -> v
+          | v -> finalize (); v
         ) else
           None
       in exec n
@@ -55,7 +55,7 @@ module M = functor (I : MACHINE_INTERPRETER) ->
       let debut = ref 0.0 in
       let fin = ref 0.0 in
       let diff = ref 0.0 in
-      let react = I.rml_make p in
+      let react, finalize = I.rml_make p in
       let rec exec () =
         let _ = debut := Sys.time() in
         let v = react () in
@@ -71,7 +71,7 @@ module M = functor (I : MACHINE_INTERPRETER) ->
         in
         match v with
         | None -> exec ()
-        | Some v -> v
+        | Some v -> finalize (); v
       in exec ()
 
 
@@ -81,7 +81,7 @@ module M = functor (I : MACHINE_INTERPRETER) ->
       let fin = ref 0.0 in
       let diff = ref 0.0 in
       let instant = ref 0 in
-      let react = I.rml_make p in
+      let react, finalize = I.rml_make p in
       let rec exec n =
         if n > 0 then
           let _ =
@@ -111,7 +111,7 @@ module M = functor (I : MACHINE_INTERPRETER) ->
           in
           match v with
           | None -> exec (n-1)
-          | v -> v
+          | v -> finalize (); v
         else
           None
       in exec n
@@ -122,12 +122,12 @@ module M = functor (I : MACHINE_INTERPRETER) ->
         p act
       in
       let pl = List.map mk_test test_list in
-      let react = I.rml_make_test pl in
+      let react, finalize = I.rml_make_test pl in
       let rec exec () =
         Format.printf "@.@.*******************  New step ********************@.@.";
         match react () with
         | None -> exec()
-        | Some v -> Rmltest.end_program (); v
+        | Some v -> Rmltest.end_program (); finalize (); v
       in exec ()
 
   end
@@ -169,7 +169,8 @@ struct
         I.R.react cd;
         !result
       in
-      react
+      let finalize () = () in
+      react, finalize
 
     let rml_make_test pl =
       let result = ref None in
@@ -181,7 +182,8 @@ struct
         Rmltest.step ();
         !result
       in
-      react
+      let finalize () = () in
+      react, finalize
   end
 
   include M(MyInterpreter)
@@ -199,6 +201,7 @@ module type DISTRIBUTED_INTERPRETER =
       type 'a step
 
       val mk_top_clock_domain : unit -> clock_domain
+      val finalize_top_clock_domain : clock_domain -> unit
       val react : clock_domain -> unit
       val on_current_instant : clock_domain -> unit step -> unit
 
@@ -217,17 +220,22 @@ struct
 
     let rml_make p =
       if I.R.is_master () then (
+        Thread.delay 1.0;
         let result = ref None in
         let cd = I.R.mk_top_clock_domain () in
         let step = I.rml_make cd result p in
         I.R.on_current_instant cd step;
         let react () =
+          Format.eprintf "@.Doing one step@.";
           I.R.react cd;
           !result
         in
-        react
+        let finalize () =
+          I.R.finalize_top_clock_domain cd
+        in
+        react, finalize
       ) else
-        (fun _ -> I.R.start_slave (); None)
+        (fun _ -> Format.eprintf "Launching slave@."; I.R.start_slave (); None), (fun () -> ())
 
     let rml_make_test pl =
       if I.R.is_master () then (
@@ -240,9 +248,12 @@ struct
           Rmltest.step ();
           !result
         in
-        react
+        let finalize () =
+          I.R.finalize_top_clock_domain cd
+        in
+        react, finalize
       ) else
-        (fun _ -> I.R.start_slave (); None)
+        (fun _ -> I.R.start_slave (); None), (fun () -> ())
 
   end
 

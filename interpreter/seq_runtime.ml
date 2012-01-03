@@ -277,7 +277,8 @@ struct
 
     let mk_top_clock_domain () =
       mk_clock_domain None
-
+    let finalize_top_clock_domain _ =
+      ()
 
     let is_eoi cd = !(cd.cd_eoi)
     let set_pauseclock _ cd =

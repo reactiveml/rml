@@ -12,8 +12,10 @@ module type S = sig
   type 'gid tag
   type site
 
+  val print_here : Format.formatter -> unit -> unit
   val print_gid : Format.formatter -> gid -> unit
   val print_site : Format.formatter -> site -> unit
+  val print_tag : Format.formatter -> gid tag -> unit
 
   module GidMap : (Map.S with type key = gid)
   module GidSet : (Set.S with type elt = gid)
@@ -22,7 +24,8 @@ module type S = sig
   module SiteSet : (Set.S with type elt = site)
 
   val is_master : unit -> bool
-  val available_site : unit -> site
+  val local_site : unit -> site
+  val available_site : site -> site
 
   val fresh : unit -> gid
   val is_local : gid -> bool

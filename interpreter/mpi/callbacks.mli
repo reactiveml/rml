@@ -17,6 +17,7 @@ module type S = sig
 
   val mk_dispatcher : unit -> dispatcher
   val receive : msg_queue -> unit
+  val stop_receiving : msg_queue -> unit
 end
 
 module Make : functor (C: Communication.S) ->

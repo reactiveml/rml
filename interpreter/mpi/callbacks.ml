@@ -17,6 +17,7 @@ module type S = sig
 
   val mk_dispatcher : unit -> dispatcher
   val receive : msg_queue -> unit
+  val stop_receiving : msg_queue -> unit
 end
 
 module Make (C : Communication.S) = struct
@@ -28,6 +29,7 @@ module Make (C : Communication.S) = struct
   type tag = C.gid C.tag
   type msg = C.msg
   type msg_queue = {
+    mutable q_alive : bool;
     q_mutex : Mutex.t;
     q_queue_filled : Condition.t;
     mutable q_queue : (tag * msg) list;
@@ -58,10 +60,11 @@ module Make (C : Communication.S) = struct
           d.d_handlers <- MyMap.remove tag d.d_handlers;
         f s
     with
-      | Not_found -> Format.eprintf "Received unexpected key@."
+      | Not_found -> Format.eprintf "%a: Received unexpected tag: %a@." C.print_here () C.print_tag tag
 
   let mk_queue () =
-  { q_mutex = Mutex.create ();
+  { q_alive = true;
+    q_mutex = Mutex.create ();
     q_queue = [];
     q_queue_filled = Condition.create () }
 
@@ -73,7 +76,7 @@ module Make (C : Communication.S) = struct
 
   let await_new_msg q =
     Mutex.lock q.q_mutex;
-    if q.q_queue <> [] then
+    if q.q_queue = [] then
       Condition.wait q.q_queue_filled q.q_mutex;
     Mutex.unlock q.q_mutex
 
@@ -84,11 +87,17 @@ module Make (C : Communication.S) = struct
     Mutex.unlock q.q_mutex;
     List.iter (fun (tag, msg) -> call_callback d tag msg) l
 
+  let stop_receiving q =
+    q.q_alive <- false
+
   let receive q =
-    while true do
+    while q.q_alive do
       let tag, msg = C.receive () in
       Mutex.lock q.q_mutex;
+      let was_empty = q.q_queue = [] in
       q.q_queue <- (tag, msg) :: q.q_queue;
       Mutex.unlock q.q_mutex;
+      if was_empty then
+        Condition.signal q.q_queue_filled
     done
 end

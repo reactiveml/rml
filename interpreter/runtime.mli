@@ -147,5 +147,6 @@ sig
 
   (* Only for distributed runtimes *)
   val start_slave : unit -> unit
+  val finalize_top_clock_domain : clock_domain -> unit
   val is_master : unit -> bool
 end
