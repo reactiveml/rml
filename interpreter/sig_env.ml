@@ -52,6 +52,7 @@ module type S =
 
     val set_value : ('a, 'b) t -> 'b -> unit
     val copy : ('a, 'b) t -> ('a, 'b) t -> unit
+    val set_clock : ('a, 'b) t -> clock -> unit
 
     val init_clock : unit -> clock
     val next: clock -> unit
@@ -65,7 +66,7 @@ module Record  (*: S*)  =
     type clock = int ref
     type clock_index = int
     type ('a, 'b) t =
-        { clock : clock;
+        { mutable clock : clock;
           mutable status: int;
           mutable value: 'b;
           mutable pre_status: int;
@@ -101,6 +102,7 @@ module Record  (*: S*)  =
       else n.value
 
     let pre_value n =
+      Format.eprintf "Pre_value: n.status=%d   n.pre_status=%d  n.clock=%d @." n.status n.pre_status !(n.clock);
       if n.status = !(n.clock)
       then
         if n.pre_status = !(n.clock) - 1
@@ -137,6 +139,8 @@ module Record  (*: S*)  =
         n.value <- v
 
     let copy n new_n =
+      Format.eprintf "Copy:New_n n.status=%d   n.pre_status=%d  n.clock=%d @." new_n.status new_n.pre_status !(new_n.clock);
+      Format.eprintf "Copy:n: n.status=%d   n.pre_status=%d  n.clock=%d @." n.status n.pre_status !(n.clock);
       n.status <- new_n.status;
       n.value <- new_n.value;
       n.pre_status <- new_n.pre_status;
@@ -144,6 +148,9 @@ module Record  (*: S*)  =
 
     let init_clock () =
       ref 0
+
+    let set_clock n ck =
+      n.clock <- ck
 
     let next ck =
       incr ck
