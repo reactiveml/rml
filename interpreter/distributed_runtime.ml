@@ -22,8 +22,8 @@ struct
           | Mdone of 'gid (* global step done *)
           | Mpauseclock of 'gid
           | Meoi (* End of instant of clock domain *)
+          | Meoi_control of 'gid
           | Mnext_instant (* Go to next instant *)
-          | Mreq_has_next of 'gid
           | Mhas_next of 'gid
               (* Whether there is processes to execute in the next local step *)
               (* signals *)
@@ -43,8 +43,8 @@ struct
         | Mdone gid -> fprintf ff "Mdone %a" print_gid gid
         | Mpauseclock gid -> fprintf ff "Mpauseclock %a" print_gid gid
         | Meoi -> fprintf ff "Meoi"
+        | Meoi_control gid -> fprintf ff "Meoi_control %a" print_gid gid
         | Mnext_instant -> fprintf ff "Mnext_instant"
-        | Mreq_has_next gid -> fprintf ff "Mreq_has_next %a" print_gid gid
         | Mhas_next gid -> fprintf ff "Mhas_next %a" print_gid gid
             (* Whether there is processes to execute in the next local step *)
         (* signals *)
@@ -486,11 +486,15 @@ struct
         We can keep the last condition (if it was true for the eoi of the fast clock,
         it is also true for the eoi of the slow clock), but we have to make sure
         to fire the handler only once. *)
-    let eoi_control ctrl =
+    let eoi_control cd req_has_next ctrl =
       let rec _eoi_control pere ctrl =
         if ctrl.alive then (
           (match ctrl.kind with
-            | Clock_domain ck when not (C.is_local ck.ck_gid) -> ()
+            | Clock_domain ck when not (C.is_local ck.ck_gid) ->
+                (* waiting for a Mhas_next message from this clock domain if req_has_next is true *)
+                if req_has_next then
+                  incr cd.cd_remaining_async;
+                C.send_owner ck.ck_gid (Meoi_control ck.ck_gid) req_has_next;
             | _ ->
                 ctrl.cond_v <- ctrl.cond ();
                 (match ctrl.kind with
@@ -514,12 +518,8 @@ struct
           | Clock_domain ck ->
               if C.is_local ck.ck_gid then
                 has_next_children cd ctrl
-              else (
-                (* waiting for a Has_next message from this clock domain *)
-                incr cd.cd_remaining_async;
-                C.send_owner ck.ck_gid (Mreq_has_next ck.ck_gid) ();
+              else
                 false
-              )
           | Kill _ | Kill_handler _ ->
             ctrl.cond () || has_next_children cd ctrl
           | Susp ->
@@ -622,7 +622,10 @@ struct
       cd.cd_eoi <- true;
       Format.eprintf "Senfing eoito %d children@." (C.SiteSet.cardinal cd.cd_remotes);
       C.SiteSet.iter (fun r -> C.send r Meoi cd.cd_clock.ck_gid) cd.cd_remotes;
-      eoi_control cd.cd_top;
+      (* if this is not the top clock domain, request all remote child clock domains
+         to send back Mhas_next *)
+      let req_has_next = match cd.cd_clock.ck_parent with Some _ -> true | _ -> false in
+      eoi_control cd req_has_next cd.cd_top;
       wake_up_now cd.cd_site (Weoi cd.cd_clock.ck_gid);
       List.iter (wake_up_now cd.cd_site) cd.cd_wake_up;
       cd.cd_wake_up <- []
@@ -671,14 +674,19 @@ struct
               )
       )
 
+    (* After receiving Meoi_control *)
+    let receive_eoi_control cd msg =
+      let req_has_next:bool = C.from_msg msg in
+      (* req has_next from children because this is not the top clock domain *)
+      eoi_control cd true cd.cd_top;
+      if req_has_next then (
+        let has_next = has_next cd cd.cd_top in
+        match cd.cd_clock.ck_parent with
+          | None -> assert false
+          | Some ck -> C.send_owner ck.ck_gid (Mhas_next ck.ck_gid) has_next
+      )
 
-
-  let receive_req_has_next cd _ =
-      let has_next = has_next cd cd.cd_top in
-      match cd.cd_clock.ck_parent with
-        | None -> assert false
-        | Some ck -> C.send_owner ck.ck_gid (Mhas_next ck.ck_gid) has_next
-
+    (* After receiving Mhas_next *)
     let gather_has_next cd msg =
       let has_next:bool = C.from_msg msg in
       decr cd.cd_remaining_async;
@@ -691,6 +699,7 @@ struct
       else
         C.send_owner ck.ck_gid (Mpauseclock ck.ck_gid) ()
 
+    (* After receiving Mpauseclock *)
     let gather_pauseclock cd _ =
       cd.cd_pause_clock <- true
 
@@ -728,7 +737,7 @@ struct
     let init_clock_domain s clock parent_ctrl =
       let cd = mk_clock_domain s clock parent_ctrl in
         add_callback s (Mhas_next clock.ck_gid) (gather_has_next cd);
-        add_callback s (Mreq_has_next clock.ck_gid) (receive_req_has_next cd);
+        add_callback s (Meoi_control clock.ck_gid) (receive_eoi_control cd);
         add_callback s (Mpauseclock clock.ck_gid) (gather_pauseclock cd);
         cd
 
@@ -839,9 +848,7 @@ struct
    (* After receiving Meoi *)
     let receive_eoi site msg =
         let ck_id:C.gid = C.from_msg msg in
-          wake_up_now site (Weoi ck_id);
-          (* evaluate control tree conditions for all clock domains*)
-          C.GidMap.iter (fun _ cd -> eoi_control cd.cd_top) site.s_clock_domains
+          wake_up_now site (Weoi ck_id)
 
     (* After receving Mnext_instant *)
     let receive_next_instant site msg =
