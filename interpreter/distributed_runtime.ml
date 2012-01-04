@@ -895,7 +895,6 @@ struct
       Callbacks.stop_receiving s.s_msg_queue;
       (* send dummy messsage to stop the receiving thread *)
       Msgs.send_dummy s.s_comm_site ();
-      C.SiteSet.iter (fun s -> Msgs.send_finalize s ()) s.s_children;
       if not (C.is_master ()) then
         exit 0
 
@@ -936,6 +935,9 @@ struct
       done
 
     let finalize_top_clock_domain cd =
+      for i = 0 to C.number_of_sites () - 1 do
+        Msgs.send_finalize (C.nth_site i) ()
+      done;
       terminate_site cd.cd_site ()
 
     let mk_top_clock_domain () =
