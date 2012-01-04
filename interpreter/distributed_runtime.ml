@@ -404,12 +404,7 @@ struct
       let rec eval pere p active =
         if p.alive then
           match p.kind with
-            | Clock_domain ck ->
-                if not (C.is_local ck.ck_gid) then (
-                  C.send_owner ck.ck_gid Mnext_instant
-                    (cd.cd_clock, Clock.get_clock_index cd.cd_site cd.cd_clock)
-                );
-                true
+            | Clock_domain ck -> true
             | Kill f_k ->
               if p.cond_v
               then
@@ -635,6 +630,7 @@ struct
       E.next (get_clock cd.cd_site cd.cd_clock.ck_clock);
       (* next instant of child clock domains *)
       wake_up_now cd.cd_site (Wnext_instant cd.cd_clock.ck_gid);
+      C.SiteSet.iter (fun s -> C.send s Mnext_instant cd.cd_clock) cd.cd_remotes;
       (* next instant of this clock domain *)
       eval_control_and_next_to_current cd;
       (* reset the clock domain *)
@@ -848,15 +844,14 @@ struct
    (* After receiving Meoi *)
     let receive_eoi site msg =
         let ck_id:C.gid = C.from_msg msg in
-          wake_up_now site (Weoi ck_id)
+        wake_up_now site (Weoi ck_id)
 
     (* After receving Mnext_instant *)
     let receive_next_instant site msg =
       (* update the status of the clock *)
-      let (ck:clock), (ck_index:E.clock_index) = C.from_msg msg in
-        E.next (get_clock site ck.ck_clock);
-        (* do next instant for all clock domains *)
-        C.GidMap.iter (fun _ cd -> next_instant cd) site.s_clock_domains
+      let ck:clock = C.from_msg msg in
+      E.next (get_clock site ck.ck_clock);
+      wake_up_now site (Wnext_instant ck.ck_gid)
 
     let terminate_site s _ =
       Callbacks.stop_receiving s.s_msg_queue;
