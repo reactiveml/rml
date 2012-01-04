@@ -1,11 +1,17 @@
+
+type policy = Plocal | Pround_robin
+val load_balancing_policy : policy ref
+val set_load_balancing_policy : string -> unit
+
 module type S = sig
   type site
-  type state
 
-  val mk_top_balancer : unit -> state
-  (* [new_child s] returns the site for the new child and its state. *)
-  val new_child : state -> site * state
+  class virtual load_balancer :
+  object
+    method virtual new_child : unit -> site * load_balancer
+  end
+
+  val mk_top_balancer : unit -> load_balancer
 end
 
-module Local : functor (C : Communication.S) -> S with type site = C.site
-module RoundRobin : functor (C : Communication.S) -> S with type site = C.site
+module Make : functor (C : Communication.S) -> S with type site = C.site

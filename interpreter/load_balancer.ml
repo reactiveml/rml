@@ -1,43 +1,70 @@
 
 module type S = sig
   type site
-  type state
 
-  val mk_top_balancer : unit -> state
-  (* [new_child s] returns the site for the new child and its state. *)
-  val new_child : state -> site * state
+  class virtual load_balancer :
+  object
+    method virtual new_child : unit -> site * load_balancer
+  end
+
+  val mk_top_balancer : unit -> load_balancer
 end
 
-module Local (C : Communication.S) = struct
+type policy = Plocal | Pround_robin
+let load_balancing_policy = ref Pround_robin
+
+let set_load_balancing_policy s =
+  let p =
+    match s with
+      | "local" -> Plocal
+      | "robin" -> Pround_robin
+      | _ -> raise (Arg.Bad ("Invalid load balancing policy"))
+  in
+  load_balancing_policy := p
+
+module Make (C : Communication.S) = struct
   type site = C.site
-  type state = C.site
+
+  class virtual load_balancer  =
+  object
+    method virtual new_child : unit -> C.site * load_balancer
+  end
+
+  class local_balancer site =
+  object(self)
+    inherit load_balancer
+
+    val site = site
+    method new_child () =
+      site, ({< >} :> load_balancer)
+  end
+
+  class round_robin_balancer here sites =
+  object(self)
+    inherit load_balancer
+
+    val s_sites = sites
+    val s_here = here
+    val mutable s_next_site = Array.length sites
+    method new_child () =
+      let new_site =
+        if s_next_site = Array.length s_sites then (
+          s_next_site <- -1;
+          s_here
+        ) else
+          s_sites.(s_next_site)
+      in
+      s_next_site <- s_next_site + 1;
+      let new_balancer = {< s_here = new_site;
+                            s_sites = Array.copy s_sites;
+                            s_next_site = Array.length s_sites >} in
+      new_site, (new_balancer :> load_balancer)
+  end
 
   let mk_top_balancer () =
-    C.master_site ()
-
-  let new_child s = s, s
-end
-
-module RoundRobin (C : Communication.S) = struct
-  type site = C .site
-  type state = {
-    s_sites : site array;
-    mutable s_next_site : int;
-    s_here : site;
-  }
-
-  let mk_state here sites = {
-    s_sites = sites;
-    s_next_site = 0;
-    s_here = here;
-  }
-
-  let mk_top_balancer () =
-    let a = Array.init (C.number_of_sites ()) (fun i -> C.nth_site i) in
-    mk_state (C.master_site ()) a
-
-  let new_child s =
-    let new_state = mk_state (s.s_sites.(s.s_next_site)) (Array.copy s.s_sites) in
-    s.s_next_site <- (s.s_next_site + 1) mod (Array.length s.s_sites);
-    new_state.s_here, new_state
+    match !load_balancing_policy with
+      | Plocal -> new local_balancer (C.local_site ())
+      | Pround_robin ->
+          let a = Array.init (C.number_of_sites ()) (fun i -> C.nth_site i) in
+          new round_robin_balancer (C.master_site ()) a
 end

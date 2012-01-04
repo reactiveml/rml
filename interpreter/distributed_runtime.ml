@@ -2,7 +2,6 @@
 module Make
   (D: Runtime.SEQ_DATA_STRUCT)
   (CF : functor (T : Communication.TAG_TYPE) -> Communication.S with type 'gid tag = 'gid T.t)
-  (LF : functor (C : Communication.S) -> Load_balancer.S with type site = C.site)
   (E: Sig_env.S) =
 struct
     module D = D(struct
@@ -58,7 +57,7 @@ struct
     module C = CF(SiteMsgs)
 
     module Callbacks = Callbacks.Make (C)
-    module L = LF(C)
+    module L = Load_balancer.Make (C)
 
     module GidHandle = Dhandle_typed.Make (struct
       type t = C.gid
@@ -137,7 +136,7 @@ struct
           cd_parent_ctrl : control_tree option;
 
           cd_site : site;
-          cd_load_balancer : L.state;
+          cd_load_balancer : L.load_balancer;
           mutable cd_children_have_next : bool;
           mutable cd_remaining_async : int ref;
           mutable cd_emitted_signals : C.GidSet.t; (* signals emitted during current step *)
@@ -836,7 +835,7 @@ struct
       Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, p)
 
     let new_clock_domain cd ctrl p f_k =
-      let remote_site, new_balancer = L.new_child cd.cd_load_balancer in
+      let remote_site, new_balancer = cd.cd_load_balancer#new_child ()  in
       if remote_site <> C.local_site () then (
         Format.eprintf "Distributing new cd to site %a@." C.print_site remote_site;
         cd.cd_remotes <- C.SiteSet.add remote_site cd.cd_remotes;
@@ -1187,5 +1186,4 @@ module MpiRuntime =
   Make
     (Seq_runtime.ListDataStruct)
     (Mpi_communication.Make)
-    (Load_balancer.RoundRobin)
     (Sig_env.Record)

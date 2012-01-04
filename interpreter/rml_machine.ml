@@ -32,6 +32,7 @@ end
 module M = functor (I : MACHINE_INTERPRETER) ->
   struct
     let rml_exec p =
+      Runtime_options.parse_cli ();
       let react, finalize = I.rml_make p in
       let rec exec () =
         match react () with
@@ -40,6 +41,7 @@ module M = functor (I : MACHINE_INTERPRETER) ->
       in exec ()
 
     let rml_exec_n p n =
+      Runtime_options.parse_cli ();
       let react, finalize = I.rml_make p in
       let rec exec n =
         if n > 0 then (
@@ -50,7 +52,9 @@ module M = functor (I : MACHINE_INTERPRETER) ->
           finalize ();
           None
         )
-      in exec n
+      in
+      let n = if !Runtime_options.number_steps = -1 then n else !Runtime_options.number_steps in
+      exec n
 
     let rml_exec_sampling p min =
       let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
