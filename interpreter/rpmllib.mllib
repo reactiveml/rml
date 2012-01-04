@@ -4,6 +4,7 @@ Callbacks
 Dhandle
 Dhandle_typed
 Mpi_communication
+Load_balancer
 Distributed_runtime
 Seq_runtime
 Lco_ctrl_tree_n
