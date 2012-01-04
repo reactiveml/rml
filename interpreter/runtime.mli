@@ -39,8 +39,6 @@ module type CONTROL_TREE_R =
 sig
   type 'a step
 
-  exception RML
-
   type control_tree
   and control_type =
     | Clock_domain of clock

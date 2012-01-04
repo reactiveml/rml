@@ -40,7 +40,6 @@
 module Rml_interpreter =
   functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
   struct
-    exception RML = R.RML
     type join_point = int ref option
     and 'a expr = 'a R.step -> R.control_tree -> join_point -> R.clock_domain -> unit R.step
     and 'a process = unit -> 'a expr
@@ -776,7 +775,7 @@ let rml_loop p =
 
     let rml_when_conf expr_cfg =
       fun f_k ctrl ->
-        fun _ -> raise R.RML
+        fun _ -> raise Types.RML
 
 (**************************************)
 (* clock domain                       *)
@@ -851,3 +850,4 @@ module Lco_ctrl_tree_seq_interpreter =
 
 module Lco_ctrl_tree_mpi_interpreter =
   Rml_interpreter(Distributed_runtime.MpiRuntime)
+

@@ -64,8 +64,6 @@ struct
       let compare = compare
     end) (C)
 
-    exception RML
-
     type clock = {
       ck_gid : C.gid;
       ck_parent : clock option;
@@ -286,7 +284,7 @@ struct
           if E.status n then
             E.value n
           else
-            raise RML
+            raise Types.RML
 
         let one cd ev = lift_handle E.one cd ev
         let pre_status cd ev = lift_handle E.pre_status cd ev

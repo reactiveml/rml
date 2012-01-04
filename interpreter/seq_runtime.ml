@@ -5,8 +5,6 @@ struct
       type 'a t = 'a -> unit
     end)
 
-    exception RML
-
     type 'a step = 'a -> unit
 
     type control_tree =
@@ -68,7 +66,7 @@ struct
           if E.status n then
             E.value n
           else
-            raise RML
+            raise Types.RML
 
         let one _ (n,_,_,_) = E.one n
         let pre_status _ (n,_,_,_) = E.pre_status n

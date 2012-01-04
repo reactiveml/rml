@@ -42,8 +42,6 @@ module type S =
       and 'a expr
       and join_point
 
-      exception RML
-
       val rml_make: 'a option ref -> 'a process -> unit R.step
 
 (*      val rml_global_signal: unit -> ('a, 'a list) R.event

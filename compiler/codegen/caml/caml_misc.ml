@@ -103,7 +103,7 @@ let make_raise_RML () =
 	  Location.none,
 	[make_expr
 	   (Cexpr_construct
-	      ({ gi = { qual = "Interpreter";
+	      ({ gi = { qual = "Types";
 			id = Ident.create Ident.gen_constr
 			  "RML" Ident.Internal };
 		 info = no_info(); },

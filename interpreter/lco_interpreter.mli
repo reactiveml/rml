@@ -43,9 +43,6 @@ module type S =
     and 'a process
     and clock_expr = R.clock Types.clock
 
-
-    exception RML
-
     val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
     val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
 

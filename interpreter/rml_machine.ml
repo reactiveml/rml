@@ -36,9 +36,13 @@ module M = functor (I : MACHINE_INTERPRETER) ->
       let react, finalize = I.rml_make p in
       let rec exec () =
         match react () with
-        | None -> exec()
-        | Some v -> finalize (); v
-      in exec ()
+          | None -> exec()
+          | Some v -> finalize (); v
+      in
+      try
+        exec ()
+      with
+        | _ -> Format.eprintf "An error occurred. aborting all processes@."; finalize (); exit 2
 
     let rml_exec_n p n =
       Runtime_options.parse_cli ();
@@ -46,17 +50,21 @@ module M = functor (I : MACHINE_INTERPRETER) ->
       let rec exec n =
         if n > 0 then (
           match react () with
-          | None -> exec (n-1)
-          | v -> finalize (); v
+            | None -> exec (n-1)
+            | v -> finalize (); v
         ) else (
           finalize ();
           None
         )
       in
       let n = if !Runtime_options.number_steps = -1 then n else !Runtime_options.number_steps in
-      exec n
+      try
+        exec n
+      with
+        | _ -> Format.eprintf "An error occurred. aborting all processes@."; finalize (); exit 2
 
     let rml_exec_sampling p min =
+      Runtime_options.parse_cli ();
       let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
       let debut = ref 0.0 in
       let fin = ref 0.0 in
@@ -82,6 +90,7 @@ module M = functor (I : MACHINE_INTERPRETER) ->
 
 
     let rml_exec_n_sampling p n min =
+      Runtime_options.parse_cli ();
       let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
       let debut = ref 0.0 in
       let fin = ref 0.0 in
@@ -123,6 +132,7 @@ module M = functor (I : MACHINE_INTERPRETER) ->
       in exec n
 
     let rml_test test_list =
+      Runtime_options.parse_cli ();
       let mk_test (p, name, expected) =
         let act, n = Rmltest.mk_checker name expected in
         p act
