@@ -893,8 +893,11 @@ struct
       Callbacks.stop_receiving s.s_msg_queue;
       (* send dummy messsage to stop the receiving thread *)
       Msgs.send_dummy s.s_comm_site ();
-      if not (C.is_master ()) then
+      (match s.s_msg_thread with Some t -> Thread.join t | _ -> assert false);
+      if not (C.is_master ()) then (
+        Format.eprintf "Exiting slave@.";
         exit 0
+      )
 
     let init_site () =
       Format.eprintf "Init site@.";

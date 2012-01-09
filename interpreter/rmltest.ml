@@ -163,10 +163,8 @@ module DistributedTest (C : Communication.T) = struct
     List.iter (fun (_, send, _) -> send next_step) !checkers;
     Counter.await_zero counter;
     if List.for_all (fun (s, _, _) -> not s.s_active) !checkers then (
-      if print_status then (
+      if print_status then
         Format.printf "All tests OK@.";
-        end_test ()
-      );
       raise Test_success
     )
 end

@@ -26,10 +26,11 @@ module type MACHINE_INTERPRETER = sig
   type 'a process
 
   val rml_make : 'a process -> (unit -> 'a option) * (unit -> unit)
-  val rml_make_test : 'a process list -> (unit -> 'a option) * (unit -> unit)
+  val rml_make_test : (((int -> unit) -> 'a process) * string * int Rmltest.behaviour list) list ->
+    (unit -> 'a option) * (unit -> unit)
 end
 
-module M (I : MACHINE_INTERPRETER) (T : Rmltest.T) =
+module M (I : MACHINE_INTERPRETER) =
   struct
     let rml_exec p =
       Runtime_options.parse_cli ();
@@ -133,22 +134,17 @@ module M (I : MACHINE_INTERPRETER) (T : Rmltest.T) =
 
     let rml_test test_list =
       Runtime_options.parse_cli ();
-      let mk_test (p, name, expected) =
-        let act = T.new_test name expected in
-        p act
-      in
-      let pl = List.map mk_test test_list in
-      let react, finalize = I.rml_make_test pl in
+      let react, finalize = I.rml_make_test test_list in
       let rec exec () =
         Format.printf "@.@.*******************  New step ********************@.@.";
         match react () with
         | None -> exec()
-        | Some v -> T.end_test (); finalize (); v
+        | Some v -> finalize (); v
       in
       try
         exec ()
       with
-        | Rmltest.Test_success ->  finalize (); exit 0
+        | Rmltest.Test_success -> finalize (); exit 0
         | _ -> finalize (); exit 2
   end
 
@@ -193,9 +189,14 @@ struct
       let finalize () = () in
       react, finalize
 
-    let rml_make_test pl =
+    let rml_make_test test_list =
       let result = ref None in
       let cd = I.R.mk_top_clock_domain () in
+      let mk_test (p, name, expected) =
+        let act = T.new_test name expected in
+        p act
+      in
+      let pl = List.map mk_test test_list in
       let steps = I.rml_make_n cd result pl in
       List.iter (fun step -> I.R.on_current_instant cd step) steps;
       let react () =
@@ -203,11 +204,11 @@ struct
         T.next_step ();
         !result
       in
-      let finalize () = () in
+      let finalize () = T.end_test () in
       react, finalize
   end
 
-  include M(MyInterpreter)(T)
+  include M(MyInterpreter)
 end
 
 
@@ -234,9 +235,9 @@ module type DISTRIBUTED_INTERPRETER =
     val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
   end
 
-module Distributed (I : DISTRIBUTED_INTERPRETER) (C : Communication.T) =
+module Distributed (I : DISTRIBUTED_INTERPRETER) =
 struct
-  module T = Rmltest.DistributedTest(C)
+  module T = Rmltest.DistributedTest(Mpi_communication.Test)
 
   module MyInterpreter = struct
     type 'a process = 'a I.process
@@ -260,10 +261,15 @@ struct
       ) else
         (fun _ -> Format.eprintf "Launching slave@."; I.R.start_slave (); None), (fun () -> ())
 
-    let rml_make_test pl =
+    let rml_make_test test_list =
       if I.R.is_master () then (
         let result = ref None in
         let cd = I.R.mk_top_clock_domain () in
+        let mk_test (p, name, expected) =
+          let act = T.new_test name expected in
+          p act
+        in
+        let pl = List.map mk_test test_list in
         let steps = I.rml_make_n cd result pl in
         List.iter (fun step -> I.R.on_current_instant cd step) steps;
         let react () =
@@ -272,6 +278,7 @@ struct
           !result
         in
         let finalize () =
+          T.end_test ();
           I.R.finalize_top_clock_domain cd
         in
         react, finalize
@@ -280,6 +287,6 @@ struct
 
   end
 
-  include M(MyInterpreter)(T)
+  include M(MyInterpreter)
 end
 
