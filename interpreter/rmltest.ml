@@ -35,7 +35,6 @@ let status_int st s n =
  if print_status then
     (print_string (st.s_name^":"^s); print_int n; print_newline ())
 
-let checkers = ref ([]: 'a stack list)
 
 let mk_stack s b n =
   { s_name = s; s_active = true; s_stack = []; s_next_b = b; s_ttl = n + 1 }
@@ -97,20 +96,77 @@ let act s r =
           (status_int s "*********** ERROR: Unexpected result" r; exit unexpected_error_code)
   )
 
-let mk_checker name b =
-  let n =  List.length b in
-  let s = mk_stack name b n in
-  checkers := s :: !checkers;
-  ignore (step_stack s);
-  act s, n
+exception Test_success
 
-let step () =
-  checkers := List.filter step_stack !checkers;
-  if !checkers = [] then (
-    if print_status then
-      Format.printf "All tests OK@.";
-    exit 0
-  )
+module type T = sig
+  val new_test : string -> int behaviour list -> (int -> unit)
+  val next_step : unit -> unit
+  val end_test : unit -> unit
+end
 
-let end_program () =
-  List.iter check_empty !checkers
+module SeqTest = struct
+  let checkers = ref ([]: 'a stack list)
+
+  let new_test name b =
+    let n =  List.length b in
+    let s = mk_stack name b n in
+    checkers := s :: !checkers;
+    ignore (step_stack s);
+    act s
+
+  let next_step () =
+    checkers := List.filter step_stack !checkers;
+    if !checkers = [] then (
+      if print_status then
+        Format.printf "All tests OK@.";
+      exit 0
+    )
+
+  let end_test () =
+    List.iter check_empty !checkers
+end
+
+module DistributedTest (C : Communication.T) = struct
+  let next_step = -1
+  let end_test = -2
+
+  let checkers = ref []
+  let counter = Counter.mk_counter ()
+
+  let receive_act recv s =
+    let is_done = ref false in
+    while not !is_done do
+      let r = recv () in
+      if r = next_step then (
+        ignore (step_stack s); Counter.decr counter
+      ) else if r = end_test then (
+        check_empty s; is_done := true
+      ) else
+          act s r
+    done
+
+  let new_test name b =
+    let n = List.length b in
+    let s = mk_stack name b n in
+    let send, recv = C.fresh_channel () in
+    let t = Thread.create (receive_act recv) s in
+    ignore (step_stack s);
+    checkers := (s, send, t) :: !checkers;
+    send
+
+  let end_test () =
+    List.iter (fun (s, send, _) -> send end_test) !checkers;
+    List.iter (fun (_, _, t) -> Thread.join t) !checkers
+
+  let next_step () =
+    Counter.set counter (List.length !checkers);
+    List.iter (fun (_, send, _) -> send next_step) !checkers;
+    Counter.await_zero counter;
+    if List.for_all (fun (s, _, _) -> not s.s_active) !checkers then (
+      if print_status then (
+        Format.printf "All tests OK@.";
+        end_test ()
+      );
+      raise Test_success
+    )
+end

@@ -1,5 +1,6 @@
 Types
 Sig_env
+Counter
 Weak_map
 Callbacks
 Dhandle

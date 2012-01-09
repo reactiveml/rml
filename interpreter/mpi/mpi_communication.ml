@@ -36,6 +36,8 @@ module type S = sig
 end
 
 
+let msg_tag = 0
+
 module Make (P : TAG_TYPE) = struct
   type msg = string
   type msg_handler = msg -> unit
@@ -104,15 +106,30 @@ module Make (P : TAG_TYPE) = struct
   let send_owner gid tag d =
     Format.eprintf "%a: Send '%a' to gid '%a' at site '%d'@."
       print_here ()  print_tag tag  print_gid gid  gid.g_rank;
-    Mpi.send (tag, to_msg d) gid.g_rank 0 Mpi.comm_world
+    Mpi.send (tag, to_msg d) gid.g_rank msg_tag Mpi.comm_world
   let send site tag d =
     Format.eprintf "%a: Send '%a' to site '%a'@."
       print_here ()  print_tag tag  print_site site;
-    Mpi.send (tag, to_msg d) site 0 Mpi.comm_world
+    Mpi.send (tag, to_msg d) site msg_tag Mpi.comm_world
 
   let receive () =
-    let tag, (msg:msg) = Mpi.receive Mpi.any_source Mpi.any_tag Mpi.comm_world in
+    let tag, (msg:msg) = Mpi.receive Mpi.any_source msg_tag Mpi.comm_world in
       Format.eprintf "%a: Received '%a'@."
         print_here ()  print_tag tag;
       tag, msg
 end
+
+module Test = struct
+  let tag_counter = ref msg_tag
+
+  let fresh_channel () =
+    incr tag_counter;
+    let tag = !tag_counter in
+    let send d =
+      Mpi.send_int d 0 tag Mpi.comm_world in
+    let receive () =
+      Mpi.receive_int Mpi.any_source tag Mpi.comm_world
+    in
+    send, receive
+end
+

@@ -29,7 +29,7 @@ module type MACHINE_INTERPRETER = sig
   val rml_make_test : 'a process list -> (unit -> 'a option) * (unit -> unit)
 end
 
-module M = functor (I : MACHINE_INTERPRETER) ->
+module M (I : MACHINE_INTERPRETER) (T : Rmltest.T) =
   struct
     let rml_exec p =
       Runtime_options.parse_cli ();
@@ -134,7 +134,7 @@ module M = functor (I : MACHINE_INTERPRETER) ->
     let rml_test test_list =
       Runtime_options.parse_cli ();
       let mk_test (p, name, expected) =
-        let act, n = Rmltest.mk_checker name expected in
+        let act = T.new_test name expected in
         p act
       in
       let pl = List.map mk_test test_list in
@@ -143,9 +143,13 @@ module M = functor (I : MACHINE_INTERPRETER) ->
         Format.printf "@.@.*******************  New step ********************@.@.";
         match react () with
         | None -> exec()
-        | Some v -> Rmltest.end_program (); finalize (); v
-      in exec ()
-
+        | Some v -> T.end_test (); finalize (); v
+      in
+      try
+        exec ()
+      with
+        | Rmltest.Test_success ->  finalize (); exit 0
+        | _ -> finalize (); exit 2
   end
 
 
@@ -172,6 +176,7 @@ module type SEQ_INTERPRETER =
 
 module Seq = functor (I : SEQ_INTERPRETER) ->
 struct
+  module T = Rmltest.DistributedTest(Mpi_communication.Test)
 
   module MyInterpreter = struct
     type 'a process = 'a I.process
@@ -195,14 +200,14 @@ struct
       List.iter (fun step -> I.R.on_current_instant cd step) steps;
       let react () =
         I.R.react cd;
-        Rmltest.step ();
+        T.next_step ();
         !result
       in
       let finalize () = () in
       react, finalize
   end
 
-  include M(MyInterpreter)
+  include M(MyInterpreter)(T)
 end
 
 
@@ -229,8 +234,10 @@ module type DISTRIBUTED_INTERPRETER =
     val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
   end
 
-module Distributed = functor (I : DISTRIBUTED_INTERPRETER) ->
+module Distributed (I : DISTRIBUTED_INTERPRETER) (C : Communication.T) =
 struct
+  module T = Rmltest.DistributedTest(C)
+
   module MyInterpreter = struct
     type 'a process = 'a I.process
 
@@ -261,7 +268,7 @@ struct
         List.iter (fun step -> I.R.on_current_instant cd step) steps;
         let react () =
           I.R.react cd;
-          Rmltest.step ();
+          T.next_step ();
           !result
         in
         let finalize () =
@@ -273,6 +280,6 @@ struct
 
   end
 
-  include M(MyInterpreter)
+  include M(MyInterpreter)(T)
 end
 

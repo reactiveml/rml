@@ -1,5 +1,3 @@
 <mpi>: include
-<*.ml>:debug,annot
+<*.ml>:debug,annot,thread
 <rpmllib.cma>:package(mpi),thread
-<distributed_runtime.ml>:thread
-<rml_machine.ml>:thread

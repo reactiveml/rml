@@ -42,5 +42,6 @@ module type S = sig
   val receive : unit -> gid tag * msg
 end
 
-module Make : functor (P : TAG_TYPE) -> S with type 'gid tag = 'gid P.t
-
+module type T = sig
+  val fresh_channel : unit -> (int -> unit) * (unit -> int)
+end
