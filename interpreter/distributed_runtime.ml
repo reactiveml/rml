@@ -699,12 +699,12 @@ struct
           | Some ck ->
               if macro_step_done cd then (
                 Format.eprintf "Macro step done@.";
+                add_waiting cd.cd_site
+                  (Wnext_instant ck.ck_gid) (fun () -> next_instant cd);
                 (* if the parent clock is not here, send Done message*)
                 if not (C.is_local ck.ck_gid) then
                   Msgs.send_step_done ck.ck_gid cd.cd_clock.ck_gid ()
                 else (
-                  add_waiting cd.cd_site
-                    (Wnext_instant ck.ck_gid) (fun () -> next_instant cd);
                   (match cd.cd_parent_ctrl with
                     | None -> assert false
                     | Some ctrl -> D.add_next (exec_cd cd) ctrl.next_control)
