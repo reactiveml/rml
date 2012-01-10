@@ -7,9 +7,13 @@ type 'a behaviour =
 
 type 'a stack = { s_name : string;
                   mutable s_active : bool;
+                  mutable s_failed : bool;
                   mutable s_stack : ('a * 'a behaviour) list ;
                   mutable s_next_b : 'a behaviour list;
                   mutable s_ttl : int }
+
+exception Test_success
+exception Test_failed of string
 
 let error_on_unexpected = true
 let unexpected_error_code = 3
@@ -37,13 +41,13 @@ let status_int st s n =
 
 
 let mk_stack s b n =
-  { s_name = s; s_active = true; s_stack = []; s_next_b = b; s_ttl = n + 1 }
+  { s_name = s; s_active = true; s_failed = false; s_stack = []; s_next_b = b; s_ttl = n + 1 }
 
 let check_empty s = match s.s_stack with
 | [] -> debug s "List empty; Step OK"
 | (x, _)::_ ->
     if error_on_unfired then
-      (status_int s "*********** ERROR: result not fired: " x; exit unexpected_error_code)
+      (status_int s "*********** ERROR: result not fired: " x; s.s_failed <- true)
 
 let add_to_stack s b =
   let rec _add_to_stack b k = match b with
@@ -93,10 +97,9 @@ let act s r =
     with
       | Not_found ->
         if error_on_unexpected then
-          (status_int s "*********** ERROR: Unexpected result" r; exit unexpected_error_code)
+          (status_int s "*********** ERROR: Unexpected result" r; s.s_failed <- true)
   )
 
-exception Test_success
 
 module type T = sig
   val new_test : string -> int behaviour list -> (int -> unit)
@@ -118,7 +121,7 @@ module SeqTest = struct
     checkers := List.filter step_stack !checkers;
     if !checkers = [] then (
       if print_status then
-        Format.printf "All tests OK@.";
+        Format.eprintf "All tests OK@.";
       exit 0
     )
 
@@ -160,11 +163,18 @@ module DistributedTest (C : Communication.T) = struct
 
   let next_step () =
     Counter.set counter (List.length !checkers);
+    Format.eprintf "Sending next step@.";
     List.iter (fun (_, send, _) -> send next_step) !checkers;
     Counter.await_zero counter;
+    Format.eprintf "Checcking if tests failed@.";
+    if List.exists (fun (s, _, _) -> s.s_failed) !checkers then (
+      if print_status then
+        Format.eprintf "Test failed@.";
+      raise (Test_failed "")
+    );
     if List.for_all (fun (s, _, _) -> not s.s_active) !checkers then (
       if print_status then
-        Format.printf "All tests OK@.";
+        Format.eprintf "All tests OK@.";
       raise Test_success
     )
 end

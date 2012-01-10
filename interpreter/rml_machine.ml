@@ -145,6 +145,7 @@ module M (I : MACHINE_INTERPRETER) =
         exec ()
       with
         | Rmltest.Test_success -> finalize (); exit 0
+        | Rmltest.Test_failed _ -> finalize (); exit 2
         | _ -> finalize (); exit 2
   end
 
