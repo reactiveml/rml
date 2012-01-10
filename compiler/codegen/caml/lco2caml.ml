@@ -33,9 +33,6 @@ open Global_ident
 open Asttypes
 open Misc
 
-let make_var s = Ident.create Ident.gen_var s Ident.Internal
-let null_ident = make_var "FAKE_VAR"
-
 let unit_value = make_expr (Cexpr_constant Const_unit) Location.none
 
 (* Translation of type expressions *)
@@ -136,7 +133,7 @@ let rec translate_pattern p =
   make_patt cpatt p.copatt_loc
 
 (* Translation of ML expressions *)
-let rec translate_ml cd e =
+let rec translate_ml e =
   let cexpr =
     match e.coexpr_desc with
     | Coexpr_local id -> Cexpr_local id
@@ -148,74 +145,74 @@ let rec translate_ml cd e =
     | Coexpr_let (flag, patt_expr_list, expr) ->
         Cexpr_let (flag,
                    List.map
-                     (fun (p,e) -> (translate_pattern p, translate_ml cd e))
+                     (fun (p,e) -> (translate_pattern p, translate_ml e))
                      patt_expr_list,
-                   translate_ml cd expr)
+                   translate_ml expr)
 
     | Coexpr_function  patt_expr_list ->
         Cexpr_function (List.map
-                          (fun (p,e) -> (translate_pattern p, translate_ml cd e))
+                          (fun (p,e) -> (translate_pattern p, translate_ml e))
                           patt_expr_list)
 
     | Coexpr_apply (expr, expr_list) ->
-        Cexpr_apply (translate_ml cd expr,
-                     List.map (translate_ml cd) expr_list)
+        Cexpr_apply (translate_ml expr,
+                     List.map translate_ml expr_list)
 
     | Coexpr_tuple expr_list ->
-        Cexpr_tuple (List.map (translate_ml cd) expr_list)
+        Cexpr_tuple (List.map translate_ml expr_list)
 
     | Coexpr_construct (c, expr_opt) ->
-        Cexpr_construct (c, opt_map (translate_ml cd) expr_opt)
+        Cexpr_construct (c, opt_map translate_ml expr_opt)
 
     | Coexpr_array l ->
-        Cexpr_array (List.map (translate_ml cd) l)
+        Cexpr_array (List.map translate_ml l)
 
     | Coexpr_record l ->
-        Cexpr_record (List.map (fun (lab,e) -> lab, translate_ml cd e) l)
+        Cexpr_record (List.map (fun (lab,e) -> lab, translate_ml e) l)
 
     | Coexpr_record_access (expr, label) ->
-        Cexpr_record_access (translate_ml cd expr, label)
+        Cexpr_record_access (translate_ml expr, label)
 
     | Coexpr_record_update (e1, label, e2) ->
-        Cexpr_record_update (translate_ml cd e1, label, translate_ml cd e2)
+        Cexpr_record_update (translate_ml e1, label, translate_ml e2)
 
     | Coexpr_constraint (expr, typ) ->
-        Cexpr_constraint (translate_ml cd expr, translate_te typ)
+        Cexpr_constraint (translate_ml expr, translate_te typ)
 
     | Coexpr_trywith (expr, l) ->
-        Cexpr_trywith (translate_ml cd expr,
+        Cexpr_trywith (translate_ml expr,
                        List.map
-                         (fun (p,e) -> translate_pattern p, translate_ml cd e)
+                         (fun (p,e) -> translate_pattern p, translate_ml e)
                          l)
 
-    | Coexpr_assert expr -> Cexpr_assert (translate_ml cd expr)
+    | Coexpr_assert expr -> Cexpr_assert (translate_ml expr)
 
     | Coexpr_ifthenelse (e1, e2, e3) ->
-        Cexpr_ifthenelse (translate_ml cd e1,
-                          translate_ml cd e2,
-                          translate_ml cd e3)
+        Cexpr_ifthenelse (translate_ml e1,
+                          translate_ml e2,
+                          translate_ml e3)
 
     | Coexpr_match (expr, l) ->
-        Cexpr_match (translate_ml cd expr,
+        Cexpr_match (translate_ml expr,
                      List.map
-                       (fun (p,e) -> translate_pattern p, translate_ml cd e)
+                       (fun (p,e) -> translate_pattern p, translate_ml e)
                        l)
 
     | Coexpr_when_match (e1, e2) ->
-        Cexpr_when_match (translate_ml cd e1, translate_ml cd e2)
+        Cexpr_when_match (translate_ml e1, translate_ml e2)
 
     | Coexpr_while(e1, e2) ->
-        Cexpr_while (translate_ml cd e1, translate_ml cd e2)
+        Cexpr_while (translate_ml e1, translate_ml e2)
 
     | Coexpr_for (id, e1, e2, flag, e3) ->
         Cexpr_for (id,
-                   translate_ml cd e1,
-                   translate_ml cd e2,
+                   translate_ml e1,
+                   translate_ml e2,
                    flag,
-                   translate_ml cd e3)
+                   translate_ml e3)
 
     | Coexpr_seq (e1, e2) ->
-        Cexpr_seq (translate_ml cd e1, translate_ml cd e2)
+        Cexpr_seq (translate_ml e1, translate_ml e2)
 
     | Coexpr_process (p) ->
         Cexpr_constraint
@@ -232,30 +229,26 @@ let rec translate_ml cd e =
           | Value -> "value"
         in
         Cexpr_apply
-          (make_instruction ("rml_pre_"^kind),
-           [make_expr_var_local cd; translate_ml cd s])
+          (make_instruction ("rml_pre_"^kind), [translate_ml s])
 
     | Coexpr_last (s) ->
         Cexpr_apply
           (make_instruction "rml_last",
-           [make_expr_var_local cd; translate_ml cd s;])
+           [translate_ml s])
 
     | Coexpr_default (s) ->
         Cexpr_apply
-          (make_instruction "rml_default",
-           [make_expr_var_local cd; translate_ml cd s;])
+          (make_instruction "rml_default", [translate_ml s])
 
     | Coexpr_emit (s) ->
         Cexpr_apply
-          (make_instruction "rml_expr_emit",
-           [make_expr_var_local cd; translate_ml cd s])
+          (make_instruction "rml_expr_emit", [translate_ml s])
 
     | Coexpr_emit_val (s, e) ->
         Cexpr_apply
           (make_instruction "rml_expr_emit_val",
-           [make_expr_var_local cd;
-            translate_ml cd s;
-            translate_ml cd e])
+           [translate_ml s;
+            translate_ml e])
 
     | Coexpr_signal (s, ck, None, e) ->
         Cexpr_let (Nonrecursive,
@@ -263,10 +256,9 @@ let rec translate_ml cd e =
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_global_signal",
-                          [make_expr_var_local cd;
-                           translate_clock_expr cd ck]))
+                          [translate_clock_expr ck]))
                       Location.none],
-                   translate_ml cd e)
+                   translate_ml e)
 
     | Coexpr_signal (s, ck, Some(e1,e2), e) ->
         Cexpr_let (Nonrecursive,
@@ -274,12 +266,11 @@ let rec translate_ml cd e =
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_global_signal_combine",
-                          [make_expr_var_local cd;
-                           translate_clock_expr cd ck;
-                           translate_ml cd e1;
-                           translate_ml cd e2;]))
+                          [translate_clock_expr ck;
+                           translate_ml e1;
+                           translate_ml e2;]))
                       Location.none],
-                   translate_ml cd e)
+                   translate_ml e)
 
     | Coexpr_topck ->
         (make_instruction "rml_top_clock").cexpr_desc
@@ -287,15 +278,8 @@ let rec translate_ml cd e =
   make_expr cexpr e.coexpr_loc
 
 (* Embedding of ML expressions in a process *)
-and embed_ml ?(with_cd=false) e =
-  let cd = make_var "cd" in
-  let arg_list =
-    if with_cd then
-      [make_patt_var_local cd; make_patt_unit ()]
-    else
-      [make_patt_unit ()]
-  in
-  make_expr (Cexpr_fun (arg_list, translate_ml cd e)) e.coexpr_loc
+and embed_ml e =
+  make_expr (Cexpr_fun ([make_patt_unit ()], translate_ml e)) e.coexpr_loc
 
 (* Translation of process *)
 and translate_proc e =
@@ -311,7 +295,7 @@ and translate_proc e =
 
     | Coproc_pause (K_not_boi, CkExpr e) ->
       if Lco_misc.is_value e then
-        Cexpr_apply (make_instruction "rml_pause_at'", [translate_ml null_ident e])
+        Cexpr_apply (make_instruction "rml_pause_at'", [translate_ml e])
       else
         Cexpr_apply (make_instruction "rml_pause_at", [embed_ml e])
 
@@ -326,14 +310,13 @@ and translate_proc e =
 
     | Coproc_compute (expr) ->
         Cexpr_apply
-          (make_instruction "rml_compute",
-           [embed_ml ~with_cd:true expr])
+          (make_instruction "rml_compute", [embed_ml expr])
 
     | Coproc_emit (s) ->
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_emit'",
-             [translate_ml null_ident s;])
+             [translate_ml s;])
         else
           Cexpr_apply
             (make_instruction "rml_emit",
@@ -343,7 +326,7 @@ and translate_proc e =
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_emit_val'",
-             [translate_ml null_ident s;
+             [translate_ml s;
               embed_ml e;])
         else
           Cexpr_apply
@@ -422,7 +405,7 @@ and translate_proc e =
     | Coproc_signal (s, ck, None, k) ->
         Cexpr_apply
           (make_instruction "rml_signal",
-           [translate_clock_expr null_ident ck;
+           [translate_clock_expr ck;
             make_expr
               (Cexpr_function [pattern_of_signal s, translate_proc k])
               Location.none])
@@ -430,7 +413,7 @@ and translate_proc e =
     | Coproc_signal (s, ck, Some(e1,e2), k) ->
         Cexpr_apply
           (make_instruction "rml_signal_combine",
-           [translate_clock_expr null_ident ck;
+           [translate_clock_expr ck;
             embed_ml e1;
             embed_ml e2;
             make_expr
@@ -441,7 +424,7 @@ and translate_proc e =
         if Lco_misc.is_value expr then
           Cexpr_let
             (Nonrecursive,
-             [translate_pattern patt, translate_ml null_ident expr],
+             [translate_pattern patt, translate_ml expr],
              translate_proc k)
         else
           Cexpr_apply
@@ -494,7 +477,7 @@ and translate_proc e =
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_until'",
-             [translate_ml null_ident s;
+             [translate_ml s;
               translate_proc k])
         else
           Cexpr_apply
@@ -516,10 +499,10 @@ and translate_proc e =
              (if Lco_misc.is_value s then "rml_until_handler_match'"
              else "rml_until_handler_match"),
            if Caml_misc.partial_match cpatt then
-             [if Lco_misc.is_value s then translate_ml null_ident s else embed_ml s;
+             [if Lco_misc.is_value s then translate_ml s else embed_ml s;
               make_expr
                 (Cexpr_function
-                   [cpatt, translate_ml null_ident e1;
+                   [cpatt, translate_ml e1;
                     make_patt Cpatt_any Location.none,
                     make_expr
                       (Cexpr_constant (Const_bool false)) Location.none ])
@@ -531,9 +514,9 @@ and translate_proc e =
                     (make_patt Cpatt_any Location.none, make_raise_RML())])
                 Location.none;]
            else
-             [if Lco_misc.is_value s then translate_ml null_ident s else embed_ml s;
+             [if Lco_misc.is_value s then translate_ml s else embed_ml s;
               make_expr
-                (Cexpr_function [cpatt, translate_ml null_ident e1])
+                (Cexpr_function [cpatt, translate_ml e1])
                 Location.none;
               translate_proc k;
               make_expr
@@ -548,10 +531,10 @@ and translate_proc e =
              (if Lco_misc.is_value s then "rml_until_handler_match'"
              else "rml_until_handler_match"),
            if Caml_misc.partial_match cpatt then
-           [if Lco_misc.is_value s then translate_ml null_ident s else embed_ml s;
+           [if Lco_misc.is_value s then translate_ml s else embed_ml s;
             make_expr
               (Cexpr_function
-                 [cpatt, translate_ml null_ident e1;
+                 [cpatt, translate_ml e1;
                   make_patt Cpatt_any Location.none,
                   make_expr
                     (Cexpr_constant (Const_bool false)) Location.none;])
@@ -564,8 +547,8 @@ and translate_proc e =
                   (make_patt Cpatt_any Location.none, make_raise_RML())])
               Location.none;]
          else
-           [if Lco_misc.is_value s then translate_ml null_ident s else embed_ml s;
-            make_expr (Cexpr_function [cpatt, translate_ml null_ident e1;]) Location.none;
+           [if Lco_misc.is_value s then translate_ml s else embed_ml s;
+            make_expr (Cexpr_function [cpatt, translate_ml e1;]) Location.none;
             translate_proc k;
             make_expr
               (Cexpr_function
@@ -581,7 +564,7 @@ and translate_proc e =
             (make_instruction
                (if Lco_misc.is_value s then "rml_until_handler_match'"
                else "rml_until_handler_match"),
-             [if Lco_misc.is_value s then translate_ml null_ident s else embed_ml s;
+             [if Lco_misc.is_value s then translate_ml s else embed_ml s;
               make_expr
                 (Cexpr_function
                    [cpatt,
@@ -602,7 +585,7 @@ and translate_proc e =
             (make_instruction
                (if Lco_misc.is_value s then "rml_until_handler'"
                else "rml_until_handler"),
-             [if Lco_misc.is_value s then translate_ml null_ident s else embed_ml s;
+             [if Lco_misc.is_value s then translate_ml s else embed_ml s;
               translate_proc k;
               make_expr
                 (Cexpr_function [cpatt, translate_proc kh])
@@ -616,7 +599,7 @@ and translate_proc e =
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_when'",
-             [translate_ml null_ident s;
+             [translate_ml s;
               translate_proc k])
         else
           Cexpr_apply
@@ -634,7 +617,7 @@ and translate_proc e =
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_control'",
-             [translate_ml null_ident s;
+             [translate_ml s;
               translate_proc k])
         else
           Cexpr_apply
@@ -647,20 +630,20 @@ and translate_proc e =
           if Caml_misc.partial_match cpatt then
             make_expr
               (Cexpr_function
-                 [cpatt, translate_ml null_ident e;
+                 [cpatt, translate_ml e;
                   make_patt Cpatt_any Location.none,
                   make_expr
                     (Cexpr_constant (Const_bool false)) Location.none;])
               Location.none
           else
             make_expr
-              (Cexpr_function [cpatt, translate_ml null_ident e])
+              (Cexpr_function [cpatt, translate_ml e])
               Location.none
         in
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_control_match'",
-             [translate_ml null_ident s;
+             [translate_ml s;
               matching;
               translate_proc k])
         else
@@ -691,7 +674,7 @@ and translate_proc e =
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_present'",
-             [translate_ml null_ident s;
+             [translate_ml s;
               translate_proc k1;
               translate_proc k2])
         else
@@ -726,13 +709,13 @@ and translate_proc e =
               Location.none])
 
     | Coproc_when_match (expr,proc) ->
-        Cexpr_when_match (translate_ml null_ident expr, translate_proc proc)
+        Cexpr_when_match (translate_ml expr, translate_proc proc)
 
     | Coproc_await (Nonimmediate, {coconf_desc = Coconf_present s}) ->
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_await'",
-             [translate_ml null_ident s])
+             [translate_ml s])
         else
           Cexpr_apply
             (make_instruction "rml_await",
@@ -745,7 +728,7 @@ and translate_proc e =
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_await_immediate'",
-             [translate_ml null_ident s])
+             [translate_ml s])
         else
           Cexpr_apply
             (make_instruction "rml_await_immediate",
@@ -775,7 +758,7 @@ and translate_proc e =
                 (Cexpr_function
                    [cpatt,
                     make_expr
-                      (Cexpr_when_match(translate_ml null_ident e1,
+                      (Cexpr_when_match(translate_ml e1,
                                         make_expr
                                           (Cexpr_constant (Const_bool true))
                                           Location.none))
@@ -806,7 +789,7 @@ and translate_proc e =
                 (Cexpr_function
                    [cpatt,
                     make_expr
-                      (Cexpr_when_match(translate_ml null_ident e1,
+                      (Cexpr_when_match(translate_ml e1,
                                         make_expr
                                           (Cexpr_constant (Const_bool true))
                                           Location.none))
@@ -856,7 +839,7 @@ and translate_proc e =
             if Lco_misc.is_value s then
               Cexpr_apply
                 (make_instruction ("rml_await"^im^kind^"'"),
-                 [translate_ml null_ident s;
+                 [translate_ml s;
                   make_expr
                     (Cexpr_function [cpatt, translate_proc k])
                     Location.none])
@@ -909,7 +892,7 @@ and translate_proc e =
 
     | Coproc_pauseclock e ->
       if Lco_misc.is_value e then
-        Cexpr_apply (make_instruction "rml_pauseclock'", [translate_ml null_ident e])
+        Cexpr_apply (make_instruction "rml_pauseclock'", [translate_ml e])
       else
         Cexpr_apply (make_instruction "rml_pauseclock", [embed_ml e])
 
@@ -924,7 +907,7 @@ and translate_conf c =
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "cfg_present'",
-             [translate_ml null_ident s])
+             [translate_ml s])
         else
           Cexpr_apply
             (make_instruction "cfg_present",
@@ -944,20 +927,20 @@ and translate_conf c =
   in
   make_expr cexpr c.coconf_loc
 
-and translate_clock_expr cd e =
+and translate_clock_expr e =
   match e with
     | CkLocal -> make_instruction "rml_local_clock"
     | CkTop -> make_instruction "rml_top_clock"
-    | CkExpr e -> translate_ml cd e
+    | CkExpr e -> translate_ml e
 
 let translate_impl_item info_chan item =
   let citem =
     match item.coimpl_desc with
-    | Coimpl_expr e -> Cimpl_expr (translate_ml null_ident e)
+    | Coimpl_expr e -> Cimpl_expr (translate_ml e)
     | Coimpl_let (flag, l) ->
         Cimpl_let (flag,
                    List.map
-                     (fun (p,e) -> (translate_pattern p, translate_ml null_ident e))
+                     (fun (p,e) -> (translate_pattern p, translate_ml e))
                      l)
     | Coimpl_signal l ->
         Cimpl_let (Nonrecursive,
@@ -977,8 +960,8 @@ let translate_impl_item info_chan item =
                            make_expr
                              (Cexpr_apply
                                 (make_instruction "rml_global_signal_combine",
-                                 [translate_ml null_ident e1;
-                                  translate_ml null_ident e2;]))
+                                 [translate_ml e1;
+                                  translate_ml e2;]))
                              Location.none)
                      l)
     | Coimpl_type l ->
