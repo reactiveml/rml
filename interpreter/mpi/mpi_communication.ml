@@ -76,17 +76,17 @@ module Make (P : TAG_TYPE) = struct
   let print_tag = P.print print_gid
 
   let is_master () =
-    Mpi.comm_rank Mpi.comm_world = 0
+    Mpi.comm_rank Mpi.comm_world = !Runtime_options.min_rank
 
   let local_site () =
     Mpi.comm_rank Mpi.comm_world
 
-  let master_site () = (0 : Mpi.rank)
+  let master_site () = (!Runtime_options.min_rank : Mpi.rank)
 
-  let nth_site n = (n + 1 : Mpi.rank)
+  let nth_site n = (n + 1 + !Runtime_options.min_rank : Mpi.rank)
 
   let number_of_sites () =
-    Mpi.comm_size Mpi.comm_world - 1
+    Mpi.comm_size Mpi.comm_world - (1 + !Runtime_options.min_rank)
 
   let counter = ref 0
   let fresh () =

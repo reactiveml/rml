@@ -3,6 +3,7 @@ let doc_load_balancer = "<name> Load balancer to use (local, robin)"
 let doc_number_steps = "<n> Number of steps to execute"
 
 let number_steps = ref (- 1)
+let min_rank = ref 0
 
 let errmsg = ""
 let rml_cli_options =
@@ -15,6 +16,12 @@ let parse_cli () =
     let n = Array.length Sys.argv in
       while !current < n do
         match Sys.argv.(!current) with
+          | "-min-rank" ->
+              incr current;
+              if !current = n then
+                raise (Arg.Bad ("Expected a number after -min-rank"));
+              min_rank := int_of_string Sys.argv.(!current);
+              incr current
           | "-load-balancer" ->
               incr current;
               if !current = n then
