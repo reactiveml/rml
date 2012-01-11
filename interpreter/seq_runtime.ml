@@ -275,8 +275,12 @@ struct
       cd.cd_top.last_activation <- save_clock_state cd;
       cd
 
+    let top_clock_ref = ref None
+
     let mk_top_clock_domain () =
-      mk_clock_domain None
+      let cd = mk_clock_domain None in
+      top_clock_ref := Some cd;
+      cd
     let finalize_top_clock_domain _ =
       ()
 
@@ -285,9 +289,12 @@ struct
       cd.cd_pause_clock := true
     let control_tree cd = cd.cd_top
     let clock cd = cd
-    let rec top_clock cd = match cd.cd_parent with
+   (* let rec top_clock cd = match cd.cd_parent with
       | None -> cd
-      | Some cd -> top_clock cd
+      | Some cd -> top_clock cd *)
+    let top_clock () = match !top_clock_ref with
+      | None -> Format.eprintf "No top clock@."; raise Types.RML
+      | Some ck -> ck
 
     let add_weoi cd p =
       D.add_waiting p cd.cd_weoi

@@ -56,12 +56,15 @@ module Rml_interpreter =
 
     let eval_clock_expr current_cd ce = match ce with
       | CkLocal -> R.clock current_cd
-      | CkTop -> R.top_clock current_cd
+      | CkTop -> R.top_clock ()
       | CkExpr e -> e
 
     let ensure_clock_expr ce = match ce with
       | CkExpr e -> e
-      | _ -> raise Types.RML (* should be rejected by compiler *)
+      | CkTop -> R.top_clock ()
+      | CkLocal -> (* should be rejected by compiler *)
+          Format.eprintf "Expected a not relative clock expr instead of top@.";
+          raise Types.RML
 
 (* ------------------------------------------------------------------------ *)
     let rml_pre_status evt = R.Event.pre_status evt
@@ -779,7 +782,7 @@ let rml_loop p =
 
     let rml_when_conf expr_cfg =
       fun f_k ctrl ->
-        fun _ -> raise Types.RML
+        fun _ -> Format.eprintf "Unimplemented when_conf@."; raise Types.RML
 
 (**************************************)
 (* clock domain                       *)

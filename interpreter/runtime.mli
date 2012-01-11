@@ -87,7 +87,7 @@ sig
   val set_pauseclock : clock_domain -> clock -> unit
   val control_tree : clock_domain -> control_tree
   val clock : clock_domain -> clock
-  val top_clock : clock_domain -> clock
+  val top_clock : unit -> clock
   val new_clock_domain : clock_domain -> control_tree ->
     (clock_domain -> control_tree -> unit step -> unit step) -> unit step -> unit step
 

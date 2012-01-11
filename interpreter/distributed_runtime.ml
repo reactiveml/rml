@@ -623,8 +623,18 @@ struct
     let add_weoi_waiting_list cd wk =
       cd.cd_wake_up <- wk :: cd.cd_wake_up
 
-    let top_clock cd =
-      Clock.top_clock cd.cd_clock
+    let any_clock_ref = ref None
+
+   (* let top_clock cd =
+      Clock.top_clock cd.cd_clock *)
+    let top_clock () = match !any_clock_ref with
+      | None -> Format.eprintf "No top clock@."; raise Types.RML
+      | Some ck -> Clock.top_clock ck
+    let mk_clock parent_ck =
+      let ck = Clock.mk_clock parent_ck in
+      if !any_clock_ref = None then
+        any_clock_ref := Some ck;
+      ck
 
 (*
     let step_clock_domain ctrl new_ctrl cd new_cd =
@@ -808,7 +818,8 @@ struct
         | None -> assert false
 
     let new_local_clock_domain cd new_balancer ctrl p f_k =
-      let new_ck = Clock.mk_clock (Some cd.cd_clock) in
+      let new_ck = mk_clock (Some cd.cd_clock) in
+        Format.eprintf "Creating local clock domain %a@." C.print_gid new_ck.ck_gid;
       let new_cd = init_clock_domain new_ck new_balancer (Some ctrl) in
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl f_k) in
@@ -820,7 +831,7 @@ struct
     (* After receving Mnew_cd *)
     let create_cd msg =
       let tmp_id, parent_ck, new_balancer, p = Msgs.recv_new_cd msg in
-      let new_ck = Clock.mk_clock (Some parent_ck) in
+      let new_ck = mk_clock (Some parent_ck) in
       Msgs.send_cd_created tmp_id new_ck;
       let new_cd = init_clock_domain new_ck new_balancer None in
       let new_ctrl = control_tree new_cd in
@@ -960,9 +971,10 @@ struct
       terminate_site ()
 
     let mk_top_clock_domain () =
-      let ck = Clock.mk_clock None in
+      let ck = mk_clock None in
       let balancer = L.mk_top_balancer () in
-      mk_clock_domain ck balancer None
+      let cd = mk_clock_domain ck balancer None in
+      cd
 
 (* ------------------------------------------------------------------------ *)
 
