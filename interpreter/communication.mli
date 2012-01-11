@@ -8,6 +8,8 @@ module type S = sig
   type lid
   type gid
 
+  type seed
+
   type msg
   type 'gid tag
   type site
@@ -31,7 +33,8 @@ module type S = sig
   val nth_site : int -> site
   val master_site : unit -> site
 
-  val fresh : unit -> gid
+  val mk_seed : unit -> seed
+  val fresh : seed -> gid
   val is_local : gid -> bool
 
   val to_msg : 'a -> msg

@@ -152,6 +152,7 @@ struct
       s_clock_cache : E.clock GidHandle.cache;
       mutable s_signal_cache : SignalHandle.cache;
       mutable s_waiting : D.waiting_list WaitingMap.t; (* waiting lists for parent cds and slow signals *)
+      s_seed : C.seed;
       s_comm_site : C.site;
       mutable s_children : C.SiteSet.t; (* remotes with child clock domains*)
     }
@@ -255,7 +256,7 @@ struct
 
       let mk_clock parent_ck =
         let site = get_site () in
-        let gid = C.fresh () in
+        let gid = C.fresh site.s_seed in
         { ck_gid = gid;
           ck_parent = parent_ck;
           ck_clock = GidHandle.init site.s_clock_cache gid (E.init_clock ()) }
@@ -367,7 +368,7 @@ struct
         let signal_local_value gid (n, ck) =
           let site = get_site () in
           (* request the current value of the signal *)
-          Msgs.send_req_signal gid (C.fresh ());
+          Msgs.send_req_signal gid (C.fresh site.s_seed);
           setup_local_copy gid n ck;
           let msg = Callbacks.recv_given_msg site.s_msg_queue
             site.s_callbacks (Msignal gid) in
@@ -379,7 +380,7 @@ struct
         let new_local_evt_combine ck default combine =
           let site = get_site () in
           let n = E.create (get_clock ck.ck_clock) default combine in
-          let gid = C.fresh () in
+          let gid = C.fresh site.s_seed in
           let ev  =
             { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck);
               ev_gid = gid }
@@ -390,7 +391,7 @@ struct
 
         let new_remote_evt_combine ck default (combine : 'a -> 'b -> 'b) =
           let site = get_site () in
-          let tmp_id = C.fresh () in
+          let tmp_id = C.fresh site.s_seed in
           let create_signal () =
             let ev = new_local_evt_combine ck default combine in
             C.send_owner tmp_id (Msignal_created tmp_id) ev
@@ -886,7 +887,8 @@ struct
       start_ctrl cd ctrl new_ctrl
 
     let new_remote_clock_domain remote_site new_balancer cd ctrl p f_k =
-      let tmp_id = C.fresh () in
+      let site = get_site () in
+      let tmp_id = C.fresh site.s_seed in
       add_callback (Mcd_created tmp_id) (start_remote_clock_domain cd ctrl f_k);
       incr cd.cd_remaining_async;
       Format.eprintf "remaining at %a is %d@." C.print_gid cd.cd_clock.ck_gid  !(cd.cd_remaining_async);
@@ -974,6 +976,7 @@ struct
         s_msg_thread = None;
         s_clock_cache = GidHandle.mk_cache (fun ck -> ck);
         s_signal_cache = SignalHandle.mk_cache wrong_m;
+        s_seed = C.mk_seed ();
         s_comm_site = C.local_site ();
         s_children = C.SiteSet.empty;
       } in
