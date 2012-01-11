@@ -739,6 +739,15 @@ struct
               )
       )
 
+    let rec react cd =
+      exec_cd cd ();
+      Format.eprintf "Exec of cd %a done with rem: %d @." C.print_gid cd.cd_clock.ck_gid !(cd.cd_remaining_async);
+      if cd.cd_top.alive && !(cd.cd_remaining_async) <> 0 then (
+        Format.eprintf "Waitinf for children to finish@.";
+        process_msgs ();
+        react cd
+      )
+
     (* After receiving Meoi_control *)
     let receive_eoi_control cd msg =
       let req_has_next = Msgs.recv_eoi_control msg in
@@ -826,7 +835,7 @@ struct
       fun _ ->
         D.add_current f new_cd.cd_current;
         start_ctrl new_cd ctrl new_ctrl;
-        exec_cd new_cd ()
+        react new_cd
 
     (* After receving Mnew_cd *)
     let create_cd msg =
@@ -850,13 +859,13 @@ struct
       add_callback (Mstep_done new_ck.ck_gid) (receive_step_done cd ctrl new_ck.ck_gid);
       start_ctrl cd ctrl new_ctrl
 
-    let new_remote_clock_domain remote_site new_balancer cd ctrl p f_k _ =
+    let new_remote_clock_domain remote_site new_balancer cd ctrl p f_k =
       let tmp_id = C.fresh () in
       add_callback (Mcd_created tmp_id) (start_remote_clock_domain cd ctrl f_k);
       incr cd.cd_remaining_async;
       Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, p)
 
-    let new_clock_domain cd ctrl p f_k =
+    let new_clock_domain cd ctrl p f_k _ =
       let remote_site, new_balancer = cd.cd_load_balancer#new_child ()  in
       if remote_site <> C.local_site () then (
         Format.eprintf "Distributing new cd to site %a@." C.print_site remote_site;
@@ -866,7 +875,7 @@ struct
         new_remote_clock_domain remote_site new_balancer cd ctrl p f_k
       ) else (
         Format.eprintf "Creating local clock domain@.";
-        new_local_clock_domain cd new_balancer ctrl p f_k
+        new_local_clock_domain cd new_balancer ctrl p f_k ()
       )
 
 
@@ -883,15 +892,6 @@ struct
 
     let is_master () =
       C.is_master ()
-
-    let rec react cd =
-      exec_cd cd ();
-      Format.eprintf "Exec of cd done with rem: %d @." !(cd.cd_remaining_async);
-      if cd.cd_top.alive && !(cd.cd_remaining_async) <> 0 then (
-       (* Format.eprintf "Waitinf for children to finish@."; *)
-        process_msgs ();
-        react cd
-      )
 
     (* After receiving Mstep *)
    let start_cd msg =
