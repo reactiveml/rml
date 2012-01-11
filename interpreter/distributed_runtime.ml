@@ -338,7 +338,7 @@ struct
           C.send_owner req_id (Msignal gid) n
 
         (* Called after receiving Memit id *)
-        let receive_emit cd (ev:('a, 'b) event) msg =
+        let receive_emit (ev:('a, 'b) event) msg =
           let v:'a = C.from_msg msg in
             do_emit ev v
 
@@ -376,10 +376,9 @@ struct
             { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck);
               ev_gid = gid }
           in
-          let cd = get_clock_domain ck in
-            add_callback (Memit gid) (receive_emit cd ev);
-            add_callback (Mreq_signal gid) (receive_req n gid);
-            ev
+          add_callback (Memit gid) (receive_emit ev);
+          add_callback (Mreq_signal gid) (receive_req n gid);
+          ev
 
         let new_evt ck =
           new_evt_combine ck [] (fun x y -> x :: y)
