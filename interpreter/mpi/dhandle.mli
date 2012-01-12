@@ -20,6 +20,7 @@ module type S = sig
 
   val init : cache -> key -> ('a, 'b) value -> ('a, 'b) handle
   val get : cache -> ('a, 'b) handle -> ('a, 'b) value
+  val set_valid : ('a, 'b) handle -> unit
 end
 
 

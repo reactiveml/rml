@@ -10,7 +10,7 @@ module type S = sig
 
   val mk_queue : unit -> msg_queue
   val dispatch_all : msg_queue -> dispatcher -> unit
-  val dispatch_given_msg : msg_queue -> dispatcher -> tag -> unit
+  val recv_given_msg : msg_queue -> dispatcher -> tag -> msg
   val await_new_msg : msg_queue -> unit
 
   val add_callback : ?kind:callback_kind -> tag -> callback -> dispatcher -> unit

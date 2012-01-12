@@ -754,7 +754,6 @@ let rml_loop p =
       let dummy = ref dummy_step in
       let new_ctrl = R.new_ctrl When in
       let rec when_act _ =
-        Format.eprintf "Waking up when@.";
         R.wake_up_ctrl new_ctrl cd;
         R.on_next_instant ctrl f_when
       and f_when _ =

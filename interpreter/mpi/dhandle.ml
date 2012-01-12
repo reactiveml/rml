@@ -20,6 +20,7 @@ module type S = sig
 
   val init : cache -> key -> ('a, 'b) value -> ('a, 'b) handle
   val get : cache -> ('a, 'b) handle -> ('a, 'b) value
+  val set_valid : ('a, 'b) handle -> unit
 end
 
 (** TODO: rendre key visible de l'exterieur ?? *)
@@ -46,6 +47,12 @@ module Make (T : DHANDLE_TYPE) (C : Communication.S) = struct
 
   let mk_cache m = m, ref MyWeak.empty
 
+  let is_valid dr =
+    dr.d_valid_for = Mpi.comm_rank Mpi.comm_world
+
+  let set_valid dr =
+    dr.d_valid_for <- Mpi.comm_rank Mpi.comm_world
+
   let find_local (m, memo) (dr: ('a, 'b) handle) =
     try
       (Obj.obj (MyWeak.find dr.d_key !memo) : ('a, 'b) value)
@@ -54,12 +61,12 @@ module Make (T : DHANDLE_TYPE) (C : Communication.S) = struct
           let module L = (val m : LOCAL_VALUE) in
           let r = L.local_value dr.d_key dr.d_value in
             dr.d_value <- r;
-            dr.d_valid_for <- Mpi.comm_rank Mpi.comm_world;
+            set_valid dr;
             memo := MyWeak.add dr.d_key (Obj.repr r) !memo;
             dr.d_value
 
   let get cache dr =
-    if dr.d_valid_for = Mpi.comm_rank Mpi.comm_world then
+    if is_valid dr then
       dr.d_value
     else
       find_local cache dr

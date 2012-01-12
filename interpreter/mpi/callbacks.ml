@@ -10,7 +10,7 @@ module type S = sig
 
   val mk_queue : unit -> msg_queue
   val dispatch_all : msg_queue -> dispatcher -> unit
-  val dispatch_given_msg : msg_queue -> dispatcher -> tag -> unit
+  val recv_given_msg : msg_queue -> dispatcher -> tag -> msg
   val await_new_msg : msg_queue -> unit
 
   val add_callback : ?kind:callback_kind -> tag -> callback -> dispatcher -> unit
@@ -89,7 +89,7 @@ module Make (C : Communication.S) = struct
     Mutex.unlock q.q_mutex;
     List.iter (fun (tag, msg) -> call_callback d tag msg) l
 
-  let dispatch_given_msg q d tag =
+  let recv_given_msg q d tag =
     let rec aux () =
       if q.q_queue = [] then
         Condition.wait q.q_queue_filled q.q_mutex;
@@ -101,15 +101,15 @@ module Make (C : Communication.S) = struct
             (* wait for a new msg *)
             Condition.wait q.q_queue_filled q.q_mutex;
             aux ()
-        | l -> (* found the awaited message *)
+        | (_, msg)::_ -> (* found the awaited message *)
             q.q_queue <- others;
-            snd (List.split l)
+            msg
     in
     Mutex.lock q.q_mutex;
-    let msgs = aux () in
+    let msg = aux () in
     Mutex.unlock q.q_mutex;
-    Format.eprintf "Received and dispatching the awaited message with tag '%a'@." C.print_tag tag;
-    List.iter (fun msg -> call_callback d tag msg) msgs
+    Format.eprintf "Received the awaited message with tag '%a'@." C.print_tag tag;
+    msg
 
   let stop_receiving q =
     q.q_alive <- false

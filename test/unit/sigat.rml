@@ -30,9 +30,21 @@ let process sigat act =
     ||
     await s(v) in act v
 
+(* [O 1; O 3] *)
+let process sigat_remote act =
+  newclock ck in
+    act 1
+  ||
+  newclock ck2 in
+    signal s at topck default 0 gather (+) in
+    emit s 3;
+    pause topck;
+    act (pre? s)
+
 open Rmltest
 
 let test =
  [
-   (sigat, "sigat", [N; O 3])
+   (sigat, "sigat", [N; O 3]);
+   (sigat_remote, "sigat_remote", [O 1; O 3])
  ]

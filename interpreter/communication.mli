@@ -41,6 +41,8 @@ module type S = sig
   val from_msg : msg -> 'a
 
   val send : site -> gid tag -> 'a -> unit
+    (* broadcast to everybody except master site *)
+  val broadcast : gid tag -> 'a -> unit
   val send_owner : gid -> gid tag -> 'a -> unit
   val receive : unit -> gid tag * msg
 end

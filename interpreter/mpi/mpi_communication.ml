@@ -88,8 +88,10 @@ module Make (P : TAG_TYPE) = struct
   let number_of_sites () =
     Mpi.comm_size Mpi.comm_world - (1 + !Runtime_options.min_rank)
 
-  let counter = ref 0
-  let fresh () =
+  type seed = int ref
+
+  let mk_seed () = ref 0
+  let fresh counter =
     incr counter;
     { g_rank = Mpi.comm_rank Mpi.comm_world;
       g_id = !counter }
@@ -107,10 +109,16 @@ module Make (P : TAG_TYPE) = struct
     Format.eprintf "%a: Send '%a' to gid '%a' at site '%d'@."
       print_here ()  print_tag tag  print_gid gid  gid.g_rank;
     Mpi.send (tag, to_msg d) gid.g_rank msg_tag Mpi.comm_world
+
   let send site tag d =
     Format.eprintf "%a: Send '%a' to site '%a'@."
       print_here ()  print_tag tag  print_site site;
     Mpi.send (tag, to_msg d) site msg_tag Mpi.comm_world
+
+  let broadcast tag d =
+    for i = 0 to number_of_sites () - 1 do
+      send (nth_site i) tag d
+    done
 
   let receive () =
     let tag, (msg:msg) = Mpi.receive Mpi.any_source msg_tag Mpi.comm_world in

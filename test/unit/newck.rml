@@ -89,6 +89,34 @@ let process nested_clocks_direct act =
   )
 
 
+(* [ S(O 1, O 2) ] *)
+let process nested_clocks_direct2 act =
+  newclock ck1 in (
+    (newclock ck3 in
+       pause topck; pause topck)
+    ||
+    (newclock ck2 in
+      loop
+        act 1; pause ck1; act 2; pause topck
+      end)
+  )
+
+(* [ S(O 1, O 2) ] *)
+let process nested_clocks_direct3 act =
+ newclock c in (
+  newclock ck1 in (
+    (newclock ck3 in
+       pause topck; pause topck)
+    ||
+    (newclock ck2 in
+      loop
+        act 1; pause c; act 2; pause topck
+      end)
+  )
+ )
+
+
+
 open Rmltest
 
 let test =
@@ -102,5 +130,7 @@ let test =
      (ck_macro_nested, "ck_macro_nested", [N; O 3]);
      (ck_done, "ck_done", [ck]);
      (nested_clocks, "nested_clocks", [ S(P [O 1; O 3], P [O 2; O 4]) ]);
-     (nested_clocks_direct, "nested_clocks_direct", [ S(O 1, O 2) ])
+     (nested_clocks_direct, "nested_clocks_direct", [ S(O 1, O 2) ]);
+     (nested_clocks_direct, "nested_clocks_direct2", [ S(O 1, O 2) ]);
+     (nested_clocks_direct, "nested_clocks_direct3", [ S(O 1, O 2) ])
     ]

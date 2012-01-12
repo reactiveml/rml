@@ -622,6 +622,9 @@ struct
     c := List.rev_append !next !c;
     next := []
 
+  let current_length c =
+    List.length !c
+
   exception Empty_current
   let take_current c = match !c with
     | f :: l -> c := l; f

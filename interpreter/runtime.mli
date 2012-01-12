@@ -21,6 +21,8 @@ sig
   val add_current_waiting_list : waiting_list -> current -> unit
   val add_current_next : next -> current -> unit
 
+  val current_length : current -> int
+
   (*functions on waiting list*)
   val mk_waiting_list : unit -> waiting_list
   val add_waiting : unit Step.t -> waiting_list -> unit

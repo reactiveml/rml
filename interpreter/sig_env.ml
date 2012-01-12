@@ -58,6 +58,7 @@ module type S =
     val next: clock -> unit
     val get : clock -> clock_index
     val equal : clock_index -> clock_index -> bool
+    val print_clock_index : Format.formatter -> clock_index -> unit
    (* val remote_emit :  ('a, 'b) t -> 'a -> unit *)
   end
 
@@ -87,7 +88,8 @@ module Record  (*: S*)  =
 
 (* -------------------------- Access functions -------------------------- *)
     let default n = n.default
-    let status n = n.status = !(n.clock)
+    let status n =
+      n.status = !(n.clock)
 
     let value n = n.value
 
@@ -102,7 +104,6 @@ module Record  (*: S*)  =
       else n.value
 
     let pre_value n =
-      Format.eprintf "Pre_value: n.status=%d   n.pre_status=%d  n.clock=%d @." n.status n.pre_status !(n.clock);
       if n.status = !(n.clock)
       then
         if n.pre_status = !(n.clock) - 1
@@ -139,8 +140,6 @@ module Record  (*: S*)  =
         n.value <- v
 
     let copy n new_n =
-      Format.eprintf "Copy:New_n n.status=%d   n.pre_status=%d  n.clock=%d @." new_n.status new_n.pre_status !(new_n.clock);
-      Format.eprintf "Copy:n: n.status=%d   n.pre_status=%d  n.clock=%d @." n.status n.pre_status !(n.clock);
       n.status <- new_n.status;
       n.value <- new_n.value;
       n.pre_status <- new_n.pre_status;
@@ -159,6 +158,9 @@ module Record  (*: S*)  =
 
     let equal ck1 ck2 =
       ck1 = ck2
+
+    let print_clock_index ff c =
+      Format.fprintf ff "%d" c
   end
 
 (*
