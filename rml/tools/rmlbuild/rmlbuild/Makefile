@@ -125,5 +125,5 @@ install: all
 	        $(BUILDDIR)/ocamlbuildlight.cmx \
 	        $(BUILDDIR)/ocamlbuildlight.o \
 	        $(BUILDDIR)/ocamlbuildlight.cmo $(INSTALL_LIB)
-	ranlib $(INSTALL_LIB)/ocamlbuildlib.a
-	ranlib $(INSTALL_LIB)/ocamlbuildlightlib.a
+	-ranlib $(INSTALL_LIB)/ocamlbuildlib.a
+	-ranlib $(INSTALL_LIB)/ocamlbuildlightlib.a
