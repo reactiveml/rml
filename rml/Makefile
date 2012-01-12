@@ -49,6 +49,8 @@ install.opt:
 	(cd toplevel; make install)
 	(cd tools; make install)
 
+checkinstall: config
+	checkinstall -D --deldoc=yes --deldesc=yes --nodoc -y --install=no
 
 ### BEGIN Patch from Serge Leblanc
 
