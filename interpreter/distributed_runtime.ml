@@ -1,3 +1,4 @@
+open Runtime_options
 
 module Make
   (D: Runtime.SEQ_DATA_STRUCT)
@@ -195,7 +196,9 @@ struct
         let site = get_site () in
         C.GidMap.find ck.ck_gid site.s_clock_domains
       with
-        | Not_found -> Format.eprintf "Error: Cannot find clock domain %a@." C.print_gid ck.ck_gid; assert false
+        | Not_found ->
+            print_debug "Error: Cannot find clock domain %a@." C.print_gid ck.ck_gid;
+            assert false
     let get_event ev =
       let site = get_site () in
       fst (SignalHandle.get site.s_signal_cache ev.ev_handle)
@@ -313,7 +316,7 @@ struct
           if E.status n then
             E.value n
           else (
-            Format.eprintf "Error: Reading the value of an absent signal %a@." C.print_gid ev.ev_gid;
+            print_debug "Error: Reading the value of an absent signal %a@." C.print_gid ev.ev_gid;
             raise Types.RML
           )
 
@@ -331,7 +334,7 @@ struct
           let n = get_event ev in
           let ev_ck = get_event_clock ev in
           if not (C.is_local ev_ck.ck_gid) then
-            Format.eprintf "Error: do_emit on remote signal %a of clock %a@."
+            print_debug "Error: do_emit on remote signal %a of clock %a@."
               C.print_gid ev.ev_gid  C.print_gid ev_ck.ck_gid;
           let cd = get_clock_domain ev_ck in
           E.emit n v;
@@ -619,7 +622,7 @@ struct
    (* let top_clock cd =
       Clock.top_clock cd.cd_clock *)
     let top_clock () = match !any_clock_ref with
-      | None -> Format.eprintf "No top clock@."; raise Types.RML
+      | None -> print_debug "No top clock@."; raise Types.RML
       | Some ck -> Clock.top_clock ck
     let mk_clock parent_ck =
       let ck = Clock.mk_clock parent_ck in
@@ -879,7 +882,7 @@ struct
 
     let new_local_clock_domain cd new_balancer ctrl p f_k =
       let new_ck = mk_clock (Some cd.cd_clock) in
-      Format.eprintf "Creating local clock domain %a@." C.print_gid new_ck.ck_gid;
+      print_debug "Creating local clock domain %a@." C.print_gid new_ck.ck_gid;
       let new_cd = init_clock_domain new_ck new_balancer (Some ctrl) in
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl f_k) in
@@ -920,7 +923,7 @@ struct
     let new_clock_domain cd ctrl p f_k _ =
       let remote_site, new_balancer = cd.cd_load_balancer#new_child ()  in
       if remote_site <> C.local_site () then (
-        Format.eprintf "Distributing new cd to site %a@." C.print_site remote_site;
+        print_debug "Distributing new cd to site %a@." C.print_site remote_site;
         (*cd.cd_remotes <- C.SiteSet.add remote_site cd.cd_remotes;*)
         (*site.s_children <- C.SiteSet.add remote_site site.s_children; *)
         new_remote_clock_domain remote_site new_balancer cd ctrl p f_k
@@ -950,12 +953,11 @@ struct
        let site = get_site () in
        exec_cd (C.GidMap.find cd_id site.s_clock_domains) ()
      with
-       | Not_found -> Format.eprintf "Received Start for unknown clock domain.@."
+       | Not_found -> print_debug "Received Start for unknown clock domain.@."
 
    (* After receiving Meoi *)
     let receive_eoi msg =
       let ck_id:C.gid = C.from_msg msg in
-      (*Format.eprintf "Doing eoi of remote clock domain@.";*)
       wake_up_now (Weoi ck_id)
 
     (* After receving Mnext_instant *)
@@ -979,12 +981,12 @@ struct
       Msgs.send_dummy site.s_comm_site ();
       (match site.s_msg_thread with Some t -> Thread.join t | _ -> assert false);
       if not (C.is_master ()) then (
-        Format.eprintf "Exiting slave@.";
+        print_debug "Exiting slave@.";
         exit 0
       )
 
     let init_site () =
-      Format.eprintf "Init site@.";
+      print_debug "Init site@.";
       let wrong_m = (module struct
         let local_value _ v = v
       end : SignalHandle.LOCAL_VALUE) in

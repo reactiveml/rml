@@ -1,4 +1,6 @@
 
+open Runtime_options
+
 module type S = sig
   type tag
   type msg
@@ -59,10 +61,10 @@ module Make (C : Communication.S) = struct
       let f, kind = MyMap.find tag d.d_handlers in
         if kind = Once then
           d.d_handlers <- MyMap.remove tag d.d_handlers;
-        Format.eprintf "Calling callback for tag: %a@." C.print_tag tag;
+        print_debug "Calling callback for tag: %a@." C.print_tag tag;
         f s
     with
-      | Not_found -> Format.eprintf "%a: Recefghfghived unexpected tag: %a@." C.print_here () C.print_tag tag
+      | Not_found -> print_debug "%a: Received unexpected tag: %a@." C.print_here () C.print_tag tag
 
   let mk_queue () =
   { q_alive = true;
@@ -93,11 +95,11 @@ module Make (C : Communication.S) = struct
     let rec aux () =
       if q.q_queue = [] then
         Condition.wait q.q_queue_filled q.q_mutex;
-      Format.eprintf "Looking for requested tag '%a' @." C.print_tag tag;
+      print_debug "Looking for requested tag '%a' @." C.print_tag tag;
       let found, others = List.partition (fun (t,_) -> t = tag) q.q_queue in
       match found with
         | [] ->
-            Format.eprintf "Message not there yet@.";
+            print_debug "Message not there yet@.";
             (* wait for a new msg *)
             Condition.wait q.q_queue_filled q.q_mutex;
             aux ()
@@ -108,7 +110,7 @@ module Make (C : Communication.S) = struct
     Mutex.lock q.q_mutex;
     let msg = aux () in
     Mutex.unlock q.q_mutex;
-    Format.eprintf "Received the awaited message with tag '%a'@." C.print_tag tag;
+    print_debug "Received the awaited message with tag '%a'@." C.print_tag tag;
     msg
 
   let stop_receiving q =

@@ -37,6 +37,8 @@
 (*   Suppression de exec                                              *)
 (*   Gestion du parallele n-aire                                      *)
 
+open Runtime_options
+
 module Rml_interpreter =
   functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
   struct
@@ -63,7 +65,7 @@ module Rml_interpreter =
       | CkExpr e -> e
       | CkTop -> R.top_clock ()
       | CkLocal -> (* should be rejected by compiler *)
-          Format.eprintf "Expected a not relative clock expr instead of top@.";
+          print_debug "Expected a not relative clock expr instead of top@.";
           raise Types.RML
 
 (* ------------------------------------------------------------------------ *)
@@ -781,7 +783,7 @@ let rml_loop p =
 
     let rml_when_conf expr_cfg =
       fun f_k ctrl ->
-        fun _ -> Format.eprintf "Unimplemented when_conf@."; raise Types.RML
+        fun _ -> print_debug "Unimplemented when_conf@."; raise Types.RML
 
 (**************************************)
 (* clock domain                       *)
@@ -851,8 +853,10 @@ module Fake =
      (functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
        Lco_interpreter.S))
 
+(*
 module Lco_ctrl_tree_seq_interpreter =
   Rml_interpreter(Seq_runtime.SeqRuntime)
+  *)
 
 module Lco_ctrl_tree_mpi_interpreter =
   Rml_interpreter(Distributed_runtime.MpiRuntime)

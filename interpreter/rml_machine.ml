@@ -22,6 +22,8 @@
 (* created: 2005-09-13  *)
 (* file: rml_machine.ml *)
 
+open Runtime_options
+
 module type MACHINE_INTERPRETER = sig
   type 'a process
 
@@ -62,7 +64,7 @@ module M (I : MACHINE_INTERPRETER) =
       try
         exec n
       with
-        | _ -> Format.eprintf "An error occurred. aborting all processes@."; finalize (); exit 2
+        | _ -> Format.eprintf "An error occurred. Aborting all processes@."; finalize (); exit 2
 
     let rml_exec_sampling p min =
       Runtime_options.parse_cli ();
@@ -136,7 +138,6 @@ module M (I : MACHINE_INTERPRETER) =
       Runtime_options.parse_cli ();
       let react, finalize = I.rml_make_test test_list in
       let rec exec () =
-        Format.printf "@.@.*******************  New step ********************@.@.";
         match react () with
         | None -> exec()
         | Some v -> finalize (); v
@@ -251,7 +252,6 @@ struct
         let step = I.rml_make cd result p in
         I.R.on_current_instant cd step;
         let react () =
-          Format.eprintf "@.Doing one step@.";
           I.R.react cd;
           !result
         in
@@ -260,7 +260,7 @@ struct
         in
         react, finalize
       ) else
-        (fun _ -> Format.eprintf "Launching slave@."; I.R.start_slave (); None), (fun () -> ())
+        (fun _ -> print_debug "Launching slave@."; I.R.start_slave (); None), (fun () -> ())
 
     let rml_make_test test_list =
       if I.R.is_master () then (
@@ -274,6 +274,7 @@ struct
         let steps = I.rml_make_n cd result pl in
         List.iter (fun step -> I.R.on_current_instant cd step) steps;
         let react () =
+          print_debug "@.********************* Doing one step@.";
           I.R.react cd;
           T.next_step ();
           !result

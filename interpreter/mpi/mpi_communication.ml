@@ -35,6 +35,8 @@ module type S = sig
   val receive : unit -> gid tag * msg
 end
 
+open Runtime_options
+
 
 let msg_tag = 0
 
@@ -106,12 +108,12 @@ module Make (P : TAG_TYPE) = struct
     Marshal.from_string s 0
 
   let send_owner gid tag d =
-    Format.eprintf "%a: Send '%a' to gid '%a' at site '%d'@."
+    print_debug "%a: Send '%a' to gid '%a' at site '%d'@."
       print_here ()  print_tag tag  print_gid gid  gid.g_rank;
     Mpi.send (tag, to_msg d) gid.g_rank msg_tag Mpi.comm_world
 
   let send site tag d =
-    Format.eprintf "%a: Send '%a' to site '%a'@."
+    print_debug "%a: Send '%a' to site '%a'@."
       print_here ()  print_tag tag  print_site site;
     Mpi.send (tag, to_msg d) site msg_tag Mpi.comm_world
 
@@ -122,7 +124,7 @@ module Make (P : TAG_TYPE) = struct
 
   let receive () =
     let tag, (msg:msg) = Mpi.receive Mpi.any_source msg_tag Mpi.comm_world in
-      Format.eprintf "%a: Received '%a'@."
+      print_debug "%a: Received '%a'@."
         print_here ()  print_tag tag;
       tag, msg
 end
