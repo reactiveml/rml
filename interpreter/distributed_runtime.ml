@@ -734,6 +734,7 @@ struct
       done
 
     let eoi cd =
+      print_debug "Eoi of clock domain %a@." print_cd cd;
       wake_up_now (Wbefore_eoi cd.cd_clock.ck_gid);
       cd.cd_eoi <- true;
       Msgs.broadcast_eoi cd.cd_clock.ck_gid;
@@ -746,6 +747,7 @@ struct
       cd.cd_wake_up <- []
 
     let next_instant cd =
+      print_debug "Next instant of clock domain %a@." print_cd cd;
       E.next (get_clock cd.cd_clock.ck_clock);
       (* next instant of child clock domains *)
       wake_up_now (Wnext_instant cd.cd_clock.ck_gid);
@@ -759,7 +761,7 @@ struct
       cd.cd_children_have_next <- false
 
     let rec exec_cd ?(wait_for_msgs=false) cd () =
-      (*Format.eprintf "Exec cd@.";*)
+      print_debug "Executing clock domain %a (waiting=%b)@." print_cd cd  wait_for_msgs;
       schedule cd;
       if cd.cd_top.alive && !(cd.cd_remaining_async) = 0 then (
         eoi cd;
@@ -769,6 +771,7 @@ struct
               (*Format.eprintf "Top clock domain next_instnt done : %d@." !(cd.cd_remaining_async)*)
           | Some ck ->
               if macro_step_done cd then (
+                print_debug "Macro step of clock domain %a is done@." print_cd cd;
                 add_waiting (Wnext_instant ck.ck_gid) (fun () -> next_instant cd);
                 (* if the parent clock is not here, send Done message*)
                 if not (C.is_local ck.ck_gid) then
@@ -779,12 +782,15 @@ struct
                     | Some ctrl -> D.add_next (exec_cd ~wait_for_msgs:wait_for_msgs cd) ctrl.next_control)
                 )
               ) else (
+                print_debug "Doing another step of clock domain %a@." print_cd cd;
                 next_instant cd;
                 (* do another step*)
                 exec_cd ~wait_for_msgs:wait_for_msgs cd ()
               )
       ) else if wait_for_msgs then (
         if cd.cd_top.alive && !(cd.cd_remaining_async) <> 0 then (
+          print_debug "Clock domain %a is waiting for %d children@."
+            print_cd cd  !(cd.cd_remaining_async);
           process_msgs ();
           exec_cd ~wait_for_msgs:wait_for_msgs cd ()
         )
@@ -805,8 +811,7 @@ struct
     (* After receiving Meoi_control *)
     let receive_eoi_control cd msg =
       let req_has_next = Msgs.recv_eoi_control msg in
-      (* req has_next from children because this is not the top clock domain *)
-      eoi_control cd true cd.cd_top;
+      eoi_control cd req_has_next cd.cd_top;
       if req_has_next then (
         let has_next = has_next_cd cd in
         match cd.cd_clock.ck_parent with
@@ -818,6 +823,8 @@ struct
     let gather_has_next cd msg =
       let has_next = Msgs.recv_has_next msg in
       decr cd.cd_remaining_async;
+      if !debug_mode && !(cd.cd_remaining_async) < 0 then
+        print_debug "Error: counter of %a is < 0@." print_cd cd;
       cd.cd_children_have_next <- has_next or cd.cd_children_have_next
 
     let set_pauseclock cd ck =
@@ -840,7 +847,7 @@ struct
       if !(cd.cd_remaining_async) = 0 then (
         match cd.cd_clock.ck_parent with
           | Some ck when not (C.is_local ck.ck_gid) ->
-              (*Format.eprintf "Waking up cd because of message@.";*)
+              print_debug "Waking up clock domain %a after receiving a message@." print_cd cd;
               exec_cd cd ()
           | _ -> () (* the cd is already executing, waiting for messages *)
       )
@@ -849,6 +856,8 @@ struct
     let receive_step_done cd ctrl remote_ck_id _ =
       D.add_next (step_remote_clock_domain cd remote_ck_id) ctrl.next_control;
       decr cd.cd_remaining_async;
+      if !debug_mode && !(cd.cd_remaining_async) < 0 then
+        print_debug "Error: counter of %a is < 0@." print_cd cd;
       (* wake up cd to emit the done message *)
       wake_up_cd_if_done cd
 
@@ -856,6 +865,8 @@ struct
     let receive_done_cd cd new_ctrl f_k _ =
       set_kill new_ctrl;
       decr cd.cd_remaining_async;
+      if !debug_mode && !(cd.cd_remaining_async) < 0 then
+        print_debug "Error: counter of %a is < 0@." print_cd cd;
       (* wake up cd to emit the done message *)
       wake_up_cd_if_done cd;
       f_k ()
@@ -870,7 +881,7 @@ struct
         cd
 
     let end_clock_domain new_cd new_ctrl f_k () =
-      (*Format.eprintf "Ending clock domain@.";*)
+      print_debug "End of clock domain %a@." print_cd new_cd;
       let site = get_site () in
       site.s_clock_domains <- C.GidMap.remove new_cd.cd_clock.ck_gid site.s_clock_domains;
       match new_cd.cd_clock.ck_parent with
@@ -897,6 +908,8 @@ struct
       let new_ck = mk_clock (Some parent_ck) in
       Msgs.send_cd_created tmp_id new_ck;
       let new_cd = init_clock_domain new_ck new_balancer None in
+      print_debug "Created local clock domain %a after request by %a@."
+        print_cd new_cd   print_clock parent_ck;
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl dummy_step) in
       D.add_current f new_cd.cd_current;
@@ -950,6 +963,7 @@ struct
    let start_cd msg =
      let cd_id = Msgs.recv_step msg in
      try
+       print_debug "Starting local clock domain %a on request@." C.print_gid cd_id;
        let site = get_site () in
        exec_cd (C.GidMap.find cd_id site.s_clock_domains) ()
      with
