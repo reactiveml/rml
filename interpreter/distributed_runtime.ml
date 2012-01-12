@@ -763,38 +763,41 @@ struct
     let rec exec_cd ?(wait_for_msgs=false) cd () =
       print_debug "Executing clock domain %a (waiting=%b)@." print_cd cd  wait_for_msgs;
       schedule cd;
-      if cd.cd_top.alive && !(cd.cd_remaining_async) = 0 then (
-        eoi cd;
-        match cd.cd_clock.ck_parent with
-          | None -> (* top clock domain *)
-              next_instant cd
-              (*Format.eprintf "Top clock domain next_instnt done : %d@." !(cd.cd_remaining_async)*)
-          | Some ck ->
-              if macro_step_done cd then (
-                print_debug "Macro step of clock domain %a is done@." print_cd cd;
-                add_waiting (Wnext_instant ck.ck_gid) (fun () -> next_instant cd);
-                (* if the parent clock is not here, send Done message*)
-                if not (C.is_local ck.ck_gid) then
-                  Msgs.send_step_done ck.ck_gid cd.cd_clock.ck_gid ()
-                else (
-                  (match cd.cd_parent_ctrl with
-                    | None -> assert false
-                    | Some ctrl -> D.add_next (exec_cd ~wait_for_msgs:wait_for_msgs cd) ctrl.next_control)
+      if cd.cd_top.alive then (
+        if !(cd.cd_remaining_async) = 0 then (
+          eoi cd;
+          match cd.cd_clock.ck_parent with
+            | None -> (* top clock domain *)
+                next_instant cd
+                  (*Format.eprintf "Top clock domain next_instnt done : %d@." !(cd.cd_remaining_async)*)
+            | Some ck ->
+                if macro_step_done cd then (
+                  print_debug "Macro step of clock domain %a is done@." print_cd cd;
+                  add_waiting (Wnext_instant ck.ck_gid) (fun () -> next_instant cd);
+                  (* if the parent clock is not here, send Done message*)
+                  if not (C.is_local ck.ck_gid) then
+                    Msgs.send_step_done ck.ck_gid cd.cd_clock.ck_gid ()
+                  else (
+                    (match cd.cd_parent_ctrl with
+                      | None -> assert false
+                      | Some ctrl -> D.add_next (exec_cd ~wait_for_msgs:wait_for_msgs cd) ctrl.next_control)
                 )
-              ) else (
-                print_debug "Doing another step of clock domain %a@." print_cd cd;
-                next_instant cd;
-                (* do another step*)
-                exec_cd ~wait_for_msgs:wait_for_msgs cd ()
-              )
-      ) else if wait_for_msgs then (
-        if cd.cd_top.alive && !(cd.cd_remaining_async) <> 0 then (
+                ) else (
+                  print_debug "Doing another step of clock domain %a@." print_cd cd;
+                  next_instant cd;
+                  (* do another step*)
+                  exec_cd ~wait_for_msgs:wait_for_msgs cd ()
+                )
+        ) else if wait_for_msgs then (
           print_debug "Clock domain %a is waiting for %d children@."
             print_cd cd  !(cd.cd_remaining_async);
           process_msgs ();
           exec_cd ~wait_for_msgs:wait_for_msgs cd ()
-        )
-      )
+        ) else
+            print_debug "Execution of clock domain %a is suspended until a message is received@."
+              print_cd cd
+      ) else
+        print_debug "Clock domain %a is dead@." print_cd cd
 
 (*
     let rec react cd =
@@ -867,10 +870,9 @@ struct
       decr cd.cd_remaining_async;
       if !debug_mode && !(cd.cd_remaining_async) < 0 then
         print_debug "Error: counter of %a is < 0@." print_cd cd;
+      D.add_current f_k cd.cd_current;
       (* wake up cd to emit the done message *)
-      wake_up_cd_if_done cd;
-      f_k ()
-
+      wake_up_cd_if_done cd
 
 
     let init_clock_domain clock balancer parent_ctrl =
