@@ -86,6 +86,10 @@ module Make (C : Communication.S) = struct
           let a = Array.init (C.number_of_sites ()) (fun i -> C.nth_site i) in
           new round_robin_balancer (C.master_site ()) a
       | Pall_remote ->
-          let a = Array.init (C.number_of_sites ()) (fun i -> C.nth_site i) in
-          new all_remote_balancer a
+          if C.number_of_sites () = 0 then (
+            new local_balancer (C.local_site ())
+          ) else (
+            let a = Array.init (C.number_of_sites ()) (fun i -> C.nth_site i) in
+            new all_remote_balancer a
+          )
 end
