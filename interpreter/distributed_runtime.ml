@@ -405,6 +405,8 @@ struct
           let tmp_id = C.fresh site.s_seed in
           let create_signal () =
             let ev = new_local_evt_combine ck default combine in
+            print_debug "Created signal %a at clock %a from request by %a@." print_signal ev
+              print_clock ck  C.print_gid tmp_id;
             C.send_owner tmp_id (Msignal_created tmp_id) ev
           in
           Msgs.send_create_signal ck.ck_gid (tmp_id, create_signal);

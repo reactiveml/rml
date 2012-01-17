@@ -19,14 +19,19 @@ module Make (T : Map.OrderedType) (C : Communication.S) = struct
   end)
 
   type 'a handle =
-      { d_master : Mpi.rank;
-        d_key : T.t;
-        mutable d_valid_for : Mpi.rank;
+      { d_key : T.t;
+        mutable d_token : Mpi.local_token;
         mutable d_value : 'a; }
   type 'a cache = ('a -> 'a) * ('a MyWeak.t) ref
   type key = T.t
 
   let mk_cache local_value = local_value, ref MyWeak.empty
+
+  let is_valid dr =
+    Mpi.is_valid_token dr.d_token
+
+  let set_valid dr =
+    dr.d_token <- Mpi.get_valid_token ()
 
   let find_local (local_value, memo) dr =
     try
@@ -35,20 +40,19 @@ module Make (T : Map.OrderedType) (C : Communication.S) = struct
       | Not_found -> (* allocate local value *)
           let r = local_value dr.d_value in
             dr.d_value <- r;
-            dr.d_valid_for <- Mpi.comm_rank Mpi.comm_world;
+            set_valid dr;
             memo := MyWeak.add dr.d_key r !memo;
             dr.d_value
 
   let get memo dr =
-    if dr.d_valid_for = Mpi.comm_rank Mpi.comm_world then
+    if is_valid dr then
       dr.d_value
     else
       find_local memo dr
 
   let init (_, memo) key v =
-    let dr = { d_master = Mpi.comm_rank Mpi.comm_world;
-               d_key = key;
-               d_valid_for = Mpi.comm_rank Mpi.comm_world;
+    let dr = { d_key = key;
+               d_token = Mpi.get_valid_token ();
                d_value = v; }
     in
     memo := MyWeak.add key v !memo;

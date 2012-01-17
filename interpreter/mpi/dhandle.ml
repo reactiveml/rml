@@ -32,9 +32,8 @@ module Make (T : DHANDLE_TYPE) (C : Communication.S) = struct
   end)
 
   type ('a, 'b) handle =
-      { d_master : Mpi.rank;
-        d_key : T.key;
-        mutable d_valid_for : Mpi.rank;
+      { d_key : T.key;
+        mutable d_token : Mpi.local_token;
         mutable d_value : ('a, 'b) T.value; }
   type ('a, 'b) value = ('a, 'b) T.value
   type key = T.key
@@ -48,10 +47,10 @@ module Make (T : DHANDLE_TYPE) (C : Communication.S) = struct
   let mk_cache m = m, ref MyWeak.empty
 
   let is_valid dr =
-    dr.d_valid_for = Mpi.comm_rank Mpi.comm_world
+    Mpi.is_valid_token dr.d_token
 
   let set_valid dr =
-    dr.d_valid_for <- Mpi.comm_rank Mpi.comm_world
+    dr.d_token <- Mpi.get_valid_token ()
 
   let find_local (m, memo) (dr: ('a, 'b) handle) =
     try
@@ -72,9 +71,8 @@ module Make (T : DHANDLE_TYPE) (C : Communication.S) = struct
       find_local cache dr
 
   let init (_, memo) key v =
-    let dr = { d_master = Mpi.comm_rank Mpi.comm_world;
-               d_key = key;
-               d_valid_for = Mpi.comm_rank Mpi.comm_world;
+    let dr = { d_key = key;
+               d_token = Mpi.get_valid_token ();
                d_value = v; }
     in
     memo := MyWeak.add key (Obj.repr v) !memo;
