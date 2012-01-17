@@ -1,0 +1,3 @@
+<*.ml>:debug
+<*.byte>:debug,thread,package(mpi)
+<*.rml>:lco_mpi

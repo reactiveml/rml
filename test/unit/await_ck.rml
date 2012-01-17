@@ -52,11 +52,38 @@ let process await_match_fast act =
 
 (* [N; O 0] *)
 let process await_immediate_ck act =
+  newclock ck in (
+    signal s in
+    pause; pause; pauseclock ck;emit s
+    ||
+    await immediate s; act 0
+  )
+
+(* [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ] *)
+let process await_sigat act =
   newclock ck in
-  signal s in
-  pause; pause; pauseclock ck; emit s
-  ||
-  await immediate s; act 0
+    signal s at topck default 0 gather (+) in
+    loop
+      await s(v) in act v
+    end
+    ||
+    loop
+      pause topck; act 1; pause ck; act 2; emit s 4
+    end
+
+(* [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ] *)
+let process await_sigat2 act =
+ newclock c in (
+  newclock ck in
+    signal s at topck default 0 gather (+) in
+    loop
+      await s(v) in act v
+    end
+    ||
+    loop
+      pause topck; act 1; pause ck; act 2; emit s 4
+    end
+ )
 
 open Rmltest
 
@@ -66,4 +93,7 @@ let test =
     (await_match_both, "await_match_both", [O 0; O 0]);
     (await_match_slow, "await_match_slow", [ck; P [ck; O 8; O 5]]);
     (await_match_fast, "await_match_fast", [P [ck; O 5]; P [ck; O 8]]);
-    (await_immediate_ck, "await_immediate_ck", [N; O 0]) ]
+    (await_immediate_ck, "await_immediate_ck", [N; O 0]);
+    (await_sigat, "await_sigat", [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ]);
+    (await_sigat2, "await_sigat2", [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ]);
+  ]

@@ -1,0 +1,101 @@
+(* [N; O 0] *)
+let process pre_status act =
+  signal s in
+  pause; if pre s then act 0 else act 1
+  ||
+  emit s
+
+(*[O 1]*)
+let process pre_status_init act =
+  signal s in
+  if pre s then act 0 else act 1
+
+(*[N; N; O 1]*)
+let process pre_status_false act =
+  signal s in
+  pause; pause; if pre s then act 0 else act 1
+
+(*[N; O 2]*)
+let process pre_value act =
+  signal s default 0 gather (+) in
+  pause; act (pre? s)
+  ||
+  emit s 2
+
+(*[O 0]*)
+let process pre_value_init act =
+  signal s default 0 gather (+) in
+  act (pre? s)
+
+(*[N; O 0]*)
+let process pre_value_default act =
+  signal s default 0 gather (+) in
+  pause; act (pre? s)
+
+(*[N; N; O 3]*)
+let process pre_multi act =
+  signal s default 0 gather (+) in
+  pause; pause; act (pre? s)
+  ||
+  emit s 2; pause; emit s 3
+
+(*[N; O 2; O 3]*)
+let process pre_multi2 act =
+  signal s default 0 gather (+) in
+  pause; act (pre? s); pause; act (pre? s)
+  ||
+  emit s 2; pause; emit s 3
+
+(*[N; O 2]*)
+let process last_value_pre act =
+  signal s default 0 gather (+) in
+  pause; act (last? s)
+  ||
+  emit s 2
+
+(*[N; N; N; O 2]*)
+let process last_value act =
+  signal s default 0 gather (+) in
+  pause; pause; pause; act (last? s)
+  ||
+  emit s 2
+
+(*[O 0]*)
+let process last_init act =
+  signal s default 0 gather (+) in
+  act (last? s)
+
+(*[N; N; N; O 3]*)
+let process last_multi act =
+  signal s default 0 gather (+) in
+  pause; pause; pause; act (last? s)
+  ||
+  emit s 2; pause; emit s 3
+
+(*[N; O 2; N; O 3]*)
+let process last_multi2 act =
+  signal s default 0 gather (+) in
+  pause; act (last? s); pause; pause; act (last? s)
+  ||
+  emit s 2; pause; emit s 3
+
+
+open Rmltest
+
+let test =
+   [
+   (pre_status, "pre_status", [N; O 0]);
+   (pre_status_init, "pre_status_init", [O 1]);
+   (pre_status_false, "pre_status_false", [N; N; O 1]);
+   (pre_value, "pre_value", [N; O 2]);
+   (pre_value_init, "pre_value_init", [O 0]);
+   (pre_value_default, "pre_value_default", [N; O 0]);
+   (pre_multi, "pre_multi", [N; N; O 3]);
+   (pre_multi2, "pre_multi2", [N; O 2; O 3]);
+   (last_value_pre, "last_value_pre", [N; O 2]);
+   (last_value, "last_value", [N; N; N; O 2]);
+   (last_init, "last_init", [O 0]);
+   (last_multi, "last_multi", [N; N; N; O 3]);
+   (last_multi2, "last_multi2", [N; O 2; N; O 3]);
+   ]
+

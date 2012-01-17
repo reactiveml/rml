@@ -1,0 +1,247 @@
+(* [O 0] *)
+let process pre_status act =
+  newclock ck in
+    signal s in
+    pause; if pre s then act 0 else act 1
+    ||
+    emit s
+
+(*[O 1]*)
+let process pre_status_init act =
+  newclock ck in
+    signal s in
+    if pre s then act 0 else act 1
+
+(*[O 1]*)
+let process pre_status_false act =
+  newclock ck in
+    signal s in
+    pause; pause; if pre s then act 0 else act 1
+
+(* [N; O 0] *)
+let process pre_status_slow act =
+  signal s in
+  newclock ck in
+    pause topck; if pre s then act 0 else act 1
+    ||
+    emit s
+
+(*[O 1]*)
+let process pre_status_init_slow act =
+  signal s in
+  newclock ck in
+    if pre s then act 0 else act 1
+
+(*[N; N; O 1]*)
+let process pre_status_false_slow act =
+  signal s in
+  newclock ck in
+    pause topck; pause topck; if pre s then act 0 else act 1
+
+
+(*[O 2]*)
+let process pre_value act =
+  newclock ck in
+    signal s default 0 gather (+) in
+    pause; act (pre? s)
+    ||
+    emit s 2
+
+(*[O 0]*)
+let process pre_value_init act =
+  newclock ck in
+    signal s default 0 gather (+) in
+    act (pre? s)
+
+(*[O 0]*)
+let process pre_value_default act =
+  newclock ck in
+    signal s default 0 gather (+) in
+    pause; act (pre? s)
+
+(*[N; O 2]*)
+let process pre_value_slow act =
+  signal s default 0 gather (+) in
+  newclock ck in
+    pause topck; act (pre? s)
+    ||
+    emit s 2
+
+(*[N; O 4]*)
+let process pre_value_slow2 act =
+  signal s default 0 gather (+) in
+  (newclock ck in
+    pause topck; act (pre? s)
+    ||
+    emit s 2)
+  ||
+  (newclock ck2 in
+     emit s 2)
+
+(*[N; O 0]*)
+let process pre_value_default_slow act =
+  signal s default 0 gather (+) in
+  newclock ck in
+    pause topck; act (pre? s)
+
+
+(*[O 3]*)
+let process pre_multi act =
+  newclock ck in
+    signal s default 0 gather (+) in
+    pause; pause; act (pre? s)
+    ||
+    emit s 2; pause; emit s 3
+
+(*[S(O 2, O 3)]*)
+let process pre_multi2 act =
+  newclock ck in
+    signal s default 0 gather (+) in
+    pause; act (pre? s); pause; act (pre? s)
+    ||
+    emit s 2; pause; emit s 3
+
+(*[N; N; O 3]*)
+let process pre_multi_slow act =
+  signal s default 0 gather (+) in
+  newclock ck in
+    pause topck; pause topck; act (pre? s)
+    ||
+    emit s 2; pause topck; emit s 3
+
+(*[N; O 2; O 3]*)
+let process pre_multi2_slow act =
+  signal s default 0 gather (+) in
+  newclock ck in
+    pause topck; act (pre? s); pause topck; act (pre? s)
+    ||
+    emit s 2; pause topck; emit s 3
+
+(*[N; O 2; O 3]*)
+let process pre_multi_at act =
+  newclock ck in
+    signal s at topck default 0 gather (+) in
+    pause topck; act (pre? s); pause topck; act (pre? s)
+    ||
+    emit s 2; pause topck; emit s 3
+
+
+(*[O 2]*)
+let process last_value_pre act =
+  newclock ck in
+  signal s default 0 gather (+) in
+  pause; act (last? s)
+  ||
+  emit s 2
+
+(*[O 2]*)
+let process last_value act =
+  newclock ck in
+  signal s default 0 gather (+) in
+  pause; pause; pause; act (last? s)
+  ||
+  emit s 2
+
+(*[O 0]*)
+let process last_init act =
+  newclock ck in
+  signal s default 0 gather (+) in
+  act (last? s)
+
+
+(*[N; O 2]*)
+let process last_value_pre_slow act =
+  signal s default 0 gather (+) in
+  newclock ck in
+    pause topck; act (last? s)
+    ||
+    emit s 2
+
+(*[N; N; N; O 2]*)
+let process last_value_slow act =
+  signal s default 0 gather (+) in
+  newclock ck in
+    pause topck; pause topck; pause topck; act (last? s)
+    ||
+    emit s 2
+
+(*[N; N; N; O 2]*)
+let process last_value_slow_at act =
+  newclock ck in
+    signal s at topck default 0 gather (+) in
+    pause topck; pause topck; pause topck; act (last? s)
+    ||
+    emit s 2
+
+(*[O 0]*)
+let process last_init_slow act =
+  signal s default 0 gather (+) in
+  newclock ck in
+    act (last? s)
+
+(*[O 3]*)
+let process last_multi act =
+  newclock ck in
+  signal s default 0 gather (+) in
+  pause; pause; pause; act (last? s)
+  ||
+  emit s 2; pause; emit s 3
+
+(*[S(O 2, O 3)]*)
+let process last_multi2 act =
+  newclock ck in
+  signal s default 0 gather (+) in
+  pause; act (last? s); pause; pause; act (last? s)
+  ||
+  emit s 2; pause; emit s 3
+
+
+(*[N; N; N; O 3]*)
+let process last_multi_slow act =
+  signal s default 0 gather (+) in
+  pause topck; pause topck; pause topck; act (last? s)
+  ||
+  emit s 2; pause topck; emit s 3
+
+(*[N; O 2; N; O 3]*)
+let process last_multi2_slow act =
+  signal s default 0 gather (+) in
+  newclock ck in
+  pause topck; act (last? s); pause topck; pause topck; act (last? s)
+  ||
+  emit s 2; pause topck; emit s 3
+
+
+open Rmltest
+
+let test =
+  [
+   (pre_status, "pre_status", [O 0]);
+   (pre_status_init, "pre_status_init", [O 1]);
+   (pre_status_false, "pre_status_false", [O 1]);
+   (pre_status_slow, "pre_status_slow", [N; O 0]);
+   (pre_status_init_slow, "pre_status_init_slow", [O 1]);
+   (pre_value_slow2, "pre_value_slow2", [N; O 4]);
+   (pre_status_false_slow, "pre_status_false_slow", [N; N; O 1]);
+   (pre_value, "pre_value", [O 2]);
+   (pre_value_init, "pre_value_init", [O 0]);
+   (pre_value_default, "pre_value_default", [O 0]);
+   (pre_value_slow, "pre_value_slow", [N; O 2]);
+   (pre_value_default_slow, "pre_value_default_slow", [N; O 0]);
+   (pre_multi, "pre_multi", [O 3]);
+   (pre_multi2, "pre_multi2", [S(O 2, O 3)]);
+   (pre_multi_slow, "pre_multi_slow", [N; N; O 3]);
+   (pre_multi2_slow, "pre_multi2_slow", [N; O 2; O 3]);
+   (pre_multi_at, "pre_multi_at", [N; O 2; O 3]);
+   (last_value_pre, "last_value_pre", [O 2]);
+   (last_value, "last_value", [O 2]);
+   (last_init, "last_init", [O 0]);
+   (last_value_pre_slow, "last_value_pre_slow", [N; O 2]);
+   (last_value_slow, "last_value_slow", [N; N; N; O 2]);
+   (last_init_slow, "last_init_slow", [O 0]);
+   (last_multi, "last_multi", [O 3]);
+   (last_multi2, "last_multi2", [S(O 2, O 3)]);
+   (last_multi_slow, "last_multi_slow", [N; N; N; O 3]);
+   (last_multi2_slow, "last_multi2_slow", [N; O 2; N; O 3]);
+  ]
+

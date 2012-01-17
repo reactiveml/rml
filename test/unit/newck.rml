@@ -115,7 +115,39 @@ let process nested_clocks_direct3 act =
   )
  )
 
+(* [O 2; O 3; N; O 4] *)
+let process macro_instant act =
+  signal s default 0 gather (+) in
+  newclock ck in (
+    signal s2 at ck default 0 gather (+) in
+    newclock ck2 in (
+      (await s(v) in act v)
+      ||
+      (await s2(v) in act v)
+      ||
+      pause ck; act 2; pause topck; emit s2 3; pause topck; emit s 4
+    )
+  )
 
+(* [O 2; O 3; O 2; P[O 3; O 4]; O 2; P[O 3; O 4]] *)
+let process macro_instant_loop act =
+  signal s default 0 gather (+) in
+  newclock ck in (
+    signal s2 at ck default 0 gather (+) in
+    newclock ck2 in (
+      loop
+        await s(v) in act v
+      end
+      ||
+      loop
+        await s2(v) in act v
+      end
+      ||
+      loop
+        pause ck; act 2; pause topck; emit s2 3; pause topck; emit s 4
+      end
+    )
+  )
 
 open Rmltest
 
@@ -132,5 +164,7 @@ let test =
      (nested_clocks, "nested_clocks", [ S(P [O 1; O 3], P [O 2; O 4]) ]);
      (nested_clocks_direct, "nested_clocks_direct", [ S(O 1, O 2) ]);
      (nested_clocks_direct, "nested_clocks_direct2", [ S(O 1, O 2) ]);
-     (nested_clocks_direct, "nested_clocks_direct3", [ S(O 1, O 2) ])
+     (nested_clocks_direct, "nested_clocks_direct3", [ S(O 1, O 2) ]);
+     (macro_instant, "macro_instant", [O 2; O 3; N; O 4]);
+     (macro_instant_loop, "macro_instant_loop", [O 2; O 3; O 2; P[O 3; O 4]; O 2; P[O 3; O 4]]);
     ]
