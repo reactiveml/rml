@@ -65,7 +65,7 @@ module Rml_interpreter =
       | CkExpr e -> e
       | CkTop -> R.top_clock ()
       | CkLocal -> (* should be rejected by compiler *)
-          print_debug "Expected a not relative clock expr instead of top@.";
+          print_debug "Error: Unexpected local clock@.";
           raise Types.RML
 
 (* ------------------------------------------------------------------------ *)

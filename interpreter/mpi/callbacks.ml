@@ -12,7 +12,8 @@ module type S = sig
 
   val mk_queue : unit -> msg_queue
   val dispatch_all : msg_queue -> dispatcher -> unit
-  val recv_given_msg : msg_queue -> dispatcher -> tag -> msg
+  val recv_given_msg : msg_queue -> tag -> msg
+  val recv_n_given_msg : msg_queue -> tag -> int -> unit
   val await_new_msg : msg_queue -> unit
 
   val add_callback : ?kind:callback_kind -> tag -> callback -> dispatcher -> unit
@@ -91,7 +92,7 @@ module Make (C : Communication.S) = struct
     Mutex.unlock q.q_mutex;
     List.iter (fun (tag, msg) -> call_callback d tag msg) l
 
-  let recv_given_msg q d tag =
+  let recv_given_msg q tag =
     let rec aux () =
       if q.q_queue = [] then
         Condition.wait q.q_queue_filled q.q_mutex;
@@ -112,6 +113,26 @@ module Make (C : Communication.S) = struct
     Mutex.unlock q.q_mutex;
     print_debug "Received the awaited message with tag '%a'@." C.print_tag tag;
     msg
+
+  let recv_n_given_msg q tag n =
+    let counter = ref n in
+    let rec aux () =
+      if q.q_queue = [] then
+        Condition.wait q.q_queue_filled q.q_mutex;
+      print_debug "Looking for requested tag '%a' @." C.print_tag tag;
+      let found, others = List.partition (fun (t,_) -> t = tag) q.q_queue in
+      q.q_queue <- others;
+      counter := !counter - (List.length found);
+      if !counter <> 0 then (
+        Condition.wait q.q_queue_filled q.q_mutex;
+        aux ()
+      )
+    in
+    Mutex.lock q.q_mutex;
+    aux ();
+    Mutex.unlock q.q_mutex;
+    print_debug "Received the n awaited messages with tag '%a'@." C.print_tag tag
+
 
   let stop_receiving q =
     q.q_alive <- false

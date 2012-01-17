@@ -382,8 +382,7 @@ struct
           (* request the current value of the signal *)
           Msgs.send_req_signal gid (C.fresh site.s_seed);
           setup_local_copy gid n ck;
-          let msg = Callbacks.recv_given_msg site.s_msg_queue
-            site.s_callbacks (Msignal gid) in
+          let msg = Callbacks.recv_given_msg site.s_msg_queue (Msignal gid) in
           (* set the local value to the one received *)
           let new_n = C.from_msg msg in
           E.copy n new_n;
@@ -409,8 +408,7 @@ struct
             C.send_owner tmp_id (Msignal_created tmp_id) ev
           in
           Msgs.send_create_signal ck.ck_gid (tmp_id, create_signal);
-          let msg = Callbacks.recv_given_msg site.s_msg_queue
-            site.s_callbacks (Msignal_created tmp_id) in
+          let msg = Callbacks.recv_given_msg site.s_msg_queue (Msignal_created tmp_id) in
           (* setup the local copy of the signal  *)
           let ev:('a, 'b) event = C.from_msg msg in
           SignalHandle.set_valid ev.ev_handle;
@@ -1001,9 +999,7 @@ struct
       (* create the signal and send the created value *)
       f ()
 
-    (* After receiving Mfinalize *)
-    let terminate_site _ =
-      let site = get_site () in
+    let terminate_site site =
       Callbacks.stop_receiving site.s_msg_queue;
       (* send dummy messsage to stop the receiving thread *)
       Msgs.send_dummy site.s_comm_site ();
@@ -1012,6 +1008,17 @@ struct
         print_debug "Exiting slave@.";
         exit 0
       )
+
+    (* After receiving Mfinalize *)
+    let receive_finalize_site msg =
+      let site = get_site () in
+      (* stop sending messages, byt keep receiving from others *)
+      let main_site = Msgs.recv_finalize msg in
+      Msgs.send_dummy main_site ();
+      (* wait for all the other sites to be done sending *)
+      let _ = Callbacks.recv_given_msg site.s_msg_queue Mfinalize in
+      (* really terminate*)
+      terminate_site site
 
     let init_site () =
       print_debug "Init site@.";
@@ -1041,7 +1048,7 @@ struct
       add_callback Meoi receive_eoi;
       add_callback Mnext_instant receive_next_instant;
       add_callback Mcreate_signal receive_create_signal;
-      add_callback Mfinalize terminate_site;
+      add_callback Mfinalize receive_finalize_site;
       s.s_msg_thread <- Some (Thread.create Callbacks.receive s.s_msg_queue)
 
     let _ = init_site ()
@@ -1053,10 +1060,18 @@ struct
       done
 
     let finalize_top_clock_domain cd =
+      let site = get_site () in
+      (* tell all sites to stop sending messages *)
       for i = 0 to C.number_of_sites () - 1 do
-        Msgs.send_finalize (C.nth_site i) ()
+        Msgs.send_finalize (C.nth_site i) site.s_comm_site
       done;
-      terminate_site ()
+      (* wait for all sites to be done *)
+      Callbacks.recv_n_given_msg site.s_msg_queue Mdummy (C.number_of_sites ());
+      (* tell all sites to stop executing *)
+      for i = 0 to C.number_of_sites () - 1 do
+        Msgs.send_finalize (C.nth_site i) site.s_comm_site
+      done;
+      terminate_site site
 
     let mk_top_clock_domain () =
       let ck = mk_clock None in
