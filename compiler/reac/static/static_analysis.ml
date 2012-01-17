@@ -400,8 +400,8 @@ let rec static_expr ctx e =
         | CkLocal ->
             if ctx <> Process then
               expr_wrong_static_err e;
-            let _ =  static_expr ctx p in
-            Dynamic Instantaneous
+            let ty =  static_expr ctx p in
+            max (Dynamic Instantaneous) ty
         | CkExpr e1 ->
             if static_expr ML e1 <> Static then
               expr_wrong_static_err e1;
@@ -413,17 +413,22 @@ let rec static_expr ctx e =
         let typ1 = static_expr ML e1 in
         let typ2 = static_expr ML e2 in
         let typ3 = static_expr ctx p in
+        let ty =
+          if max typ1 typ2 = Static
+          then typ3
+          else expr_wrong_static_err e
+        in
         (match ck with
           | CkLocal ->
-            if ctx <> Process then
-              expr_wrong_static_err e
+              if ctx <> Process then
+                expr_wrong_static_err e;
+              max (Dynamic Instantaneous) ty
           | CkExpr e1 ->
-            if static_expr ML e1 <> Static then
-              expr_wrong_static_err e1
-          | _ -> ());
-        if max typ1 typ2 = Static
-        then typ3
-        else expr_wrong_static_err e
+              if static_expr ML e1 <> Static then
+                expr_wrong_static_err e1;
+              ty
+          | _ -> ty)
+
 
     | Eprocess (p) ->
         let typ = static_expr Process p in
