@@ -119,7 +119,9 @@ module Make (P : TAG_TYPE) = struct
 
   let broadcast tag d =
     for i = 0 to number_of_sites () - 1 do
-      send (nth_site i) tag d
+      let s = nth_site i in
+      if s <> local_site () then
+        send s tag d
     done
 
   let receive () =

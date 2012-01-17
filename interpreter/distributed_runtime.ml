@@ -331,6 +331,7 @@ struct
           C.broadcast (Mvalue ev.ev_gid) (E.value n)
 
         let do_emit ev v =
+          print_debug "Emitting a value for %a@." print_signal ev;
           let n = get_event ev in
           let ev_ck = get_event_clock ev in
           if not (C.is_local ev_ck.ck_gid) then
