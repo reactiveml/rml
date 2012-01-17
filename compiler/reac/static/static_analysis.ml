@@ -398,14 +398,16 @@ let rec static_expr ctx e =
     | Esignal (_, ck, None, p) ->
       (match ck with
         | CkLocal ->
-          if ctx <> Process then
-            expr_wrong_static_err e
+            if ctx <> Process then
+              expr_wrong_static_err e;
+            let _ =  static_expr ctx p in
+            Dynamic Instantaneous
         | CkExpr e1 ->
-          if static_expr ML e1 <> Static then
-            expr_wrong_static_err e1
-        | _ -> ()
-      );
-      static_expr ctx p
+            if static_expr ML e1 <> Static then
+              expr_wrong_static_err e1;
+            static_expr ctx p
+        | _ ->  static_expr ctx p
+      )
 
     | Esignal (_, ck, Some(e1,e2), p) ->
         let typ1 = static_expr ML e1 in
