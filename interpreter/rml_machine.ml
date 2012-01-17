@@ -147,7 +147,7 @@ module M (I : MACHINE_INTERPRETER) =
       with
         | Rmltest.Test_success -> finalize (); exit 0
         | Rmltest.Test_failed _ -> finalize (); exit 2
-        | _ -> finalize (); exit 2
+        | _ -> Format.eprintf "Error: An exception was raised. Aborting@."; finalize (); exit 2
   end
 
 

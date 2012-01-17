@@ -664,8 +664,10 @@ struct
           (match ctrl.kind with
             | Clock_domain ck when not (C.is_local ck.ck_gid) ->
                 (* waiting for a Mhas_next message from this clock domain if req_has_next is true *)
-                if req_has_next then
+                if req_has_next then (
+                  print_debug "++%a@." print_cd cd;
                   incr cd.cd_remaining_async;
+                );
                 Msgs.send_eoi_control ck.ck_gid req_has_next
             | Clock_domain ck -> (*local clock domain*)
                 let cd = get_clock_domain ck in
@@ -825,6 +827,7 @@ struct
     (* After receiving Mhas_next *)
     let gather_has_next cd msg =
       let has_next = Msgs.recv_has_next msg in
+      print_debug "--%a@." print_cd cd;
       decr cd.cd_remaining_async;
       if !debug_mode && !(cd.cd_remaining_async) < 0 then
         print_debug "Error: counter of %a is < 0@." print_cd cd;
@@ -843,6 +846,7 @@ struct
 
 
     let step_remote_clock_domain cd ck_id () =
+      print_debug "++%a@." print_cd cd;
       incr cd.cd_remaining_async;
       Msgs.send_step ck_id ck_id
 
@@ -858,6 +862,7 @@ struct
     (* After receving Mstep_done*)
     let receive_step_done cd ctrl remote_ck_id _ =
       D.add_next (step_remote_clock_domain cd remote_ck_id) ctrl.next_control;
+      print_debug "--%a@." print_cd cd;
       decr cd.cd_remaining_async;
       if !debug_mode && !(cd.cd_remaining_async) < 0 then
         print_debug "Error: counter of %a is < 0@." print_cd cd;
@@ -867,6 +872,7 @@ struct
     (* After receiving Mdone *)
     let receive_done_cd cd new_ctrl f_k _ =
       set_kill new_ctrl;
+      print_debug "--%a@." print_cd cd;
       decr cd.cd_remaining_async;
       if !debug_mode && !(cd.cd_remaining_async) < 0 then
         print_debug "Error: counter of %a is < 0@." print_cd cd;
@@ -908,30 +914,36 @@ struct
     let create_cd msg =
       let tmp_id, parent_ck, new_balancer, p = Msgs.recv_new_cd msg in
       let new_ck = mk_clock (Some parent_ck) in
-      Msgs.send_cd_created tmp_id new_ck;
       let new_cd = init_clock_domain new_ck new_balancer None in
       print_debug "Created local clock domain %a after request by %a@."
         print_cd new_cd   print_clock parent_ck;
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl dummy_step) in
       D.add_current f new_cd.cd_current;
-      exec_cd new_cd ()
+      (* we wait for the start of the clock domain *)
+      Msgs.send_cd_created tmp_id new_ck
 
     (* After receiving Mcd_created *)
     let start_remote_clock_domain cd ctrl f_k msg =
-      (*Format.eprintf "Starting remote clock domain@.";*)
+      print_debug "Starting remote clock domain@.";
       let site = get_site () in
       let new_ck = Msgs.recv_cd_created msg in
+      print_debug "--%a" print_cd cd;
+      decr cd.cd_remaining_async;
       let new_ctrl = new_ctrl (Clock_domain new_ck) in
+      (* add local callbacks *)
       Callbacks.add_callback ~kind:Callbacks.Once
         (Mdone new_ck.ck_gid) (receive_done_cd cd new_ctrl f_k) site.s_callbacks;
       add_callback (Mstep_done new_ck.ck_gid) (receive_step_done cd ctrl new_ck.ck_gid);
-      start_ctrl cd ctrl new_ctrl
+      start_ctrl cd ctrl new_ctrl;
+      (* send a message to start the execution *)
+      step_remote_clock_domain cd new_ck.ck_gid ()
 
     let new_remote_clock_domain remote_site new_balancer cd ctrl p f_k =
       let site = get_site () in
       let tmp_id = C.fresh site.s_seed in
       add_callback (Mcd_created tmp_id) (start_remote_clock_domain cd ctrl f_k);
+      print_debug "++%a@." print_cd cd;
       incr cd.cd_remaining_async;
       Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, p)
 
@@ -969,7 +981,7 @@ struct
        let site = get_site () in
        exec_cd (C.GidMap.find cd_id site.s_clock_domains) ()
      with
-       | Not_found -> print_debug "Received Start for unknown clock domain.@."
+       | Not_found -> print_debug "Error: Received Start for unknown clock domain.@."
 
    (* After receiving Meoi *)
     let receive_eoi msg =
