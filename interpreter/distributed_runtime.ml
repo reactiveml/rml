@@ -24,6 +24,7 @@ struct
           | Meoi (* End of instant of clock domain *)
           | Meoi_control of 'gid
           | Mnext_instant (* Go to next instant *)
+          | Mreq_has_next of 'gid
           | Mhas_next of 'gid
               (* Whether there is processes to execute in the next local step *)
               (* signals *)
@@ -47,6 +48,7 @@ struct
         | Meoi -> fprintf ff "Meoi"
         | Meoi_control gid -> fprintf ff "Meoi_control %a" print_gid gid
         | Mnext_instant -> fprintf ff "Mnext_instant"
+        | Mreq_has_next gid -> fprintf ff "Mreq_has_next %a" print_gid gid
         | Mhas_next gid -> fprintf ff "Mhas_next %a" print_gid gid
             (* Whether there is processes to execute in the next local step *)
         (* signals *)
@@ -257,6 +259,10 @@ struct
         let send id (d:'a) = C.send_owner id (Mhas_next id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
+      let send_req_has_next, recv_req_has_next =
+        let send id (d:'a) = C.send_owner id (Mreq_has_next id) d in
+        let recv = (C.from_msg : C.msg -> 'a) in
+        send, recv
       let send_req_signal, recv_req_signal =
         let send id (d:'a) = C.send_owner id (Mreq_signal id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
@@ -331,7 +337,7 @@ struct
           C.broadcast (Mvalue ev.ev_gid) (E.value n)
 
         let do_emit ev v =
-          print_debug "Emitting a value for %a@." print_signal ev;
+          (*print_debug "Emitting a value for %a@." print_signal ev;*)
           let n = get_event ev in
           let ev_ck = get_event_clock ev in
           if not (C.is_local ev_ck.ck_gid) then
@@ -659,20 +665,15 @@ struct
         We can keep the last condition (if it was true for the eoi of the fast clock,
         it is also true for the eoi of the slow clock), but we have to make sure
         to fire the handler only once. *)
-    let rec eoi_control cd req_has_next ctrl =
+    let rec eoi_control cd ctrl =
       let rec _eoi_control pere ctrl =
         if ctrl.alive then (
           (match ctrl.kind with
             | Clock_domain ck when not (C.is_local ck.ck_gid) ->
-                (* waiting for a Mhas_next message from this clock domain if req_has_next is true *)
-                if req_has_next then (
-                  print_debug "++%a@." print_cd cd;
-                  incr cd.cd_remaining_async;
-                );
-                Msgs.send_eoi_control ck.ck_gid req_has_next
+                Msgs.send_eoi_control ck.ck_gid ()
             | Clock_domain ck -> (*local clock domain*)
                 let cd = get_clock_domain ck in
-                eoi_control cd req_has_next cd.cd_top
+                eoi_control cd cd.cd_top
             | _ ->
                 ctrl.cond_v <- ctrl.cond ();
                 (match ctrl.kind with
@@ -686,8 +687,6 @@ struct
           )
         )
       in
-      if req_has_next then
-        cd.cd_children_have_next <- false;
       List.iter (_eoi_control ctrl) ctrl.children
 
     let rec has_next cd ctrl =
@@ -699,8 +698,13 @@ struct
               if C.is_local ck.ck_gid then
                 let cd = get_clock_domain ck in
                 has_next_cd cd
-              else
+              else (
+                (* waiting for a Mhas_next message from this clock domain *)
+                print_debug "++%a@." print_cd cd;
+                incr cd.cd_remaining_async;
+                Msgs.send_req_has_next ck.ck_gid ();
                 false
+              )
           | Kill _ | Kill_handler _ ->
             ctrl.cond () || has_next_children cd ctrl
           | Susp ->
@@ -712,6 +716,7 @@ struct
       not (D.is_empty_next ctrl.next) || List.exists (has_next cd) ctrl.children
     (* Computes has_next, waiting for child clock domains if necessary *)
     and has_next_cd cd =
+      cd.cd_children_have_next <- false;
       let has_next_ctrl = has_next_children cd cd.cd_top in
       (* Awaits Mhas_next from all remote clock domains *)
       await_all_children cd;
@@ -720,6 +725,8 @@ struct
 
     let macro_step_done cd =
       let has_next = has_next_cd cd in
+      print_debug "Macro step of clock domain %a: pauseclock = %b and has_next = %b@."
+        print_cd cd  cd.cd_pause_clock  has_next;
       cd.cd_pause_clock || not has_next
 
     (* cd.cd_current_lock should be locked when calling schedule and is still locked
@@ -740,21 +747,21 @@ struct
       print_debug "Eoi of clock domain %a@." print_cd cd;
       wake_up_now (Wbefore_eoi cd.cd_clock.ck_gid);
       cd.cd_eoi <- true;
-      Msgs.broadcast_eoi cd.cd_clock.ck_gid;
       (* if this is not the top clock domain, request all remote child clock domains
          to send back Mhas_next *)
-      let req_has_next = match cd.cd_clock.ck_parent with Some _ -> true | _ -> false in
-      eoi_control cd req_has_next cd.cd_top;
+      eoi_control cd cd.cd_top;
       wake_up_now (Weoi cd.cd_clock.ck_gid);
+      Msgs.broadcast_eoi cd.cd_clock.ck_gid;
       List.iter wake_up_now cd.cd_wake_up;
       cd.cd_wake_up <- []
 
     let next_instant cd =
       print_debug "Next instant of clock domain %a@." print_cd cd;
-      E.next (get_clock cd.cd_clock.ck_clock);
       (* next instant of child clock domains *)
-      wake_up_now (Wnext_instant cd.cd_clock.ck_gid);
       Msgs.broadcast_next_instant cd.cd_clock;
+      (*increment the clock after sending because the receiver will increment it*)
+      E.next (get_clock cd.cd_clock.ck_clock);
+      wake_up_now (Wnext_instant cd.cd_clock.ck_gid);
       (* next instant of this clock domain *)
       eval_control_and_next_to_current cd;
       (* reset the clock domain *)
@@ -784,9 +791,8 @@ struct
                     (match cd.cd_parent_ctrl with
                       | None -> assert false
                       | Some ctrl -> D.add_next (exec_cd ~wait_for_msgs:wait_for_msgs cd) ctrl.next_control)
-                )
+                  )
                 ) else (
-                  print_debug "Doing another step of clock domain %a@." print_cd cd;
                   next_instant cd;
                   (* do another step*)
                   exec_cd ~wait_for_msgs:wait_for_msgs cd ()
@@ -815,15 +821,16 @@ struct
     let react cd = exec_cd ~wait_for_msgs:true cd ()
 
     (* After receiving Meoi_control *)
-    let receive_eoi_control cd msg =
-      let req_has_next = Msgs.recv_eoi_control msg in
-      eoi_control cd req_has_next cd.cd_top;
-      if req_has_next then (
-        let has_next = has_next_cd cd in
-        match cd.cd_clock.ck_parent with
-          | None -> assert false
-          | Some ck -> Msgs.send_has_next ck.ck_gid has_next
-      )
+    let receive_eoi_control cd _ =
+      eoi_control cd cd.cd_top
+
+    (* After receiving Mreq_has_next *)
+    let receive_req_has_next cd _ =
+      match cd.cd_clock.ck_parent with
+        | None -> assert false
+        | Some ck ->
+            let has_next = has_next_cd cd in
+            Msgs.send_has_next ck.ck_gid has_next
 
     (* After receiving Mhas_next *)
     let gather_has_next cd msg =
@@ -886,6 +893,7 @@ struct
       let cd = mk_clock_domain clock balancer parent_ctrl in
         add_callback (Mhas_next clock.ck_gid) (gather_has_next cd);
         add_callback (Meoi_control clock.ck_gid) (receive_eoi_control cd);
+        add_callback (Mreq_has_next clock.ck_gid) (receive_req_has_next cd);
         add_callback (Mpauseclock clock.ck_gid) (gather_pauseclock cd);
         cd
 
@@ -1261,8 +1269,10 @@ struct
       let rec self _ =
         if has_been_active ctrl ev then
           add_waiting (Weoi ev_ck.ck_gid) eoi_work
-        else
-           add_waiting (Wsignal_wa ev.ev_gid) self
+        else (
+          print_debug "Signal %a was emitted, but ctrl is not active so keep waiting@." print_signal ev;
+          add_waiting (Wsignal_wa ev.ev_gid) self
+        )
       and eoi_work _ =
           (try
             f unit_value

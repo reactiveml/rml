@@ -149,10 +149,37 @@ let process macro_instant_loop act =
     )
   )
 
+(* let v = P[O 4; O 5; O 6; O 7] in
+  [N; v; v; N; v; v] *)
+let process await_slow_loop act =
+ newclock adapt_ck in (
+  signal s default 0 gather (+) in
+  loop
+    pause topck;
+    emit s 3;
+    pause topck;
+    emit s 3;
+    pause topck;
+  end
+  ||
+  (
+  pause topck;
+  newclock computation_ck in (
+    for i = 1 to 4 dopar
+      newclock ck2 in
+        loop
+          await s(v) in act (v+i)
+        end
+    done
+  )
+  )
+ )
+
 open Rmltest
 
 let test =
   let ck = S (O 0, S (O 1, O 2)) in
+  let v = P[O 4; O 5; O 6; O 7] in
    [ (ck_one_step, "ck_one_step", [O 0]);
      (ck_macro_pauseck_par, "ck_macro_pauseck_par", [P [ck; O 8]; P [ck; O 7]]);
      (ck_macro_pauseck, "ck_macro_pauseck", [ck; ck]);
@@ -167,4 +194,5 @@ let test =
      (nested_clocks_direct, "nested_clocks_direct3", [ S(O 1, O 2) ]);
      (macro_instant, "macro_instant", [O 2; O 3; N; O 4]);
      (macro_instant_loop, "macro_instant_loop", [O 2; O 3; O 2; P[O 3; O 4]; O 2; P[O 3; O 4]]);
+     (await_slow_loop, "await_slow_loop", [N; v; v; N; v; v]);
     ]
