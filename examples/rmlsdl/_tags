@@ -1,0 +1,5 @@
+<*.ml>:use_sdl, thread, debug, package(mpi)
+<*.mli>:use_sdl
+<*.rml>:lco_mpi
+<rmlsdl.cma>:use_sdl,use_sdlloader,use_sdlgfx,use_sdlttf,use_bigarray,thread
+<*.byte>:package(mpi),use_sdl,use_sdlloader,use_sdlgfx,use_sdlttf,use_bigarray,thread,debug

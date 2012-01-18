@@ -1,0 +1,21 @@
+open Mlsdl_types
+
+type 'a sprite
+type 'a viewport
+
+val identity_viewport : int viewport
+val create_float_viewport : float rect -> int rect -> float viewport
+val translate_pos : int pos -> 'a viewport -> 'a pos
+
+val sprite_pos : 'a sprite -> 'a pos
+val set_sprite_pos : 'a sprite -> 'a -> 'a -> unit
+val set_sprite_zoom : 'a sprite -> float -> unit
+val draw_sprite : 'a sprite -> unit
+val clear_sprite : 'a sprite -> unit
+val create_sprite_from_file : 'a viewport -> 'a pos -> int -> int -> string -> 'a sprite
+val create_sprite_box : 'a viewport -> 'a pos -> int -> int -> color -> 'a sprite
+
+val flush_key_events : unit -> string list
+val flush_mouse_events : unit -> (mouse_event * int pos) list
+
+val start_screen : window_desc -> int -> int -> color -> int -> unit

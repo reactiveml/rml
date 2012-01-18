@@ -1,0 +1,22 @@
+type ident
+
+type color = Black | White | Yellow | Green | Blue | Red | Grey
+
+type 'a pos = { p_x : 'a; p_y : 'a; }
+type 'a rect = { r_x : 'a; r_y : 'a; r_w : 'a; r_h : 'a; }
+
+val mk_rect : 'a -> 'a -> 'a -> 'a -> 'a rect
+val mk_pos : 'a -> 'a -> 'a pos
+val null_int_pos : int pos
+val null_float_pos : float pos
+
+type keyboard_event = string
+type mouse_event =
+    Mleft_down
+  | Mleft_up
+  | Mright_down
+  | Mright_up
+  | Mmotion of (int * int)
+type any_event = Key_event of keyboard_event | Mouse_event of mouse_event * int pos
+
+type window_desc = Fullscreen | Window of int * int

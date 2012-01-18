@@ -1,0 +1,156 @@
+(****************************************************)
+(** Adaptative version ******************************)
+(****************************************************)
+(****************************************************)
+
+open Mlsdl_types
+open Rmlsdl
+open Utils
+
+let enable_graphics = true
+
+
+let process no_compute env x_t v_t w =
+  (x_t, v_t, 0.0)
+
+let process compute_a env x w =
+  emit env (force (x, w));
+  await env(f) in
+  f x
+
+
+let process compute_bogacki_shampine dt env x_t v_t w =
+  (* step 1 *)
+  let k1_v = run (compute_a env x_t w) in
+  let k1_p = v_t in
+  (* step 2 *)
+  let k2_p = add_vector v_t (scalar_mult (dt /. 2.0) k1_v) in
+  let x_2 = add_vector x_t (scalar_mult (dt /. 2.0) k1_p) in
+  let k2_v = run (compute_a env x_2 w) in
+  (* step 3 *)
+  let k3_p = add_vector v_t (scalar_mult (0.75 *. dt) k2_v) in
+  let x_3 = add_vector x_t (scalar_mult (0.75 *. dt) k2_p) in
+  let k3_v = run (compute_a env x_3 w) in
+  (* final result *)
+  let v_tp =
+    add_vector v_t (scalar_mult (dt /. 9.0)
+                      (add_vector (scalar_mult 2.0 k1_v)
+                         (add_vector (scalar_mult 3.0 k2_v)
+                            (scalar_mult 4.0 k3_v))) )
+  in
+  let x_tp =
+    add_vector x_t (scalar_mult (dt /. 9.0)
+                      (add_vector (scalar_mult 2.0 k1_p)
+                         (add_vector (scalar_mult 3.0 k2_p)
+                            (scalar_mult 4.0 k3_p))) )
+  in
+  (*error computation*)
+  (* step 3 *)
+  let k4_v = run (compute_a env x_tp w) in
+  (* second final value *)
+  let v_s =
+    add_vector v_t (scalar_mult (dt /. 24.0)
+                      (add_vector (scalar_mult 7.0 k1_v)
+                         (add_vector (scalar_mult 6.0 k2_v)
+                            (add_vector (scalar_mult 8.0 k3_v)
+                               (scalar_mult 3.0 k4_v)))))
+  in
+  let e = vector_error v_tp v_s in
+  (*print_float e; print_newline ();*)
+  x_tp, v_tp, e
+
+let process body st compute env error adapt_ck =
+  let rec process do_compute f =
+    do
+      let x_tp, v_tp, e = run (f env (pre? st.b_pos) st.b_vel st.b_weight) in
+      emit error(e);
+      pause adapt_ck;
+      (*wait for possible preemption here*)
+      pause adapt_ck;
+      (*step is ok; write back result*)
+      emit st.b_pos x_tp;
+      st.b_vel <- v_tp
+    until compute(f) -> run (do_compute f) done
+  in
+  loop
+    await compute(f) in
+    run (do_compute f)
+  end
+
+let process container time_step error_threshold p pck =
+  newclock adapt_ck in
+    signal error default 0.0 gather max in
+    signal compute default no_compute gather (fun x _ -> x) in
+    let rec process try_step fuel s =
+      emit compute(compute_bogacki_shampine s);
+      await error(e) in
+      if e > error_threshold && fuel > 0 then (
+        print_string "Error found; trying with step : "; print_float (s /. 2.0); print_newline ();
+        run (try_step (fuel - 1) (s /. 2.0));
+        run (try_step (fuel - 1) (s /. 2.0))
+      ) else (
+        pause
+      )
+    in
+    loop
+      run (try_step 2 time_step);
+      pause pck
+    end
+    ||
+    newclock computation_ck in
+      let env = run env_signal in
+      run (p compute env error adapt_ck)
+
+let process body_sprite st sp pck =
+  loop
+    await st.b_pos(p) in
+    Mlsdl_client.set_sprite_pos sp p.v_x p.v_y;
+    Mlsdl_client.draw_sprite sp
+  end
+
+
+let process planet center vp compute env error adapt_ck =
+  let pos = random_pos_planet center.v_x center.v_y 200.0 350.0 in
+  let st = mk_body topck pos
+      (scalar_mult 10.0 (normal_unit_vector pos center))
+      (random_float 0.01 0.01)
+  in
+  (*let sp = Rmlsdl.create_sprite_circle 5 Rmlsdl.Blue in*)
+  let sp = Mlsdl_client.create_sprite_from_file vp null_float_pos 12 12 "earth.png" in
+  run (body st compute env error adapt_ck)
+  ||
+  run (body_sprite st sp topck)
+
+let process sun center vp compute env error adapt_ck =
+  let st = mk_body topck center zero_vector 8000.0 in
+  let sp = Mlsdl_client.create_sprite_from_file vp null_float_pos 48 48 "sun.png" in
+  run (body st compute env error adapt_ck)
+  ||
+  run (body_sprite st sp topck)
+
+let w = 1000
+let h = 800
+let nb_procs = 3
+let nb_planets_per_procs = 20
+
+let _ = Random.self_init ()
+
+let process main =
+  let vp_rect = mk_rect 0.0 0.0 1000.0 1000.0 in
+  let sc_rect = mk_rect 0 0 w h in
+  let center = center_float vp_rect in
+  Mlsdl_client.start_screen (Window (w, h)) w h Black 60;
+  let vp = Mlsdl_client.create_float_viewport vp_rect sc_rect in
+  let process p compute env error adapt_ck =
+    run (sun center vp compute env error adapt_ck)
+    ||
+    pause;
+    for i = 1 to nb_procs dopar
+      newclock ck in (
+        for i = 1 to nb_planets_per_procs dopar
+          run (planet center vp compute env error adapt_ck)
+        done
+      )
+    done
+  in
+  run (container 1.0 1e-6 p topck)
