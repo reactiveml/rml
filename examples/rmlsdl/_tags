@@ -1,5 +1,5 @@
 <*.ml>:use_sdl, use_mlmpi, thread, debug
 <*.rml>:lco_mpi
 <*.mli>:use_sdl
-<*.cma>:thread,custom,use_unix,use_sdl,use_sdlloader,use_sdlgfx,use_sdlttf,use_bigarray,use_mlmpi
+<*.cma>:thread,custom,use_unix,use_sdl,use_sdlloader,use_sdlgfx,use_sdlttf,use_bigarray
 <*.byte>:use_unix,use_sdl,use_sdlloader,use_sdlgfx,use_sdlttf,use_bigarray,thread,use_mlmpi,debug

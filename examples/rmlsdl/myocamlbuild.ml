@@ -11,14 +11,8 @@ let df = function
       (* mlmpi *)
       ocaml_lib ~extern:true ~dir:mlmpi_dir "mlmpi";
 
-      flag ["link"; "library"; "ocaml"; "byte"; "use_mlmpi"]
-        (S[A"-dllib"; A"-lmlmpi"; A"-cclib"; A"-lmlmpi"]);
-
-      flag ["link"; "library"; "ocaml"; "native"; "use_mlmpi"]
-        (S[A"-cclib"; A"-lmlmpi"]);
-
-     flag ["link"; "ocaml"; "library"]
-          (S[A"-ccopt"; A sdl_dir;  A"-cclib"; A "-lsdlttfstub"]);
+      flag ["link"; "ocaml"; "library"]
+        (S[A"-ccopt"; A sdl_dir;  A"-cclib"; A "-lsdlttfstub"]);
 
       (* Tell ocamlbuild about the sdl library. *)
       ocaml_lib ~extern:true ~dir:"+sdl" "sdl";
