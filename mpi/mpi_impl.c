@@ -46,7 +46,7 @@ value caml_mpi_send(value data, value flags, value dest, value tag)
   caml_release_runtime_system();
   MPI_Send(buffer, len, MPI_BYTE, Int_val(dest), Int_val(tag), MPI_COMM_WORLD);
   caml_acquire_runtime_system();
-  stat_free(buffer);
+  caml_stat_free(buffer);
 
   CAMLreturn (Val_unit);
 }
@@ -69,7 +69,6 @@ value caml_mpi_receive(value src, value tag)
 {
   MPI_Status status;
   int count;
-  size_t len;
   value res;
   char * buffer;
 #ifdef ACTIVE_WAITING
@@ -91,9 +90,9 @@ value caml_mpi_receive(value src, value tag)
 #endif
   /* allocate a buffer big enough */
   MPI_Get_count(&status, MPI_BYTE, &count);
-  buffer = malloc(len);
+  buffer = malloc(count);
   /* receive the value in this buffer */
-  MPI_Recv(buffer, len, MPI_BYTE, Int_val(src), Int_val(tag), MPI_COMM_WORLD, &status);
+  MPI_Recv(buffer, count, MPI_BYTE, Int_val(src), Int_val(tag), MPI_COMM_WORLD, &status);
 
   caml_acquire_runtime_system() ;
 

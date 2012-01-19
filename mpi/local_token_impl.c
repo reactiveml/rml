@@ -8,7 +8,7 @@
 #define TOKEN_TRUE 1
 #define TOKEN_FALSE 0
 
-#define Token_val(v) ((int*) Data_custom_val(v))
+#define Token_val(v) ((char*) Data_custom_val(v))
 
 void token_serialize(value v, uintnat * wsize_32 /*size in bytes*/,
                      uintnat * wsize_64 /*size in bytes*/)
@@ -21,7 +21,7 @@ void token_serialize(value v, uintnat * wsize_32 /*size in bytes*/,
 unsigned long token_deserialize(void* dst)
 {
   caml_deserialize_uint_1();
-  *((int*) dst) = TOKEN_FALSE;
+  *((char*) dst) = TOKEN_FALSE;
   return TOKEN_SIZE;
 }
 
@@ -35,11 +35,9 @@ static struct custom_operations token_ops = {
  deserialize: token_deserialize
 };
 
-value init_locality_token(value a)
+void init_locality_token()
 {
   caml_register_custom_operations(&token_ops);
-
-  return Val_unit;
 }
 
 value get_valid_locality_token(value a)

@@ -26,6 +26,8 @@
 
 static value * caml_mpi_exn = NULL;
 
+extern void init_locality_token();
+
 static void caml_mpi_error_handler(MPI_Comm * comm, int * errcode, ...)
 {
   char errmsg[MPI_MAX_ERROR_STRING + 1];
@@ -58,6 +60,10 @@ value caml_mpi_init(value arguments)
   /* Register an error handler */
   MPI_Errhandler_create((MPI_Handler_function *)caml_mpi_error_handler, &hdlr);
   MPI_Errhandler_set(MPI_COMM_WORLD, hdlr);
+
+  /* Init local token*/
+  init_locality_token();
+
   return Val_unit;
 }
 
