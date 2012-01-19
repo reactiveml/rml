@@ -1,1 +1,1 @@
-<*.ml>: thread, package(mpi)
+<*.ml>: thread, use_mlmpi

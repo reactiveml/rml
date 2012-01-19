@@ -1,4 +1,4 @@
 <mpi>: include
-<*.ml>:debug,annot,thread
-<rpmllib.cma>:package(mpi),thread
-<distributed_runtime.ml>:package(mpi)
+<*.ml>: debug,annot,thread
+<rpmllib.cma>:use_mlmpi,thread
+<distributed_runtime.ml>:use_mlmpi

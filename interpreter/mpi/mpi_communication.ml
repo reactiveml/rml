@@ -67,7 +67,7 @@ module Make (P : TAG_TYPE) = struct
 
 
   let print_here ff () =
-    Format.fprintf ff "%d" (Mpi.comm_rank Mpi.comm_world)
+    Format.fprintf ff "%d" (Mpi.communicator_rank ())
 
   let print_gid ff gid =
     Format.fprintf ff "%d.%d" gid.g_rank gid.g_id
@@ -77,29 +77,29 @@ module Make (P : TAG_TYPE) = struct
 
   let print_tag = P.print print_gid
 
-  let is_master () =
-    Mpi.comm_rank Mpi.comm_world = !Runtime_options.min_rank
-
   let local_site () =
-    Mpi.comm_rank Mpi.comm_world
+    Mpi.communicator_rank ()
+
+  let is_master () =
+    local_site () = !Runtime_options.min_rank
 
   let master_site () = (!Runtime_options.min_rank : Mpi.rank)
 
   let nth_site n = (n + 1 + !Runtime_options.min_rank : Mpi.rank)
 
   let number_of_sites () =
-    Mpi.comm_size Mpi.comm_world - (1 + !Runtime_options.min_rank)
+    Mpi.communicator_size - (1 + !Runtime_options.min_rank)
 
   type seed = int ref
 
   let mk_seed () = ref 0
   let fresh counter =
     incr counter;
-    { g_rank = Mpi.comm_rank Mpi.comm_world;
+    { g_rank = local_site ();
       g_id = !counter }
 
   let is_local gid =
-    gid.g_rank = Mpi.comm_rank Mpi.comm_world
+    gid.g_rank = local_site ()
 
   let to_msg d =
     Marshal.to_string d [Marshal.Closures]
@@ -110,12 +110,12 @@ module Make (P : TAG_TYPE) = struct
   let send_owner gid tag d =
     print_debug "%a: Send '%a' to gid '%a' at site '%d'@."
       print_here ()  print_tag tag  print_gid gid  gid.g_rank;
-    Mpi.send (tag, to_msg d) gid.g_rank msg_tag Mpi.comm_world
+    Mpi.send (tag, to_msg d) gid.g_rank msg_tag
 
   let send site tag d =
     print_debug "%a: Send '%a' to site '%a'@."
       print_here ()  print_tag tag  print_site site;
-    Mpi.send (tag, to_msg d) site msg_tag Mpi.comm_world
+    Mpi.send (tag, to_msg d) site msg_tag
 
   let broadcast tag d =
     for i = 0 to number_of_sites () - 1 do
@@ -125,7 +125,7 @@ module Make (P : TAG_TYPE) = struct
     done
 
   let receive () =
-    let tag, (msg:msg) = Mpi.receive Mpi.any_source msg_tag Mpi.comm_world in
+    let tag, (msg:msg) = Mpi.receive Mpi.any_source msg_tag in
       print_debug "%a: Received '%a'@."
         print_here ()  print_tag tag;
       tag, msg
@@ -138,9 +138,9 @@ module Test = struct
     incr tag_counter;
     let tag = !tag_counter in
     let send d =
-      Mpi.send_int d 0 tag Mpi.comm_world in
+      Mpi.send_int d 0 tag in
     let receive () =
-      Mpi.receive_int Mpi.any_source tag Mpi.comm_world
+      Mpi.receive_int Mpi.any_source tag
     in
     send, receive
 end

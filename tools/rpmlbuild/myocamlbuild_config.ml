@@ -166,7 +166,7 @@ let rmlbuild_after_rules () =
 
         let file = env "%.rmli" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc] @ includes @ [A "-I"; A stdlib_dir; P file]))
+        Cmd(S ([rmlc] @ [A "-c"] @ includes @ [A "-I"; A stdlib_dir; P file]))
       end;
 
       rule "rml: rml -> ml, rzi"

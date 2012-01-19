@@ -168,7 +168,7 @@ struct
       C.print_gid ff ev.ev_gid
 
     let get_site () =
-      (Mpi.get_local_ref ():site)
+      (Local_ref.get ():site)
 
     let find_waiting wk =
       let site = get_site () in
@@ -921,7 +921,9 @@ struct
 
     (* After receving Mnew_cd *)
     let create_cd msg =
+      print_debug "newcd@.";
       let tmp_id, parent_ck, new_balancer, p = Msgs.recv_new_cd msg in
+      print_debug "newcd@.";
       let new_ck = mk_clock (Some parent_ck) in
       let new_cd = init_clock_domain new_ck new_balancer None in
       print_debug "Created local clock domain %a after request by %a@."
@@ -930,7 +932,8 @@ struct
       let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl dummy_step) in
       D.add_current f new_cd.cd_current;
       (* we wait for the start of the clock domain *)
-      Msgs.send_cd_created tmp_id new_ck
+      Msgs.send_cd_created tmp_id new_ck;
+      print_debug "newcd done@."
 
     (* After receiving Mcd_created *)
     let start_remote_clock_domain cd ctrl f_k msg =
@@ -1053,7 +1056,7 @@ struct
         let local_value = Event.signal_local_value
       end : SignalHandle.LOCAL_VALUE) in
       s.s_signal_cache <- SignalHandle.mk_cache m;
-      Mpi.init_local_ref s;
+      Local_ref.init s;
       add_callback Mnew_cd create_cd;
       add_callback Mstep start_cd;
       add_callback Meoi receive_eoi;
