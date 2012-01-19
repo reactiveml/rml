@@ -15,6 +15,7 @@
 
 /* Initialization and error handling */
 
+#include <stdio.h>
 #include <mpi.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
@@ -48,7 +49,7 @@ static void caml_mpi_error_handler(MPI_Comm * comm, int * errcode, ...)
 
 value caml_mpi_init(value arguments)
 {
-  int argc, i;
+  int argc, i, provided_threading;
   char ** argv;
   MPI_Errhandler hdlr;
 
@@ -56,7 +57,9 @@ value caml_mpi_init(value arguments)
   argv = stat_alloc((argc + 1) * sizeof(char *));
   for (i = 0; i < argc; i++) argv[i] = String_val(Field(arguments, i));
   argv[i] = NULL;
-  MPI_Init(&argc, &argv);
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_threading);
+  if(provided_threading != MPI_THREAD_MULTIPLE)
+    perror("Warning: MPI is initialized without thread support. Things might go wrong.\n");
   /* Register an error handler */
   MPI_Errhandler_create((MPI_Handler_function *)caml_mpi_error_handler, &hdlr);
   MPI_Errhandler_set(MPI_COMM_WORLD, hdlr);
