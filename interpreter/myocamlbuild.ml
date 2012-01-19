@@ -1,12 +1,17 @@
 open Ocamlbuild_plugin
 open Ocamlbuild_plugin.Options
 
-let df = function
-  | Before_options ->
-      Options.use_ocamlfind := true
+let mlmpi_dir = "/Users/ccpasteur/Documents/work/git/rml/mpi/_build"
 
+let df = function
   | After_rules ->
-      flag ["link"; "ocaml"] (S[A"-cclib"; A "-lmpl"])
+      ocaml_lib ~extern:true ~dir:mlmpi_dir "mlmpi";
+
+      flag ["link"; "library"; "ocaml"; "byte"; "use_mlmpi"]
+        (S[A"-dllib"; A"-lmlmpi"; A"-cclib"; A"-lmlmpi"]);
+
+      flag ["link"; "library"; "ocaml"; "native"; "use_mlmpi"]
+        (S[A"-cclib"; A"-lmlmpi"])
 
   | _ -> ()
 
