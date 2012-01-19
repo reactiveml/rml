@@ -22,7 +22,7 @@ let fresh_id =
   let counter = ref 0 in
   fun () ->
     incr counter;
-    (!counter * Mpi.comm_size Mpi.comm_world) + Mpi.comm_rank Mpi.comm_world
+    (!counter * Mpi.communicator_size) + Mpi.communicator_rank ()
 
 (* definition of types used by the user *)
 type 'a pos = { p_x : 'a; p_y : 'a }
@@ -102,13 +102,13 @@ let screen_id = 0
 let program_id = 1
 
 let receive_op () =
-  (Mpi.receive Mpi.any_source screen_tag Mpi.comm_world:screen_op)
+  (Mpi.receive Mpi.any_source screen_tag:screen_op)
 
 let enqueue_op (op:screen_op) =
-  Mpi.send op screen_id screen_tag Mpi.comm_world
+  Mpi.send op screen_id screen_tag
 
 let receive_event () =
-  (Mpi.receive Mpi.any_source events_tag Mpi.comm_world:any_event)
+  (Mpi.receive Mpi.any_source events_tag:any_event)
 
 let add_event (ev:any_event) =
-  Mpi.send ev program_id events_tag Mpi.comm_world
+  Mpi.send ev program_id events_tag

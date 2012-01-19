@@ -1,3 +1,3 @@
 <*.rml>:lco_mpi, use_rmlsdl
 <*.ml>:use_rmlsdl
-<*.byte>:thread, package(mpi), use_rmlsdl
+<*.byte>:use_rmlsdl,thread

@@ -283,7 +283,7 @@ let process_collision me s b = match b with
 
     let d2 = dist2 new_pos_a new_pos_me in
     if d2 > 0. && (sqrt d2) < a.a_state.b_rad +. me.a_state.b_rad then (
-      print_endline "collision detected";
+      (*print_endline "collision detected";*)
       (*collision detected*)
       (* formula from http://fr.wikipedia.org/wiki/Choc_élastique *)
       let sum_m = a.a_state.b_weight +. me.a_state.b_weight in
@@ -374,9 +374,8 @@ let process main =
   (* setup screen *)
   let vp_rect = Mlsdl_types.mk_rect (-. margin) (-. margin) (float_of_int sc_w) (float_of_int sc_h) in
   let sc_rect = Mlsdl_types.mk_rect 0 0 sc_w sc_h in
-  Mlsdl.fork_screen (Mlsdl_types.Window (sc_w, sc_h)) sc_w sc_h Mlsdl_types.Green 60;
+  Mlsdl_client.start_screen (Mlsdl_types.Window (sc_w, sc_h)) sc_w sc_h Mlsdl_types.Green 60;
   let vp = Mlsdl_client.create_float_viewport vp_rect sc_rect in
-
   let top_adder, clicks, top_area_p = mk_global_area topck 1 (mk_rect 0. 0. w h) vp in
   run top_area_p
   ||

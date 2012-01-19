@@ -8,7 +8,7 @@ open Rmlsdl
 open Utils
 
 let enable_graphics = true
-
+let adaptive_fuel = 2
 
 let process no_compute env x_t v_t w =
   (x_t, v_t, 0.0)
@@ -93,7 +93,7 @@ let process container time_step error_threshold p pck =
       )
     in
     loop
-      run (try_step 2 time_step);
+      run (try_step adaptive_fuel time_step);
       pause pck
     end
     ||

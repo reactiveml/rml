@@ -224,7 +224,8 @@ let rmlbuild_after_rules () =
         cp file mllib_file
       end;
 
-      flag ["rml"; "compile"; "annot"] (A "-dtypes")
+      flag ["rml"; "compile"; "annot"] (A "-dtypes");
+      flag ["rml"; "compile"; "lco_mpi"] (S [A "-runtime"; A "Lco_mpi"]);
 ;;
 
 let rml_lib ?(byte=true) ?(native=true) ?dir ?tag_name libpath =
