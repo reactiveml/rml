@@ -40,6 +40,20 @@ Prérequis:
   - SDL (libsdl_gfx, libsdl_ttf)
   - ocamlsdl >= 0.8.0
 
+Note for Macports users:
+The ocamlsdl port has a bug. You need to change the file
+'/opt/local/var/macports/sources/svn.macports.org/trunk/dports/devel/ocamlsdl/Portfile' (or
+rsync... depending on your configuration) at line 20 from:
+
+#patchfiles              patch-configure.diff patch-src-Makefile.diff
+
+to:
+
+patchfiles              patch-configure.diff
+
+This should be done before building the package.
+
+
 Construction:
    - construction de rmlsdl:
        * dans le fichier examples/rmlsdl/myocamlbuild.ml, mettre a jour mlmpi_dir et sdl_dir.
