@@ -58,14 +58,14 @@ Construction:
    - construction de rmlsdl:
        * dans le fichier examples/rmlsdl/myocamlbuild.ml, mettre a jour mlmpi_dir et sdl_dir.
        * construction:
-            cd exemples/rmlsdl
+            cd examples/rmlsdl
             ocamlbuild rmlsdl.cma mlsdl_server
 
 
   - construction de galaxy:
       * dans le fichier examples/galaxy_mpi/myocamlbuild.ml, mettre a jour rmlsdl_dir
      * construction:
-            cd exemples/galaxy_mpi
+            cd examples/galaxy_mpi
             ocamlbuild planets_adapt.rml.byte
 
      * pour lancer l'exemple:
@@ -77,5 +77,5 @@ Construction:
   - construction de collision:
       * dans le fichier examples/collision/myocamlbuild.ml, mettre a jour rmlsdl_dir
      * construction:
-            cd exemples/galaxy_mpi
-            ocamlbuild planets_adapt.rml.byte
+            cd examples/collision
+            ocamlbuild collision.rml.byte
