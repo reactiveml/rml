@@ -43,6 +43,9 @@ oprof: opt
 .ml.cmo:
 	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) $<
 
+.ml.cmi:
+	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) $<
+
 .mli.cmi:
 	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) $<
 
