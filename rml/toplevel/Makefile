@@ -75,6 +75,8 @@ cleanall: realclean
 
 ## 
 
+rmltop.cmi: rmltop_lexer.cmi rmltop_global.cmi rmltop_directives.cmi
+
 rmltop_lexer.ml: rmltop_lexer.mll
 	$(OCAMLLEX) rmltop_lexer.mll
 
