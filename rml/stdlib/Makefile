@@ -50,7 +50,7 @@ CIBLE= $(SRC:.rmli=.rzi)
 
 all:  $(CIBLE)
 
-install:
+install: $(CIBLE)
 	$(INSTALL) -d $(LIBDIR)
 	$(INSTALL) -m 644 $(patsubst %.rzi,%.rmli,$(CIBLE)) $(LIBDIR)
 	$(INSTALL) -m 644 $(CIBLE) $(LIBDIR)
