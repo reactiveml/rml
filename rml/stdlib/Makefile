@@ -1,4 +1,4 @@
-(* Warning: This file has been modified to be ReactiveML compatible. *)
+# Warning: This file has been modified to be ReactiveML compatible.
 
 # Makefile for Reactive-ML
 # Taken from Lucid-synchrone
