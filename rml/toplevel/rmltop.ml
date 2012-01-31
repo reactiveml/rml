@@ -23,6 +23,26 @@
 
 let print_DEBUG s = print_string s; print_newline()
 
+let show_help = ref false
+let print_help () =
+  print_endline "Toplevel directives:";
+  let list =
+    ["#run e;;",      "spawn the execution of a process e.";
+     "#exec e;;",     "execute a reactive expression e.";
+     "#suspend;;",    "suspend the simulation.";
+     "#step;;",       "execute one instant of the system. (*)";
+     "#step n;;",     "execute n instants of the system. (*)";
+     "#resume;;",     "go back to the sampled mode.";
+     "#sampling p;;", "change the sampling rate.";
+     "#quit;;",       "exit the toplevel";
+     "# e;;",         "execute e in the OCaml toplevel."
+    ] in
+  List.iter
+    (fun (dir, msg) -> Printf.printf "  %-13s  %s\n" dir msg)
+    list;
+  Printf.printf "  (*): Can be used only while the simulation is suspended.\n\n";
+  flush stdout
+
 let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
   let rmltop_in_lexbuf = Lexing.from_channel rmltop_in in
   let rmlc_out_lexbuf = Lexing.from_channel rmlc_out in
@@ -116,7 +136,8 @@ let print_intro () =
   let version = input_line version_ch in
   print_string version;
   close_in version_ch;
-  print_newline()
+  print_newline();
+  if !show_help then print_help ()
 
 let rmlc = ref "rmlc -i -interactive -I `rmlc -where`/toplevel"
 let ocaml = 
@@ -145,11 +166,12 @@ let main s =
 let usage = ""
 
 let _ = 
-  Arg.parse
-    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x), 
+  Arg.parse (Arg.align
+    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x),
       "<rate> Sets the sampling rate to <rate> seconds";
+      "-i", Arg.Set show_help, " List known rml directives at startup ";
       "--", Arg.Rest (fun x -> ocaml := !ocaml ^ " " ^ x), 
-      "Sends all others options to the Ocaml toplevel"]
+      " Sends all others options to the Ocaml toplevel"])
     (fun x -> ocaml := !ocaml ^ " " ^ x)
     usage;
   main ""
