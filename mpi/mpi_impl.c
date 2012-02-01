@@ -5,7 +5,8 @@
 #include <caml/threads.h>
 #include <caml/intext.h>
 
-#define ACTIVE_WAITING
+#define SEMI_ACTIVE_WAITING
+#define SEMI_ACTIVE_WAITING_DELAY 50     /* delay in ms */
 
 /* Various functions to initialize global variables */
 value caml_mpi_get_comm_world_size(value unit)
@@ -71,7 +72,7 @@ value caml_mpi_receive(value src, value tag)
   int count;
   value res;
   char * buffer;
-#ifdef ACTIVE_WAITING
+#ifdef SEMI_ACTIVE_WAITING
   int msg_received = 0;
 #endif
 
@@ -80,10 +81,10 @@ value caml_mpi_receive(value src, value tag)
   caml_release_runtime_system();
 
   /* first probe to know the size of the value sent */
-#ifdef ACTIVE_WAITING
+#ifdef SEMI_ACTIVE_WAITING
   while (!msg_received) {
     MPI_Iprobe(Int_val(src), Int_val(tag), MPI_COMM_WORLD, &msg_received, &status);
-    if (!msg_received) { usleep(50); };
+    if (!msg_received) { usleep(ACTIVE_WAITING_DELAY); };
   }
 #else
   MPI_Probe(Int_val(src), Int_val(tag), MPI_COMM_WORLD, &status);
