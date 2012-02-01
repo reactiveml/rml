@@ -12,6 +12,7 @@ mandir=''
 manext=1
 emacsdir=''
 target=byte
+debug=''
 
 verbose=no
 ocamlversion_min=3.06
@@ -37,6 +38,10 @@ while : ; do
             manext=1;;
         esac
         shift;;
+    -debug)
+        debug='-g -annot';
+        shift;
+        break;;
     -target|--target)
         target=$2; shift;;
     -with-emacs-dir|--with-emacs-dir)
@@ -248,6 +253,9 @@ echo "OCAMLOPT=$ocamlopt" >> config
 echo "OCAMLDEP=$ocamldep" >> config
 echo "OCAMLLEX=$ocamllex" >> config
 echo "OCAMLYACC=$ocamlyacc" >> config
+echo "OCAMLFLAGS=$debug" >> config
+echo "OCAMLOPTFLAGS=$debug" >> config
+echo "OCAMLDEPFLAGS=-slash" >> config
 echo
 cat config.in >> config
 
