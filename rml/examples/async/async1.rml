@@ -1,0 +1,16 @@
+let rec process wait s =
+  do
+    loop
+      print_endline "I'm still waiting!";
+      pause;
+    end
+  until s(x) ->
+    print_endline ("Got it: "^x)
+  done
+
+let process perform s =
+  let result = async (fun () -> Unix.sleep 2; "2 secs!") in
+  emit s result
+
+let process main =
+  signal s default "" gather (fun x y -> x^y) in (run (wait s) || run (perform s))
