@@ -1,7 +1,7 @@
 open Ocamlbuild_plugin
 open Ocamlbuild_plugin.Options
 
-let mlmpi_dir = "/Users/ccpasteur/Documents/work/git/rml/mpi/_build"
+let mlmpi_dir = "../../../mpi/_build"
 let sdl_dir = "-L/opt/local/lib/ocaml/site-lib/sdl"
 
 let df = function

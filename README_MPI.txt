@@ -27,8 +27,6 @@ Installation:
 
   - construction de rpmllib.cma:
        * dans le fichier mpi/myocamlbuild_config.ml, mettre a jour la variable source_dir
-       * dans le fichier interpreter/myocamlbuild.ml, mettre le chemin du dossier mpi/ dans
-  mlmpi_libdir
        * construction:
             cd interpreter/
              ocamlbuild rpmllib.cma
@@ -56,14 +54,13 @@ This should be done before building the package.
 
 Construction:
    - construction de rmlsdl:
-       * dans le fichier examples/rmlsdl/myocamlbuild.ml, mettre a jour mlmpi_dir et sdl_dir.
+       * dans le fichier examples/rmlsdl/myocamlbuild.ml, mettre a jour sdl_dir.
        * construction:
             cd examples/rmlsdl
             ocamlbuild rmlsdl.cma mlsdl_server
 
 
   - construction de galaxy:
-      * dans le fichier examples/galaxy_mpi/myocamlbuild.ml, mettre a jour rmlsdl_dir
      * construction:
             cd examples/galaxy_mpi
             ocamlbuild planets_adapt.rml.byte
@@ -75,7 +72,6 @@ Construction:
            robin), all_remote (tous les domaines d'horloges sont mis en distant)
 
   - construction de collision:
-      * dans le fichier examples/collision/myocamlbuild.ml, mettre a jour rmlsdl_dir
      * construction:
             cd examples/collision
             ocamlbuild collision.rml.byte
