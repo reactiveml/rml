@@ -11,12 +11,9 @@ module type S = sig
   type ('a, 'b) value
   type key
 
-  module type LOCAL_VALUE = sig
-    val local_value : key -> ('a, 'b) value -> ('a, 'b) value
-  end
-
+  type local_fun = { c_local_value : 'a 'b. key -> ('a, 'b) value -> ('a, 'b) value; }
   type cache
-  val mk_cache : (module LOCAL_VALUE) -> cache
+  val mk_cache : local_fun -> cache
 
   val init : cache -> key -> ('a, 'b) value -> ('a, 'b) handle
   val get : cache -> ('a, 'b) handle -> ('a, 'b) value
@@ -38,11 +35,8 @@ module Make (T : DHANDLE_TYPE) (C : Communication.S) = struct
   type ('a, 'b) value = ('a, 'b) T.value
   type key = T.key
 
-  module type LOCAL_VALUE = sig
-    val local_value : key -> ('a, 'b) value -> ('a, 'b) value
-  end
-
-  type cache = (module LOCAL_VALUE) * (Obj.t MyWeak.t) ref
+  type local_fun = { c_local_value : 'a 'b. key -> ('a, 'b) value -> ('a, 'b) value; }
+  type cache = local_fun * (Obj.t MyWeak.t) ref
 
   let mk_cache m = m, ref MyWeak.empty
 
@@ -52,13 +46,13 @@ module Make (T : DHANDLE_TYPE) (C : Communication.S) = struct
   let set_valid dr =
     dr.d_token <- Local_token.get_token ()
 
-  let find_local (m, memo) (dr: ('a, 'b) handle) =
+  let find_local ({ c_local_value = local_value }, memo) (dr: ('a, 'b) handle) =
     try
       (Obj.obj (MyWeak.find dr.d_key !memo) : ('a, 'b) value)
     with
       | Not_found -> (* allocate local value *)
-          let module L = (val m : LOCAL_VALUE) in
-          let r = L.local_value dr.d_key dr.d_value in
+         (* let module L = (val m : LOCAL_VALUE) in *)
+          let r = local_value dr.d_key dr.d_value in
             dr.d_value <- r;
             set_valid dr;
             memo := MyWeak.add dr.d_key (Obj.repr r) !memo;

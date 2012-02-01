@@ -333,6 +333,7 @@ struct
         let default ev = lift_handle E.default ev
         let clock ev = get_event_clock ev
 
+        (** TODO: on envoie la valeur a tous ceux qui ont envoye un req_signal *)
         let send_value_to_remotes cd ev n () =
           C.broadcast (Mvalue ev.ev_gid) (E.value n)
 
@@ -1036,10 +1037,7 @@ struct
 
     let init_site () =
       print_debug "Init site@.";
-      let wrong_m = (module struct
-        let local_value _ v = v
-      end : SignalHandle.LOCAL_VALUE) in
-      let rec s = {
+      let s = {
         s_clock_domains = C.GidMap.empty;
         (*  s_top_clock_domains = clock_domain list; *)
         s_msg_queue = Callbacks.mk_queue ();
@@ -1047,15 +1045,11 @@ struct
         s_waiting = WaitingMap.empty;
         s_msg_thread = None;
         s_clock_cache = GidHandle.mk_cache (fun ck -> ck);
-        s_signal_cache = SignalHandle.mk_cache wrong_m;
+        s_signal_cache = SignalHandle.mk_cache { SignalHandle.c_local_value = Event.signal_local_value };
         s_seed = C.mk_seed ();
         s_comm_site = C.local_site ();
        (* s_children = C.SiteSet.empty; *)
       } in
-      let m = (module struct
-        let local_value = Event.signal_local_value
-      end : SignalHandle.LOCAL_VALUE) in
-      s.s_signal_cache <- SignalHandle.mk_cache m;
       Local_ref.init s;
       add_callback Mnew_cd create_cd;
       add_callback Mstep start_cd;
