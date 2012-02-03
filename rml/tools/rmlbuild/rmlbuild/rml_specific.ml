@@ -113,7 +113,7 @@ let link_rml extension env _build =
   let byte_file = Pathname.update_extension extension main_file in
   let rml_byte_file = env ("%.rml."^extension) in
   declare_rmllib ();
-  tag_file byte_file ["use_rmllib"; "use_unix"];
+  tag_file byte_file ["use_rmllib"; "use_unix"; "thread"];
   tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
   List.iter Outcome.ignore_good (_build [[byte_file]]);
   ln_s byte_file rml_byte_file
@@ -225,13 +225,13 @@ let init () =
         let file = env "%.rmllib" in
         let mllib_file = Pathname.update_extension "mllib" (Pathname.basename file) in
         let cma_file = Pathname.update_extension "cma" file in
-        tag_file cma_file ["use_rmllib"; "use_unix"];
+        tag_file cma_file ["use_rmllib"; "use_unix"; "thread"];
         let cma_file = Pathname.update_extension "d.cma" file in
-        tag_file cma_file ["use_rmllib"; "use_unix"];
+        tag_file cma_file ["use_rmllib"; "use_unix"; "thread"];
         let cmxa_file = Pathname.update_extension "cmxa" file in
-        tag_file cmxa_file ["use_rmllib"; "use_unix"];
+        tag_file cmxa_file ["use_rmllib"; "use_unix"; "thread"];
         let cmxa_file = Pathname.update_extension "p.cmxa" file in
-        tag_file cmxa_file ["use_rmllib"; "use_unix"];
+        tag_file cmxa_file ["use_rmllib"; "use_unix"; "thread"];
         cp file mllib_file
       end;
 
