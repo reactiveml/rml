@@ -87,20 +87,20 @@ clean:
 distclean: clean
 	rm -rf _log _start ocamlbuild.byte.start boot/ocamlbuild
 
-install: all install-opt install-byte
+install: all install-prepare install-opt install-byte
 ifeq ($(TARGET), opt)
 	cp $(BUILDDIR)/rmlbuild.native $(INSTALL_BIN)/rmlbuild
+	cp $(BUILDDIR)/rmlbuild.byte $(INSTALL_BIN)
 else
 	cp $(BUILDDIR)/rmlbuild.byte   $(INSTALL_BIN)/rmlbuild
 endif
 
-install-opt: install-byte
-	cp $(BUILDDIR)/ocamlbuild.native $(BUILDDIR)/rmlbuild.native
-
+install-prepare:
 	mkdir -p $(INSTALL_BIN)
 	mkdir -p $(INSTALL_LIB)
-	install $(BUILDDIR)/rmlbuild.native \
-		$(INSTALL_BIN)
+
+install-opt: install-byte
+	cp $(BUILDDIR)/ocamlbuild.native $(BUILDDIR)/rmlbuild.native
 	install -m 644 \
 	        $(BUILDDIR)/ocamlbuildlib.cmxa \
 	        $(BUILDDIR)/ocamlbuildlib.a \
@@ -119,11 +119,6 @@ install-opt: install-byte
 
 install-byte:
 	cp $(BUILDDIR)/ocamlbuild.byte $(BUILDDIR)/rmlbuild.byte
-
-	mkdir -p $(INSTALL_BIN)
-	mkdir -p $(INSTALL_LIB)
-	install $(BUILDDIR)/rmlbuild.byte \
-		$(INSTALL_BIN)
 	install -m 644 \
 	        $(BUILDDIR)/ocamlbuildlib.cma \
 	        $(BUILDDIR)/ocamlbuild_unix_plugin.cmo \
