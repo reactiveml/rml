@@ -1,6 +1,7 @@
 # Compilation units and binaries
 *.cm*
 *.rzi
+*.opt
 *.byte
 *.native
 *.o
