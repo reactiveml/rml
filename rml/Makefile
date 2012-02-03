@@ -29,7 +29,7 @@ opt: all
 byte: TARGET := byte
 byte: all
 
-install: install.byte
+install: install.$(TARGET)
 
 install.byte:
 	(cd compiler; make install.byte)
