@@ -89,9 +89,9 @@ distclean: clean
 
 install: all install-opt install-byte
 ifeq ($(TARGET), opt)
-	cp $(BUILDDIR)/rmlbuild.native $(BUILDDIR)/rmlbuild
+	cp $(BUILDDIR)/rmlbuild.native $(INSTALL_BIN)/rmlbuild
 else
-	cp $(BUILDDIR)/rmlbuild.byte   $(BUILDDIR)/rmlbuild
+	cp $(BUILDDIR)/rmlbuild.byte   $(INSTALL_BIN)/rmlbuild
 endif
 
 install-opt: install-byte
