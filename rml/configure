@@ -177,7 +177,6 @@ if sh ./searchpath $compiler_name; then
     compiler=$compiler_name
 else
     echo "not found"
-    { echo "configure: error: Cannot find $compiler_name." 1>&2; exit 1; }
 fi
 ocamlopt=$compiler
 
