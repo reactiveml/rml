@@ -95,7 +95,7 @@ let mk_includes dir =
   List.fold_left add_include [] (Pathname.include_dirs_of dir)
 
 let find_rml_stdlib_dir () =
-  let path = Pathname.concat !Options.build_dir "rmlc.where" in
+  let path = "rmlc.where" in
     if not (Pathname.exists path) then
       (let cmd = Cmd (S [rmlc; A "-where"; Sh ">"; Px path]) in
          Command.execute cmd);
