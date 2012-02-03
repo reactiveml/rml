@@ -41,9 +41,13 @@ BYTE=$(LIBS:=.cma) $(PROGRAMS:=.byte)
 NATIVE=$(LIBS:=.cmxa) $(PROGRAMS:=.native)
 
 all:
-	$(OCAMLBUILD) $(BYTE) $(NATIVE)
+	$(OCAMLBUILD) $(BYTE)
+ifeq ($(TARGET), opt)
+	$(OCAMLBUILD) $(NATIVE)
+endif
 byte:
 	$(OCAMLBUILD) $(BYTE)
+opt: native
 native:
 	$(OCAMLBUILD) $(NATIVE)
 profile:
@@ -84,6 +88,11 @@ distclean: clean
 	rm -rf _log _start ocamlbuild.byte.start boot/ocamlbuild
 
 install: all install-opt install-byte
+ifeq ($(TARGET), opt)
+	cp $(BUILDDIR)/rmlbuild.native $(BUILDDIR)/rmlbuild
+else
+	cp $(BUILDDIR)/rmlbuild.byte   $(BUILDDIR)/rmlbuild
+endif
 
 install-opt: install-byte
 	cp $(BUILDDIR)/ocamlbuild.native $(BUILDDIR)/rmlbuild.native

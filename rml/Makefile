@@ -4,7 +4,7 @@
 
 include configure-tools/version
 
-TARGET=byte
+TARGET=$(shell sed -n "s/^TARGET=//p" config)
 
 all: config
 	(cd compiler; touch .depend; make depend; make $(TARGET))

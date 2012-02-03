@@ -11,7 +11,7 @@ libdir=''
 mandir=''
 manext=1
 emacsdir=''
-target=byte
+target=''
 debug=''
 
 verbose=no
@@ -123,9 +123,6 @@ esac
 echo "MANEXT=$manext" >> config
 echo "EMACSDIR=\"$emacsdir\"" >> config
 echo "" >> config
-echo "TARGET=$target" >> config
-echo "" >> config
-
 
 # Check for install script
 set dummy install; cmd_name=$2
@@ -179,6 +176,17 @@ else
     echo "not found"
 fi
 ocamlopt=$compiler
+
+ocamlbest=byte
+if [ -n "$ocamlopt" ]; then
+  ocamlbest=opt
+fi
+if [ -z "$target" ]; then
+  target=$ocamlbest
+fi
+
+echo "TARGET=$target" >> config
+echo "" >> config
 
 # we extract Ocaml version number and library path
 # (borrowed from JC Filliatre)
@@ -255,6 +263,7 @@ echo "OCAMLYACC=$ocamlyacc" >> config
 echo "OCAMLFLAGS=$debug" >> config
 echo "OCAMLOPTFLAGS=$debug" >> config
 echo "OCAMLDEPFLAGS=-slash" >> config
+echo "OCAMLBEST=$ocamlbest" >> config
 echo
 cat config.in >> config
 
