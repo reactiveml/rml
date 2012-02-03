@@ -17,7 +17,7 @@
 include ../../../config
 
 INSTALL_BIN=$(BINDIR)
-INSTALL_LIB=`ocamlc -where`/rmlbuild
+INSTALL_LIB=$(LIBDIR)/rmlbuild
 
 
 ifndef BUILDDIR
