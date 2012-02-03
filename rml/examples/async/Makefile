@@ -2,7 +2,7 @@
 all: async1
 
 async1: async1.ml
-	ocamlc -I ../../interpreter -g -thread unix.cma threads.cma rmllib.cma $^ -o $@
+	ocamlc -rectypes -I ../../interpreter -g -thread unix.cma threads.cma rmllib.cma $^ -o $@
 
 .SUFFIXES: .ml .rml
 
