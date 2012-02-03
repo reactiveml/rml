@@ -25,18 +25,12 @@ BUILDDIR := "_build"
 endif
 
 ifndef OCAMLBUILDCMD
-OCAMLBUILDCMD := ./boot/ocamlbuild -classic-display
+OCAMLBUILDCMD := ocamlbuild -classic-display
 endif
 
-ifdef O
-OCAMLBUILD_OPTIONS := $(OCAMLBUILD_OPTIONS) $(O)
-endif
-
-ifeq ($(wildcard ./ocamlbuild_Myocamlbuil*_config.ml),./ocamlbuild_Myocamlbuild_config.ml)
-ifeq ($(wildcard ./boot/oc*build),./boot/ocamlbuild)
 OCAMLBUILD=INSTALL_LIB=$(INSTALL_LIB) INSTALL_BIN=$(INSTALL_BIN) $(OCAMLBUILDCMD) -build-dir $(BUILDDIR) -no-links $(OCAMLBUILD_OPTIONS)
-LIBS=ocamlbuildlib ocamlbuildlightlib
-PROGRAMS=ocamlbuild ocamlbuildlight
+LIBS=ocamlbuildlib
+PROGRAMS=ocamlbuild
 BYTE=$(LIBS:=.cma) $(PROGRAMS:=.byte)
 NATIVE=$(LIBS:=.cmxa) $(PROGRAMS:=.native)
 
@@ -54,29 +48,6 @@ profile:
 	$(OCAMLBUILD) $(LIBS:=.p.cmxa) $(PROGRAMS:=.p.native)
 debug:
 	$(OCAMLBUILD) $(LIBS:=.d.cma) $(PROGRAMS:=.d.byte)
-ppcache:
-	$(OCAMLBUILD) ppcache.byte ppcache.native
-doc:
-	$(OCAMLBUILD) ocamlbuild.docdir/index.html
-	ln -s -f $(BUILDDIR)/ocamlbuild.docdir doc
-else
-all byte native: ocamlbuild.byte.start
-	mkdir -p boot
-	cp ocamlbuild.byte.start boot/ocamlbuild
-	$(MAKE) $(MFLAGS) $(MAKECMDGOALS)
-	cp $(BUILDDIR)/ocamlbuild.native boot/ocamlbuild
-	$(MAKE) $(MFLAGS) $(MAKECMDGOALS) OCAMLBUILD_OPTIONS="-nothing-should-be-rebuilt -verbose -1"
-endif
-else
-all byte native:
-	@echo "Please copy the myocamlbuild_config.ml of the OCaml source distribution"
-	@echo "  as ocamlbuild_Myocamlbuild_config.ml"
-	@echo
-	@echo "$$ cp ../myocamlbuild_config.ml ocamlbuild_Myocamlbuild_config.ml"
-endif
-
-ocamlbuild.byte.start:
-	./start.sh
 
 promote:
 	cp $(BUILDDIR)/ocamlbuild.native boot/ocamlbuild
