@@ -9,6 +9,7 @@ INCLUDES=-I ../../compiler/global -I ../../compiler/parsing
 OBJ =	../../compiler/global/version.cmo \
 	../../compiler/global/misc.cmo \
 	../../compiler/global/warnings.cmo \
+	../../compiler/global/ident.cmo \
 	../../compiler/parsing/linenum.cmo \
 	../../compiler/parsing/parse_ident.cmo \
 	../../compiler/parsing/parse_ast.cmo \
