@@ -83,47 +83,47 @@ clean:
 distclean: clean
 	rm -rf _log _start ocamlbuild.byte.start boot/ocamlbuild
 
-install: all
-	cp $(BUILDDIR)/ocamlbuild.byte $(BUILDDIR)/rmlbuild.byte
+install: all install-opt install-byte
+
+install-opt: install-byte
 	cp $(BUILDDIR)/ocamlbuild.native $(BUILDDIR)/rmlbuild.native
-	cp $(BUILDDIR)/ocamlbuildlight.byte $(BUILDDIR)/rmlbuildlight.byte
-	cp $(BUILDDIR)/ocamlbuildlight.native $(BUILDDIR)/rmlbuildlight.native
 
 	mkdir -p $(INSTALL_BIN)
 	mkdir -p $(INSTALL_LIB)
-	install $(BUILDDIR)/rmlbuild.byte \
-		$(BUILDDIR)/rmlbuild.native \
-		$(BUILDDIR)/rmlbuildlight.byte \
-		$(BUILDDIR)/rmlbuildlight.native \
+	install $(BUILDDIR)/rmlbuild.native \
 		$(INSTALL_BIN)
-	install $(BUILDDIR)/rmlbuild.native $(INSTALL_BIN)/rmlbuild
-	install $(BUILDDIR)/rmlbuildlight.byte $(INSTALL_BIN)/rmlbuildlight
 	install -m 644 \
 	        $(BUILDDIR)/ocamlbuildlib.cmxa \
 	        $(BUILDDIR)/ocamlbuildlib.a \
-	        $(BUILDDIR)/ocamlbuildlib.cma \
-	        $(BUILDDIR)/ocamlbuildlightlib.cmxa \
-	        $(BUILDDIR)/ocamlbuildlightlib.a \
-	        $(BUILDDIR)/ocamlbuildlightlib.cma \
 	        $(BUILDDIR)/ocamlbuild_unix_plugin.cmx \
 	        $(BUILDDIR)/ocamlbuild_unix_plugin.o \
-	        $(BUILDDIR)/ocamlbuild_unix_plugin.cmo \
-	        $(BUILDDIR)/ocamlbuild_unix_plugin.cmi \
-	        $(BUILDDIR)/ocamlbuild_executor.cmi \
-	        $(BUILDDIR)/ocamlbuild_executor.cmo \
 	        $(BUILDDIR)/ocamlbuild_executor.cmx \
 	        $(BUILDDIR)/ocamlbuild_executor.o \
-	        $(BUILDDIR)/ocamlbuild_pack.cmi \
-	        $(BUILDDIR)/ocamlbuild_pack.cmo \
 	        $(BUILDDIR)/ocamlbuild_pack.cmx \
 	        $(BUILDDIR)/ocamlbuild_pack.o \
 	        $(BUILDDIR)/ocamlbuild.cmi \
 	        $(BUILDDIR)/ocamlbuild_plugin.cmi \
 	        $(BUILDDIR)/ocamlbuild.cmx \
 	        $(BUILDDIR)/ocamlbuild.o \
-	        $(BUILDDIR)/ocamlbuild.cmo \
-	        $(BUILDDIR)/ocamlbuildlight.cmx \
-	        $(BUILDDIR)/ocamlbuildlight.o \
-	        $(BUILDDIR)/ocamlbuildlight.cmo $(INSTALL_LIB)
+		$(INSTALL_LIB)
 	-ranlib $(INSTALL_LIB)/ocamlbuildlib.a
-	-ranlib $(INSTALL_LIB)/ocamlbuildlightlib.a
+
+install-byte:
+	cp $(BUILDDIR)/ocamlbuild.byte $(BUILDDIR)/rmlbuild.byte
+
+	mkdir -p $(INSTALL_BIN)
+	mkdir -p $(INSTALL_LIB)
+	install $(BUILDDIR)/rmlbuild.byte \
+		$(INSTALL_BIN)
+	install -m 644 \
+	        $(BUILDDIR)/ocamlbuildlib.cma \
+	        $(BUILDDIR)/ocamlbuild_unix_plugin.cmo \
+	        $(BUILDDIR)/ocamlbuild_unix_plugin.cmi \
+	        $(BUILDDIR)/ocamlbuild_executor.cmi \
+	        $(BUILDDIR)/ocamlbuild_executor.cmo \
+	        $(BUILDDIR)/ocamlbuild_pack.cmi \
+	        $(BUILDDIR)/ocamlbuild_pack.cmo \
+	        $(BUILDDIR)/ocamlbuild.cmi \
+	        $(BUILDDIR)/ocamlbuild_plugin.cmi \
+	        $(BUILDDIR)/ocamlbuild.cmo \
+		$(INSTALL_LIB)
