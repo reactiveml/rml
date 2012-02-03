@@ -29,19 +29,8 @@ opt: all
 byte: TARGET := byte
 byte: all
 
-install: install.$(TARGET)
-
-install.byte:
-	(cd compiler; make install.byte)
-	(cd stdlib; make install)
-	(cd interpreter; make install)
-	(cd man; make install)
-	(cd emacs; make install)
-	(cd toplevel; make install)
-	(cd tools; make install)
-
-install.opt:
-	(cd compiler; make install.opt)
+install:
+	(cd compiler; make install)
 	(cd stdlib; make install)
 	(cd interpreter; make install)
 	(cd man; make install)

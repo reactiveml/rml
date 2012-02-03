@@ -28,6 +28,7 @@ include ../../config
 
 all: $(TARGET)
 install: install.$(TARGET)
+	mv $(BINDIR)/$(BIN).$(TARGET) $(BINDIR)/$(BIN)
 
 # cleaning:
 clean:
