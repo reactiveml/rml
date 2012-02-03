@@ -269,6 +269,9 @@ cat config.in >> config
 
 mv config ..
 
+# Configure rmlbuild
+./mkmyocamlbuild_config.sh "$prefix" "$libdir" "$ocamllib"
+
 # Patch Caml files
 
 cd ../patch
