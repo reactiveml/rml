@@ -11,6 +11,10 @@
 _build
 *.start
 
+# Rmlbuild stuff
+rml/configure-tools/rmlbuild.config
+rml/tools/rmlbuild/rmlbuild/ocamlbuild_Myocamlbuild_config.ml
+
 # OCamlYacc stuff
 *.output
 
