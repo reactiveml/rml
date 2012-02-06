@@ -63,10 +63,10 @@ module Make (C : Communication.S) = struct
     method new_child () =
       let s, bal =
         if s_next_site = Array.length s_sites then (
-          s_next_site = -1;
-          s_here, new simple_load_balancer here s_sites
+          s_next_site <- -1;
+          s_here, new round_robin_balancer here s_sites
         ) else (
-          let site = s_site.(s_next_site) in
+          let site = s_sites.(s_next_site) in
           site, new local_balancer site
         )
       in
