@@ -769,8 +769,8 @@ struct
       cd.cd_emitted_signals <- C.GidSet.empty;
       cd.cd_children_have_next <- false
 
-    let rec exec_cd ?(wait_for_msgs=false) cd () =
-      print_debug "Executing clock domain %a (waiting=%b)@." print_cd cd  wait_for_msgs;
+    let rec exec_cd cd () =
+      print_debug "Executing clock domain %a@." print_cd cd;
       schedule cd;
       if cd.cd_top.alive then (
         if !(cd.cd_remaining_async) = 0 then (
@@ -789,24 +789,30 @@ struct
                   else (
                     (match cd.cd_parent_ctrl with
                       | None -> assert false
-                      | Some ctrl -> D.add_next (exec_cd ~wait_for_msgs:wait_for_msgs cd) ctrl.next_control)
+                      | Some ctrl -> D.add_next (exec_cd cd) ctrl.next_control)
                   )
                 ) else (
                   next_instant cd;
                   (* do another step*)
-                  exec_cd ~wait_for_msgs:wait_for_msgs cd ()
+                  exec_cd  cd ()
                 )
-        ) else if wait_for_msgs then (
-          print_debug "Clock domain %a is waiting for %d children@."
-            print_cd cd  !(cd.cd_remaining_async);
-          process_msgs ();
-          exec_cd ~wait_for_msgs:wait_for_msgs cd ()
         ) else
-            print_debug "Execution of clock domain %a is suspended until a message is received@."
-              print_cd cd
+          match cd.cd_clock.ck_parent with
+            | None -> (* top clock, wait for msgs *)
+                print_debug "Top clock domain %a is waiting for %d children@."
+                  print_cd cd  !(cd.cd_remaining_async);
+                process_msgs ();
+                exec_cd cd ()
+            | Some ck ->
+                (* parent is local, increment its async counter before returning *)
+                if C.is_local ck.ck_gid then (
+                  let parent_cd = get_clock_domain ck in
+                  incr parent_cd.cd_remaining_async
+                );
+                print_debug "Execution of clock domain %a is suspended until a message is received@."
+                  print_cd cd
       ) else
         print_debug "Clock domain %a is dead@." print_cd cd
-
 (*
     let rec react cd =
       exec_cd cd ();
@@ -817,7 +823,7 @@ struct
         react cd
       )
 *)
-    let react cd = exec_cd ~wait_for_msgs:true cd ()
+    let react cd = exec_cd cd ()
 
     (* After receiving Meoi_control *)
     let receive_eoi_control cd _ =
@@ -857,13 +863,22 @@ struct
       incr cd.cd_remaining_async;
       Msgs.send_step ck_id ck_id
 
-    let wake_up_cd_if_done cd =
+    let rec wake_up_cd_if_done cd =
       if !(cd.cd_remaining_async) = 0 then (
         match cd.cd_clock.ck_parent with
-          | Some ck when not (C.is_local ck.ck_gid) ->
+          | None -> () (* the cd is already executing, waiting for messages *)
+          | Some ck ->
               print_debug "Waking up clock domain %a after receiving a message@." print_cd cd;
-              exec_cd cd ()
-          | _ -> () (* the cd is already executing, waiting for messages *)
+              if C.is_local ck.ck_gid then (
+                let parent_cd = get_clock_domain ck in
+                exec_cd cd ();
+                print_debug "--%a@." print_cd parent_cd;
+                decr parent_cd.cd_remaining_async;
+                if !debug_mode && !(parent_cd.cd_remaining_async) < 0 then
+                  print_debug "Error: counter of %a is < 0@." print_cd parent_cd;
+                wake_up_cd_if_done parent_cd
+              ) else
+                exec_cd cd ()
       )
 
     (* After receving Mstep_done*)
@@ -916,7 +931,7 @@ struct
       fun _ ->
         D.add_current f new_cd.cd_current;
         start_ctrl new_cd ctrl new_ctrl;
-        react new_cd
+        exec_cd new_cd ()
 
     (* After receving Mnew_cd *)
     let create_cd msg =
@@ -1025,7 +1040,7 @@ struct
     (* After receiving Mfinalize *)
     let receive_finalize_site msg =
       let site = get_site () in
-      (* stop sending messages, byt keep receiving from others *)
+      (* stop sending messages, but keep receiving from others *)
       let main_site = Msgs.recv_finalize msg in
       Msgs.send_dummy main_site ();
       (* wait for all the other sites to be done sending *)
