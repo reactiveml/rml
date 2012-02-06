@@ -1,4 +1,3 @@
-file: async1.rml
 sim: main
 sampling: 0.1
 n: 100
