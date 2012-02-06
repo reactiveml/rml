@@ -108,7 +108,7 @@ let declare_rmllib () =
 
 let link_rml extension env _build =
   let rmlsim_file = env "%.rmlsim" in
-  let main_file = env "%.ml" in
+  let main_file = env "%.rml" in
   let () = read_rmlsim rmlsim_file main_file in
   let byte_file = Pathname.update_extension extension main_file in
   let rml_byte_file = env ("%.rml."^extension) in
