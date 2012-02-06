@@ -25,17 +25,17 @@ let exec_machine_controller () =
   let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
   let debut = ref 0.0 in
   let sleep = ref 0.0 in
-  let react = 
-    Rmltop_implem.Machine_controler_machine.rml_make 
+  let react =
+    Rmltop_implem.Machine_controler_machine.rml_make
       Rmltop_controller.controller
   in
   while true do
     let _ = debut := Sys.time() in
     let _ = react () in
-    let _ = 
+    let _ =
       sleep := !Rmltop_global.sampling -. ((Sys.time()) -. !debut);
-      if !sleep > 0.001 then 
-	begin try Thread.delay !sleep 
+      if !sleep > 0.001 then
+	begin try Thread.delay !sleep
 	with Unix.Unix_error _ -> () end
     in ()
   done

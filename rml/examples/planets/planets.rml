@@ -58,7 +58,7 @@ let compute_pos =
   let force p1 p2 =
     let d2 = distance2 p1.pos p2.pos in
     let d = sqrt d2 in
-    if (d <> 0.0) then 
+    if (d <> 0.0) then
       let  f12 = g *. ( (* p1.masse *. *) p2.masse) /. d2 in
       (f12 *. (p2.pos.x -. p1.pos.x) /. d,
        f12 *. (p2.pos.y -. p1.pos.y) /. d,
@@ -67,14 +67,14 @@ let compute_pos =
       (0.0, 0.0, 0.0)
   in
   fun me all ->
-    let fx, fy, fz = 
-      (List.fold_left 
-	 (fun (fx,fy,fz) p -> 
+    let fx, fy, fz =
+      (List.fold_left
+	 (fun (fx,fy,fz) p ->
 	   let x,y,z = force me p in
-	   (fx +. x), 
-	   (fy +. y), 
-	   (fz +. z)) 
-	 (0.0, 0.0, 0.0) 
+	   (fx +. x),
+	   (fy +. y),
+	   (fz +. z))
+	 (0.0, 0.0, 0.0)
 	 all)
     in
     let v = {x = (me).v.x +. fx *. dt;
@@ -95,23 +95,23 @@ let maj_aff all =
   Graphics.clear_graph();
   let max_x_2 = (Graphics.size_x()) / 2 in
   let max_y_2 = (Graphics.size_y()) / 2 in
-  List.iter 
-    (fun p -> 
+  List.iter
+    (fun p ->
       Graphics.set_color (color_of_int (p.id mod 7));
-      Graphics.fill_circle 
+      Graphics.fill_circle
 	(int_of_float p.pos.x + max_x_2)
 	(int_of_float p.pos.y  + max_y_2)
 	(*3*)
-	(if (-200.0 < p.pos.z) & (p.pos.z < 5000.0) then 
-	  5+(int_of_float p.pos.z / 50) 
-	else 1)) 
+	(if (-200.0 < p.pos.z) & (p.pos.z < 5000.0) then
+	  5+(int_of_float p.pos.z / 50)
+	else 1))
     all
 ;;
 
 (****************************************************************************)
 let process planet id masse pos_init v_init p =
   let me = ref {id = id; masse = masse; pos = pos_init; v = v_init} in
-  loop 
+  loop
     emit p !me;
     await p (all) in
     me := compute_pos !me all
@@ -120,7 +120,7 @@ let process planet id masse pos_init v_init p =
 
 let process soleil id masse pos_init p =
   let me = {id = id; masse = masse; pos = pos_init; v = {x=0.0;y=0.0;z=0.0}} in
-  loop 
+  loop
     emit p (me);
     pause
   end
@@ -128,7 +128,7 @@ let process soleil id masse pos_init p =
 
 (* Interface graphique *)
 let process click_of_button_down click =
-  loop 
+  loop
     if Graphics.button_down() then emit click (Graphics.mouse_pos());
     pause
   end
@@ -140,11 +140,11 @@ let process key_of_key_pressed key =
   end
 
 let process fenetre new_planet p kill_sun kill suspend =
-  let process read_click = 
+  let process read_click =
     signal click in
     run (click_of_button_down click)
     ||
-    loop 
+    loop
       present click then
          pause
       else
@@ -153,11 +153,11 @@ let process fenetre new_planet p kill_sun kill suspend =
         pause
     end
   in
-  let process read_key = 
+  let process read_key =
     signal key in
     run (key_of_key_pressed key)
     ||
-    loop 
+    loop
       await immediate one key(c) in
       print_string ("key_pressed = ");print_char c;print_newline();
       begin
@@ -176,7 +176,7 @@ let process fenetre new_planet p kill_sun kill suspend =
   Graphics.auto_synchronize false;
   begin
     loop
-      await p (all) in 
+      await p (all) in
       maj_aff all;
       Graphics.synchronize();
 
@@ -185,9 +185,9 @@ let process fenetre new_planet p kill_sun kill suspend =
 
     end
     ||
-    run read_click 
+    run read_click
     ||
-    run read_key 
+    run read_key
   end
 ;;
 
@@ -200,8 +200,8 @@ let rec process add_aux id new_planet kill kill_new p =
   signal new_kill_new in
   run (add_aux (id+1) new_planet kill new_kill_new p)
   ||
-  (await new_planet || await immediate kill_new); 
-  await kill; 
+  (await new_planet || await immediate kill_new);
+  await kill;
   emit new_kill_new
 
 let process add id new_planet kill p =
@@ -222,17 +222,17 @@ let process systeme =
     until kill_sun done
     ||
     run (planet 1 1.0
-	   {x = 0.0; y = -. 200.0; z = 0.0} 
+	   {x = 0.0; y = -. 200.0; z = 0.0}
 	   {x = 30.0; y = 0.0; z = 0.0}
            p)
     ||
     run (planet 2 1.0
-	   {x = 0.0; y = 200.0; z = 0.0} 
+	   {x = 0.0; y = 200.0; z = 0.0}
            {x = -. 30.0; y = 0.0; z = 0.0}
 	   p)
     ||
     run (planet 3 1.0
-	   {x = 200.0; y = 0.0; z = 0.0} 
+	   {x = 200.0; y = 0.0; z = 0.0}
 	   {x = 0.0; y = 0.0; z = 30.0}
 	   p)
     ||
@@ -241,7 +241,7 @@ let process systeme =
 ;;
 
 (****************************************************************************)
-let _ = Random.self_init() 
+let _ = Random.self_init()
 ;;
 let main = systeme
 ;;

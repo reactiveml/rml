@@ -44,13 +44,13 @@ let locate_stdlib () =
   try
     Sys.getenv "RMLLIB"
   with
-    Not_found -> standard_lib 
+    Not_found -> standard_lib
 
 (* standard pervasives module *)
 let set_init_pervasives () =
   default_used_modules := [pervasives_module]
 
-let set_no_pervasives () = 
+let set_no_pervasives () =
   default_used_modules := []
 
 (* show version *)
@@ -100,28 +100,28 @@ let set_runtime s =
       set_interpreter_impl "Rec_implem";
       set_interpreter_module "Lco_rewrite_record";
       set_translation Lco
-  | "Lco_ctrl_tree" | "Lco" -> 
+  | "Lco_ctrl_tree" | "Lco" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implem";
       set_interpreter_module "Lco_ctrl_tree_record";
       set_translation Lco
-  | "Lco_ctrl_tree_class" -> 
+  | "Lco_ctrl_tree_class" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implem";
       set_interpreter_module "Lco_ctrl_tree_class";
       set_translation Lco
-  | "Lco_ctrl_tree_thread_safe" -> 
+  | "Lco_ctrl_tree_thread_safe" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Thread_implem";
       set_interpreter_module "Lco_ctrl_tree_thread_safe_record";
       set_translation Lco
-  | "Lco_ctrl_tree_n" | "Lco_n" -> 
+  | "Lco_ctrl_tree_n" | "Lco_n" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implem";
       set_interpreter_module "Lco_ctrl_tree_n_record";
       set_translation Lco
 (*
-  | "ctrl_tree_debug" -> 
+  | "ctrl_tree_debug" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Lco_ctrl_tree_debug";
       set_translation Lco
@@ -154,7 +154,7 @@ let set_dparse () = dparse := true
 let set_dtime () = dtime := true
 
 (* sets the interactive mode *)
-let set_interactive () = 
+let set_interactive () =
 (*
   interpreter_module := "Rml_interactive";
 *)
@@ -189,7 +189,7 @@ and doc_verbose = "Print types"
 and doc_save_types = "Save type information in <filename>.?annot"
 and doc_no_loop_warning = "Remove instantaneous loop and recursion warnings"
 and doc_interactive = "Read programs on stdin and output on stdout"
-and doc_runtime = 
+and doc_runtime =
 (*"<interpreter> select the runtime according to <interpreter>:\n"*)
    "(undocumented)\n" ^
    "\t Lco_rewrite\n" ^
@@ -200,7 +200,7 @@ and doc_runtime =
 
 and doc_dparse = "(undocumented)"
 and doc_dtime = "(undocumented)"
-and errmsg = 
+and errmsg =
 "\nrmlc - The Reactive ML Compiler
 Usage: rmlc [options] -s <process> <file>.rml
   <process> : name of the main process
@@ -216,9 +216,9 @@ let configure () =
   set_init_stdlib ();
   set_init_pervasives ();
   try
-    Arg.parse 
+    Arg.parse
       [ "-stdlib", Arg.String set_stdlib, doc_stdlib;
-	"-v", Arg.Unit show_v, doc_v;    
+	"-v", Arg.Unit show_v, doc_v;
 	"-version", Arg.Unit show_version, doc_version;
 	"-where", Arg.Unit show_where, doc_where;
 	"-c",Arg.Set no_link, doc_compilation;
@@ -235,10 +235,10 @@ let configure () =
 	"-no_nary_opt", Arg.Unit set_no_nary, doc_no_nary;
 	"-no_static_opt", Arg.Unit set_no_static, doc_no_static;
 	"-no_for_opt", Arg.Unit set_no_for, doc_no_for;
-	"-no_const_opt", Arg.Clear const_optimization, doc_no_const_opt; 
+	"-no_const_opt", Arg.Clear const_optimization, doc_no_const_opt;
 	"-dparse", Arg.Unit set_dparse, doc_dparse;
 	"-dtime", Arg.Unit set_dtime, doc_dtime;
-      ]	
+      ]
       add_to_compile
       errmsg;
   with x ->
@@ -247,7 +247,7 @@ let configure () =
 ;;
 
 
-let _ = 
+let _ =
   Printexc.catch configure ();
   to_compile := List.rev !to_compile
 

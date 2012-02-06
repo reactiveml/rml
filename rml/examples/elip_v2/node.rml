@@ -4,7 +4,7 @@ open Global
 
 
 let update_pos_tbl self neighbors =
-  List.iter 
+  List.iter
     (fun node ->
       Pos_tbl.set self.pos_tbl_le node.id node.pos self.date;
       Pos_tbl.set self.pos_tbl_elip node.id node.pos self.date)
@@ -34,11 +34,11 @@ let process node id pos_init =
     emit draw self;
 
     (* Neighborhood discovering *)
-    let (i,j) as local_area, neighbor_areas = 
-      get_areas self.pos.x self.pos.y 
+    let (i,j) as local_area, neighbor_areas =
+      get_areas self.pos.x self.pos.y
     in
-    List.iter 
-      (fun (i,j) -> emit hello_array.(i).(j) self) 
+    List.iter
+      (fun (i,j) -> emit hello_array.(i).(j) self)
       (local_area::neighbor_areas);
     await hello_array.(i).(j) (all) in
     self.neighbors <- get_neighbors self all;
@@ -48,11 +48,11 @@ let process node id pos_init =
     (* Routing *)
     pause;
 
-    List.iter 
-      (fun dest_id -> 
-	Routing.route LE self 
+    List.iter
+      (fun dest_id ->
+	Routing.route LE self
 	  (make_le_packet self dest_id);
-        Routing.route ELIP self 
+        Routing.route ELIP self
 	  (make_elip_packet self dest_id))
       (self.make_msg self);
 

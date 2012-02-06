@@ -39,7 +39,7 @@ let constant_propagation =
     let expr' =
       begin match expr.cexpr_desc with
       | Cexpr_local id ->
-	  begin try 
+	  begin try
 	    Env.find id env
 	  with Not_found ->
 	    expr.cexpr_desc
@@ -73,14 +73,14 @@ let constant_propagation =
 	  begin match patt_expr_list'' with
 	  | [] -> (constant_propagation env' expression).cexpr_desc
 	  | _ ->
-	      Cexpr_let(rec_flag, 
-			patt_expr_list'', 
+	      Cexpr_let(rec_flag,
+			patt_expr_list'',
 			constant_propagation env' expression)
 	  end
 
       | Cexpr_function patt_expr_list ->
 	  let patt_expr_list' =
-	    List.map 
+	    List.map
 	      (fun (patt,expr) -> (patt, constant_propagation env expr))
 	      patt_expr_list
 	  in
@@ -104,12 +104,12 @@ let constant_propagation =
 	     opt_map (constant_propagation env) expr_option)
 
       | Cexpr_array expr_list ->
-	  Cexpr_array 
+	  Cexpr_array
 	    (List.map (fun expr -> constant_propagation env expr) expr_list)
 
       | Cexpr_record lbl_expr_list ->
 	  Cexpr_record
-	    (List.map 
+	    (List.map
 	       (fun (lbl,expr) -> (lbl, constant_propagation env expr))
 	       lbl_expr_list)
 
@@ -118,7 +118,7 @@ let constant_propagation =
 
       | Cexpr_record_update (e1, lbl, e2) ->
 	  Cexpr_record_update
-	    (constant_propagation env e1, 
+	    (constant_propagation env e1,
 	     lbl,
 	     constant_propagation env e2)
 
@@ -128,7 +128,7 @@ let constant_propagation =
       | Cexpr_trywith (expr, patt_expr_list) ->
 	  Cexpr_trywith
 	    (constant_propagation env expr,
-	     List.map 
+	     List.map
 	       (fun (patt, expr) -> (patt, constant_propagation env expr))
 	       patt_expr_list)
 
@@ -144,7 +144,7 @@ let constant_propagation =
       | Cexpr_match  (expr, patt_expr_list) ->
 	  Cexpr_match
 	    (constant_propagation env expr,
-	     List.map 
+	     List.map
 	       (fun (patt, expr) -> (patt, constant_propagation env expr))
 	       patt_expr_list)
 

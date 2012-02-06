@@ -17,7 +17,7 @@
 ;; XEmacs compatibility
 
 (eval-and-compile
-  (if (and (boundp 'running-xemacs) running-xemacs) 
+  (if (and (boundp 'running-xemacs) running-xemacs)
       (require 'rml-xemacs)
     (require 'rml-emacs)))
 
@@ -25,8 +25,8 @@
 
 (defvar rml-static-location-re nil "Regexp to parse *.sannot files.
 
-Annotation files *.sannot may be generated with the \"-dtypes\" option 
-of rmlc and rmlopt. 
+Annotation files *.sannot may be generated with the \"-dtypes\" option
+of rmlc and rmlopt.
 
 Their format is:
 
@@ -113,7 +113,7 @@ For the moment, the only possible keyword is \"type\"."
      in the file, up to where the type checker failed.
 
 Types are also diplayed in the buffer *rml-static*, which buffer is
-display when the commande is called with Prefix argument 4. 
+display when the commande is called with Prefix argument 4.
 
 See also `rml-static-explore' for exploration by mouse dragging.
 See `rml-static-location-re' for annotation file format.
@@ -128,7 +128,7 @@ See `rml-static-location-re' for annotation file format.
          (type-file (concat (file-name-sans-extension (buffer-file-name))
                             ".sannot")))
     (rml-static-preprocess type-file)
-    (unless rml-static-buffer 
+    (unless rml-static-buffer
       (setq rml-static-buffer (get-buffer-create rml-static-buffer-name)))
     (let* ((targ-loc (vector target-file target-line target-bol target-cnum))
            (node (rml-static-find-location targ-loc ()
@@ -409,7 +409,7 @@ and its type is displayed in the minibuffer, until the move is released."
         (progn
           (rml-static-preprocess type-file)
           (setq target-tree rml-static-annotation-tree)
-          (unless rml-static-buffer 
+          (unless rml-static-buffer
             (setq rml-static-buffer
                   (get-buffer-create rml-static-buffer-name)))
           ;; (message "Drag the mouse to explore types")

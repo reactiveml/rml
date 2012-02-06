@@ -64,9 +64,9 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
 	| Rmltop_lexer.OCaml_phrase s ->
 	    [ s; ";;\n";
 	      "let () = Rmltop_global.print_prompt();;" ]
-	| Rmltop_lexer.Run s -> 
+	| Rmltop_lexer.Run s ->
 	    (* add "(process ( run (...); ()));;" *)
-	    let phrase = 
+	    let phrase =
 	      [ "let () = Rmltop_global.to_run := ";
 		"(process ( run (";s;"); ())) :: !Rmltop_global.to_run ;;" ]
 	    in
@@ -81,9 +81,9 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
 	      "let () = Rmltop_global.print_prompt ();;" ]
 	| Rmltop_lexer.Exec s ->
 	    (* add "(process ( ...; ()));;" *)
-	    let phrase = 
+	    let phrase =
 	      [ "let () = Rmltop_global.to_run := ";
-		"(process (";s;"; ())) :: !Rmltop_global.to_run;;" ] 
+		"(process (";s;"; ())) :: !Rmltop_global.to_run;;" ]
 	    in
 	    (* send phrase to rmlc *)
 	    List.iter (fun line -> output_string rmlc_in line) phrase;
@@ -98,7 +98,7 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
 	    [ "let () = Rmltop_directives.set_step 1 ;;\n";
 	      "let () = Rmltop_global.print_prompt ();;" ]
 	| Rmltop_lexer.Step (Some n) ->
-	    [ "let () = Rmltop_directives.set_step "; string_of_int n; ";;\n"; 
+	    [ "let () = Rmltop_directives.set_step "; string_of_int n; ";;\n";
 	      "let () = Rmltop_global.print_prompt ();;" ]
 	| Rmltop_lexer.Suspend ->
 	    [ "let () = Rmltop_directives.set_suspend () ;;\n";
@@ -118,7 +118,7 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
       flush ocaml_in
     with
     | Rmltop_lexer.EOF -> exit 0
-    | Rmltop_lexer.Syntax_error -> 
+    | Rmltop_lexer.Syntax_error ->
 	Printf.fprintf stderr "Syntax error\n";
 	flush stderr;
 	output_string ocaml_in "let () = Rmltop_global.print_prompt ();;\n\n";
@@ -128,8 +128,8 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
 let init ocaml_in =
   output_string ocaml_in ("open Implem;;\n");
   output_string ocaml_in ("let () = Rmltop_global.print_prompt ();;\n");
-  flush ocaml_in  
-      
+  flush ocaml_in
+
 let print_intro () =
   print_string "        ReactiveML version ";
   let version_ch = Unix.open_process_in "rmlc -version" in
@@ -140,13 +140,13 @@ let print_intro () =
   if !show_help then print_help ()
 
 let rmlc = ref "rmlc -i -interactive -I `rmlc -where`/toplevel"
-let ocaml = 
-  ref 
+let ocaml =
+  ref
 (*"ocaml -I +threads -I `rmlc -where` unix.cma threads.cma rml_interactive.cmo "*)
     "TERM=norepeat ocaml -noprompt -I +threads -I `rmlc -where` -I `rmlc -where`/toplevel unix.cma threads.cma rmllib.cma rmltop_global.cmo rmltop_implem.cmo rmltop_machine_body.cmo rmltop_reactive_machine.cmo rmltop_controller.cmo rmltop_directives.cmo rmltop_main.cmo "
 
 let sampling = ref None
-    
+
 let main s =
   let _ = print_intro() in
   (* fork the ReactiveML compiler *)
@@ -165,12 +165,12 @@ let main s =
 
 let usage = ""
 
-let _ = 
+let _ =
   Arg.parse (Arg.align
     [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x),
       "<rate> Sets the sampling rate to <rate> seconds";
       "-i", Arg.Set show_help, " List known rml directives at startup ";
-      "--", Arg.Rest (fun x -> ocaml := !ocaml ^ " " ^ x), 
+      "--", Arg.Rest (fun x -> ocaml := !ocaml ^ " " ^ x),
       " Sends all others options to the Ocaml toplevel"])
     (fun x -> ocaml := !ocaml ^ " " ^ x)
     usage;

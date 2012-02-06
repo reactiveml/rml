@@ -17,7 +17,7 @@
 
 (** Last-in first-out stacks.
 
-   This module implements stacks (LIFOs), with in-place modification. 
+   This module implements stacks (LIFOs), with in-place modification.
 *)
 
 type 'a t

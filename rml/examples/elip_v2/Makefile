@@ -102,7 +102,7 @@ elip: cmo
 		routing.cmo \
 		node.cmo \
 		dynamic.cmo \
-		simul.cmo 
+		simul.cmo
 
 elip.opt: cmx
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o elip.opt \
@@ -122,7 +122,7 @@ elip.opt: cmx
 		routing.cmx \
 		node.cmx \
 		dynamic.cmx \
-		simul.cmx 
+		simul.cmx
 
 clean:
 	rm -f *.rzi *.annot *.?annot *.cmo *.cmx *.cmi *.o \
@@ -140,7 +140,7 @@ clean:
 	routing.ml \
 	node.ml \
 	dynamic.ml \
-	simul.ml 
+	simul.ml
 
 cleanall: clean
 	rm -f elip elip.opt pos_tbl.ml *~

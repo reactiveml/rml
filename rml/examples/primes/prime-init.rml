@@ -16,10 +16,10 @@ let output =
   let num = ref 0 in
   fun n ->
     print_int n;
-    print_string " "; 
+    print_string " ";
     flush stdout;
     num := !num + 1;
-    if (!num > max) 
+    if (!num > max)
     then exit(0)
     else ()
 ;;

@@ -21,7 +21,7 @@
 (* created: 2004-04-27  *)
 (* author: Louis Mandel *)
 
-(* $Id$ *) 
+(* $Id$ *)
 
 (* Implementation of the symbol table *)
 

@@ -18,8 +18,8 @@ let add visited id v = visited := id :: !visited
 
 (* Map *)
 module OrderedInt =
-  struct 
-    type t = int 
+  struct
+    type t = int
     let compare = compare
   end
 module M = Map.Make (OrderedInt)
@@ -35,7 +35,7 @@ let add visited id v = visited := M.add id () !visited
 let create () = Hashtbl.create 141
 let mem visited id = Hashtbl.mem visited id
 let add visited id v = Hashtbl.add visited id v
-      
+
 
 let search_best_age kind src_node dest age_limit =
   let level = ref 0 in
@@ -59,9 +59,9 @@ let search_best_age kind src_node dest age_limit =
     let best =
       List.fold_left
 	(fun best n ->
-	  let pos_tbl = 
+	  let pos_tbl =
 	    match kind with
-	    | LE -> n.pos_tbl_le 
+	    | LE -> n.pos_tbl_le
 	    | ELIP -> n.pos_tbl_elip
 	  in
 	  incr node_cpt;
@@ -71,8 +71,8 @@ let search_best_age kind src_node dest age_limit =
 	  match best with
 	  | None ->
 	      let (pos, date) = Pos_tbl.get pos_tbl dest in
-	      if date <> Pos_tbl.no_info & 
-		abs (n.date - date) <= age_limit 
+	      if date <> Pos_tbl.no_info &
+		abs (n.date - date) <= age_limit
 	      then
 		Some (n, (pos, abs (n.date - date)))
 	      else
@@ -91,13 +91,13 @@ let search_best_age kind src_node dest age_limit =
       (best, lvl, node_cpt, (1+lvl-current_level) * !visited_cpt + overhead)
     else
       (best, !level, !node_cpt, !visited_cpt)
-  in 
+  in
   fun neighbors ->
-    let () = 
+    let () =
       add visited src_node.id ();
-      List.iter 
+      List.iter
 	(fun node ->
-	  if node.id <> src_node.id then 
+	  if node.id <> src_node.id then
 	    add visited node.id ())
 	neighbors
     in
@@ -110,7 +110,7 @@ let search_best_age kind src_node dest age_limit =
 let rec set_not_visited neighbors =
   begin match neighbors with
   | [] -> ()
-  | n::l -> 
+  | n::l ->
       n.visited <- false;
       set_not_visited l
   end
@@ -136,9 +136,9 @@ let search_best_age kind src_node dest age_limit =
     let best =
       List.fold_left
 	(fun best n ->
-	  let pos_tbl = 
+	  let pos_tbl =
 	    match kind with
-	    | LE -> n.pos_tbl_le 
+	    | LE -> n.pos_tbl_le
 	    | ELIP -> n.pos_tbl_elip
 	  in
 	  incr node_cpt;
@@ -148,8 +148,8 @@ let search_best_age kind src_node dest age_limit =
 	  match best with
 	  | None ->
 	      let (pos, date) = Pos_tbl.get pos_tbl dest in
-	      if date <> Pos_tbl.no_info & 
-		abs (n.date - date) <= age_limit 
+	      if date <> Pos_tbl.no_info &
+		abs (n.date - date) <= age_limit
 	      then
 		Some (n, (pos, abs (n.date - date)))
 	      else
@@ -170,13 +170,13 @@ let search_best_age kind src_node dest age_limit =
     else
       (set_not_visited !next_neighbors;
        (best, !level, !node_cpt, !visited_cpt))
-  in 
+  in
   fun neighbors ->
-    let () = 
+    let () =
       src_node.visited <- true;
-      List.iter 
+      List.iter
 	(fun node ->
-	  if node.id <> src_node.id then 
+	  if node.id <> src_node.id then
 	    node.visited <- true)
 	neighbors
     in

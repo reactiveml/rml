@@ -29,10 +29,10 @@ type state
 
 
 (** Builds the initial state of the Lucky machine *)
-val make : 
+val make :
   (int) ->      (* to fix a seed for the pseudo-random generator *)
   (bool) ->     (* favour fairness over efficiency *)
-  (string) ->     (* in order to use a preprocessor before parsing *) 
+  (string) ->     (* in order to use a preprocessor before parsing *)
   (int) ->  (* verbose *)
   (int) ->  (* precision *)
   string list ->      (* list of ".luc" file names *)
@@ -40,8 +40,8 @@ val make :
 
 (** To indicate whether the point used to perform the step is
   drawn inside, at edges, or at vertices of the convex hull of
-  numeric solutions; the step mode is used iff at least one 
-  controllable variable is numeric.  
+  numeric solutions; the step mode is used iff at least one
+  controllable variable is numeric.
 *)
 
 type step_mode = StepInside | StepEdges | StepVertices
@@ -54,7 +54,7 @@ val step_se : (step_mode) -> state ref -> inputs -> solution
 
 
 
-(** Reads from an in_channel Lucky inputs in RIF 
+(** Reads from an in_channel Lucky inputs in RIF
 
 nb: RIF = Reactive Input Format
   It is the input/output format of most Lustre/verimag tools.

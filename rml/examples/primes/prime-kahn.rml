@@ -21,10 +21,10 @@ let rec process shift s_in s_out =
 let process output s_in =
   loop
     await s_in (primes) in
-    List.iter 
+    List.iter
       (fun n ->
 	print_int n;
-	print_string " "; 
+	print_string " ";
 	flush stdout)
       primes
   end

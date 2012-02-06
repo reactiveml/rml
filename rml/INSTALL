@@ -1,22 +1,22 @@
 Installation procedure for ReactiveML:
 
 . Requirement:
-  ----------- 
+  -----------
 
 You'll need Objective Caml >= 3.06 in order to build ReactiveML
-from source. You can get it from http://reactiveML.org/ or 
+from source. You can get it from http://reactiveML.org/ or
 http://rml.inria.fr/.
 
 . Quick installation:
-  ------------------ 
+  ------------------
 
 The simplest way to install ReactiveML is to type
 
-./configure 
-make 
+./configure
+make
 make install
 
-in the ReactiveML main directory. However, look at the output of 
+in the ReactiveML main directory. However, look at the output of
 configure to make sure that default installation directories suit your
 configuration.
 
@@ -26,9 +26,9 @@ configuration.
 You can pass options to configure in order to customize the
 installation, type
 
-./configure --help 
+./configure --help
 
-to get the full list of options. The most important ones are the 
+to get the full list of options. The most important ones are the
 following:
 
 	--prefix <dir>  sets the root directory for the installation
@@ -57,7 +57,7 @@ Other make target which can be usefull:
 	make binary-distrib  makes a file rml-VERSION.TARGET.tar.gz
 		containing a full ReactiveML binary distribution,
 		ready for installation.
-		TARGET is either opt or byte. Default is opt, you 
+		TARGET is either opt or byte. Default is opt, you
 		can bet the bytecode version with
 		make binary-distrib.byte
 
@@ -65,11 +65,11 @@ Other make target which can be usefull:
 		containing a full ReactiveML source distribution.
 
 
-      - in the compiler/ directory 
+      - in the compiler/ directory
 
         make byte  produces a bytecode version of the compiler in
-	        rmlc.byte 
-		
+	        rmlc.byte
+
 	make opt   produces an opt version of the compiler in
 		rmlc.opt
 
@@ -81,18 +81,18 @@ Other make target which can be usefull:
 		bytecode profiler.
 
 	make oprof  produces a compiler with informations for the opt
-		profiler. 
+		profiler.
 
 
 
 . Copyright information:
   ---------------------
 
-License information are given in the file LICENSE. 
+License information are given in the file LICENSE.
 
 Some files are based on Caml Light and Objective Caml. The original
 files with patches are in the compiler/diff/ directory. The license
 of Caml files is also in this directory.
 
-Files in the stdlib/ directory are based on the Objective Caml 
+Files in the stdlib/ directory are based on the Objective Caml
 standard library.

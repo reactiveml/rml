@@ -30,7 +30,7 @@ open Reac_misc
 (* Checks that expression as right-hand side of `let rec' are well formed *)
 
 let error e =
-  Printf.eprintf 
+  Printf.eprintf
    "%aThis kind of expression is not allowed as right-hand side of `let rec'.\n"
    Location.print_oc e.expr_loc;
   raise Misc.Error
@@ -49,15 +49,15 @@ let rec check_patt_expr (patt, expr) =
   else
     begin match expr.expr_desc with
     | Rexpr_pause _
-    | Rexpr_halt _ 
-    | Rexpr_constant _	
+    | Rexpr_halt _
+    | Rexpr_constant _
     | Rexpr_function _
     | Rexpr_construct _
     | Rexpr_array _
     | Rexpr_tuple _
-    | Rexpr_record _ 
+    | Rexpr_record _
     | Rexpr_process _
-    | Rexpr_nothing -> 
+    | Rexpr_nothing ->
 	  ()
     | Rexpr_local _
     | Rexpr_global _
@@ -94,14 +94,14 @@ let rec check_patt_expr (patt, expr) =
     | Rexpr_constraint (e, _) ->
 	check_patt_expr (patt, e)
   end
-	  
+
 let check_expr expr =
   begin match expr.expr_desc with
   | Rexpr_let (Recursive, patt_expr_list, _) ->
       List.iter check_patt_expr patt_expr_list;
       expr
   | _ -> expr
-  end  
+  end
 
 let check impl =
   ignore (Reac2reac.impl_map check_expr impl);

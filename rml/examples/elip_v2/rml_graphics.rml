@@ -1,5 +1,5 @@
 let process read_click click =
-  loop 
+  loop
 	let pos_x, pos_y = Graphics.mouse_pos() in
     if Graphics.button_down() then emit click ((float_of_int pos_x), (float_of_int pos_y	));
     pause

@@ -29,20 +29,20 @@
 +
 +(* first modification: 2004-05-06 *)
 +(* modified by: Louis Mandel      *)
- 
+
  (***********************************************************************)
  (*                                                                     *)
 @@ -12,7 +38,7 @@
  (*                                                                     *)
  (***********************************************************************)
- 
+
 -(* $Id: parse.ml,v 1.15 2002/11/01 17:06:46 doligez Exp $ *)
 +(* $Id$ *)
- 
+
  (* Entry points in the parser *)
- 
+
 @@ -62,5 +88,4 @@
- 
+
  let implementation = wrap Parser.implementation
  and interface = wrap Parser.interface
 -and toplevel_phrase = wrap Parser.toplevel_phrase

@@ -67,7 +67,7 @@ let add_opt add_fn bv = function
 
 let rec add_type bv ty =
   match ty.pte_desc with
-  | Ptype_var _ -> () 
+  | Ptype_var _ -> ()
   | Ptype_arrow (t1, t2) -> add_type bv t1; add_type bv t2
   | Ptype_tuple tl -> List.iter (add_type bv) tl
   | Ptype_constr (id, tl) -> add bv id; List.iter (add_type bv) tl
@@ -107,10 +107,10 @@ let rec add_expr bv exp =
   | Pexpr_tuple el -> List.iter (add_expr bv) el
   | Pexpr_construct(c, opte) -> add bv c; add_opt add_expr bv opte
   | Pexpr_array el -> List.iter (add_expr bv) el
-  | Pexpr_record lblel ->  
+  | Pexpr_record lblel ->
       List.iter (fun (lbl, e) -> add bv lbl; add_expr bv e) lblel
   | Pexpr_record_access(e, fld) -> add_expr bv e; add bv fld
-  | Pexpr_record_update(e1, fld, e2) -> 
+  | Pexpr_record_update(e1, fld, e2) ->
       add_expr bv e1; add bv fld; add_expr bv e2
   | Pexpr_constraint(e1, ty) ->
       add_expr bv e1;
@@ -135,7 +135,7 @@ let rec add_expr bv exp =
   | Pexpr_loop(e1) -> add_expr bv e1
   | Pexpr_par(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_merge(e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pexpr_signal(ioel, oee, e) -> 
+  | Pexpr_signal(ioel, oee, e) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
       Misc.opt_iter (fun (e1, e2) -> add_expr bv e1; add_expr bv e2) oee;
       add_expr bv e
@@ -146,15 +146,15 @@ let rec add_expr bv exp =
       add_expr bv e1;
       Misc.opt_iter (fun (p,e) -> add_pattern bv p; add_expr bv e) ope
   | Pexpr_when(e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pexpr_control(e1, ope, e2) -> 
-      add_expr bv e1; 
+  | Pexpr_control(e1, ope, e2) ->
+      add_expr bv e1;
       Misc.opt_iter (fun (p,e) -> add_pattern bv p; add_expr bv e) ope;
       add_expr bv e2
   | Pexpr_get(e1) -> add_expr bv e1
   | Pexpr_present(e1, e2, e3) -> add_expr bv e1; add_expr bv e2; add_expr bv e3
   | Pexpr_await(_, e1) -> add_expr bv e1
   | Pexpr_await_val(_, _, e1, p, e2) ->
-      add_expr bv e1; add_pattern bv p; add_expr bv e2 
+      add_expr bv e1; add_pattern bv p; add_expr bv e2
   | Pexpr_pre(_, e1) -> add_expr bv e1
   | Pexpr_last(e1) -> add_expr bv e1
   | Pexpr_default(e1) -> add_expr bv e1
@@ -183,7 +183,7 @@ and add_sig_item bv item =
       bv
 
 and add_structure bv item_list =
-  List.fold_left add_struct_item bv item_list 
+  List.fold_left add_struct_item bv item_list
 
 and add_struct_item bv item =
   match item.pimpl_desc with
@@ -191,7 +191,7 @@ and add_struct_item bv item =
       add_expr bv e; bv
   | Pimpl_let(_, pel) ->
       add_pat_expr_list bv pel; bv
-  | Pimpl_signal(ioel, oee) -> 
+  | Pimpl_signal(ioel, oee) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
       Misc.opt_iter (fun (e1, e2) -> add_expr bv e1; add_expr bv e2) oee;
       bv

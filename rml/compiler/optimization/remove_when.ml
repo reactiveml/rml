@@ -21,7 +21,7 @@
 (* created: 2005-07-27  *)
 (* author: Louis Mandel *)
 
-(* $Id$ *) 
+(* $Id$ *)
 
 (* Replace de "when" constructs by "await" *)
 
@@ -32,9 +32,9 @@ open Reac_misc
 
 let tr =
   let rec tr_config ctrl config =
-    let c = 
+    let c =
       match config.conf_desc with
-      | Rconf_present e -> 
+      | Rconf_present e ->
 	  let e' = tr ctrl e in
 	  Rconf_present e'
       | Rconf_and (c1, c2) ->
@@ -51,18 +51,18 @@ let tr =
     let rexpr =
       match expr.expr_desc with
       | Rexpr_local _ as e -> e
-	    
+
       | Rexpr_global _ as e -> e
-	    
+
       | Rexpr_constant _ as e -> e
-	    
+
       | Rexpr_let (rec_flag, patt_expr_list, expr) ->
 	  let patt_expr_list' =
 	    List.map (fun (p,e) -> (p, tr ctrl e)) patt_expr_list
 	  in
 	  let expr' = tr ctrl expr in
 	  Rexpr_let (rec_flag, patt_expr_list', expr')
-	    
+
       | Rexpr_function patt_expr_list ->
 	  let patt_expr_list' =
 	    List.map (fun (p,e) -> (p, tr ctrl e)) patt_expr_list
@@ -71,13 +71,13 @@ let tr =
 
       | Rexpr_apply (e, expr_list) ->
 	  let e' = tr ctrl e in
-	  let expr_list' = 
+	  let expr_list' =
 	    List.map (fun e -> tr ctrl e) expr_list
 	  in
 	  Rexpr_apply (e', expr_list')
 
       | Rexpr_tuple expr_list ->
-	  let expr_list' = 
+	  let expr_list' =
 	    List.map (fun e -> tr ctrl e) expr_list
 	  in
 	  Rexpr_tuple expr_list'
@@ -88,7 +88,7 @@ let tr =
 	  Rexpr_construct (const, Some e')
 
       | Rexpr_array expr_list ->
-	  let expr_list' = 
+	  let expr_list' =
 	    List.map (fun e -> tr ctrl e) expr_list
 	  in
 	  Rexpr_array expr_list'
@@ -99,7 +99,7 @@ let tr =
 	  in
 	  Rexpr_record lbl_expr_list'
 
-      | Rexpr_record_access (e, lbl) -> 
+      | Rexpr_record_access (e, lbl) ->
 	  let e' = tr ctrl e in
 	  Rexpr_record_access (e', lbl)
 
@@ -158,14 +158,14 @@ let tr =
 	  Rexpr_seq (e1',e2')
 
       | Rexpr_process e ->
-	  let id = 
+	  let id =
 	    Ident.create Initialization.gen_ident "__ctrl" Ident.Internal
 	  in
-	  let c = 
-	    make_conf 
-	      (Rconf_present (make_expr (Rexpr_local id) Location.none)) 
-	      Location.none 
-	  in 
+	  let c =
+	    make_conf
+	      (Rconf_present (make_expr (Rexpr_local id) Location.none))
+	      Location.none
+	  in
 	  let e' = tr c e in
 	  Rexpr_function
 	    [ make_patt (Rpatt_var (Varpatt_local id)) Location.none,
@@ -232,9 +232,9 @@ let tr =
 	  | None -> Rexpr_run e'
 	  | Some c ->
 	      Rexpr_run
-		(make_expr 
+		(make_expr
 		   (Rexpr_apply
-		      (e', [ make_expr (c) Location.none ])) 
+		      (e', [ make_expr (c) Location.none ]))
 		   Location.none)
 	  end
 
@@ -245,8 +245,8 @@ let tr =
 	  | None ->
 	      Rexpr_until (config', e', None)
 	  | Some c ->
-	      let config'' = 
-		make_conf 
+	      let config'' =
+		make_conf
 		  (Rconf_and (c, config'))
 		  Location.none
 	      in
@@ -257,18 +257,18 @@ let tr =
 	  let e' = tr ctrl e in
 	  let e1' = tr ctrl e1 in
 	  begin match ctrl with
-	  | None -> 
+	  | None ->
 	      Rexpr_until (config', e', Some(p,e1'))
 	  | Some c ->
-	      let config'' = 
-		make_conf 
+	      let config'' =
+		make_conf
 		  (Rconf_and (c, config'))
 		  Location.none
 	      in
 	      let e1'' =
 		make_expr
 		  (Rexpr_seq
-		     (make_expr (Rexpr_await (Immediate, c)) Location.none), 
+		     (make_expr (Rexpr_await (Immediate, c)) Location.none),
 		      e1')
 	      in
 	      Rexpr_until (config'', e', Some(p,e1''))

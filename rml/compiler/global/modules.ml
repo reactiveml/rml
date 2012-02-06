@@ -40,7 +40,7 @@ type module0 =
     { mod_name: string;                      (* name of the module *)
       mod_values: (string, value_type_description global) Hashtbl.t;
                                              (* table of values *)
-      mod_constrs: 
+      mod_constrs:
 	(string, constructor_type_description global) Hashtbl.t;
                                              (* table of constructors *)
       mod_labels: (string, label_type_description global) Hashtbl.t;
@@ -48,7 +48,7 @@ type module0 =
       mod_types: (string, type_description global) Hashtbl.t;
                                              (* table of type constructors *)
     }
-      
+
 let name_of_module    md = md.mod_name
 and values_of_module  md = md.mod_values
 and constrs_of_module md = md.mod_constrs
@@ -68,7 +68,7 @@ let new_module nm =
       mod_labels = Hashtbl.create 1}
   in
   Hashtbl.add module_table nm md; md
-    
+
 
 (* To load an interface from a file *)
 
@@ -87,7 +87,7 @@ let read_module basename filename =
 
 
 let use_extended_interfaces = ref false
-    
+
 let load_module modname =
   let name = String.uncapitalize modname in
   try
@@ -102,7 +102,7 @@ let load_module modname =
 
 
 (* To find an interface by its name *)
-      
+
 let find_module modname =
   try
     Hashtbl.find module_table modname
@@ -111,7 +111,7 @@ let find_module modname =
     Hashtbl.add module_table modname md; md
 
 (* To remove the in-memory image of an interface *)
-      
+
 let kill_module name =
   Hashtbl.remove module_table name
 
@@ -127,7 +127,7 @@ let opened_modules = ref
       mod_labels = Hashtbl.create 1 }
 let opened_modules_names = ref ([]: string list)
 let used_opened_modules = ref (Hashtbl.create 1: (string, bool ref) Hashtbl.t)
-    
+
 let reset_opened_modules () =
   opened_modules :=
     { mod_name = "";
@@ -142,9 +142,9 @@ let reset_opened_modules () =
 
 let add_table t1 t2 =
   let rev_t1 = Hashtbl.fold (fun k x acc -> (k,x)::acc) t1 [] in
-  List.iter (fun (k, x) -> Hashtbl.add t2 k x) rev_t1 
+  List.iter (fun (k, x) -> Hashtbl.add t2 k x) rev_t1
 
-    
+
 let open_module modname =
   let module0 = find_module modname in
   add_table module0.mod_values (!opened_modules).mod_values;
@@ -178,7 +178,7 @@ let add_global_info sel_fct glob =
   let tbl = sel_fct !defined_module in
   Hashtbl.add tbl (Ident.name glob.gi.id) glob
 
-let add_global_info_list sel_fct glob_list = 
+let add_global_info_list sel_fct glob_list =
   List.iter (add_global_info sel_fct) glob_list
 
 let add_value = add_global_info values_of_module
@@ -190,12 +190,12 @@ and add_type = add_global_info types_of_module
 (* Find the descriptor for a reference to a global identifier.
    If the identifier is qualified (mod.name), just look into module mod.
    If the identifier is not qualified, look inside the current module,
-   then inside the table of opened modules. 
+   then inside the table of opened modules.
    returns true if the name is imported *)
 
 exception Desc_not_found
 
-let pfind_desc sel_fct pident = 
+let pfind_desc sel_fct pident =
   match pident with
   | Pdot (mod_name, s) ->
       begin try
@@ -221,7 +221,7 @@ and pfind_constr_desc = pfind_desc constrs_of_module
 and pfind_label_desc = pfind_desc labels_of_module
 and pfind_type_desc = pfind_desc types_of_module
 
-let find_desc sel_fct gident = 
+let find_desc sel_fct gident =
   try
     Hashtbl.find (sel_fct (find_module gident.qual)) (Ident.name gident.id)
   with Not_found ->

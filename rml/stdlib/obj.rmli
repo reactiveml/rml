@@ -17,7 +17,7 @@
 
 (** Operations on internal representations of values.
 
-   Not for the casual user. 
+   Not for the casual user.
 *)
 
 type t
@@ -25,15 +25,15 @@ type t
 val repr : 'a -> t
 val obj : t -> 'a
 val magic : 'a -> 'b
-val is_block : t -> bool 
+val is_block : t -> bool
 val is_int : t -> bool
 val tag : t -> int
-val set_tag : t -> int -> unit 
+val set_tag : t -> int -> unit
 val size : t -> int
-val truncate : t -> int -> unit 
+val truncate : t -> int -> unit
 val field : t -> int -> t
 val set_field : t -> int -> t -> unit
-val new_block : int -> int -> t 
+val new_block : int -> int -> t
 val dup : t -> t
 
 val lazy_tag : int

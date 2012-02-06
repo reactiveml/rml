@@ -124,7 +124,7 @@ let rec free_vars_of_pat pat =
   | Zconstraintpat(pat, _) -> free_vars_of_pat pat
   | Zrecordpat lbl_pat_list ->
       flat_map (fun (lbl,pat) -> free_vars_of_pat pat) lbl_pat_list
-;;    
+;;
 
 let rec expr_is_pure expr =
   match expr.e_desc with

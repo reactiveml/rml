@@ -1,6 +1,6 @@
 # Makefile for Reactive-ML
 # Taken from Lucid-synchrone
-# Organization : SPI team, LIP6 laboratory, University Paris 6 
+# Organization : SPI team, LIP6 laboratory, University Paris 6
 
 include configure-tools/version
 
@@ -48,7 +48,7 @@ install.findlib:
 	@(echo "version = \"$(VERSION)\"" > ./META)
 	@(cat ./configure-tools/META.in >> ./META)
 	- [ ! -e ./rmllib.a ] && \
-		ln -s ./interpreter/rmllib.a ./rmllib.a 
+		ln -s ./interpreter/rmllib.a ./rmllib.a
 	- [ ! -e ./rmllib.cma ] && \
 		ln -s ./interpreter/rmllib.cma ./rmllib.cma
 	- [ ! -e ./rmllib.cmxa ] && \
@@ -102,7 +102,7 @@ realclean: clean-distrib
 
 cleanall: realclean
 
-# Making distribution 
+# Making distribution
 DATE=`date "+%Y-%m-%d"`
 
 public-distrib:
@@ -147,7 +147,7 @@ binary-distrib: binary-distrib.opt
 binary-distrib.opt: clean-distrib
 	touch config
 	make realclean
-	./configure 
+	./configure
 	(cd compiler; touch .depend; make depend; make opt)
 	(cd stdlib; make all)
 	(cd interpreter; make all)
@@ -171,7 +171,7 @@ binary-distrib.opt: clean-distrib
 binary-distrib.byte: clean-distrib
 	touch config
 	make realclean
-	./configure 
+	./configure
 	(cd compiler; touch .depend; make depend; make byte)
 	(cd stdlib; make all)
 	(cd interpreter; make all)
@@ -191,7 +191,7 @@ binary-distrib.byte: clean-distrib
          cd ..; tar --exclude=CVS --exclude=.svn -zcvf rml-`../compiler/rmlc -version`.byte.tar.gz rml ; \
          mv rml-`../compiler/rmlc -version`.byte.tar.gz ..)
 
-clean-distrib: 
+clean-distrib:
 	rm -rf distrib/rml/bin \
 		distrib/rml/lib \
 		distrib/rml/emacs \

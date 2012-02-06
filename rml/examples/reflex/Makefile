@@ -27,12 +27,12 @@ opt: $(EXECOPT)
 $(FILE).ml: $(FILE).rml
 
 $(FILE).cmo: $(FILE).ml
-$(FILE): $(FILE).cmo 
-	$(OCAMLC) $(OCAMLFLAGS) -o $(FILE) unix.cma graphics.cma -I `$(RMLC) -where` rmllib.cma $(FILE).cmo 
+$(FILE): $(FILE).cmo
+	$(OCAMLC) $(OCAMLFLAGS) -o $(FILE) unix.cma graphics.cma -I `$(RMLC) -where` rmllib.cma $(FILE).cmo
 
 $(FILE).cmx: $(FILE).ml
-$(FILE).opt: $(FILE).cmx 
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FILE).opt unix.cmxa graphics.cmxa -I `$(RMLC) -where` rmllib.cmxa $(FILE).cmx 
+$(FILE).opt: $(FILE).cmx
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FILE).opt unix.cmxa graphics.cmxa -I `$(RMLC) -where` rmllib.cmxa $(FILE).cmx
 
 # implicit rules
 .SUFFIXES: .rml .mli .ml .cmi .cmo .cmx .o .rzi
@@ -57,8 +57,8 @@ $(FILE).opt: $(FILE).cmx
 
 
 clean:
-	rm -f *.cm* *.annot *.rzi $(FILE).ml *.o 
+	rm -f *.cm* *.annot *.rzi $(FILE).ml *.o
 
 realclean: clean
-	rm -f $(FILE) $(FILE).opt *~ 
+	rm -f $(FILE) $(FILE).opt *~
 cleanall: realclean

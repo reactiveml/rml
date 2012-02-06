@@ -39,24 +39,24 @@ val zero : int32
 val minus_one : int32
 (** The 32-bit integer -1. *)
 
-val neg : int32 -> int32 
+val neg : int32 -> int32
 (** Unary negation. *)
 
-val add : int32 -> int32 -> int32 
+val add : int32 -> int32 -> int32
 (** Addition. *)
 
-val sub : int32 -> int32 -> int32 
+val sub : int32 -> int32 -> int32
 (** Subtraction. *)
 
-val mul : int32 -> int32 -> int32 
+val mul : int32 -> int32 -> int32
 (** Multiplication. *)
 
-val div : int32 -> int32 -> int32 
-(** Integer division.  Raise [Division_by_zero] if the second 
+val div : int32 -> int32 -> int32
+(** Integer division.  Raise [Division_by_zero] if the second
    argument is zero.  This division rounds the real quotient of
    its arguments towards zero, as specified for {!Pervasives.(/)}. *)
 
-val rem : int32 -> int32 -> int32 
+val rem : int32 -> int32 -> int32
 (** Integer remainder.  If [y] is not zero, the result
    of [Int32.rem x y] satisfies the following properties:
    [Int32.zero <= Int32.rem x y < Int32.abs y] and
@@ -79,23 +79,23 @@ val min_int : int32
 (** The smallest representable 32-bit integer, -2{^31}. *)
 
 
-val logand : int32 -> int32 -> int32 
+val logand : int32 -> int32 -> int32
 (** Bitwise logical and. *)
 
-val logor : int32 -> int32 -> int32 
+val logor : int32 -> int32 -> int32
 (** Bitwise logical or. *)
 
-val logxor : int32 -> int32 -> int32 
+val logxor : int32 -> int32 -> int32
 (** Bitwise logical exclusive or. *)
 
 val lognot : int32 -> int32
 (** Bitwise logical negation *)
 
-val shift_left : int32 -> int -> int32 
+val shift_left : int32 -> int -> int32
 (** [Int32.shift_left x y] shifts [x] to the left by [y] bits.
    The result is unspecified if [y < 0] or [y >= 32]. *)
 
-val shift_right : int32 -> int -> int32 
+val shift_right : int32 -> int -> int32
 (** [Int32.shift_right x y] shifts [x] to the right by [y] bits.
    This is an arithmetic shift: the sign bit of [x] is replicated
    and inserted in the vacated bits.
@@ -107,26 +107,26 @@ val shift_right_logical : int32 -> int -> int32
    regardless of the sign of [x].
    The result is unspecified if [y < 0] or [y >= 32]. *)
 
-val of_int : int -> int32 
+val of_int : int -> int32
 (** Convert the given integer (type [int]) to a 32-bit integer (type [int32]). *)
 
-val to_int : int32 -> int 
+val to_int : int32 -> int
 (** Convert the given 32-bit integer (type [int32]) to an
    integer (type [int]).  On 32-bit platforms, the 32-bit integer
    is taken modulo 2{^31}, i.e. the high-order bit is lost
    during the conversion.  On 64-bit platforms, the conversion
    is exact. *)
 
-val of_float : float -> int32 
+val of_float : float -> int32
 (** Convert the given floating-point number to a 32-bit integer,
    discarding the fractional part (truncate towards 0).
    The result of the conversion is undefined if, after truncation,
    the number is outside the range \[{!Int32.min_int}, {!Int32.max_int}\]. *)
 
-val to_float : int32 -> float 
+val to_float : int32 -> float
 (** Convert the given 32-bit integer to a floating-point number. *)
 
-val of_string : string -> int32 
+val of_string : string -> int32
 (** Convert the given string to a 32-bit integer.
    The string is read in decimal (by default) or in hexadecimal,
    octal or binary if the string begins with [0x], [0o] or [0b]
@@ -138,14 +138,14 @@ val of_string : string -> int32
 val to_string : int32 -> string
 (** Return the string representation of its argument, in signed decimal. *)
 
-val bits_of_float : float -> int32 
+val bits_of_float : float -> int32
 (** Return the internal representation of the given float according
    to the IEEE 754 floating-point ``single format'' bit layout.
    Bit 31 of the result represents the sign of the float;
    bits 30 to 23 represent the (biased) exponent; bits 22 to 0
    represent the mantissa. *)
 
-val float_of_bits : int32 -> float 
+val float_of_bits : int32 -> float
 (** Return the floating-point number whose internal representation,
    according to the IEEE 754 floating-point ``single format'' bit layout,
    is the given [int32]. *)
@@ -163,7 +163,7 @@ val compare: t -> t -> int
 
 (** {6 Deprecated functions} *)
 
-val format : string -> int32 -> string 
+val format : string -> int32 -> string
 (** [Int32.format fmt n] return the string representation of the
    32-bit integer [n] in the format specified by [fmt].
    [fmt] is a [Printf]-style format consisting of exactly

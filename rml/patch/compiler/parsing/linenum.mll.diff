@@ -29,16 +29,16 @@
 +
 +(* first modification: 2004-05-06 *)
 +(* modified by: Louis Mandel      *)
- 
+
  (***********************************************************************)
  (*                                                                     *)
 @@ -12,7 +38,7 @@
  (*                                                                     *)
  (***********************************************************************)
- 
+
 -(* $Id: linenum.mll,v 1.7 1999/11/17 18:58:17 xleroy Exp $ *)
 +(* $Id$ *)
- 
+
  (* An auxiliary lexer for determining the line number corresponding to
     a file position, honoring the directives # linenum "filename" *)
 @@ -37,7 +63,7 @@
@@ -48,5 +48,5 @@
 -    Misc.fatal_error "Linenum.parse_sharp_line"
 +    failwith "Linenum.parse_sharp_line"
  }
- 
+
  rule skip_line = parse

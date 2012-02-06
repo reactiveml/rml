@@ -33,7 +33,7 @@ open Modules
 open Compiler
 
 (* list of object files passed on the command line *)
-let object_files = ref [] 
+let object_files = ref []
 
 let compile file =
   if Filename.check_suffix file ".rml"
@@ -43,19 +43,19 @@ let compile file =
     compile_implementation (String.capitalize modname) filename;
     object_files := modname::!object_files
   else if Filename.check_suffix file ".rmli"
-  then 
+  then
     let filename = Filename.chop_suffix file ".rmli" in
     compile_interface (String.capitalize (Filename.basename filename)) filename
   else if Filename.check_suffix file ".mli"
   then
     let filename = Filename.chop_suffix file ".mli" in
-    compile_scalar_interface 
+    compile_scalar_interface
       (String.capitalize (Filename.basename filename)) filename
-  else 
+  else
     raise (Arg.Bad ("don't know what to do with " ^ file))
 
 
-let main () = 
+let main () =
   try
     List.iter compile !to_compile
   with x ->
@@ -63,9 +63,9 @@ let main () =
     exit 2
 ;;
 
-Printexc.catch main (); 
+Printexc.catch main ();
 (* this is strange, but is required to avoid a bug in ocaml 3.04 *)
-Format.set_formatter_out_channel stdout; 
+Format.set_formatter_out_channel stdout;
 if !interactive then Interactive.compile ();
 if !dtime then Diagnostic.print stderr;
 exit 0;;

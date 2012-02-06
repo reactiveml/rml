@@ -1,7 +1,7 @@
 open Position
 open Global
 open Node
-open Draw  
+open Draw
 
 let _ =
   init_make_move := (fun pos -> Move.rwp (4. *. coverage_range) pos);
@@ -17,7 +17,7 @@ let _ =
 let process make_nodes n =
   for i = 1 to n dopar
     let pos = { x = Random.float max_x;
-		y = Random.float max_y } 
+		y = Random.float max_y }
     in
     run (node (get_new_id()) pos)
   done
@@ -25,7 +25,7 @@ let process make_nodes n =
 let process make_preemptible_nodes n kill=
   for i = 1 to n dopar
     let pos = { x = Random.float max_x;
-		y = Random.float max_y } 
+		y = Random.float max_y }
     in
     run (Dynamic.preemptible_node (get_new_id()) pos kill)
   done
@@ -37,9 +37,9 @@ let process main =
   signal suspend in
   signal start in
   signal new_node, kill in
-  control 
+  control
     (* run (make_nodes nb_nodes) *)
-    run (make_preemptible_nodes nb_nodes kill) 
+    run (make_preemptible_nodes nb_nodes kill)
     ||
     run (Dynamic.add new_node start)
     ||

@@ -29,20 +29,20 @@
 +
 +(* first modification: 2004-05-05 *)
 +(* modified by: Louis Mandel      *)
- 
+
  (***********************************************************************)
  (*                                                                     *)
 @@ -12,7 +38,7 @@
  (*                                                                     *)
  (***********************************************************************)
- 
+
 -(* $Id: syntaxerr.ml,v 1.8 2002/04/18 08:50:43 garrigue Exp $ *)
 +(* $Id$ *)
- 
+
  (* Auxiliary type for reporting syntax errors *)
- 
+
 @@ -27,16 +53,10 @@
- 
+
  let report_error ppf = function
    | Unclosed(opening_loc, opening, closing_loc, closing) ->
 -      if String.length !Location.input_name = 0
@@ -53,12 +53,12 @@
 -        fprintf ppf "%aSyntax error: '%s' expected@."
 -          Location.print closing_loc closing;
 -        fprintf ppf "%aThis '%s' might be unmatched"
--          Location.print opening_loc opening 
+-          Location.print opening_loc opening
 -      end
 +      fprintf ppf "%aSyntax error: '%s' expected@."
 +        Location.print closing_loc closing;
 +      fprintf ppf "%aThis '%s' might be unmatched"
-+        Location.print opening_loc opening 
++        Location.print opening_loc opening
    | Other loc ->
        fprintf ppf "%aSyntax error" Location.print loc
- 
+

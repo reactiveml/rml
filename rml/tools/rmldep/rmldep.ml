@@ -95,7 +95,7 @@ let find_dependency modname (byt_deps, opt_deps) =
     let filename = find_file (modname ^ ".rmli") in
     let basename = Filename.chop_suffix filename ".rmli" in
     let optname =
-      if Sys.file_exists (basename ^ ".rml") 
+      if Sys.file_exists (basename ^ ".rml")
 	or Sys.file_exists (basename ^ ".ml")
       then basename ^ ".cmx"
       else basename ^ ".cmi" in
@@ -224,7 +224,7 @@ let rml_file_dependencies source_file =
     end else begin
       let basename = Filename.chop_suffix source_file ".rml" in
       let init_deps =
-        if (Sys.file_exists (basename ^ ".rmli")) 
+        if (Sys.file_exists (basename ^ ".rmli"))
 	    or (Sys.file_exists (basename ^ ".mli"))
         then let cmi_name = basename ^ ".cmi" in ([cmi_name], [cmi_name])
         else ([], []) in

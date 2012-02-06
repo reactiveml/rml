@@ -7,7 +7,7 @@ type routage_kind = LE | ELIP
 
 type id = int
 
-type node = 
+type node =
     { id: id;
       mutable pos: position;
       mutable date: int;
@@ -15,7 +15,7 @@ type node =
       pos_tbl_elip: Pos_tbl.t;
       mutable neighbors: node list;
       move: (position -> position);
-      insert_elip_info: (node -> packet -> unit);  
+      insert_elip_info: (node -> packet -> unit);
       make_msg: (node -> id list);
       mutable visited: bool; }
 
@@ -36,7 +36,7 @@ and packet =
       mutable dest_pos_age: int;
       (* to compute statistics *)
       mutable route: node list;
-      mutable anchors: (node * node option * int * int) list; 
+      mutable anchors: (node * node option * int * int) list;
       mutable overhead: int; }
 
 
@@ -61,13 +61,13 @@ let area_size_y = !Init.area_size_y
 let nb_area_x =
   let n = max_x /. area_size_x in
   int_of_float (ceil n)
-let nb_area_y = 
+let nb_area_y =
   let n = max_y /. area_size_y in
   int_of_float (ceil n)
 
 
-let hello_array = 
-  Array.make_matrix nb_area_x nb_area_y 
+let hello_array =
+  Array.make_matrix nb_area_x nb_area_y
     ((Obj.magic()): (node, node list) event)
 
 
@@ -91,7 +91,7 @@ let elip_proba = !Init.elip_proba
 let elip_forecast = !Init.elip_forecast
 let elip_min_insert_dist = !Init.elip_min_insert_dist
 let elip_min_insert_dist2 =
-  elip_min_insert_dist *. coverage_range *. coverage_range 
+  elip_min_insert_dist *. coverage_range *. coverage_range
 let elip_min_insert_angle = !Init.elip_min_insert_angle *. pi /. 180.
 
 let msg_proba = !Init.msg_proba
@@ -114,13 +114,13 @@ let prefix = !Init.prefix
 	^"-locality_val_"^(string_of_float (elip_min_insert_dist))
 	^"-angle_val_"^(string_of_float (elip_min_insert_angle))
     ^"_"
-	
+
 
 
 
 (* ---------------------------- *)
 (* Misc                         *)
-(* ---------------------------- *) 
+(* ---------------------------- *)
 (* Creation functions *)
 let get_new_id =
   let cpt = ref (-1) in
@@ -137,8 +137,8 @@ let init_make_make_msg = ref (fun _ -> assert false)
 let make_node id pos =
   { id = id;
     date = 0;
-    pos_tbl_le = Pos_tbl.make nb_nodes; 
-    pos_tbl_elip = Pos_tbl.make nb_nodes; 
+    pos_tbl_le = Pos_tbl.make nb_nodes;
+    pos_tbl_elip = Pos_tbl.make nb_nodes;
     neighbors = [];
     pos = pos;
     move = !init_make_move pos;
@@ -148,9 +148,9 @@ let make_node id pos =
 
 
 let make_packet header src_node dest =
-  let dest_pos, dest_pos_date = 
+  let dest_pos, dest_pos_date =
     match header with
-    | H_LE -> Pos_tbl.get src_node.pos_tbl_le dest 
+    | H_LE -> Pos_tbl.get src_node.pos_tbl_le dest
     | H_ELIP _ -> Pos_tbl.get src_node.pos_tbl_elip dest
   in
   { header = header;
@@ -169,7 +169,7 @@ let make_elip_header id pos =
       elip_overhead = 0; }
 
 
-let make_le_packet =  make_packet H_LE 
+let make_le_packet =  make_packet H_LE
 
 let make_elip_packet src_node dest =
   make_packet (H_ELIP None) src_node dest

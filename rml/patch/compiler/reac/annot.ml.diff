@@ -29,26 +29,26 @@
 +
 +(* first modification: 2004-08-17 *)
 +(* modified by: Louis Mandel      *)
- 
+
  (***********************************************************************)
  (*                                                                     *)
 @@ -12,7 +38,8 @@
  (*                                                                     *)
  (***********************************************************************)
- 
+
 -(* $Id: stypes.ml,v 1.8 2003/07/25 18:00:40 doligez Exp $ *)
-+(* $Id$ *) 
++(* $Id$ *)
 +
- 
+
  (* Recording and dumping (partial) type information *)
- 
+
 @@ -26,66 +53,69 @@
  open Format;;
  open Lexing;;
  open Location;;
 -open Typedtree;;
 +open Reac_ast;;
- 
+
  type type_info =
 -    Ti_pat   of pattern
 -  | Ti_expr  of expression
@@ -58,7 +58,7 @@
 -
 +    Ti_patt of pattern
 +  | Ti_expr of expression
-+	    
++
  let get_location ti =
    match ti with
 -    Ti_pat p   -> p.pat_loc
@@ -76,7 +76,7 @@
 -;;
 +    Ti_patt p -> p.patt_loc
 +  | Ti_expr e -> e.expr_loc
- 
+
 -let record_phrase loc =
 -  if !Clflags.save_types then phrases := loc :: !phrases;
 -;;
@@ -111,16 +111,16 @@
 -  in
 -  phrases := loop [] Location.none ph;
 -;;
-+module Annot(T: sig 
++module Annot(T: sig
 +  type t
 +  val get_type: type_info -> t
 +  val output: out_channel -> t -> unit
 +end) =
-+  struct	    
++  struct
 +
 +    let type_info = ref ([] : type_info list)
 +    let phrases = ref ([] : Location.t list)
-+	
++
 +    let record ti =
 +      if !Misc.save_types && not (get_location ti).Location.loc_ghost then
 +	type_info := ti :: !type_info
@@ -145,7 +145,7 @@
 +
 +
 +    let print_position pp pos =
-+      fprintf pp "%S %d %d %d" 
++      fprintf pp "%S %d %d %d"
 +	pos.pos_fname pos.pos_lnum pos.pos_bol pos.pos_cnum
 +
 +
@@ -161,7 +161,7 @@
 +	    else loop (loc :: accu) loc t
 +      in
 +      phrases := loop [] Location.none ph
- 
+
 +(*
  let rec printtyp_reset_maybe loc =
    match !phrases with
@@ -172,9 +172,9 @@
  ;;
 -
 +*)
- 
+
  (* The format of the annotation file is documented in emacs/caml-types.el. *)
- 
+
 -let print_info pp ti =
 -  match ti with
 -  | Ti_class _ | Ti_mod _ -> ()
@@ -202,13 +202,13 @@
 +*)
 +	  T.output oc typ;
 +	  fprintf pp "@.)@."
- 
+
 -let get_info () =
 -  let info = List.fast_sort cmp_ti_inner_first !type_info in
 -  type_info := [];
 -  info
 -;;
- 
+
 -let dump filename =
 -  if !Clflags.save_types then begin
 -    let info = get_info () in
@@ -251,7 +251,7 @@
 +      end
 +
 +(*     let output = Types_printer.output *)
-+    let output oc ty = 
++    let output oc ty =
 +      set_formatter_out_channel oc;
 +      print_string "  ";
 +      Types_printer.print ty;

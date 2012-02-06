@@ -13,11 +13,11 @@ MAIN=systeme
 all : planets
 opt : planets.opt
 
-planets : planets.cmo 
-	 $(OCAMLC) $(FLAGS) -o planets -I $(INTERPRETERDIR) unix.cma graphics.cma $(INTERPRETER) planets.cmo 
+planets : planets.cmo
+	 $(OCAMLC) $(FLAGS) -o planets -I $(INTERPRETERDIR) unix.cma graphics.cma $(INTERPRETER) planets.cmo
 
-planets.opt : planets.cmx 
-	 $(OCAMLOPT) $(FLAGS) -o planets.opt -I $(INTERPRETERDIR) unix.cmxa graphics.cmxa $(INTERPRETERX) planets.cmx 
+planets.opt : planets.cmx
+	 $(OCAMLOPT) $(FLAGS) -o planets.opt -I $(INTERPRETERDIR) unix.cmxa graphics.cmxa $(INTERPRETERX) planets.cmx
 
 clean :
 	rm -f *.cm* *.annot *.rzi *.?annot *.o \

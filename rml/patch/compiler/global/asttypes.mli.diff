@@ -29,18 +29,18 @@
 +
 +(* first modification: 2004-04-23 *)
 +(* modified by: Louis Mandel      *)
- 
+
  (***********************************************************************)
  (*                                                                     *)
 @@ -12,27 +38,26 @@
  (*                                                                     *)
  (***********************************************************************)
- 
+
 -(* $Id: asttypes.mli,v 1.9 2003/04/25 12:27:30 xleroy Exp $ *)
 -
 -(* Auxiliary a.s.t. types used by parsetree and typedtree. *)
 +(* $Id$ *)
- 
+
 -type constant =
 -    Const_int of int
 -  | Const_char of char
@@ -50,21 +50,21 @@
 -  | Const_int64 of int64
 -  | Const_nativeint of nativeint
 +(* Types used in the a.s.t. *)
- 
+
 -type rec_flag = Nonrecursive | Recursive | Default
 +type rec_flag = Nonrecursive | Recursive
- 
+
  type direction_flag = Upto | Downto
- 
+
 -type private_flag = Private | Public
 +type immediate_flag = Immediate | Nonimmediate
- 
+
 -type mutable_flag = Immutable | Mutable
 +type mutable_flag = Mutable | Immutable
- 
+
 -type virtual_flag = Virtual | Concrete
 +type await_kind = All | One
- 
+
 -type label = string
 +type pre_kind = Status | Value
 +

@@ -1,6 +1,6 @@
 BIN = rmlc
 
-DIRECTORIES = global parsing external static typing other_analysis reac lco lk caml main 
+DIRECTORIES = global parsing external static typing other_analysis reac lco lk caml main
 
 
 GLOBAL = global/asttypes.mli \

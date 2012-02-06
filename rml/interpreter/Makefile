@@ -35,7 +35,7 @@ OBJ_OPT = $(OBJ:.cmo=.cmx)
 INTF = $(OBJ:.cmo=.cmi) \
 	lco_interpreter.cmi lk_interpreter.cmi
 
-LIB= rmllib.cma rmllib.cmxa rmllib.a 
+LIB= rmllib.cma rmllib.cmxa rmllib.a
 
 INSTALLFILE= $(LIB) $(INTF)
 
@@ -59,7 +59,7 @@ realclean: clean
 cleanall: realclean
 
 # utilities
-depend: 
+depend:
 	$(OCAMLDEP) $(OCAMLDEPFLAGS) $(INCLUDES) *.mli *.ml > .depend
 
 wc:
@@ -91,4 +91,4 @@ thread_implem.cmx: OCAMLOPTFLAGS += -thread
 
 include .depend
 
-.PHONY: all install uninstall clean realclean .depend wc 
+.PHONY: all install uninstall clean realclean .depend wc

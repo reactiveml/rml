@@ -23,62 +23,62 @@
 (* Add to ocaml pervasives.mli *)
 
 exception Match_failure of (string * int * int)
-(** Exception raised when none of the cases of a pattern-matching apply. 
-    The arguments are the location of the match keyword in the source code 
-  (file name, line number, column number). 
+(** Exception raised when none of the cases of a pattern-matching apply.
+    The arguments are the location of the match keyword in the source code
+  (file name, line number, column number).
 *)
 
 exception Assert_failure of (string * int * int)
-(** Exception raised when an assertion fails. The arguments are the 
-    location of the assert keyword in the source code 
-    (file name, line number, column number). 
+(** Exception raised when an assertion fails. The arguments are the
+    location of the assert keyword in the source code
+    (file name, line number, column number).
 *)
 
 exception Invalid_argument of string
-(** Exception raised by library functions to signal that the given 
-   arguments do not make sense. 
+(** Exception raised by library functions to signal that the given
+   arguments do not make sense.
 *)
 
 exception Failure of string
-(**  Exception raised by library functions to signal that they are 
-  undefined on the given arguments. 
+(**  Exception raised by library functions to signal that they are
+  undefined on the given arguments.
 *)
 
 exception Not_found
-(**  Exception raised by search functions when the desired object could 
-   not be found. 
+(**  Exception raised by search functions when the desired object could
+   not be found.
 *)
 
 exception Out_of_memory
-(** Exception raised by the garbage collector when there is insufficient 
-   memory to complete the computation. 
+(** Exception raised by the garbage collector when there is insufficient
+   memory to complete the computation.
 *)
 
 exception Stack_overflow
-(**  Exception raised by the bytecode interpreter when the evaluation stack 
-    reaches its maximal size. This often indicates infinite or excessively 
-    deep recursion in the user's program. 
-  (Not fully implemented by the native-code compiler; see section 11.4.) 
+(**  Exception raised by the bytecode interpreter when the evaluation stack
+    reaches its maximal size. This often indicates infinite or excessively
+    deep recursion in the user's program.
+  (Not fully implemented by the native-code compiler; see section 11.4.)
 *)
 
 exception Sys_error of string
-(**  Exception raised by the input/output functions to report an 
-  operating system error. 
+(**  Exception raised by the input/output functions to report an
+  operating system error.
 *)
 
 exception End_of_file
-(**  Exception raised by input functions to signal that the end of file 
-   has been reached. 
+(**  Exception raised by input functions to signal that the end of file
+   has been reached.
 *)
 
 exception Division_by_zero
-(**  Exception raised by division and remainder operations when their 
-   second argument is null. (Not fully implemented by the native-code 
-   compiler; see section 11.4.) 
+(**  Exception raised by division and remainder operations when their
+   second argument is null. (Not fully implemented by the native-code
+   compiler; see section 11.4.)
 *)
 
 exception Sys_blocked_io
-(**  A special case of Sys_error raised when no I/O is possible on a 
+(**  A special case of Sys_error raised when no I/O is possible on a
    non-blocking I/O channel.
 *)
 
@@ -101,7 +101,7 @@ exception Undefined_recursive_module of (string * int * int)
 
 val raise : exn -> 'a
 (** Raise the given exception value *)
-        
+
 val invalid_arg : string -> 'a
 (** Raise exception [Invalid_argument] with the given string. *)
 
@@ -253,7 +253,7 @@ val min_int : int
 val ( land ) : int -> int -> int
 (** Bitwise logical and. *)
 
-val ( lor ) : int -> int -> int 
+val ( lor ) : int -> int -> int
 (** Bitwise logical or. *)
 
 val ( lxor ) : int -> int -> int
@@ -262,23 +262,23 @@ val ( lxor ) : int -> int -> int
 val lnot : int -> int
 (** Bitwise logical negation. *)
 
-val ( lsl ) : int -> int -> int 
+val ( lsl ) : int -> int -> int
 (** [n lsl m] shifts [n] to the left by [m] bits.
    The result is unspecified if [m < 0] or [m >= bitsize],
    where [bitsize] is [32] on a 32-bit platform and
    [64] on a 64-bit platform. *)
 
-val ( lsr ) : int -> int -> int 
+val ( lsr ) : int -> int -> int
 (** [n lsr m] shifts [n] to the right by [m] bits.
    This is a logical shift: zeroes are inserted regardless of
    the sign of [n].
    The result is unspecified if [m < 0] or [m >= bitsize]. *)
 
-val ( asr ) : int -> int -> int 
+val ( asr ) : int -> int -> int
 (** [n asr m] shifts [n] to the right by [m] bits.
    This is an arithmetic shift: the sign bit of [n] is replicated.
    The result is unspecified if [m < 0] or [m >= bitsize]. *)
-    
+
 
 (** {6 Floating-point arithmetic}
 
@@ -290,11 +290,11 @@ val ( asr ) : int -> int -> int
    [neg_infinity] for [-1.0 /. 0.0], and [nan] (``not a number'')
    for [0.0 /. 0.0].  These special numbers then propagate through
    floating-point computations as expected: for instance,
-   [1.0 /. infinity] is [0.0], and any operation with [nan] as 
-   argument returns [nan] as result. 
+   [1.0 /. infinity] is [0.0], and any operation with [nan] as
+   argument returns [nan] as result.
 *)
 
-val ( ~-. ) : float -> float 
+val ( ~-. ) : float -> float
 (** Unary negation. You can also write [-.e] instead of [~-.e]. *)
 
 val ( +. ) : float -> float -> float
@@ -315,22 +315,22 @@ val ( ** ) : float -> float -> float
 val sqrt : float -> float
 (** Square root *)
 
-val exp : float -> float 
+val exp : float -> float
 (** Exponential. *)
 
-val log : float -> float 
+val log : float -> float
 (** Natural logarithm. *)
 
 val log10 : float -> float
 (** Base 10 logarithm. *)
 
-val cos : float -> float 
+val cos : float -> float
 (** See {!Pervasives.atan2}. *)
 
-val sin : float -> float 
+val sin : float -> float
 (** See {!Pervasives.atan2}. *)
 
-val tan : float -> float 
+val tan : float -> float
 (** See {!Pervasives.atan2}. *)
 
 val acos : float -> float
@@ -342,19 +342,19 @@ val asin : float -> float
 val atan : float -> float
 (** See {!Pervasives.atan2}. *)
 
-val atan2 : float -> float -> float 
+val atan2 : float -> float -> float
 (** The usual trigonometric functions. *)
 
-val cosh : float -> float 
+val cosh : float -> float
 (** See {!Pervasives.tanh}. *)
 
-val sinh : float -> float 
+val sinh : float -> float
 (** See {!Pervasives.tanh}. *)
 
-val tanh : float -> float 
+val tanh : float -> float
 (** The usual hyperbolic trigonometric functions. *)
 
-val ceil : float -> float 
+val ceil : float -> float
 (** See {!Pervasives.floor}. *)
 
 val floor : float -> float
@@ -364,10 +364,10 @@ val floor : float -> float
    [ceil f] returns the least integer value greater than or
    equal to [f]. *)
 
-val abs_float : float -> float 
+val abs_float : float -> float
 (** Return the absolute value of the argument. *)
 
-val mod_float : float -> float -> float 
+val mod_float : float -> float -> float
 (** [mod_float a b] returns the remainder of [a] with respect to
    [b].  The returned value is [a -. n *. b], where [n]
    is the quotient [a /. b] rounded towards zero to an integer. *)
@@ -392,10 +392,10 @@ val float : int -> float
 val float_of_int : int -> float
 (** Convert an integer to floating-point. *)
 
-val truncate : float -> int 
+val truncate : float -> int
 (** Same as {!Pervasives.int_of_float}. *)
 
-val int_of_float : float -> int 
+val int_of_float : float -> int
 (** Truncate the given floating-point number to an integer.
    The result is unspecified if it falls outside the
    range of representable integers. *)
@@ -429,7 +429,7 @@ type fpclass =
 (** The five classes of floating-point numbers, as determined by
    the {!Pervasives.classify_float} function. *)
 
-val classify_float : float -> fpclass 
+val classify_float : float -> fpclass
 (** Return the class of the given floating-point number:
    normal, subnormal, zero, infinite, or not a number. *)
 
@@ -459,7 +459,7 @@ val char_of_int : int -> char
 
 (** {6 Unit operations} *)
 
-val ignore : 'a -> unit 
+val ignore : 'a -> unit
 (** Discard the value of its argument and return [()].
    For instance, [ignore(f x)] discards the result of
    the side-effecting function [f].  It is equivalent to
@@ -481,7 +481,7 @@ val bool_of_string : string -> bool
 val string_of_int : int -> string
 (** Return the string representation of an integer, in decimal. *)
 
-val int_of_string : string -> int 
+val int_of_string : string -> int
 (** Convert the given string to an integer.
    The string is read in decimal (by default) or in hexadecimal (if it
    begins with [0x] or [0X]), octal (if it begins with [0o] or [0O]),
@@ -492,7 +492,7 @@ val int_of_string : string -> int
 val string_of_float : float -> string
 (** Return the string representation of a floating-point number. *)
 
-val float_of_string : string -> float 
+val float_of_string : string -> float
 (** Convert the given string to a float.  Raise [Failure "float_of_string"]
    if the given string is not a valid representation of a float. *)
 
@@ -500,16 +500,16 @@ val float_of_string : string -> float
 
 (** {6 Pair operations} *)
 
-val fst : 'a * 'b -> 'a 
+val fst : 'a * 'b -> 'a
 (** Return the first component of a pair. *)
 
-val snd : 'a * 'b -> 'b 
+val snd : 'a * 'b -> 'b
 (** Return the second component of a pair. *)
 
 
 (** {6 List operations}
 
-   More list operations are provided in module {!List}. 
+   More list operations are provided in module {!List}.
 *)
 
 val ( @ ) : 'a list -> 'a list -> 'a list
@@ -613,7 +613,7 @@ type open_flag =
   | Open_text        (** open in text mode (may perform conversions). *)
   | Open_nonblock    (** open in non-blocking mode. *)
 (** Opening modes for {!Pervasives.open_out_gen} and {!Pervasives.open_in_gen}. *)
-           
+
 val open_out : string -> out_channel
 (** Open the named file for writing, and return a new output channel
    on that file, positionned at the beginning of the file. The
@@ -635,7 +635,7 @@ val open_out_gen : open_flag list -> int -> string -> out_channel
    cases of this function. *)
 
 val flush : out_channel -> unit
-(** Flush the buffer associated with the given output channel, 
+(** Flush the buffer associated with the given output channel,
    performing all pending writes on that channel.
    Interactive programs must be careful about flushing standard
    output and standard error at the right time. *)
@@ -755,7 +755,7 @@ val input : in_channel -> string -> int -> int -> int
    if desired.  (See also {!Pervasives.really_input} for reading
    exactly [len] characters.)
    Exception [Invalid_argument "input"] is raised if [pos] and [len]
-   do not designate a valid substring of [buf]. *)          
+   do not designate a valid substring of [buf]. *)
 
 val really_input : in_channel -> string -> int -> int -> unit
 (** [really_input ic buf pos len] reads [len] characters from channel [ic],
@@ -841,10 +841,10 @@ type 'a ref = { mutable contents : 'a }
 (** The type of references (mutable indirection cells) containing
    a value of type ['a]. *)
 
-val ref : 'a -> 'a ref 
+val ref : 'a -> 'a ref
 (** Return a fresh reference containing the given value. *)
 
-val ( ! ) : 'a ref -> 'a 
+val ( ! ) : 'a ref -> 'a
 (** [!r] returns the current contents of reference [r].
    Equivalent to [fun r -> r.contents]. *)
 
@@ -852,18 +852,18 @@ val ( := ) : 'a ref -> 'a -> unit
 (** [r := a] stores the value of [a] in reference [r].
    Equivalent to [fun r v -> r.contents <- v]. *)
 
-val incr : int ref -> unit 
+val incr : int ref -> unit
 (** Increment the integer contained in the given reference.
    Equivalent to [fun r -> r := succ !r]. *)
 
-val decr : int ref -> unit 
+val decr : int ref -> unit
 (** Decrement the integer contained in the given reference.
    Equivalent to [fun r -> r := pred !r]. *)
 
 
 (** {6 Operations on format strings} *)
 
-(** See modules {!Printf} and {!Scanf} for more operations on 
+(** See modules {!Printf} and {!Scanf} for more operations on
     format strings. *)
 
 type ('a, 'b, 'c, 'd) format4
@@ -879,7 +879,7 @@ val string_of_format :
   ('a, 'b, 'c, 'd) format4 -> string
 (** Converts a format string into a string. *)
 val format_of_string :
-  ('a, 'b, 'c, 'd) format4 -> ('a, 'b, 'c, 'd) format4 
+  ('a, 'b, 'c, 'd) format4 -> ('a, 'b, 'c, 'd) format4
 (** [format_of_string s] returns a format string read from the string
     literal [s]. *)
 
@@ -896,7 +896,7 @@ val ( ^^ ) :
 val exit : int -> 'a
 (** Terminate the process, returning the given status code
    to the operating system: usually 0 to indicate no errors,
-   and a small positive integer to indicate failure. 
+   and a small positive integer to indicate failure.
    All open output channels are flushed with flush_all.
    An implicit [exit 0] is performed each time a program
    terminates normally.  An implicit [exit 2] is performed if the program

@@ -2,8 +2,8 @@ open Position
 open Global
 open Graphics
 
-let with_history = ref false 
-let history = ref [] 
+let with_history = ref false
+let history = ref []
 
 let draw_route p =
   let c1, c2, c3, dr =
@@ -13,8 +13,8 @@ let draw_route p =
   in
   begin
     match p.route with
-    | n :: _ -> 
-	Graphics.moveto 
+    | n :: _ ->
+	Graphics.moveto
 	  (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom));
 	if n.id = p.dest_id then
 	  set_color c1
@@ -24,20 +24,20 @@ let draw_route p =
   end;
   List.iter
     (fun n ->
-      Graphics.lineto 
+      Graphics.lineto
 	(int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom)))
     p.route;
   List.iter
-    (function 
+    (function
       | (src, Some info, _, _) ->
-	  let r = 
-	    (sqrt  
+	  let r =
+	    (sqrt
 	       (distance2 src.pos info.pos))
 	  in
 	  set_color c2;
 	  Graphics.draw_circle
-	    (int_of_float (src.pos.x *. zoom)) 
-	    (int_of_float (src.pos.y *. zoom)) 
+	    (int_of_float (src.pos.x *. zoom))
+	    (int_of_float (src.pos.y *. zoom))
 	    ((int_of_float (r *. zoom)) + dr)
       | (src, None, level, _) ->
 	  let r =
@@ -45,15 +45,15 @@ let draw_route p =
 	  in
 	  set_color c3;
 	  Graphics.draw_circle
-	    (int_of_float (src.pos.x *. zoom)) 
-	    (int_of_float (src.pos.y *. zoom)) 
+	    (int_of_float (src.pos.x *. zoom))
+	    (int_of_float (src.pos.y *. zoom))
 	    (r + dr))
     p.anchors
 
 
 
 let draw_node kind n =
-  let pos_tbl = 
+  let pos_tbl =
     match kind with
     | LE -> n.pos_tbl_le
     | ELIP -> n.pos_tbl_elip
@@ -75,40 +75,40 @@ let draw_node kind n =
 	    Graphics.set_color Graphics.cyan
 	  else
 	    Graphics.set_color Graphics.black;
-  
-  Graphics.moveto 
+
+  Graphics.moveto
     (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom));
-  Graphics.draw_string (string_of_int n.id); 
+  Graphics.draw_string (string_of_int n.id);
   Graphics.set_color Graphics.black;
   if n.id = !main_node then
-    (Graphics.draw_circle 
-       (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom)) 
+    (Graphics.draw_circle
+       (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom))
        (int_of_float (coverage_range *. zoom));
      if !with_history then
        (history := n.pos :: !history;
 	begin
 	  match !history with
-	  | pos :: _ -> 
-	      Graphics.moveto 
+	  | pos :: _ ->
+	      Graphics.moveto
 		(int_of_float (pos.x *. zoom)) (int_of_float (pos.y *. zoom))
 	  | _ -> ()
 	end;
 	List.iter
 	  (fun pos ->
-	    Graphics.lineto 
+	    Graphics.lineto
 	      (int_of_float (pos.x *. zoom)) (int_of_float (pos.y *. zoom)))
 	  !history))
 
 
 let draw_info_ascii kind n =
   Graphics.set_color Graphics.black;
-  let pos_tbl = 
+  let pos_tbl =
     match kind with
     | LE -> n.pos_tbl_le
     | ELIP -> n.pos_tbl_elip
   in
   let _, date = Pos_tbl.get pos_tbl !main_node in
-  Graphics.moveto 
+  Graphics.moveto
     (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom));
   if date = Pos_tbl.no_info then
     Graphics.draw_string "."
@@ -127,21 +127,21 @@ let draw_info_ascii kind n =
 	  else
 	    Graphics.draw_string "-";
   if n.id = !main_node then
-    (Graphics.draw_circle 
-       (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom)) 
+    (Graphics.draw_circle
+       (int_of_float (n.pos.x *. zoom)) (int_of_float (n.pos.y *. zoom))
        (int_of_float (coverage_range *. zoom));
      if !with_history then
        (history := n.pos :: !history;
 	begin
 	  match !history with
-	  | pos :: _ -> 
-	      Graphics.moveto 
+	  | pos :: _ ->
+	      Graphics.moveto
 		(int_of_float (pos.x *. zoom)) (int_of_float (pos.y *. zoom))
 	  | _ -> ()
 	end;
 	List.iter
 	  (fun pos ->
-	    Graphics.lineto 
+	    Graphics.lineto
 	      (int_of_float (pos.x *. zoom)) (int_of_float (pos.y *. zoom)))
 	  !history))
 
@@ -149,11 +149,11 @@ let draw_neighborhood self =
   Graphics.set_color Graphics.green;
   List.iter
     (fun info ->
-      Graphics.moveto 
-	(int_of_float (self.pos.x *. zoom)) 
+      Graphics.moveto
+	(int_of_float (self.pos.x *. zoom))
 	(int_of_float (self.pos.y *. zoom));
-      Graphics.lineto 
-	(int_of_float (info.pos.x *. zoom)) 
+      Graphics.lineto
+	(int_of_float (info.pos.x *. zoom))
 	(int_of_float (info.pos.y *. zoom)))
     self.neighbors;
   Graphics.set_color Graphics.black
@@ -163,25 +163,25 @@ let draw_areas () =
   let y = ref 0 in
   Graphics.set_color Graphics.black;
   while !x < (int_of_float (max_x *. zoom)) do
-    Graphics.moveto !x 0; 
+    Graphics.moveto !x 0;
     Graphics.lineto !x (int_of_float (max_y *. zoom));
-    x := !x + (int_of_float (area_size_x *. zoom)) 
+    x := !x + (int_of_float (area_size_x *. zoom))
   done;
   while !y < (int_of_float (max_y *. zoom)) do
-    Graphics.moveto 0 !y; 
+    Graphics.moveto 0 !y;
     Graphics.lineto (int_of_float (max_x *. zoom)) !y;
-    y := !y + (int_of_float (area_size_y *. zoom)) 
+    y := !y + (int_of_float (area_size_y *. zoom))
   done
-    
+
 let search_closer (x,y) all =
   let pos = { x=x; y=y } in
   let d2_min, best_info =
-    List.fold_left 
+    List.fold_left
       (fun (d2min, info_min) info ->
 	let d2 = distance2 info.pos pos in
 	if d2 < d2min then
 	  (d2,Some info)
-	else 
+	else
 	  (d2min, info_min))
       (max_float, None)
       all
@@ -192,10 +192,10 @@ let search_closer (x,y) all =
 
 
 let process draw_simul draw suspend new_node kill =
-   Graphics.open_graph 
+   Graphics.open_graph
     (" "^(string_of_int (int_of_float (max_x *. zoom)))^"x"^
      (string_of_int (int_of_float (max_y *. zoom))));
-  Graphics.set_window_title 
+  Graphics.set_window_title
     ("Simulation of "^(string_of_int nb_nodes)^" nodes");
   Graphics.auto_synchronize false;
 
@@ -225,7 +225,7 @@ let process draw_simul draw suspend new_node kill =
     Graphics.synchronize();
     pause;
     Graphics.synchronize();
-  end 
+  end
   ||
   print_string "Press";
   print_newline();
@@ -251,7 +251,7 @@ let process draw_simul draw suspend new_node kill =
     await immediate one key (c) in
     begin
       match c with
-      | 'N'| 'n' -> 
+      | 'N'| 'n' ->
 	  with_neighborhood := not !with_neighborhood;
 	  emit refresh
       | 'P' | 'p' ->
@@ -274,7 +274,7 @@ let process draw_simul draw suspend new_node kill =
 	  with_history := not !with_history;
 	  history := [];
 	  emit refresh
-      | 'A' | 'a' -> 
+      | 'A' | 'a' ->
 	  print_string "click to create a new node";
 	  print_newline();
 	  await immediate one click (x,y) in
@@ -287,10 +287,10 @@ let process draw_simul draw suspend new_node kill =
 	  let node = search_closer p !all_infos in
 	  emit kill node;
 	  emit refresh
-      | 'G' | 'g' -> 
+      | 'G' | 'g' ->
 	  with_areas := not !with_areas;
 	  emit refresh
-      | 'Q' | 'q' -> 
+      | 'Q' | 'q' ->
 	  exit 0
       | _ -> ()
     end;

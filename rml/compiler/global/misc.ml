@@ -39,18 +39,18 @@ let not_yet_implemented msg =
   prerr_string ">> Not yet implemented: "; prerr_endline msg; raise Error
 
 
-let print_DEBUG msg = 
-  prerr_string ">> DEBUG: "; prerr_endline msg 
+let print_DEBUG msg =
+  prerr_string ">> DEBUG: "; prerr_endline msg
 
 (* standard module *)
 let pervasives_module = "Pervasives"
-let interpreter_module = ref "Lco_ctrl_tree_record" 
+let interpreter_module = ref "Lco_ctrl_tree_record"
 (* let interpreter_module = ref "Lk_record" *)
 let interpreter_intf = ref "Lco_interpreter"
 let interpreter_impl = ref "Implem"
 
 
-let standard_lib = Version.stdlib 
+let standard_lib = Version.stdlib
 
 (* List of file to compile *)
 let to_compile = ref ([] : string list)
@@ -196,7 +196,7 @@ let expand_directory alt s =
 module Diagnostic =
   struct
     open Format
-      
+
     let diag_list = ref []
     let global_time = ref 0.0
 
@@ -215,11 +215,11 @@ module Diagnostic =
 	print_tab ();
 	print_float (round average);
 	print_string "%" in
-      
+
       (* prints a diagnostic of the execution *)
       set_max_boxes max_int;
       set_formatter_out_channel oc;
-      
+
       open_tbox ();
       set_tab ();
       print_tbreak 30 0;
@@ -241,21 +241,21 @@ module Diagnostic =
   end
 
 (* every step of the compiler takes its own timer *)
-module Timer = 
+module Timer =
   functor (Name: sig val name: string end) ->
   struct
     open Diagnostic
-    
+
     let exec_time = ref 0.0
     let accumulated_time = ref 0.0
     let start_time = ref 0.0;;
-	
+
     (* add the entry to the list *)
     diag_list := (Name.name, accumulated_time) :: !diag_list
 
     (* start counting *)
     let start () = start_time := Sys.time ()
-    
+
     (* counting *)
     let time () =
       let t = Sys.time () in

@@ -182,7 +182,7 @@ let bigarray_set arr arg newval =
                        ["", arr; "", c1; "", c2; "", c3; "", newval]))
   | coords ->
       mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Genarray" "set")),
-                       ["", arr; 
+                       ["", arr;
                         "", ghexp(Pexp_array coords);
                         "", newval]))
 %}

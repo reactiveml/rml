@@ -5,9 +5,9 @@
 
 
 . Installation:
-  ------------- 
+  -------------
 
-Put the .el files in your path, and add the following lines to 
+Put the .el files in your path, and add the following lines to
 your .emacs file:
 
 (setq auto-mode-alist

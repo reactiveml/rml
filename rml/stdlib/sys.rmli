@@ -36,24 +36,24 @@ val rename : string -> string -> unit
 (** Rename a file. The first argument is the old name and the
    second is the new name. *)
 
-val getenv : string -> string 
+val getenv : string -> string
 (** Return the value associated to a variable in the process
    environment. Raise [Not_found] if the variable is unbound. *)
 
-val command : string -> int 
+val command : string -> int
 (** Execute the given shell command and return its exit code. *)
 
-val time : unit -> float 
+val time : unit -> float
 (** Return the processor time, in seconds, used by the program
    since the beginning of execution. *)
 
 val chdir : string -> unit
 (** Change the current working directory of the process. *)
 
-val getcwd : unit -> string 
+val getcwd : unit -> string
 (** Return the current working directory of the process. *)
 
-val readdir : string -> string array 
+val readdir : string -> string array
 (** Return the names of all files present in the given directory.
    Names denoting the current directory and the parent directory
    (["."] and [".."] in Unix) are not returned.  Each string in the
@@ -90,7 +90,7 @@ val max_array_length : int
 
 type signal_behavior =
     Signal_default
-  | Signal_ignore 
+  | Signal_ignore
   | Signal_handle of (int -> unit)
 (** What to do when receiving a signal:
    - [Signal_default]: take the default behavior
@@ -110,7 +110,7 @@ val set_signal : int -> signal_behavior -> unit
 (** Same as {!Sys.signal} but return value is ignored. *)
 
 
-(** {7 Signal numbers for the standard POSIX signals.} *) 
+(** {7 Signal numbers for the standard POSIX signals.} *)
 
 val sigabrt : int
 (** Abnormal termination *)
@@ -183,7 +183,7 @@ exception Break
 
 val catch_break : bool -> unit
 (** [catch_break] governs whether interactive interrupt (ctrl-C)
-   terminates the program or raises the [Break] exception. 
+   terminates the program or raises the [Break] exception.
    Call [catch_break true] to enable raising [Break],
    and [catch_break false] to let the system
    terminate the program on user interrupt. *)

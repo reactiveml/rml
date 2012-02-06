@@ -6,7 +6,7 @@ let process producer nat =
     emit nat !n;
     pause
   end
-    
+
 (*********** prime numbers ************************)
 let rec process filter nat ok =
   await nat (prime) in
@@ -23,10 +23,10 @@ let rec process filter nat ok =
 let process output primes =
   loop
     await primes (l) in
-    List.iter 
+    List.iter
       (fun n ->
 	print_int n;
-	print_string " "; 
+	print_string " ";
 	flush stdout)
       l
   end

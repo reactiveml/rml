@@ -1,9 +1,9 @@
 open Global
-  
-let get_area posx posy = 
+
+let get_area posx posy =
   truncate (posx /. area_size_x), truncate (posy /. area_size_y)
-    
-let get_areas posx posy = 
+
+let get_areas posx posy =
   let neighbor_areas = ref [] in
   let center_i, center_j = get_area posx posy in
   let left = truncate ((posx -. coverage_range) /. area_size_x) in
@@ -19,7 +19,7 @@ let get_areas posx posy =
       done
   done;
   (center_i, center_j), !neighbor_areas
-    
+
 let make_areas =
   for i = 0 to nb_area_x-1 do
     for j = 0 to nb_area_y-1 do

@@ -44,7 +44,7 @@ let impl_wrong_static_err impl =
 
 (* Type clash *)
 let unify_err exp actual_k expected_k =
-  Printf.eprintf 
+  Printf.eprintf
     "%aThis expression is a %s process,\n\
     but it should be a %s process.\n"
     Location.print_oc exp.expr_loc

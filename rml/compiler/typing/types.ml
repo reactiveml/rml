@@ -53,9 +53,9 @@ and pop_type_level () =
 ;;
 
 (* making types *)
-let make_type ty = 
-  { type_desc = ty; 
-    type_level = generic; 
+let make_type ty =
+  { type_desc = ty;
+    type_level = generic;
     type_index = names#name; }
 
 let product ty_list =
@@ -66,7 +66,7 @@ let constr ty_constr ty_list =
 
 let constr_notabbrev name ty_list =
   make_type (Type_constr({ gi = name;
-			   info = Some {constr_abbr = Constr_notabbrev}; }, 
+			   info = Some {constr_abbr = Constr_notabbrev}; },
 			 ty_list))
 
 let arrow ty1 ty2 =
@@ -82,21 +82,21 @@ let process ty k =
   make_type (Type_process (ty, k))
 
 
-let no_type_expression = 
-  { type_desc = Type_product[]; 
-    type_level = generic; 
+let no_type_expression =
+  { type_desc = Type_product[];
+    type_level = generic;
     type_index = -1; }
 
 (* To get fresh type variables *)
 
-let new_var () = 
-  { type_desc = Type_var; 
-    type_level = !current_level; 
+let new_var () =
+  { type_desc = Type_var;
+    type_level = !current_level;
     type_index = names#name }
 
 let new_generic_var () =
-  { type_desc = Type_var; 
-    type_level = generic; 
+  { type_desc = Type_var;
+    type_level = generic;
     type_index = names#name }
 
 let rec new_var_list n =
@@ -116,7 +116,7 @@ let rec type_repr ty =
   match ty.type_desc with
   | Type_link t ->
       let t = type_repr t in
-      ty.type_desc <- Type_link t; 
+      ty.type_desc <- Type_link t;
       t
   | _ ->
       ty
@@ -146,12 +146,12 @@ let rec gen_ty is_gen ty =
       let level2 = gen_ty is_gen ty2 in
       ty.type_level <- min level1 level2
   | Type_product(ty_list) ->
-      ty.type_level <- 
+      ty.type_level <-
 	List.fold_left (fun level ty -> min level (gen_ty is_gen ty))
 	  notgeneric ty_list
   | Type_constr(name, ty_list) ->
-      ty.type_level <- 
-	List.fold_left 
+      ty.type_level <-
+	List.fold_left
 	  (fun level ty -> min level (gen_ty is_gen ty))
 	  notgeneric ty_list
   | Type_link(link) ->
@@ -162,7 +162,7 @@ let rec gen_ty is_gen ty =
   ty.type_level
 
 (* main generalisation function *)
-let gen ty = 
+let gen ty =
   list_of_typ_vars := [];
   let _ = gen_ty true ty in
   { ts_binders = !list_of_typ_vars;
@@ -182,7 +182,7 @@ let free_type_vars level ty =
     | Type_product(ty_list) ->
 	List.iter free_vars ty_list
     | Type_constr(c, ty_list) ->
-	List.iter free_vars ty_list 
+	List.iter free_vars ty_list
     | Type_link(link) ->
 	free_vars link
     | Type_process(ty, _) -> free_vars ty
@@ -210,7 +210,7 @@ let rec copy ty =
       else ty
   | Type_link(link) ->
       if level = generic
-      then link 
+      then link
       else copy link
   | Type_arrow(ty1, ty2) ->
       if level = generic
@@ -219,7 +219,7 @@ let rec copy ty =
       else ty
   | Type_product(ty_list) ->
       if level = generic
-      then 
+      then
 	product (List.map copy ty_list)
       else ty
   | Type_constr(name, ty_list) ->
@@ -303,7 +303,7 @@ let rec unify expected_ty actual_ty =
     let expected_ty = type_repr expected_ty in
     let actual_ty = type_repr actual_ty in
     if expected_ty == actual_ty then ()
-    else 
+    else
       match expected_ty.type_desc, actual_ty.type_desc with
 	Type_var, _ ->
 	  occur_check expected_ty.type_level expected_ty actual_ty;
@@ -320,7 +320,7 @@ let rec unify expected_ty actual_ty =
       | Type_arrow(ty1, ty2), Type_arrow(ty3, ty4) ->
 	  unify ty1 ty3;
 	  unify ty2 ty4
-      |	Type_constr(c1, ty_l1), 
+      |	Type_constr(c1, ty_l1),
 	  Type_constr(c2, ty_l2) when same_type_constr c1 c2 ->
 	  begin try
 	    List.iter2 unify ty_l1 ty_l2
@@ -328,19 +328,19 @@ let rec unify expected_ty actual_ty =
 	  | Invalid_argument _ -> raise Unify
 	  end
       | Type_constr
-	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } }, args), 
+	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } }, args),
 	_ ->
 	  unify (expand_abbrev params body args) actual_ty
-      | _, 
+      | _,
 	Type_constr
 	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
-	    unify expected_ty (expand_abbrev params body args) 
-      | Type_process(ty1, pi1), Type_process(ty2, pi2) -> 
+	    unify expected_ty (expand_abbrev params body args)
+      | Type_process(ty1, pi1), Type_process(ty2, pi2) ->
 	  begin match pi1.proc_static, pi2.proc_static with
 	  | None, None -> ()
 	  | Some ps, None -> pi2.proc_static <- Some (Proc_link ps)
 	  | None, Some ps -> pi1.proc_static <- Some (Proc_link ps)
-	  | Some ps1, Some ps2 -> 
+	  | Some ps1, Some ps2 ->
 	      pi1.proc_static <- Some (Proc_unify (ps1, ps2))
 	  end;
 	  unify ty1 ty2
@@ -361,14 +361,14 @@ let rec filter_arrow ty =
       ty1, ty2
 
 let rec filter_product arity ty =
-  let ty = type_repr ty in 
-  match ty.type_desc with 
-    Type_product(l) -> 
-      if List.length l = arity then l else raise Unify 
+  let ty = type_repr ty in
+  match ty.type_desc with
+    Type_product(l) ->
+      if List.length l = arity then l else raise Unify
   | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
       filter_product arity (expand_abbrev params body args)
   | _ ->
-      let ty_list = new_var_list arity in 
-      unify ty (product ty_list); 
+      let ty_list = new_var_list arity in
+      unify ty (product ty_list);
       ty_list
 

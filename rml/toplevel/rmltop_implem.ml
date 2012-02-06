@@ -22,7 +22,7 @@
 (* created: 2005-10-25  *)
 
 module Sig_env (* : S *) =
-  struct 
+  struct
     type ('a, 'b) t =
 	{ mutable status: int;
 	  mutable value: 'b;
@@ -35,14 +35,14 @@ module Sig_env (* : S *) =
     let absent = -2
 
     let create default combine =
-      { status = absent; 
+      { status = absent;
 	value = default;
-	pre_status = absent; 
+	pre_status = absent;
 	last = default;
 	default = default;
-	combine = combine; } 
+	combine = combine; }
 
-(* -------------------------- Access functions -------------------------- *) 
+(* -------------------------- Access functions -------------------------- *)
     let default n = n.default
     let status n = n.status = !instant
 
@@ -52,7 +52,7 @@ module Sig_env (* : S *) =
       if n.status = !instant
       then n.pre_status = !instant - 1
       else n.status = !instant - 1
-	  
+
     let last n =
       if n.status = !instant
       then n.last
@@ -60,12 +60,12 @@ module Sig_env (* : S *) =
 
     let pre_value n =
       if n.status = !instant
-      then 
-	if n.pre_status = !instant - 1 
+      then
+	if n.pre_status = !instant - 1
 	then n.last
 	else n.default
-      else 
-	if n.status = !instant - 1 
+      else
+	if n.status = !instant - 1
 	then n.value
 	else n.default
 
@@ -78,8 +78,8 @@ module Sig_env (* : S *) =
 (* emit                                *)
 (***************************************)
     let emit n v =
-      if n.status <> !instant 
-      then 
+      if n.status <> !instant
+      then
 	(n.pre_status <- n.status;
 	 n.last <- n.value;
 	 n.status <- !instant;

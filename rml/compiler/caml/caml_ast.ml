@@ -51,7 +51,7 @@ and expression_desc =
   | Cexpr_array of expression list
   | Cexpr_record of (label_type_description global * expression) list
   | Cexpr_record_access of expression * label_type_description global
-  | Cexpr_record_update of 
+  | Cexpr_record_update of
       expression * label_type_description global * expression
   | Cexpr_constraint of expression * type_expression
   | Cexpr_trywith of expression * (pattern * expression) list
@@ -60,7 +60,7 @@ and expression_desc =
   | Cexpr_match of expression * (pattern * expression) list
   | Cexpr_when_match of expression * expression
   | Cexpr_while of expression * expression
-  | Cexpr_for of 
+  | Cexpr_for of
       ident * expression * expression * direction_flag * expression
   | Cexpr_seq of expression * expression
 
@@ -90,17 +90,17 @@ and type_expression =
       cte_loc: Location.t}
 and type_expression_desc =
     Ctype_var of string
-  | Ctype_arrow of type_expression * type_expression 
-  | Ctype_product of type_expression list                  
+  | Ctype_arrow of type_expression * type_expression
+  | Ctype_product of type_expression list
   | Ctype_constr of type_description global * type_expression list
   | Ctype_any
 
 and type_declaration =
   | Ctype_abstract
   | Ctype_rebind of type_expression
-  | Ctype_variant of 
+  | Ctype_variant of
       (constructor_type_description global * type_expression option) list
-  | Ctype_record of 
+  | Ctype_record of
       (label_type_description global * mutable_flag * type_expression) list
 
 (* Structure *)
@@ -109,11 +109,11 @@ type impl_item =
     cimpl_loc: Location.t;}
 and impl_desc =
   | Cimpl_expr of expression
-  | Cimpl_let of rec_flag * (pattern * expression) list 
-  | Cimpl_type of 
+  | Cimpl_let of rec_flag * (pattern * expression) list
+  | Cimpl_type of
       (type_description global * string list * type_declaration) list
   | Cimpl_exn of constructor_type_description global * type_expression option
-  | Cimpl_exn_rebind of 
+  | Cimpl_exn_rebind of
       constructor_type_description global * constructor_type_description global
   | Cimpl_open of string
 
@@ -123,8 +123,8 @@ type intf_item =
      cintf_loc: Location.t;}
 and intf_desc =
   | Cintf_val of value_type_description global * type_expression
-  | Cintf_type of 
+  | Cintf_type of
       (type_description global * string list * type_declaration) list
-  | Cintf_exn of 
+  | Cintf_exn of
       constructor_type_description global * type_expression option
   | Cintf_open of string

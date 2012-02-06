@@ -189,8 +189,8 @@ and ident_x_pattern i ppf (li, p) =
 ;;
 
 let rec expression i ppf x =
-  line i ppf "expr %a\n" 
-    fmt_location x.pexpr_loc; 
+  line i ppf "expr %a\n"
+    fmt_location x.pexpr_loc;
   let i = i+1 in
   match x.pexpr_desc with
   | Pexpr_ident (id) -> line i ppf "Pexpr_ident %a\n" fmt_ident id;
@@ -254,7 +254,7 @@ let rec expression i ppf x =
       expression i ppf e2;
       expression i ppf e3;
   | Pexpr_fordopar (s, e1, e2, df, e3) ->
-      line i ppf "Pexpr_fordopar \"%a\" %a\n" 
+      line i ppf "Pexpr_fordopar \"%a\" %a\n"
 	fmt_simple s fmt_direction_flag df;
       expression i ppf e1;
       expression i ppf e2;
@@ -270,7 +270,7 @@ let rec expression i ppf x =
   | Pexpr_assert (e) ->
       line i ppf "Pexpr_assert";
       expression i ppf e;
-  | Pexpr_nothing -> 
+  | Pexpr_nothing ->
       line i ppf "Pexpr_nothing\n";
   | Pexpr_pause ->
       line i ppf "Pexpr_pause\n";
@@ -331,7 +331,7 @@ let rec expression i ppf x =
       line i ppf "Pexpr_await %a\n" fmt_immediate_flag imf;
       expression i ppf s;
   | Pexpr_await_val (flag1, flag2, s, p, e) ->
-      line i ppf "Pexpr_await_val %a %a\n" 
+      line i ppf "Pexpr_await_val %a %a\n"
 	fmt_immediate_flag flag1 fmt_await_kind_flag flag2;
       expression i ppf s;
       pattern_x_expression_def i ppf (p,e);
@@ -344,7 +344,7 @@ let rec expression i ppf x =
   | Pexpr_default s ->
       line i ppf "Pexpr_default\n";
       expression i ppf s;
-  | Pconf_present (e) -> 
+  | Pconf_present (e) ->
       line i ppf "Pconf_present\n";
       expression i ppf e
   | Pconf_and (e1,e2) ->
@@ -387,7 +387,7 @@ let rec type_declaration i ppf x =
   line i ppf "type_declaration \n";
   let i = i+1 in
   match x with
-  | Ptype_abstract -> 
+  | Ptype_abstract ->
       line i ppf "Ptype_abstract\n";
   | Ptype_rebind (te) ->
       line i ppf "Ptype_rebind\n";
@@ -413,7 +413,7 @@ let rec impl_item i ppf x =
   line i ppf "impl_item %a\n" fmt_location x.pimpl_loc;
   let i = i+1 in
   match x.pimpl_desc with
-  | Pimpl_expr (e) -> 
+  | Pimpl_expr (e) ->
       line i ppf "Pimpl_expr\n";
       expression i ppf e;
   | Pimpl_let (rf, l) ->
@@ -436,7 +436,7 @@ let rec impl_item i ppf x =
       line i ppf "Pimpl_open %s\n" s;
   | Pimpl_lucky (id, in_ty_list, out_ty_list, files) ->
       line i ppf "Pimpl_lucky ... A FAIRE ...\n";
-      
+
 
 and string_x_string_list_x_type_expression_def i ppf (s,l,td) =
   line i ppf "<def> %a\n" fmt_simple s;

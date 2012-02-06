@@ -38,7 +38,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id$ *) 
+(* $Id$ *)
 
 
 (* Recording and dumping (partial) type information *)
@@ -58,22 +58,22 @@ open Reac_ast;;
 type type_info =
     Ti_patt of pattern
   | Ti_expr of expression
-	    
+
 let get_location ti =
   match ti with
     Ti_patt p -> p.patt_loc
   | Ti_expr e -> e.expr_loc
 
-module Annot(T: sig 
+module Annot(T: sig
   type t
   val get_type: type_info -> t
   val output: out_channel -> t -> unit
 end) =
-  struct	    
+  struct
 
     let type_info = ref ([] : type_info list)
     let phrases = ref ([] : Location.t list)
-	
+
     let record ti =
       if !Misc.save_types && not (get_location ti).Location.loc_ghost then
 	type_info := ti :: !type_info
@@ -98,7 +98,7 @@ end) =
 
 
     let print_position pp pos =
-      fprintf pp "%S %d %d %d" 
+      fprintf pp "%S %d %d %d"
 	pos.pos_fname pos.pos_lnum pos.pos_bol pos.pos_cnum
 
 
@@ -177,7 +177,7 @@ module Stypes =
       end
 
 (*     let output = Types_printer.output *)
-    let output oc ty = 
+    let output oc ty =
       set_formatter_out_channel oc;
       print_string "  ";
       Types_printer.print ty;

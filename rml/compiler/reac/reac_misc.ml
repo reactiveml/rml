@@ -32,21 +32,21 @@ open Types
 
 let make_expr_all e typ static reactivity loc =
   { expr_desc = e;
-    expr_loc = loc; 
-    expr_type = typ; 
-    expr_static = static; 
+    expr_loc = loc;
+    expr_type = typ;
+    expr_static = static;
     expr_reactivity = reactivity; }
 
 let make_expr e loc =
   { expr_desc = e;
-    expr_loc = loc; 
-    expr_type = no_type_expression; 
-    expr_static = Def_static.Dynamic Def_static.Dontknow; 
+    expr_loc = loc;
+    expr_type = no_type_expression;
+    expr_static = Def_static.Dynamic Def_static.Dontknow;
     expr_reactivity = []; }
 
 let make_patt p loc =
   { patt_desc = p;
-    patt_loc = loc; 
+    patt_loc = loc;
     patt_type = no_type_expression; }
 
 let make_conf c loc =
@@ -85,7 +85,7 @@ let rec vars_of_patt p =
   | Rpatt_constant _ -> []
 
   | Rpatt_tuple patt_list ->
-      List.fold_left (fun vars patt -> (vars_of_patt patt)@vars) [] patt_list 
+      List.fold_left (fun vars patt -> (vars_of_patt patt)@vars) [] patt_list
 
   | Rpatt_construct (_, None) -> []
 
@@ -94,12 +94,12 @@ let rec vars_of_patt p =
   | Rpatt_or (patt1, patt2) -> (vars_of_patt patt1) @ (vars_of_patt patt2)
 
   | Rpatt_record label_patt_list ->
-      List.fold_left 
+      List.fold_left
 	(fun vars (_,patt) -> (vars_of_patt patt)@vars)
-	[] label_patt_list 
+	[] label_patt_list
 
   | Rpatt_array patt_list ->
-      List.fold_left (fun vars patt -> (vars_of_patt patt)@vars) [] patt_list 
+      List.fold_left (fun vars patt -> (vars_of_patt patt)@vars) [] patt_list
 
   | Rpatt_constraint (patt, _) -> vars_of_patt patt
 
@@ -120,7 +120,7 @@ let rec is_free x vars =
 	    false
 	  else
 	    is_free x vars'
-      | _ -> 
+      | _ ->
 	  is_free x vars'
       end
   end
@@ -128,18 +128,18 @@ let rec is_free x vars =
 (* Compute the list of free variables of an expression *)
 let expr_free_vars e =
   let fv = ref [] in
-  let rec expr_free_vars vars expr = 
+  let rec expr_free_vars vars expr =
     begin match expr.expr_desc with
-    | Rexpr_local x -> 
+    | Rexpr_local x ->
 	if is_free (Varpatt_local x) vars then
 	  fv := (Varpatt_local x) :: !fv
 
     | Rexpr_global x ->
 	if is_free (Varpatt_global x) vars then
 	  fv := (Varpatt_global x) :: !fv
-	  
+
     | Rexpr_constant _ -> ()
-	  
+
     | Rexpr_let (rec_flag, patt_expr_list, expr) ->
 	let vars' =
 	  List.fold_left
@@ -148,94 +148,94 @@ let expr_free_vars e =
 	    patt_expr_list
 	in
 	if rec_flag = Recursive then
-	  List.iter 
+	  List.iter
 	    (fun (_, e) -> expr_free_vars vars' e)
 	    patt_expr_list
 	else
-	  List.iter 
+	  List.iter
 	    (fun (_, e) -> expr_free_vars vars e)
 	    patt_expr_list;
-	expr_free_vars vars' expr 
-	  
+	expr_free_vars vars' expr
+
     | Rexpr_function patt_expr_list ->
 	List.iter
-	  (fun (p,e) -> 
+	  (fun (p,e) ->
 	    let vars' = (vars_of_patt p) @ vars in
 	    expr_free_vars vars' e)
 	  patt_expr_list
-	  
+
     | Rexpr_apply (e, expr_list) ->
 	expr_free_vars vars e;
-	List.iter (expr_free_vars vars) expr_list 
-	  
+	List.iter (expr_free_vars vars) expr_list
+
     | Rexpr_tuple expr_list ->
-	List.iter (expr_free_vars vars) expr_list 
-	  
+	List.iter (expr_free_vars vars) expr_list
+
     | Rexpr_construct (const, None) -> ()
 
     | Rexpr_construct (const, Some e) ->
 	expr_free_vars vars e
-	  
+
     | Rexpr_array expr_list ->
-	List.iter (expr_free_vars vars) expr_list 
-	  
+	List.iter (expr_free_vars vars) expr_list
+
     | Rexpr_record lbl_expr_list ->
 	List.iter (fun (_,e) -> expr_free_vars vars e) lbl_expr_list
-	  
-    | Rexpr_record_access (e, lbl) -> 
+
+    | Rexpr_record_access (e, lbl) ->
 	expr_free_vars vars e
-	  
+
     | Rexpr_record_update (e1, lbl, e2) ->
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
-	  
+
     | Rexpr_constraint (e, ty) ->
 	expr_free_vars vars e
-	  
+
     | Rexpr_trywith (e, patt_expr_list) ->
 	expr_free_vars vars e;
 	List.iter
-	  (fun (p,e) -> 
+	  (fun (p,e) ->
 	    let vars' = (vars_of_patt p) @ vars in
 	    expr_free_vars vars' e)
 	  patt_expr_list
-	  
+
     | Rexpr_assert e ->
 	expr_free_vars vars e
-	  
+
     | Rexpr_ifthenelse(e,e1,e2) ->
 	expr_free_vars vars e;
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
-	  
+
     | Rexpr_match (e, patt_expr_list) ->
 	expr_free_vars vars e;
 	List.iter
-	  (fun (p,e) -> 
+	  (fun (p,e) ->
 	    let vars' = (vars_of_patt p) @ vars in
 	    expr_free_vars vars' e)
 	  patt_expr_list
-	  
+
     | Rexpr_when_match (e1,e2) ->
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
-	  
+
     | Rexpr_while (e1,e2) ->
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
-	  
+
     | Rexpr_for (ident, e1, e2, direction_flag, e) ->
 	let vars' = (Varpatt_local ident) :: vars in
 	expr_free_vars vars' e1;
 	expr_free_vars vars' e2;
 	expr_free_vars vars' e
-	  
+
     | Rexpr_seq e_list ->
-	List.iter (expr_free_vars vars) e_list 
-	  
+	List.iter (expr_free_vars vars) e_list
+
     | Rexpr_process e ->
 	expr_free_vars vars e
-	  
+
     | Rexpr_pre (pre_kind, e) ->
 	expr_free_vars vars e
 
@@ -244,37 +244,37 @@ let expr_free_vars e =
 
     | Rexpr_default e ->
 	expr_free_vars vars e
-	  
+
     | Rexpr_nothing -> ()
-	  
+
     | Rexpr_pause _ -> ()
 
     | Rexpr_halt _ -> ()
-	  
+
     | Rexpr_emit (e, None) ->
 	expr_free_vars vars e
-	  
+
     | Rexpr_emit (e1, Some e2) ->
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
-	  
+
     | Rexpr_loop (n_opt, e) ->
 	Misc.opt_iter (expr_free_vars vars) n_opt;
 	expr_free_vars vars e
-	  
+
     | Rexpr_fordopar (ident, e1, e2, direction_flag, e) ->
 	let vars' = (Varpatt_local ident) :: vars in
 	expr_free_vars vars' e1;
 	expr_free_vars vars' e2;
 	expr_free_vars vars' e
-	  
+
     | Rexpr_par e_list ->
-	List.iter (expr_free_vars vars) e_list 
-	  
+	List.iter (expr_free_vars vars) e_list
+
     | Rexpr_merge (e1, e2) ->
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
-	  
+
     | Rexpr_signal ((ident, tyexpr_opt), None, e) ->
 	let vars' = (Varpatt_local ident) :: vars in
 	expr_free_vars vars' e
@@ -283,10 +283,10 @@ let expr_free_vars e =
 	expr_free_vars vars' e1;
 	expr_free_vars vars' e2;
 	expr_free_vars vars' e
-	  
+
     | Rexpr_run e ->
 	expr_free_vars vars e
-	  
+
     | Rexpr_until (config, e, None) ->
 	config_free_vars vars config;
 	expr_free_vars vars e
@@ -295,11 +295,11 @@ let expr_free_vars e =
 	expr_free_vars vars e;
 	let vars' = (vars_of_patt p) @ vars in
 	expr_free_vars vars' e1
-	  
+
     | Rexpr_when (config, e) ->
 	config_free_vars vars config;
 	expr_free_vars vars e
-	  
+
     | Rexpr_control (config, None, e) ->
 	config_free_vars vars config;
 	expr_free_vars vars e
@@ -308,20 +308,20 @@ let expr_free_vars e =
 	expr_free_vars vars e;
 	let vars' = (vars_of_patt p) @ vars in
 	expr_free_vars vars' e1
-	  
+
     | Rexpr_get (e,patt,e1) ->
 	expr_free_vars vars e;
 	let vars' = (vars_of_patt patt) @ vars in
 	expr_free_vars vars' e1
-	  
+
     | Rexpr_present (config, e1, e2) ->
 	config_free_vars vars config;
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
-	  
+
     | Rexpr_await (immediate_flag, config) ->
 	config_free_vars vars config
-	  
+
     | Rexpr_await_val (immediate, kind, e, patt, e1) ->
 	expr_free_vars vars e;
 	let vars' = (vars_of_patt patt) @ vars in
@@ -331,7 +331,7 @@ let expr_free_vars e =
 
   and config_free_vars vars config =
     match config.conf_desc with
-    | Rconf_present e -> 
+    | Rconf_present e ->
 	expr_free_vars vars e
 
     | Rconf_and (c1, c2) ->

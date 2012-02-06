@@ -63,9 +63,9 @@ and expression_desc =
   | Pexpr_match of expression * (pattern * expression) list
   | Pexpr_when_match of expression * expression
   | Pexpr_while of expression * expression
-  | Pexpr_for of 
+  | Pexpr_for of
       simple_ident * expression * expression * direction_flag * expression
-  | Pexpr_fordopar of 
+  | Pexpr_fordopar of
       simple_ident * expression * expression * direction_flag * expression
   | Pexpr_seq of expression * expression
   | Pexpr_nothing
@@ -76,20 +76,20 @@ and expression_desc =
   | Pexpr_loop of expression
   | Pexpr_par of expression * expression
   | Pexpr_merge of expression * expression
-  | Pexpr_signal of 
-      (simple_ident * type_expression option) list * 
+  | Pexpr_signal of
+      (simple_ident * type_expression option) list *
 	(expression * expression) option * expression
   | Pexpr_process of expression
-  | Pexpr_run of expression 
-  | Pexpr_until of 
-      event_config * expression * (pattern * expression) option 
+  | Pexpr_run of expression
+  | Pexpr_until of
+      event_config * expression * (pattern * expression) option
   (* signal        * body       * handler *)
   | Pexpr_when of event_config * expression
   | Pexpr_control of event_config * (pattern * expression) option * expression
-  | Pexpr_get of expression 
+  | Pexpr_get of expression
   | Pexpr_present of event_config * expression * expression
   | Pexpr_await of immediate_flag * event_config
-  | Pexpr_await_val of 
+  | Pexpr_await_val of
       immediate_flag * await_kind * expression * pattern * expression
   | Pexpr_pre of pre_kind * expression
   | Pexpr_last of expression
@@ -116,7 +116,7 @@ and pattern_desc =
   | Ppatt_record of (ident * pattern) list
   | Ppatt_array of pattern list
   | Ppatt_constraint of pattern * type_expression
-      
+
 (* Types *)
 and type_expression =
     {pte_desc: type_expression_desc;
@@ -128,7 +128,7 @@ and type_expression_desc =
   | Ptype_constr of ident * type_expression list
   | Ptype_process of type_expression * Def_static.instantaneous
 
-and type_declaration = 
+and type_declaration =
   | Ptype_abstract
   | Ptype_rebind of type_expression
   | Ptype_variant of (simple_ident * type_expression option) list
@@ -142,16 +142,16 @@ and impl_item =
     pimpl_loc: Location.t;}
 and impl_desc =
   | Pimpl_expr of expression
-  | Pimpl_let of rec_flag * (pattern * expression) list 
-  | Pimpl_signal of 
-      (simple_ident * type_expression option) list * 
+  | Pimpl_let of rec_flag * (pattern * expression) list
+  | Pimpl_signal of
+      (simple_ident * type_expression option) list *
 	(expression * expression) option
   | Pimpl_type of (simple_ident * string list * type_declaration) list
   | Pimpl_exn of simple_ident * type_expression option
   | Pimpl_exn_rebind of simple_ident * ident
   | Pimpl_open of string
-  | Pimpl_lucky of 
-      simple_ident * 
+  | Pimpl_lucky of
+      simple_ident *
 	(simple_ident * type_expression) list * (* inputs: (id * ty) *)
 	(simple_ident * type_expression) list * (* outputs: (id * ty) *)
 	string list (* files *)

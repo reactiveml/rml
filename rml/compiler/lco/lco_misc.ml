@@ -30,7 +30,7 @@ open Lco_ast
 let rec is_value e =
   match e.coexpr_desc with
   | Coexpr_local _  | Coexpr_global _ | Coexpr_constant _
-  | Coexpr_function _ | Coexpr_process _ -> 
+  | Coexpr_function _ | Coexpr_process _ ->
       true
 
   | Coexpr_let(_, patt_expr_list, expr) ->

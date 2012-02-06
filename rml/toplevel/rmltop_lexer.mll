@@ -24,13 +24,13 @@
 {
  open Lexing
 
- exception EOF 
+ exception EOF
  exception Syntax_error
 
- type directive = 
+ type directive =
    | Rml_phrase of string
    | OCaml_phrase of string
-   | Suspend 
+   | Suspend
    | Resume
    | Step of int option
    | Sampling of float
@@ -44,9 +44,9 @@
 
 let newline = ('\010' | '\013' | "\013\010")
 let blank = [' ' '\009' '\012']
-let sep =  blank | newline 
+let sep =  blank | newline
 
-let identchar = 
+let identchar =
   ['A'-'Z' 'a'-'z' '_' '\192'-'\214' '\216'-'\246' '\248'-'\255' '\'' '0'-'9']
 
 let decimal_literal =
@@ -61,7 +61,7 @@ let int_literal =
   decimal_literal | hex_literal | oct_literal | bin_literal
 
 let float_literal =
-  ['0'-'9'] ['0'-'9' '_']* 
+  ['0'-'9'] ['0'-'9' '_']*
   ('.' ['0'-'9' '_']* )?
   (['e' 'E'] ['+' '-']? ['0'-'9'] ['0'-'9' '_']*)?
 
@@ -93,7 +93,7 @@ and expr = parse
 	               expr lexbuf }
 
 and float_expr = parse
-  | float_literal    { let x = float_of_string (Lexing.lexeme lexbuf) in 
+  | float_literal    { let x = float_of_string (Lexing.lexeme lexbuf) in
                        end_of_phrase lexbuf;
                        x }
   | eof              { raise EOF }
@@ -101,14 +101,14 @@ and float_expr = parse
   | _                { error lexbuf; assert false }
 
 and int_expr = parse
-  | int_literal      { let x = int_of_string (Lexing.lexeme lexbuf) in 
+  | int_literal      { let x = int_of_string (Lexing.lexeme lexbuf) in
                         end_of_phrase lexbuf;
                         x }
   | eof              { raise EOF }
   | _                { error lexbuf; assert false }
 
 and end_of_phrase = parse
-  | sep*  ";;"       { () } 
+  | sep*  ";;"       { () }
   | eof              { raise EOF }
   | _                { error lexbuf; assert false }
 

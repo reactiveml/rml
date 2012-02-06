@@ -26,19 +26,19 @@
 +(* Warning: *)
 +(* This file is based on the original version of globals.ml *)
 +(* from the CamlLight 0.75 distribution, INRIA              *)
- 
+
 -(* Global symbol tables *)
 +(* first modification: 2004-04-23 *)
 +(* modified by: Louis Mandel      *)
- 
+
 -#open "const";;
 -#open "prim";;
 +(* $Id$ *)
- 
+
 -(* A reference to a global, in a source file, is either a qualified identifier
 -   mod__name, or an unqualified identifier name. *)
 +open Misc
- 
+
 -type global_reference =
 -    GRname of string
 -  | GRmodname of qualified_ident
@@ -47,7 +47,7 @@
 -(* Internally, a global is represented by its fully qualified name,
 -   plus associated information. *)
 +(* values in the symbol table *)
- 
+
  type 'a global =
 -  { qualid: qualified_ident; (* Full name *)
 -    info: 'a }               (* Description *)
@@ -143,9 +143,9 @@
 +
 +
 +let no_info() = None
- 
+
 +let gi gl = gl.gi
-+let info gl = 
++let info gl =
 +  match gl.info with
 +  | None -> assert false
 +  | Some i -> i

@@ -19,7 +19,7 @@ OBJ =	../../compiler/global/version.cmo \
 	../../compiler/parsing/parser.cmo \
 	../../compiler/parsing/parse.cmo \
 	depend.cmo \
-	rmldep.cmo 
+	rmldep.cmo
 
 OBJ_OPT = $(OBJ:.cmo=.cmx)
 

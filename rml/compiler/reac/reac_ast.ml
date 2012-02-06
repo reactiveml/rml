@@ -26,7 +26,7 @@
 (* first modification: 2004-04-23 *)
 (* modified by: Louis Mandel *)
 
-(* $Id$ *) 
+(* $Id$ *)
 
 (* The abstract syntax for the reac language *)
 
@@ -44,7 +44,7 @@ type 'a global = 'a Global.global
 type expression =
   { expr_desc: expression_desc;
     expr_loc: Location.t;
-    mutable expr_type: Def_types.type_expression; 
+    mutable expr_type: Def_types.type_expression;
     mutable expr_static: Def_static.static;
     mutable expr_reactivity: (varpatt * int) list; }
 
@@ -60,7 +60,7 @@ and expression_desc =
   | Rexpr_array of expression list
   | Rexpr_record of (label_type_description global * expression) list
   | Rexpr_record_access of expression * label_type_description global
-  | Rexpr_record_update of 
+  | Rexpr_record_update of
       expression * label_type_description global * expression
   | Rexpr_constraint of expression * type_expression
   | Rexpr_trywith of expression * (pattern * expression) list
@@ -69,7 +69,7 @@ and expression_desc =
   | Rexpr_match of expression * (pattern * expression) list
   | Rexpr_when_match of expression * expression
   | Rexpr_while of expression * expression
-  | Rexpr_for of 
+  | Rexpr_for of
       ident * expression * expression * direction_flag * expression
   | Rexpr_seq of expression list
   | Rexpr_process of expression
@@ -81,21 +81,21 @@ and expression_desc =
   | Rexpr_halt of continue_begin_of_instant
   | Rexpr_emit of expression * expression option
   | Rexpr_loop of expression option * expression
-  | Rexpr_fordopar of 
+  | Rexpr_fordopar of
       ident * expression * expression * direction_flag * expression
   | Rexpr_par of expression list
   | Rexpr_merge of expression * expression
-  | Rexpr_signal of 
-      (ident * type_expression option) 
+  | Rexpr_signal of
+      (ident * type_expression option)
 	* (expression * expression) option * expression
-  | Rexpr_run of expression 
+  | Rexpr_run of expression
   | Rexpr_until of event_config * expression * (pattern * expression) option
   | Rexpr_when of event_config * expression
   | Rexpr_control of event_config * (pattern * expression) option * expression
   | Rexpr_get of expression * pattern * expression
   | Rexpr_present of event_config * expression * expression
   | Rexpr_await of immediate_flag * event_config
-  | Rexpr_await_val of 
+  | Rexpr_await_val of
       immediate_flag * await_kind * expression * pattern * expression
 
 (* event configuration *)
@@ -134,17 +134,17 @@ and type_expression =
       te_loc: Location.t}
 and type_expression_desc =
     Rtype_var of string
-  | Rtype_arrow of type_expression * type_expression 
-  | Rtype_product of type_expression list                  
+  | Rtype_arrow of type_expression * type_expression
+  | Rtype_product of type_expression list
   | Rtype_constr of type_description global * type_expression list
   | Rtype_process of type_expression * Def_static.instantaneous
 
 and type_declaration =
   | Rtype_abstract
   | Rtype_rebind of type_expression
-  | Rtype_variant of 
+  | Rtype_variant of
       (constructor_type_description global * type_expression option) list
-  | Rtype_record of 
+  | Rtype_record of
       (label_type_description global * mutable_flag * type_expression) list
 
 (* Structure *)
@@ -153,15 +153,15 @@ type impl_item =
     impl_loc: Location.t;}
 and impl_desc =
   | Rimpl_expr of expression
-  | Rimpl_let of rec_flag * (pattern * expression) list 
-  | Rimpl_signal of 
-      ((value_type_description global * type_expression option) 
+  | Rimpl_let of rec_flag * (pattern * expression) list
+  | Rimpl_signal of
+      ((value_type_description global * type_expression option)
 	 * (expression * expression) option) list
-  | Rimpl_type of 
+  | Rimpl_type of
       (type_description global * string list * type_declaration) list
-  | Rimpl_exn of 
+  | Rimpl_exn of
       constructor_type_description global * type_expression option
-  | Rimpl_exn_rebind of 
+  | Rimpl_exn_rebind of
       constructor_type_description global * constructor_type_description global
   | Rimpl_open of string
 
@@ -171,9 +171,9 @@ type intf_item =
      intf_loc: Location.t;}
 and intf_desc =
   | Rintf_val of value_type_description global * type_expression
-  | Rintf_type of 
+  | Rintf_type of
       (type_description global * string list * type_declaration) list
-  | Rintf_exn of 
+  | Rintf_exn of
       constructor_type_description global * type_expression option
   | Rintf_open of string
 

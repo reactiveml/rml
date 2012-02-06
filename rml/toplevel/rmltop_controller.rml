@@ -25,11 +25,11 @@
 signal suspend, resume default () gather (fun () () -> ());;
 signal step default 1 gather (fun x y -> x);;
 
-let ref_to_sig ref_s s = 
-  match !ref_s with 
+let ref_to_sig ref_s s =
+  match !ref_s with
   | None -> ()
   | Some v ->
-      ref_s := None; 
+      ref_s := None;
       emit s v
 
 let get_to_run () =
@@ -49,31 +49,31 @@ let process generate_signals =
     pause;
   end
 
-let process sampled = 
-  loop 
-    Rmltop_reactive_machine.rml_react(get_to_run()); 
-    pause 
+let process sampled =
+  loop
+    Rmltop_reactive_machine.rml_react(get_to_run());
+    pause
   end
 
-let process step_by_step = 
-  loop 
-    await step(n) in 
+let process step_by_step =
+  loop
+    await step(n) in
     do
-      for i = 1 to n do 
-        Rmltop_reactive_machine.rml_react(get_to_run()); 
+      for i = 1 to n do
+        Rmltop_reactive_machine.rml_react(get_to_run());
 	pause
-      done 
+      done
     until suspend done
   end
 
 let process machine_controller =
-  loop 
+  loop
     pause ||
-    do 
-      run sampled 
+    do
+      run sampled
     until suspend done;
-    do 
-      run step_by_step 
+    do
+      run step_by_step
     until resume done
   end
 

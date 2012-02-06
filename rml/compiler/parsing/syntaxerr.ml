@@ -56,7 +56,7 @@ let report_error ppf = function
       fprintf ppf "%aSyntax error: '%s' expected@."
         Location.print closing_loc closing;
       fprintf ppf "%aThis '%s' might be unmatched"
-        Location.print opening_loc opening 
+        Location.print opening_loc opening
   | Other loc ->
       fprintf ppf "%aSyntax error" Location.print loc
 

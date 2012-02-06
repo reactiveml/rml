@@ -21,12 +21,12 @@ val fprintf : out_channel -> ('a, out_channel, unit) format -> 'a
 (** [fprintf outchan format arg1 ... argN] formats the arguments
    [arg1] to [argN] according to the format string [format],
    and outputs the resulting string on the channel [outchan].
-   
+
    The format is a character string which contains two types of
    objects:  plain  characters, which are simply copied to the
    output channel, and conversion specifications, each of which
    causes  conversion and printing of one argument.
-   
+
    Conversion specifications consist in the [%] character, followed
    by optional flags and field widths, followed by one or two conversion
    character. The conversion characters and their meanings are:
@@ -85,7 +85,7 @@ val fprintf : out_channel -> ('a, out_channel, unit) format -> 'a
    fractional digits.  Each or both of the integer literals can also be
    specified as a [*], in which case an extra integer argument is taken
    to specify the corresponding width or precision.
-   
+
    Warning: if too few arguments are provided,
    for instance because the [printf] function is partially
    applied, the format is immediately printed up to

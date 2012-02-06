@@ -56,20 +56,20 @@ let unbound_type_err typ loc =
   raise Error
 
 let multiply_bound_variable_err x loc =
-  Format.eprintf 
+  Format.eprintf
     "%aThe variable %s is bound several times in this matching.\n"
     Location.print loc
     x;
   raise Error
 
 let orpat_vars loc =
-  Format.eprintf 
+  Format.eprintf
     "%aVariables must occur on both sides of this | pattern.\n"
     Location.print loc;
   raise Error
 
 let event_config_err loc =
-  Format.eprintf 
+  Format.eprintf
     "%aEvent configuration outside of a await, present, until, control or when.\n"
     Location.print loc;
   raise Error

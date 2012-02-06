@@ -83,7 +83,7 @@ be sent from another buffer in Rml mode.
 (defconst inferior-rml-buffer-name
   (concat "*" inferior-rml-buffer-subname "*"))
 
-;; for compatibility with xemacs 
+;; for compatibility with xemacs
 
 (defun rml-sit-for (second &optional mili redisplay)
    (if (and (boundp 'running-xemacs) running-xemacs)
@@ -173,7 +173,7 @@ Input and output via buffer `*inferior-rml*'."
     )
 )
 
-;; patched by Didier to move cursor after evaluation 
+;; patched by Didier to move cursor after evaluation
 
 (defun inferior-rml-eval-region (start end)
   "Send the current region to the inferior Rml process."
@@ -234,15 +234,15 @@ output can be retreived later, asynchronously.")
 
 (defun inferior-rml-eval-phrase (arg &optional min max)
   "Send the phrase containing the point to the RML process.
-With prefix-arg send as many phrases as its numeric value, 
+With prefix-arg send as many phrases as its numeric value,
 If an error occurs during evalutaion, stop at this phrase and
-repport the error. 
+repport the error.
 
 Return nil if noerror and position of error if any.
 
 If arg's numeric value is zero or negative, evaluate the current phrase
-or as many as prefix arg, ignoring evaluation errors. 
-This allows to jump other erroneous phrases. 
+or as many as prefix arg, ignoring evaluation errors.
+This allows to jump other erroneous phrases.
 
 Optional arguments min max defines a region within which the phrase
 should lies."
@@ -330,12 +330,12 @@ should lies."
              (progn
                (move-overlay rml-error-overlay beg end (current-buffer))
                (beep) (if wait (read-event) (rml-sit-for 60)))
-           (delete-overlay rml-error-overlay)))))  
+           (delete-overlay rml-error-overlay)))))
 
 ;; wait some amount for ouput, that is, until inferior-rml-output is set
 ;; to true. Hence, interleaves sitting for shorts delays and checking the
-;; flag. Give up after some time. Typing into the source buffer will cancel 
-;; waiting, i.e. may report 'No result yet' 
+;; flag. Give up after some time. Typing into the source buffer will cancel
+;; waiting, i.e. may report 'No result yet'
 
 (defun rml-wait-output (&optional before after)
   (let ((c 1))
@@ -354,11 +354,11 @@ should lies."
                            rml-previous-output (- pos 2))))
 
 ;; additional bindings
-  
+
 ;(let ((map (lookup-key rml-mode-map [menu-bar rml])))
 ;  (define-key map [indent-buffer] '("Indent buffer" . rml-indent-buffer))
 ;  (define-key map [eval-buffer] '("Eval buffer" . rml-eval-buffer))
-;) 
+;)
 ;(define-key rml-mode-map "\C-c\C-b" 'rml-eval-buffer)
 
 

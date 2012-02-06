@@ -13,27 +13,27 @@
 ;;   - dump some databaes: Info, Lib, ...
 ;;   - accept a search path for local libraries instead of current dir
 ;;     (then distinguish between different modules lying in different
-;;     directories) 
+;;     directories)
 ;;   - improve the construction for info files.
 ;;
-;;  Abstract over 
+;;  Abstract over
 ;;   - the viewing method and the database, so that the documentation for
-;;     and identifier could be search in 
+;;     and identifier could be search in
 ;;       * info / html / man / rmli's sources
 ;;       * viewed in emacs or using an external previewer.
 ;;
 ;;  Take all identifiers (labels, Constructors, exceptions, etc.)
-;;       
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (eval-and-compile
-  (if (and (boundp 'running-xemacs) running-xemacs) 
+  (if (and (boundp 'running-xemacs) running-xemacs)
       (require 'rml-xemacs)
     (require 'rml-emacs)))
 
 ;; Loading or building databases.
-;; 
+;;
 
 ;; variables to be customized
 
@@ -76,17 +76,17 @@
           (if (stringp path)
               (if (file-directory-p path) path nil)
             (mapconcat '(lambda (d) (if (file-directory-p d) d))
-                       path " "))) 
+                       path " ")))
          (command
           (and path-string
                (concat "find " path-string
                        " '(' " filter " ')' "
                        (if depth (concat " -maxdepth " (int-to-string depth)))
-                       (if split nil " -printf '%\p '") 
+                       (if split nil " -printf '%\p '")
                        )))
           (files
            (and command (shell-command-to-string command))))
-         (if (and split (stringp files)) (split-string files "\n") files) 
+         (if (and split (stringp files)) (split-string files "\n") files)
          ))
 
 ;; Specialized auxiliary functions
@@ -95,7 +95,7 @@
 ;; Global table of modules contents of modules loaded lazily.
 
 (defvar rml-module-alist 'lazy
-  "A-list of modules with how and where to find help information. 
+  "A-list of modules with how and where to find help information.
   'delay means non computed yet")
 
 (defun rml-add-rmli-modules (modules tag &optional path)
@@ -193,7 +193,7 @@
       alist)
       ))
 
-;; Local list of visible modules. 
+;; Local list of visible modules.
 
 (defvar rml-visible-modules 'lazy
   "A-list of open modules, local to every file.")
@@ -233,8 +233,8 @@ When call interactively, make completion over known modules."
   (message "%S" (mapcar 'car (rml-visible-modules))))
 
 (defun rml-close-module (arg)
-  "*Close module of name ARG when ARG is a string. 
-When call interactively, make completion over visible modules. 
+  "*Close module of name ARG when ARG is a string.
+When call interactively, make completion over visible modules.
 Otherwise if ARG is true, close all modules and reset to default. "
   (interactive "P")
   (if (= (prefix-numeric-value arg) 4)
@@ -252,27 +252,27 @@ Otherwise if ARG is true, close all modules and reset to default. "
                        rml-visible-modules))
       ))
   (message "%S" (mapcar 'car (rml-visible-modules))))
-           
+
 
 ;; Look for identifiers around point
 
 (defun rml-qualified-identifier (&optional show)
-  "Search for a qualified identifier (Path. entry) around point. 
+  "Search for a qualified identifier (Path. entry) around point.
 
 Entry may be nil.
-Currently, the path may only be nil or a single Module. 
-For paths is of the form Module.Path', it returns Module 
-and always nil for entry. 
+Currently, the path may only be nil or a single Module.
+For paths is of the form Module.Path', it returns Module
+and always nil for entry.
 
-If defined Module and Entry are represented by a region in the buffer, 
-and are nil otherwise. 
+If defined Module and Entry are represented by a region in the buffer,
+and are nil otherwise.
 
-For debugging purposes, it returns the string Module.entry if called 
-with an optional non-nil argument. 
+For debugging purposes, it returns the string Module.entry if called
+with an optional non-nil argument.
 "
   (save-excursion
     (let ((module) (entry))
-      (if (looking-at "[ \n]") (skip-chars-backward " ")) 
+      (if (looking-at "[ \n]") (skip-chars-backward " "))
       (if (re-search-backward
            "\\([^A-Za-z0-9_.']\\|\\`\\)\\([A-Za-z0-9_']*[.]\\)*[A-Za-z0-9_']*\\="
            (- (point) 100) t)
@@ -298,7 +298,7 @@ with an optional non-nil argument.
   (let ((list
          (or
           (and module
-               (list 
+               (list
                 (or (assoc module (rml-module-alist))
                     (error "Unknown module %s" module))))
           (rml-visible-modules))))
@@ -317,19 +317,19 @@ with an optional non-nil argument.
       )))
 
 (defun rml-complete (arg)
-  "Does completion for Rml identifiers qualified. 
+  "Does completion for Rml identifiers qualified.
 
-It attemps to recognize an qualified identifier Module . entry 
+It attemps to recognize an qualified identifier Module . entry
 around point using function \\[rml-qualified-identifier].
 
 If Module is defined, it does completion for identifier in Module.
 
-If Module is undefined, it does completion in visible modules. 
-Then, if completion fails, it does completion among  all modules 
+If Module is undefined, it does completion in visible modules.
+Then, if completion fails, it does completion among  all modules
 where identifier is defined."
   (interactive "p")
   (let* ((module-entry (rml-qualified-identifier)) (entry)
-         (module) 
+         (module)
          (beg) (end) (pattern))
     (if (car module-entry)
         (progn
@@ -348,7 +348,7 @@ where identifier is defined."
                    (progn (setq entry (cdr module-entry)) t))
               (error "Unknown module %s" module))))
     (if (consp (cdr module-entry))
-        (progn         
+        (progn
           (setq beg (cadr module-entry))
           (setq end (cddr module-entry)))
       (if (and module
@@ -392,7 +392,7 @@ where identifier is defined."
                        (delete-region (caar module-entry) end)
                      (delete-region beg end))
                    (insert module "." pattern))))
-                     
+
               ((not (string-equal pattern completion))
                (delete-region beg end)
                (goto-char beg)
@@ -410,10 +410,10 @@ where identifier is defined."
 
 (defvar rml-info-prefix "rml-lib"
   "Prefix of rml info files describing library modules.
-Suffix .info will be added to info files. 
+Suffix .info will be added to info files.
 Additional suffix .gz may be added if info files are compressed.
 ")
-;; 
+;;
 
 (defun rml-hevea-info-add-entries (entries dir name)
   (let*
@@ -454,9 +454,9 @@ Additional suffix .gz may be added if info files are compressed.
     entries))
 
 (defun rml-hevea-info ()
-  "The default way to create an info data base from the value 
-of \\[Info-default-directory-list] and the base name \\[rml-info-name] 
-of files to look for. 
+  "The default way to create an info data base from the value
+of \\[Info-default-directory-list] and the base name \\[rml-info-name]
+of files to look for.
 
 This uses info files produced by HeVeA.
 "
@@ -496,8 +496,8 @@ This uses info files produced by HeVeA.
     entries))
 
 (defun rml-rmldoc-info ()
-  "The default way to create an info data base from the value 
-of \\[Info-default-directory-list] and the base name \\[rml-info-name] 
+  "The default way to create an info data base from the value
+of \\[Info-default-directory-list] and the base name \\[rml-info-name]
 of files to look for.
 
 This uses info files produced by rmldoc."
@@ -515,18 +515,18 @@ This uses info files produced by rmldoc."
 ;; Continuing
 
 (defvar rml-info-alist 'rml-rmldoc-info
-  "A-list binding module names to info entries: 
+  "A-list binding module names to info entries:
 
   nil means do not use info.
 
   A function to build the list lazily (at the first call). The result of
 the function call will be assign permanently to this variable for future
 uses. We provide two default functions \\[rml-info-default-function]
-(info produced by HeVeA is the default) and \\[rml-info-default-function] 
-(info produced by rmldoc). 
+(info produced by HeVeA is the default) and \\[rml-info-default-function]
+(info produced by rmldoc).
 
   Otherwise, this value should be an alist binding module names to info
-entries of the form to \"(entry)section\" be taken by the \\[info] 
+entries of the form to \"(entry)section\" be taken by the \\[info]
 command. An entry may be an info module or a complete file name."
 )
 
@@ -555,7 +555,7 @@ command. An entry may be an info module or a complete file name."
 (defun rml-buffer-substring (region)
   (and region (buffer-substring-no-properties (car region) (cdr region))))
 
-;; Help function. 
+;; Help function.
 
 
 (defun rml-goto-help (&optional module entry)
@@ -572,7 +572,7 @@ current buffer using \\[rml-qualified-identifier]."
               (or (assoc module (rml-module-alist))
                   (and (file-exists-p
                         (concat (rml-uncapitalize module) ".rmli"))
-                       (rml-get-or-make-module module))))                  
+                       (rml-get-or-make-module module))))
              (location (cdr (cadr module-info))))
 	(cond
          (location
@@ -609,27 +609,27 @@ current buffer using \\[rml-qualified-identifier]."
     ))
 
 (defun rml-help (arg)
-  "Find documentation for Rml qualified identifiers. 
+  "Find documentation for Rml qualified identifiers.
 
 It attemps to recognize an qualified identifier of the form
 ``Module . entry'' around point using function `rml-qualified-identifier'.
 
 If Module is undetermined it is temptatively guessed from the identifier name
-and according to visible modules. If this is still unsucessful,  the user is 
-then prompted for a Module name. 
+and according to visible modules. If this is still unsucessful,  the user is
+then prompted for a Module name.
 
 The documentation for Module is first seach in the info manual if available,
-then in the ``module.rmli'' source file. The entry is then searched in the documentation. 
+then in the ``module.rmli'' source file. The entry is then searched in the documentation.
 
-Visible modules are computed only once, at the first call. 
+Visible modules are computed only once, at the first call.
 Modules can be made visible explicitly with `rml-open-module' and
-hidden with `rml-close-module'. 
+hidden with `rml-close-module'.
 
 Prefix arg 0 forces recompilation of visible modules (and their content)
-from the file content. 
+from the file content.
 
 Prefix arg 4 prompts for Module and identifier instead of guessing values
-from the possition of point in the current buffer. 
+from the possition of point in the current buffer.
 "
   (interactive "p")
   (let ((module) (entry) (module-entry))
@@ -674,7 +674,7 @@ from the possition of point in the current buffer.
                            modules nil t "" (cons 'hist 0)))
                     (if (string-equal module "") default module))
                    ))))
-      ))    
+      ))
      (message "Help for %s%s%s" module (if entry "." "") (or entry ""))
      (rml-goto-help module entry)
      ))
@@ -689,7 +689,7 @@ from the possition of point in the current buffer.
 (defvar rml-links nil
   "Local links in the current of last info node or interface file.
 
-The car of the list is a key that indentifies the module to prevent 
+The car of the list is a key that indentifies the module to prevent
 recompilation when next help command is relative to the same module.
 The cdr is a list of elments, each of which is an string and a pair of
 buffer positions."
@@ -770,14 +770,14 @@ buffer positions."
           (setq buffer-read-only t))
           )))
 
-  
+
 
 ;; bindings ---now in rml.el
 
 ; (and
 ;  (boundp 'rml-mode-map)
 ;  (keymapp rml-mode-map)
-;  (progn 
+;  (progn
 ;    (define-key rml-mode-map [?\C-c?i] 'rml-add-path)
 ;    (define-key rml-mode-map [?\C-c?]] 'rml-close-module)
 ;    (define-key rml-mode-map [?\C-c?[] 'rml-open-module)
@@ -794,7 +794,7 @@ buffer positions."
 ;         (define-key map [open] '("Open module for help" . rml-open-module))
 ;         (define-key map [help] '("Help for identifier" . rml-help))
 ;         (define-key map [complete] '("Complete identifier" . rml-complete))
-;         ) 
+;         )
 ;    ))))
 
 

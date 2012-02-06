@@ -26,7 +26,7 @@
 
 module type Interpretor_type =
   sig
-    type 'a process 
+    type 'a process
     val rml_make: 'a process -> (unit -> 'a option)
   end
 
@@ -41,7 +41,7 @@ module M =
 	| None -> exec()
 	| Some v -> v
       in exec ()
-    
+
     let rml_exec_n p n =
       let react = Interpretor.rml_make p in
       let rec exec n =
@@ -52,7 +52,7 @@ module M =
 	else
 	  None
       in exec n
- 
+
     let rml_exec_sampling p min =
       let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
       let debut = ref 0.0 in
@@ -62,14 +62,14 @@ module M =
       let rec exec () =
 	let _ = debut := Sys.time() in
 	let v = react () in
-	let _ = 
+	let _ =
 	  fin := Sys.time();
 	  diff := min -. (!fin -. !debut);
 	  if !diff > 0.001 then (
-	    ignore (Unix.setitimer 
-		      Unix.ITIMER_REAL 
+	    ignore (Unix.setitimer
+		      Unix.ITIMER_REAL
 		      {Unix.it_interval = 0.0; Unix.it_value = !diff});
-	    Unix.pause())  
+	    Unix.pause())
 	  else ();
 	in
 	match v with
@@ -77,7 +77,7 @@ module M =
 	| Some v -> v
       in exec ()
 
-   
+
     let rml_exec_n_sampling p n min =
       let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
       let debut = ref 0.0 in
@@ -97,15 +97,15 @@ module M =
 	  in
 	  let _ = debut := Sys.time() in
 	  let v = react () in
-	  let _ = 
+	  let _ =
 	    fin := Sys.time();
 	    diff := min -. (!fin -. !debut);
 	    if !diff > 0.001 then (
-	      ignore (Unix.setitimer 
-			Unix.ITIMER_REAL 
+	      ignore (Unix.setitimer
+			Unix.ITIMER_REAL
 			{Unix.it_interval = 0.0; Unix.it_value = !diff});
-	      Unix.pause())  
-	    else 
+	      Unix.pause())
+	    else
 	      (print_string "Instant ";
 	       print_int !instant;
 	       print_string " : depassement = ";
@@ -121,4 +121,4 @@ module M =
 
 
   end
-    
+

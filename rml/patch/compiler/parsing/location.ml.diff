@@ -29,20 +29,20 @@
 +
 +(* first modification: 2004-05-06 *)
 +(* modified by: Louis Mandel      *)
- 
+
  (***********************************************************************)
  (*                                                                     *)
 @@ -12,14 +38,28 @@
  (*                                                                     *)
  (***********************************************************************)
- 
+
 -(* $Id: location.ml,v 1.43 2003/09/03 13:24:56 doligez Exp $ *)
 +(* $Id$ *)
- 
+
  open Lexing
- 
+
  type t = { loc_start: position; loc_end: position; loc_ghost: bool };;
- 
+
 +let init lexbuf fname =
 +  lexbuf.lex_curr_p <- {
 +    pos_fname = fname;
@@ -53,10 +53,10 @@
 +;;
 +
  let none = { loc_start = dummy_pos; loc_end = dummy_pos; loc_ghost = true };;
- 
-+let concat loc1 loc2 = 
-+  { loc_start = loc1.loc_start; 
-+    loc_end = loc2.loc_end; 
+
++let concat loc1 loc2 =
++  { loc_start = loc1.loc_start;
++    loc_end = loc2.loc_end;
 +    loc_ghost = loc1.loc_ghost or loc2.loc_ghost; };;
 +
  let curr lexbuf = {
@@ -65,13 +65,13 @@
 @@ -56,133 +96,8 @@
  let input_name = ref ""
  let input_lexbuf = ref (None : lexbuf option)
- 
+
 -(* Terminal info *)
 -
 -let status = ref Terminfo.Uninitialised
 -
  let num_loc_lines = ref 0 (* number of lines already printed after input *)
- 
+
 -(* Highlight the location using standout mode. *)
 -
 -let highlight_terminfo ppf num_lines lb loc1 loc2 =
@@ -194,7 +194,7 @@
 -      end
 -
  (* Print the location in some way or another *)
- 
+
  open Format
 @@ -212,15 +127,17 @@
    let (file, line, startchar) = get_pos_info loc.loc_start in
@@ -211,7 +211,7 @@
 -    fprintf ppf "%s%i%s@.%s" msg_to endchar msg_colon msg_head;
 +    fprintf ppf "%s%i%s@.%s" msg_to endchar msg_colon msg_head
    end
- 
+
 +let print_oc oc loc =
 +  print (formatter_of_out_channel oc) loc
 +

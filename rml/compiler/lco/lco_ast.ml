@@ -21,7 +21,7 @@
 (* created: 2004-06-04  *)
 (* author: Louis Mandel *)
 
-(* $Id: lco_ast.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *) 
+(* $Id: lco_ast.ml,v 1.2 2005/03/14 09:58:54 mandel Exp $ *)
 
 (* The abstract syntax for the Lco language *)
 
@@ -50,7 +50,7 @@ and expression_desc =
   | Coexpr_array of expression list
   | Coexpr_record of (label_type_description global * expression) list
   | Coexpr_record_access of expression * label_type_description global
-  | Coexpr_record_update of 
+  | Coexpr_record_update of
       expression * label_type_description global * expression
   | Coexpr_constraint of expression * type_expression
   | Coexpr_trywith of expression * (pattern * expression) list
@@ -59,7 +59,7 @@ and expression_desc =
   | Coexpr_match of expression * (pattern * expression) list
   | Coexpr_when_match of expression * expression
   | Coexpr_while of expression * expression
-  | Coexpr_for of 
+  | Coexpr_for of
       ident * expression * expression * direction_flag * expression
   | Coexpr_seq of expression * expression
   | Coexpr_process of process
@@ -68,8 +68,8 @@ and expression_desc =
   | Coexpr_default of expression
   | Coexpr_emit of expression
   | Coexpr_emit_val of expression * expression
-  | Coexpr_signal of 
-      (ident * type_expression option) 
+  | Coexpr_signal of
+      (ident * type_expression option)
 	* (expression * expression) option * expression
 
 (* Process expressions *)
@@ -86,18 +86,18 @@ and process_desc =
   | Coproc_loop of expression option * process
   | Coproc_while of expression * process
   | Coproc_for of ident * expression * expression * direction_flag * process
-  | Coproc_fordopar of 
+  | Coproc_fordopar of
       ident * expression * expression * direction_flag * process
   | Coproc_seq of process * process
   | Coproc_par of process list
   | Coproc_merge of process * process
-  | Coproc_signal of 
-      (ident * type_expression option) 
+  | Coproc_signal of
+      (ident * type_expression option)
 	* (expression * expression) option * process
   | Coproc_def of (pattern * expression) * process
   | Coproc_def_dyn of (pattern * process) * process
   | Coproc_def_and_dyn of (pattern * process) list * process
-  | Coproc_run of expression 
+  | Coproc_run of expression
   | Coproc_until of event_config * process * (pattern * process) option
   | Coproc_when of event_config * process
   | Coproc_control of event_config * (pattern * expression) option * process
@@ -107,7 +107,7 @@ and process_desc =
   | Coproc_match of expression * (pattern * process) list
   | Coproc_when_match of expression * process
   | Coproc_await of immediate_flag * event_config
-  | Coproc_await_val of 
+  | Coproc_await_val of
       immediate_flag * await_kind * expression * pattern * process
 
 (* event configuration *)
@@ -145,17 +145,17 @@ and type_expression =
       cote_loc: Location.t}
 and type_expression_desc =
     Cotype_var of string
-  | Cotype_arrow of type_expression * type_expression 
-  | Cotype_product of type_expression list                  
+  | Cotype_arrow of type_expression * type_expression
+  | Cotype_product of type_expression list
   | Cotype_constr of type_description global * type_expression list
   | Cotype_process of type_expression
 
 and type_declaration =
   | Cotype_abstract
   | Cotype_rebind of type_expression
-  | Cotype_variant of 
+  | Cotype_variant of
       (constructor_type_description global * type_expression option) list
-  | Cotype_record of 
+  | Cotype_record of
       (label_type_description global * mutable_flag * type_expression) list
 
 (* Structure *)
@@ -164,15 +164,15 @@ type impl_item =
     coimpl_loc: Location.t;}
 and impl_desc =
   | Coimpl_expr of expression
-  | Coimpl_let of rec_flag * (pattern * expression) list 
-  | Coimpl_signal of 
-      ((value_type_description global * type_expression option) 
+  | Coimpl_let of rec_flag * (pattern * expression) list
+  | Coimpl_signal of
+      ((value_type_description global * type_expression option)
 	 * (expression * expression) option) list
-  | Coimpl_type of 
+  | Coimpl_type of
       (type_description global * string list * type_declaration) list
-  | Coimpl_exn of 
+  | Coimpl_exn of
       constructor_type_description global * type_expression option
-  | Coimpl_exn_rebind of 
+  | Coimpl_exn_rebind of
       constructor_type_description global * constructor_type_description global
   | Coimpl_open of string
 
@@ -182,9 +182,9 @@ type intf_item =
      cointf_loc: Location.t;}
 and intf_desc =
   | Cointf_val of value_type_description global * type_expression
-  | Cointf_type of 
+  | Cointf_type of
       (type_description global * string list * type_declaration) list
-  | Cointf_exn of 
+  | Cointf_exn of
       constructor_type_description global * type_expression option
   | Cointf_open of string
 

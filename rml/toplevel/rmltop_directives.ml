@@ -27,7 +27,7 @@ let set ref n =
   Rmltop_global.unlock()
 
 let set_suspend = set Rmltop_global.suspend
-let set_resume = set Rmltop_global.resume 
-let set_step = set Rmltop_global.step 
+let set_resume = set Rmltop_global.resume
+let set_step = set Rmltop_global.step
 
 let set_sampling n =  Rmltop_global.sampling := n

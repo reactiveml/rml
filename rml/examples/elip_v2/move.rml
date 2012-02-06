@@ -1,33 +1,33 @@
 open Position
-open Global 
+open Global
 
-let translate pos dir speed = 
+let translate pos dir speed =
   let x = pos.x in
   let y = pos.y in
   match dir with
-  | 0 -> { x = x; 
+  | 0 -> { x = x;
 	   y = min (y+.speed) (max_y-.1.) }
-  | 1 -> { x = min (x+.speed) (max_x-.1.); 
+  | 1 -> { x = min (x+.speed) (max_x-.1.);
 	   y = min (y+.speed) (max_y-.1.) }
   | 2 -> { x = min (x+.speed) (max_x-.1.);
 	   y = y }
-  | 3 -> { x = min (x+.speed) (max_x-.1.); 
+  | 3 -> { x = min (x+.speed) (max_x-.1.);
 	   y = max (y-.speed) 0. }
   | 4 -> { x = x;
 	   y = max (y-.speed) 0. }
-  | 5 -> { x = max (x-.speed) 0.; 
+  | 5 -> { x = max (x-.speed) 0.;
 	   y = max (y-.speed) 0. }
   | 6 -> { x = max (x-.speed) 0.;
 	   y = y }
   | 7 -> { x = max (x-.speed) 0.;
 	   y = min (y+.speed) (max_y-.1.) }
   | _ -> pos
-	
-
-let no_move pos = pos 
 
 
-let random pos = 
+let no_move pos = pos
+
+
+let random pos =
   translate pos (Random.int 8) speed
 
 
@@ -57,11 +57,11 @@ let random_pos r pos =
 
 let local_rwp r pos_init =
   let waypoint = ref pos_init in
-  fun pos ->  	
+  fun pos ->
   	let dx = !waypoint.x -. pos.x in
   	let dy = !waypoint.y -. pos.y in
-    if (abs_float dx < speed) 
-			&& (abs_float dy < speed) 
+    if (abs_float dx < speed)
+			&& (abs_float dy < speed)
     then waypoint := random_pos r pos;
     (* move in the direction of !waypoint *)
   	let distance = sqrt (distance2 pos !waypoint) in
@@ -79,12 +79,12 @@ let rwp r pos_init =
   	print_pos !waypoint;
   	print_newline();
   	print_string "pos: ";
-  	print_pos pos; 
+  	print_pos pos;
   	print_newline();*)
-  	
+
     let dx = !waypoint.x -. pos.x in
     let dy = !waypoint.y -. pos.y in
-    if (abs_float dx < !speed) && (abs_float dy < !speed) then 
+    if (abs_float dx < !speed) && (abs_float dy < !speed) then
       begin match !pause_cpt with
       | x when x < 0 ->
 	  pause_cpt := (Random.int (pause_max - pause_min)) + pause_min;
@@ -98,7 +98,7 @@ let rwp r pos_init =
 	  waypoint := random_pos r pos;
 	  pos
       end
-    else 
+    else
       (* move in the direction of !waypoint *)
       let distance = sqrt (distance2 pos !waypoint) in
       let vx = dx *. !speed /. distance in

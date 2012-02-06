@@ -8,7 +8,7 @@ type status =
   | Status_Active
 
 (*
-type state = 
+type state =
   | State_Basic
   | State_Collide
   | State_Barrier
@@ -41,7 +41,7 @@ type dir =
   | Up_Right
   | Down_Left
   | Down_Right
- 
+
 let opposite dir =
   match dir with
   | Up -> Down
@@ -59,22 +59,22 @@ let opposite dir =
 
 type 'a info =
     { origine: dir;
-      status: status; 
+      status: status;
       info: 'a;
     }
 (*
       state: state_t;
       fired: int;
-      new_status: status_t; 
+      new_status: status_t;
       new_state: state_t; }
 *)
-      
+
 (**************************************************************************)
 (* neighborhood                                                           *)
 (**************************************************************************)
-    
+
 type 'a neighborhood = 'a info list
-      
+
 (********************************************************************)
 (* Constantes                                                       *)
 (********************************************************************)
@@ -84,11 +84,11 @@ let maxy = ref 400
 let nox = ref false
 let zoom = ref 2
 
-      
+
 (**************************************************************************)
 (* cell                                                                   *)
 (**************************************************************************)
-      
+
 type ('a, 'b) cell =
     { cell_x: int;
       cell_y: int;
@@ -104,8 +104,8 @@ type ('a, 'b) cell =
 
 let make_info origine cell =
   { origine = origine;
-    status = cell.cell_status; 
-    info = cell.cell_ext; 
+    status = cell.cell_status;
+    info = cell.cell_ext;
   }
 
 (*
@@ -113,9 +113,9 @@ let make_info origine cell =
     fired = 0;
     new_status = Status_None;
     new_state = State_Basic; }
-*)  
+*)
 
-          
+
 let new_cell x y activation status ext =
   { cell_x = x;
     cell_y = y;
@@ -126,19 +126,19 @@ let new_cell x y activation status ext =
   }
 
 
-let no_draw c = () 
+let no_draw c = ()
 
 let draw_cell_gen color_of_cell c =
   Graphics.set_color (color_of_cell c);
   Graphics.fill_rect (c.cell_x * !zoom) (c.cell_y * !zoom) !zoom !zoom
 
 let color_of_status s =
-  match s.cell_status with 
+  match s.cell_status with
   | Status_Quiescent -> Graphics.red
   | Status_Wall -> Graphics.green
   | Status_Active -> Graphics.blue
- 
-let color_of_fire_state c = 
+
+let color_of_fire_state c =
   match c.cell_ext with
   | Fire_empty -> Graphics.rgb  255 255 255
   | Fire_ash -> Graphics.rgb 173 173 173
@@ -178,21 +178,21 @@ let get_moore_neighbors cell cell_array =
   let x = cell.cell_x in
   let y = cell.cell_y in
   let neighbors = ref [] in
-  if 0 <= x-1 && y+1 < maxy then 
+  if 0 <= x-1 && y+1 < maxy then
     neighbors := (Up_Left, cell_array.(x-1).(y+1)) :: !neighbors;
-  if y+1 < maxy then 
+  if y+1 < maxy then
     neighbors := (Up, cell_array.(x).(y+1)) :: !neighbors;
-  if x+1 < maxx && y+1 < maxy then 
+  if x+1 < maxx && y+1 < maxy then
     neighbors := (Up_Right, cell_array.(x+1).(y+1)) :: !neighbors;
-  if x+1 < maxx then 
+  if x+1 < maxx then
     neighbors := (Right, cell_array.(x+1).(y)) :: !neighbors;
-  if x+1 < maxx && 0 <= y-1 then 
+  if x+1 < maxx && 0 <= y-1 then
     neighbors := (Down_Right, cell_array.(x+1).(y-1)) :: !neighbors;
-  if 0 <= y-1 then 
+  if 0 <= y-1 then
     neighbors := (Down, cell_array.(x).(y-1)) :: !neighbors;
-  if 0 <= x-1 && 0 <= y-1 then 
+  if 0 <= x-1 && 0 <= y-1 then
     neighbors := (Down_Left, cell_array.(x-1).(y-1)) :: !neighbors;
-  if 0 <= x-1 then 
+  if 0 <= x-1 then
     neighbors := (Left, cell_array.(x-1).(y)) :: !neighbors;
   !neighbors
 
@@ -202,21 +202,21 @@ let get_moore_neighbors_circular cell cell_array =
   let x = cell.cell_x + maxx in
   let y = cell.cell_y + maxy in
   let neighbors = ref [] in
-  neighbors := 
+  neighbors :=
     (Up_Left, cell_array.((x-1) mod maxx).((y+1) mod maxy)) :: !neighbors;
-  neighbors := 
+  neighbors :=
     (Up, cell_array.(x mod maxx).((y+1) mod maxy)) :: !neighbors;
-  neighbors := 
+  neighbors :=
     (Up_Right, cell_array.((x+1) mod maxx).((y+1) mod maxy)) :: !neighbors;
-  neighbors := 
+  neighbors :=
     (Right, cell_array.((x+1) mod maxx).(y mod maxy)) :: !neighbors;
-  neighbors := 
+  neighbors :=
     (Down_Right, cell_array.((x+1) mod maxx).((y-1) mod maxy)) :: !neighbors;
-  neighbors := 
+  neighbors :=
     (Down, cell_array.(x mod maxx).((y-1) mod maxy)) :: !neighbors;
-  neighbors := 
+  neighbors :=
     (Down_Left, cell_array.((x-1) mod maxx).((y-1) mod maxy)) :: !neighbors;
-  neighbors := 
+  neighbors :=
     (Left, cell_array.((x-1) mod maxx).(y mod maxy)) :: !neighbors;
   !neighbors
 
@@ -243,7 +243,7 @@ let process cell draw_cell get_neighbors cell_behavior
   pause;
   self.cell_neighborhood <- get_neighbors self cell_array;
   loop
-    if self.cell_status <> Status_Quiescent 
+    if self.cell_status <> Status_Quiescent
     then activate_neighborhood self self.cell_neighborhood
     else await immediate activation;
 (*    let activation <neighbors> in *)
@@ -258,26 +258,26 @@ let process cell draw_cell get_neighbors cell_behavior
 (* cell behaviors                                                         *)
 (**************************************************************************)
 
-let fredkin cell neighbors = 
+let fredkin cell neighbors =
   let cpt = ref 0 in
-  List.iter 
+  List.iter
     (fun info -> if info.status <> Status_Quiescent then incr cpt)
     neighbors;
-  cell.cell_status <- 
+  cell.cell_status <-
     if (!cpt mod 2) = 1 then Status_Active else Status_Quiescent
 
 let game_of_life cell neighbors =
   let cpt = ref 0 in
-  List.iter 
+  List.iter
     (fun info -> if info.status <> Status_Quiescent then incr cpt)
     neighbors;
-  cell.cell_status <- 
-    if cell.cell_status = Status_Quiescent && !cpt = 3 
-    then Status_Active 
+  cell.cell_status <-
+    if cell.cell_status = Status_Quiescent && !cpt = 3
+    then Status_Active
     else
       if cell.cell_status <> Status_Quiescent && !cpt <> 2 && !cpt <> 3
       then Status_Quiescent
-      else cell.cell_status 
+      else cell.cell_status
 
 let fire_behavior cell neighbors =
   match cell.cell_ext with
@@ -290,7 +290,7 @@ let fire_behavior cell neighbors =
       cell.cell_ext <- Fire_ash;
       cell.cell_status <- Status_Active
   | Fire_tree ->
-      if List.exists 
+      if List.exists
 	  (fun info -> info.info = Fire_fire)
 	  neighbors
       then
@@ -310,8 +310,8 @@ let srl_behavior cell =
       match cell.cell_ext.srl_state with
       | PSRL_stop ->
 	  cell.cell_status <- Status_Quiescent;
-	  cell.cell_ext.srl_state <- PSRL_none 
-      | PSRL_erase -> 
+	  cell.cell_ext.srl_state <- PSRL_none
+      | PSRL_erase ->
 	  cell.cell_status <- Status_Quiescent;
 	  cell.cell_ext.srl_state <- PSRL_none;
 *)
@@ -326,17 +326,17 @@ let cell_array_create tmp =
 let get_status_empty i j = Status_Quiescent, ()
 
 let get_status_center i j =
-  if i = !maxx/2 && j = !maxy/2 
+  if i = !maxx/2 && j = !maxy/2
   then Status_Active, ()
   else Status_Quiescent, ()
 
 let get_status_center_line i j =
-  if i = !maxx/2 
+  if i = !maxx/2
   then Status_Active, ()
   else Status_Quiescent, ()
 
 let get_status_center_line_wall i j =
-  if i = 0 or i = !maxx/2 or i = (!maxx-1) or j = 0 or j = (!maxy-1)  
+  if i = 0 or i = !maxx/2 or i = (!maxx-1) or j = 0 or j = (!maxy-1)
   then Status_Active, ()
   else Status_Quiescent, ()
 
@@ -349,7 +349,7 @@ let get_status_fire i j =
     else
       Status_Quiescent, Fire_empty
 
-let process cellular_automaton_start 
+let process cellular_automaton_start
     draw_cell get_neighbors get_status cell_behavior cell_array =
   for i = 0 to !maxx - 1 dopar
     for j = 0 to !maxy - 1 dopar
@@ -362,10 +362,10 @@ let process cellular_automaton_start
 (**************************************************************************)
 (* main                                                                   *)
 (**************************************************************************)
- 
+
 let behavior = ref "fire"
 
-let configure () = 
+let configure () =
   let doc_zoom = "<n> set the size of a cell"
   and doc_width = "<n> set the number of cells in the width"
   and doc_height = "<n> set the number of cells in the height"
@@ -400,12 +400,12 @@ let process main =
     | "gol" ->
 	signal tmp in
 	let cell_array = cell_array_create tmp in
-	let draw = 
-	  if ! nox then no_draw 
+	let draw =
+	  if ! nox then no_draw
 	  else draw_cell_gen color_of_status
 	in
-	run (cellular_automaton_start 
-	       draw 
+	run (cellular_automaton_start
+	       draw
 	       get_moore_neighbors_circular
 	       get_status_center_line_wall
 	       game_of_life
@@ -413,24 +413,24 @@ let process main =
     | "fredkin" ->
 	signal tmp in
 	let cell_array = cell_array_create tmp in
-	let draw = 
-	  if ! nox then no_draw 
+	let draw =
+	  if ! nox then no_draw
 	  else draw_cell_gen color_of_status
 	in
-	run (cellular_automaton_start 
+	run (cellular_automaton_start
 	       draw
 	       get_moore_neighbors_circular
-	       get_status_center 
+	       get_status_center
 	       fredkin
 	       cell_array);
     | "fredkin2" ->
 	signal tmp in
 	let cell_array = cell_array_create tmp in
-	let draw = 
-	  if ! nox then no_draw 
+	let draw =
+	  if ! nox then no_draw
 	  else draw_cell_gen color_of_status
 	in
-	run (cellular_automaton_start 
+	run (cellular_automaton_start
 	       draw
 	       get_von_neumann_neighbors
 	       get_status_center
@@ -439,11 +439,11 @@ let process main =
     | "fire" ->
 	signal tmp in
 	let cell_array = cell_array_create tmp in
-	let draw = 
-	  if ! nox then no_draw 
+	let draw =
+	  if ! nox then no_draw
 	  else draw_cell_gen color_of_fire_state
 	in
-	run (cellular_automaton_start 
+	run (cellular_automaton_start
 	       draw
 	       get_von_neumann_neighbors
 	       get_status_fire
@@ -454,8 +454,8 @@ let process main =
     ||
     if !nox then ()
     else
-      loop 
-	Graphics.synchronize (); 
+      loop
+	Graphics.synchronize ();
 	pause;
       end
   end

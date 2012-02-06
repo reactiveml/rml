@@ -28,11 +28,11 @@ let compile_decl_list module_name itf info_chan out_chan decl_list =
   (* expend externals *)
   let decl_list = List.map External.expend decl_list in
   (* front-end *)
-  let intermediate_code = 
-    Compiler.compile_implementation_front_end info_chan itf decl_list 
+  let intermediate_code =
+    Compiler.compile_implementation_front_end info_chan itf decl_list
   in
   (* the implementation *)
-  Compiler.compile_implementation_back_end info_chan out_chan module_name 
+  Compiler.compile_implementation_back_end info_chan out_chan module_name
     intermediate_code
 
 
@@ -56,7 +56,7 @@ let compile () =
       try
 (* 	Location.init lexbuf ""; *)
 	Lexer.update_loc lexbuf None 1 true 0;
-	let decl_list = Parse.interactive lexbuf in 
+	let decl_list = Parse.interactive lexbuf in
 	compile_decl_list module_name itf info_chan out_chan decl_list
       with x ->
 	Errors.report_error Format.err_formatter x;

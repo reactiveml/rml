@@ -29,28 +29,28 @@
 +
 +(* first modification: 2004-05-05 *)
 +(* modified by: Louis Mandel      *)
- 
+
  (***********************************************************************)
  (*                                                                     *)
 @@ -12,7 +38,7 @@
  (*                                                                     *)
  (***********************************************************************)
- 
+
 -(* $Id: lexer.mll,v 1.66 2003/08/25 13:15:47 doligez Exp $ *)
 +(* $Id$ *)
- 
+
  (* The lexer definition *)
- 
+
 @@ -34,18 +60,24 @@
- 
+
  (* The table of keywords *)
- 
+
 -let keyword_table =
 -  create_hashtable 149 [
 -    "and", AND;
 +let keyword_table = ((Hashtbl.create 149) : (string, token) Hashtbl.t);;
 +
-+List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok) 
++List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
 +  [ "and", AND;
      "as", AS;
      "assert", ASSERT;
@@ -124,13 +124,13 @@
      "asr", INFIXOP4("asr")
 -]
 +  ]
- 
+
  (* To buffer string literals *)
- 
+
 @@ -168,19 +216,6 @@
    in
    Char.chr (val1 * 16 + val2)
- 
+
 -(* Remove underscores from float literals *)
 -
 -let remove_underscores s =
@@ -145,7 +145,7 @@
 -  in remove 0 0
 -
  (* Update the current location with file name and line number. *)
- 
+
  let update_loc lexbuf file line absolute chars =
 @@ -275,7 +310,7 @@
    | int_literal

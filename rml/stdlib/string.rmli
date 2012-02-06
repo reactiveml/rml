@@ -20,7 +20,7 @@
 val length : string -> int
 (** Return the length (number of characters) of the given string. *)
 
-val get : string -> int -> char 
+val get : string -> int -> char
 (** [String.get s n] returns character number [n] in string [s].
    The first character is character number 0.
    The last character is character number [String.length s - 1].
@@ -28,14 +28,14 @@ val get : string -> int -> char
    0 to [(String.length s - 1)].
    You can also write [s.[n]] instead of [String.get s n]. *)
 
-val set : string -> int -> char -> unit 
+val set : string -> int -> char -> unit
 (** [String.set s n c] modifies string [s] in place,
    replacing the character number [n] by [c].
    Raise [Invalid_argument] if [n] is outside the range
    0 to [(String.length s - 1)].
    You can also write [s.[n] <- c] instead of [String.set s n c]. *)
 
-val create : int -> string 
+val create : int -> string
 (** [String.create n] returns a fresh string of length [n].
    The string initially contains arbitrary characters.
    Raise [Invalid_argument] if [n < 0] or [n > Sys.max_string_length].
@@ -154,9 +154,9 @@ val compare: t -> t -> int
 
 (**/**)
 
-val unsafe_get : string -> int -> char 
-val unsafe_set : string -> int -> char -> unit 
+val unsafe_get : string -> int -> char
+val unsafe_set : string -> int -> char -> unit
 val unsafe_blit :
-  string -> int -> string -> int -> int -> unit 
+  string -> int -> string -> int -> int -> unit
 val unsafe_fill :
-  string -> int -> int -> char -> unit 
+  string -> int -> int -> char -> unit

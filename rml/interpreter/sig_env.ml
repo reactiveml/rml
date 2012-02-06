@@ -42,7 +42,7 @@ module type S =
   end
 
 module Record  (*: S*)  =
-  struct 
+  struct
     type ('a, 'b) t =
 	{ mutable status: int;
 	  mutable value: 'b;
@@ -55,14 +55,14 @@ module Record  (*: S*)  =
     let absent = -2
 
     let create default combine =
-      { status = absent; 
+      { status = absent;
 	value = default;
-	pre_status = absent; 
+	pre_status = absent;
 	last = default;
 	default = default;
-	combine = combine; } 
+	combine = combine; }
 
-(* -------------------------- Access functions -------------------------- *) 
+(* -------------------------- Access functions -------------------------- *)
     let default n = n.default
     let status n = n.status = !instant
 
@@ -72,20 +72,20 @@ module Record  (*: S*)  =
       if n.status = !instant
       then n.pre_status = !instant - 1
       else n.status = !instant - 1
-	  
+
     let last n =
       if n.status = !instant
       then n.last
       else n.value
- 
+
     let pre_value n =
       if n.status = !instant
-      then 
-	if n.pre_status = !instant - 1 
+      then
+	if n.pre_status = !instant - 1
 	then n.last
 	else n.default
-      else 
-	if n.status = !instant - 1 
+      else
+	if n.status = !instant - 1
 	then n.value
 	else n.default
 
@@ -98,8 +98,8 @@ module Record  (*: S*)  =
 (* emit                                *)
 (***************************************)
     let emit n v =
-      if n.status <> !instant 
-      then 
+      if n.status <> !instant
+      then
 	(n.pre_status <- n.status;
 	 n.last <- n.value;
 	 n.status <- !instant;
@@ -116,12 +116,12 @@ module Record  (*: S*)  =
 
 
 module Class : S =
-  struct 
+  struct
 
     let to_update_list = ref []
 
     class virtual pur_event =
-      object 
+      object
 	val mutable status = false
 	val mutable pre_status = false
 	val mutable to_update = false
@@ -130,7 +130,7 @@ module Class : S =
 	method pre_status = pre_status
 
 	method virtual update : bool
-	  
+
       end
 
     class ['a, 'b] valued_event((default: 'b), (combine: ('a -> 'b -> 'b))) =
@@ -156,12 +156,12 @@ module Class : S =
 	  value <- combine v value
 
 
-        (* maj de l'etat de l'objet si necessaire et revoie "true" 
+        (* maj de l'etat de l'objet si necessaire et revoie "true"
 	    s'il doit etre mis a jour à l'instant suivant *)
 	method update =
 	  if to_update then
 	    begin
-	      if status then 
+	      if status then
 		begin
 		  last <- value;
 		  value <- default
@@ -171,7 +171,7 @@ module Class : S =
 	      to_update <- pre_status;
 	      pre_status
 	    end
-	  else 
+	  else
 	    false
       end
 
@@ -186,8 +186,8 @@ module Class : S =
 
     let create default combine =
       ((new valued_event (default, combine)) :> ('a, 'b) t)
- 
-(* -------------------------- Access functions -------------------------- *) 
+
+(* -------------------------- Access functions -------------------------- *)
     let default n = n#default
     let status n = n#status
 
@@ -196,7 +196,7 @@ module Class : S =
     let pre_status n = n#pre_status
 
     let pre_value n = if n#pre_status then n#last else n#default
-	  
+
     let last n = n#last
 
     let one n =
@@ -213,10 +213,10 @@ module Class : S =
 (***************************************)
 (* next                                *)
 (***************************************)
-    let next () = 
+    let next () =
       let next_to_update_list = ref [] in
       List.iter
-	(fun n -> 
+	(fun n ->
 	  if n#update then
 	    next_to_update_list := n :: !next_to_update_list)
 	!to_update_list;
@@ -226,7 +226,7 @@ module Class : S =
 
 
 module Hashtbl (*: S*) =
-  struct 
+  struct
     type ('a, 'b) t = string
 
     type ('a, 'b) event_struct =
@@ -251,56 +251,56 @@ module Hashtbl (*: S*) =
     let create default combine =
       let evt_id = gensym () in
       let evt_struct =
-	{ status = absent; 
+	{ status = absent;
 	  value = default;
-	  pre_status = absent; 
+	  pre_status = absent;
 	  last = default;
 	  default = default;
 	  combine = combine; }
       in
-      Hashtbl.add env evt_id 
+      Hashtbl.add env evt_id
 	(Obj.magic evt_struct: (alpha, beta) event_struct);
       evt_id
 
-(* -------------------------- Access functions -------------------------- *) 
-    let default n = 
-      let evt_struct = Obj.magic Hashtbl.find env n in 
+(* -------------------------- Access functions -------------------------- *)
+    let default n =
+      let evt_struct = Obj.magic Hashtbl.find env n in
       evt_struct.default
 
-    let status n = 
-      let evt_struct = Hashtbl.find env n in 
+    let status n =
+      let evt_struct = Hashtbl.find env n in
       evt_struct.status = !instant
 
-    let value n = 
-      let evt_struct = Obj.magic Hashtbl.find env n in 
+    let value n =
+      let evt_struct = Obj.magic Hashtbl.find env n in
       evt_struct.value
 
     let pre_status n =
-      let evt_struct = Obj.magic Hashtbl.find env n in 
+      let evt_struct = Obj.magic Hashtbl.find env n in
       if evt_struct.status = !instant
       then evt_struct.pre_status = !instant - 1
       else evt_struct.status = !instant - 1
-	  
+
     let last n =
-      let evt_struct = Obj.magic Hashtbl.find env n in 
+      let evt_struct = Obj.magic Hashtbl.find env n in
       if evt_struct.status = !instant
       then evt_struct.last
       else evt_struct.value
 
     let pre_value n =
-      let evt_struct = Obj.magic Hashtbl.find env n in 
+      let evt_struct = Obj.magic Hashtbl.find env n in
       if evt_struct.status = !instant
-      then 
+      then
 	if evt_struct.pre_status = !instant - 1
 	then evt_struct.last
 	else evt_struct.default
-      else 
+      else
 	if evt_struct.status = !instant - 1
 	then evt_struct.value
 	else evt_struct.default
-      
+
     let one n =
-      let evt_struct = Obj.magic Hashtbl.find env n in 
+      let evt_struct = Obj.magic Hashtbl.find env n in
       match evt_struct.value with
       | x :: _ -> x
       | _ -> assert false
@@ -309,9 +309,9 @@ module Hashtbl (*: S*) =
 (* emit                                *)
 (***************************************)
     let emit n v =
-      let n = Obj.magic (Hashtbl.find env n) in 
-      if n.status <> !instant 
-      then 
+      let n = Obj.magic (Hashtbl.find env n) in
+      if n.status <> !instant
+      then
 	(n.pre_status <- n.status;
 	 n.last <- n.value;
 	 n.status <- !instant;

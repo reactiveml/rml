@@ -19,12 +19,12 @@ let output =
     print_string " ";
     flush stdout;
     num := !num + 1;
-    if (!num > max) 
+    if (!num > max)
     then exit(0)
     else ()
 ;;
 (*********** prime numbers ************************)
-let rec process filter  = 
+let rec process filter  =
   let prime = ref 0 in
 (*  await me;*)
   prime := !global;
@@ -39,7 +39,7 @@ let rec process filter  =
      end)
 ;;
 (*********** main function ************************)
-let process main = 
+let process main =
   signal start in
   run (producer start)
   ||

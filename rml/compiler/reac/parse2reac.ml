@@ -36,8 +36,8 @@ open Parse_ident
 open Def_types
 open Types
 
-module Env = 
-  Symbol_table.Make 
+module Env =
+  Symbol_table.Make
     (struct
       type t = string
       let compare = compare
@@ -60,7 +60,7 @@ let rec translate_te typ =
 
     | Ptype_constr (cstr, te_list) ->
 	let gcstr = try (Modules.pfind_type_desc cstr.pident_id) with
-	| Modules.Desc_not_found -> 
+	| Modules.Desc_not_found ->
 	    unbound_type_err cstr.pident_id typ.pte_loc
 	in
 	Rtype_constr (gcstr, List.map translate_te te_list)
@@ -84,7 +84,7 @@ let rec translate_type_decl typ =
 	    let id = Ident.create Ident.gen_constr c.psimple_id Ident.Constr in
 	    let g = Modules.defined_global id (no_info()) in
 	    let _ = Modules.add_constr g in
-	    let typ = 
+	    let typ =
 	      match typ with
 	      | None -> None
 	      | Some typ -> Some (translate_te typ)
@@ -95,8 +95,8 @@ let rec translate_type_decl typ =
       Rtype_variant l
 
   | Ptype_record l ->
-      let l = 
-	List.map 
+      let l =
+	List.map
 	  (fun (lab, flag, typ) ->
 	    let id = Ident.create Ident.gen_label lab.psimple_id Ident.Label in
 	    let g = Modules.defined_global id (no_info()) in
@@ -107,7 +107,7 @@ let rec translate_type_decl typ =
       Rtype_record l
 
 (* Translation of a pattern :
-   The function returns the list of new variables and 
+   The function returns the list of new variables and
    the translation of the pattern.
    If a varible is bind twice an error is raised
    or_vars is the list of variables to bind
@@ -117,9 +117,9 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
     let vars, rpatt =
       match p.ppatt_desc with
       | Ppatt_any -> [], Rpatt_any
-	    
-      | Ppatt_var x -> 
-	  begin try 
+
+      | Ppatt_var x ->
+	  begin try
 	    let vp = List.assoc x.psimple_id or_vars in
 	    [(x.psimple_id, vp)], Rpatt_var vp
 	  with
@@ -127,31 +127,31 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
 	      let id =
 		Ident.create Ident.gen_var x.psimple_id Ident.Val_RML
 	      in
-	      if is_global 
-	      then 
+	      if is_global
+	      then
 		let gl = Modules.defined_global id (no_info()) in
 		let vp = Varpatt_global gl in
 		[(x.psimple_id, vp)], Rpatt_var vp
 	      else
 		let vp = Varpatt_local id in
 		[(x.psimple_id, vp)], Rpatt_var vp
-	  end  
+	  end
 
       | Ppatt_alias (patt,x) ->
 	  let vars, rpatt = translate_pattern or_vars is_global patt in
 	  if List.mem_assoc x.psimple_id vars
 	  then multiply_bound_variable_err x.psimple_id p.ppatt_loc
 	  else
-	    begin try 
+	    begin try
 	      let vp = List.assoc x.psimple_id or_vars in
 	      (x.psimple_id, vp) :: vars, Rpatt_alias (rpatt, vp)
 	    with
 	    | Not_found ->
-		let id = 
+		let id =
 		  Ident.create Ident.gen_var x.psimple_id Ident.Val_RML
 		in
-		if is_global 
-		then 
+		if is_global
+		then
 		  let gl = Modules.defined_global id (no_info()) in
 		  let vp = Varpatt_global gl in
 		  (x.psimple_id, vp) :: vars, Rpatt_alias (rpatt, vp)
@@ -159,35 +159,35 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
 		  let vp = Varpatt_local id in
 		  (x.psimple_id, vp) :: vars, Rpatt_alias (rpatt, vp)
 	    end
-	      
+
       | Ppatt_constant im -> [], Rpatt_constant im
-	    
+
       | Ppatt_tuple patt_list ->
-	  let vars, rpatt_list = 
-	    translate_pattern_list or_vars is_global patt_list 
+	  let vars, rpatt_list =
+	    translate_pattern_list or_vars is_global patt_list
 	  in
 	  vars, Rpatt_tuple rpatt_list
-	    
+
       | Ppatt_construct (constr, None) ->
 	  let gconstr = try Modules.pfind_constr_desc constr.pident_id with
-	  | Modules.Desc_not_found -> 
+	  | Modules.Desc_not_found ->
 	      unbound_constr_err constr.pident_id constr.pident_loc
 	  in
-	  [], Rpatt_construct (gconstr, None) 
-	    
+	  [], Rpatt_construct (gconstr, None)
+
       | Ppatt_construct (constr, Some patt) ->
 	  let gconstr = try Modules.pfind_constr_desc constr.pident_id with
-	  | Modules.Desc_not_found -> 
+	  | Modules.Desc_not_found ->
 	      unbound_constr_err constr.pident_id constr.pident_loc
 	  in
 	  let vars, rpatt = translate_pattern or_vars is_global patt in
-	  vars, Rpatt_construct (gconstr, Some rpatt) 
-	  
+	  vars, Rpatt_construct (gconstr, Some rpatt)
+
       | Ppatt_or (patt1, patt2) ->
 	  let vars1, rpatt1 = translate_pattern or_vars is_global patt1 in
 	  let vars2, rpatt2 = translate_pattern vars1 is_global patt2 in
 	  if List.for_all (fun (x,_) -> List.mem_assoc x vars1) vars2 &
-	    List.for_all (fun (x,_) -> List.mem_assoc x vars2) vars1 
+	    List.for_all (fun (x,_) -> List.mem_assoc x vars2) vars1
 	  then
 	    vars1, Rpatt_or (rpatt1, rpatt2)
 	  else
@@ -198,8 +198,8 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
 	  vars, Rpatt_record(l)
 
       | Ppatt_array patt_list ->
-	  let vars, rpatt_list = 
-	    translate_pattern_list or_vars is_global patt_list 
+	  let vars, rpatt_list =
+	    translate_pattern_list or_vars is_global patt_list
 	  in
 	  vars, Rpatt_array rpatt_list
 
@@ -217,15 +217,15 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
     let rec translate_pattern_list vars patt_list rpatt_list =
       match patt_list with
       | [] -> vars, rpatt_list
-	    
+
       | patt :: patt_list ->
 	  let new_vars, rpatt = translate_pattern or_vars is_global patt in
 	  let vars =
-	    List.fold_left 
-	      (fun acc ((x,_) as e)  -> 
-		if List.mem_assoc x vars 
+	    List.fold_left
+	      (fun acc ((x,_) as e)  ->
+		if List.mem_assoc x vars
 		then multiply_bound_variable_err x patt.ppatt_loc
-		else e::acc) 
+		else e::acc)
 	      vars new_vars
 	  in
 	  translate_pattern_list vars patt_list (rpatt::rpatt_list)
@@ -239,29 +239,29 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
     let rec translate_pattern_record vars lab_patt_list rlab_rpatt_list =
       match lab_patt_list with
       | [] -> vars, rlab_rpatt_list
-	    
+
       | (lab,patt) :: lab_patt_list ->
 	  let glab = try Modules.pfind_label_desc lab.pident_id with
-	  | Modules.Desc_not_found -> 
+	  | Modules.Desc_not_found ->
 	      unbound_label_err lab.pident_id lab.pident_loc
 	  in
 	  let new_vars, rpatt = translate_pattern or_vars is_global patt in
 	  let vars =
-	    List.fold_left 
-	      (fun acc ((x,_) as e)  -> 
-		if List.mem_assoc x vars 
+	    List.fold_left
+	      (fun acc ((x,_) as e)  ->
+		if List.mem_assoc x vars
 		then multiply_bound_variable_err x patt.ppatt_loc
-		else e::acc) 
+		else e::acc)
 	      vars new_vars
 	  in
-	  translate_pattern_record 
-	    vars 
-	    lab_patt_list 
+	  translate_pattern_record
+	    vars
+	    lab_patt_list
 	    ((glab,rpatt) :: rlab_rpatt_list)
     in
     fun lab_patt_list ->
-      let vars, rlab_rpatt_list = 
-	translate_pattern_record [] lab_patt_list [] 
+      let vars, rlab_rpatt_list =
+	translate_pattern_record [] lab_patt_list []
       in
       (vars, List.rev rlab_rpatt_list)
   in
@@ -274,10 +274,10 @@ let translate_ident env x =
       Rexpr_global (Modules.pfind_value_desc x.pident_id)
 
   | Pident s ->
-      try 
+      try
 	let id = Env.find s env in
-	Rexpr_local id 
-      with 
+	Rexpr_local id
+      with
       | Not_found ->
 	  Rexpr_global (Modules.pfind_value_desc x.pident_id)
 
@@ -285,10 +285,10 @@ let translate_ident env x =
 let rec translate env e =
   let rexpr =
     match e.pexpr_desc with
-    | Pexpr_ident x -> 
+    | Pexpr_ident x ->
 	begin
 	  try translate_ident env x with
-	  | Modules.Desc_not_found -> 
+	  | Modules.Desc_not_found ->
 	      unbound_variable_err x.pident_id e.pexpr_loc
 	end
 
@@ -301,7 +301,7 @@ let rec translate env e =
 		  rpatt, translate new_env expr)
 
     | Pexpr_let (rec_flag, patt_expr_list, expr) ->
-	let env, rpatt_rexpr_list = 
+	let env, rpatt_rexpr_list =
 	  translate_let false env rec_flag patt_expr_list
 	in
 	Rexpr_let (rec_flag, rpatt_rexpr_list, translate env expr)
@@ -314,18 +314,18 @@ let rec translate env e =
 	let rexpr_list = List.map (translate env) expr_list in
 	Rexpr_apply (rexpr, rexpr_list)
 
-    | Pexpr_tuple expr_list -> 
+    | Pexpr_tuple expr_list ->
 	let rexpr_list = List.map (translate env) expr_list in
 	Rexpr_tuple rexpr_list
 
     | Pexpr_construct (constr, expr_opt) ->
 	let gconstr = try Modules.pfind_constr_desc constr.pident_id with
-	| Modules.Desc_not_found -> 
+	| Modules.Desc_not_found ->
 	    unbound_constr_err constr.pident_id constr.pident_loc
-	in 
+	in
 	Rexpr_construct (gconstr, opt_map (translate env) expr_opt)
 
-    | Pexpr_array expr_list -> 
+    | Pexpr_array expr_list ->
 	let rexpr_list = List.map (translate env) expr_list in
 	Rexpr_array rexpr_list
 
@@ -334,17 +334,17 @@ let rec translate env e =
 
     | Pexpr_record_access (expr, lab) ->
 	let glab = try Modules.pfind_label_desc lab.pident_id with
-	| Modules.Desc_not_found -> 
+	| Modules.Desc_not_found ->
 	    unbound_label_err lab.pident_id lab.pident_loc
 	in
 	Rexpr_record_access (translate env expr, glab)
 
     | Pexpr_record_update (e1, lab, e2) ->
 	let glab = try Modules.pfind_label_desc lab.pident_id with
-	| Modules.Desc_not_found -> 
+	| Modules.Desc_not_found ->
 	    unbound_label_err lab.pident_id lab.pident_loc
 	in
-	Rexpr_record_update (translate env e1, 
+	Rexpr_record_update (translate env e1,
 			     glab,
 			     translate env e2)
 
@@ -362,7 +362,7 @@ let rec translate env e =
 	let tr_e2 = translate env e2 in
 	Rexpr_ifthenelse (tr_e1,
 			  tr_e2,
-			  make_expr (Rexpr_constant(Const_unit)) 
+			  make_expr (Rexpr_constant(Const_unit))
 			    Location.none)
 
     | Pexpr_ifthenelse (e1, e2, Some e3) ->
@@ -417,13 +417,13 @@ let rec translate env e =
     | Pexpr_default expr ->
 	Rexpr_default (translate env expr)
 
-    | Pexpr_emit s -> 
+    | Pexpr_emit s ->
 	Rexpr_emit (translate env s, None)
 
     | Pexpr_emit_val (s,expr) ->
 	Rexpr_emit (translate env s,
 		    Some (translate env expr))
-    
+
     | Pexpr_signal (sig_typ_list, None, expr) ->
 	(translate_signal env sig_typ_list None expr).expr_desc
     | Pexpr_signal (sig_typ_list, Some(e1,e2), expr) ->
@@ -447,7 +447,7 @@ let rec translate env e =
 
     | Pexpr_loop expr ->
 	Rexpr_loop (None, translate env expr)
-	  
+
     | Pexpr_par (e1, e2) ->
 	Rexpr_par [translate env e1;
 		   translate env e2]
@@ -462,8 +462,8 @@ let rec translate env e =
     | Pexpr_until (s, expr, patt_expr_opt) ->
 	Rexpr_until (translate_conf env s,
 		     translate env expr,
-		     opt_map 
-		       (translate_patt_expr env) 
+		     opt_map
+		       (translate_patt_expr env)
 		       patt_expr_opt)
 
     | Pexpr_when (s, expr) ->
@@ -472,7 +472,7 @@ let rec translate env e =
 
     | Pexpr_control (s, patt_expr_opt, expr) ->
 	Rexpr_control (translate_conf env s,
-		       opt_map 
+		       opt_map
 			 (translate_patt_expr env)
 			 patt_expr_opt,
 		       translate env expr)
@@ -483,7 +483,7 @@ let rec translate env e =
 		      translate env e2)
 
     | Pexpr_await (flag, s) ->
-	Rexpr_await (flag, 
+	Rexpr_await (flag,
 		     translate_conf env s)
 
     | Pexpr_await_val (flag, k, s, patt, expr) ->
@@ -492,7 +492,7 @@ let rec translate env e =
 	Rexpr_await_val (flag,
 			 k,
 			 translate env s,
-			 rpatt, 
+			 rpatt,
 			 translate new_env expr)
 
     | Pexpr_get _ ->
@@ -505,7 +505,7 @@ let rec translate env e =
 
 (* Translation of event configurations *)
 and translate_conf env c =
-  let rconf = 
+  let rconf =
     match c.pexpr_desc with
     | Pconf_present e -> Rconf_present (translate env e)
 
@@ -513,7 +513,7 @@ and translate_conf env c =
 	Rconf_and (translate_conf env conf1, translate_conf env conf2)
 
     | Pconf_or (conf1, conf2) ->
-	Rconf_or (translate_conf env conf1, translate_conf env conf2)    
+	Rconf_or (translate_conf env conf1, translate_conf env conf2)
 
     | _ -> Rconf_present (translate env c)
   in
@@ -523,21 +523,21 @@ and translate_conf env c =
 and translate_let is_global env rec_flag patt_expr_list =
   let patt_list, expr_list = List.split patt_expr_list in
   let new_vars, rpatt_list = translate_pattern_list is_global patt_list in
-  let tr_env = 
-    if rec_flag = Recursive 
-    then add_varpatt env new_vars 
-    else env 
+  let tr_env =
+    if rec_flag = Recursive
+    then add_varpatt env new_vars
+    else env
   in
   let rpatt_rexpr_list =
-    List.map2 
+    List.map2
       (fun rpatt expr -> rpatt,	translate tr_env expr)
       rpatt_list
       expr_list
   in
   let new_env =
-    if rec_flag <> Recursive 
-    then add_varpatt env new_vars 
-    else tr_env 
+    if rec_flag <> Recursive
+    then add_varpatt env new_vars
+    else tr_env
   in
   new_env, rpatt_rexpr_list
 
@@ -555,10 +555,10 @@ and translate_match =
 
 (* Translation of record *)
 and translate_record env lab_expr_list =
-  List.map 
+  List.map
     (fun (lab,expr) ->
       let glab = try Modules.pfind_label_desc lab.pident_id with
-      | Modules.Desc_not_found -> 
+      | Modules.Desc_not_found ->
 	  unbound_label_err lab.pident_id lab.pident_loc
       in
       (glab, translate env expr))
@@ -569,22 +569,22 @@ and translate_signal env sig_typ_list comb expr =
   match sig_typ_list with
   | [] -> translate env expr
   | (s,typ) :: sig_typ_list ->
-      let (id, rtyp) = 
-	Ident.create Ident.gen_var s.psimple_id Ident.Sig, 
-	opt_map translate_te typ 
+      let (id, rtyp) =
+	Ident.create Ident.gen_var s.psimple_id Ident.Sig,
+	opt_map translate_te typ
       in
       let env = Env.add s.psimple_id id env in
       make_expr
-	(Rexpr_signal 
-	   ((id, rtyp), 
-	    comb, 
+	(Rexpr_signal
+	   ((id, rtyp),
+	    comb,
 	    translate_signal env sig_typ_list comb expr))
 	Location.none
 
 (* Add a varpatt in the environment *)
 and add_varpatt env vars =
-  List.fold_left 
-    (fun env (x,vp) -> 
+  List.fold_left
+    (fun env (x,vp) ->
       match vp with
       | Varpatt_local id -> Env.add x id env
       | Varpatt_global gl -> Modules.add_value gl; env) env vars
@@ -597,35 +597,35 @@ let translate_type_declaration l =
       (fun (name, param, typ) ->
 	let id = Ident.create Ident.gen_type name.psimple_id Ident.Type in
 	let gl = Modules.defined_global id (no_info()) in
-	let info = { type_constr = { gi = gl.gi; 
-				     info = 
+	let info = { type_constr = { gi = gl.gi;
+				     info =
 				     Some {constr_abbr = Constr_notabbrev}};
 		     type_kind = Type_abstract;
 		     type_arity = List.length param; }
 	in
-	let _ = 
+	let _ =
 	  gl.info <- Some info;
-	  Modules.add_type gl 
+	  Modules.add_type gl
 	in
 	(gl, param, typ))
       l
-  in 
-  List.map 
+  in
+  List.map
     (fun (gl, param, typ) -> (gl, param, translate_type_decl typ))
     l_rename
 
 (* Translation of implementation item *)
 let translate_impl_item info_chan item =
   let ritem =
-    match item.pimpl_desc with 
+    match item.pimpl_desc with
     | Pimpl_expr expr -> Rimpl_expr (translate Env.empty expr)
 
     | Pimpl_let (flag, patt_expr_list) ->
-	let env, rpatt_rexpr_list = 
+	let env, rpatt_rexpr_list =
 	  translate_let true Env.empty flag patt_expr_list
 	in
 	Rimpl_let (flag, rpatt_rexpr_list)
-	  
+
     | Pimpl_signal (sig_typ_list, comb_opt) ->
 	Rimpl_signal
 	  (List.map
@@ -635,8 +635,8 @@ let translate_impl_item info_chan item =
 	       let _ = Modules.add_value gl in
 	       let rty_opt = opt_map translate_te ty_opt in
 	       let rcomb_opt =
-		 opt_map 
-		   (fun (e1,e2) -> 
+		 opt_map
+		   (fun (e1,e2) ->
 		     (translate Env.empty e1, translate Env.empty e2))
 		   comb_opt
 	       in
@@ -658,16 +658,16 @@ let translate_impl_item info_chan item =
 	let gl = Modules.defined_global id (no_info()) in
 	let _ = Modules.add_constr gl in
 	let gtype = try Modules.pfind_constr_desc gl_name.pident_id with
-	| Modules.Desc_not_found -> 
+	| Modules.Desc_not_found ->
 	    unbound_type_err gl_name.pident_id gl_name.pident_loc
 	in
 	Rimpl_exn_rebind(gl, gtype)
 
-    | Pimpl_open s -> 
+    | Pimpl_open s ->
 	Modules.open_module s;
 	Rimpl_open s
 
-    | Pimpl_lucky _ -> 
+    | Pimpl_lucky _ ->
 	raise (Internal (item.pimpl_loc,
 			 "Parse2reac.translate_impl_item: must be translated"))
 
@@ -676,9 +676,9 @@ let translate_impl_item info_chan item =
 
 (* Translation of interfacr item *)
 let translate_intf_item info_chan item =
-  let ritem = 
+  let ritem =
     match item.pintf_desc with
-    | Pintf_val (s, t) -> 
+    | Pintf_val (s, t) ->
 	let id = Ident.create Ident.gen_var s.psimple_id Ident.Val_ML in
 	let gl = Modules.defined_global id (no_info()) in
 	let _ = Modules.add_value gl in
@@ -694,7 +694,7 @@ let translate_intf_item info_chan item =
 	let _ = Modules.add_constr gl in
 	Rintf_exn (gl, opt_map translate_te typ)
 
-    | Pintf_open s -> 
+    | Pintf_open s ->
 	Modules.open_module s;
 	Rintf_open s
 

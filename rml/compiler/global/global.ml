@@ -42,7 +42,7 @@ let little_name_of_global g = Global_ident.little_name g.gi
 let no_info() = None
 
 let gi gl = gl.gi
-let info gl = 
+let info gl =
   match gl.info with
   | None -> assert false
   | Some i -> i

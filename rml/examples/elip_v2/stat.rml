@@ -26,14 +26,14 @@ let elip_search_level = ref 0
 
 
 let compute_anchor p =
-  List.fold_left 
-    (fun (anchor_cpt, level_cpt, ask_cpt) 
+  List.fold_left
+    (fun (anchor_cpt, level_cpt, ask_cpt)
 	(anchor, info_node_opt, level, nb_ask) ->
 	  (anchor_cpt + 1, level_cpt + level, ask_cpt + nb_ask))
     (0,0,0)
     p.anchors
 
-let packet_stat p = 
+let packet_stat p =
   let nb_anchor, level_sum, nb_ask = compute_anchor p in
   begin
     match p.header with
@@ -47,7 +47,7 @@ let packet_stat p =
     | H_ELIP info_opt ->
 	incr elip_packet_cpt;
 	elip_route_len := !elip_route_len + List.length p.route;
-	elip_overhead := !elip_overhead +. (float_of_int (search_overhead * p.overhead));	
+	elip_overhead := !elip_overhead +. (float_of_int (search_overhead * p.overhead));
 	elip_nb_anchor := !elip_nb_anchor + nb_anchor;
 	elip_nb_ask := !elip_nb_ask + nb_ask;
 	elip_search_level := !elip_search_level + level_sum;
@@ -56,8 +56,8 @@ let packet_stat p =
 	      (*elip_overhead := !elip_overhead +. (float_of_int (search_overhead
                * * p.overhead));*)
 	| Some info ->
-	    elip_overhead := 
-	      !elip_overhead +. 
+	    elip_overhead :=
+	      !elip_overhead +.
 		(float_of_int info.elip_overhead);
 	    (*	(float_of_int ((search_overhead * p.overhead) +
              *	info.elip_overhead));*)
@@ -107,10 +107,10 @@ let output_overhead overhead_ch =
   flush overhead_ch
 
 let output_route_len route_len_ch =
-  let le_avg = 
+  let le_avg =
     (float_of_int !le_route_len) /. (float_of_int !le_packet_cpt)
   in
-  let elip_avg = 
+  let elip_avg =
     (float_of_int !elip_route_len) /. (float_of_int !elip_packet_cpt)
   in
   output_string route_len_ch
@@ -120,18 +120,18 @@ let output_route_len route_len_ch =
   flush route_len_ch
 
 let output_anchor anchor_ch =
-  let le_nb_anchor_avg = 
+  let le_nb_anchor_avg =
     (float_of_int !le_nb_anchor) /. (float_of_int !le_packet_cpt)
   in
-  let elip_nb_anchor_avg = 
+  let elip_nb_anchor_avg =
     (float_of_int !elip_nb_anchor) /. (float_of_int !elip_packet_cpt)
   in
   output_string anchor_ch
     ((string_of_int !instant)^"\t"^
      (string_of_float (elip_nb_anchor_avg /. le_nb_anchor_avg))^"\t"^
-     (string_of_float 
+     (string_of_float
 	((float_of_int !elip_nb_ask)/.(float_of_int !le_nb_ask)))^"\t"^
-     (string_of_float 
+     (string_of_float
 	((float_of_int !elip_search_level)/.(float_of_int !le_search_level)))^
      "\n");
   flush anchor_ch
@@ -155,7 +155,7 @@ let instant_stat overhead_ch route_len_ch anchor_ch =
   reset()
 
 
-let process stat start = 
+let process stat start =
   let overhead_ch = open_out (prefix^"overhead") in
   let route_len_ch = open_out (prefix^"route_len") in
   let anchor_ch = open_out (prefix^"anchor") in

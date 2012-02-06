@@ -69,8 +69,8 @@
 # The Caml sources (including camlyacc and camllex source files)
 
 SOURCES =
-MAIN_FILE = 
-MAIN_PROCESS = 
+MAIN_FILE =
+MAIN_PROCESS =
 
 # The executable file to generate (default a.out under Unix)
 
@@ -80,7 +80,7 @@ EXEC = a.out
 ########################## Advanced user's variables #####################
 #
 # The ReactiveML and Caml compilers.
-# You may fix here the path to access the ReactiveML and Caml compilers 
+# You may fix here the path to access the ReactiveML and Caml compilers
 # on your machine
 RMLC = rmlc
 RMLDEP = rmldep
@@ -144,14 +144,14 @@ SOURCES2 = $(SOURCES1:.mll=.ml)
 OBJS = $(SOURCES2:.ml=.cmo)
 OPTOBJS = $(OBJS:.cmo=.cmx)
 
-$(EXEC): $(OBJS) 
+$(EXEC): $(OBJS)
 	$(CAMLC) $(CUSTOM) -o $(EXEC) -I `$(RMLC) -where` $(LIBS) $(OBJS)
 
 $(EXEC).opt: $(OPTOBJS)
 	$(CAMLOPT) -o $(EXEC).opt -I `$(RMLC) -where` $(LIBS:.cma=.cmxa) $(OPTOBJS)
 
 
-$(MAIN_FILE:.rml=.cmo): 
+$(MAIN_FILE:.rml=.cmo):
 	$(RMLC) -s $(MAIN_PROCESS) $(MAIN_FILE)
 	$(CAMLC) -c -I `$(RMLC) -where` $(MAIN_FILE:.rml=.ml)
 

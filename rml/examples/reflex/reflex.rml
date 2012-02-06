@@ -8,7 +8,7 @@ let measure_number = 3
 let process average update_average average_value =
   let measure_number = ref 0 in
   let total_time = ref 0 in
-  loop 
+  loop
     await update_average(n) in
     total_time := !total_time + n;
     incr measure_number;
@@ -16,10 +16,10 @@ let process average update_average average_value =
   end
 
 
-let process measure ready stop 
+let process measure ready stop
     ring_bell go_on go_off error display update_average =
-  (* step (1) 
-   * Wait for the [ready] signal. 
+  (* step (1)
+   * Wait for the [ready] signal.
    * The signal [ring_bell] is emitted if the signal [stop] is
    * emitted during the waiting *)
   do
@@ -31,8 +31,8 @@ let process measure ready stop
   until ready done;
 
   (* step (2)
-   * Wait for a random delay, and after the delay switch on 
-   * the go lamp. If the signal [stop] is emitted the signal 
+   * Wait for a random delay, and after the delay switch on
+   * the go lamp. If the signal [stop] is emitted the signal
    * [error] is emitted *)
   do
     for i = 0 to Random.int 1000 do
@@ -43,11 +43,11 @@ let process measure ready stop
 
   (* step (3)
    * Wait for the [stop] signal and conting the instants.
-   * Then the go lamp is turned off. The bell rings when 
+   * Then the go lamp is turned off. The bell rings when
    * the button [ready] is hit. *)
-   
+
   let time = ref 0 in
-  do 
+  do
     loop
       incr time;
       pause
@@ -63,13 +63,13 @@ let process measure ready stop
     emit update_average !time;
     emit go_off
   done
-  
-let process game_controller 
-    coin ready stop 
+
+let process game_controller
+    coin ready stop
     go_on go_off game_over_on game_over_off red_on red_off display ring_bell
     =
   signal error, end_measure in
-  loop 
+  loop
     pause
     ||
     await immediate coin;
@@ -79,25 +79,25 @@ let process game_controller
     emit game_over_off;
     emit display 0;
 
-    do 
+    do
       do
 	signal update_average, average_value default 0 gather (+) in
 	run (average update_average average_value)
 	||
 	for i = 1 to measure_number do
-	  run (measure 
+	  run (measure
 		 ready stop ring_bell go_on go_off error display update_average)
 	done;
 	(* normal end: wait a few seconds and display the average time *)
 	for i = 1 to pause_length do pause done;
-	emit display (last ?average_value); 
+	emit display (last ?average_value);
 	emit end_measure
-      until error (x) -> 
+      until error (x) ->
 	emit red_on;
 	emit go_off
       done
     until
-      end_measure 
+      end_measure
     done;
     emit game_over_on;
   end
@@ -113,14 +113,14 @@ let draw_frame (x1, y1, x2, y2) c =
 
 (* The mouse *)
 
-let process read_click click = 
+let process read_click click =
   signal button_down in
-  loop 
+  loop
     if Graphics.button_down() then emit button_down (Graphics.mouse_pos());
     pause
-  end  
+  end
   ||
-  loop 
+  loop
     present button_down then
       pause
     else
@@ -144,19 +144,19 @@ let process button frame mevent oclick =
 
 (* A lamp *)
 let process lamp frame c_on c_off on off =
-  loop 
+  loop
     await on;
     draw_frame frame c_on
   end
   ||
-  loop 
+  loop
     await off;
     draw_frame frame c_off
   end
 
 (* Bell *)
 let process bell ring_bell =
-  loop 
+  loop
     await ring_bell;
     print_string "Bip !";
     print_newline()
@@ -164,16 +164,16 @@ let process bell ring_bell =
 
 (* screen *)
 let process screen display =
-  loop 
+  loop
     await display (s_list) in
     List.iter (fun s -> print_int s; print_newline()) s_list
   end
 
 (* A reflex machine *)
 
-let process game_interface 
+let process game_interface
     go_on go_off game_over_on game_over_off red_on red_off display ring_bell
-    coin ready stop 
+    coin ready stop
     =
   Graphics.open_graph "";
   let max_x = Graphics.size_x () in
@@ -195,7 +195,7 @@ let process game_interface
   ||
   run (lamp red_frame Graphics.red Graphics.white red_on red_off)
   ||
-  run (lamp game_over_frame Graphics.red Graphics.green 
+  run (lamp game_over_frame Graphics.red Graphics.green
 	 game_over_on game_over_off)
   ||
   run (button ready_frame click ready)
@@ -216,18 +216,18 @@ let process game_interface
 (****************************************************************)
 
 let process game =
-  signal go_on, go_off, 
-    game_over_on, game_over_off, 
-    red_on, red_off, 
+  signal go_on, go_off,
+    game_over_on, game_over_off,
+    red_on, red_off,
     display, ring_bell,
     coin, ready, stop
-  in 
-  run 
-    (game_interface 
+  in
+  run
+    (game_interface
        go_on go_off game_over_on game_over_off red_on red_off display ring_bell
        coin ready stop )
   ||
-  run 
-    (game_controller 
-       coin ready stop 
+  run
+    (game_controller
+       coin ready stop
        go_on go_off game_over_on game_over_off red_on red_off display ring_bell)

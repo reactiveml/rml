@@ -63,7 +63,7 @@ val rgb : int -> int -> int -> color
    component [r], green component [g], and blue component [b].
    [r], [g] and [b] are in the range [0..255]. *)
 
-val set_color : color -> unit 
+val set_color : color -> unit
 (** Set the current drawing color. *)
 
 val background : color
@@ -130,7 +130,7 @@ val curveto : int * int -> int * int -> int * int -> unit
    the current point to point [d], with control points [b] and
    [c], and moves the current point to [d]. *)
 
-val draw_rect : int -> int -> int -> int -> unit 
+val draw_rect : int -> int -> int -> int -> unit
 (** [draw_rect x y w h] draws the rectangle with lower left corner
    at [x,y], width [w] and height [h].
    The current point is unchanged. *)
@@ -189,12 +189,12 @@ val draw_string : string -> unit
 
 val set_font : string -> unit
 (** Set the font used for drawing text.
-   The interpretation of the arguments to [set_font] 
+   The interpretation of the arguments to [set_font]
    is implementation-dependent. *)
 
 val set_text_size : int -> unit
 (** Set the character size used for drawing text.
-   The interpretation of the arguments to [set_text_size] 
+   The interpretation of the arguments to [set_text_size]
    is implementation-dependent. *)
 
 val text_size : string -> int * int
@@ -214,7 +214,7 @@ val fill_poly : (int * int) array -> unit
 
 val fill_arc :
   int -> int -> int -> int -> int -> int ->
-    unit 
+    unit
 (** Fill an elliptical pie slice with the current color. The
    parameters are the same as for {!Graphics.draw_arc}. *)
 
@@ -241,13 +241,13 @@ val transp : color
    of the corresponding point in the image. This allows superimposing
    an image over an existing background. *)
 
-val make_image : color array array -> image 
+val make_image : color array array -> image
 (** Convert the given color matrix to an image.
    Each sub-array represents one horizontal line. All sub-arrays
    must have the same length; otherwise, exception [Graphic_failure]
    is raised. *)
 
-val dump_image : image -> color array array 
+val dump_image : image -> color array array
 (** Convert an image to a color matrix. *)
 
 val draw_image : image -> int -> int -> unit
@@ -257,7 +257,7 @@ val get_image : int -> int -> int -> int -> image
 (** Capture the contents of a rectangle on the screen as an image.
    The parameters are the same as for {!Graphics.fill_rect}. *)
 
-val create_image : int -> int -> image 
+val create_image : int -> int -> image
 (** [create_image w h] returns a new image [w] pixels wide and [h]
    pixels tall, to be used in conjunction with [blit_image].
    The initial image contents are random, except that no point
@@ -278,7 +278,7 @@ type status =
     mouse_y : int;              (** Y coordinate of the mouse *)
     button : bool;              (** true if a mouse button is pressed *)
     keypressed : bool;          (** true if a key has been pressed *)
-    key : char;                 (** the character for the key pressed *) 
+    key : char;                 (** the character for the key pressed *)
   }
 (** To report events. *)
 
@@ -292,7 +292,7 @@ type event =
 (** To specify events to wait for. *)
 
 
-val wait_next_event : event list -> status 
+val wait_next_event : event list -> status
 (** Wait until one of the events specified in the given event list
    occurs, and return the status of the mouse and keyboard at
    that time. If [Poll] is given in the event list, return immediately
@@ -335,21 +335,21 @@ val auto_synchronize : bool -> unit
    on screen, and in a memory area (the ``backing store'').
    The backing store image is used to re-paint the on-screen
    window when necessary.
-   
+
    To avoid flicker during animations, it is possible to turn
    off on-screen drawing, perform a number of drawing operations
    in the backing store only, then refresh the on-screen window
    explicitly.
-   
+
    [auto_synchronize false] turns on-screen drawing off.  All
    subsequent drawing commands are performed on the backing store
    only.
-   
+
    [auto_synchronize true] refreshes the on-screen window from
    the backing store (as per [synchronize]), then turns on-screen
    drawing back on.  All subsequent drawing commands are performed
    both on screen and in the backing store.
-   
+
    The default drawing mode corresponds to [auto_synchronize true]. *)
 
 val synchronize : unit -> unit
@@ -358,7 +358,7 @@ val synchronize : unit -> unit
    window. *)
 
 
-val display_mode : bool -> unit 
+val display_mode : bool -> unit
 (** Set display mode on or off. When turned on, drawings are done
    in the graphics window; when turned off, drawings do not affect
    the graphics window.  This occurs independently of
@@ -366,7 +366,7 @@ val display_mode : bool -> unit
    below). Default display mode is on. *)
 
 
-val remember_mode : bool -> unit 
+val remember_mode : bool -> unit
 (** Set remember mode on or off. When turned on, drawings are done
    in the backing store; when turned off, the backing store is
    unaffected by drawings.  This occurs independently of drawing

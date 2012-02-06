@@ -58,13 +58,13 @@
 +open Parse_ast
 +open Asttypes
 +open Location
- 
+
  let fmt_position f l =
    if l.pos_fname = "" && l.pos_lnum = 1
 @@ -34,25 +49,28 @@
    if loc.loc_ghost then fprintf f " ghost";
  ;;
- 
+
 -let rec fmt_longident_aux f x =
 +let rec fmt_parseident_aux f x =
    match x with
@@ -75,7 +75,7 @@
 +  | Parse_ident.Pident (s) -> fprintf f "%s" s;
 +  | Parse_ident.Pdot (m, s) -> fprintf f "%s.%s" m s;
  ;;
- 
+
 -let fmt_longident f x = fprintf f "\"%a\"" fmt_longident_aux x;;
 +let fmt_parseident f x = fprintf f "\"%a\"" fmt_parseident_aux x;;
 +
@@ -84,7 +84,7 @@
 +let fmt_ident f x = fmt_parseident f x.pident_id;;
 +
 +let fmt_simple f x = fprintf f "%s" x.psimple_id;;
- 
+
  let fmt_constant f x =
    match x with
 +  | Const_unit -> fprintf f "Const_unit";
@@ -98,12 +98,12 @@
 -  | Const_nativeint (i) -> fprintf f "Const_nativeint %nd" i;
 +  | Const_float (fl) -> fprintf f "Const_float %f" fl;
  ;;
- 
+
  let fmt_mutable_flag f x =
 @@ -61,17 +79,10 @@
    | Mutable -> fprintf f "Mutable";
  ;;
- 
+
 -let fmt_virtual_flag f x =
 -  match x with
 -  | Virtual -> fprintf f "Virtual";
@@ -116,12 +116,12 @@
    | Recursive -> fprintf f "Rec";
 -  | Default -> fprintf f "Default";
  ;;
- 
+
  let fmt_direction_flag f x =
 @@ -80,10 +91,22 @@
    | Downto -> fprintf f "Down";
  ;;
- 
+
 -let fmt_private_flag f x =
 +let fmt_immediate_flag f x =
 +  match x with
@@ -142,12 +142,12 @@
 +  | All -> fprintf f "All"
 +  | One -> fprintf f "One"
  ;;
- 
+
  let line i f s (*...*) =
 @@ -101,530 +124,236 @@
        f (i+1) ppf x;
  ;;
- 
+
 -let longident i ppf li = line i ppf "%a\n" fmt_longident li;;
 +let parseident i ppf li = line i ppf "%a\n" fmt_parseident li;;
 +let ident i ppf li = line i ppf "%a\n" fmt_ident li;;
@@ -155,7 +155,7 @@
  let string i ppf s = line i ppf "\"%s\"\n" s;;
  let bool i ppf x = line i ppf "%s\n" (string_of_bool x);;
  let label i ppf x = line i ppf "label=\"%s\"\n" x;;
- 
+
 -let rec core_type i ppf x =
 -  line i ppf "core_type %a\n" fmt_location x.ptyp_loc;
 -  let i = i+1 in
@@ -281,7 +281,7 @@
 -      line i ppf "PPat_type";
 -      longident i ppf li
 +      type_expression i ppf ct
- 
+
 -and expression i ppf x =
 -  line i ppf "expression %a\n" fmt_location x.pexp_loc;
 +and ident_x_pattern i ppf (li, p) =
@@ -290,8 +290,8 @@
 +;;
 +
 +let rec expression i ppf x =
-+  line i ppf "expr %a\n" 
-+    fmt_location x.pexpr_loc; 
++  line i ppf "expr %a\n"
++    fmt_location x.pexpr_loc;
    let i = i+1 in
 -  match x.pexp_desc with
 -  | Pexp_ident (li) -> line i ppf "Pexp_ident %a\n" fmt_longident li;
@@ -404,7 +404,7 @@
 -  | Pexp_when (e1, e2) ->
 -      line i ppf "Pexp_when\n";
 +  | Pexpr_fordopar (s, e1, e2, df, e3) ->
-+      line i ppf "Pexpr_fordopar \"%a\" %a\n" 
++      line i ppf "Pexpr_fordopar \"%a\" %a\n"
 +	fmt_simple s fmt_direction_flag df;
        expression i ppf e1;
        expression i ppf e2;
@@ -442,7 +442,7 @@
        expression i ppf e;
 -  | Pexp_poly (e, cto) ->
 -      line i ppf "Pexp_poly\n";
-+  | Pexpr_nothing -> 
++  | Pexpr_nothing ->
 +      line i ppf "Pexpr_nothing\n";
 +  | Pexpr_pause ->
 +      line i ppf "Pexpr_pause\n";
@@ -833,7 +833,7 @@
 +      line i ppf "Pexpr_await %a\n" fmt_immediate_flag imf;
 +      expression i ppf s;
 +  | Pexpr_await_val (flag1, flag2, s, p, e) ->
-+      line i ppf "Pexpr_await_val %a %a\n" 
++      line i ppf "Pexpr_await_val %a %a\n"
 +	fmt_immediate_flag flag1 fmt_await_kind_flag flag2;
 +      expression i ppf s;
 +      pattern_x_expression_def i ppf (p,e);
@@ -846,7 +846,7 @@
 +  | Pexpr_default s ->
 +      line i ppf "Pexpr_default\n";
 +      expression i ppf s;
-+  | Pconf_present (e) -> 
++  | Pconf_present (e) ->
 +      line i ppf "Pconf_present\n";
 +      expression i ppf e
 +  | Pconf_and (e1,e2) ->
@@ -857,32 +857,32 @@
 +      line i ppf "Pconf_or\n";
 +      expression i ppf e1;
 +      expression i ppf e2
- 
+
  and pattern_x_expression_case i ppf (p, e) =
    line i ppf "<case>\n";
 @@ -636,48 +365,83 @@
    pattern (i+1) ppf p;
    expression (i+1) ppf e;
- 
+
 -and string_x_expression i ppf (s, e) =
 -  line i ppf "<override> \"%s\"\n" s;
 +and expression_arg  i ppf e =
 +  line i ppf "<arg>\n";
    expression (i+1) ppf e;
- 
+
 -and longident_x_expression i ppf (li, e) =
 -  line i ppf "%a\n" fmt_longident li;
 +and ident_x_expression i ppf (li, e) =
 +  line i ppf "%a\n" fmt_ident li;
    expression (i+1) ppf e;
- 
+
 -and label_x_expression i ppf (l,e) =
 -  line i ppf "<label> \"%s\"\n" l;
 -  expression (i+1) ppf e;
 +and string_x_type_expression_option i ppf (s, teo) =
 +  line i ppf "%a\n" fmt_simple s;
 +  option (i+1) type_expression ppf teo;
- 
+
 -and label_x_bool_x_core_type_list i ppf x =
 -  match x with
 -    Rtag (l, b, ctl) ->
@@ -895,7 +895,7 @@
 +  expression i ppf e1;
 +  expression i ppf e2
  ;;
- 
+
 -let rec toplevel_phrase i ppf x =
 +let rec type_declaration i ppf x =
 +  line i ppf "type_declaration \n";
@@ -907,7 +907,7 @@
 -  | Ptop_dir (s, da) ->
 -      line i ppf "Ptop_dir \"%s\"\n" s;
 -      directive_argument i ppf da;
-+  | Ptype_abstract -> 
++  | Ptype_abstract ->
 +      line i ppf "Ptype_abstract\n";
 +  | Ptype_rebind (te) ->
 +      line i ppf "Ptype_rebind\n";
@@ -918,7 +918,7 @@
 +  | Ptype_record (l) ->
 +      line i ppf "Ptype_record\n";
 +      list (i+1) string_x_mutable_flag_x_type_expression ppf l;
- 
+
 -and directive_argument i ppf x =
 -  match x with
 -  | Pdir_none -> line i ppf "Pdir_none\n"
@@ -934,15 +934,15 @@
 +  line i ppf "%a\n" fmt_simple s;
 +  option (i+1) type_expression ppf teo;
  ;;
- 
+
 -let interface ppf x = list 0 signature_item ppf x;;
- 
+
 -let implementation ppf x = list 0 structure_item ppf x;;
 +let rec impl_item i ppf x =
 +  line i ppf "impl_item %a\n" fmt_location x.pimpl_loc;
 +  let i = i+1 in
 +  match x.pimpl_desc with
-+  | Pimpl_expr (e) -> 
++  | Pimpl_expr (e) ->
 +      line i ppf "Pimpl_expr\n";
 +      expression i ppf e;
 +  | Pimpl_let (rf, l) ->
@@ -965,7 +965,7 @@
 +      line i ppf "Pimpl_open %s\n" s;
 +  | Pimpl_lucky (id, in_ty_list, out_ty_list, files) ->
 +      line i ppf "Pimpl_lucky ... A FAIRE ...\n";
-+      
++
 +
 +and string_x_string_list_x_type_expression_def i ppf (s,l,td) =
 +  line i ppf "<def> %a\n" fmt_simple s;
@@ -974,5 +974,5 @@
 +
 +and type_var i ppf x = line i ppf "\'%s" x
 +;;
- 
+
 -let top_phrase ppf x = toplevel_phrase 0 ppf x;;

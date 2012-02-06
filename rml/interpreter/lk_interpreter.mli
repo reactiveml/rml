@@ -29,16 +29,16 @@ module type S =
 
       exception RML
 
-      type ('a, 'b) event 
-      and event_cfg 
+      type ('a, 'b) event
+      and event_cfg
       and 'a step = 'a -> unit
       and control_tree
       and 'a process = 'a step -> control_tree -> unit step
       and join_point
 
       val rml_global_signal: unit -> ('a, 'a list) event
-      val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event 
-      val rml_expr_emit_pure: (unit, 'b) event -> unit 
+      val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+      val rml_expr_emit_pure: (unit, 'b) event -> unit
       val rml_expr_emit: ('a, 'b) event -> 'a -> unit
       val rml_pre_status: ('a, 'b) event -> bool
       val rml_pre_value: ('a, 'b) event -> 'b
@@ -80,10 +80,10 @@ module type S =
         ('a, 'b) event -> unit step -> control_tree -> 'c step
 
       val rml_get:
-        (unit -> ('a, 'b) event) -> ('b -> unit step) -> control_tree -> 
+        (unit -> ('a, 'b) event) -> ('b -> unit step) -> control_tree ->
 	  'c step
       val rml_get_v:
-        ('a, 'b) event -> ('b -> unit step) -> control_tree -> 
+        ('a, 'b) event -> ('b -> unit step) -> control_tree ->
 	  'c step
 
       val rml_await_immediate_one:
@@ -108,10 +108,10 @@ module type S =
 	  'c step
 
       val rml_await_all_match:
-        (unit -> ('a, 'b) event) -> ('b -> bool) -> ('b -> unit step) -> 
+        (unit -> ('a, 'b) event) -> ('b -> bool) -> ('b -> unit step) ->
 	  control_tree -> 'c step
       val rml_await_all_match_v:
-        ('a, 'b) event -> ('b -> bool) -> ('b -> unit step) -> 
+        ('a, 'b) event -> ('b -> bool) -> ('b -> unit step) ->
 	  control_tree -> 'c step
 
       val rml_present:
@@ -121,20 +121,20 @@ module type S =
 	  control_tree -> ('a, 'b) event ->
 	    unit step -> unit step -> 'c step
 
-      val rml_signal: (('a, 'a list) event -> unit step) -> 'b step 
+      val rml_signal: (('a, 'a list) event -> unit step) -> 'b step
 
-      val rml_signal_combine: 
+      val rml_signal_combine:
 	  (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
-	    (('a, 'b) event -> unit step) -> 'c step 
-      val rml_signal_combine_v_e: 
+	    (('a, 'b) event -> unit step) -> 'c step
+      val rml_signal_combine_v_e:
 	  'b -> (unit -> ('a -> 'b -> 'b)) ->
-	    (('a, 'b) event -> unit step) -> 'c step 
-      val rml_signal_combine_e_v: 
+	    (('a, 'b) event -> unit step) -> 'c step
+      val rml_signal_combine_e_v:
 	  (unit -> 'b) -> ('a -> 'b -> 'b) ->
-	    (('a, 'b) event -> unit step) -> 'c step 
-      val rml_signal_combine_v_v: 
+	    (('a, 'b) event -> unit step) -> 'c step
+      val rml_signal_combine_v_v:
 	  'b -> ('a -> 'b -> 'b) ->
-	    (('a, 'b) event -> unit step) -> 'c step 
+	    (('a, 'b) event -> unit step) -> 'c step
 
       val rml_split_par:
 	  int -> (join_point -> (unit step) list) -> 'a step
@@ -147,9 +147,9 @@ module type S =
 
       val rml_loop: ('a step -> unit step) ->  unit step
 
-      val rml_loop_n: 
+      val rml_loop_n:
 	  (unit -> int) -> ('a step -> unit step) -> unit step ->  unit step
-      val rml_loop_n_v: 
+      val rml_loop_n_v:
 	  int -> ('a step -> unit step) -> unit step ->  unit step
 
       val rml_match: (unit -> 'a) -> ('a -> unit step) -> 'b step
@@ -161,40 +161,40 @@ module type S =
       val rml_if: (unit -> bool) -> unit step -> unit step -> 'a step
       val rml_if_v: bool -> unit step -> unit step -> 'a step
 
-      val rml_while: 
+      val rml_while:
 	  (unit -> bool) -> ('a step -> unit step) -> unit step -> 'b step
 
-      val rml_for: 
-	  (unit -> int) -> (unit -> int) -> bool -> 
+      val rml_for:
+	  (unit -> int) -> (unit -> int) -> bool ->
 	    (int -> 'a step -> unit step) -> unit step -> 'b step
 
-      val rml_fordopar: 
-	  (unit -> int) -> (unit -> int) -> bool -> 
+      val rml_fordopar:
+	  (unit -> int) -> (unit -> int) -> bool ->
 	    (join_point -> int -> unit step) -> unit step -> 'b step
-	    
-      val rml_start_until: 
-	  control_tree -> (unit -> ('a, 'b) event) -> 
+
+      val rml_start_until:
+	  control_tree -> (unit -> ('a, 'b) event) ->
 	    (control_tree -> unit step) -> ('b -> unit step) -> 'c step
-      val rml_start_until_v: 
-	  control_tree -> ('a, 'b) event -> 
+      val rml_start_until_v:
+	  control_tree -> ('a, 'b) event ->
 	    (control_tree -> unit step) -> ('b -> unit step) -> 'c step
       val rml_end_until:
 	  control_tree -> 'a step -> 'a step
 
-      val rml_start_control: 
-	  control_tree -> (unit -> ('a, 'b) event) -> 
+      val rml_start_control:
+	  control_tree -> (unit -> ('a, 'b) event) ->
 	    (control_tree -> unit step) -> 'c step
-      val rml_start_control_v: 
-	  control_tree -> ('a, 'b) event -> 
+      val rml_start_control_v:
+	  control_tree -> ('a, 'b) event ->
 	    (control_tree -> unit step) -> 'c step
       val rml_end_control:
 	  control_tree -> 'a step -> 'a step
 
-      val rml_start_when: 
-	  control_tree -> (unit -> ('a, 'b) event) -> 
+      val rml_start_when:
+	  control_tree -> (unit -> ('a, 'b) event) ->
 	    (control_tree -> unit step) -> 'c step
-      val rml_start_when_v: 
-	  control_tree -> ('a, 'b) event -> 
+      val rml_start_when_v:
+	  control_tree -> ('a, 'b) event ->
 	    (control_tree -> unit step) -> 'c step
       val rml_end_when:
 	  control_tree -> 'a step -> 'a step

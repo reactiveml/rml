@@ -74,7 +74,7 @@ let letter = function        (* 'a' is all *)
 let check c =
   try ignore (String.index "acdeflmpsuvxACDEFLMPSUVX" c)
   with _ -> raise (Arg.Bad (Printf.sprintf "unknown warning option %c" c))
-;;    
+;;
 
 let active = Array.create 26 true;;
 let error = Array.create 26 false;;

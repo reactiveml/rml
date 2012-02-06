@@ -29,22 +29,22 @@
 +
 +(* first modification: 2004-05-08  *)
 +(* modified by: Louis Mandel *)
- 
+
  (***********************************************************************)
  (*                                                                     *)
 @@ -12,60 +38,33 @@
  (*                                                                     *)
  (***********************************************************************)
- 
+
 -(* $Id: errors.ml,v 1.25 2003/06/19 15:53:49 xleroy Exp $ *)
 -
 -(* WARNING: if you change something in this file, you must look at
 -   opterrors.ml to see if you need to make the same changes there.
 -*)
 +(* $Id$ *)
- 
+
  open Format
- 
+
 -(* Report an error *)
 -
  let report_error ppf exn =
@@ -102,14 +102,14 @@
 +    | Misc.Error -> ()
 +(*	fprintf ppf "@.Error." *)
 +    | Misc.Internal (loc,msg) ->
-+	if loc = Location.none 
++	if loc = Location.none
 +      	then fprintf ppf "@.Internal error: %s. \nPlease report it." msg
-+	else 
-+	  fprintf ppf "@.%aInternal error: %s. \nPlease report it." 
++	else
++	  fprintf ppf "@.%aInternal error: %s. \nPlease report it."
 +	    Location.print loc msg
 +    | Warnings.Errors (n) ->
 +	fprintf ppf "@.Error: %d error-enabled warnings occurred." n
-+    | x -> fprintf ppf "@]"; raise x 
++    | x -> fprintf ppf "@]"; raise x
 +  in
    fprintf ppf "@[%a@]@." report exn
 +

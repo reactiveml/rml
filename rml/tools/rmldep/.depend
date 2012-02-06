@@ -1,2 +1,2 @@
-rmldep.cmo: depend.cmo 
-rmldep.cmx: depend.cmx 
+rmldep.cmo: depend.cmo
+rmldep.cmx: depend.cmx
