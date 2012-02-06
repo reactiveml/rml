@@ -66,11 +66,10 @@ let read_rmlsim_lines inc =
   read_rmlsim_line inc []
 
 
-let read_rmlsim file =
+let read_rmlsim file filename =
   let inc = open_in (Pathname.to_string file) in
   let cmds = read_rmlsim_lines inc in
   close_in inc;
-  let filename = Pathname.mk (List.assoc "file" cmds) in
   tag_file filename ["simulation_file"];
   let specs = [A "-s"; A (List.assoc "sim" cmds)] in
   let specs =
@@ -85,8 +84,7 @@ let read_rmlsim file =
     else
       specs
   in
-  flag ["rml";"compile";"simulation_file"] (S specs);
-  filename
+  flag ["rml";"compile";"simulation_file"] (S specs)
 
 let mk_includes dir =
   let add_include acc i =
@@ -110,7 +108,8 @@ let declare_rmllib () =
 
 let link_rml extension env _build =
   let rmlsim_file = env "%.rmlsim" in
-  let main_file = read_rmlsim rmlsim_file in
+  let main_file = env "%.ml" in
+  let () = read_rmlsim rmlsim_file main_file in
   let byte_file = Pathname.update_extension extension main_file in
   let rml_byte_file = env ("%.rml."^extension) in
   declare_rmllib ();
