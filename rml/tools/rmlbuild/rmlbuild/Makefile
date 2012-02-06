@@ -54,9 +54,10 @@ promote:
 
 clean:
 	rm -rf $(BUILDDIR)
+	rm -rf _log _start
 
-distclean: clean
-	rm -rf _log _start ocamlbuild.byte.start boot/ocamlbuild
+realclean: clean
+	rm -rf ocamlbuild_Myocamlbuild_config.ml
 
 install: all install-prepare install-opt install-byte
 ifeq ($(TARGET), opt)

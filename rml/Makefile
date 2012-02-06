@@ -98,7 +98,7 @@ realclean: clean-distrib
 	(cd examples; make realclean)
 	rm -rf META
 	rm -rf config distrib/rml/rmlc.in distrib/rml/Makefile *~
-	touch config 
+	rm -rf configure-tools/rmlbuild.config
 
 cleanall: realclean
 

@@ -12,7 +12,8 @@ install:
 clean:
 	cd rmlbuild; make clean
 
-realclean: clean
+realclean:
+	cd rmlbuild; make realclean
 
 cleanall: realclean
 
