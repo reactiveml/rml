@@ -22,6 +22,7 @@ sig
   val add_current_next : next -> current -> unit
 
   val current_length : current -> int
+  val waiting_length : waiting_list -> int
 
   (*functions on waiting list*)
   val mk_waiting_list : unit -> waiting_list

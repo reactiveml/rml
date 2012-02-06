@@ -637,6 +637,8 @@ struct
     let l = !w in
     w := [];
     l
+  let waiting_length w =
+    List.length !w
 
   let mk_next () = ref ([]:unit Step.t list)
   let add_next p next =

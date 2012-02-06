@@ -656,11 +656,6 @@ struct
       f_cd
         *)
 
-    let await_all_children cd =
-      while !(cd.cd_remaining_async) <> 0 do
-        process_msgs ()
-      done
-
     (** Evaluates the condition of control nodes. This can be called several
         times for a same control node, zhen doing the eoi of several clocks.
         We can keep the last condition (if it was true for the eoi of the fast clock,
@@ -717,10 +712,15 @@ struct
       not (D.is_empty_next ctrl.next) || List.exists (has_next cd) ctrl.children
     (* Computes has_next, waiting for child clock domains if necessary *)
     and has_next_cd cd =
+      print_debug "Before Waiting: %d@." !(cd.cd_remaining_async);
       cd.cd_children_have_next <- false;
       let has_next_ctrl = has_next_children cd cd.cd_top in
       (* Awaits Mhas_next from all remote clock domains *)
-      await_all_children cd;
+      let site = get_site () in
+      while !(cd.cd_remaining_async) > 0 do
+        print_debug "Waiting for %d has_next msgs@." !(cd.cd_remaining_async);
+        Callbacks.dispatch_given_msg site.s_msg_queue site.s_callbacks (Mhas_next cd.cd_clock.ck_gid)
+      done;
       has_next_ctrl || cd.cd_children_have_next
 
 
@@ -748,8 +748,6 @@ struct
       print_debug "Eoi of clock domain %a@." print_cd cd;
       wake_up_now (Wbefore_eoi cd.cd_clock.ck_gid);
       cd.cd_eoi <- true;
-      (* if this is not the top clock domain, request all remote child clock domains
-         to send back Mhas_next *)
       eoi_control cd cd.cd_top;
       wake_up_now (Weoi cd.cd_clock.ck_gid);
       Msgs.broadcast_eoi cd.cd_clock.ck_gid;

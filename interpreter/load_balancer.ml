@@ -40,26 +40,38 @@ module Make (C : Communication.S) = struct
       site, ({< >} :> load_balancer)
   end
 
+  let sub_array_without a x =
+    let n = Array.length a - 1 in
+    let new_a = Array.make n x in
+    let cpt = ref 0 in
+    for i = 0 to n-1 do
+      if a.(!cpt) = x then
+        incr cpt;
+      new_a.(i) <- a.(!cpt);
+      incr cpt
+    done;
+    new_a
+
   class round_robin_balancer here sites =
   object(self)
     inherit load_balancer
 
-    val s_sites = sites
     val s_here = here
+    val s_sites = sites
     val mutable s_next_site = Array.length sites
+
     method new_child () =
-      let new_site =
+      let s, bal =
         if s_next_site = Array.length s_sites then (
-          s_next_site <- -1;
-          s_here
-        ) else
-          s_sites.(s_next_site)
+          s_next_site = -1;
+          s_here, new simple_load_balancer here s_sites
+        ) else (
+          let site = s_site.(s_next_site) in
+          site, new local_balancer site
+        )
       in
       s_next_site <- s_next_site + 1;
-      let new_balancer = {< s_here = new_site;
-                            s_sites = Array.copy s_sites;
-                            s_next_site = Array.length s_sites >} in
-      new_site, (new_balancer :> load_balancer)
+      s, bal
   end
 
   class all_remote_balancer sites =
@@ -70,12 +82,8 @@ module Make (C : Communication.S) = struct
     val mutable s_next_site = 0
     method new_child () =
       let new_site = s_sites.(s_next_site) in
-      s_next_site <- s_next_site + 1;
-      if s_next_site = Array.length s_sites then
-        s_next_site <- 0;
-      let new_balancer = {< s_sites = Array.copy s_sites;
-                            s_next_site = 0 >} in
-      new_site, (new_balancer :> load_balancer)
+      s_next_site <- (s_next_site + 1) mod (Array.length s_sites);
+      new_site, (new local_balancer new_site :> load_balancer)
   end
 
 
