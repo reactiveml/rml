@@ -28,7 +28,6 @@ module Make (P : Communication.TAG_TYPE) = struct
   module SiteMap = Map.Make (Site)
   module SiteSet = Set.Make (Site)
 
-
   let print_here ff () =
     Format.fprintf ff "%d" (Mpi.communicator_rank ())
 
@@ -72,33 +71,75 @@ module Make (P : Communication.TAG_TYPE) = struct
   let from_msg s =
     Marshal.from_string s 0
 
+
+  type send_buffer = ((gid tag * msg) list) SiteMap.t
+  type recv_buffer = (gid tag * msg) list
+
+  let get_send_buffer () =
+    (Local_ref.get 1:send_buffer ref)
+  let get_recv_buffer () =
+    (Local_ref.get 2:recv_buffer ref)
+
+  let _ =
+    Local_ref.init 1 (ref SiteMap.empty);
+    Local_ref.init 2 (ref [])
+
+  let do_send site (tag:gid tag) (msg:msg) =
+    let buffer = get_send_buffer () in
+    let msgs =
+      if SiteMap.mem site !buffer then
+        SiteMap.find site !buffer
+      else
+        []
+    in
+    let msgs = (tag, msg)::msgs in
+    if P.flush_after tag then (
+      (* really send the values *)
+      Mpi.send (List.rev msgs) site msg_tag;
+      buffer:= SiteMap.remove site !buffer
+    ) else
+      buffer := SiteMap.add site msgs !buffer
+
+  let flush () =
+    print_debug "Flushing all messages@.";
+    let buffer = get_send_buffer () in
+    SiteMap.iter (fun site msgs -> print_debug "Flusing %d messages@." (List.length msgs); Mpi.send (List.rev msgs) site msg_tag) !buffer;
+    buffer := SiteMap.empty
+
   let send_owner gid tag d =
     print_debug "%a: Send '%a' to gid '%a' at site '%d'@."
       print_here ()  print_tag tag  print_gid gid  gid.g_rank;
-    Mpi.send (tag, to_msg d) gid.g_rank msg_tag
+    do_send gid.g_rank tag (to_msg d)
 
   let send site tag d =
     print_debug "%a: Send '%a' to site '%a'@."
       print_here ()  print_tag tag  print_site site;
-    Mpi.send (tag, to_msg d) site msg_tag
+    do_send site tag (to_msg d)
 
   let broadcast tag d =
     for i = 0 to number_of_sites () - 1 do
       let s = nth_site i in
       if s <> local_site () then
-        send s tag d
+        do_send s tag (to_msg d)
     done
 
   let broadcast_set s tag d =
-    SiteSet.iter (fun site -> send site tag d) s
+    SiteSet.iter (fun site -> do_send site tag (to_msg d)) s
 
   let receive () =
-    let tag, (msg:msg) = Mpi.receive Mpi.any_source msg_tag in
-      print_debug "%a: Received '%a'@."
-        print_here ()  print_tag tag;
-      tag, msg
-
-  let flush () = ()
+    let buffer = get_recv_buffer () in
+    let tag, msg, msgs =
+      match !buffer with
+        | [] ->
+            let msgs:(gid tag*msg) list = Mpi.receive Mpi.any_source msg_tag in
+            (match msgs with
+              | [] -> print_debug "Received empty list@."; assert false
+              | (tag, msg)::msgs -> tag, msg, msgs)
+        | (tag, msg)::msgs -> tag, msg, msgs
+    in
+    print_debug "%a: Received '%a'@." print_here ()  print_tag tag;
+    buffer := msgs;
+    tag, msg
 end
 
 module Test = struct

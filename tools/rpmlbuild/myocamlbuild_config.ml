@@ -226,6 +226,8 @@ let rmlbuild_after_rules () =
 
       flag ["rml"; "compile"; "annot"] (A "-dtypes");
       flag ["rml"; "compile"; "lco_mpi"] (S [A "-runtime"; A "Lco_mpi"]);
+      flag ["rml"; "compile"; "lco_mpi_buffer"] (S [A "-runtime"; A "Lco_mpi_buffer"]);
+
 ;;
 
 let rml_lib ?(byte=true) ?(native=true) ?dir ?tag_name libpath =

@@ -6,6 +6,7 @@ Callbacks
 Dhandle
 Dhandle_typed
 Mpi_communication
+Mpi_buffer_communication
 Load_balancer
 Distributed_runtime
 Seq_runtime

@@ -1,6 +1,8 @@
 
 module type TAG_TYPE = sig
   type 'gid t
+
+  val flush_after : 'gid t -> bool
   val print : (Format.formatter -> 'gid -> unit) -> Format.formatter -> 'gid t -> unit
 end
 
@@ -48,6 +50,8 @@ module type S = sig
   val broadcast : gid tag -> 'a -> unit
   val send_owner : gid -> gid tag -> 'a -> unit
   val receive : unit -> gid tag * msg
+
+  val flush : unit -> unit
 end
 
 module type T = sig

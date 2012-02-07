@@ -859,3 +859,5 @@ module Lco_ctrl_tree_seq_interpreter =
 module Lco_ctrl_tree_mpi_interpreter =
   Rml_interpreter(Distributed_runtime.MpiRuntime)
 
+module Lco_ctrl_tree_mpi_buffer_interpreter =
+  Rml_interpreter(Distributed_runtime.MpiBufferedRuntime)

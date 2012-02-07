@@ -36,6 +36,11 @@ struct
           | Mcreate_signal
           | Msignal_created of 'gid
 
+      let flush_after tag = match tag with
+         | Mfinalize | Mdummy | Mhas_next _ | Mvalue _ | Mnew_cd | Mcd_created _
+         | Mreq_signal _ | Msignal_created _ | Mcreate_signal -> true
+         | _ -> false
+
       open Format
       let print print_gid ff m = match m with
         | Mdummy -> fprintf ff "Mdummy"
@@ -213,7 +218,8 @@ struct
     let process_msgs () =
       let site = get_site () in
       Callbacks.await_new_msg site.s_msg_queue;
-      Callbacks.dispatch_all site.s_msg_queue site.s_callbacks
+      Callbacks.dispatch_all site.s_msg_queue site.s_callbacks;
+      C.flush ()
 
     module Msgs = struct
       let mk_send_recv tag =
@@ -722,6 +728,7 @@ struct
       cd.cd_children_have_next <- false;
       let has_next_ctrl = has_next_children cd cd.cd_top in
       (* Awaits Mhas_next from all remote clock domains *)
+      C.flush ();
       let site = get_site () in
       while !(cd.cd_remaining_async) > 0 do
         print_debug "Waiting for %d has_next msgs@." !(cd.cd_remaining_async);
@@ -1094,9 +1101,8 @@ struct
       add_callback Mfinalize receive_finalize_site;
       s.s_msg_thread <- Some (Thread.create Callbacks.receive s.s_msg_queue)
 
-    let _ = init_site ()
-
     let start_slave () =
+      init_site ();
       while true do
         (*  Format.eprintf "Waiting for messages@."; *)
         process_msgs ()
@@ -1117,6 +1123,7 @@ struct
       terminate_site site
 
     let mk_top_clock_domain () =
+      init_site ();
       let ck = mk_clock None in
       let balancer = L.mk_top_balancer () in
       let cd = mk_clock_domain ck balancer None in
@@ -1366,3 +1373,11 @@ module MpiRuntime =
     (Seq_runtime.ListDataStruct)
     (Mpi_communication.Make)
     (Sig_env.Record)
+
+
+module MpiBufferedRuntime =
+  Make
+    (Seq_runtime.ListDataStruct)
+    (Mpi_buffer_communication.Make)
+    (Sig_env.Record)
+

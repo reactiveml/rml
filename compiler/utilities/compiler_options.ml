@@ -181,6 +181,12 @@ let set_runtime s =
       set_machine_kind "Distributed";
       set_translation Lco
 
+    | "Lco_mpi_buffer" ->
+      set_interpreter_impl "Lco_ctrl_tree_mpi_buffer_interpreter";
+      set_interpreter_module "Lco_ctrl_tree_n";
+      set_machine_kind "Distributed";
+      set_translation Lco
+
     | _ -> raise (Arg.Bad ("Invalid runtime:" ^ s))
 
 (* sets the display of the parse code *)
