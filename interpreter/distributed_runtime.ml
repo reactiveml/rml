@@ -170,7 +170,7 @@ struct
       C.print_gid ff ev.ev_gid
 
     let get_site () =
-      (Local_ref.get ():site)
+      (Local_ref.get 0:site)
 
     let find_waiting wk =
       let site = get_site () in
@@ -1085,7 +1085,7 @@ struct
         s_comm_site = C.local_site ();
        (* s_children = C.SiteSet.empty; *)
       } in
-      Local_ref.init s;
+      Local_ref.init 0 s;
       add_callback Mnew_cd create_cd;
       add_callback Mstep start_cd;
       add_callback Meoi receive_eoi;

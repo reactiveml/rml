@@ -1,17 +1,24 @@
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 
-value local_ref;
+#define MAX_REF_NUMBER 3
+value local_ref[MAX_REF_NUMBER];
 
-value caml_mpi_init_local_ref(value v)
+value caml_mpi_init_local_ref(value idx, value v)
 {
-  local_ref = v;
-  caml_register_generational_global_root(&local_ref);
+  CAMLparam2(idx, v);
 
-  return Val_unit;
+  int i = Int_val(idx);
+  local_ref[i] = v;
+  caml_register_generational_global_root(&local_ref[i]);
+
+  CAMLreturn(Val_unit);
 }
 
-value caml_mpi_get_local_ref(value unit)
+value caml_mpi_get_local_ref(value idx)
 {
-  return local_ref;
+  CAMLparam1(idx);
+  int i = Int_val(idx);
+
+  CAMLreturn(local_ref[i]);
 }
