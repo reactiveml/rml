@@ -84,7 +84,7 @@ value caml_mpi_receive(value src, value tag)
 #ifdef SEMI_ACTIVE_WAITING
   while (!msg_received) {
     MPI_Iprobe(Int_val(src), Int_val(tag), MPI_COMM_WORLD, &msg_received, &status);
-    if (!msg_received) { usleep(ACTIVE_WAITING_DELAY); };
+    if (!msg_received) { usleep(SEMI_ACTIVE_WAITING_DELAY); };
   }
 #else
   MPI_Probe(Int_val(src), Int_val(tag), MPI_COMM_WORLD, &status);
