@@ -27,6 +27,7 @@ module type S = sig
 
   val is_master : unit -> bool
   val local_site : unit -> site
+  val site_of_gid : gid -> site
   (* number of slave sites (master site not included) *)
   val number_of_sites : unit -> int
   (* returns the nth slave site (n < number_of_sites) *)
@@ -41,6 +42,8 @@ module type S = sig
   val from_msg : msg -> 'a
 
   val send : site -> gid tag -> 'a -> unit
+    (* broadcast to all the sites in the set *)
+  val broadcast_set : SiteSet.t -> gid tag -> 'a -> unit
     (* broadcast to everybody except master site and the current site *)
   val broadcast : gid tag -> 'a -> unit
   val send_owner : gid -> gid tag -> 'a -> unit

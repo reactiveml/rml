@@ -80,6 +80,8 @@ module Make (P : TAG_TYPE) = struct
   let local_site () =
     Mpi.communicator_rank ()
 
+  let site_of_gid { g_rank = r } = r
+
   let is_master () =
     local_site () = !Runtime_options.min_rank
 
@@ -123,6 +125,9 @@ module Make (P : TAG_TYPE) = struct
       if s <> local_site () then
         send s tag d
     done
+
+  let broadcast_set s tag d =
+    SiteSet.iter (fun site -> send site tag d) s
 
   let receive () =
     let tag, (msg:msg) = Mpi.receive Mpi.any_source msg_tag in

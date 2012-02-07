@@ -27,6 +27,7 @@ struct
           | Mreq_has_next of 'gid
           | Mhas_next of 'gid
               (* Whether there is processes to execute in the next local step *)
+          | Mnew_remote of 'gid
               (* signals *)
           | Memit of 'gid (* Emit a value *)
           | Mvalue of 'gid (* Send the value of the signal to child cd *)
@@ -50,6 +51,7 @@ struct
         | Mnext_instant -> fprintf ff "Mnext_instant"
         | Mreq_has_next gid -> fprintf ff "Mreq_has_next %a" print_gid gid
         | Mhas_next gid -> fprintf ff "Mhas_next %a" print_gid gid
+        | Mnew_remote gid -> fprintf ff "Mnew_remote %a" print_gid gid
             (* Whether there is processes to execute in the next local step *)
         (* signals *)
         | Memit gid -> fprintf ff "Memit %a" print_gid gid
@@ -144,7 +146,7 @@ struct
           mutable cd_children_have_next : bool;
           mutable cd_remaining_async : int ref;
           mutable cd_emitted_signals : C.GidSet.t; (* signals emitted during current step *)
-          (* mutable cd_remotes : C.SiteSet.t; (* remotes with child clock domains*) *)
+          mutable cd_remotes : C.SiteSet.t; (* remotes with child clock domains*)
         }
 
     type site = {
@@ -219,8 +221,8 @@ struct
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
 
-      let mk_broadcast_recv tag =
-        let broadcast (d:'a) = C.broadcast tag d in
+      let mk_broadcast_set_recv tag =
+        let broadcast s (d:'a) = C.broadcast_set s tag d in
         let recv = (C.from_msg : C.msg -> 'a) in
         broadcast, recv
 
@@ -249,18 +251,22 @@ struct
         let send id (d:'a) = C.send_owner id (Mpauseclock id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
-      let broadcast_eoi, recv_eoi = mk_broadcast_recv Meoi
+      let broadcast_eoi, recv_eoi = mk_broadcast_set_recv Meoi
       let send_eoi_control, recv_eoi_control =
         let send id (d:'a) = C.send_owner id (Meoi_control id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
-      let broadcast_next_instant, recv_next_instant = mk_broadcast_recv Mnext_instant
+      let broadcast_next_instant, recv_next_instant = mk_broadcast_set_recv Mnext_instant
       let send_has_next, recv_has_next =
         let send id (d:'a) = C.send_owner id (Mhas_next id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
       let send_req_has_next, recv_req_has_next =
         let send id (d:'a) = C.send_owner id (Mreq_has_next id) d in
+        let recv = (C.from_msg : C.msg -> 'a) in
+        send, recv
+      let send_new_remote, recv_new_remote =
+        let send id (d:'a) = C.send_owner id (Mnew_remote id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
       let send_req_signal, recv_req_signal =
@@ -613,7 +619,7 @@ struct
         cd_load_balancer = balancer;
         cd_remaining_async = ref 0;
         cd_emitted_signals = C.GidSet.empty;
-       (* cd_remotes = C.SiteSet.empty; *)
+        cd_remotes = C.SiteSet.empty;
       } in
       site.s_clock_domains <- C.GidMap.add clock.ck_gid cd site.s_clock_domains;
       cd.cd_top.last_activation <- Clock.save_clock_state cd.cd_clock;
@@ -750,14 +756,14 @@ struct
       cd.cd_eoi <- true;
       eoi_control cd cd.cd_top;
       wake_up_now (Weoi cd.cd_clock.ck_gid);
-      Msgs.broadcast_eoi cd.cd_clock.ck_gid;
+      Msgs.broadcast_eoi cd.cd_remotes cd.cd_clock.ck_gid;
       List.iter wake_up_now cd.cd_wake_up;
       cd.cd_wake_up <- []
 
     let next_instant cd =
       print_debug "Next instant of clock domain %a@." print_cd cd;
       (* next instant of child clock domains *)
-      Msgs.broadcast_next_instant cd.cd_clock;
+      Msgs.broadcast_next_instant cd.cd_remotes cd.cd_clock;
       (*increment the clock after sending because the receiver will increment it*)
       E.next (get_clock cd.cd_clock.ck_clock);
       wake_up_now (Wnext_instant cd.cd_clock.ck_gid);
@@ -902,6 +908,20 @@ struct
       (* wake up cd to emit the done message *)
       wake_up_cd_if_done cd
 
+    let update_remote_set cd site =
+      if not (C.SiteSet.mem site cd.cd_remotes) then (
+        print_debug "Adding site %a to remote sites of %a@." C.print_site site  print_cd cd;
+        cd.cd_remotes <- C.SiteSet.add site cd.cd_remotes;
+        (* propagate the information to the parent *)
+        match cd.cd_clock.ck_parent with
+          | None -> ()
+          | Some pck -> Msgs.send_new_remote pck.ck_gid site
+      )
+
+    (* After receiving Mnew_remote *)
+    let receive_new_remote cd msg =
+      let site = Msgs.recv_new_remote msg in
+      update_remote_set cd site
 
     let init_clock_domain clock balancer parent_ctrl =
       let cd = mk_clock_domain clock balancer parent_ctrl in
@@ -909,6 +929,7 @@ struct
         add_callback (Meoi_control clock.ck_gid) (receive_eoi_control cd);
         add_callback (Mreq_has_next clock.ck_gid) (receive_req_has_next cd);
         add_callback (Mpauseclock clock.ck_gid) (gather_pauseclock cd);
+        add_callback (Mnew_remote clock.ck_gid) (receive_new_remote cd);
         cd
 
     let end_clock_domain new_cd new_ctrl f_k () =
@@ -956,6 +977,7 @@ struct
       let new_ck = Msgs.recv_cd_created msg in
       print_debug "--%a" print_cd cd;
       decr cd.cd_remaining_async;
+      update_remote_set cd (C.site_of_gid new_ck.ck_gid);
       let new_ctrl = new_ctrl (Clock_domain new_ck) in
       (* add local callbacks *)
       Callbacks.add_callback ~kind:Callbacks.Once
