@@ -38,7 +38,7 @@ while : ; do
         esac
         shift;;
     -debug)
-        debug='-g -annot';
+        debug='-g -dtypes';
         shift;
         break;;
     -target|--target)
@@ -54,6 +54,7 @@ Options: [defaults in brackets after descriptions]
   --libdir DIR            object code libraries in DIR [PREFIX/lib]
   --mandir DIR            man documentation in DIR [PREFIX/man]
   --target TARGET         [byte]
+  --debug                 add "-g -dtypes" to ocaml flags
   --help                  print this message
 EOF
 	exit 0;;
