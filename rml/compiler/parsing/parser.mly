@@ -218,6 +218,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token DOWNTO              /* "downto" */
 %token ELSE                /* "else" */
 %token EMIT                /* "emit" */
+%token BANGEMIT            /* "!emit" */
 %token END                 /* "end" */
 %token EOF
 %token EQUAL               /* "=" */
@@ -576,10 +577,14 @@ expr:
       { mkexpr(Pexpr_last $3) }
   | DEFAULT QUESTION simple_expr
       { mkexpr(Pexpr_default $3) }
+  | BANGEMIT simple_expr
+      { mkexpr(Pexpr_emit (true, $2) ) }
+  | BANGEMIT simple_expr simple_expr
+      { mkexpr(Pexpr_emit_val (true, $2, $3)) }
   | EMIT simple_expr
-      { mkexpr(Pexpr_emit $2 ) }
+      { mkexpr(Pexpr_emit (false, $2) ) }
   | EMIT simple_expr simple_expr
-      { mkexpr(Pexpr_emit_val($2, $3)) }
+      { mkexpr(Pexpr_emit_val (false, $2, $3)) }
   | SIGNAL signal_comma_list IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr

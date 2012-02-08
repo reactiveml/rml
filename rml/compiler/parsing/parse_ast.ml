@@ -71,8 +71,8 @@ and expression_desc =
   | Pexpr_nothing
   | Pexpr_pause
   | Pexpr_halt
-  | Pexpr_emit of expression
-  | Pexpr_emit_val of expression * expression
+  | Pexpr_emit of bool * expression
+  | Pexpr_emit_val of bool * expression * expression
   | Pexpr_loop of expression
   | Pexpr_par of expression * expression
   | Pexpr_merge of expression * expression

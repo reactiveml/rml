@@ -299,6 +299,7 @@ rule token = parse
         if Hashtbl.mem keyword_table name then
           raise (Error(Keyword_as_label name, Location.curr lexbuf));
         OPTLABEL name }
+  | "!emit" { BANGEMIT }
   | lowercase identchar *
       { let s = Lexing.lexeme lexbuf in
           try

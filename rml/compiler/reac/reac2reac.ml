@@ -203,15 +203,15 @@ let expr_map  =
       | Rexpr_halt _ ->
 	  f expr
 
-      | Rexpr_emit (e, None) ->
+      | Rexpr_emit (a, e, None) ->
 	  let e' = expr_map f e in
-	  f (make_expr_all (Rexpr_emit (e', None)) typ static reactivity loc)
+	  f (make_expr_all (Rexpr_emit (a, e', None)) typ static reactivity loc)
 
-      | Rexpr_emit (e1, Some e2) ->
+      | Rexpr_emit (a, e1, Some e2) ->
 	  let e1' = expr_map f e1 in
 	  let e2' = expr_map f e2 in
 	  f (make_expr_all
-	       (Rexpr_emit (e1', Some e2')) typ static reactivity loc)
+	       (Rexpr_emit (a, e1', Some e2')) typ static reactivity loc)
 
       | Rexpr_loop (n_opt, e) ->
 	  let n_opt' = Misc.opt_map (expr_map f) n_opt in

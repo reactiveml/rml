@@ -130,6 +130,10 @@ let simple i ppf li = line i ppf "%a\n" fmt_simple li;;
 let string i ppf s = line i ppf "\"%s\"\n" s;;
 let bool i ppf x = line i ppf "%s\n" (string_of_bool x);;
 let label i ppf x = line i ppf "label=\"%s\"\n" x;;
+let bang i ppf a x =
+  line i ppf "";
+  if a then fprintf ppf "!";
+  fprintf ppf x
 
 let rec type_expression i ppf x =
   line i ppf "type_expression %a\n" fmt_location x.pte_loc;
@@ -276,11 +280,11 @@ let rec expression i ppf x =
       line i ppf "Pexpr_pause\n";
   | Pexpr_halt ->
       line i ppf "Pexpr_halt\n";
-  | Pexpr_emit (e) ->
-      line i ppf "Pexpr_emit";
+  | Pexpr_emit (a,e) ->
+      bang i ppf a "Pexpr_emit\n";
       expression i ppf e;
-  | Pexpr_emit_val (e1,e2) ->
-      line i ppf "Pexpr_emit_val\n";
+  | Pexpr_emit_val (a,e1,e2) ->
+      bang i ppf a "Pexpr_emit_val\n";
       expression i ppf e1;
       expression i ppf e2;
   | Pexpr_loop (e) ->

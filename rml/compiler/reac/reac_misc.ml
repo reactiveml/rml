@@ -251,10 +251,10 @@ let expr_free_vars e =
 
     | Rexpr_halt _ -> ()
 
-    | Rexpr_emit (e, None) ->
+    | Rexpr_emit (_, e, None) ->
 	expr_free_vars vars e
 
-    | Rexpr_emit (e1, Some e2) ->
+    | Rexpr_emit (_, e1, Some e2) ->
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
 

@@ -79,7 +79,7 @@ and expression_desc =
   | Rexpr_nothing
   | Rexpr_pause of continue_begin_of_instant
   | Rexpr_halt of continue_begin_of_instant
-  | Rexpr_emit of expression * expression option
+  | Rexpr_emit of bool * expression * expression option
   | Rexpr_loop of expression option * expression
   | Rexpr_fordopar of
       ident * expression * expression * direction_flag * expression

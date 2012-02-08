@@ -260,9 +260,9 @@ let rec translate_ml e =
     | Rexpr_default s ->
 	Coexpr_default (translate_ml s)
 
-    | Rexpr_emit (s, None) -> Coexpr_emit (translate_ml s)
+    | Rexpr_emit (_, s, None) -> Coexpr_emit (translate_ml s)
 
-    | Rexpr_emit (s, Some e) ->
+    | Rexpr_emit (_, s, Some e) ->
 	Coexpr_emit_val (translate_ml s, translate_ml e)
 
     | Rexpr_signal ((s,typ), comb, e) ->
@@ -293,9 +293,9 @@ and translate_proc p =
 
 	| Rexpr_halt kboi -> Coproc_halt kboi
 
-	| Rexpr_emit (s, None) -> Coproc_emit (translate_ml s)
+	| Rexpr_emit (_, s, None) -> Coproc_emit (translate_ml s)
 
-	| Rexpr_emit (s, Some e) ->
+	| Rexpr_emit (_, s, Some e) ->
 	    Coproc_emit_val (translate_ml s, translate_ml e)
 
 	| Rexpr_loop (n_opt, proc) ->

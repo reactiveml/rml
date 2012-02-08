@@ -258,9 +258,9 @@ let rec translate_ml e =
     | Rexpr_default s ->
 	Kexpr_default (translate_ml s)
 
-    | Rexpr_emit (s, None) -> Kexpr_emit (translate_ml s)
+    | Rexpr_emit (_, s, None) -> Kexpr_emit (translate_ml s)
 
-    | Rexpr_emit (s, Some e) ->
+    | Rexpr_emit (_, s, Some e) ->
 	Kexpr_emit_val (translate_ml s, translate_ml e)
 
     | Rexpr_signal ((s,typ), comb, e) ->
@@ -291,9 +291,9 @@ and translate_proc e k (ctrl: ident) =
 
 	| Rexpr_halt kboi -> Kproc_halt kboi
 
-	| Rexpr_emit (s, None) -> Kproc_emit (translate_ml s, k)
+	| Rexpr_emit (_, s, None) -> Kproc_emit (translate_ml s, k)
 
-	| Rexpr_emit (s, Some e) ->
+	| Rexpr_emit (_, s, Some e) ->
 	    Kproc_emit_val (translate_ml s, translate_ml e, k)
 
 (* C_k[loop p] = loop (fun k' -> C_k'[p])                                  *)

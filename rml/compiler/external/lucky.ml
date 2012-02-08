@@ -146,7 +146,8 @@ let emit_outputs =
 			     (make_var_patt "x")))]),
     if is_valued ty then
       make_expr (Pexpr_emit_val
-		   (make_expr
+		   (false,
+                    make_expr
 		      (Pexpr_ident(make_ident
 				     (Pident ("evt_"^
 					      id.psimple_id^
@@ -158,7 +159,8 @@ let emit_outputs =
 	(Pexpr_ifthenelse
 	   (make_expr (Pexpr_ident(make_ident (Pident "x"))),
 	    make_expr (Pexpr_emit
-			 (make_expr
+			 (false,
+                          make_expr
 			    (Pexpr_ident
 			       (make_ident
 				  (Pident ("evt_"^

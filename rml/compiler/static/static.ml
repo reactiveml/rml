@@ -326,12 +326,12 @@ let rec static_expr ctx e =
 	then Dynamic Noninstantaneous
 	else expr_wrong_static_err e
 
-    | Rexpr_emit (s, None) ->
+    | Rexpr_emit (_, s, None) ->
 	if static_expr ML s = Static
 	then Static
 	else expr_wrong_static_err s
 
-    | Rexpr_emit (s, Some e1) ->
+    | Rexpr_emit (_, s, Some e1) ->
 	if static_expr ML s = Static
 	then
 	  if static_expr ML e1 = Static

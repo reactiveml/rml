@@ -507,10 +507,10 @@ let instantaneous_loop_expr =
 
       | Rexpr_halt _ -> Env.empty
 
-      | Rexpr_emit (e, None) ->
+      | Rexpr_emit (_, e, None) ->
 	  analyse vars e
 
-      | Rexpr_emit (e1, Some e2) ->
+      | Rexpr_emit (_, e1, Some e2) ->
 	  let ty1 = analyse vars e1 in
 	  let ty2 = analyse vars e2 in
 	  if not (Env.equal Env.empty ty2) then rec_warning expr;

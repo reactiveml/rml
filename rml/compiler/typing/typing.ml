@@ -154,8 +154,8 @@ let rec is_nonexpansive expr =
   | Rexpr_nothing -> true
   | Rexpr_pause _ -> true
   | Rexpr_halt _ -> true
-  | Rexpr_emit (e, None) -> is_nonexpansive e
-  | Rexpr_emit (e1, Some e2) -> is_nonexpansive e1 && is_nonexpansive e2
+  | Rexpr_emit (_, e, None) -> is_nonexpansive e
+  | Rexpr_emit (_, e1, Some e2) -> is_nonexpansive e1 && is_nonexpansive e2
   | Rexpr_present (e,e1,e2) ->
       is_nonexpansive_conf e && is_nonexpansive e1 && is_nonexpansive e2
   | Rexpr_await (_, e) ->
@@ -605,7 +605,7 @@ let rec type_of_expression env expr =
 	in
 	ty
 
-    | Rexpr_emit (s, None) ->
+    | Rexpr_emit (a, s, None) ->
 	let ty_s = type_of_expression env s in
 	let ty, _ =
 	  try
@@ -616,7 +616,7 @@ let rec type_of_expression env expr =
 	unify_emit expr.expr_loc type_unit ty;
 	type_unit
 
-    | Rexpr_emit (s, Some e) ->
+    | Rexpr_emit (a, s, Some e) ->
 	let ty_s = type_of_expression env s in
 	let ty, _ =
 	  try

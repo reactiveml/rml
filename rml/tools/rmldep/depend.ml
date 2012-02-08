@@ -130,8 +130,8 @@ let rec add_expr bv exp =
   | Pexpr_nothing -> ()
   | Pexpr_pause -> ()
   | Pexpr_halt -> ()
-  | Pexpr_emit(e1) -> add_expr bv e1
-  | Pexpr_emit_val(e1, e2) -> add_expr bv e1; add_expr bv e2
+  | Pexpr_emit(_,e1) -> add_expr bv e1
+  | Pexpr_emit_val(_,e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_loop(e1) -> add_expr bv e1
   | Pexpr_par(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_merge(e1, e2) -> add_expr bv e1; add_expr bv e2
