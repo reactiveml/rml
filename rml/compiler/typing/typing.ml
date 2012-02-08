@@ -158,9 +158,9 @@ let rec is_nonexpansive expr =
   | Rexpr_emit (_, e1, Some e2) -> is_nonexpansive e1 && is_nonexpansive e2
   | Rexpr_present (e,e1,e2) ->
       is_nonexpansive_conf e && is_nonexpansive e1 && is_nonexpansive e2
-  | Rexpr_await (_, e) ->
+  | Rexpr_await (_, _, e) ->
       is_nonexpansive_conf e
-  | Rexpr_await_val (_, _, s, _, e) ->
+  | Rexpr_await_val (_, _, _, s, _, e) ->
       is_nonexpansive s && is_nonexpansive e
   | Rexpr_until (c, e, None) ->
       is_nonexpansive_conf c && is_nonexpansive e
@@ -775,11 +775,11 @@ let rec type_of_expression env expr =
 	type_expect env p2 ty;
 	ty
 
-    | Rexpr_await (_,s) ->
+    | Rexpr_await (_,_,s) ->
 	type_of_event_config env s;
 	type_unit
 
-    | Rexpr_await_val (_,All,s,patt,p) ->
+    | Rexpr_await_val (_,_,All,s,patt,p) ->
 	let ty_s = type_of_expression env s in
 	let _, ty_get =
 	  try
@@ -795,7 +795,7 @@ let rec type_of_expression env expr =
 	    env loc_env
 	in
 	type_of_expression new_env p
-    | Rexpr_await_val (_,One,s,patt,p) ->
+    | Rexpr_await_val (_,_,One,s,patt,p) ->
 	let ty_s = type_of_expression env s in
 	let ty_emit, ty_get =
 	  try

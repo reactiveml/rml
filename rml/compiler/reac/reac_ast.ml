@@ -94,9 +94,9 @@ and expression_desc =
   | Rexpr_control of event_config * (pattern * expression) option * expression
   | Rexpr_get of expression * pattern * expression
   | Rexpr_present of event_config * expression * expression
-  | Rexpr_await of immediate_flag * event_config
+  | Rexpr_await of bool * immediate_flag * event_config
   | Rexpr_await_val of
-      immediate_flag * await_kind * expression * pattern * expression
+      bool * immediate_flag * await_kind * expression * pattern * expression
 
 (* event configuration *)
 and event_config =

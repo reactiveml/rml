@@ -319,10 +319,10 @@ let expr_free_vars e =
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
 
-    | Rexpr_await (immediate_flag, config) ->
+    | Rexpr_await (_, immediate_flag, config) ->
 	config_free_vars vars config
 
-    | Rexpr_await_val (immediate, kind, e, patt, e1) ->
+    | Rexpr_await_val (_, immediate, kind, e, patt, e1) ->
 	expr_free_vars vars e;
 	let vars' = (vars_of_patt patt) @ vars in
 	expr_free_vars vars' e1

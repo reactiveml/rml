@@ -491,20 +491,20 @@ let rec static_expr ctx e =
  	else
 	  expr_wrong_static_err e
 
-    | Rexpr_await (Immediate, s) ->
+    | Rexpr_await (_, Immediate, s) ->
 	if ctx = Process
 	then
 	  (static_conf s;
 	   Dynamic Dontknow)
 	else expr_wrong_static_err e
-    | Rexpr_await (Nonimmediate, s) ->
+    | Rexpr_await (_, Nonimmediate, s) ->
 	if ctx = Process
 	then
 	  (static_conf s;
 	   Dynamic Noninstantaneous)
 	else expr_wrong_static_err e
 
-    | Rexpr_await_val (Immediate, One, s, _, p) ->
+    | Rexpr_await_val (_, Immediate, One, s, _, p) ->
 	if ctx = Process
 	then
 	  if static_expr ML s = Static
@@ -514,7 +514,7 @@ let rec static_expr ctx e =
 	  else expr_wrong_static_err s
 	else
 	  expr_wrong_static_err e
-    | Rexpr_await_val (_, _, s, _, p) ->
+    | Rexpr_await_val (_, _, _, s, _, p) ->
 	if ctx = Process
 	then
 	  if static_expr ML s = Static

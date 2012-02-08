@@ -594,10 +594,10 @@ and translate_proc e k (ctrl: ident) =
 	| Rexpr_when_match (e1, e2) ->
 	    Kproc_when_match (translate_ml e1, translate_proc e2 k ctrl)
 
-	| Rexpr_await (flag, s) ->
+	| Rexpr_await (affine, flag, s) ->
 	    Kproc_await (flag, translate_conf s, k, ctrl)
 
-	| Rexpr_await_val (flag1, flag2, s, patt, proc) ->
+	| Rexpr_await_val (_, flag1, flag2, s, patt, proc) ->
 	    let k_id = make_var "k" in
 	    let k_var = make_proc (Kproc_var k_id) Location.none in
 	    let k_patt =

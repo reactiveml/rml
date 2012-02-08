@@ -483,14 +483,16 @@ let rec translate env e =
 		      translate env e1,
 		      translate env e2)
 
-    | Pexpr_await (flag, s) ->
-	Rexpr_await (flag,
-		     translate_conf env s)
+    | Pexpr_await (affine, flag, s) ->
+	Rexpr_await (affine,
+                     flag,
+                     translate_conf env s)
 
-    | Pexpr_await_val (flag, k, s, patt, expr) ->
+    | Pexpr_await_val (affine, flag, k, s, patt, expr) ->
 	let vars, rpatt = translate_pattern false patt in
 	let new_env = add_varpatt env vars in
-	Rexpr_await_val (flag,
+	Rexpr_await_val (affine,
+                         flag,
 			 k,
 			 translate env s,
 			 rpatt,

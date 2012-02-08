@@ -592,14 +592,14 @@ let instantaneous_loop_expr =
 	  let _ = analyse Env.empty e2 in
 	  Env.append ty_config ty1
 
-      | Rexpr_await (immediate_flag, config) ->
+      | Rexpr_await (_, immediate_flag, config) ->
 	  config_analyse vars config
 
-      | Rexpr_await_val (Immediate, One, e, patt, e1) ->
+      | Rexpr_await_val (_, Immediate, One, e, patt, e1) ->
 	  let ty = analyse vars e in
 	  let ty1 = analyse vars e1 in
 	  Env.append ty ty1
-      | Rexpr_await_val (immediate, kind, e, patt, e1) ->
+      | Rexpr_await_val (_, immediate, kind, e, patt, e1) ->
 	  let ty = analyse vars e in
 	  let _ = analyse Env.empty e1 in
 	  ty

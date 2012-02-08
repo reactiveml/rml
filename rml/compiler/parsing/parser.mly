@@ -193,6 +193,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token AS                  /* "as" */
 %token ASSERT              /* "assert" */
 %token AWAIT               /* "await" */
+%token BANGAWAIT           /* "!await" */
 %token BACKQUOTE           /* "`" */
 %token BACKSLASHSLASH      /* " \/ " */
 %token BAR                 /* "|" */
@@ -608,19 +609,34 @@ expr:
       { mkexpr(Pexpr_present($2, $4, ghexpr(Pexpr_nothing))) }
   | PRESENT par_expr ELSE expr
       { mkexpr(Pexpr_present($2, ghexpr(Pexpr_nothing), $4)) }
+  | BANGAWAIT await_flag simple_expr
+      { if (snd $2) = One
+        then raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
+        else mkexpr(Pexpr_await(true, fst $2, $3)) }
+  | BANGAWAIT await_flag simple_expr LPAREN pattern RPAREN IN par_expr
+      { match $2 with
+        | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
+	| im, k -> mkexpr(Pexpr_await_val(true, im, k, $3, $5, $8)) }
+  | BANGAWAIT await_flag simple_expr LPAREN pattern RPAREN WHEN par_expr IN par_expr
+      { match $2 with
+        | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
+	| im, k ->
+	    mkexpr(Pexpr_await_val(true, im, k, $3, $5,
+				   { pexpr_desc = Pexpr_when_match($8, $10);
+				     pexpr_loc = Location.none; })) }
   | AWAIT await_flag simple_expr
       { if (snd $2) = One
         then raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
-        else mkexpr(Pexpr_await(fst $2, $3)) }
+        else mkexpr(Pexpr_await(false, fst $2, $3)) }
   | AWAIT await_flag simple_expr LPAREN pattern RPAREN IN par_expr
       { match $2 with
         | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
-	| im, k -> mkexpr(Pexpr_await_val(im, k, $3, $5, $8)) }
+	| im, k -> mkexpr(Pexpr_await_val(false, im, k, $3, $5, $8)) }
   | AWAIT await_flag simple_expr LPAREN pattern RPAREN WHEN par_expr IN par_expr
       { match $2 with
         | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
 	| im, k ->
-	    mkexpr(Pexpr_await_val(im, k, $3, $5,
+	    mkexpr(Pexpr_await_val(false, im, k, $3, $5,
 				   { pexpr_desc = Pexpr_when_match($8, $10);
 				     pexpr_loc = Location.none; })) }
   | PROCESS proc_def

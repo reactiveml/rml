@@ -300,6 +300,7 @@ rule token = parse
           raise (Error(Keyword_as_label name, Location.curr lexbuf));
         OPTLABEL name }
   | "!emit" { BANGEMIT }
+  | "!await" { BANGAWAIT }
   | lowercase identchar *
       { let s = Lexing.lexeme lexbuf in
           try

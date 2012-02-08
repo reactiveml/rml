@@ -433,9 +433,9 @@ and translate_proc p =
 	| Rexpr_when_match (e1, e2) ->
 	    Coproc_when_match (translate_ml e1, translate_proc e2)
 
-	| Rexpr_await (flag, s) -> Coproc_await (flag, translate_conf s)
+	| Rexpr_await (affine, flag, s) -> Coproc_await (flag, translate_conf s)
 
-	| Rexpr_await_val (flag1, flag2, s, patt, proc) ->
+	| Rexpr_await_val (_, flag1, flag2, s, patt, proc) ->
 	    Coproc_await_val (flag1,
 			      flag2,
 			      translate_ml s,

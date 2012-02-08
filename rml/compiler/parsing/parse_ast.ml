@@ -88,9 +88,9 @@ and expression_desc =
   | Pexpr_control of event_config * (pattern * expression) option * expression
   | Pexpr_get of expression
   | Pexpr_present of event_config * expression * expression
-  | Pexpr_await of immediate_flag * event_config
+  | Pexpr_await of bool * immediate_flag * event_config
   | Pexpr_await_val of
-      immediate_flag * await_kind * expression * pattern * expression
+      bool * immediate_flag * await_kind * expression * pattern * expression
   | Pexpr_pre of pre_kind * expression
   | Pexpr_last of expression
   | Pexpr_default of expression

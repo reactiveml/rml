@@ -331,11 +331,11 @@ let rec expression i ppf x =
       expression i ppf s;
       expression i ppf e1;
       expression i ppf e2;
-  | Pexpr_await (imf,s) ->
-      line i ppf "Pexpr_await %a\n" fmt_immediate_flag imf;
+  | Pexpr_await (a,imf,s) ->
+      bang i ppf a "Pexpr_await %b %a\n" a fmt_immediate_flag imf;
       expression i ppf s;
-  | Pexpr_await_val (flag1, flag2, s, p, e) ->
-      line i ppf "Pexpr_await_val %a %a\n"
+  | Pexpr_await_val (a, flag1, flag2, s, p, e) ->
+      bang i ppf a "Pexpr_await_val %a %a\n"
 	fmt_immediate_flag flag1 fmt_await_kind_flag flag2;
       expression i ppf s;
       pattern_x_expression_def i ppf (p,e);

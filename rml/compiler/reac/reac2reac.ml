@@ -292,15 +292,15 @@ let expr_map  =
 	  f (make_expr_all
 	       (Rexpr_present (config', e1', e2')) typ static reactivity loc)
 
-      | Rexpr_await (immediate_flag, config) ->
+      | Rexpr_await (affine, immediate_flag, config) ->
 	  let config' = config_map f config in
-	  f (make_expr_all (Rexpr_await (immediate_flag, config'))
+	  f (make_expr_all (Rexpr_await (affine, immediate_flag, config'))
 	       typ static reactivity loc)
 
-      | Rexpr_await_val (immediate, kind, e, patt, e1) ->
+      | Rexpr_await_val (affine, immediate, kind, e, patt, e1) ->
 	  let e' = expr_map f e in
 	  let e1' = expr_map f e1 in
-	  f (make_expr_all (Rexpr_await_val (immediate, kind, e', patt, e1'))
+	  f (make_expr_all (Rexpr_await_val (affine, immediate, kind, e', patt, e1'))
 	       typ static reactivity loc)
     in
     expr'.expr_type <- expr.expr_type;

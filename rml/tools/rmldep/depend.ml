@@ -152,8 +152,8 @@ let rec add_expr bv exp =
       add_expr bv e2
   | Pexpr_get(e1) -> add_expr bv e1
   | Pexpr_present(e1, e2, e3) -> add_expr bv e1; add_expr bv e2; add_expr bv e3
-  | Pexpr_await(_, e1) -> add_expr bv e1
-  | Pexpr_await_val(_, _, e1, p, e2) ->
+  | Pexpr_await(_,_, e1) -> add_expr bv e1
+  | Pexpr_await_val(_,_, _, e1, p, e2) ->
       add_expr bv e1; add_pattern bv p; add_expr bv e2
   | Pexpr_pre(_, e1) -> add_expr bv e1
   | Pexpr_last(e1) -> add_expr bv e1
