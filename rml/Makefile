@@ -195,8 +195,8 @@ clean-distrib:
 	rm -rf distrib/rml/bin \
 		distrib/rml/lib \
 		distrib/rml/emacs \
-		distrib/rml/man \
-	rm -f rml-`./compiler/rmlc -version`.*.tar.gz
+		distrib/rml/man
+	- rm -f rml-`./compiler/rmlc -version`.*.tar.gz
 	rm -f rml-$(VERSION)-????-??-??.tar.gz
 
 FORCE:
