@@ -55,6 +55,8 @@ Options: [defaults in brackets after descriptions]
   --mandir DIR            man documentation in DIR [PREFIX/man]
   --target TARGET         [byte]
   --debug                 add "-g -dtypes" to ocaml flags
+  --with-emacs-dir DIR    set emacs dir to DIR
+  -with-emacs-dir DIR     (same as above)
   --help                  print this message
 EOF
 	exit 0;;
