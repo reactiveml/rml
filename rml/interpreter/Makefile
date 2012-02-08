@@ -1,4 +1,5 @@
 -include ../config
+include ../configure-tools/Makefile.common
 
 THEAD_TYPE=-thread
 

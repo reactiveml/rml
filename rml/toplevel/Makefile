@@ -1,4 +1,5 @@
 -include ../config
+include ../configure-tools/Makefile.common
 
 RMLC=../compiler/rmlc
 RMLLIB=-I ../stdlib -I ../interpreter

@@ -265,8 +265,6 @@ echo "OCAMLOPTFLAGS=$debug" >> config
 echo "OCAMLDEPFLAGS=-slash" >> config
 echo "OCAMLBEST=$ocamlbest" >> config
 echo
-cat config.in >> config
-
 mv config ..
 
 # Configure rmlbuild

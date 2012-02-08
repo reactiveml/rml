@@ -3,18 +3,18 @@
 # Organization : SPI team, LIP6 laboratory, University Paris 6
 
 include configure-tools/version
+-include config
 
-TARGET=$(shell sed -n "s/^TARGET=//p" config)
-
-all: config
+all: config-stamp
 	(cd compiler; touch .depend; make depend; make $(TARGET))
 	(cd stdlib; make all)
 	(cd interpreter; touch .depend; make depend; make all)
 	(cd toplevel; make all)
 	(cd tools; make $(TARGET))
 
-config:
+config-stamp:
 	./configure
+	touch $@
 
 toplevel: FORCE
 	(cd toplevel; make all)
@@ -97,7 +97,7 @@ realclean: clean-distrib
 	(cd patch; make realclean)
 	(cd examples; make realclean)
 	rm -rf META
-	rm -rf config distrib/rml/rmlc.in distrib/rml/Makefile *~
+	rm -rf config config-stamp Makefile.common distrib/rml/rmlc.in distrib/rml/Makefile *~
 	rm -rf configure-tools/rmlbuild.config
 
 cleanall: realclean

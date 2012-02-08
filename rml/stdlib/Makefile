@@ -4,6 +4,7 @@
 # Taken from Lucid-synchrone
 
 -include ../config
+include ../configure-tools/Makefile.common
 
 RMLC := ../compiler/rmlc
 

@@ -138,6 +138,7 @@ GENSOURCES = parsing/parser.mli parsing/lexer.ml parsing/parser.ml \
 	parsing/linenum.ml
 
 -include ../config
+include ../configure-tools/Makefile.common
 
 all: $(TARGET)
 install: install.$(TARGET)
