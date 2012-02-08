@@ -14,7 +14,6 @@ emacsdir=''
 target=''
 debug=''
 
-verbose=no
 ocamlversion_min=3.06
 
 # Parse command-line arguments
@@ -46,8 +45,6 @@ while : ; do
         target=$2; shift;;
     -with-emacs-dir|--with-emacs-dir)
 	emacsdir=$2; shift;;
-    -verbose|--verbose)
-        verbose=yes;;
     -help|--help)
         cat <<EOF
 Usage: configure [options]
