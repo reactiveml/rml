@@ -25,7 +25,7 @@ OBJ_OPT = $(OBJ:.cmo=.cmx)
 
 INCLUDES = $(DIRECTORIES:%=-I %)
 
-include ../../config
+-include ../../config
 
 all: $(TARGET)
 install: install.$(TARGET)

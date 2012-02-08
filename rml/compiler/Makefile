@@ -137,7 +137,7 @@ INCLUDES = $(DIRECTORIES:%=-I %)
 GENSOURCES = parsing/parser.mli parsing/lexer.ml parsing/parser.ml \
 	parsing/linenum.ml
 
-include ../config
+-include ../config
 
 all: $(TARGET)
 install: install.$(TARGET)

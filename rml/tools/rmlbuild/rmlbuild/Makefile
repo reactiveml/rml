@@ -14,7 +14,7 @@
 
 .PHONY: all byte native profile debug ppcache doc
 
-include ../../../config
+-include ../../../config
 
 INSTALL_BIN=$(BINDIR)
 INSTALL_LIB=$(LIBDIR)/rmlbuild

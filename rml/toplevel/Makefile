@@ -1,4 +1,4 @@
-include ../config
+-include ../config
 
 RMLC=../compiler/rmlc
 RMLLIB=-I ../stdlib -I ../interpreter

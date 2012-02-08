@@ -3,7 +3,7 @@
 # Makefile for Reactive-ML
 # Taken from Lucid-synchrone
 
-include ../config
+-include ../config
 
 RMLC := ../compiler/rmlc
 

@@ -1,4 +1,4 @@
-include ../config
+-include ../config
 
 THEAD_TYPE=-thread
 
