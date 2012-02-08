@@ -180,6 +180,7 @@ struct
     type 'a process = 'a I.process
 
     let rml_make p =
+      let start_t = Unix.gettimeofday () in
       let result = ref None in
       let cd = I.R.mk_top_clock_domain () in
       let step = I.rml_make cd result p in
@@ -188,7 +189,11 @@ struct
         I.R.react cd;
         !result
       in
-      let finalize () = () in
+      let finalize () =
+        if !Runtime_options.bench_mode then
+          let end_t = Unix.gettimeofday () in
+          Format.printf "%f@." (end_t -. start_t)
+      in
       react, finalize
 
     let rml_make_test test_list =
@@ -246,7 +251,7 @@ struct
 
     let rml_make p =
       if I.R.is_master () then (
-        Thread.delay 1.0;
+        let start_t = Unix.gettimeofday () in
         let result = ref None in
         let cd = I.R.mk_top_clock_domain () in
         let step = I.rml_make cd result p in
@@ -256,7 +261,10 @@ struct
           !result
         in
         let finalize () =
-          I.R.finalize_top_clock_domain cd
+          I.R.finalize_top_clock_domain cd;
+          if !Runtime_options.bench_mode then
+            let end_t = Unix.gettimeofday () in
+            Format.printf "%f@." (end_t -. start_t)
         in
         react, finalize
       ) else
