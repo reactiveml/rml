@@ -4,6 +4,10 @@ open Format
 
 let verbose = ref false
 let nb_mpi_procs = ref 4
+let tests = ref []
+
+let add_test s =
+  tests := s :: !tests
 
 exception Command_failed
 
@@ -53,11 +57,8 @@ let run_test args f =
   with
       _ -> Format.eprintf "Test '%s' failed.@." f; raise Command_failed
 
-let do_tests (backend, args, desc) =
+let do_tests rml_files (backend, args, desc) =
   Format.printf "%s:@." desc;
-  let files = Array.to_list (Sys.readdir (Sys.getcwd ())) in
-  let rml_files = List.filter (fun f -> Filename.check_suffix f ".rml") files in
-  print_status "Found files: %a@.@." (fun ff l -> List.iter (fun s -> fprintf ff "%s " s) l) rml_files;
   ocamlbuild "-clean";
   mk_tags_file backend;
   List.iter (run_test args) rml_files;
@@ -69,7 +70,7 @@ let mpi_launcher balancer p =
 
 let rml_backends =
   [
-    ("lco", seq_launcher, "Sequential");
+    ("lco", seq_launcher, "Sequential (Lco)");
     ("lco_mpi", mpi_launcher "local", "MPI with local load balancer");
     ("lco_mpi", mpi_launcher "robin", "MPI with round robin load balancer");
     ("lco_mpi", mpi_launcher "all_remote", "MPI with always remote load balancer");
@@ -78,17 +79,40 @@ let rml_backends =
     ("lco_mpi_buffer", mpi_launcher "all_remote", "MPI+buffering with always remote load balancer")
   ]
 
+let do_all_tests () =
+  let files =
+    if !tests = [] then
+      Array.to_list (Sys.readdir (Sys.getcwd ()))
+    else
+      !tests
+  in
+  let rml_files = List.filter (fun f -> Filename.check_suffix f ".rml") files in
+  print_status "Found files: %a@.@." (fun ff l -> List.iter (fun s -> fprintf ff "%s " s) l) rml_files;
+  Sys.chdir "tests/";
+  List.iter (do_tests rml_files) rml_backends
+
+let list_tests () =
+  let files = Array.to_list (Sys.readdir (Sys.getcwd ()^"/tests")) in
+  let rml_files = List.filter (fun f -> Filename.check_suffix f ".rml") files in
+  Format.printf "Available tests: %a@." (fun ff l -> List.iter (fun s -> fprintf ff "%s " s) l) rml_files;
+  exit 0
+
 let options =
   ["-v", Arg.Set verbose, " Verbose mode";
+   "-list", Arg.Unit list_tests, " List available tests";
    "-mpi-n", Arg.Set_int nb_mpi_procs, " Number of MPI processes to run"]
-let err_msg =
-  "Wrong arguments. Expected:"
+let usage_msg =
+"Benchmark program.
+  '"^Sys.executable_name^"' runs alls the tests in the tests/ dir.
+  You can also specify tests as arguments: '"^Sys.executable_name^" test1.rml test2.rml'
+
+Options are:"
+
 
 let _ =
-  Arg.parse options ignore err_msg;
+  Arg.parse options add_test usage_msg;
   try
-    Sys.chdir "tests/";
-    List.iter do_tests rml_backends
+    do_all_tests ()
   with
       Command_failed ->
         print_status "Error detected. Cleaning up@.";

@@ -1,17 +1,15 @@
-let do_stuff () =
+let do_stuff s =
   let r = ref 0 in
   for i = 1 to 1000000 do
     r := (!r + 29378) mod 5243552
-  done
-
-let do_lot_stuff () =
-  for i = 1 to 10 do
-    do_stuff ()
-  done
+  done;
+  emit s !r
 
 let process main =
+  signal s default 0 gather (+) in
   for i = 1 to 300 dopar
     newclock ck in
-      do_stuff ()
+      do_stuff s
   done
-
+  ||
+  await s(v) in ignore v

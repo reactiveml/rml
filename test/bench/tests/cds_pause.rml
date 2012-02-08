@@ -4,13 +4,13 @@ let do_stuff () =
     r := (!r + 29378) mod 5243552
   done
 
-let do_lot_stuff () =
+let process do_lot_stuff =
   for i = 1 to 10 do
-    do_stuff ()
+    do_stuff (); pause
   done
 
 let process main =
-  for i = 1 to 300 dopar
+  for i = 1 to 50 dopar
     newclock ck in
       do_stuff ()
   done
