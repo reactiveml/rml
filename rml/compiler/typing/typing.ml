@@ -77,8 +77,11 @@ let filter_event ty =
   let ty = type_repr ty in
   let ty1 = new_var() in
   let ty2 = new_var() in
-  unify ty (constr_notabbrev event_ident [ty1;ty2]);
-  ty1, ty2
+  let ty3 = new_var() in
+  let ty4 = new_var() in
+  unify ty (constr_notabbrev event_ident [ty1;ty2;ty3;ty4]);
+  (* emit, get, emit usage, get usage *)
+  ty1,     ty2, ty3,        ty4
 
 let is_unit_process desc =
   let sch = desc.value_typ in
@@ -561,7 +564,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_pre (Status, s) ->
 	let ty_s = type_of_expression env s in
-	let _, _ty =
+	let _, _ty, _, _ =
 	  try
 	    filter_event ty_s
 	  with Unify ->
@@ -570,7 +573,7 @@ let rec type_of_expression env expr =
 	type_bool
     | Rexpr_pre (Value, s) ->
 	let ty_s = type_of_expression env s in
-	let _, ty =
+	let _, ty, _, _ =
 	  try
 	    filter_event ty_s
 	  with Unify ->
@@ -580,7 +583,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_last s ->
 	let ty_s = type_of_expression env s in
-	let _, ty =
+	let _, ty, _, _ =
 	  try
 	    filter_event ty_s
 	  with Unify ->
@@ -590,7 +593,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_default s ->
 	let ty_s = type_of_expression env s in
-	let _, ty =
+	let _, ty, _, _ =
 	  try
 	    filter_event ty_s
 	  with Unify ->
@@ -600,7 +603,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_emit (a, s, None) ->
 	let ty_s = type_of_expression env s in
-	let ty, _ =
+	let ty, _, _, _ =
 	  try
 	    filter_event ty_s
 	  with Unify ->
@@ -611,7 +614,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_emit (a, s, Some e) ->
 	let ty_s = type_of_expression env s in
-	let ty, _ =
+	let ty, _, _, _ =
 	  try
 	    filter_event ty_s
 	  with Unify ->
@@ -624,7 +627,9 @@ let rec type_of_expression env expr =
     | Rexpr_signal ((s,te_opt), combine_opt, e) ->
 	let ty_emit = new_var() in
 	let ty_get = new_var() in
-	let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in
+        let u_emit = new_var () in
+        let u_get = new_var () in
+	let ty_s = constr_notabbrev event_ident [ty_emit; ty_get; u_emit; u_get] in
 	opt_iter
 	  (fun te ->
 	    unify_event s (instance (full_type_of_type_expression te)) ty_s)
@@ -632,10 +637,9 @@ let rec type_of_expression env expr =
 	begin
 	  match combine_opt with
 	  | None ->
-	      unify_event s
-		(constr_notabbrev event_ident
-		   [ty_emit; (constr_notabbrev list_ident [ty_emit])])
-		ty_s
+              unify_event s
+                  (constr_notabbrev list_ident [ty_emit])
+                  ty_get
 	  | Some (default,comb) ->
 	      type_expect env default ty_get;
 	      type_expect env comb (arrow ty_emit (arrow ty_get ty_get))
@@ -689,7 +693,7 @@ let rec type_of_expression env expr =
 	    begin match s.conf_desc with
 	    | Rconf_present s ->
 		let ty_s = type_of_expression env s in
-		let ty_emit, ty_get =
+		let ty_emit, ty_get, u_emit, u_get =
 		  try
 		    filter_event ty_s
 		  with Unify ->
@@ -725,7 +729,7 @@ let rec type_of_expression env expr =
 	begin match s.conf_desc with
 	| Rconf_present s ->
 	    let ty_s = type_of_expression env s in
-	    let ty_emit, ty_get =
+	    let ty_emit, ty_get, u_emit, u_get =
 	      try
 		filter_event ty_s
 	      with Unify ->
@@ -747,7 +751,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_get (s,patt,p) ->
 	let ty_s = type_of_expression env s in
-	let _, ty_get =
+	let _, ty_get, u_emit, u_get =
 	  try
 	    filter_event ty_s
 	  with Unify ->
@@ -774,7 +778,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_await_val (_,_,All,s,patt,p) ->
 	let ty_s = type_of_expression env s in
-	let _, ty_get =
+	let _, ty_get, u_emit, u_get =
 	  try
 	    filter_event ty_s
 	  with Unify ->
@@ -790,16 +794,15 @@ let rec type_of_expression env expr =
 	type_of_expression new_env p
     | Rexpr_await_val (_,_,One,s,patt,p) ->
 	let ty_s = type_of_expression env s in
-	let ty_emit, ty_get =
+	let ty_emit, ty_get, u_emit, u_get =
 	  try
 	    filter_event ty_s
 	  with Unify ->
 	    non_event_err s
 	in
-	unify_expr s
-	  (constr_notabbrev event_ident
-	     [ty_emit; (constr_notabbrev list_ident [ty_emit])])
-	  ty_s;
+        unify_expr s
+          (constr_notabbrev list_ident [ty_emit])
+          ty_get;
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_emit in
 	assert (gl_env = []);
 	let new_env =
@@ -1005,7 +1008,9 @@ let type_impl_item info_chan item =
 	(fun ((s,te_opt), combine_opt) ->
 	  let ty_emit = new_var() in
 	  let ty_get = new_var() in
-	  let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in
+          let u_emit = new_var() in
+          let u_get = new_var() in
+	  let ty_s = constr_notabbrev event_ident [ty_emit; ty_get; u_emit; u_get] in
 	  opt_iter
 	    (fun te ->
 	      unify_event s.gi.id

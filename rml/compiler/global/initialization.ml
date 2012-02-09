@@ -113,9 +113,7 @@ let type_desc_event =
     info = Some { type_constr = { gi = event_ident;
 				  info = Some{ constr_abbr=Constr_notabbrev} };
 		  type_kind = Type_abstract;
-		  type_arity = 2; } }
-let type_event = Types.constr_notabbrev event_ident [Types.new_generic_var();
-						     Types.new_generic_var(); ]
+		  type_arity = 4; } }
 
 
 (* list *)
