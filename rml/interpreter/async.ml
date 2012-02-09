@@ -40,7 +40,6 @@ let release () =
 let async send func () =
   let tid = Thread.id (Thread.self ()) in
   let result = func () in
-  Thread.yield ();
   save tid (send result)
 
 let run send func =
