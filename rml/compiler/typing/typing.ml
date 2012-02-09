@@ -80,13 +80,6 @@ let filter_event ty =
   unify ty (constr_notabbrev event_ident [ty1;ty2]);
   ty1, ty2
 
-let filter_multi_event ty =
-  let ty = type_repr ty in
-  let ty1 = new_var() in
-  unify ty (constr_notabbrev event_ident [ty1;
-					  constr_notabbrev list_ident [ty1]]);
-  ty1
-
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
