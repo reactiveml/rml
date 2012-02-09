@@ -83,6 +83,12 @@ let filter_event ty =
   (* emit, get, emit usage, get usage *)
   ty1,     ty2, ty3,        ty4
 
+let filter_event_or_err ty s =
+  try
+    filter_event ty
+  with Unify ->
+    non_event_err s
+
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
@@ -564,62 +570,32 @@ let rec type_of_expression env expr =
 
     | Rexpr_pre (Status, s) ->
 	let ty_s = type_of_expression env s in
-	let _, _ty, _, _ =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	  non_event_err s
-	in
+	let _, _ty, _, _ = filter_event_or_err ty_s s in
 	type_bool
     | Rexpr_pre (Value, s) ->
 	let ty_s = type_of_expression env s in
-	let _, ty, _, _ =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	  non_event_err s
-	in
+	let _, ty, _, _ = filter_event_or_err ty_s s in
 	ty
 
     | Rexpr_last s ->
 	let ty_s = type_of_expression env s in
-	let _, ty, _, _ =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	  non_event_err s
-	in
+	let _, ty, _, _ = filter_event_or_err ty_s s in
 	ty
 
     | Rexpr_default s ->
 	let ty_s = type_of_expression env s in
-	let _, ty, _, _ =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	  non_event_err s
-	in
+	let _, ty, _, _ = filter_event_or_err ty_s s in
 	ty
 
     | Rexpr_emit (a, s, None) ->
 	let ty_s = type_of_expression env s in
-	let ty, _, _, _ =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	    non_event_err s
-	in
+	let ty, _, _, _ = filter_event_or_err ty_s s in
 	unify_emit expr.expr_loc type_unit ty;
 	type_unit
 
     | Rexpr_emit (a, s, Some e) ->
 	let ty_s = type_of_expression env s in
-	let ty, _, _, _ =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	    non_event_err s
-	in
+	let ty, _, _, _ = filter_event_or_err ty_s s in
 	let ty_e = type_of_expression env e in
 	unify_emit e.expr_loc ty ty_e;
 	type_unit
@@ -693,12 +669,7 @@ let rec type_of_expression env expr =
 	    begin match s.conf_desc with
 	    | Rconf_present s ->
 		let ty_s = type_of_expression env s in
-		let ty_emit, ty_get, u_emit, u_get =
-		  try
-		    filter_event ty_s
-		  with Unify ->
-		    non_event_err s
-		in
+		let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
 		let ty_body = type_of_expression env p in
 		opt_iter
 		  (fun (patt,proc) ->
@@ -729,12 +700,7 @@ let rec type_of_expression env expr =
 	begin match s.conf_desc with
 	| Rconf_present s ->
 	    let ty_s = type_of_expression env s in
-	    let ty_emit, ty_get, u_emit, u_get =
-	      try
-		filter_event ty_s
-	      with Unify ->
-		non_event_err s
-	    in
+	    let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
 	    let ty_body = type_of_expression env p in
 	    let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
 	    assert (gl_env = []);
@@ -751,12 +717,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_get (s,patt,p) ->
 	let ty_s = type_of_expression env s in
-	let _, ty_get, u_emit, u_get =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	    non_event_err s
-	in
+	let _, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
 	assert (gl_env = []);
 	let new_env =
@@ -778,12 +739,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_await_val (_,_,All,s,patt,p) ->
 	let ty_s = type_of_expression env s in
-	let _, ty_get, u_emit, u_get =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	    non_event_err s
-	in
+	let _, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
 	assert (gl_env = []);
 	let new_env =
@@ -794,12 +750,7 @@ let rec type_of_expression env expr =
 	type_of_expression new_env p
     | Rexpr_await_val (_,_,One,s,patt,p) ->
 	let ty_s = type_of_expression env s in
-	let ty_emit, ty_get, u_emit, u_get =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	    non_event_err s
-	in
+	let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
         unify_expr s
           (constr_notabbrev list_ident [ty_emit])
           ty_get;
@@ -823,12 +774,7 @@ and type_of_event_config env conf =
   match conf.conf_desc with
   | Rconf_present s ->
       let ty = type_of_expression env s in
-      let _ =
-	try
-	  filter_event ty
-	with Unify ->
-	  non_event_err s
-      in
+      let _ = filter_event_or_err ty s in
       ()
 
   | Rconf_and (c1,c2) ->
