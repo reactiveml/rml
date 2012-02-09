@@ -40,7 +40,7 @@ while : ; do
     -debug)
         debug='-g -dtypes';
         shift;
-        break;;
+        continue;;
     -target|--target)
         target=$2; shift;;
     -with-emacs-dir|--with-emacs-dir)
