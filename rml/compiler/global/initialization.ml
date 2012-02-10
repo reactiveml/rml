@@ -106,7 +106,6 @@ let type_desc_array =
 let type_array = Types.constr_notabbrev array_ident [Types.new_generic_var()]
 
 (* event *)
-(* let event_ident = interpreter_type "event" *)
 let event_ident = pervasives_type "event"
 
 let type_desc_event =
