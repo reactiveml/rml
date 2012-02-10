@@ -62,6 +62,16 @@ let unify_emit loc expected_ty actual_ty =
     unify expected_ty actual_ty
   with Unify -> emit_wrong_type_err loc actual_ty expected_ty
 
+let unify_usage loc affine actual_u =
+  let expected_u =
+    if affine
+    then type_affine
+    else type_neutral
+  in
+  try
+    unify expected_u actual_u
+  with Unify -> usage_wrong_type_err loc actual_u expected_u
+
 let unify_run loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
@@ -587,16 +597,18 @@ let rec type_of_expression env expr =
 	let _, ty, _, _ = filter_event_or_err ty_s s in
 	ty
 
-    | Rexpr_emit (a, s, None) ->
+    | Rexpr_emit (affine, s, None) ->
 	let ty_s = type_of_expression env s in
-	let ty, _, _, _ = filter_event_or_err ty_s s in
+	let ty, _, u_emit, _ = filter_event_or_err ty_s s in
+        unify_usage expr.expr_loc affine u_emit;
 	unify_emit expr.expr_loc type_unit ty;
 	type_unit
 
-    | Rexpr_emit (a, s, Some e) ->
+    | Rexpr_emit (affine, s, Some e) ->
 	let ty_s = type_of_expression env s in
-	let ty, _, _, _ = filter_event_or_err ty_s s in
+	let ty, _, u_emit, u_get = filter_event_or_err ty_s s in
 	let ty_e = type_of_expression env e in
+        unify_usage expr.expr_loc affine u_emit;
 	unify_emit e.expr_loc ty ty_e;
 	type_unit
 
@@ -733,11 +745,17 @@ let rec type_of_expression env expr =
 	type_expect env p2 ty;
 	ty
 
-    | Rexpr_await (_,_,s) ->
+    | Rexpr_await (affine,_,s) ->
 	type_of_event_config env s;
+        List.iter (fun s ->
+            let ty_s = type_of_expression env s in
+            let _, _, _, u_get = filter_event_or_err ty_s s in
+            unify_usage s.expr_loc affine u_get;
+          )
+          (events_from_event_config s);
 	type_unit
 
-    | Rexpr_await_val (_,_,All,s,patt,p) ->
+    | Rexpr_await_val (affine,_,All,s,patt,p) ->
 	let ty_s = type_of_expression env s in
 	let _, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
@@ -747,8 +765,10 @@ let rec type_of_expression env expr =
 	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
 	    env loc_env
 	in
+        unify_usage expr.expr_loc affine u_get;
 	type_of_expression new_env p
-    | Rexpr_await_val (_,_,One,s,patt,p) ->
+
+    | Rexpr_await_val (affine,_,One,s,patt,p) ->
 	let ty_s = type_of_expression env s in
 	let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
         unify_expr s
@@ -761,6 +781,7 @@ let rec type_of_expression env expr =
 	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
 	    env loc_env
 	in
+        unify_usage expr.expr_loc affine u_get;
 	type_of_expression new_env p
 
   in
@@ -785,6 +806,13 @@ and type_of_event_config env conf =
       type_of_event_config env c1;
       type_of_event_config env c2
 
+and events_from_event_config conf =
+  match conf.conf_desc with
+    | Rconf_present s -> [s]
+    | Rconf_and (c1, c2) | Rconf_or (c1, c2) ->
+      let c1 = events_from_event_config c1 in
+      let c2 = events_from_event_config c2 in
+      c1 @ c2
 
 (* Typing of let declatations *)
 and type_let is_rec env patt_expr_list =

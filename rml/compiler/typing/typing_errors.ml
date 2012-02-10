@@ -90,6 +90,12 @@ let var_wrong_type_err loc actual_ty expected_ty =
     Types_printer.output expected_ty;
   raise Error
 
+let usage_wrong_type_err loc _ _ =
+  Printf.eprintf
+    "%aThe affine signal is used more than once.\n"
+    Location.print_oc loc;
+  raise Error
+
 let application_of_non_function_err exp ty =
   begin try
     let _ = filter_arrow ty in
