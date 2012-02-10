@@ -17,66 +17,30 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: symbol_table.ml *)
-(* created: 2004-04-27  *)
-(* author: Louis Mandel *)
+(* Usages *)
+type usage = Affine | Neutral | Zero
+type signal_usage = usage * usage
 
-(* $Id$ *)
+exception Forbidden_usage
 
-(* Implementation of the symbol table *)
+(* Operations on usages *)
+val add_u : usage -> usage -> usage
+val add_s : signal_usage -> signal_usage -> signal_usage
+val usage_of_type : Def_types.type_expression -> usage
 
-(* The signature of identifiers *)
-
-module type Ident_type =
+module Table :
   sig
-    type t
-    val compare: t -> t -> int
-    val name: t -> string
-  end
-
-module type S = functor (Ident: Ident_type) ->
-  sig
+    type key = int
     type 'a t
-    val empty: 'a t
-    val is_empty: 'a t -> bool
-    val add: Ident.t -> 'a -> 'a t -> 'a t
-    val find: Ident.t -> 'a t -> 'a
-    val mem: Ident.t -> 'a t -> bool
-    val append: 'a t -> 'a t -> 'a t
-    val iter: (Ident.t -> 'a -> unit) -> 'a t -> unit
-    val fold: (Ident.t -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-    val map: ('a -> 'b) -> 'a t -> 'b t
-  end
 
-module Make = functor (Ident: Ident_type) ->
-  struct
-    module OrderIdent =
-      struct
-	type t = Ident.t
-	let compare = Ident.compare
-      end
+    val empty : signal_usage t
 
-    module BinSearch = Map.Make(Ident)
+    val mem : key -> signal_usage t -> bool
+    val find : key -> signal_usage t -> signal_usage
 
-    type 'a t = 'a BinSearch.t
+    val add : key -> Def_types.type_expression -> Def_types.type_expression -> signal_usage t -> signal_usage t
+    val singleton : key -> Def_types.type_expression -> Def_types.type_expression -> signal_usage t
 
-    let empty = BinSearch.empty
-
-    let is_empty = BinSearch.is_empty
-
-    let add = BinSearch.add
-
-    let find = BinSearch.find
-
-    let mem = BinSearch.mem
-
-    let append tbl1 tbl2 =
-      BinSearch.fold (fun k x tbl -> add k x tbl) tbl1 tbl2
-
-    let iter = BinSearch.iter
-
-    let fold = BinSearch.fold
-
-    let map = BinSearch.map
-
+    val merge : signal_usage t -> signal_usage t -> signal_usage t
+    val flatten : signal_usage t list -> signal_usage t
   end

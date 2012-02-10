@@ -41,6 +41,8 @@ REAC =	reac/annot.ml \
 
 TYPING = typing/def_types.ml \
 	typing/types.ml \
+	typing/usages_misc.mli \
+	typing/usages_misc.ml \
 	typing/types_printer.ml \
 	typing/typing.ml \
 	typing/typing_errors.ml \
@@ -104,6 +106,7 @@ OBJ =	global/version.cmo \
 	reac/reac_misc.cmo \
 	reac/parse2reac.cmo \
 	global/initialization.cmo \
+	typing/usages_misc.cmo \
 	reac/reac2reac.cmo \
 	static/static_printer.cmo \
 	static/static_errors.cmo \

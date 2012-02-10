@@ -76,6 +76,7 @@ static/static_printer.cmo: reac/reac_ast.cmo static/def_static.cmo \
     global/asttypes.cmi
 static/static_printer.cmx: reac/reac_ast.cmx static/def_static.cmx \
     global/asttypes.cmi
+typing/usages_misc.cmi: typing/def_types.cmo
 typing/def_types.cmo: global/global.cmo static/def_static.cmo \
     global/asttypes.cmi
 typing/def_types.cmx: global/global.cmx static/def_static.cmx \
@@ -108,6 +109,8 @@ typing/typing_errors.cmo: typing/types_printer.cmo typing/types.cmo \
 typing/typing_errors.cmx: typing/types_printer.cmx typing/types.cmx \
     reac/reac_ast.cmx global/misc.cmx parsing/location.cmx global/ident.cmx \
     global/global_ident.cmx typing/def_types.cmx
+typing/usages_misc.cmo: global/initialization.cmo typing/usages_misc.cmi
+typing/usages_misc.cmx: global/initialization.cmx typing/usages_misc.cmi
 other_analysis/instantaneous_loop.cmo: static/static.cmo reac/reac_misc.cmo \
     reac/reac_ast.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo static/def_static.cmo \
