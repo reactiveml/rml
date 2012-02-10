@@ -254,6 +254,15 @@ let rec make_dummy t =
 	  else if type_desc = Initialization.type_desc_event then
 	    Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
 
+	  else if type_desc = Initialization.type_desc_affine then
+	    Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
+
+	  else if type_desc = Initialization.type_desc_neutral then
+	    Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
+
+	  else if type_desc = Initialization.type_desc_zero then
+	    Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
+
 	  else if type_desc = Initialization.type_desc_list then
 	    Cexpr_construct (Initialization.nil_constr_desc, None)
 

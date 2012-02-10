@@ -115,6 +115,18 @@ let type_desc_event =
 		  type_kind = Type_abstract;
 		  type_arity = 4; } }
 
+(* usages *)
+let affine_ident = pervasives_type "affine"
+let type_desc_affine = type_desc affine_ident
+let type_affine = Types.constr_notabbrev affine_ident []
+
+let neutral_ident = pervasives_type "neutral"
+let type_desc_neutral = type_desc neutral_ident
+let type_neutral = Types.constr_notabbrev neutral_ident []
+
+let zero_ident = pervasives_type "zero"
+let type_desc_zero = type_desc zero_ident
+let type_zero = Types.constr_notabbrev zero_ident []
 
 (* list *)
 let list_ident = pervasives_type "list"
@@ -194,6 +206,9 @@ let list_of_type_desc =
     type_desc_list;
     type_desc_option;
     type_desc_event;
+    type_desc_affine;
+    type_desc_neutral;
+    type_desc_zero;
 ]
 
 let list_of_constr_desc =
