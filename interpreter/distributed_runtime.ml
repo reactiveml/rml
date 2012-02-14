@@ -1144,7 +1144,9 @@ struct
         for i = 0 to C.number_of_sites () - 1 do
           Msgs.send_finalize (C.nth_site i) site.s_comm_site
         done
-      );
+      ) else
+        (* Hack: Make sure that the receiving thread is started before terminating *)
+        Thread.delay 0.050;
       terminate_site site
 
     let mk_top_clock_domain () =
