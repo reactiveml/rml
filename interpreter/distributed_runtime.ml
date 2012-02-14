@@ -917,6 +917,10 @@ struct
 
     let rec update_remote_set cd site =
       if not (C.SiteSet.mem site cd.cd_remotes) then (
+        if C.SiteSet.is_empty cd.cd_remotes then (
+          print_debug "Allocating callbacks for %a@." print_cd cd;
+          register_cd_callbacks cd
+        );
         print_debug "Adding site %a to remote sites of %a@." C.print_site site  print_cd cd;
         cd.cd_remotes <- C.SiteSet.add site cd.cd_remotes;
         (* propagate the information to the parent *)
@@ -929,23 +933,34 @@ struct
       )
 
     (* After receiving Mnew_remote *)
-    let receive_new_remote cd msg =
+    and receive_new_remote cd msg =
       let site = Msgs.recv_new_remote msg in
       update_remote_set cd site
 
-    let init_clock_domain clock balancer parent_ctrl =
-      let cd = mk_clock_domain clock balancer parent_ctrl in
-        add_callback (Mhas_next clock.ck_gid) (gather_has_next cd);
-        add_callback (Meoi_control clock.ck_gid) (receive_eoi_control cd);
-        add_callback (Mreq_has_next clock.ck_gid) (receive_req_has_next cd);
-        add_callback (Mpauseclock clock.ck_gid) (gather_pauseclock cd);
-        add_callback (Mnew_remote clock.ck_gid) (receive_new_remote cd);
-        cd
+    (* Registers callbacks for messages sent by child cds *)
+    and register_cd_callbacks cd =
+      add_callback (Mhas_next cd.cd_clock.ck_gid) (gather_has_next cd);
+      add_callback (Mpauseclock cd.cd_clock.ck_gid) (gather_pauseclock cd);
+      add_callback (Mnew_remote cd.cd_clock.ck_gid) (receive_new_remote cd)
+
+    (* Registers callbacks for messages sent by the parent cd *)
+    let register_parent_callbacks cd =
+      add_callback (Meoi_control cd.cd_clock.ck_gid) (receive_eoi_control cd);
+      add_callback (Mreq_has_next cd.cd_clock.ck_gid) (receive_req_has_next cd)
+
+    let unregister_cd_callbacks cd =
+      let site = get_site () in
+      Callbacks.remove_callback (Mhas_next cd.cd_clock.ck_gid) site.s_callbacks;
+      Callbacks.remove_callback (Meoi_control cd.cd_clock.ck_gid) site.s_callbacks;
+      Callbacks.remove_callback (Mreq_has_next cd.cd_clock.ck_gid) site.s_callbacks;
+      Callbacks.remove_callback (Mpauseclock cd.cd_clock.ck_gid) site.s_callbacks;
+      Callbacks.remove_callback (Mnew_remote cd.cd_clock.ck_gid) site.s_callbacks
 
     let end_clock_domain new_cd new_ctrl f_k () =
       print_debug "End of clock domain %a@." print_cd new_cd;
       let site = get_site () in
       site.s_clock_domains <- C.GidMap.remove new_cd.cd_clock.ck_gid site.s_clock_domains;
+      unregister_cd_callbacks new_cd;
       match new_cd.cd_clock.ck_parent with
         | Some ck ->
             if not (C.is_local ck.ck_gid) then
@@ -956,7 +971,7 @@ struct
     let new_local_clock_domain cd new_balancer ctrl p f_k =
       let new_ck = mk_clock (Some cd.cd_clock) in
       print_debug "Creating local clock domain %a@." C.print_gid new_ck.ck_gid;
-      let new_cd = init_clock_domain new_ck new_balancer (Some ctrl) in
+      let new_cd = mk_clock_domain new_ck new_balancer (Some ctrl) in
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl f_k) in
       fun _ ->
@@ -970,7 +985,8 @@ struct
       let tmp_id, parent_ck, new_balancer, p = Msgs.recv_new_cd msg in
       print_debug "newcd@.";
       let new_ck = mk_clock (Some parent_ck) in
-      let new_cd = init_clock_domain new_ck new_balancer None in
+      let new_cd = mk_clock_domain new_ck new_balancer None in
+      register_parent_callbacks new_cd;
       print_debug "Created local clock domain %a after request by %a@."
         print_cd new_cd   print_clock parent_ck;
       let new_ctrl = control_tree new_cd in
