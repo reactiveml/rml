@@ -915,13 +915,16 @@ struct
       (* wake up cd to emit the done message *)
       wake_up_cd_if_done cd
 
-    let update_remote_set cd site =
+    let rec update_remote_set cd site =
       if not (C.SiteSet.mem site cd.cd_remotes) then (
         print_debug "Adding site %a to remote sites of %a@." C.print_site site  print_cd cd;
         cd.cd_remotes <- C.SiteSet.add site cd.cd_remotes;
         (* propagate the information to the parent *)
         match cd.cd_clock.ck_parent with
           | None -> ()
+          | Some pck when C.is_local pck.ck_gid ->
+              let pcd = get_clock_domain pck in
+              update_remote_set pcd site
           | Some pck -> Msgs.send_new_remote pck.ck_gid site
       )
 
