@@ -347,7 +347,7 @@ struct
 
         (** TODO: on envoie la valeur a tous ceux qui ont envoye un req_signal *)
         let send_value_to_remotes cd ev n () =
-          C.broadcast (Mvalue ev.ev_gid) (E.value n)
+          C.broadcast_set cd.cd_remotes (Mvalue ev.ev_gid) (E.value n)
 
         let do_emit ev v =
           (*print_debug "Emitting a value for %a@." print_signal ev;*)
