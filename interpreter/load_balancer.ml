@@ -1,10 +1,11 @@
 
 module type S = sig
   type site
+  type kind = Lany | Lleaf
 
   class virtual load_balancer :
   object
-    method virtual new_child : unit -> site * load_balancer
+    method virtual new_child : unit -> site * kind * load_balancer
   end
 
   val mk_top_balancer : unit -> load_balancer
@@ -25,10 +26,11 @@ let set_load_balancing_policy s =
 
 module Make (C : Communication.S) = struct
   type site = C.site
+  type kind = Lany | Lleaf
 
   class virtual load_balancer  =
   object
-    method virtual new_child : unit -> C.site * load_balancer
+    method virtual new_child : unit -> C.site * kind * load_balancer
   end
 
   class local_balancer site =
@@ -37,41 +39,28 @@ module Make (C : Communication.S) = struct
 
     val site = site
     method new_child () =
-      site, ({< >} :> load_balancer)
+      site, Lleaf, ({< >} :> load_balancer)
   end
-
-  let sub_array_without a x =
-    let n = Array.length a - 1 in
-    let new_a = Array.make n x in
-    let cpt = ref 0 in
-    for i = 0 to n-1 do
-      if a.(!cpt) = x then
-        incr cpt;
-      new_a.(i) <- a.(!cpt);
-      incr cpt
-    done;
-    new_a
 
   class round_robin_balancer here sites =
   object(self)
     inherit load_balancer
 
-    val s_here = here
     val s_sites = sites
     val mutable s_next_site = Array.length sites
 
     method new_child () =
-      let s, bal =
+      let s, k, bal =
         if s_next_site = Array.length s_sites then (
           s_next_site <- -1;
-          s_here, new round_robin_balancer here s_sites
+          here, Lany, new round_robin_balancer here s_sites
         ) else (
           let site = s_sites.(s_next_site) in
-          site, new local_balancer site
+          site, Lleaf, new local_balancer site
         )
       in
       s_next_site <- s_next_site + 1;
-      s, bal
+      s, k, bal
   end
 
   class all_remote_balancer sites =
@@ -83,7 +72,7 @@ module Make (C : Communication.S) = struct
     method new_child () =
       let new_site = s_sites.(s_next_site) in
       s_next_site <- (s_next_site + 1) mod (Array.length s_sites);
-      new_site, (new local_balancer new_site :> load_balancer)
+      new_site, Lleaf, (new local_balancer new_site :> load_balancer)
   end
 
 

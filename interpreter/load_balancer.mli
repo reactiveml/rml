@@ -5,10 +5,11 @@ val set_load_balancing_policy : string -> unit
 
 module type S = sig
   type site
+  type kind = Lany | Lleaf
 
   class virtual load_balancer :
   object
-    method virtual new_child : unit -> site * load_balancer
+    method virtual new_child : unit -> site * kind * load_balancer
   end
 
   val mk_top_balancer : unit -> load_balancer

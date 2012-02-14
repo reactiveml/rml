@@ -148,6 +148,7 @@ struct
           cd_parent_ctrl : control_tree option;
 
           cd_load_balancer : L.load_balancer;
+          cd_location : L.kind;
           mutable cd_children_have_next : bool;
           mutable cd_remaining_async : int ref;
           mutable cd_emitted_signals : C.GidSet.t; (* signals emitted during current step *)
@@ -362,7 +363,7 @@ struct
           wake_up_now (Wsignal_wa ev.ev_gid);
           wake_up_now (Wsignal_wp ev.ev_gid);
           (* if we have remote clock domains, we should send them the value later *)
-          if not (C.GidSet.mem ev.ev_gid cd.cd_emitted_signals) then (
+          if cd.cd_location = L.Lany && not (C.GidSet.mem ev.ev_gid cd.cd_emitted_signals) then (
               add_waiting (Wbefore_eoi ev_ck.ck_gid) (send_value_to_remotes cd ev n);
               cd.cd_emitted_signals <- C.GidSet.add ev.ev_gid cd.cd_emitted_signals
             )
@@ -409,14 +410,17 @@ struct
 
         let new_local_evt_combine ck default combine =
           let site = get_site () in
+          let cd = get_clock_domain ck in
           let n = E.create (get_clock ck.ck_clock) default combine in
           let gid = C.fresh site.s_seed in
           let ev  =
             { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck);
               ev_gid = gid }
           in
-          add_callback (Memit gid) (receive_emit ev);
-          add_callback (Mreq_signal gid) (receive_req n gid);
+          if cd.cd_location = L.Lany then (
+            add_callback (Memit gid) (receive_emit ev);
+            add_callback (Mreq_signal gid) (receive_req n gid)
+          );
           ev
 
         let new_remote_evt_combine ck default (combine : 'a -> 'b -> 'b) =
@@ -610,7 +614,7 @@ struct
       ctrl.cond <- c
 
     (** clock domains operations *)
-    let mk_clock_domain clock balancer parent_ctrl =
+    let mk_clock_domain clock balancer location parent_ctrl =
       let site = get_site () in
       let cd = {
         cd_current = D.mk_current ();
@@ -622,6 +626,7 @@ struct
         cd_parent_ctrl = parent_ctrl;
         cd_children_have_next = false;
         cd_load_balancer = balancer;
+        cd_location = location;
         cd_remaining_async = ref 0;
         cd_emitted_signals = C.GidSet.empty;
         cd_remotes = C.SiteSet.empty;
@@ -967,10 +972,10 @@ struct
             end_ctrl new_ctrl f_k ()
         | None -> assert false
 
-    let new_local_clock_domain cd new_balancer ctrl p f_k =
+    let new_local_clock_domain cd new_balancer location ctrl p f_k =
       let new_ck = mk_clock (Some cd.cd_clock) in
       print_debug "Creating local clock domain %a@." C.print_gid new_ck.ck_gid;
-      let new_cd = mk_clock_domain new_ck new_balancer (Some ctrl) in
+      let new_cd = mk_clock_domain new_ck new_balancer location (Some ctrl) in
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl f_k) in
       fun _ ->
@@ -981,10 +986,10 @@ struct
     (* After receving Mnew_cd *)
     let create_cd msg =
       print_debug "newcd@.";
-      let tmp_id, parent_ck, new_balancer, p = Msgs.recv_new_cd msg in
+      let tmp_id, parent_ck, new_balancer, location, p = Msgs.recv_new_cd msg in
       print_debug "newcd@.";
       let new_ck = mk_clock (Some parent_ck) in
-      let new_cd = mk_clock_domain new_ck new_balancer None in
+      let new_cd = mk_clock_domain new_ck new_balancer location None in
       register_parent_callbacks new_cd;
       print_debug "Created local clock domain %a after request by %a@."
         print_cd new_cd   print_clock parent_ck;
@@ -1012,25 +1017,25 @@ struct
       (* send a message to start the execution *)
       step_remote_clock_domain cd new_ck.ck_gid ()
 
-    let new_remote_clock_domain remote_site new_balancer cd ctrl p f_k =
+    let new_remote_clock_domain remote_site new_balancer location cd ctrl p f_k =
       let site = get_site () in
       let tmp_id = C.fresh site.s_seed in
       add_callback (Mcd_created tmp_id) (start_remote_clock_domain cd ctrl f_k);
       print_debug "++%a@." print_cd cd;
       incr cd.cd_remaining_async;
-      Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, p)
+      Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, location, p)
 
     let new_clock_domain cd ctrl p f_k _ =
-      let remote_site, new_balancer = cd.cd_load_balancer#new_child ()  in
-      if remote_site <> C.local_site () then (
-        print_debug "Distributing new cd to site %a@." C.print_site remote_site;
-        (*cd.cd_remotes <- C.SiteSet.add remote_site cd.cd_remotes;*)
-        (*site.s_children <- C.SiteSet.add remote_site site.s_children; *)
-        new_remote_clock_domain remote_site new_balancer cd ctrl p f_k
-      ) else (
-        new_local_clock_domain cd new_balancer ctrl p f_k ()
-      )
-
+      if cd.cd_location = L.Lleaf then
+        new_local_clock_domain cd cd.cd_load_balancer L.Lleaf ctrl p f_k ()
+      else (
+        let remote_site, location, new_balancer = cd.cd_load_balancer#new_child ()  in
+        if remote_site <> C.local_site () then (
+          print_debug "Distributing new cd to site %a@." C.print_site remote_site;
+          new_remote_clock_domain remote_site new_balancer location cd ctrl p f_k
+        ) else
+          new_local_clock_domain cd new_balancer location ctrl p f_k ()
+     )
 
 
     (** Sites operations *)
@@ -1144,7 +1149,7 @@ struct
       init_site ();
       let ck = mk_clock None in
       let balancer = L.mk_top_balancer () in
-      let cd = mk_clock_domain ck balancer None in
+      let cd = mk_clock_domain ck balancer L.Lany None in
       cd
 
 (* ------------------------------------------------------------------------ *)
