@@ -12,6 +12,7 @@ _build
 *.start
 
 # Rmlbuild stuff
+rml/config-stamp
 rml/configure-tools/rmlbuild.config
 rml/tools/rmlbuild/rmlbuild/ocamlbuild_Myocamlbuild_config.ml
 
