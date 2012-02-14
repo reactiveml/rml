@@ -1134,15 +1134,17 @@ struct
     let finalize_top_clock_domain cd =
       let site = get_site () in
       (* tell all sites to stop sending messages *)
-      for i = 0 to C.number_of_sites () - 1 do
-        Msgs.send_finalize (C.nth_site i) site.s_comm_site
-      done;
-      (* wait for all sites to be done *)
-      Callbacks.recv_n_given_msg site.s_msg_queue Mdummy (C.number_of_sites ());
-      (* tell all sites to stop executing *)
-      for i = 0 to C.number_of_sites () - 1 do
-        Msgs.send_finalize (C.nth_site i) site.s_comm_site
-      done;
+      if C.number_of_sites () <> 0 then (
+        for i = 0 to C.number_of_sites () - 1 do
+          Msgs.send_finalize (C.nth_site i) site.s_comm_site
+        done;
+        (* wait for all sites to be done *)
+        Callbacks.recv_n_given_msg site.s_msg_queue Mdummy (C.number_of_sites ());
+        (* tell all sites to stop executing *)
+        for i = 0 to C.number_of_sites () - 1 do
+          Msgs.send_finalize (C.nth_site i) site.s_comm_site
+        done
+      );
       terminate_site site
 
     let mk_top_clock_domain () =

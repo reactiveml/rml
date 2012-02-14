@@ -67,6 +67,8 @@ let do_tests rml_files (backend, args, desc) =
 let seq_launcher p = p
 let mpi_launcher balancer p =
   "mpiexec -n "^string_of_int !nb_mpi_procs^" "^p^" -load-balancer "^balancer
+let mpi_one_launcher balancer p =
+  "mpiexec -n 1 "^p^" -load-balancer "^balancer
 
 let rml_backends =
   [
