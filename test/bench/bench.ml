@@ -82,7 +82,7 @@ let rml_backends =
 let do_all_tests () =
   let files =
     if !tests = [] then
-      Array.to_list (Sys.readdir (Sys.getcwd ()))
+      Array.to_list (Sys.readdir (Sys.getcwd ()^"/tests"))
     else
       !tests
   in
