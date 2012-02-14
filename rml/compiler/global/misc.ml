@@ -139,6 +139,10 @@ let find_in_path filename =
           if Sys.file_exists b then b else find rest
     in find !load_path
 
+let opt_map_default d f = function
+    Some x -> f x
+  | None -> d
+
 let opt_map f = function
     Some x -> Some (f x)
   | None -> None
