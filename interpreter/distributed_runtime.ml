@@ -362,8 +362,7 @@ struct
           wake_up_now (Wsignal_wa ev.ev_gid);
           wake_up_now (Wsignal_wp ev.ev_gid);
           (* if we have remote clock domains, we should send them the value later *)
-          if not (C.SiteSet.is_empty cd.cd_remotes) &&
-            not (C.GidSet.mem ev.ev_gid cd.cd_emitted_signals) then (
+          if not (C.GidSet.mem ev.ev_gid cd.cd_emitted_signals) then (
               add_waiting (Wbefore_eoi ev_ck.ck_gid) (send_value_to_remotes cd ev n);
               cd.cd_emitted_signals <- C.GidSet.add ev.ev_gid cd.cd_emitted_signals
             )
