@@ -218,9 +218,9 @@ struct
 
     let process_msgs () =
       let site = get_site () in
+      C.flush ();
       Callbacks.await_new_msg site.s_msg_queue;
-      Callbacks.dispatch_all site.s_msg_queue site.s_callbacks;
-      C.flush ()
+      Callbacks.dispatch_all site.s_msg_queue site.s_callbacks
 
     module Msgs = struct
       let mk_send_recv tag =
