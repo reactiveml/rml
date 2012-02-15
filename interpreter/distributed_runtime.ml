@@ -238,7 +238,7 @@ struct
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
 
-      let send_finalize, recv_finalize = mk_send_recv Mfinalize
+      let broadcast_finalize, recv_finalize = mk_broadcast_set_recv Mfinalize
       let send_dummy, recv_dummy = mk_send_recv Mdummy
       let send_new_cd, recv_new_cd = mk_send_recv Mnew_cd
       let send_cd_created, recv_cd_created =
@@ -1025,11 +1025,11 @@ struct
       incr cd.cd_remaining_async;
       Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, location, p)
 
-    let new_clock_domain cd ctrl p f_k _ =
+    let new_clock_domain cd ctrl p user_balancer f_k _ =
       if cd.cd_location = L.Lleaf then
         new_local_clock_domain cd cd.cd_load_balancer L.Lleaf ctrl p f_k ()
       else (
-        let remote_site, location, new_balancer = cd.cd_load_balancer#new_child ()  in
+        let remote_site, location, new_balancer = cd.cd_load_balancer#new_child user_balancer  in
         if remote_site <> C.local_site () then (
           print_debug "Distributing new cd to site %a@." C.print_site remote_site;
           new_remote_clock_domain remote_site new_balancer location cd ctrl p f_k
@@ -1134,16 +1134,12 @@ struct
     let finalize_top_clock_domain cd =
       let site = get_site () in
       (* tell all sites to stop sending messages *)
-      if C.number_of_sites () <> 0 then (
-        for i = 0 to C.number_of_sites () - 1 do
-          Msgs.send_finalize (C.nth_site i) site.s_comm_site
-        done;
+      if not (C.SiteSet.is_empty C.all_sites) then (
+        Msgs.broadcast_finalize C.all_sites site.s_comm_site;
         (* wait for all sites to be done *)
-        Callbacks.recv_n_given_msg site.s_msg_queue Mdummy (C.number_of_sites ());
+        Callbacks.recv_n_given_msg site.s_msg_queue Mdummy (C.SiteSet.cardinal C.all_sites);
         (* tell all sites to stop executing *)
-        for i = 0 to C.number_of_sites () - 1 do
-          Msgs.send_finalize (C.nth_site i) site.s_comm_site
-        done
+        Msgs.broadcast_finalize C.all_sites site.s_comm_site
       ) else
         (* Hack: Make sure that the receiving thread is started before terminating *)
         Thread.delay 0.050;

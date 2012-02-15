@@ -1,5 +1,5 @@
 
-type policy = Plocal | Pround_robin | Pall_remote
+type policy = Plocal | Pround_robin | Puser_local | Puser_robin
 val load_balancing_policy : policy ref
 val set_load_balancing_policy : string -> unit
 
@@ -9,7 +9,7 @@ module type S = sig
 
   class virtual load_balancer :
   object
-    method virtual new_child : unit -> site * kind * load_balancer
+    method virtual new_child : (int -> int * int) option -> site * kind * load_balancer
   end
 
   val mk_top_balancer : unit -> load_balancer

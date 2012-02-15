@@ -92,7 +92,8 @@ sig
   val clock : clock_domain -> clock
   val top_clock : unit -> clock
   val new_clock_domain : clock_domain -> control_tree ->
-    (clock_domain -> control_tree -> unit step -> unit step) -> unit step -> unit step
+    (clock_domain -> control_tree -> unit step -> unit step) ->
+    (int -> int * int) option ->unit step -> unit step
 
   (* step scheduling *)
   exception Wait_again

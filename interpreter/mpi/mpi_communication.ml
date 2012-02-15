@@ -48,12 +48,14 @@ module Make (P : Communication.TAG_TYPE) = struct
   let is_master () =
     local_site () = !Runtime_options.min_rank
 
-  let master_site () = (!Runtime_options.min_rank : Mpi.rank)
+  let master_site = (!Runtime_options.min_rank : Mpi.rank)
 
-  let nth_site n = (n + 1 + !Runtime_options.min_rank : Mpi.rank)
-
-  let number_of_sites () =
-    Mpi.communicator_size - (1 + !Runtime_options.min_rank)
+  let all_sites =
+   let s = ref SiteSet.empty in
+   for i = !Runtime_options.min_rank + 1 to Mpi.communicator_size - 1 do
+     s:= SiteSet.add (i:Mpi.rank) !s
+   done;
+   !s
 
   type seed = int ref
 
@@ -83,11 +85,7 @@ module Make (P : Communication.TAG_TYPE) = struct
     Mpi.send (tag, to_msg d) site msg_tag
 
   let broadcast tag d =
-    for i = 0 to number_of_sites () - 1 do
-      let s = nth_site i in
-      if s <> local_site () then
-        send s tag d
-    done
+    SiteSet.iter (fun s -> if s <> local_site () then send s tag d) all_sites
 
   let broadcast_set s tag d =
     SiteSet.iter (fun site -> send site tag d) s

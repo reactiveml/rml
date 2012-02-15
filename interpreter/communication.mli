@@ -30,11 +30,9 @@ module type S = sig
   val is_master : unit -> bool
   val local_site : unit -> site
   val site_of_gid : gid -> site
-  (* number of slave sites (master site not included) *)
-  val number_of_sites : unit -> int
-  (* returns the nth slave site (n < number_of_sites) *)
-  val nth_site : int -> site
-  val master_site : unit -> site
+
+  val master_site : site
+  val all_sites : SiteSet.t
 
   val mk_seed : unit -> seed
   val fresh : seed -> gid

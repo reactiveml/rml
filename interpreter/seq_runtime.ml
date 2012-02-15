@@ -444,7 +444,6 @@ struct
             ) else
               check_last_activation l
       in
-        Format.eprintf "Legth of last_activation: %d@." (List.length ctrl.last_activation);
         check_last_activation ctrl.last_activation
 
     (** [on_event_at_eoi evt ctrl f] executes 'f ()' during the eoi
@@ -582,7 +581,7 @@ struct
     let end_clock_domain new_ctrl f_k x =
       end_ctrl new_ctrl f_k x
 
-    let new_clock_domain cd ctrl p f_k =
+    let new_clock_domain cd ctrl p _ f_k =
       let new_cd = mk_clock_domain (Some cd) in
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain new_ctrl f_k) in
