@@ -1,0 +1,11 @@
+let do_small_stuff () =
+  let r = ref 0 in
+  for i = 1 to 10 do
+    r := (!r + 29378) mod 5243552
+  done
+
+let process main =
+  for i = 1 to 50000 dopar
+    newclock ck in
+      do_small_stuff ()
+  done

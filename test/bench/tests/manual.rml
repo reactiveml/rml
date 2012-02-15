@@ -1,0 +1,16 @@
+let do_stuff () =
+  let r = ref 0 in
+  for i = 1 to 1000000 do
+    r := (!r + 29378) mod 5243552
+  done
+
+let process main =
+  (newclock ck schedule (fun _ -> 0, 0) in
+    do_stuff ())
+  ||
+  newclock ck2 schedule (fun nb -> 0, nb) in
+    for i = 1 to 8 dopar
+      newclock ck schedule (fun nb -> i, 0) in
+        do_stuff ()
+    done
+

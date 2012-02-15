@@ -1,0 +1,163 @@
+let random_int min max =
+  min + Random.int (max - min)
+
+let random_float min max =
+  min +. Random.float (max -. min)
+
+let process sustain n s v =
+  for i = 1 to n do
+    emit s(v);
+    pause
+  done
+
+(* Vector operations*)
+type vector = { v_x : float; v_y : float; v_z : float }
+
+let mk_vector x y z =
+  { v_x = x; v_y = y; v_z = z }
+
+let zero_vector = { v_x = 0.0; v_y = 0.0; v_z = 0.0 }
+
+let random_vector xmin ymin xmax ymax =
+  { v_x = random_float xmin xmax;
+    v_y = random_float ymin ymax;
+    v_z = 0.0; }
+
+let norm2 v =
+  v.v_x *. v.v_x +. v.v_y *. v.v_y +. v.v_z *. v.v_z
+
+let dist2 v1 v2 =
+  (v2.v_x -. v1.v_x) *. (v2.v_x -. v1.v_x)
+    +. (v2.v_y -. v1.v_y) *. (v2.v_y -. v1.v_y)
+    +. (v2.v_z -. v1.v_z) *. (v2.v_z -. v1.v_z)
+
+let unit_vector v1 v2 =
+  let d2 = dist2 v1 v2 in
+  let d = sqrt d2 in
+  { v_x = (v2.v_x -. v1.v_x) /. d;
+    v_y = (v2.v_y -. v1.v_y) /. d;
+    v_z = (v2.v_z -. v1.v_z) /. d }
+
+let normal_unit_vector v1 v2 =
+  let d2 = dist2 v1 v2 in
+  let d = sqrt d2 in
+  { v_x = -. (v2.v_y -. v1.v_y) /. d;
+    v_y = (v2.v_x -. v1.v_x) /. d;
+    v_z = (v2.v_z -. v1.v_z) /. d }
+
+let add_vector v1 v2 =
+  { v_x = v1.v_x +. v2.v_x;
+    v_y = v1.v_y +. v2.v_y;
+    v_z = v1.v_z +. v2.v_z }
+
+let scalar_mult a v =
+  { v_x = a *. v.v_x; v_y = a *. v.v_y; v_z = a *. v.v_z;  }
+
+let vector_error v1 v2 =
+  (dist2 v1 v2) /. (norm2 v1)
+
+(* Data structures *)
+
+let gen_id =
+  let counter = ref 0 in
+  fun () ->
+    incr counter;
+    !counter
+
+type body =
+    { b_id : int;
+      mutable b_pos : vector;
+      mutable b_vel : vector;
+      b_weight : float; }
+
+let mk_body pos v weight =
+  { b_id = gen_id ();
+    b_pos = pos;
+    b_vel = v;
+    b_weight = weight;
+  }
+
+(* Computing forces *)
+let g = 3.0
+
+let force pos1 (pos2, w2) =
+  let d2 = dist2 pos1 pos2 in
+  if (d2 <> 0.0) then
+    let f12 = (g *. w2) /. d2 in
+    (*print_float f12; print_newline (); *)
+    scalar_mult f12 (unit_vector pos1 pos2)
+  else
+    zero_vector
+
+let force_sum l pos1 =
+  List.fold_left (fun f (pos2, w2) -> add_vector f (force pos1 (pos2, w2))) zero_vector l
+
+(**This is semi implicit Euler method *)
+(*let compute_pos dt st all =
+  let add_force f body = add_vector (force st.b_pos body) f in
+  let f = List.fold_left add_force zero_vector all in
+  st.b_vel <- add_vector st.b_vel (scalar_mult dt f);
+  st.b_pos <- add_vector st.b_pos (scalar_mult dt st.b_vel)
+*)
+
+(* various functions to create examples *)
+let random_pos_planet c_x c_y dmin dmax =
+  let rand_away z d =
+    if Random.bool () then z +. d else z -. d
+  in
+  let d = random_float dmin dmax in
+  let x = random_float (c_x -. d) (c_x +. d) in
+  let dy = sqrt ( (d *. d) -. ((x -. c_x) *. (x -. c_x)) ) in
+  let y = rand_away c_y dy in
+  mk_vector x y 0.0
+
+
+(**This is semi implicit Euler method *)
+let compute_pos dt st f =
+  st.b_vel <- add_vector st.b_vel (scalar_mult dt f);
+  st.b_pos <- add_vector st.b_pos (scalar_mult dt st.b_vel)
+
+(** Body processes *)
+let process body st dt env =
+  loop
+    emit env (st.b_pos, st.b_weight);
+    await env(all) in
+    let f = force_sum all st.b_pos in
+    compute_pos (pre? dt) st f
+  end
+
+let process planet center dt env =
+   let pos = random_pos_planet center.v_x center.v_y 100.0 200.0 in
+   let st = mk_body pos
+     (scalar_mult 10.0 (normal_unit_vector pos center))
+     (random_float 0.01 0.01)
+   in
+   run (body st dt env)
+
+let process sun center dt env =
+  let st = mk_body center zero_vector 8000.0 in
+  run (body st dt env)
+
+let nb_tiles = 8
+let nb_planets = 10
+
+let _ = Random.self_init ()
+
+let process main =
+  let center = mk_vector 1000.0 1000.0 0.0 in
+  signal dt default 0.0 gather (+.) in
+  signal env in
+  run (sun center dt env)
+  ||
+  for i = 1 to nb_tiles dopar
+   newclock ck in
+    for i = 1 to nb_planets dopar
+      run (planet center dt env)
+    done
+  done
+  ||
+  loop
+    emit dt(1.0);
+    pause
+  end
+
