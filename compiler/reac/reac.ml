@@ -98,7 +98,7 @@ and expression_desc =
   | Eawait_val of
       immediate_flag * await_kind * expression * pattern * expression
 (*reparml related expressions*)
-  | Enewclock of ident * expression
+  | Enewclock of ident * expression option * expression
   | Epauseclock of expression
   | Etopck
 

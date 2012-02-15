@@ -63,10 +63,10 @@ let make_instruction s =
          info = no_info(); })
     Location.none
 
-let make_constr s e =
+let make_constr q s e =
   make_expr
     (Cexpr_construct
-       ({ gi = { qual = "Types";
+       ({ gi = { qual = q;
                  id = Ident.create Ident.gen_constr s Ident.Constr };
            info = no_info(); },
         e))

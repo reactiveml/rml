@@ -456,8 +456,8 @@ and translate_proc p =
                               translate_pattern patt,
                               translate_proc proc)
 
-        | Enewclock (id, e) ->
-          Coproc_newclock (id, translate_proc e)
+        | Enewclock (id, sch, e) ->
+            Coproc_newclock (id, Misc.opt_map translate_ml sch, translate_proc e)
 
         | Epauseclock e1 ->
           Coproc_pauseclock (translate_ml e1)

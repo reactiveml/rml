@@ -581,12 +581,17 @@ let rec static_expr ctx e =
         else
           expr_wrong_static_err p
 
-    | Enewclock (id, p) ->
+    | Enewclock (id, sch, p) ->
         if ctx = Process
-        then
+        then (
+          (match sch with
+            | None -> ()
+            | Some sch ->
+                if static_expr ctx sch <> Static then
+                  expr_wrong_static_err sch);
           let _typ = static_expr ctx p in
           Dynamic Dontknow
-        else expr_wrong_static_err e
+        ) else expr_wrong_static_err e
 
     | Epauseclock e1 ->
         if ctx = Process

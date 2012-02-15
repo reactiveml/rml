@@ -148,7 +148,7 @@ module type S =
     val rml_seq_n : expr list -> expr
 *)
 
-    val rml_newclock : (clock_expr -> unit expr) -> unit expr
+    val rml_newclock : (int -> int* int) option -> (clock_expr -> unit expr) -> unit expr
 
     val rml_pauseclock : (unit -> clock_expr) -> unit expr
     val rml_pauseclock' : clock_expr -> unit expr

@@ -122,6 +122,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "process", PROCESS;
     "rec", REC;
     "run", RUN;
+    "schedule", SCHEDULE;
     "sig", SIG;
     "signal", SIGNAL;
     "struct", STRUCT;

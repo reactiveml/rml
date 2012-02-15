@@ -95,7 +95,7 @@ and expression_desc =
   | Pexpr_last of expression
   | Pexpr_default of expression
   (*reparml related expreessions *)
-  | Pexpr_newclock of simple_ident * expression
+  | Pexpr_newclock of simple_ident * expression option * expression (* ck, scheduling annotation, body *)
   | Pexpr_pauseclock of expression
   | Pexpr_topck
 (* event configuration *)

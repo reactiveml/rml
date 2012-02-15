@@ -160,7 +160,7 @@ let rec add_expr bv exp =
   | Pexpr_pre(_, e1) -> add_expr bv e1
   | Pexpr_last(e1) -> add_expr bv e1
   | Pexpr_default(e1) -> add_expr bv e1
-  | Pexpr_newclock (_, e1) -> add_expr bv e1
+  | Pexpr_newclock (_, opt_e1, e2) -> Misc.opt_iter (add_expr bv) opt_e1; add_expr bv e2
   | Pexpr_pauseclock e1 -> add_expr bv e1
   | Pexpr_topck -> ()
   | Pconf_present(e1) -> add_expr bv e1

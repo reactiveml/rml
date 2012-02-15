@@ -129,7 +129,7 @@ let process macro_instant act =
     )
   )
 
-(* [O 2; O 3; O 2; P[O 3; O 4]; O 2; P[O 3; O 4]] *)
+(* [S(O 22, O 2); S(O 33, O 3); P[S(O 22, O 2); O 11]; P[S(O 33, O 3); O 1]; P[S(O 22, O 2); O 11]; P[S(O 33, O 3); O 1]] *)
 let process macro_instant_loop act =
   signal s default 0 gather (+) in
   newclock ck in (
@@ -144,7 +144,7 @@ let process macro_instant_loop act =
       end
       ||
       loop
-        pause ck; act 2; pause topck; emit s2 3; pause topck; emit s 4
+        act 22; pause ck; act 2; pause topck; act 33; emit s2 3; pause topck; act 11; emit s 1
       end
     )
   )
@@ -175,6 +175,14 @@ let process await_slow_loop act =
   )
  )
 
+(* [P [O 0; O 2]] *)
+let process ck_sch_annot act =
+  newclock ck schedule (fun _ -> 0, 0) in
+    pause ck; act 0
+    ||
+    newclock ck2 in
+      act 2
+
 open Rmltest
 
 let test =
@@ -193,6 +201,7 @@ let test =
      (nested_clocks_direct, "nested_clocks_direct2", [ S(O 1, O 2) ]);
      (nested_clocks_direct, "nested_clocks_direct3", [ S(O 1, O 2) ]);
      (macro_instant, "macro_instant", [O 2; O 3; N; O 4]);
-     (macro_instant_loop, "macro_instant_loop", [O 2; O 3; O 2; P[O 3; O 4]; O 2; P[O 3; O 4]]);
+     (macro_instant_loop, "macro_instant_loop", [S(O 22, O 2); S(O 33, O 3); P[S(O 22, O 2); O 11]; P[S(O 33, O 3); O 1]; P[S(O 22, O 2); O 11]; P[S(O 33, O 3); O 1]]);
      (await_slow_loop, "await_slow_loop", [N; v; v; N; v; v]);
+     (ck_sch_annot, "ck_sch_annot", [P [O 0; O 2]]);
     ]

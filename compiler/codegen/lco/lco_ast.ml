@@ -110,7 +110,7 @@ and process_desc =
   | Coproc_await of immediate_flag * event_config
   | Coproc_await_val of
       immediate_flag * await_kind * expression * pattern * process
-  | Coproc_newclock of ident * process
+  | Coproc_newclock of ident * expression option * process
   | Coproc_pauseclock of expression
 
 (* event configuration *)

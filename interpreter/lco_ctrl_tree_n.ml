@@ -789,9 +789,9 @@ let rml_loop p =
 (* clock domain                       *)
 (**************************************)
 
-    let rml_newclock p =
+    let rml_newclock sch p =
       fun f_k ctrl jp cd ->
-        R.new_clock_domain cd ctrl (fun cd ctrl f_k -> p (CkExpr (R.clock cd)) f_k ctrl None cd) None f_k
+        R.new_clock_domain cd ctrl (fun cd ctrl f_k -> p (CkExpr (R.clock cd)) f_k ctrl None cd) sch f_k
 
     let rml_top_clock = CkTop
     let rml_local_clock = CkLocal

@@ -331,8 +331,9 @@ let expr_free_vars e =
         let vars' = (vars_of_patt patt) @ vars in
         expr_free_vars vars' e1
 
-    | Enewclock (id, e1) ->
+    | Enewclock (id, sch, e1) ->
         let vars' = (Vlocal id) :: vars in
+        Misc.opt_iter (expr_free_vars vars') sch;
         expr_free_vars vars' e1
 
     | Epauseclock e -> expr_free_vars vars e

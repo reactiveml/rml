@@ -502,10 +502,11 @@ let rec translate env e =
                          rpatt,
                          translate new_env expr)
 
-    | Pexpr_newclock (x, e) ->
+    | Pexpr_newclock (x, sch, e) ->
       let id = Ident.create Ident.gen_var x.psimple_id Ident.Val_ML in
       let env = Env.add x.psimple_id id env in
-      Enewclock (id, translate env e)
+      let sch = Misc.opt_map (translate env) sch in
+      Enewclock (id, sch, translate env e)
 
     | Pexpr_pauseclock e ->
       Epauseclock (translate env e)

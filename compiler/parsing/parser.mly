@@ -299,6 +299,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token REC                 /* "rec" */
 %token RPAREN              /* "(" */
 %token RUN                 /* "run" */
+%token SCHEDULE            /* "schedule" */
 %token SEMI                /* ";" */
 %token SEMISEMI            /* ";;" */
 %token SHARP               /* "#" */
@@ -626,8 +627,8 @@ expr:
       { $2 }
   | RUN simple_expr
       { mkexpr(Pexpr_run($2)) }
-  | NEWCLOCK LIDENT IN par_expr
-      { mkexpr (Pexpr_newclock (mksimple $2 2, $4)) }
+  | NEWCLOCK LIDENT opt_schedule IN par_expr
+      { mkexpr (Pexpr_newclock (mksimple $2 2, $3, $5)) }
 ;
 simple_expr:
     val_longident
@@ -726,6 +727,11 @@ clock_expr:
     /* empty */ { CkLocal }
   | simple_expr { CkExpr $1 }
   | TOPCK       { CkTop }
+
+opt_schedule:
+   /* empty */ { None}
+  | SCHEDULE par_expr { Some $2 }
+
 let_bindings:
     let_binding                                 { [$1] }
   | let_bindings AND let_binding                { $3 :: $1 }
