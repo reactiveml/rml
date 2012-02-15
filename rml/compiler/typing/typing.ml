@@ -41,9 +41,9 @@ open Reac_ast
 open Misc
 open Annot
 
-let unify_expr expr expected_ty actual_ty =
+let unify_expr ?(regions = false) expr expected_ty actual_ty =
   try
-    unify expected_ty actual_ty
+    unify ~regions expected_ty actual_ty
   with
     Unify -> expr_wrong_type_err expr actual_ty expected_ty
 
@@ -57,19 +57,19 @@ let unify_event evt expected_ty actual_ty =
     unify expected_ty actual_ty
   with Unify -> event_wrong_type_err evt actual_ty expected_ty
 
-let unify_emit loc expected_ty actual_ty =
+let unify_emit ?(regions = false) loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
   with Unify -> emit_wrong_type_err loc actual_ty expected_ty
 
-let unify_usage loc affine actual_u =
+let unify_usage ?(regions = false) loc affine actual_u =
   let expected_u =
     if affine
     then type_affine
     else type_neutral
   in
   try
-    unify expected_u actual_u
+    unify ~regions expected_u actual_u
   with Unify -> usage_wrong_type_err loc actual_u expected_u
 
 let unify_run loc expected_ty actual_ty =
@@ -440,11 +440,11 @@ let rec type_of_expression env expr =
 	  | arg :: args ->
 	      let t1, t2 =
 		try
-		  filter_arrow ty_res
+		  filter_arrow ~regions:true ty_res
 		with Unify ->
 		  application_of_non_function_err fct ty_fct
 	      in
-              let u2 = type_expect env arg t1 in
+              let u2 = type_expect ~regions:true env arg t1 in
 	      type_args (Effects.merge u2 u) t2 args
 	in
 	type_args effects_f ty_fct args
@@ -631,8 +631,8 @@ let rec type_of_expression env expr =
     | Rexpr_emit (affine, s, None) ->
 	let ty_s, u_s = type_of_expression env s in
 	let ty, _, u_emit, u_get = filter_event_or_err ty_s s in
+	unify_emit ~regions:true expr.expr_loc type_unit ty;
         unify_usage expr.expr_loc affine u_emit;
-	unify_emit expr.expr_loc type_unit ty;
         let r_s = ty_s.type_region in
 	type_unit, Effects.add r_s u_emit u_get u_s
 
@@ -640,8 +640,8 @@ let rec type_of_expression env expr =
 	let ty_s, u_s = type_of_expression env s in
 	let ty, _, u_emit, u_get = filter_event_or_err ty_s s in
 	let ty_e, u_e = type_of_expression env e in
+	unify_emit ~regions:true e.expr_loc ty ty_e;
         unify_usage expr.expr_loc affine u_emit;
-	unify_emit e.expr_loc ty ty_e;
         let r_s = ty_s.type_region in
 	type_unit, Effects.flatten [u_s; u_e; Effects.singleton r_s u_emit u_get]
 
@@ -792,7 +792,7 @@ let rec type_of_expression env expr =
         let l = List.map (fun s ->
             let ty_s, u_s = type_of_expression env s in
             let _, _, u_emit, u_get = filter_event_or_err ty_s s in
-            unify_usage s.expr_loc affine u_get;
+            unify_usage ~regions:true s.expr_loc affine u_get;
             let r_s = ty_s.type_region in
             Effects.merge u_s (Effects.singleton r_s u_emit u_get)
           )
@@ -810,7 +810,7 @@ let rec type_of_expression env expr =
 	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
 	    env loc_env
 	in
-        unify_usage expr.expr_loc affine u_get;
+        unify_usage ~regions:true expr.expr_loc affine u_get;
         let ty, u_p = type_of_expression new_env p in
         let r_s = ty_s.type_region in
         ty, Effects.flatten [u_s; u_p; Effects.singleton r_s u_emit u_get]
@@ -828,7 +828,7 @@ let rec type_of_expression env expr =
 	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
 	    env loc_env
 	in
-        unify_usage expr.expr_loc affine u_get;
+        unify_usage ~regions:true expr.expr_loc affine u_get;
         let ty, u_p = type_of_expression new_env p in
         let r_s = ty_s.type_region in
         ty, Effects.flatten [u_s; u_p; Effects.singleton r_s u_emit u_get]
@@ -906,9 +906,9 @@ and type_let is_rec env patt_expr_list =
 
 
 (* Typing of an expression with an expected type *)
-and type_expect env expr expected_ty =
+and type_expect ?(regions = false) env expr expected_ty =
   let actual_ty, effects = type_of_expression env expr in
-  let () = unify_expr expr expected_ty actual_ty in
+  let () = unify_expr ~regions expr expected_ty actual_ty in
   effects
 
 (* Typing of statements (expressions whose values are ignored) *)
