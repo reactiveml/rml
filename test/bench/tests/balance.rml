@@ -6,7 +6,7 @@ let do_stuff () =
 
 let process main =
   newclock ck2 in
-    for i = 1 to 8 dopar
+    for i = 1 to 300 dopar
       newclock ck in
         do_stuff ()
     done

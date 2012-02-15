@@ -193,7 +193,7 @@ let process body st compute env error adapt_ck =
   end
 
 let process container time_step error_threshold p pck =
-  newclock adapt_ck in
+  newclock adapt_ck schedule (fun nb -> 0, nb) in
     signal error default 0.0 gather max in
     signal compute default no_compute gather (fun x _ -> x) in
     let rec process try_step fuel s =
@@ -212,7 +212,7 @@ let process container time_step error_threshold p pck =
       pause pck
     end
     ||
-    newclock computation_ck in
+    newclock computation_ck schedule (fun nb -> 0, nb) in
       let env = run env_signal in
       run (p compute env error adapt_ck)
 
@@ -243,7 +243,7 @@ let process main =
     ||
     pause;
     for i = 1 to nb_procs dopar
-      newclock ck in (
+      newclock ck schedule (fun _ -> i-1, 0) in (
         for i = 1 to nb_planets_per_procs dopar
           run (planet center compute env error adapt_ck)
         done

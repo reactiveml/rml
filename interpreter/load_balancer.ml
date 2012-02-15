@@ -59,26 +59,25 @@ module Make (C : Communication.S) = struct
     (* Tries to use site number i to execute a child. If it is not available, use
        another unused site. Returns the used site and updates the state of the object*)
     method add_child_site i =
-      let rec next_child i =
-        if IntMap.mem i child_sites then
+      let rec aux i =
+        if i > nb_sites then
+          aux (i mod (nb_sites + 1))
+        else if i = 0 then
+          here
+        else if IntMap.mem i child_sites then
           IntMap.find i child_sites
         else
-          next_child ((i+1) mod nb_sites)
+          let s =
+            if C.SiteSet.is_empty !unused_sites then
+              aux ((i+1) mod (nb_sites + 1))
+            else
+              C.SiteSet.choose !unused_sites
+          in
+          child_sites <- IntMap.add i s child_sites;
+          unused_sites := C.SiteSet.remove s !unused_sites;
+          s
       in
-      if i = 0 then
-        here
-      else if IntMap.mem i child_sites then
-        IntMap.find i child_sites
-      else
-        let s =
-          if C.SiteSet.is_empty !unused_sites then
-            next_child i
-          else
-            C.SiteSet.choose !unused_sites
-        in
-        child_sites <- IntMap.add i s child_sites;
-        unused_sites := C.SiteSet.remove s !unused_sites;
-        s
+      aux i
 
     method take_grand_child_sites n =
       let rec take n s acc = match n with

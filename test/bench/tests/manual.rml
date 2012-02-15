@@ -9,7 +9,7 @@ let process main =
     do_stuff ())
   ||
   newclock ck2 schedule (fun nb -> 0, nb) in
-    for i = 1 to 8 dopar
+    for i = 1 to 300 dopar
       newclock ck schedule (fun nb -> i, 0) in
         do_stuff ()
     done
