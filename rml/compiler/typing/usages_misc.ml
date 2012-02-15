@@ -42,6 +42,7 @@ let addable u1 u2 =
   with Forbidden_usage -> false
 
 let usage_of_type ty =
+  let ty = Static.get_type ty in
   if ty = Initialization.type_affine then
     Affine
   else if ty = Initialization.type_neutral then
@@ -53,6 +54,16 @@ let add_t ty1 ty2 =
   let u1 = usage_of_type ty1 in
   let u2 = usage_of_type ty2 in
   add_u u1 u2
+
+let string_of_usage = function
+  | Affine -> "1"
+  | neutral -> "_"
+  (* | Zero -> "0" *)
+
+let string_of_signal_usage (u1,u2) =
+  Printf.sprintf "(%s,%s)"
+    (string_of_usage u1)
+    (string_of_usage u2)
 
 module Int = struct
   type t = int
@@ -92,5 +103,14 @@ module Table = struct
   let rec flatten = function
     | [] -> empty
     | a::l -> merge a (flatten l)
+
+  let print t =
+    if not (M.is_empty t) then begin
+      M.iter (fun k v ->
+        Printf.printf "%d:%s;" k (string_of_signal_usage v)
+      )
+        t;
+      Printf.printf "\n%!"
+    end
 
 end

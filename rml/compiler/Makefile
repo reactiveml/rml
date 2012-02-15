@@ -106,11 +106,11 @@ OBJ =	global/version.cmo \
 	reac/reac_misc.cmo \
 	reac/parse2reac.cmo \
 	global/initialization.cmo \
+	static/static_errors.cmo \
+	static/static.cmo \
 	typing/usages_misc.cmo \
 	reac/reac2reac.cmo \
 	static/static_printer.cmo \
-	static/static_errors.cmo \
-	static/static.cmo \
 	other_analysis/wf_rec.cmo \
 	other_analysis/instantaneous_loop.cmo \
 	reac/annot.cmo \

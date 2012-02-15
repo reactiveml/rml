@@ -1026,7 +1026,8 @@ let check_nongen_values impl_item_list =
 let type_impl_item info_chan item =
   match item.impl_desc with
   | Rimpl_expr (e) ->
-      ignore (type_of_expression Env.empty e)
+      let _, _ = type_of_expression Env.empty e in
+      ()
 
   | Rimpl_let (flag, patt_expr_list) ->
       let global_env, local_env, _ =
