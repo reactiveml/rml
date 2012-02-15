@@ -99,6 +99,10 @@ let filter_event_or_err ty s =
   with Unify ->
     non_event_err s
 
+let filter_usage ty s =
+  let _, _, u_emit, u_get = filter_event_or_err ty s in
+  Usages_misc.usage_of_type u_emit, Usages_misc.usage_of_type u_get
+
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
