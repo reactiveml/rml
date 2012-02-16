@@ -1,0 +1,34 @@
+val random_int : int -> int -> int
+val random_float : float -> float -> float
+
+(* Vectors *)
+type vector = { v_x : float; v_y : float; }
+
+val mk_vector : float -> float -> vector
+val zero_vector : vector
+val random_vector : float -> float -> float -> float -> vector
+val random_vector_from_center : float -> float -> float -> float -> vector
+val norm2 : vector -> float
+val dist2 : vector -> vector -> float
+val unit_vector : vector -> vector -> vector
+val normal_unit_vector : vector -> vector -> vector
+val add_vector : vector -> vector -> vector
+val scalar_mult : float -> vector -> vector
+val vector_error : vector -> vector -> float
+
+(* Rects and quads *)
+type rect = { r_x : float; r_y : float; r_w : float; r_h : float; }
+type quad = SW | SE | NW | NE
+type direction = S | N | E | W
+
+val mk_rect : float -> float -> float -> float -> rect
+val center_float : rect -> vector
+val sub_rect : rect -> quad -> rect
+val is_inside : rect -> vector -> bool
+val is_in_border : rect -> vector -> bool
+val quad_from_pos : rect -> vector -> quad
+val near_quads_from_pos : rect -> vector -> quad list
+val int_of_quad : quad -> int
+
+val string_of_quad : quad -> string
+val string_of_rect : rect -> string
