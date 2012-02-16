@@ -250,7 +250,8 @@ let rec process area area_ck global_area_ck agent_ck global_add add env parent l
 
 and init_child_areas area_ck global_area_ck agent_ck global_add level from_children r walls =
   let add_area (add_map, env_map, p) q =
-    let add, env, newp = mk_area area_ck global_area_ck agent_ck global_add
+    let idx = int_of_quad q in
+    let add, env, newp = mk_area idx area_ck global_area_ck agent_ck global_add
         (Some (from_children, q)) (level - 1) (sub_rect r q) (sub_walls walls q) in
     let add_map = Geomap.add q add add_map in
     let env_map = Geomap.add q env env_map in
@@ -259,11 +260,11 @@ and init_child_areas area_ck global_area_ck agent_ck global_add level from_child
   in
   List.fold_left add_area (Geomap.empty r, Geomap.empty r, process ()) [NW; SW;NE;SE]
 
-and mk_area ck global_area_ck agent_ck global_add parent level r walls =
+and mk_area idx ck global_area_ck agent_ck global_add parent level r walls =
   signal add at ck in
   signal env at ck in
   let process area_p =
-    newclock area_ck in
+    newclock area_ck schedule (fun nb -> idx, (nb - 3) / 4) in
       run (area area_ck global_area_ck agent_ck global_add add env parent level r walls)
   in
   add, env, area_p
@@ -271,10 +272,10 @@ and mk_area ck global_area_ck agent_ck global_add parent level r walls =
 let mk_global_area agent_ck level r =
   signal external_add at topck in
   let process area_p =
-   newclock global_ck in
+   newclock global_ck schedule (fun nb -> 0, nb) in
     signal add at global_ck in
     signal env at global_ck in
-    newclock area_ck in
+    newclock area_ck schedule (fun nb -> 0, nb) in
       run (area area_ck area_ck agent_ck add add env None level r [N; S; W; E])
       ||
       run (forwarder external_add add)
@@ -336,7 +337,7 @@ let process ball me area env =
 
 
 (* test case *)
-let nb_balls = 400
+let nb_balls = 1000
 let max_speed = 0.2
 
 let w = 800.
@@ -358,7 +359,7 @@ let process ball top_adder =
   emit top_adder (pos, st, ball)
 
 let process main =
-  let top_adder, top_area_p = mk_global_area topck 1 (mk_rect 0. 0. w h) in
+  let top_adder, top_area_p = mk_global_area topck 2 (mk_rect 0. 0. w h) in
   run top_area_p
   ||
   for i = 1 to nb_balls dopar

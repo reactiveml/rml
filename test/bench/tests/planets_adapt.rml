@@ -232,7 +232,7 @@ let process sun center compute env error adapt_ck =
 let w = 1000
 let h = 800
 let nb_procs = 8
-let nb_planets_per_procs = 10
+let nb_planets_per_procs = 20
 
 let _ = Random.self_init ()
 
@@ -243,7 +243,7 @@ let process main =
     ||
     pause;
     for i = 1 to nb_procs dopar
-      newclock ck schedule (fun _ -> i-1, 0) in (
+      newclock ck in (
         for i = 1 to nb_planets_per_procs dopar
           run (planet center compute env error adapt_ck)
         done
