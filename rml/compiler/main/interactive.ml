@@ -54,7 +54,7 @@ let compile () =
   while true do
     begin
       try
-(* 	Location.init lexbuf ""; *)
+	Location.init lexbuf "";
 	Lexer.update_loc lexbuf None 1 true 0;
 	let decl_list = Parse.interactive lexbuf in
 	compile_decl_list module_name itf info_chan out_chan decl_list

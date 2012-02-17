@@ -45,6 +45,8 @@ open Lexing
 type t = { loc_start: position; loc_end: position; loc_ghost: bool };;
 
 let init lexbuf fname =
+  lexbuf.lex_curr_pos <- 0;
+  lexbuf.lex_buffer_len <- 0;
   lexbuf.lex_curr_p <- {
     pos_fname = fname;
     pos_lnum = 1;
