@@ -151,7 +151,6 @@ struct
           cd_location : L.kind;
           mutable cd_children_have_next : bool;
           mutable cd_remaining_async : int ref;
-          mutable cd_emitted_signals : C.GidSet.t; (* signals emitted during current step *)
           mutable cd_remotes : C.SiteSet.t; (* remotes with child clock domains*)
         }
 
@@ -378,6 +377,7 @@ struct
           (*print_debug "Emitting a value for %a@." print_signal ev;*)
           let n = get_event ev in
           let ev_ck = get_event_clock ev in
+          let already_present = E.status n in
           if not (C.is_local ev_ck.ck_gid) then
             print_debug "Error: do_emit on remote signal %a of clock %a@."
               C.print_gid ev.ev_gid  C.print_gid ev_ck.ck_gid;
@@ -387,10 +387,8 @@ struct
           wake_up_now (Wsignal_wa ev.ev_gid);
           wake_up_now (Wsignal_wp ev.ev_gid);
           (* if we have remote clock domains, we should send them the value later *)
-          if cd.cd_location = L.Lany && not (C.GidSet.mem ev.ev_gid cd.cd_emitted_signals) then (
-              add_waiting (Wbefore_eoi ev_ck.ck_gid) (send_value_to_remotes cd ev n);
-              cd.cd_emitted_signals <- C.GidSet.add ev.ev_gid cd.cd_emitted_signals
-            )
+          if cd.cd_location = L.Lany && not already_present then
+            add_waiting (Wbefore_eoi ev_ck.ck_gid) (send_value_to_remotes cd ev n)
 
         let emit ev v =
           if C.is_local ev.ev_gid then (
@@ -656,7 +654,6 @@ struct
         cd_load_balancer = balancer;
         cd_location = location;
         cd_remaining_async = ref 0;
-        cd_emitted_signals = C.GidSet.empty;
         cd_remotes = C.SiteSet.empty;
       } in
       site.s_clock_domains <- C.GidMap.add clock.ck_gid cd site.s_clock_domains;
@@ -811,7 +808,6 @@ struct
       (* reset the clock domain *)
       cd.cd_eoi <- false;
       cd.cd_pause_clock <- false;
-      cd.cd_emitted_signals <- C.GidSet.empty;
       cd.cd_children_have_next <- false
 
     let rec exec_cd cd () =
