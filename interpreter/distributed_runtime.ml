@@ -165,6 +165,7 @@ struct
       mutable s_waiting : D.waiting_list WaitingMap.t; (* waiting lists for parent cds and slow signals *)
       s_seed : C.seed;
       s_comm_site : C.site;
+      mutable s_signals_remotes : C.SiteSet.t C.GidMap.t;
      (* mutable s_children : C.SiteSet.t; (* remotes with child clock domains*) *)
     }
 
@@ -346,9 +347,32 @@ struct
         let default ev = lift_handle E.default ev
         let clock ev = get_event_clock ev
 
-        (** TODO: on envoie la valeur a tous ceux qui ont envoye un req_signal *)
+        let get_signal_remotes gid =
+          let site = get_site () in
+          try
+            C.GidMap.find gid site.s_signals_remotes
+          with
+            | Not_found -> C.SiteSet.empty
+
+        let add_signal_remote s gid =
+          let site = get_site () in
+          let set =
+            if C.GidMap.mem gid site.s_signals_remotes then
+              let set = C.GidMap.find gid site.s_signals_remotes in
+              C.SiteSet.add s set
+            else
+              C.SiteSet.singleton s
+          in
+          site.s_signals_remotes <- C.GidMap.add gid set site.s_signals_remotes
+
         let send_value_to_remotes cd ev n () =
-          C.broadcast_set cd.cd_remotes (Mvalue ev.ev_gid) (E.value n)
+          let remotes =
+            if !Runtime_options.use_signals_users_set then
+              get_signal_remotes ev.ev_gid
+            else
+              cd.cd_remotes
+          in
+          C.broadcast_set remotes (Mvalue ev.ev_gid) (E.value n)
 
         let do_emit ev v =
           (*print_debug "Emitting a value for %a@." print_signal ev;*)
@@ -377,6 +401,8 @@ struct
         (* Called after receiving Mreq_signal id *)
         let receive_req (n : ('a, 'b) E.t) gid msg =
           let req_id = Msgs.recv_req_signal msg in
+          if !Runtime_options.use_signals_users_set then
+            add_signal_remote (C.site_of_gid req_id) gid;
           C.send_owner req_id (Msignal gid) n
 
         (* Called after receiving Memit id *)
@@ -428,6 +454,8 @@ struct
           let tmp_id = C.fresh site.s_seed in
           let create_signal () =
             let ev = new_local_evt_combine ck default combine in
+            if !Runtime_options.use_signals_users_set then
+              add_signal_remote (C.site_of_gid tmp_id) ev.ev_gid;
             print_debug "Created signal %a at clock %a from request by %a@." print_signal ev
               print_clock ck  C.print_gid tmp_id;
             C.send_owner tmp_id (Msignal_created tmp_id) ev
@@ -1113,6 +1141,7 @@ struct
         s_signal_cache = SignalHandle.mk_cache { SignalHandle.c_local_value = Event.signal_local_value };
         s_seed = C.mk_seed ();
         s_comm_site = C.local_site ();
+        s_signals_remotes = C.GidMap.empty;
        (* s_children = C.SiteSet.empty; *)
       } in
       Local_ref.init 0 s;

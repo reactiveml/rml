@@ -4,11 +4,14 @@ let doc_number_steps = "<n> Number of steps to execute"
 let doc_min_rank = "<n> Use only ranks starting from n (only for MPI backend)"
 let doc_debug = "Print debugging information"
 let doc_bench = "Print the elapsed time on the standard output"
+let doc_signals_remote = "Do not use a remote set for each signal"
 
 let number_steps = ref (- 1)
 let min_rank = ref 0
 let debug_mode = ref false
 let bench_mode = ref false
+
+let use_signals_users_set = ref true
 
 let errmsg = ""
 let rml_cli_options =
@@ -17,6 +20,7 @@ let rml_cli_options =
       "-min-rank", Arg.Int ignore, doc_min_rank;
       "-debug", Arg.Unit ignore, doc_debug;
       "-bench", Arg.Unit ignore, doc_bench;
+      "-signals-remote", Arg.Unit ignore, doc_signals_remote;
     ]
 
 let parse_cli () =
@@ -27,6 +31,7 @@ let parse_cli () =
         let arg = Sys.argv.(!current) in
         incr current;
         match arg with
+          | "-no-signals-remote" -> use_signals_users_set := false
           | "-bench" -> bench_mode := true
           | "-debug" -> debug_mode := true
           | "-min-rank" ->

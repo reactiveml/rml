@@ -96,6 +96,8 @@ module Make (C : Communication.S) = struct
       let site = self#add_child_site i in
       let k = if nb_req_sites = 0 then Lleaf else Lany in
       let sites = ref (self#take_grand_child_sites nb_req_sites) in
+      (*Format.eprintf "Creating clock domain at %a with idx %d at site %a with %d req_sites and %d provided@."
+        C.print_site here  i  C.print_site site  nb_req_sites (C.SiteSet.cardinal !sites);*)
       site, k, sites
   end
 
