@@ -66,15 +66,6 @@ let curr lexbuf = {
   loc_ghost = false
 };;
 
-let init lexbuf fname =
-  lexbuf.lex_curr_p <- {
-    pos_fname = fname;
-    pos_lnum = 1;
-    pos_bol = 0;
-    pos_cnum = 0;
-  }
-;;
-
 let symbol_rloc () = {
   loc_start = Parsing.symbol_start_pos ();
   loc_end = Parsing.symbol_end_pos ();
