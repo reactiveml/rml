@@ -86,6 +86,7 @@ OBJ =	global/version.cmo \
 	static/def_static.cmo \
 	typing/def_types.cmo \
 	global/modules.cmo \
+	global/initialization.cmo \
 	global/symbol_table.cmo \
 	parsing/lexer.cmo \
 	parsing/syntaxerr.cmo \
@@ -105,7 +106,6 @@ OBJ =	global/version.cmo \
 	typing/types.cmo \
 	reac/reac_misc.cmo \
 	reac/parse2reac.cmo \
-	global/initialization.cmo \
 	static/static_errors.cmo \
 	static/static.cmo \
 	typing/usages_misc.cmo \

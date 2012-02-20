@@ -115,3 +115,57 @@ and notgeneric = 0
 let type_of_global g = (info g).value_typ
 let type_of_constr_arg g = (info g).cstr_arg
 let type_of_label_res g = (info g).lbl_res
+
+(* The current nesting level of lets *)
+let current_level = ref 0;;
+
+(* generating fresh names *)
+let names = new Ident.name_generator
+
+(* making types *)
+let make_type ty =
+  { type_desc = ty;
+    type_level = generic;
+    type_index = names#name;
+    type_usage = Usages.mk_zero;
+  }
+
+let product ty_list =
+  make_type (Type_product(ty_list))
+
+let constr ty_constr ty_list =
+  make_type (Type_constr(ty_constr, ty_list))
+
+let constr_notabbrev name ty_list =
+  make_type (Type_constr({ gi = name;
+			   info = Some {constr_abbr = Constr_notabbrev}; },
+			 ty_list))
+
+let arrow ty1 ty2 =
+  make_type (Type_arrow(ty1, ty2))
+
+let process ty k =
+  make_type (Type_process (ty, k))
+
+let no_type_expression =
+  { type_desc = Type_product[];
+    type_level = generic;
+    type_index = -1;
+    type_usage = Usages.mk_zero;
+  }
+
+(* To get fresh type variables *)
+
+let new_var () =
+  { type_desc = Type_var;
+    type_level = !current_level;
+    type_index = names#name;
+    type_usage = Usages.mk_zero;
+  }
+
+let new_generic_var () =
+  { type_desc = Type_var;
+    type_level = generic;
+    type_index = names#name;
+    type_usage = Usages.mk_zero;
+  }

@@ -36,20 +36,12 @@ open Global
 
 exception Unify
 
-
-(* generating fresh names *)
-let names = new Ident.name_generator
-
-
-(* The current nesting level of lets *)
-let current_level = ref 0;;
-
 let reset_type_var () =
-  current_level := 0; ()
+  Def_types.current_level := 0; ()
 and push_type_level () =
-  incr current_level; ()
+  incr Def_types.current_level; ()
 and pop_type_level () =
-  decr current_level; ()
+  decr Def_types.current_level; ()
 ;;
 
 (* making types *)
@@ -77,27 +69,6 @@ let rec arrow_list ty_l ty_res =
     [] -> ty_res
   | [ty] -> arrow ty ty_res
   | ty :: ty_l -> arrow ty (arrow_list ty_l ty_res)
-
-let process ty k =
-  make_type (Type_process (ty, k))
-
-
-let no_type_expression =
-  { type_desc = Type_product[];
-    type_level = generic;
-    type_index = -1; }
-
-(* To get fresh type variables *)
-
-let new_var () =
-  { type_desc = Type_var;
-    type_level = !current_level;
-    type_index = names#name }
-
-let new_generic_var () =
-  { type_desc = Type_var;
-    type_level = generic;
-    type_index = names#name }
 
 let rec new_var_list n =
   match n with
@@ -136,11 +107,11 @@ let rec gen_ty is_gen ty =
   let ty = type_repr ty in
   begin match ty.type_desc with
     Type_var ->
-      if ty.type_level > !current_level
+      if ty.type_level > !Def_types.current_level
       then if is_gen
       then (ty.type_level <- generic;
 	    list_of_typ_vars := ty :: !list_of_typ_vars)
-      else ty.type_level <- !current_level
+      else ty.type_level <- !Def_types.current_level
   | Type_arrow(ty1, ty2) ->
       let level1 = gen_ty is_gen ty1 in
       let level2 = gen_ty is_gen ty2 in
@@ -298,7 +269,9 @@ let expand_abbrev params body args =
 
 let unify_regions enabled expected_ty actual_ty =
   if enabled then begin
-    expected_ty.type_region <- actual_ty.type_region
+    let new_su = Usages.add_s expected_ty.type_usage actual_ty.type_usage in
+    expected_ty.type_usage <- new_su;
+    actual_ty.type_usage <- new_su;
   end
 
 (* unification *)

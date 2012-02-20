@@ -640,10 +640,12 @@ let rec type_of_expression env expr =
 	let ty_s, u_s = type_of_expression env s in
 	let ty, _, u_emit, u_get = filter_event_or_err ty_s s in
 	let ty_e, u_e = type_of_expression env e in
-	unify_emit ~regions:true e.expr_loc ty ty_e;
-        unify_usage expr.expr_loc affine u_emit;
-        let r_s = ty_s.type_region in
-	type_unit, Effects.flatten [u_s; u_e; Effects.singleton r_s u_emit u_get]
+	unify_emit e.expr_loc ty ty_e;
+        unify_usage_type expr.expr_loc ty_s affine u_emit u_emit u_get;
+        let r_s = ty_s.type_index in
+        let effects = Effects.flatten [u_s; u_e; Effects.singleton r_s s.expr_loc u_emit u_get] in
+        let () = eprint "Rexpr_emit (Some _)" effects in
+	type_unit, effects
 
     | Rexpr_signal ((s,te_opt), combine_opt, e) ->
 	let ty_emit = new_var() in
@@ -792,9 +794,10 @@ let rec type_of_expression env expr =
         let l = List.map (fun s ->
             let ty_s, u_s = type_of_expression env s in
             let _, _, u_emit, u_get = filter_event_or_err ty_s s in
-            unify_usage ~regions:true s.expr_loc affine u_get;
-            let r_s = ty_s.type_region in
-            Effects.merge u_s (Effects.singleton r_s u_emit u_get)
+            unify_usage_type s.expr_loc ty_s affine u_get u_emit u_get;
+            (* accumulate_usage ty_s u_emit u_get; *)
+            let r_s = ty_s.type_index in
+            Effects.merge u_s (Effects.singleton r_s s.expr_loc u_emit u_get)
           )
           (events_from_event_config s)
         in
@@ -812,8 +815,8 @@ let rec type_of_expression env expr =
 	in
         unify_usage ~regions:true expr.expr_loc affine u_get;
         let ty, u_p = type_of_expression new_env p in
-        let r_s = ty_s.type_region in
-        ty, Effects.flatten [u_s; u_p; Effects.singleton r_s u_emit u_get]
+        let r_s = ty_s.type_index in
+        ty, Effects.flatten [u_s; u_p; Effects.singleton r_s s.expr_loc u_emit u_get]
 
     | Rexpr_await_val (affine,_,One,s,patt,p) ->
 	let ty_s, u_s = type_of_expression env s in
@@ -830,8 +833,8 @@ let rec type_of_expression env expr =
 	in
         unify_usage ~regions:true expr.expr_loc affine u_get;
         let ty, u_p = type_of_expression new_env p in
-        let r_s = ty_s.type_region in
-        ty, Effects.flatten [u_s; u_p; Effects.singleton r_s u_emit u_get]
+        let r_s = ty_s.type_index in
+        ty, Effects.flatten [u_s; u_p; Effects.singleton r_s s.expr_loc u_emit u_get]
 
   in
   expr.expr_type <- fst t;
