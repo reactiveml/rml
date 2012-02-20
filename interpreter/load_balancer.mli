@@ -1,5 +1,5 @@
 
-type policy = Plocal | Pround_robin | Puser_local | Puser_robin
+type policy = Plocal | Pround_robin | Puser_local | Puser_robin | Premote
 val load_balancing_policy : policy ref
 val set_load_balancing_policy : string -> unit
 

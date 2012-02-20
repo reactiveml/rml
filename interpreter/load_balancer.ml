@@ -11,7 +11,7 @@ module type S = sig
   val mk_top_balancer : unit -> load_balancer
 end
 
-type policy = Plocal | Pround_robin | Puser_local | Puser_robin
+type policy = Plocal | Pround_robin | Puser_local | Puser_robin | Premote
 let load_balancing_policy = ref Pround_robin
 
 let set_load_balancing_policy s =
@@ -21,6 +21,7 @@ let set_load_balancing_policy s =
       | "robin" -> Pround_robin
       | "user_local" -> Puser_local
       | "user_robin" -> Puser_robin
+      | "remote" -> Premote
       | _ -> raise (Arg.Bad ("Invalid load balancing policy"))
   in
   load_balancing_policy := p
@@ -116,7 +117,7 @@ module Make (C : Communication.S) = struct
   end
 
 
-  class robin_balancer ignore_annotations here sites =
+  class robin_balancer ignore_annotations start_index here sites =
   object(self)
     inherit generic_balancer here sites
 
@@ -126,15 +127,15 @@ module Make (C : Communication.S) = struct
       match f, ignore_annotations with
         | Some f, false ->
             let site, k, sites = self#follow_annotation f in
-            site, k, (new robin_balancer ignore_annotations site sites :> load_balancer)
+            site, k, (new robin_balancer ignore_annotations start_index site sites :> load_balancer)
         | _ ->
             let s, k, bal =
               if current_index = 0 then
                 let k = if C.SiteSet.is_empty !sites then Lleaf else Lany in
-                here, k, new robin_balancer ignore_annotations here unused_sites
+                here, k, new robin_balancer ignore_annotations start_index here unused_sites
               else
                 let site = self#add_child_site current_index in
-                site, Lleaf, new robin_balancer ignore_annotations site (ref C.SiteSet.empty)
+                site, Lleaf, new robin_balancer ignore_annotations start_index site (ref C.SiteSet.empty)
             in
             current_index <- (current_index + 1) mod (nb_sites + 1);
             s, k, (bal :> load_balancer)
@@ -145,6 +146,7 @@ module Make (C : Communication.S) = struct
     match !load_balancing_policy with
       | Plocal -> (new local_balancer C.master_site :> load_balancer)
       | Puser_local -> (new local_user_balancer C.master_site all_sites :> load_balancer)
-      | Pround_robin -> (new robin_balancer true C.master_site all_sites :> load_balancer)
-      | Puser_robin -> (new robin_balancer false C.master_site all_sites :> load_balancer)
+      | Pround_robin -> (new robin_balancer true 0 C.master_site all_sites :> load_balancer)
+      | Puser_robin -> (new robin_balancer false 0 C.master_site all_sites :> load_balancer)
+      | Premote -> (new robin_balancer true 1 C.master_site all_sites :> load_balancer)
 end
