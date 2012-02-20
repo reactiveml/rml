@@ -70,8 +70,8 @@ type body =
       mutable b_vel : vector;
       b_weight : float; }
 
-let mk_body pos v weight =
-  signal s at topck default pos gather (fun _ v -> v) in
+let mk_body ck pos v weight =
+  signal s at topck restrict ck default pos gather (fun _ v -> v) in
   { b_id = gen_id ();
     b_pos = s;
     b_vel = v;
@@ -131,16 +131,16 @@ let process body st dt env =
     compute_pos (pre? dt) st (f (last? st.b_pos))
   end
 
-let process planet center dt env =
+let process planet ck center dt env =
    let pos = random_pos_planet center.v_x center.v_y 100.0 200.0 in
-   let st = mk_body pos
+   let st = mk_body ck pos
      (scalar_mult 10.0 (normal_unit_vector pos center))
      (random_float 0.01 0.01)
    in
    run (body st dt env)
 
 let process sun center dt env =
-  let st = mk_body center zero_vector 8000.0 in
+  let st = mk_body topck center zero_vector 8000.0 in
   run (body st dt env)
 
 let nb_tiles = 8
@@ -157,7 +157,7 @@ let process main =
   for i = 1 to nb_tiles dopar
    newclock ck in
     for i = 1 to nb_planets dopar
-      run (planet center dt env)
+      run (planet ck center dt env)
     done
   done
   ||

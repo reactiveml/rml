@@ -75,13 +75,17 @@ let rml_backends =
     ("lco", seq_launcher, "Sequential (Lco)");
     ("lco_mpi", mpi_one_launcher "local", "MPI with local load balancer");
     ("lco_mpi", mpi_launcher "user_local" "", "MPI with user annotations and local load balancer");
-    ("lco_mpi", mpi_launcher "robin" "", "MPI with round robin load balancer"); *)
+    ("lco_mpi", mpi_launcher "robin" "", "MPI with round robin load balancer");
     ("lco_mpi", mpi_launcher "user_robin" "", "MPI with user annotations and round robin balancer");
     ("lco_mpi", mpi_launcher "user_robin" " -no-signals-remote ",
       "MPI with user annotations and round robin balancer and no signals remotes");
-    ("lco_mpi_buffer", mpi_launcher "user_local" "", "MPI+buffering with user annotations and local load balancer");
+    ("lco_mpi", mpi_launcher "user_robin" " -no-local-slow-signals ",
+      "MPI with user annotations and round robin balancer and no local slow signals");
+    ("lco_mpi", mpi_launcher "user_robin" " -no-local-slow-signals -no-signals-remote ",
+      "MPI with user annotations and round robin balancer and no local slow signals and no signals remotes");
+  (*  ("lco_mpi_buffer", mpi_launcher "user_local" "", "MPI+buffering with user annotations and local load balancer");
     ("lco_mpi_buffer", mpi_launcher "robin" "", "MPI+buffering with round robin load balancer");
-    ("lco_mpi_buffer", mpi_launcher "user_robin" "", "MPI+buffering with user annotations and round robin balancer")
+    ("lco_mpi_buffer", mpi_launcher "user_robin" "", "MPI+buffering with user annotations and round robin balancer") *)
   ]
 
 let do_all_tests () =
