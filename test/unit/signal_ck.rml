@@ -125,6 +125,14 @@ let process pre_multi_at act =
     ||
     emit s 2; pause topck; emit s 3
 
+(*[N; O 2; O 3]*)
+let process pre_multi_at_restrict act =
+  newclock ck in
+    signal s at topck restrict ck default 0 gather (+) in
+    pause topck; act (pre? s); pause topck; act (pre? s)
+    ||
+    emit s 2; pause topck; emit s 3
+
 
 (*[O 2]*)
 let process last_value_pre act =
@@ -169,6 +177,14 @@ let process last_value_slow act =
 let process last_value_slow_at act =
   newclock ck in
     signal s at topck default 0 gather (+) in
+    pause topck; pause topck; pause topck; act (last? s)
+    ||
+    emit s 2
+
+(*[N; N; N; O 2]*)
+let process last_value_slow_at_restrict act =
+  newclock ck in
+    signal s at topck restrict ck default 0 gather (+) in
     pause topck; pause topck; pause topck; act (last? s)
     ||
     emit s 2
@@ -233,11 +249,14 @@ let test =
    (pre_multi_slow, "pre_multi_slow", [N; N; O 3]);
    (pre_multi2_slow, "pre_multi2_slow", [N; O 2; O 3]);
    (pre_multi_at, "pre_multi_at", [N; O 2; O 3]);
+   (pre_multi_at_restrict, "pre_multi_at_restrict", [N; O 2; O 3]);
    (last_value_pre, "last_value_pre", [O 2]);
    (last_value, "last_value", [O 2]);
    (last_init, "last_init", [O 0]);
    (last_value_pre_slow, "last_value_pre_slow", [N; O 2]);
    (last_value_slow, "last_value_slow", [N; N; N; O 2]);
+   (last_value_slow_at, "last_value_slow_at", [N; N; N; O 2]);
+   (last_value_slow_at_restrict, "last_value_slow_at_restrict", [N; N; N; O 2]);
    (last_init_slow, "last_init_slow", [O 0]);
    (last_multi, "last_multi", [O 3]);
    (last_multi2, "last_multi2", [S(O 2, O 3)]);

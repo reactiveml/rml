@@ -631,7 +631,7 @@ let rec type_of_expression env expr =
         unify_emit e.e_loc ty ty_e;
         type_unit
 
-    | Esignal ((s,te_opt), _, combine_opt, e) ->
+    | Esignal ((s,te_opt), _, _, combine_opt, e) ->
         let ty_emit = new_var() in
         let ty_get = new_var() in
         let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in

@@ -51,13 +51,14 @@ sig
     | When
   and clock_domain
   and clock
+  type region
 
   type ('a, 'b) event
   type event_cfg
   module Event :
     (sig
-      val new_evt : clock -> ('a, 'a list) event
-      val new_evt_combine : clock -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+      val new_evt : clock -> region -> ('a, 'a list) event
+      val new_evt_combine : clock -> region -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
 
       val status: ?only_at_eoi:bool -> ('a, 'b) event -> bool
       val value: ('a, 'b) event -> 'b
@@ -69,6 +70,7 @@ sig
       val emit: ('a, 'b) event -> 'a -> unit
 
       val clock : ('a, 'b) event -> clock
+      val region_of_clock : clock -> region
 
       val cfg_present : ('a, 'b) event -> event_cfg
       val cfg_or : event_cfg -> event_cfg -> event_cfg

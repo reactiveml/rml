@@ -297,6 +297,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token RBRACE              /* "}" */
 %token RBRACKET            /* "]" */
 %token REC                 /* "rec" */
+%token RESTRICT            /* "restrict" */
 %token RPAREN              /* "(" */
 %token RUN                 /* "run" */
 %token SCHEDULE            /* "schedule" */
@@ -1111,10 +1112,15 @@ signal_comma_list:
   | signal_comma_list COMMA signal_decl         { $3 :: $1}
 ;
 opt_at_expr:
-    /* empty */       { CkLocal }
-  | AT TOPCK             { CkTop }
-  | AT simple_expr    { CkExpr $2 }
+    /* empty */       { CkLocal, CkLocal }
+  | AT sig_clock_expr { $2, $2 }
+  | AT sig_clock_expr RESTRICT simple_expr { $2, CkExpr $4 }
 ;
+sig_clock_expr:
+ | TOPCK { CkTop }
+ | simple_expr { CkExpr $1 }
+;
+
 /* Miscellaneous */
 
 rec_flag:

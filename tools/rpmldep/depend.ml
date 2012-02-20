@@ -136,9 +136,10 @@ let rec add_expr bv exp =
   | Pexpr_loop(e1) -> add_expr bv e1
   | Pexpr_par(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_merge(e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pexpr_signal(ioel, ck, oee, e) ->
+  | Pexpr_signal(ioel, (ck, r), oee, e) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
       add_clock_expr bv ck;
+      add_clock_expr bv r;
       Misc.opt_iter (fun (e1, e2) -> add_expr bv e1; add_expr bv e2) oee;
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1

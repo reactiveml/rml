@@ -250,23 +250,24 @@ let rec translate_ml e =
            [translate_ml s;
             translate_ml e])
 
-    | Coexpr_signal (s, ck, None, e) ->
+    | Coexpr_signal (s, ck, r, None, e) ->
         Cexpr_let (Nonrecursive,
                    [pattern_of_signal s,
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_global_signal",
-                          [translate_clock_expr ck]))
+                          [translate_clock_expr ck; translate_clock_expr r]))
                       Location.none],
                    translate_ml e)
 
-    | Coexpr_signal (s, ck, Some(e1,e2), e) ->
+    | Coexpr_signal (s, ck, r, Some(e1,e2), e) ->
         Cexpr_let (Nonrecursive,
                    [pattern_of_signal s,
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_global_signal_combine",
                           [translate_clock_expr ck;
+                           translate_clock_expr r;
                            translate_ml e1;
                            translate_ml e2;]))
                       Location.none],
@@ -402,18 +403,20 @@ and translate_proc e =
            [translate_proc k1;
             translate_proc k2;])
 
-    | Coproc_signal (s, ck, None, k) ->
+    | Coproc_signal (s, ck, r, None, k) ->
         Cexpr_apply
           (make_instruction "rml_signal",
            [translate_clock_expr ck;
+            translate_clock_expr r;
             make_expr
               (Cexpr_function [pattern_of_signal s, translate_proc k])
               Location.none])
 
-    | Coproc_signal (s, ck, Some(e1,e2), k) ->
+    | Coproc_signal (s, ck, r, Some(e1,e2), k) ->
         Cexpr_apply
           (make_instruction "rml_signal_combine",
            [translate_clock_expr ck;
+            translate_clock_expr r;
             embed_ml e1;
             embed_ml e2;
             make_expr

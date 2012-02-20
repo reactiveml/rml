@@ -69,7 +69,7 @@ and expression_desc =
   | Coexpr_emit of expression
   | Coexpr_emit_val of expression * expression
   | Coexpr_signal of
-      (ident * type_expression option) * expression Asttypes.clock
+      (ident * type_expression option) * expression Asttypes.clock * expression Asttypes.clock
     * (expression * expression) option * expression
   | Coexpr_topck
 
@@ -93,7 +93,7 @@ and process_desc =
   | Coproc_par of process list
   | Coproc_merge of process * process
   | Coproc_signal of
-      (ident * type_expression option) * expression Asttypes.clock
+      (ident * type_expression option) * expression Asttypes.clock * expression Asttypes.clock
     * (expression * expression) option * process
   | Coproc_def of (pattern * expression) * process
   | Coproc_def_dyn of (pattern * process) * process

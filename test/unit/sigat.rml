@@ -41,10 +41,18 @@ let process sigat_remote act =
     pause topck;
     act (pre? s)
 
+let process sigat_restrict act =
+  newclock ck in
+    signal s at topck restrict ck default 0 gather (+) in
+    emit s 3;
+    pause topck;
+    act (pre? s)
+
 open Rmltest
 
 let test =
  [
    (sigat, "sigat", [N; O 3]);
-   (sigat_remote, "sigat_remote", [O 1; O 3])
+   (sigat_remote, "sigat_remote", [O 1; O 3]);
+   (sigat_restrict, "sigat_restrict", [N; O 3])
  ]

@@ -395,7 +395,13 @@ let rec static_expr ctx e =
         else
           expr_wrong_static_err e
 
-    | Esignal (_, ck, None, p) ->
+    | Esignal (_, ck, r, None, p) ->
+      (match r with
+        | CkExpr e1 ->
+            if static_expr ML e1 <> Static then
+              expr_wrong_static_err e1;
+        | _ -> ()
+      );
       (match ck with
         | CkLocal ->
             if ctx <> Process then
@@ -409,7 +415,7 @@ let rec static_expr ctx e =
         | _ ->  static_expr ctx p
       )
 
-    | Esignal (_, ck, Some(e1,e2), p) ->
+    | Esignal (_, ck, r, Some(e1,e2), p) ->
         let typ1 = static_expr ML e1 in
         let typ2 = static_expr ML e2 in
         let typ3 = static_expr ctx p in

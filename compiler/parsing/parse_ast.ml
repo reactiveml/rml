@@ -77,7 +77,8 @@ and expression_desc =
   | Pexpr_par of expression * expression
   | Pexpr_merge of expression * expression
   | Pexpr_signal of
-      (simple_ident * type_expression option) list * expression Asttypes.clock *
+      (simple_ident * type_expression option) list *
+        (expression Asttypes.clock (*ck*) * expression Asttypes.clock (*region*)) *
         (expression * expression) option * expression
   | Pexpr_process of expression
   | Pexpr_run of expression

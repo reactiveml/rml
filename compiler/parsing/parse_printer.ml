@@ -295,9 +295,10 @@ let rec expression i ppf x =
       line i ppf "Pexpr_merge\n";
       expression i ppf e1;
       expression i ppf e2;
-  | Pexpr_signal (l, ck, eeo, e) ->
+  | Pexpr_signal (l, (ck, r), eeo, e) ->
       line i ppf "Pexpr_signal\n";
       clock_expr true i ppf ck;
+      clock_expr true i ppf r;
       list i string_x_type_expression_option ppf l;
       option i expression_x_expression ppf eeo;
       expression i ppf e;

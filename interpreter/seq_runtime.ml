@@ -40,6 +40,7 @@ struct
         }
 
     and clock = clock_domain
+    and region = clock
 
     type ('a, 'b) event = ('a,'b) E.t * clock_domain * D.waiting_list * D.waiting_list
     type event_cfg =
@@ -53,11 +54,11 @@ struct
 
     module Event =
       struct
-        let new_evt_combine cd default combine =
+        let new_evt_combine cd _ default combine =
           (E.create cd.cd_clock default combine, cd, D.mk_waiting_list (), D.mk_waiting_list ())
 
-        let new_evt sig_cd =
-          new_evt_combine sig_cd [] (fun x y -> x :: y)
+        let new_evt sig_cd _ =
+          new_evt_combine sig_cd sig_cd [] (fun x y -> x :: y)
 
         let status ?(only_at_eoi=false) (n,sig_cd,_,_) =
           E.status n && (not only_at_eoi || !(sig_cd.cd_eoi))
@@ -74,6 +75,8 @@ struct
         let last (n,_,_,_) = E.last n
         let default (n,_,_,_) = E.default n
         let clock (_,sig_cd,_,_) = sig_cd
+
+        let region_of_clock cd = cd
 
         let emit (n,sig_cd,wa,wp) v =
           E.emit n v;

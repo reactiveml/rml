@@ -278,9 +278,12 @@ let expr_free_vars e =
         expr_free_vars vars e1;
         expr_free_vars vars e2
 
-    | Esignal ((ident, tyexpr_opt), ck, comb, e) ->
+    | Esignal ((ident, tyexpr_opt), ck, r, comb, e) ->
         let vars' = (Vlocal ident) :: vars in
         (match ck with
+          | CkExpr e1 -> expr_free_vars vars' e1
+          | _ -> ());
+        (match r with
           | CkExpr e1 -> expr_free_vars vars' e1
           | _ -> ());
         (match comb with

@@ -49,6 +49,7 @@ module Rml_interpreter =
     type ('a, 'b) event = ('a, 'b) R.event
     type event_cfg_gen = unit -> R.event_cfg
     type clock_expr = R.clock Types.clock
+    type region_expr = clock_expr
 
     let unit_value = ()
     let dummy_step _ = ()
@@ -79,11 +80,15 @@ module Rml_interpreter =
 
 (* ------------------------------------------------------------------------ *)
 
-    let rml_global_signal ce =
-      R.Event.new_evt (ensure_clock_expr ce)
+    let rml_global_signal ce re =
+      let ck = ensure_clock_expr ce in
+      let r = R.Event.region_of_clock (ensure_clock_expr re) in
+      R.Event.new_evt ck r
 
-    let rml_global_signal_combine ce default combine =
-      R.Event.new_evt_combine (ensure_clock_expr ce) default combine
+    let rml_global_signal_combine ce re default combine =
+      let ck = ensure_clock_expr ce in
+      let r = R.Event.region_of_clock (ensure_clock_expr re) in
+      R.Event.new_evt_combine ck r default combine
 
 (* ------------------------------------------------------------------------ *)
 
@@ -397,13 +402,17 @@ let rml_loop p =
 (* signal                             *)
 (**************************************)
 
-    let rml_signal ce p =
+    let rml_signal ce re p =
       fun f_k ctrl jp cd _ ->
-        p (R.Event.new_evt (eval_clock_expr cd ce)) f_k ctrl jp cd unit_value
+        let ck = eval_clock_expr cd ce in
+        let r = R.Event.region_of_clock (eval_clock_expr cd re) in
+        p (R.Event.new_evt ck r) f_k ctrl jp cd unit_value
 
-    let rml_signal_combine ce default comb p =
+    let rml_signal_combine ce re default comb p =
       fun f_k ctrl jp cd _ ->
-        let evt = R.Event.new_evt_combine (eval_clock_expr cd ce) (default()) (comb()) in
+        let ck = eval_clock_expr cd ce in
+        let r = R.Event.region_of_clock (eval_clock_expr cd re) in
+        let evt = R.Event.new_evt_combine ck r (default()) (comb()) in
         p evt f_k ctrl jp cd unit_value
 
 (**************************************)

@@ -26,6 +26,7 @@
 module type LCO_RUNTIME =
   sig
     type clock
+    type region
     type clock_domain
     type ('a, 'b) event
     type event_cfg
@@ -42,6 +43,7 @@ module type S =
     type 'a expr
     and 'a process
     and clock_expr = R.clock Types.clock
+    and region_expr = clock_expr
 
     val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
     val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
@@ -54,11 +56,9 @@ module type S =
     val rml_expr_emit: (unit, 'b) R.event -> unit
     val rml_expr_emit_val: ('a, 'b) R.event -> 'a -> unit
 
-(*
-    val rml_global_signal: R.clock_domain -> clock_expr -> ('a, 'a list) R.event
-    val rml_global_signal_combine: R.clock_domain -> clock_expr -> 'b ->
+    val rml_global_signal: clock_expr -> region_expr -> ('a, 'a list) R.event
+    val rml_global_signal_combine: clock_expr -> region_expr -> 'b ->
       ('a -> 'b -> 'b) -> ('a, 'b) R.event
-      *)
 
     type event_cfg_gen = unit -> R.event_cfg
     val cfg_present': ('a,'b) R.event -> event_cfg_gen
@@ -111,9 +111,10 @@ module type S =
     val rml_fordopar:
         (unit -> int) -> (unit -> int) -> bool -> (int -> 'a expr) ->
           unit expr
-    val rml_signal: clock_expr -> (('a, 'a list) R.event -> 'b expr) -> 'b expr
+    val rml_signal:
+      clock_expr -> region_expr -> (('a, 'a list) R.event -> 'b expr) -> 'b expr
     val rml_signal_combine:
-        clock_expr -> (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
+        clock_expr -> region_expr -> (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
           (('a, 'b) R.event -> 'c expr) -> 'c expr
     val rml_def: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
     val rml_def_dyn: 'a expr -> ('a -> 'b expr) -> 'b expr

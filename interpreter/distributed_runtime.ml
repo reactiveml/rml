@@ -21,6 +21,7 @@ struct
           | Mstep_done of 'gid (* a clock domain has finished its step *)
           | Mdone of 'gid (* global step done *)
           | Mpauseclock of 'gid
+          | Mbefore_eoi (* Before the end of instant of clock domain *)
           | Meoi (* End of instant of clock domain *)
           | Meoi_control of 'gid
           | Mnext_instant (* Go to next instant *)
@@ -51,7 +52,8 @@ struct
         | Mstep_done gid -> fprintf ff "Mstep_done %a" print_gid gid
         | Mdone gid -> fprintf ff "Mdone %a" print_gid gid
         | Mpauseclock gid -> fprintf ff "Mpauseclock %a" print_gid gid
-        | Meoi -> fprintf ff "Meoi"
+        | Meoi -> fprintf ff "Mbefore_eoi"
+        | Mbefore_eoi -> fprintf ff "Meoi"
         | Meoi_control gid -> fprintf ff "Meoi_control %a" print_gid gid
         | Mnext_instant -> fprintf ff "Mnext_instant"
         | Mreq_has_next gid -> fprintf ff "Mreq_has_next %a" print_gid gid
@@ -83,6 +85,7 @@ struct
       ck_parent : clock option;
       ck_clock : E.clock GidHandle.handle;
     }
+    type region = clock
     (** Saving and searching clock state *)
     type clock_state = (clock * E.clock_index) list
 
@@ -123,7 +126,7 @@ struct
 
     module SignalHandle = Dhandle.Make (struct
       type key = C.gid
-      type ('a, 'b) value = ('a, 'b) E.t * clock
+      type ('a, 'b) value = ('a, 'b) E.t * clock * region
       let compare = compare
     end) (C)
 
@@ -211,10 +214,19 @@ struct
             assert false
     let get_event ev =
       let site = get_site () in
-      fst (SignalHandle.get site.s_signal_cache ev.ev_handle)
+      let n, _, _ =  SignalHandle.get site.s_signal_cache ev.ev_handle in
+      n
     let get_event_clock ev =
       let site = get_site () in
-      snd (SignalHandle.get site.s_signal_cache ev.ev_handle)
+      let _, ck, _ = SignalHandle.get site.s_signal_cache ev.ev_handle in
+      ck
+    let get_event_region ev =
+      let site = get_site () in
+      let _, _, r = SignalHandle.get site.s_signal_cache ev.ev_handle in
+      r
+    let get_event_whole ev =
+      let site = get_site () in
+      SignalHandle.get site.s_signal_cache ev.ev_handle
 
     let process_msgs () =
       let site = get_site () in
@@ -258,6 +270,7 @@ struct
         let send id (d:'a) = C.send_owner id (Mpauseclock id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
+      let broadcast_before_eoi, recv_before_eoi = mk_broadcast_set_recv Mbefore_eoi
       let broadcast_eoi, recv_eoi = mk_broadcast_set_recv Meoi
       let send_eoi_control, recv_eoi_control =
         let send id (d:'a) = C.send_owner id (Meoi_control id) d in
@@ -346,6 +359,8 @@ struct
         let default ev = lift_handle E.default ev
         let clock ev = get_event_clock ev
 
+        let region_of_clock ck = ck
+
         let get_signal_remotes gid =
           let site = get_site () in
           try
@@ -374,20 +389,19 @@ struct
           C.broadcast_set remotes (Mvalue ev.ev_gid) (E.value n)
 
         let do_emit ev v =
-          (*print_debug "Emitting a value for %a@." print_signal ev;*)
-          let n = get_event ev in
-          let ev_ck = get_event_clock ev in
+          print_debug "Emitting a value for %a@." print_signal ev;
+          let n, ev_ck, ev_r = get_event_whole ev in
           let already_present = E.status n in
-          if not (C.is_local ev_ck.ck_gid) then
-            print_debug "Error: do_emit on remote signal %a of clock %a@."
-              C.print_gid ev.ev_gid  C.print_gid ev_ck.ck_gid;
-          let cd = get_clock_domain ev_ck in
+          if not (C.is_local ev_r.ck_gid) then
+            print_debug "Error: do_emit on remote signal %a at region %a of clock %a@."
+              C.print_gid ev.ev_gid   print_clock ev_r  print_clock ev_ck;
           E.emit n v;
           (* wake up processes awaiting this signal *)
           wake_up_now (Wsignal_wa ev.ev_gid);
           wake_up_now (Wsignal_wp ev.ev_gid);
           (* if we have remote clock domains, we should send them the value later *)
-          if cd.cd_location = L.Lany && not already_present then
+          let cd = get_clock_domain ev_r in
+          if not already_present && cd.cd_location = L.Lany then
             add_waiting (Wbefore_eoi ev_ck.ck_gid) (send_value_to_remotes cd ev n)
 
         let emit ev v =
@@ -421,7 +435,7 @@ struct
         (* Called when a local process tries to access a remote signal for the first time.
            Creates local callbacks for this signal. *)
         (** TODO: remove callbacks when signal is no longer needed *)
-        let signal_local_value gid (n, ck) =
+        let signal_local_value gid (n, ck, r) =
           let site = get_site () in
           (* request the current value of the signal *)
           Msgs.send_req_signal gid (C.fresh site.s_seed);
@@ -430,51 +444,53 @@ struct
           (* set the local value to the one received *)
           let new_n = C.from_msg msg in
           E.copy n new_n;
-          n, ck
+          n, ck, r
 
-        let new_local_evt_combine ck default combine =
+        let new_local_evt_combine ck r default combine =
           let site = get_site () in
-          let cd = get_clock_domain ck in
           let n = E.create (get_clock ck.ck_clock) default combine in
           let gid = C.fresh site.s_seed in
           let ev  =
-            { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck);
+            { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck, r);
               ev_gid = gid }
           in
-          if cd.cd_location = L.Lany then (
+          print_debug "Created signal %a at region %a of clock %a@." print_signal ev
+            print_clock r  print_clock ck;
+          if (get_clock_domain r).cd_location = L.Lany then (
             add_callback (Memit gid) (receive_emit ev);
             add_callback (Mreq_signal gid) (receive_req n gid)
           );
           ev
 
-        let new_remote_evt_combine ck default (combine : 'a -> 'b -> 'b) =
+        let new_remote_evt_combine ck r default (combine : 'a -> 'b -> 'b) =
           let site = get_site () in
           let tmp_id = C.fresh site.s_seed in
           let create_signal () =
-            let ev = new_local_evt_combine ck default combine in
+            let ev = new_local_evt_combine ck r default combine in
             if !Runtime_options.use_signals_users_set then
               add_signal_remote (C.site_of_gid tmp_id) ev.ev_gid;
-            print_debug "Created signal %a at clock %a from request by %a@." print_signal ev
-              print_clock ck  C.print_gid tmp_id;
+            print_debug "Created signal %a at region %a of clock %a from request by %a@." print_signal ev
+              print_clock r   print_clock ck  C.print_gid tmp_id;
             C.send_owner tmp_id (Msignal_created tmp_id) ev
           in
-          Msgs.send_create_signal ck.ck_gid (tmp_id, create_signal);
+          Msgs.send_create_signal r.ck_gid (tmp_id, create_signal);
           let msg = Callbacks.recv_given_msg site.s_msg_queue (Msignal_created tmp_id) in
           (* setup the local copy of the signal  *)
           let ev:('a, 'b) event = C.from_msg msg in
           SignalHandle.set_valid ev.ev_handle;
-          let n, _ = SignalHandle.get site.s_signal_cache ev.ev_handle in
+          let n = get_event ev in
           setup_local_copy ev.ev_gid n ck;
           ev
 
-        let new_evt_combine ck default combine =
-          if C.is_local ck.ck_gid then
-            new_local_evt_combine ck default combine
+        let new_evt_combine ck r default combine =
+          let r = if !Runtime_options.use_local_slow_signals then r else ck in
+          if C.is_local r.ck_gid then
+            new_local_evt_combine ck r default combine
           else
-            new_remote_evt_combine ck default combine
+            new_remote_evt_combine ck r default combine
 
-        let new_evt ck =
-          new_evt_combine ck [] (fun x y -> x :: y)
+        let new_evt ck r =
+          new_evt_combine ck r [] (fun x y -> x :: y)
 
         let status ?(only_at_eoi=false) ev =
           let n = get_event ev in
@@ -789,6 +805,7 @@ struct
     let eoi cd =
       print_debug "Eoi of clock domain %a@." print_cd cd;
       wake_up_now (Wbefore_eoi cd.cd_clock.ck_gid);
+      Msgs.broadcast_before_eoi cd.cd_remotes cd.cd_clock.ck_gid;
       cd.cd_eoi <- true;
       eoi_control cd cd.cd_top;
       wake_up_now (Weoi cd.cd_clock.ck_gid);
@@ -1084,6 +1101,11 @@ struct
        exec_cd (C.GidMap.find cd_id site.s_clock_domains) ()
      with
        | Not_found -> print_debug "Error: Received Start for unknown clock domain.@."
+
+   (* After receiving Mbefore_eoi *)
+    let receive_before_eoi msg =
+      let ck_id:C.gid = C.from_msg msg in
+      wake_up_now (Wbefore_eoi ck_id)
 
    (* After receiving Meoi *)
     let receive_eoi msg =

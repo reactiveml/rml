@@ -85,6 +85,33 @@ let process await_sigat2 act =
     end
  )
 
+(* [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ] *)
+let process await_sigat_restrict act =
+  newclock ck in
+    signal s at topck restrict ck default 0 gather (+) in
+    loop
+      await s(v) in act v
+    end
+    ||
+    loop
+      pause topck; act 1; pause ck; act 2; emit s 4
+    end
+
+(* [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ] *)
+let process await_sigat_restrict2 act =
+ newclock c in (
+  newclock ck in
+    signal s at topck default 0 gather (+) in
+    loop
+      await s(v) in act v
+    end
+    ||
+    loop
+      pause topck; act 1; pause ck; act 2; emit s 4
+    end
+ )
+
+
 open Rmltest
 
 let test =
@@ -96,4 +123,6 @@ let test =
     (await_immediate_ck, "await_immediate_ck", [N; O 0]);
     (await_sigat, "await_sigat", [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ]);
     (await_sigat2, "await_sigat2", [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ]);
+    (await_sigat_restrict, "await_sigat_restrict", [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ]);
+    (await_sigat_restrict2, "await_sigat_restrict2", [N; S(O 1, O 2); P[O 4; S(O 1, O 2)]; P[O 4; S(O 1, O 2)] ]);
   ]

@@ -5,6 +5,7 @@ let doc_min_rank = "<n> Use only ranks starting from n (only for MPI backend)"
 let doc_debug = "Print debugging information"
 let doc_bench = "Print the elapsed time on the standard output"
 let doc_signals_remote = "Do not use a remote set for each signal"
+let doc_local_slow_signals = "Do not allocate slow local signals"
 
 let number_steps = ref (- 1)
 let min_rank = ref 0
@@ -12,6 +13,7 @@ let debug_mode = ref false
 let bench_mode = ref false
 
 let use_signals_users_set = ref true
+let use_local_slow_signals = ref true
 
 let errmsg = ""
 let rml_cli_options =
@@ -20,7 +22,8 @@ let rml_cli_options =
       "-min-rank", Arg.Int ignore, doc_min_rank;
       "-debug", Arg.Unit ignore, doc_debug;
       "-bench", Arg.Unit ignore, doc_bench;
-      "-signals-remote", Arg.Unit ignore, doc_signals_remote;
+      "-no-signals-remote", Arg.Unit ignore, doc_signals_remote;
+      "-no-local-slow-signals", Arg.Unit ignore, doc_local_slow_signals;
     ]
 
 let parse_cli () =
@@ -32,6 +35,7 @@ let parse_cli () =
         incr current;
         match arg with
           | "-no-signals-remote" -> use_signals_users_set := false
+          | "-no-local-slow-signals" -> use_local_slow_signals := false
           | "-bench" -> bench_mode := true
           | "-debug" -> debug_mode := true
           | "-min-rank" ->

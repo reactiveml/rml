@@ -16,7 +16,7 @@ OCAMLBUILD=ocamlbuild
 MPIEXEC=mpiexec
 MPIEXEC_OPTIONS="-l -n 4"
 
-load_balancers=("local" "robin" "all_remote")
+load_balancers=("local" "robin" "user_local" "user_robin" "remote")
 RUNTIME_OPTIONS=""
 
 build_compiler () {
