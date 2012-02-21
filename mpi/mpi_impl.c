@@ -93,7 +93,7 @@ value caml_mpi_receive(value src, value tag)
   MPI_Get_count(&status, MPI_BYTE, &count);
   buffer = malloc(count);
   /* receive the value in this buffer */
-  MPI_Recv(buffer, count, MPI_BYTE, Int_val(src), Int_val(tag), MPI_COMM_WORLD, &status);
+  MPI_Recv(buffer, count, MPI_BYTE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
   caml_acquire_runtime_system() ;
 
