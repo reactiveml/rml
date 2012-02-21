@@ -1,0 +1,370 @@
+open Utils
+
+(*** Some useful processes *)
+
+let rec process process_iter p l = match l with
+| [] -> ()
+| x::l -> run (p x) || run (process_iter p l)
+
+let rec process foreach_p s p =
+  await s(l) in
+  run (process_iter p l) || run (foreach_p s p)
+
+let process foreach s f =
+  loop
+    await s(l) in
+     List.iter f l
+  end
+
+let process on_signal s f =
+  loop
+    await s(v) in f v
+  end
+
+let process forwarder s1 s2 =
+  run (foreach s1 (fun v -> emit s2 v))
+
+let process forwarder_filter s1 f s2 =
+  run (foreach s1 (fun v -> if f v then emit s2 v))
+
+let process sustain n s v =
+  for i = 1 to n do
+    emit s(v);
+    pause
+  done
+
+
+let dt = 0.5
+
+(*** Definition of types and related functions *)
+
+type ('a, 'state) agent_state =
+    { mutable a_pos : vector;
+      a_kill : (unit, unit list) event;
+      a_relocate : (unit, unit list) event;
+      a_state : 'state }
+
+type ('a, 'state) state =
+  | Agent of ('a, 'state) agent_state
+  | Wall of (vector -> vector -> float -> vector option) (* pos -> speed -> rad -> new_speed *)
+
+let mk_pos agent_ck init =
+  init
+
+let mk_state pos st global_area_ck =
+  signal kill at global_area_ck in
+  signal relocate at global_area_ck in
+  { a_pos = pos;
+    a_state = st;
+    a_kill = kill;
+    a_relocate = relocate }
+
+let rec only_agents l = match l with
+| [] -> []
+| Agent b as x :: l -> b::(only_agents l)
+| Wall _ :: l -> only_agents l
+
+let print_walls_list l =
+  let string_of_wall w = match w with
+  | S -> "S"
+  | N -> "N"
+  | E -> "E"
+  | W -> "W"
+  in
+  List.iter (fun w -> print_string ((string_of_wall w)^", ")) l
+
+let sub_walls walls q =
+  let filter_wall wall = match q, wall with
+  | NW, (N | W) -> true
+  | NW, _ -> false
+  | NE, (N | E) -> true
+  | NE, _ -> false
+  | SW, (S | W) -> true
+  | SW, _ -> false
+  | SE, (S | E) -> true
+  | SE, _ -> false
+  in
+  List.filter filter_wall walls
+
+let wall_thickness = 1.0
+let wall_rect r w = match w with
+| S ->
+    mk_rect (r.r_x -. wall_thickness) (r.r_y -. wall_thickness)
+      (2. *. wall_thickness +. r.r_w) (wall_thickness)
+| N ->
+    mk_rect (r.r_x -. wall_thickness) (r.r_y +. r.r_h)
+      (2. *. wall_thickness +. r.r_w) wall_thickness
+| W ->
+    mk_rect (r.r_x -. wall_thickness) (r.r_y -. wall_thickness)
+      wall_thickness (2. *. wall_thickness +. r.r_h)
+| E ->
+    mk_rect (r.r_x +. r.r_w) (r.r_y -. wall_thickness)
+      wall_thickness (2. *.wall_thickness +. r.r_h)
+
+let bounce_wall r w pos sp rad = match w with
+| S ->
+    if pos.v_y +. (dt *. sp.v_y) -. rad < r.r_y then
+      Some (mk_vector sp.v_x (-. sp.v_y))
+    else
+      None
+| N ->
+    if pos.v_y +. (dt *. sp.v_y) +. rad > r.r_y +. r.r_h then
+      Some (mk_vector sp.v_x (-. sp.v_y))
+    else
+      None
+| W ->
+    if pos.v_x +. (dt *. sp.v_x) -. rad < r.r_x then
+      Some (mk_vector (-. sp.v_x) sp.v_y)
+    else
+      None
+| E ->
+    if pos.v_x +. (dt *. sp.v_x) +. rad > r.r_x +. r.r_w then
+      Some (mk_vector (-. sp.v_x) sp.v_y)
+    else
+      None
+
+type boundary_kind = Boundary | BrickWall
+
+(*** Agents *)
+let process agent pos st move global_add global_area_ck area env =
+  let me = mk_state pos st global_area_ck in
+  do
+    do
+      run (move me area env)
+    until me.a_relocate -> emit global_add (me.a_pos, me.a_state, move) done
+  until me.a_kill done
+
+(** Wall *)
+let process wall r w area env =
+  let me = Wall (bounce_wall r w) in
+  loop
+    emit area(me);
+    await env;
+  end
+
+(*** Area *)
+let process forward_child s s_map =
+  let forward b = match b with
+  | Agent b ->
+      let s = Geomap.find_by_pos b.a_pos s_map in
+      emit s (Agent b)
+  | Wall _ -> ()
+  in
+  run (foreach s forward)
+
+let process adder add global_add global_area_ck area env =
+  let process launch_agent (pos, st, move) =
+    run (agent pos st move global_add global_area_ck area env)
+  in
+  run (foreach_p add launch_agent)
+
+let process composed_adder add add_map =
+  let forward ((pos, _, _) as x) =
+    let s = Geomap.find_by_pos pos add_map in
+    emit s x
+  in
+  run (foreach add forward)
+
+(* send to neighbors *)
+let process parent_forwarder r global_add area parent_area =
+  let forward l =
+    (*print_string "Forwarding to parents"; print_int (List.length l); print_newline();*)
+    let l = only_agents l in
+    let l, outsiders = List.partition (fun b -> is_inside r b.a_pos) l in
+    (*if outsiders <> [] then (
+      print_string "Relocating "; print_int (List.length outsiders); print_newline()
+     ); *)
+    let in_borders = List.filter (fun b -> is_in_border r b.a_pos) l in
+    List.iter (fun x -> emit parent_area (Agent x)) in_borders;
+    List.iter (fun x -> (*print_endline "emit relocate";*) emit x.a_relocate) outsiders
+  in
+  run (on_signal area forward)
+
+(* dispatch to child areas *)
+let process dispatcher r area local_areas =
+  let dispatch b = match b with
+  | Wall _ -> ()
+  | Agent b ->
+      let l = List.map (fun q -> Geomap.find q local_areas) (near_quads_from_pos r b.a_pos) in
+      List.iter (fun area -> emit area (Agent b)) l
+  in
+  run (foreach area dispatch)
+
+let process local_walls r walls area env =
+  let process wall w =
+    run (wall r w area env)
+  in
+  run (process_iter wall walls)
+
+let process click_divider global_area_ck r from_children divide local_divide =
+  let relocate_one b = match b with
+  | Agent a -> emit a.a_relocate
+  | _ -> ()
+  in
+  await local_divide;
+  List.iter relocate_one (pre? from_children);
+  pause global_area_ck;
+  emit divide
+
+let rec process area area_ck global_area_ck agent_ck global_add add env parent level r walls =
+  signal from_children at area_ck in
+  let rec process behave level =
+    match level with
+    | 0 ->
+        signal divide at global_area_ck in
+        signal local_divide at area_ck in
+        signal local_env at agent_ck in
+        do
+          run (forwarder from_children local_env)
+          ||
+          run (forwarder env local_env)
+          ||
+          run (local_walls r walls from_children local_env)
+        until local_divide done
+        ||
+        do
+          run (adder add global_add global_area_ck from_children local_env)
+        until divide -> run (behave 1) done
+        ||
+        run (click_divider global_area_ck r from_children divide local_divide)
+      | _ ->
+          let add_map, env_map, p =
+            init_child_areas area_ck global_area_ck agent_ck global_add
+              level from_children r walls
+          in
+          run p
+          ||
+          run (dispatcher r from_children env_map)
+          ||
+          run (composed_adder add add_map)
+          ||
+          run (forward_child env env_map)
+  in
+  run (behave level)
+  ||
+  match parent with
+  | None -> ()
+  | Some (parent_area, pos) -> run (parent_forwarder r global_add from_children parent_area)
+
+
+and init_child_areas area_ck global_area_ck agent_ck global_add level from_children r walls =
+  let add_area (add_map, env_map, p) q =
+    let idx = int_of_quad q in
+    let add, env, newp = mk_area idx area_ck global_area_ck agent_ck global_add
+        (Some (from_children, q)) (level - 1) (sub_rect r q) (sub_walls walls q) in
+    let add_map = Geomap.add q add add_map in
+    let env_map = Geomap.add q env env_map in
+    let p = process (run p || run newp) in
+    (add_map, env_map, p)
+  in
+  List.fold_left add_area (Geomap.empty r, Geomap.empty r, process ()) [NW; SW;NE;SE]
+
+and mk_area idx ck global_area_ck agent_ck global_add parent level r walls =
+  signal add at ck in
+  signal env at ck in
+  let process area_p =
+    newclock area_ck schedule (fun nb -> idx, (nb - 3) / 4) in
+      run (area area_ck global_area_ck agent_ck global_add add env parent level r walls)
+  in
+  add, env, area_p
+
+let mk_global_area agent_ck level r =
+  signal external_add at topck in
+  let process area_p =
+   newclock global_ck schedule (fun nb -> 0, nb) in
+    signal add at global_ck in
+    signal env at global_ck in
+    newclock area_ck schedule (fun nb -> 0, nb) in
+      run (area area_ck area_ck agent_ck add add env None level r [N; S; W; E])
+      ||
+      run (forwarder external_add add)
+  in
+  external_add, area_p
+
+(** Simple ball *)
+type ball_state =
+    { mutable b_speed : vector;
+      b_rad : float;
+      b_weight : float; }
+
+let process_collision me s b = match b with
+| Agent a ->
+    let new_pos_a = add_vector a.a_pos (scalar_mult dt a.a_state.b_speed) in
+    let new_pos_me = add_vector me.a_pos (scalar_mult dt me.a_state.b_speed) in
+
+    let d2 = dist2 new_pos_a new_pos_me in
+    if d2 > 0. && (sqrt d2) < a.a_state.b_rad +. me.a_state.b_rad then (
+      (*print_endline "collision detected";*)
+      (*collision detected*)
+      (* formula from http://fr.wikipedia.org/wiki/Choc_élastique *)
+      let sum_m = a.a_state.b_weight +. me.a_state.b_weight in
+      let s_I = (* VI = (m1.V1 + m2.V2) / (m1 + m2) *)
+        add_vector
+          (scalar_mult (me.a_state.b_weight /. sum_m) me.a_state.b_speed)
+          (scalar_mult (a.a_state.b_weight /. sum_m) a.a_state.b_speed)
+      in
+      let s = (* v_1' = 2 VI - v_1 *)
+        add_vector
+          (scalar_mult 2.0 s_I)
+          (scalar_mult (-1.0) me.a_state.b_speed)
+      in
+      s
+    ) else
+      s
+| Wall _ -> s
+
+let process_wall me s b = match b with
+| Wall bounce ->
+    (match bounce me.a_pos s me.a_state.b_rad with
+    | None -> s
+    | Some new_s -> new_s)
+| Agent _ -> s
+
+let process compute_pos_ball me others =
+  let new_speed = List.fold_left (process_collision me) me.a_state.b_speed others in
+  let new_speed = List.fold_left (process_wall me) (new_speed) others in
+  let new_pos = add_vector me.a_pos (scalar_mult dt new_speed) in
+  pause;
+  me.a_pos <- new_pos;
+  me.a_state.b_speed <- new_speed
+
+let process ball me area env =
+  loop
+    emit area(Agent me);
+    await env(others) in
+    run (compute_pos_ball me others)
+  end
+
+
+(* test case *)
+let nb_balls = 2000
+let max_speed = 0.2
+
+let w = 8000.
+let h = 6000.
+let margin = 20.0
+let sc_w = int_of_float (w +. 2. *. margin)
+let sc_h = int_of_float (h +. 2. *. margin)
+
+let _ = Random.self_init ()
+
+let random_ball_state () =
+  { b_speed = mk_pos topck (random_vector (-. max_speed) (-. max_speed) max_speed max_speed);
+    b_weight = 5.0;
+    b_rad = 1.0; }
+
+let process ball top_adder =
+  let pos = mk_pos topck (random_vector 0.0 0.0 w h) in
+  let st = random_ball_state () in
+  emit top_adder (pos, st, ball)
+
+let process main =
+  let top_adder, top_area_p = mk_global_area topck 2 (mk_rect 0. 0. w h) in
+  run top_area_p
+  ||
+  for i = 1 to nb_balls dopar
+    run (ball top_adder)
+  done
+
+
+
