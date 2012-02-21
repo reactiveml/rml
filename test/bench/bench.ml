@@ -19,6 +19,7 @@ let print_status fmt =
 
 
 let ocamlbuild = "ocamlbuild"
+let mpiexec = "openmpiexec"
 let rpmlc = "../../compiler/rpmlc.byte"
 
 let check_success p s =
@@ -66,9 +67,9 @@ let do_tests rml_files (backend, args, desc) =
 
 let seq_launcher p = p
 let mpi_launcher balancer program_args p =
-  "mpiexec -n "^string_of_int !nb_mpi_procs^" "^p^" -load-balancer "^balancer^program_args
+  mpiexec^" -n "^string_of_int !nb_mpi_procs^" "^p^" -load-balancer "^balancer^program_args
 let mpi_one_launcher balancer p =
-  "mpiexec -n 1 "^p^" -load-balancer "^balancer
+  mpiexec^" -n 1 "^p^" -load-balancer "^balancer
 
 let rml_backends =
   [

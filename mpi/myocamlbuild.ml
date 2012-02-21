@@ -2,11 +2,9 @@ open Ocamlbuild_plugin
 open Command
 
 (* Configuration section *)
-let mpi_lib = "-lmpich"
-let pmpi_lib = "-lpmpich"
-let mpl_lib = "-lmpl"
+let mpi_lib = "-lmpi"
 let mpi_libdir = "-L/opt/local/lib"
-let mpi_include = "-I/opt/local/include/mpich2"
+let mpi_include = "-I/opt/local/include/openmpi"
 
 let mlmpi_libdir = "-L/Users/ccpasteur/Documents/work/git/rml/mpi/_build"
 
@@ -21,13 +19,13 @@ let df = function
   | After_rules ->
      (* When one make a C library that use mpi with ocamlmklib,
         then issue these flags. *)
-     flag ["ocamlmklib"; "c"; "use_mpi"] (S[A mpi_libdir; A mpl_lib; A mpi_lib; A pmpi_lib]);
+     flag ["ocamlmklib"; "c"; "use_mpi"] (S[A mpi_libdir; A mpi_lib]);
 
      (* When one compile C code using mpi *)
      flag ["c"; "compile"; "include_mpi"] (S[A"-ccopt"; A mpi_include]);
 
      flag ["link"; "ocaml"; "library"; "use_mpi"]
-          (S[A"-ccopt"; A mpi_libdir; A"-cclib"; A mpi_lib; A"-cclib"; A pmpi_lib; A"-cclib"; A mpl_lib]);
+          (S[A"-ccopt"; A mpi_libdir; A"-cclib"; A mpi_lib]);
 
      (* If `static' is true then every ocaml link in bytecode will add -custom *)
      if static then flag ["link"; "ocaml"; "byte"] (A"-custom");

@@ -5,8 +5,8 @@
 #include <caml/threads.h>
 #include <caml/intext.h>
 
-#define SEMI_ACTIVE_WAITING
-#define SEMI_ACTIVE_WAITING_DELAY 50     /* delay in ms */
+//#define SEMI_ACTIVE_WAITING
+#define SEMI_ACTIVE_WAITING_DELAY 25     /* delay in ms */
 
 /* Various functions to initialize global variables */
 value caml_mpi_get_comm_world_size(value unit)
