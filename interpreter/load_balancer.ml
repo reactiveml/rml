@@ -142,11 +142,12 @@ module Make (C : Communication.S) = struct
   end
 
   let mk_top_balancer () =
-    let all_sites = ref C.all_sites in
+    let all_sites = ref (C.all_sites ()) in
+    let master = C.master_site () in
     match !load_balancing_policy with
-      | Plocal -> (new local_balancer C.master_site :> load_balancer)
-      | Puser_local -> (new local_user_balancer C.master_site all_sites :> load_balancer)
-      | Pround_robin -> (new robin_balancer true 0 C.master_site all_sites :> load_balancer)
-      | Puser_robin -> (new robin_balancer false 0 C.master_site all_sites :> load_balancer)
-      | Premote -> (new robin_balancer true 1 C.master_site all_sites :> load_balancer)
+      | Plocal -> (new local_balancer master:> load_balancer)
+      | Puser_local -> (new local_user_balancer master all_sites :> load_balancer)
+      | Pround_robin -> (new robin_balancer true 0 master all_sites :> load_balancer)
+      | Puser_robin -> (new robin_balancer false 0 master all_sites :> load_balancer)
+      | Premote -> (new robin_balancer true 1 master all_sites :> load_balancer)
 end

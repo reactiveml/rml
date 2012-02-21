@@ -1180,13 +1180,14 @@ struct
 
     let finalize_top_clock_domain cd =
       let site = get_site () in
+      let sites = C.all_sites () in
       (* tell all sites to stop sending messages *)
-      if not (C.SiteSet.is_empty C.all_sites) then (
-        Msgs.broadcast_finalize C.all_sites site.s_comm_site;
+      if not (C.SiteSet.is_empty sites) then (
+        Msgs.broadcast_finalize sites site.s_comm_site;
         (* wait for all sites to be done *)
-        Callbacks.recv_n_given_msg site.s_msg_queue Mdummy (C.SiteSet.cardinal C.all_sites);
+        Callbacks.recv_n_given_msg site.s_msg_queue Mdummy (C.SiteSet.cardinal sites);
         (* tell all sites to stop executing *)
-        Msgs.broadcast_finalize C.all_sites site.s_comm_site
+        Msgs.broadcast_finalize sites site.s_comm_site
       ) else
         (* Hack: Make sure that the receiving thread is started before terminating *)
         Thread.delay 0.050;

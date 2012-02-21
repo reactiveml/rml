@@ -31,8 +31,8 @@ module type S = sig
   val local_site : unit -> site
   val site_of_gid : gid -> site
 
-  val master_site : site
-  val all_sites : SiteSet.t
+  val master_site : unit -> site
+  val all_sites : unit -> SiteSet.t
 
   val mk_seed : unit -> seed
   val fresh : seed -> gid
