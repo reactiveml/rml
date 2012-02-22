@@ -78,7 +78,7 @@ struct
     module GidHandle = Dhandle_typed.Make (struct
       type t = C.gid
       let compare = compare
-    end) (C)
+    end)
 
     type clock = {
       ck_gid : C.gid;
@@ -128,7 +128,7 @@ struct
       type key = C.gid
       type ('a, 'b) value = ('a, 'b) E.t * clock * region
       let compare = compare
-    end) (C)
+    end)
 
     type ('a, 'b) event = {
       ev_handle : ('a,'b) SignalHandle.handle;

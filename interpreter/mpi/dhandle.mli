@@ -21,5 +21,5 @@ module type S = sig
 end
 
 
-module Make : functor (T : DHANDLE_TYPE) -> functor (C : Communication.S) ->
+module Make : functor (T : DHANDLE_TYPE) ->
   S with type ('a, 'b) value = ('a, 'b) T.value and type key = T.key

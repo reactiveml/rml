@@ -9,5 +9,5 @@ module type S = sig
   val get : 'a cache -> 'a handle -> 'a
 end
 
-module Make : functor (T : Map.OrderedType) -> functor (C : Communication.S) ->
+module Make : functor (T : Map.OrderedType) ->
   S with type key = T.t

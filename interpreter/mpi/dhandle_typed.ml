@@ -11,7 +11,7 @@ end
 
 
 (** TODO: rendre key visible de l'exterieur ?? *)
-module Make (T : Map.OrderedType) (C : Communication.S) = struct
+module Make (T : Map.OrderedType) = struct
 
   module MyWeak = Weak_map.Make (struct
     type t = T.t

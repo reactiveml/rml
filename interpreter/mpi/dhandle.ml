@@ -21,7 +21,7 @@ module type S = sig
 end
 
 (** TODO: rendre key visible de l'exterieur ?? *)
-module Make (T : DHANDLE_TYPE) (C : Communication.S) = struct
+module Make (T : DHANDLE_TYPE) = struct
 
   module MyWeak = Weak_map.Make (struct
     type t = T.key
