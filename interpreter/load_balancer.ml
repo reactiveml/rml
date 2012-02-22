@@ -11,21 +11,6 @@ module type S = sig
   val mk_top_balancer : unit -> load_balancer
 end
 
-type policy = Plocal | Pround_robin | Puser_local | Puser_robin | Premote
-let load_balancing_policy = ref Pround_robin
-
-let set_load_balancing_policy s =
-  let p =
-    match s with
-      | "local" -> Plocal
-      | "robin" -> Pround_robin
-      | "user_local" -> Puser_local
-      | "user_robin" -> Puser_robin
-      | "remote" -> Premote
-      | _ -> raise (Arg.Bad ("Invalid load balancing policy"))
-  in
-  load_balancing_policy := p
-
 module Make (C : Communication.S) = struct
   type site = C.site
   type kind = Lany | Lleaf
@@ -144,10 +129,10 @@ module Make (C : Communication.S) = struct
   let mk_top_balancer () =
     let all_sites = ref (C.all_sites ()) in
     let master = C.master_site () in
-    match !load_balancing_policy with
-      | Plocal -> (new local_balancer master:> load_balancer)
-      | Puser_local -> (new local_user_balancer master all_sites :> load_balancer)
-      | Pround_robin -> (new robin_balancer true 0 master all_sites :> load_balancer)
-      | Puser_robin -> (new robin_balancer false 0 master all_sites :> load_balancer)
-      | Premote -> (new robin_balancer true 1 master all_sites :> load_balancer)
+    match !Runtime_options.load_balancing_policy with
+      | Runtime_options.Plocal -> (new local_balancer master:> load_balancer)
+      | Runtime_options.Puser_local -> (new local_user_balancer master all_sites :> load_balancer)
+      | Runtime_options.Pround_robin -> (new robin_balancer true 0 master all_sites :> load_balancer)
+      | Runtime_options.Puser_robin -> (new robin_balancer false 0 master all_sites :> load_balancer)
+      | Runtime_options.Premote -> (new robin_balancer true 1 master all_sites :> load_balancer)
 end

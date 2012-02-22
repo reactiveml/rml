@@ -15,6 +15,21 @@ let bench_mode = ref false
 let use_signals_users_set = ref true
 let use_local_slow_signals = ref true
 
+type policy = Plocal | Pround_robin | Puser_local | Puser_robin | Premote
+let load_balancing_policy = ref Pround_robin
+
+let set_load_balancing_policy s =
+  let p =
+    match s with
+      | "local" -> Plocal
+      | "robin" -> Pround_robin
+      | "user_local" -> Puser_local
+      | "user_robin" -> Puser_robin
+      | "remote" -> Premote
+      | _ -> raise (Arg.Bad ("Invalid load balancing policy"))
+  in
+  load_balancing_policy := p
+
 let errmsg = ""
 let rml_cli_options =
     [ "-load-balancer", Arg.String ignore, doc_load_balancer;
@@ -46,7 +61,7 @@ let parse_cli () =
           | "-load-balancer" ->
               if !current = n then
                 raise (Arg.Bad ("Expected a load balancer name after -load-balancer"));
-              Load_balancer.set_load_balancing_policy Sys.argv.(!current);
+              set_load_balancing_policy Sys.argv.(!current);
               incr current
           | "-n" ->
               if !current = n then
