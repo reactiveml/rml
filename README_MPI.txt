@@ -2,7 +2,19 @@
 
 Prérequis:
 - ocaml >= 3.12
-- mpich2
+- openmpi
+
+Pour les utilisateurs de Macports:
+Il faut construire le paquet openmpi avec l'option +threads. Il y a une erreur dans le fichier
+'/opt/local/var/macports/sources/svn.macports.org/trunk/dports/science/openmpi/Portfile' qu'il faut
+modifier a la main. A la ligne 65, il faut remplacer:
+	configure.args-append --enable-mpi-threads
+par
+	configure.args-append --enable-mpi-thread-multiple
+puis installer avec:
+  $ port install openmpi +threads
+Il faut ensuite utiliser openmpiexec et pas mpiexec pour lancer les binaires.
+
 
 Installation:
   - construction du compilateur rpmlc :
