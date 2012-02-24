@@ -110,7 +110,8 @@ and print_list priority sep l =
 
 let print ty =
   type_name#reset;
-  print 0 ty
+  print 0 ty;
+  print_flush ()
 let print_scheme { ts_desc = ty } = print ty
 
 let print_value_type_declaration global =
