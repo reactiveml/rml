@@ -1,0 +1,11 @@
+signal s;;
+signal t;;
+signal x;;
+
+let process f () = !emit x ()
+let process should_not_type = run (f ()) || run (f ())
+
+let process envoyer s = !emit s () || !emit t ();;
+
+let process main () =
+  run (envoyer s) || run (envoyer t)
