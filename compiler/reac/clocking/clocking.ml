@@ -31,9 +31,9 @@
 (* The type synthesizer *)
 
 open Compiler_options
-open Types
-open Types_utils
-open Typing_errors
+open Clocks
+open Clocks_utils
+open Clocking_errors
 open Initialization
 open Asttypes
 open Global
@@ -42,84 +42,66 @@ open Reac
 open Misc
 open Annot
 
+
+let filter_event ck =
+  let ck = clock_repr ck in
+  let ck1 = new_clock_var() in
+  let ck2 = new_clock_var() in
+  unify ck (constr_notabbrev event_ident [ck1; ck2]);
+  ck1, ck2
+
+let filter_multi_event ck =
+  let ck = clock_repr ck in
+  let ck1 = new_clock_var() in
+  unify ck (constr_notabbrev event_ident [ck1;
+                                          constr_notabbrev list_ident [ck1]]);
+  ck1
+
+
 let unify_expr expr expected_ty actual_ty =
   try
     unify expected_ty actual_ty
   with
-    | Unify -> expr_wrong_type_err expr actual_ty expected_ty
-    | Unify_detailed (expected_sub_ty, actual_sub_ty) ->
-        expr_wrong_type_detailed_err expr actual_ty expected_ty actual_sub_ty expected_sub_ty
+    | Unify -> expr_wrong_clock_err expr actual_ty expected_ty
+    | Escape (s, _) -> expr_wrong_clock_escape_err expr s actual_ty
 
 let unify_patt pat expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with _ -> patt_wrong_type_err pat actual_ty expected_ty
+  with _ -> patt_wrong_clock_err pat actual_ty expected_ty
 
 let unify_event evt expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with _ -> event_wrong_type_err evt actual_ty expected_ty
+  with _ -> event_wrong_clock_err evt actual_ty expected_ty
 
 let unify_emit loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with _ -> emit_wrong_type_err loc actual_ty expected_ty
+  with _ -> emit_wrong_clock_err loc actual_ty expected_ty
 
 let unify_run loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with _ -> run_wrong_type_err loc actual_ty expected_ty
+  with _ -> run_wrong_clock_err loc actual_ty expected_ty
 
 let unify_var loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with _ -> var_wrong_type_err loc actual_ty expected_ty
+  with _ -> var_wrong_clock_err loc actual_ty expected_ty
 
 (* special cases of unification *)
-let filter_event ty =
-  let ty = type_repr ty in
-  let ty1 = new_var() in
-  let ty2 = new_var() in
-  unify ty (constr_notabbrev event_ident [ty1;ty2]);
-  ty1, ty2
-
-let filter_multi_event ty =
-  let ty = type_repr ty in
-  let ty1 = new_var() in
-  unify ty (constr_notabbrev event_ident [ty1;
-                                          constr_notabbrev list_ident [ty1]]);
-  ty1
-
-let is_unit_process desc =
-  let sch = desc.value_typ in
-  let ty = instance sch in
-  let unit_process = process type_unit { proc_static = None } in
-  try
-    unify unit_process ty;
-    true
-  with Unify -> false
 
 (* Typing environment *)
 module Env = Symbol_table.Make (Ident)
 
-
-(* checks that every type is defined *)
-(* and used with the correct arity *)
-let check_type_constr_defined loc gl arity =
-  let name = gl.gi in
-  let ty_desc = Global.ty_info gl in
-  let arity' = ty_desc.type_arity in
-  if arity' <> arity
-  then type_constr_arity_err name arity' arity loc;
-  ty_desc.type_constr
-
 (* find the type of the constructor C *)
-let get_type_of_constructor c loc =
-  constr_instance (Global.ty_info c)
+let get_clock_of_constructor c loc =
+  constr_instance (Global.ck_info c)
 
 (* find the type of a label *)
-let get_type_of_label label loc =
-  label_instance (Global.ty_info label)
+let get_clock_of_label label loc =
+  label_instance (Global.ck_info label)
 
 (* tests if an expression is expansive *)
 let rec is_nonexpansive expr =
@@ -134,19 +116,13 @@ let rec is_nonexpansive expr =
       List.for_all (fun (pat, expr) -> is_nonexpansive expr) bindings &&
       is_nonexpansive body
   | Efunction _ -> true
-(*
-  | Etrywith(body, pat_expr_list) ->
-      is_nonexpansive body &&
-      List.for_all (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
-  | Eseq(e1, e2) -> is_nonexpansive e2
-*)
   | Eifthenelse(cond, ifso, ifnot) ->
       is_nonexpansive ifso && is_nonexpansive ifnot
   | Econstraint(e, ty) -> is_nonexpansive e
   | Earray [] -> true
   | Erecord lbl_expr_list ->
       List.for_all (fun (lbl, expr) ->
-        (Global.ty_info lbl).lbl_mut == Immutable && is_nonexpansive expr)
+        (Global.ck_info lbl).lbl_mut == Immutable && is_nonexpansive expr)
         lbl_expr_list
   | Erecord_access(e, lbl) -> is_nonexpansive e
   | Ewhen_match(cond, act) -> is_nonexpansive act
@@ -192,69 +168,74 @@ and is_nonexpansive_conf c =
 
 (* Typing functions *)
 
-(* Typing of constants *)
-let type_of_immediate i =
-  match i with
-  | Const_unit -> type_unit
-  | Const_bool _ -> type_bool
-  | Const_int(i) -> type_int
-  | Const_float(i) -> type_float
-  | Const_char(c) -> type_char
-  | Const_string(c) -> type_string
-
 (* Typing of type expressions *)
-let type_of_type_expression typ_vars typexp =
-  let rec type_of typexp =
+let clock_of_type_expression (ty_vars, car_vars) typexp =
+  let rec clock_of typexp =
     match typexp.te_desc with
     | Tvar (s, Ttype_var) ->
         begin try
-          List.assoc s typ_vars
+          List.assoc s ty_vars
         with
-          Not_found -> unbound_typ_err s typexp.te_loc
+          Not_found -> unbound_clock_err s typexp.te_loc
         end
-    | Tvar (s, Tcarrier_var) -> assert false
+
+    | Tvar (s, Tcarrier_var) ->
+        begin try
+          depend (List.assoc s car_vars)
+        with
+          Not_found -> unbound_clock_err s typexp.te_loc
+        end
 
     | Tarrow (t1, t2) ->
-        arrow (type_of t1) (type_of t2)
+        arrow (clock_of t1) (clock_of t2)
 
     | Tproduct (l) ->
-        product (List.map type_of l)
+        product (List.map clock_of l)
 
     | Tconstr (s, ty_list) ->
-        let name =
-          check_type_constr_defined typexp.te_loc s (List.length ty_list)
-        in
-        constr name (List.map type_of ty_list)
+        let ck_desc = Global.ck_info s in
+        constr ck_desc.clock_constr (List.map clock_of ty_list)
 
-    | Tprocess (ty,k) ->
-        process (type_of ty) { proc_static = Some(Proc_def (ref k)); }
+    | Tprocess (te,_) ->
+        process (clock_of te)
   in
-  type_of typexp
+  clock_of typexp
 
 (* Free variables of a type *)
 let free_of_type ty =
-  let rec vars v ty =
+  let rec vars (ty_vars, car_vars) ty =
     match ty.te_desc with
-      Tvar(x, Ttype_var) -> if List.mem x v then v else x::v
-    | Tvar(x, Tcarrier_var) -> v
-    | Tarrow(t1,t2) -> vars (vars v t1) t2
-    | Tproduct(t) ->
-        List.fold_left vars v t
-    | Tconstr(_,t) ->
-        List.fold_left vars v t
-    | Tprocess (t, _) -> vars v t
-  in vars [] ty
+      | Tvar(x, Ttype_var) ->
+          if List.mem x ty_vars then
+            ty_vars, car_vars
+          else
+            x::ty_vars, car_vars
+      | Tvar(x, Tcarrier_var) ->
+          if List.mem x car_vars then
+            ty_vars, car_vars
+          else
+            ty_vars, x::car_vars
+      | Tarrow(t1,t2) -> vars (vars (ty_vars, car_vars) t1) t2
+      | Tproduct(t) ->
+          List.fold_left vars (ty_vars, car_vars) t
+      | Tconstr(_,t) ->
+          List.fold_left vars (ty_vars, car_vars) t
+      | Tprocess (t, _) -> vars (ty_vars, car_vars) t
+  in vars ([], []) ty
 
 (* translating a declared type expression into an internal type *)
-let full_type_of_type_expression typ =
-  let lv = free_of_type typ in
-  let typ_vars = List.map (fun v -> (v,new_generic_var ())) lv in
-  let typ = type_of_type_expression typ_vars typ in
-  { ts_binders = List.map snd typ_vars; ts_desc = typ }
+let full_clock_of_type_expression typ =
+  let ty_vars, car_vars = free_of_type typ in
+  let ty_vars = List.map (fun v -> v, new_generic_clock_var ()) ty_vars in
+  let car_vars = List.map (fun v -> v, make_carrier v) car_vars in
+  let typ = clock_of_type_expression (ty_vars, car_vars) typ in
+  { cs_clock_vars = List.map snd ty_vars;
+    cs_carrier_vars = List.map snd car_vars;
+    cs_desc = typ }
 
 (* Typing of patterns *)
-let rec type_of_pattern global_env local_env patt ty =
-  patt.patt_type <- ty;
+let rec clock_of_pattern global_env local_env patt ty =
+  patt.patt_clock <- ty;
   Stypes.record (Ti_patt patt);
   match patt.patt_desc with
   | Pany ->
@@ -263,7 +244,7 @@ let rec type_of_pattern global_env local_env patt ty =
   | Pvar (Vglobal gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
       then non_linear_pattern_err patt (Ident.name gl.gi.id);
-      gl.ty_info <- Some { value_typ = forall [] ty };
+      gl.ck_info <- Some { value_ck = forall [] [] ty };
       (gl::global_env, local_env)
   | Pvar (Vlocal x) ->
       if List.mem_assoc x local_env
@@ -273,26 +254,26 @@ let rec type_of_pattern global_env local_env patt ty =
   | Palias (p,Vglobal gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
       then non_linear_pattern_err patt (Ident.name gl.gi.id);
-      gl.ty_info <- Some { value_typ = forall [] ty };
-      type_of_pattern (gl::global_env) local_env p ty
+      gl.ck_info <- Some { value_ck = forall [] [] ty };
+      clock_of_pattern (gl::global_env) local_env p ty
   | Palias (p,Vlocal x) ->
       if List.mem_assoc x local_env
       then non_linear_pattern_err patt (Ident.name x);
-      type_of_pattern global_env ((x,ty)::local_env) p ty
+      clock_of_pattern global_env ((x,ty)::local_env) p ty
 
   | Pconstant (i) ->
-      unify_patt patt ty (type_of_immediate i);
+      unify_patt patt ty Clocks_utils.static;
       global_env, local_env
 
   | Ptuple (l) ->
-      let ty_list = List.map (fun _ -> new_var ()) l in
+      let ty_list = List.map (fun _ -> new_clock_var ()) l in
       unify_patt patt ty (product ty_list);
-      type_of_pattern_list global_env local_env l ty_list
+      clock_of_pattern_list global_env local_env l ty_list
 
   | Pconstruct (c, None) ->
       begin
         let { cstr_arg = ty_arg_opt;
-              cstr_res = actual_ty } = get_type_of_constructor c patt.patt_loc
+              cstr_res = actual_ty } = get_clock_of_constructor c patt.patt_loc
         in
         unify_patt patt ty actual_ty;
         match ty_arg_opt with
@@ -302,21 +283,21 @@ let rec type_of_pattern global_env local_env patt ty =
   | Pconstruct (c, Some arg_patt) ->
       begin
         let { cstr_arg = ty_arg_opt;
-              cstr_res = ty_res; } = get_type_of_constructor c patt.patt_loc
+              cstr_res = ty_res; } = get_clock_of_constructor c patt.patt_loc
         in
         unify_patt patt ty ty_res;
         match ty_arg_opt with
         | None -> constr_arity_err_2 c.gi patt.patt_loc
         | Some ty_arg ->
-            type_of_pattern global_env local_env arg_patt ty_arg
+            clock_of_pattern global_env local_env arg_patt ty_arg
       end
 
   | Por (p1,p2) ->
       let global_env1, local_env1 =
-        type_of_pattern global_env local_env p1 ty
+        clock_of_pattern global_env local_env p1 ty
       in
       let global_env2, local_env2 =
-        type_of_pattern global_env local_env p2 ty
+        clock_of_pattern global_env local_env p2 ty
       in
       List.iter
         (fun gl1 ->
@@ -327,8 +308,8 @@ let rec type_of_pattern global_env local_env patt ty =
             | Not_found -> orpat_vars p2.patt_loc (Ident.name gl1.gi.id)
           in
           unify_var p2.patt_loc
-            (Global.ty_info gl1).value_typ.ts_desc
-            (Global.ty_info gl2).value_typ.ts_desc)
+            (Global.ck_info gl1).value_ck.cs_desc
+            (Global.ck_info gl2).value_ck.cs_desc)
         global_env1;
       List.iter
         (fun (x1,ty1) ->
@@ -344,73 +325,73 @@ let rec type_of_pattern global_env local_env patt ty =
       global_env2, local_env2
 
   | Precord (label_patt_list) ->
-      let rec type_of_record global_env local_env label_list label_pat_list =
+      let rec clock_of_record global_env local_env label_list label_pat_list =
         match label_pat_list with
           [] -> global_env, local_env
         | (label,label_pat) :: label_pat_list ->
             let { lbl_arg = ty_arg;
-                  lbl_res = ty_res } = get_type_of_label label patt.patt_loc
+                  lbl_res = ty_res } = get_clock_of_label label patt.patt_loc
             in
             (* check that the label appears only once *)
             if List.mem label label_list
             then non_linear_record_err label.gi patt.patt_loc;
             unify_patt patt ty ty_arg;
             let global_env, local_env =
-              type_of_pattern global_env local_env label_pat ty_res
+              clock_of_pattern global_env local_env label_pat ty_res
             in
-            type_of_record
+            clock_of_record
               global_env local_env (label :: label_list) label_pat_list
       in
-      type_of_record global_env local_env [] label_patt_list
+      clock_of_record global_env local_env [] label_patt_list
 
   | Parray (l) ->
-      let ty_var = new_var () in
+      let ty_var = new_clock_var () in
       unify_patt patt ty (constr_notabbrev array_ident [ty_var]);
       List.fold_left
-        (fun (gl_env,lc_env) p -> type_of_pattern gl_env lc_env p ty_var)
+        (fun (gl_env,lc_env) p -> clock_of_pattern gl_env lc_env p ty_var)
         (global_env,local_env) l
 
   | Pconstraint (p,t) ->
-      let new_ty = instance (full_type_of_type_expression t) in
+      let new_ty = instance (full_clock_of_type_expression t) in
       unify_patt p ty new_ty;
-      type_of_pattern global_env local_env p new_ty
+      clock_of_pattern global_env local_env p new_ty
 
-and type_of_pattern_list global_env local_env patt_list ty_list =
+and clock_of_pattern_list global_env local_env patt_list ty_list =
   match patt_list, ty_list with
   | [], [] -> global_env, local_env
   | p::patt_list, t::ty_list ->
-      let global_env, local_env = type_of_pattern global_env local_env p t in
-      type_of_pattern_list global_env local_env patt_list ty_list
-  | _ -> raise (Internal (Location.none, "type_of_pattern_list"))
+      let global_env, local_env = clock_of_pattern global_env local_env p t in
+      clock_of_pattern_list global_env local_env patt_list ty_list
+  | _ -> raise (Internal (Location.none, "clock_of_pattern_list"))
 
 (* Typing of expressions *)
-let rec type_of_expression env expr =
+let rec clock_of_expression env expr =
   let t =
     match expr.e_desc with
-    | Econstant (i) -> type_of_immediate i
+    | Econstant (i) -> Clocks_utils.static
 
     | Elocal (n) ->
         let typ_sch = Env.find n env in
         instance typ_sch
 
     | Eglobal (n) ->
-        instance (Global.ty_info n).value_typ
+        instance (Global.ck_info n).value_ck
 
     | Elet (flag, patt_expr_list, e) ->
         let gl_env, new_env = type_let (flag = Recursive) env patt_expr_list in
-        type_of_expression new_env e
+        clock_of_expression new_env e
 
     | Efunction (matching)  ->
-        let ty_arg = new_var() in
-        let ty_res = new_var() in
+        let ty_arg = new_clock_var() in
+        let ty_res = new_clock_var() in
         let ty = arrow ty_arg ty_res in
         List.iter
           (fun (p,e) ->
-            let gl_env, loc_env = type_of_pattern [] [] p ty_arg in
+            let gl_env, loc_env = clock_of_pattern [] [] p ty_arg in
             assert (gl_env = []);
             let new_env =
               List.fold_left
-                (fun env (x, ty) -> Env.add x (forall [] ty) env)
+                (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
                 env loc_env
             in
             type_expect new_env e ty_res)
@@ -418,7 +399,7 @@ let rec type_of_expression env expr =
         ty
 
     | Eapply (fct, args) ->
-        let ty_fct = type_of_expression env fct in
+        let ty_fct = clock_of_expression env fct in
         let rec type_args ty_res = function
           | [] -> ty_res
           | arg :: args ->
@@ -433,12 +414,12 @@ let rec type_of_expression env expr =
         in
         type_args ty_fct args
     | Etuple (l) ->
-        product (List.map (type_of_expression env) l)
+        product (List.map (clock_of_expression env) l)
 
     | Econstruct(c,None) ->
         begin
           let { cstr_arg = ty_arg_opt;
-                cstr_res = ty } = get_type_of_constructor c expr.e_loc
+                cstr_res = ty } = get_clock_of_constructor c expr.e_loc
           in
           match ty_arg_opt with
           | None -> ty
@@ -447,7 +428,7 @@ let rec type_of_expression env expr =
     | Econstruct (c, Some arg) ->
         begin
           let { cstr_arg = ty_arg_opt;
-                cstr_res = ty_res; } = get_type_of_constructor c expr.e_loc
+                cstr_res = ty_res; } = get_clock_of_constructor c expr.e_loc
           in
           match ty_arg_opt with
           | None -> constr_arity_err_2 c.gi expr.e_loc
@@ -457,18 +438,18 @@ let rec type_of_expression env expr =
         end
 
     | Earray (l) ->
-        let ty_var = new_var () in
+        let ty_var = new_clock_var () in
         List.iter (fun e -> type_expect env e ty_var) l;
         constr_notabbrev array_ident [ty_var]
 
     | Erecord (l) ->
-        let ty = new_var() in
+        let ty = new_clock_var() in
         let rec typing_record label_list label_expr_list =
           match label_expr_list with
             [] -> ()
           | (label,label_expr) :: label_expr_list ->
               let { lbl_arg = ty_arg;
-                    lbl_res = ty_res } = get_type_of_label label expr.e_loc
+                    lbl_res = ty_res } = get_clock_of_label label expr.e_loc
               in
               (* check that the label appears only once *)
               if List.mem label label_list
@@ -482,34 +463,33 @@ let rec type_of_expression env expr =
 
     | Erecord_access (e, label) ->
         let { lbl_arg = ty_arg; lbl_res = ty_res } =
-          get_type_of_label label expr.e_loc
+          get_clock_of_label label expr.e_loc
         in
         type_expect env e ty_arg;
         ty_res
 
     | Erecord_update (e1, label, e2) ->
         let { lbl_arg = ty_arg; lbl_res = ty_res; lbl_mut = mut } =
-          get_type_of_label label expr.e_loc
+          get_clock_of_label label expr.e_loc
         in
-        if mut = Immutable then label_not_mutable_err expr label.gi;
         type_expect env e1 ty_arg;
         type_expect env e2 ty_res;
-        type_unit
+        Clocks_utils.static
 
     | Econstraint(e,t) ->
-        let expected_ty = instance (full_type_of_type_expression t) in
+        let expected_ty = instance (full_clock_of_type_expression t) in
         type_expect env e expected_ty;
         expected_ty
 
     | Etrywith (body,matching) ->
-        let ty = type_of_expression env body in
+        let ty = clock_of_expression env body in
         List.iter
           (fun (p,e) ->
-            let gl_env, loc_env = type_of_pattern [] [] p type_exn in
+            let gl_env, loc_env = clock_of_pattern [] [] p Clocks_utils.static in
             assert (gl_env = []);
             let new_env =
               List.fold_left
-                (fun env (x, ty) -> Env.add x (forall [] ty) env)
+                (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
                 env loc_env
             in
             type_expect new_env e ty)
@@ -517,25 +497,25 @@ let rec type_of_expression env expr =
         ty
 
     | Eassert e ->
-        type_expect env e type_bool;
-        new_var()
+        type_expect env e Clocks_utils.static;
+        new_clock_var()
 
     | Eifthenelse (cond,e1,e2) ->
-        type_expect env cond type_bool;
-        let ty = type_of_expression env e1 in
+        type_expect env cond Clocks_utils.static;
+        let ty = clock_of_expression env e1 in
         type_expect env e2 ty;
         ty
 
     | Ematch (body,matching) ->
-        let ty_body = type_of_expression env body in
-        let ty_res = new_var() in
+        let ty_body = clock_of_expression env body in
+        let ty_res = new_clock_var() in
         List.iter
           (fun (p,e) ->
-            let gl_env, loc_env = type_of_pattern [] [] p ty_body in
+            let gl_env, loc_env = clock_of_pattern [] [] p ty_body in
             assert (gl_env = []);
             let new_env =
               List.fold_left
-                (fun env (x, ty) -> Env.add x (forall [] ty) env)
+                (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
                 env loc_env
             in
             type_expect new_env e ty_res)
@@ -543,45 +523,45 @@ let rec type_of_expression env expr =
         ty_res
 
     | Ewhen_match (e1,e2) ->
-        type_expect env e1 type_bool;
-        type_of_expression env e2
+        type_expect env e1 Clocks_utils.static;
+        clock_of_expression env e2
 
     | Ewhile (e1,e2) ->
-        type_expect env e1 type_bool;
+        type_expect env e1 Clocks_utils.static;
         type_statement env e2;
-        type_unit
+        Clocks_utils.static
 
     | Efor(i,e1,e2,flag,e3) ->
-        type_expect env e1 type_int;
-        type_expect env e2 type_int;
-        type_statement (Env.add i (forall [] type_int) env) e3;
-        type_unit
+        type_expect env e1 Clocks_utils.static;
+        type_expect env e2 Clocks_utils.static;
+        type_statement (Env.add i (forall [] [] Clocks_utils.static) env) e3;
+        Clocks_utils.static
 
     | Eseq e_list ->
         let rec f l =
           match l with
           | [] -> assert false
-          | [e] -> type_of_expression env e
+          | [e] -> clock_of_expression env e
           | e::l ->
               type_statement env e;
               f l
         in f e_list
 
     | Eprocess(e) ->
-        let ty = type_of_expression env e in
-        process ty { proc_static = Some(Proc_def (ref Static.Dontknow)); }
+        let ty = clock_of_expression env e in
+        process ty
 
     | Epre (Status, s) ->
-        let ty_s = type_of_expression env s in
+        let ty_s = clock_of_expression env s in
         let _, _ty =
           try
             filter_event ty_s
           with Unify ->
           non_event_err s
         in
-        type_bool
+        Clocks_utils.static
     | Epre (Value, s) ->
-        let ty_s = type_of_expression env s in
+        let ty_s = clock_of_expression env s in
         let _, ty =
           try
             filter_event ty_s
@@ -591,7 +571,7 @@ let rec type_of_expression env expr =
         ty
 
     | Elast s ->
-        let ty_s = type_of_expression env s in
+        let ty_s = clock_of_expression env s in
         let _, ty =
           try
             filter_event ty_s
@@ -601,7 +581,7 @@ let rec type_of_expression env expr =
         ty
 
     | Edefault s ->
-        let ty_s = type_of_expression env s in
+        let ty_s = clock_of_expression env s in
         let _, ty =
           try
             filter_event ty_s
@@ -611,35 +591,35 @@ let rec type_of_expression env expr =
         ty
 
     | Eemit (s, None) ->
-        let ty_s = type_of_expression env s in
+        let ty_s = clock_of_expression env s in
         let ty, _ =
           try
             filter_event ty_s
           with Unify ->
             non_event_err s
         in
-        unify_emit expr.e_loc type_unit ty;
-        type_unit
+        unify_emit expr.e_loc Clocks_utils.static ty;
+        Clocks_utils.static
 
     | Eemit (s, Some e) ->
-        let ty_s = type_of_expression env s in
+        let ty_s = clock_of_expression env s in
         let ty, _ =
           try
             filter_event ty_s
           with Unify ->
             non_event_err s
         in
-        let ty_e = type_of_expression env e in
+        let ty_e = clock_of_expression env e in
         unify_emit e.e_loc ty ty_e;
-        type_unit
+        Clocks_utils.static
 
     | Esignal ((s,te_opt), _, _, combine_opt, e) ->
-        let ty_emit = new_var() in
-        let ty_get = new_var() in
+        let ty_emit = new_clock_var() in
+        let ty_get = new_clock_var() in
         let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in
         opt_iter
           (fun te ->
-            unify_event s (instance (full_type_of_type_expression te)) ty_s)
+            unify_event s (instance (full_clock_of_type_expression te)) ty_s)
           te_opt;
         begin
           match combine_opt with
@@ -652,73 +632,78 @@ let rec type_of_expression env expr =
               type_expect env default ty_get;
               type_expect env comb (arrow ty_emit (arrow ty_get ty_get))
         end;
-        type_of_expression (Env.add s (forall [] ty_s) env) e
+        clock_of_expression (Env.add s (forall [] [] ty_s) env) e
 
-    | Enothing -> type_unit
+    | Enothing -> Clocks_utils.static
 
-    | Epause (_, ck) ->
-      (match ck with
-        | CkExpr e -> type_expect env e type_clock
-        | _ -> ());
-      type_unit
+    | Epause (_, ce) ->
+        (match ce with
+          | CkExpr ce ->
+              let ck_ce = clock_of_expression env ce in
+              (try
+                  ignore (filter_depend ck_ce)
+                with
+                  | Unify -> non_clock_err ce)
+          | _ -> ());
+        Clocks_utils.static
 
-    | Ehalt _ -> new_var()
+    | Ehalt _ -> new_clock_var()
 
     | Eloop (None, p) ->
         type_statement env p;
-        type_unit
+        Clocks_utils.static
 
     | Eloop (Some n, p) ->
-        type_expect env n type_int;
+        type_expect env n Clocks_utils.static;
         type_statement env p;
-        type_unit
+        Clocks_utils.static
 
     | Efordopar(i,e1,e2,flag,p) ->
-        type_expect env e1 type_int;
-        type_expect env e2 type_int;
-        type_statement (Env.add i (forall [] type_int) env) p;
-        type_unit
+        type_expect env e1 Clocks_utils.static;
+        type_expect env e2 Clocks_utils.static;
+        type_statement (Env.add i (forall [] [] Clocks_utils.static) env) p;
+        Clocks_utils.static
 
     | Epar p_list ->
         List.iter (fun p -> ignore (type_statement env p)) p_list;
-        type_unit
+        Clocks_utils.static
 
     | Emerge (p1,p2) ->
         type_statement env p1;
         type_statement env p2;
-        type_unit
+        Clocks_utils.static
 
     | Erun (e) ->
-        let ty_e = type_of_expression env e in
-        let ty = new_var() in
+        let ty_e = clock_of_expression env e in
+        let ty = new_clock_var() in
         unify_run e.e_loc
-          ty_e (process ty { proc_static = None; });
+          ty_e (process ty);
         ty
 
     | Euntil (s,p,patt_proc_opt) ->
         begin match patt_proc_opt with
         | None ->
             type_of_event_config env s;
-            type_expect env p type_unit;
-            type_unit
+            type_expect env p Clocks_utils.static;
+            Clocks_utils.static
         | Some _ ->
             begin match s.conf_desc with
             | Cpresent s ->
-                let ty_s = type_of_expression env s in
+                let ty_s = clock_of_expression env s in
                 let ty_emit, ty_get =
                   try
                     filter_event ty_s
                   with Unify ->
                     non_event_err s
                 in
-                let ty_body = type_of_expression env p in
+                let ty_body = clock_of_expression env p in
                 opt_iter
                   (fun (patt,proc) ->
-                    let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+                    let gl_env, loc_env = clock_of_pattern [] [] patt ty_get in
                     assert (gl_env = []);
                     let new_env =
                       List.fold_left
-                        (fun env (x, ty) -> Env.add x (forall [] ty) env)
+                        (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
                         env loc_env
                     in
                     type_expect new_env proc ty_body)
@@ -732,80 +717,81 @@ let rec type_of_expression env expr =
 
     | Ewhen (s,p) ->
         type_of_event_config env s;
-        type_of_expression env p
+        clock_of_expression env p
 
     | Econtrol (s, None, p) ->
         type_of_event_config env s;
-        type_of_expression env p
+        clock_of_expression env p
+
     | Econtrol (s, (Some (patt, e)), p) ->
         begin match s.conf_desc with
         | Cpresent s ->
-            let ty_s = type_of_expression env s in
+            let ty_s = clock_of_expression env s in
             let ty_emit, ty_get =
               try
                 filter_event ty_s
               with Unify ->
                 non_event_err s
             in
-            let ty_body = type_of_expression env p in
-            let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+            let ty_body = clock_of_expression env p in
+            let gl_env, loc_env = clock_of_pattern [] [] patt ty_get in
             assert (gl_env = []);
             let new_env =
               List.fold_left
-                (fun env (x, ty) -> Env.add x (forall [] ty) env)
+                (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
                 env loc_env
             in
-            type_expect new_env e type_bool;
+            type_expect new_env e Clocks_utils.static;
             ty_body
         | _ ->
             non_event_err2 s
         end
 
     | Eget (s,patt,p) ->
-        let ty_s = type_of_expression env s in
+        let ty_s = clock_of_expression env s in
         let _, ty_get =
           try
             filter_event ty_s
           with Unify ->
             non_event_err s
         in
-        let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+        let gl_env, loc_env = clock_of_pattern [] [] patt ty_get in
         assert (gl_env = []);
         let new_env =
           List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
             env loc_env
         in
-        type_of_expression new_env p
+        clock_of_expression new_env p
 
     | Epresent (s,p1,p2) ->
         type_of_event_config env s;
-        let ty = type_of_expression env p1 in
+        let ty = clock_of_expression env p1 in
         type_expect env p2 ty;
         ty
 
     | Eawait (_,s) ->
         type_of_event_config env s;
-        type_unit
+        Clocks_utils.static
 
     | Eawait_val (_,All,s,patt,p) ->
-        let ty_s = type_of_expression env s in
+        let ty_s = clock_of_expression env s in
         let _, ty_get =
           try
             filter_event ty_s
           with Unify ->
             non_event_err s
         in
-        let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+        let gl_env, loc_env = clock_of_pattern [] [] patt ty_get in
         assert (gl_env = []);
         let new_env =
           List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
             env loc_env
         in
-        type_of_expression new_env p
+        clock_of_expression new_env p
     | Eawait_val (_,One,s,patt,p) ->
-        let ty_s = type_of_expression env s in
+        let ty_s = clock_of_expression env s in
         let ty_emit, ty_get =
           try
             filter_event ty_s
@@ -816,29 +802,38 @@ let rec type_of_expression env expr =
           (constr_notabbrev event_ident
              [ty_emit; (constr_notabbrev list_ident [ty_emit])])
           ty_s;
-        let gl_env, loc_env = type_of_pattern [] [] patt ty_emit in
+        let gl_env, loc_env = clock_of_pattern [] [] patt ty_emit in
         assert (gl_env = []);
         let new_env =
           List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
             env loc_env
         in
-        type_of_expression new_env p
+        clock_of_expression new_env p
 
     | Enewclock (id, sch, e) ->
-      let env = Env.add id (forall [] type_clock) env in
-      let sch_type = arrow type_int (product [type_int; type_int]) in
+      let sch_type = arrow Clocks_utils.static (product [Clocks_utils.static; Clocks_utils.static]) in
       Misc.opt_iter (fun sch -> type_expect env sch sch_type) sch;
-      type_of_expression env e
+      push_type_level ();
+      let new_ck = depend (carrier_skolem id.Ident.name !current_level) in
+      let env = Env.add id (forall [] [] new_ck) env in
+      pop_type_level ();
+      clock_of_expression env e
 
-    | Epauseclock ck ->
-      type_expect env ck type_clock;
-      type_unit
+    | Epauseclock ce ->
+        let ty_ce = clock_of_expression env ce in
+        let _ =
+          try
+            filter_depend ty_ce
+          with
+            | Unify -> non_clock_err ce
+        in
+        Clocks_utils.static
 
-    | Etopck -> type_clock
+    | Etopck -> clock_topck
 
   in
-  expr.e_type <- t;
+  expr.e_clock <- t;
   Stypes.record (Ti_expr expr);
   t
 
@@ -847,7 +842,7 @@ let rec type_of_expression env expr =
 and type_of_event_config env conf =
   match conf.conf_desc with
   | Cpresent s ->
-      let ty = type_of_expression env s in
+      let ty = clock_of_expression env s in
       let _ =
         try
           filter_event ty
@@ -868,13 +863,13 @@ and type_of_event_config env conf =
 (* Typing of let declatations *)
 and type_let is_rec env patt_expr_list =
   push_type_level();
-  let ty_list = List.map (fun _ -> new_var()) patt_expr_list in
+  let ty_list = List.map (fun _ -> new_clock_var()) patt_expr_list in
   let global_env, local_env =
-    type_of_pattern_list [] [] (List.map fst patt_expr_list) ty_list
+    clock_of_pattern_list [] [] (List.map fst patt_expr_list) ty_list
   in
   let add_env =
     List.fold_left
-      (fun env (x, ty) -> Env.add x (forall [] ty) env)
+      (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
       Env.empty local_env
   in
   let let_env =
@@ -894,22 +889,22 @@ and type_let is_rec env patt_expr_list =
   let _ =
     List.iter
       (fun gl ->
-        gl.ty_info <- Some { value_typ = gen (Global.ty_info gl).value_typ.ts_desc })
+        gl.ck_info <- Some { value_ck = gen (Global.ck_info gl).value_ck.cs_desc })
       global_env
   in
-  let gen_env = Env.map (fun ty -> gen ty.ts_desc) add_env in
+  let gen_env = Env.map (fun ty -> gen ty.cs_desc) add_env in
   global_env, Env.append gen_env env
 
 
 (* Typing of an expression with an expected type *)
 and type_expect env expr expected_ty =
-  let actual_ty = type_of_expression env expr in
+  let actual_ty = clock_of_expression env expr in
   unify_expr expr expected_ty actual_ty
 
 (* Typing of statements (expressions whose values are ignored) *)
 and type_statement env expr =
-  let ty = type_of_expression env expr in
-  match (type_repr ty).type_desc with
+  ignore (clock_of_expression env expr)
+  (*match (clock_repr ty).desc with
   | Type_arrow(_,_) -> partial_apply_warning expr.e_loc
   | Type_var -> ()
   | Type_constr (c, _) ->
@@ -920,7 +915,7 @@ and type_statement env expr =
       | _ -> assert false
       end
   | _ ->
-      not_unit_type_warning expr
+      not_dot_clock_warning expr*)
 
 
 (* Checks multiple occurrences *)
@@ -947,14 +942,15 @@ let check_no_repeated_label loc l =
   checkrec [] l
 
 (* Typing of type declatations *)
-let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
-  let typ_vars = List.map (fun v -> (v,new_generic_var ())) typ_params in
+let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
+  let typ_vars = List.map (fun v -> (v,new_generic_clock_var ())) typ_params in
+  let car_vars = [] in (*TODO*)
   let final_typ =
     constr_notabbrev type_gl.gi (List.map snd typ_vars)
   in
   let type_desc, abbr =
     match type_decl with
-    | Tabstract -> Type_abstract, Constr_notabbrev
+    | Tabstract -> Clock_abstract, Constr_notabbrev
 
     | Tvariant constr_decl_list ->
         check_no_repeated_constructor loc constr_decl_list;
@@ -962,41 +958,41 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
           List.rev_map
             (fun (gl_cstr,te_opt) ->
               let ty_arg_opt =
-                opt_map (type_of_type_expression typ_vars) te_opt
+                opt_map (clock_of_type_expression (typ_vars, car_vars)) te_opt
               in
-              gl_cstr.ty_info <- Some { cstr_arg = ty_arg_opt;
-                                     cstr_res = final_typ; };
-              Types_utils.add_clock_description gl_cstr)
+              gl_cstr.ck_info <- Some { cstr_arg = ty_arg_opt;
+                                        cstr_res = final_typ; };
+              Clocks_utils.add_type_description gl_cstr)
             constr_decl_list
         in
-        Type_variant cstr_list, Constr_notabbrev
+        Clock_variant cstr_list, Constr_notabbrev
 
     | Trecord label_decl_list ->
         check_no_repeated_label loc label_decl_list;
         let lbl_list =
           List.rev_map
             (fun (gl_lbl, mut, te) ->
-              let ty_res = type_of_type_expression typ_vars te in
-              gl_lbl.ty_info <- Some { lbl_res = ty_res;
+              let ty_res = clock_of_type_expression (typ_vars, car_vars) te in
+              gl_lbl.ck_info <- Some { lbl_res = ty_res;
                                     lbl_arg = final_typ;
                                     lbl_mut = mut; };
-              Types_utils.add_clock_description gl_lbl)
+              Clocks_utils.add_type_description gl_lbl)
             label_decl_list
         in
-        Type_record lbl_list, Constr_notabbrev
+        Clock_record lbl_list, Constr_notabbrev
 
     | Trebind (te) ->
-        let ty_te = type_of_type_expression typ_vars te in
-        Type_rebind (ty_te),
+        let ty_te = clock_of_type_expression (typ_vars, car_vars) te in
+        Clock_rebind (ty_te),
         Constr_abbrev (List.map snd typ_vars, ty_te)
 
   in
-  type_gl.ty_info <-
-    Some { type_constr = {gi = type_gl.gi;
-                          ty_info = Some {constr_abbr = abbr};
-                          ck_info = None };
-           type_kind = type_desc;
-           type_arity = List.length typ_vars };
+  type_gl.ck_info <-
+    Some { clock_constr = {gi = type_gl.gi;
+                           ty_info = None;
+                           ck_info = Some {constr_abbr = abbr}};
+           clock_kind = type_desc;
+           clock_arity = List.length typ_vars };
   type_gl
 
 
@@ -1008,7 +1004,7 @@ let check_nongen_values impl_item_list =
       match impl_item.impl_desc with
       | Ilet (_, patt_expr_list) ->
           List.iter (fun (patt,expr) ->
-            if free_type_vars notgeneric expr.e_type != []
+            if free_clock_vars notgeneric expr.e_clock != []
             then
               cannot_generalize_err expr)
             patt_expr_list
@@ -1019,7 +1015,7 @@ let check_nongen_values impl_item_list =
 let impl info_chan item =
   (match item.impl_desc with
   | Iexpr (e) ->
-      ignore (type_of_expression Env.empty e)
+      ignore (clock_of_expression Env.empty e)
 
   | Ilet (flag, patt_expr_list) ->
       let global_env, local_env =
@@ -1027,18 +1023,18 @@ let impl info_chan item =
       in
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_value_type_declaration info_chan global_env
+      then Clocks_printer.output_value_declaration info_chan global_env
 
   | Isignal (l) ->
       List.iter
         (fun ((s,te_opt), combine_opt) ->
-          let ty_emit = new_var() in
-          let ty_get = new_var() in
+          let ty_emit = new_clock_var() in
+          let ty_get = new_clock_var() in
           let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in
           opt_iter
             (fun te ->
               unify_event s.gi.id
-                (instance (full_type_of_type_expression te)) ty_s)
+                (instance (full_clock_of_type_expression te)) ty_s)
             te_opt;
           begin
             match combine_opt with
@@ -1051,32 +1047,32 @@ let impl info_chan item =
                 type_expect Env.empty comb
                   (arrow ty_emit (arrow ty_get ty_get))
           end;
-          s.ty_info <- Some { value_typ = forall [] ty_s };
+          s.ck_info <- Some { value_ck = forall [] [] ty_s };
           (* verbose mode *)
           if !print_type
-          then Types_printer.output_value_type_declaration info_chan [s])
+          then Clocks_printer.output_value_declaration info_chan [s])
         l
   | Itype (l) ->
       let global_env =
-        List.map (type_of_type_declaration item.impl_loc) l
+        List.map (clock_of_type_declaration item.impl_loc) l
       in
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_type_declaration info_chan global_env
+      then Clocks_printer.output_type_declaration info_chan global_env
 
   | Iexn (gl_cstr, te_opt) ->
-      gl_cstr.ty_info <-
-        Some {cstr_arg = opt_map (type_of_type_expression []) te_opt;
-              cstr_res = type_exn; };
+      gl_cstr.ck_info <-
+        Some {cstr_arg = opt_map (clock_of_type_expression ([], [])) te_opt;
+              cstr_res = Clocks_utils.static; };
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_exception_declaration info_chan gl_cstr
+      then Clocks_printer.output_exception_declaration info_chan gl_cstr
 
   | Iexn_rebind (gl_cstr1, gl_cstr2) ->
-      gl_cstr1.ty_info <- Some (Global.ty_info gl_cstr2);
+      gl_cstr1.ck_info <- Some (Global.ck_info gl_cstr2);
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_exception_declaration info_chan gl_cstr1
+      then Clocks_printer.output_exception_declaration info_chan gl_cstr1
 
   | Iopen _ -> ()
   );
@@ -1086,27 +1082,27 @@ let impl info_chan item =
 let intf info_chan item =
   (match item.intf_desc with
   | Dval (gl, te) ->
-      gl.ty_info <-
-        Some { value_typ = gen (full_type_of_type_expression te).ts_desc };
+      gl.ck_info <-
+        Some { value_ck = gen (full_clock_of_type_expression te).cs_desc };
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_value_type_declaration info_chan [gl]
+      then Clocks_printer.output_value_declaration info_chan [gl]
 
   | Dtype l ->
       let global_env =
-        List.map (type_of_type_declaration item.intf_loc) l
+        List.map (clock_of_type_declaration item.intf_loc) l
       in
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_type_declaration info_chan global_env
+      then Clocks_printer.output_type_declaration info_chan global_env
 
   | Dexn (gl_cstr, te_opt) ->
-      gl_cstr.ty_info <-
-        Some {cstr_arg = opt_map (type_of_type_expression []) te_opt;
-              cstr_res = type_exn; };
+      gl_cstr.ck_info <-
+        Some {cstr_arg = opt_map (clock_of_type_expression ([], [])) te_opt;
+              cstr_res = Clocks_utils.static; };
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_exception_declaration info_chan gl_cstr
+      then Clocks_printer.output_exception_declaration info_chan gl_cstr
 
   | Dopen _ -> ()
   );

@@ -33,7 +33,7 @@
 open Format
 open Misc
 open Compiler_options
-open Types
+open Clocks
 open Asttypes
 open Ident
 open Modules
@@ -52,69 +52,91 @@ let print_qualified_ident q =
 
 (* type variables are printed 'a, 'b,... *)
 let type_name = new name_assoc_table int_to_alpha
+let carrier_names = new name_assoc_table (fun i -> string_of_int i)
+
+let print_carrier_name n i =
+  print_string "_";
+  print_string n;
+  print_string (carrier_names#name i)
+let print_skolem_name (n, i) =
+  print_string "?";
+  print_carrier_name n i
 
 let rec print priority ty =
   open_box 0;
-  begin match ty.type_desc with
-    Type_var ->
-      print_string "'";
-      if ty.type_level <> generic then print_string "_";
-      print_string (type_name#name ty.type_index)
-  | Type_arrow(ty1, ty2) ->
-      if priority >= 1 then print_string "(";
-      print 1 ty1;
-      print_space ();
-      print_string "->";
-      print_space ();
-      print 0 ty2;
-      if priority >= 1 then print_string ")"
-  | Type_product(ty_list) ->
-      if priority >= 2 then print_string "(";
-      print_list 2 "*" ty_list;
-      if priority >= 2 then print_string ")"
-  | Type_constr(name,ty_list) ->
-      let n = List.length ty_list in
-      if n > 1 then print_string "(";
-      print_list 2 "," ty_list;
-      if n > 1 then print_string ")";
-      if ty_list <> [] then print_space ();
-      print_qualified_ident name.gi
-  | Type_link(link) ->
-      print priority link
-  | Type_process(ty, proc_info) ->
-      print 2 ty;
-      print_space ();
-      print_string "process";
+  begin match ty.desc with
+    | Clock_static -> print_string "."
+    | Clock_var ->
+        print_string "'";
+        if ty.level <> generic then print_string "_";
+        print_string (type_name#name ty.index)
+    | Clock_depend c ->
+        print_string "{";
+        print_carrier c;
+        print_string "}"
+    | Clock_arrow(ty1, ty2) ->
+        if priority >= 1 then print_string "(";
+        print 1 ty1;
+        print_space ();
+        print_string "->";
+        print_space ();
+        print 0 ty2;
+        if priority >= 1 then print_string ")"
+    | Clock_product(ty_list) ->
+        (*if priority >= 2 then*) print_string "(";
+        print_list 2 "*" ty_list;
+        (*if priority >= 2 then*) print_string ")"
+    | Clock_constr(name,ty_list) ->
+        let n = List.length ty_list in
+        if n > 1 then print_string "(";
+        print_list 2 "," ty_list;
+        if n > 1 then print_string ")";
+        if ty_list <> [] then print_space ();
+        print_qualified_ident name.gi;
+       (* (match name.ck_info with
+          | Some { constr_abbr = Constr_abbrev(_, ck) } -> print_string " ----> "; print priority ck
+          | _ -> ()) *)
+    | Clock_link(link) ->
+        (*print_string "~>";*) print priority link
+    | Clock_process ty ->
+        print 2 ty;
+        print_space ();
+        print_string "process";
   end;
   close_box ()
 
-and print_proc_info pi = ()
-(*   begin match pi.proc_static with *)
-(*   | None | Some(Def_static.Dontknow) -> () *)
-(*   | Some(Def_static.Instantaneous) -> print_string "-" *)
-(*   | Some(Def_static.Noninstantaneous) -> print_string "+" *)
-(*   end *)
+and print_carrier car =
+  open_box 0;
+  begin match car.desc with
+    Carrier_var(s) ->
+      print_carrier_name s car.index
+  | Carrier_skolem(n, i) ->
+      print_skolem_name (n, i)
+  | Carrier_link(link) -> print_carrier link
+  end;
+  close_box ()
 
 and print_list priority sep l =
   let rec printrec l =
     match l with
       [] -> ()
     | [ty] ->
-	print priority ty
+	      print priority ty
     | ty::rest ->
-	print priority ty;
-	print_space ();
-	print_string sep;
-	print_space ();
-	printrec rest in
+	      print priority ty;
+	      print_space ();
+	      print_string sep;
+	      print_space ();
+	      printrec rest
+  in
   printrec l
 
 let print ty =
   type_name#reset;
   print 0 ty
-let print_scheme { ts_desc = ty } = print ty
+let print_scheme { cs_desc = ty } = print ty
 
-let print_value_type_declaration global =
+let print_value_clock_declaration global =
   let prefix = "val" in
   let name = little_name_of_global global in
   open_box 2;
@@ -124,30 +146,30 @@ let print_value_type_declaration global =
   then begin print_string "( "; print_string name; print_string " )" end
   else print_string name;
   print_space ();
-  print_string ":";
+  print_string "::";
   print_space ();
-  print_scheme (type_of_global global);
+  print_scheme (clock_of_global global);
   print_string "\n";
   close_box ();
   print_flush ()
 
 (* printing type declarations *)
-let print_type_name tc ta =
-  let print_one_type_variable i =
-    print_string "'";
+let print_clock_name tc ta =
+  let print_one_clock_variable i =
+    print_string "''";
     print_string (int_to_alpha i) in
   let rec printrec n =
     if n >= ta then ()
-    else if n = ta - 1 then print_one_type_variable n
+    else if n = ta - 1 then print_one_clock_variable n
     else begin
-      print_one_type_variable n;
+      print_one_clock_variable n;
       print_string ",";
       printrec (n+1)
     end in
   if ta = 0 then () else if ta = 1
   then
     begin
-      print_one_type_variable 0;
+      print_one_clock_variable 0;
       print_space ()
     end
   else begin
@@ -167,7 +189,7 @@ let print_one_variant global =
   print_string (little_name_of_global global);
   (* prints the rest if the arity is not null *)
   begin
-    match type_of_constr_arg global with
+    match clock_of_constr_arg global with
     | None -> ()
     | Some typ ->
 	print_space ();
@@ -184,7 +206,7 @@ let print_one_label global =
   print_string (little_name_of_global global);
   print_string ":";
   print_space ();
-  print (type_of_label_res global);
+  print (clock_of_label_res global);
   close_box ()
 
 let rec print_label_list = function
@@ -197,20 +219,20 @@ let rec print_label_list = function
 	  print_label_list t
 	end
 
-let print_type_declaration gl =
+let print_clock_declaration gl =
   let q = Global.gi gl in
-  let { type_kind = td;
-	type_arity = ta; } = Global.ty_info gl in
+  let { clock_kind = td;
+	      clock_arity = ta; } = Global.ck_info gl in
   open_box 2;
-  print_type_name q ta;
+  print_clock_name q ta;
   begin match td with
-  | Type_abstract -> ()
-  | Type_variant global_list ->
+  | Clock_abstract -> ()
+  | Clock_variant global_list ->
       print_string " =";
       open_hvbox 0;
       List.iter print_one_variant global_list;
       close_box ()
-  | Type_record global_list ->
+  | Clock_record global_list ->
       print_string " =";
       print_space ();
       print_string "{";
@@ -219,20 +241,20 @@ let print_type_declaration gl =
       close_box ();
       print_space ();
       print_string "}"
-  | Type_rebind te ->
+  | Clock_rebind te ->
       print_string " =";
       print_space ();
       print te
   end;
   close_box ()
 
-let print_list_of_type_declarations global_list =
+let print_list_of_clock_declarations global_list =
   let rec printrec global_list =
     match global_list with
       [] -> ()
-    | [global] -> print_type_declaration global
+    | [global] -> print_clock_declaration global
     | global :: global_list ->
-	print_type_declaration global;
+	print_clock_declaration global;
 	print_space ();
 	print_string "and ";
 	printrec global_list in
@@ -254,13 +276,13 @@ let output oc ty =
   print ty;
   print_flush ()
 
-let output_value_type_declaration oc global_list =
+let output_value_declaration oc global_list =
   set_formatter_out_channel oc;
-  List.iter print_value_type_declaration global_list
+  List.iter print_value_clock_declaration global_list
 
 let output_type_declaration oc global_list =
   set_formatter_out_channel oc;
-  print_list_of_type_declarations global_list;
+  print_list_of_clock_declarations global_list;
   print_flush ()
 
 let output_exception_declaration oc gl =
@@ -271,7 +293,7 @@ let output_exception_declaration oc gl =
   print_string (little_name_of_global gl);
   (* prints the rest if the arity is not null *)
   begin
-    match type_of_constr_arg gl with
+    match clock_of_constr_arg gl with
     | None -> ()
     | Some typ ->
 	print_space ();

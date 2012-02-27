@@ -135,7 +135,7 @@ let rec type_expression i ppf x =
   line i ppf "type_expression %a\n" fmt_location x.pte_loc;
   let i = i+1 in
   match x.pte_desc with
-  | Ptype_var (s) -> line i ppf "Ptype_var \'%s\n" s;
+  | Ptype_var (s, _) -> line i ppf "Ptype_var \'%s\n" s;
   | Ptype_arrow (ct1, ct2) ->
       line i ppf "Ptype_arrow\n";
       type_expression i ppf ct1;

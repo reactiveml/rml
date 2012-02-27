@@ -27,10 +27,9 @@
 
 open Asttypes
 open Types
+open Modules
 
 type ident = Ident.t
-
-type 'a global = 'a Global.global
 
 (* Expressions *)
 
@@ -40,18 +39,18 @@ type expression =
     coexpr_loc: Location.t; }
 and expression_desc =
   | Coexpr_local of ident
-  | Coexpr_global of value_type_description global
+  | Coexpr_global of value_description
   | Coexpr_constant of immediate
   | Coexpr_let of rec_flag * (pattern * expression) list * expression
   | Coexpr_function of (pattern * expression) list
   | Coexpr_apply of expression * expression list
   | Coexpr_tuple of expression list
-  | Coexpr_construct of constructor_type_description global * expression option
+  | Coexpr_construct of constructor_description * expression option
   | Coexpr_array of expression list
-  | Coexpr_record of (label_type_description global * expression) list
-  | Coexpr_record_access of expression * label_type_description global
+  | Coexpr_record of (label_description * expression) list
+  | Coexpr_record_access of expression * label_description
   | Coexpr_record_update of
-      expression * label_type_description global * expression
+      expression * label_description * expression
   | Coexpr_constraint of expression * type_expression
   | Coexpr_trywith of expression * (pattern * expression) list
   | Coexpr_assert of expression
@@ -69,7 +68,7 @@ and expression_desc =
   | Coexpr_emit of expression
   | Coexpr_emit_val of expression * expression
   | Coexpr_signal of
-      (ident * type_expression option) * expression Asttypes.clock * expression Asttypes.clock
+      (ident * type_expression option) * expression Asttypes.clock_expr * expression Asttypes.clock_expr
     * (expression * expression) option * expression
   | Coexpr_topck
 
@@ -79,7 +78,7 @@ and process =
     coproc_loc: Location.t;}
 and process_desc =
   | Coproc_nothing
-  | Coproc_pause of continue_begin_of_instant * expression Asttypes.clock
+  | Coproc_pause of continue_begin_of_instant * expression Asttypes.clock_expr
   | Coproc_halt of continue_begin_of_instant
   | Coproc_compute of expression
   | Coproc_emit of expression
@@ -93,7 +92,7 @@ and process_desc =
   | Coproc_par of process list
   | Coproc_merge of process * process
   | Coproc_signal of
-      (ident * type_expression option) * expression Asttypes.clock * expression Asttypes.clock
+      (ident * type_expression option) * expression Asttypes.clock_expr * expression Asttypes.clock_expr
     * (expression * expression) option * process
   | Coproc_def of (pattern * expression) * process
   | Coproc_def_dyn of (pattern * process) * process
@@ -132,34 +131,34 @@ and pattern_desc =
   | Copatt_alias of pattern * varpatt
   | Copatt_constant of immediate
   | Copatt_tuple of pattern list
-  | Copatt_construct of constructor_type_description global * pattern option
+  | Copatt_construct of constructor_description * pattern option
   | Copatt_or of pattern * pattern
-  | Copatt_record of (label_type_description global * pattern) list
+  | Copatt_record of (label_description * pattern) list
   | Copatt_array of pattern list
   | Copatt_constraint of pattern * type_expression
 
 and varpatt =
   | Covarpatt_local of ident
-  | Covarpatt_global of value_type_description global
+  | Covarpatt_global of value_description
 
 (* Types *)
 and type_expression =
     { cote_desc: type_expression_desc;
       cote_loc: Location.t}
 and type_expression_desc =
-    Cotype_var of string
+    Cotype_var of string * type_var_kind
   | Cotype_arrow of type_expression * type_expression
   | Cotype_product of type_expression list
-  | Cotype_constr of type_description global * type_expression list
+  | Cotype_constr of type_description * type_expression list
   | Cotype_process of type_expression
 
 and type_declaration =
   | Cotype_abstract
   | Cotype_rebind of type_expression
   | Cotype_variant of
-      (constructor_type_description global * type_expression option) list
+      (constructor_description * type_expression option) list
   | Cotype_record of
-      (label_type_description global * mutable_flag * type_expression) list
+      (label_description * mutable_flag * type_expression) list
 
 (* Structure *)
 type impl_item =
@@ -169,14 +168,14 @@ and impl_desc =
   | Coimpl_expr of expression
   | Coimpl_let of rec_flag * (pattern * expression) list
   | Coimpl_signal of
-      ((value_type_description global * type_expression option)
+      ((value_description * type_expression option)
 	 * (expression * expression) option) list
   | Coimpl_type of
-      (type_description global * string list * type_declaration) list
+      (type_description * string list * type_declaration) list
   | Coimpl_exn of
-      constructor_type_description global * type_expression option
+      constructor_description * type_expression option
   | Coimpl_exn_rebind of
-      constructor_type_description global * constructor_type_description global
+      constructor_description * constructor_description
   | Coimpl_open of string
 
 (* Signature *)
@@ -184,10 +183,10 @@ type intf_item =
     {cointf_desc: intf_desc;
      cointf_loc: Location.t;}
 and intf_desc =
-  | Cointf_val of value_type_description global * type_expression
+  | Cointf_val of value_description * type_expression
   | Cointf_type of
-      (type_description global * string list * type_declaration) list
+      (type_description * string list * type_declaration) list
   | Cointf_exn of
-      constructor_type_description global * type_expression option
+      constructor_description * type_expression option
   | Cointf_open of string
 

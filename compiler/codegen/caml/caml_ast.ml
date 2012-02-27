@@ -27,10 +27,10 @@
 
 open Asttypes
 open Types
+open Modules
 
 type signal = Ident.t
 type ident = Ident.t
-type 'a global = 'a Global.global
 
 (* Expressions *)
 
@@ -40,19 +40,19 @@ type expression =
     cexpr_loc: Location.t; }
 and expression_desc =
   | Cexpr_local of ident
-  | Cexpr_global of value_type_description global
+  | Cexpr_global of value_description
   | Cexpr_constant of immediate
   | Cexpr_let of rec_flag * (pattern * expression) list * expression
   | Cexpr_function of (pattern * expression) list
   | Cexpr_fun of pattern list * expression
   | Cexpr_apply of expression * expression list
   | Cexpr_tuple of expression list
-  | Cexpr_construct of constructor_type_description global * expression option
+  | Cexpr_construct of constructor_description * expression option
   | Cexpr_array of expression list
-  | Cexpr_record of (label_type_description global * expression) list
-  | Cexpr_record_access of expression * label_type_description global
+  | Cexpr_record of (label_description * expression) list
+  | Cexpr_record_access of expression * label_description
   | Cexpr_record_update of
-      expression * label_type_description global * expression
+      expression * label_description * expression
   | Cexpr_constraint of expression * type_expression
   | Cexpr_trywith of expression * (pattern * expression) list
   | Cexpr_assert of expression
@@ -74,15 +74,15 @@ and pattern_desc =
   | Cpatt_alias of pattern * varpatt
   | Cpatt_constant of immediate
   | Cpatt_tuple of pattern list
-  | Cpatt_construct of constructor_type_description global * pattern option
+  | Cpatt_construct of constructor_description * pattern option
   | Cpatt_or of pattern * pattern
-  | Cpatt_record of (label_type_description global * pattern) list
+  | Cpatt_record of (label_description * pattern) list
   | Cpatt_array of pattern list
   | Cpatt_constraint of pattern * type_expression
 
 and varpatt =
   | Cvarpatt_local of ident
-  | Cvarpatt_global of value_type_description global
+  | Cvarpatt_global of value_description
 
 (* Types *)
 and type_expression =
@@ -92,16 +92,16 @@ and type_expression_desc =
     Ctype_var of string
   | Ctype_arrow of type_expression * type_expression
   | Ctype_product of type_expression list
-  | Ctype_constr of type_description global * type_expression list
+  | Ctype_constr of type_description * type_expression list
   | Ctype_any
 
 and type_declaration =
   | Ctype_abstract
   | Ctype_rebind of type_expression
   | Ctype_variant of
-      (constructor_type_description global * type_expression option) list
+      (constructor_description * type_expression option) list
   | Ctype_record of
-      (label_type_description global * mutable_flag * type_expression) list
+      (label_description * mutable_flag * type_expression) list
 
 (* Structure *)
 type impl_item =
@@ -111,10 +111,10 @@ and impl_desc =
   | Cimpl_expr of expression
   | Cimpl_let of rec_flag * (pattern * expression) list
   | Cimpl_type of
-      (type_description global * string list * type_declaration) list
-  | Cimpl_exn of constructor_type_description global * type_expression option
+      (type_description * string list * type_declaration) list
+  | Cimpl_exn of constructor_description * type_expression option
   | Cimpl_exn_rebind of
-      constructor_type_description global * constructor_type_description global
+      constructor_description * constructor_description
   | Cimpl_open of string
 
 (* Signature *)
@@ -122,9 +122,9 @@ type intf_item =
     {cintf_desc: intf_desc;
      cintf_loc: Location.t;}
 and intf_desc =
-  | Cintf_val of value_type_description global * type_expression
+  | Cintf_val of value_description * type_expression
   | Cintf_type of
-      (type_description global * string list * type_declaration) list
+      (type_description * string list * type_declaration) list
   | Cintf_exn of
-      constructor_type_description global * type_expression option
+      constructor_description * type_expression option
   | Cintf_open of string

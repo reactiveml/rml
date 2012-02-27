@@ -33,6 +33,8 @@ open Binding_errors
 open Reac
 open Reac_utils
 open Parse_ident
+open Clocks
+open Clocks_utils
 open Types
 open Types_utils
 
@@ -50,7 +52,7 @@ module Env =
 let rec translate_te typ =
   let rtyp =
     match typ.pte_desc with
-    | Ptype_var x -> Tvar x
+    | Ptype_var (x, k) -> Tvar (x, k)
 
     | Ptype_arrow (t1, t2) ->
         Tarrow (translate_te t1, translate_te t2)
@@ -82,7 +84,7 @@ let rec translate_type_decl typ =
         List.map
           (fun (c, typ) ->
             let id = Ident.create Ident.gen_constr c.psimple_id Ident.Constr in
-            let g = Modules.defined_global id (no_info()) in
+            let g = Modules.defined_global id (no_info()) (no_info()) in
             let _ = Modules.add_constr g in
             let typ =
               match typ with
@@ -99,7 +101,7 @@ let rec translate_type_decl typ =
         List.map
           (fun (lab, flag, typ) ->
             let id = Ident.create Ident.gen_label lab.psimple_id Ident.Label in
-            let g = Modules.defined_global id (no_info()) in
+            let g = Modules.defined_global id (no_info()) (no_info()) in
             let _ = Modules.add_label g in
             (g, flag, translate_te typ))
           l
@@ -129,7 +131,7 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
               in
               if is_global
               then
-                let gl = Modules.defined_global id (no_info()) in
+                let gl = Modules.defined_global id (no_info()) (no_info()) in
                 let vp = Vglobal gl in
                 [(x.psimple_id, vp)], Pvar vp
               else
@@ -152,7 +154,7 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
                 in
                 if is_global
                 then
-                  let gl = Modules.defined_global id (no_info()) in
+                  let gl = Modules.defined_global id (no_info()) (no_info()) in
                   let vp = Vglobal gl in
                   (x.psimple_id, vp) :: vars, Palias (rpatt, vp)
                 else
@@ -615,15 +617,22 @@ let translate_type_declaration l =
     List.map
       (fun (name, param, typ) ->
         let id = Ident.create Ident.gen_type name.psimple_id Ident.Type in
-        let gl = Modules.defined_global id (no_info()) in
-        let info = { type_constr = { gi = gl.gi;
-                                     info =
-                                     Some {constr_abbr = Constr_notabbrev}};
-                     type_kind = Type_abstract;
-                     type_arity = List.length param; }
+        let gl = Modules.defined_global id (no_info()) (no_info()) in
+        let ty_info = { type_constr = { gi = gl.gi;
+                                        ty_info = Some {constr_abbr = Constr_notabbrev};
+                                        ck_info = None; };
+                        type_kind = Type_abstract;
+                        type_arity = List.length param; }
+        in
+        let ck_info = { clock_constr = { gi = gl.gi;
+                                         ty_info = None;
+                                         ck_info = Some { Clocks.constr_abbr = Clocks.Constr_notabbrev} };
+                        clock_kind = Clock_abstract;
+                        clock_arity = List.length param; }
         in
         let _ =
-          gl.info <- Some info;
+          gl.ty_info <- Some ty_info;
+          gl.ck_info <- Some ck_info;
           Modules.add_type gl
         in
         (gl, param, typ))
@@ -650,7 +659,7 @@ let translate_impl_item info_chan item =
           (List.map
              (fun (s,ty_opt) ->
                let id = Ident.create Ident.gen_var s.psimple_id Ident.Sig in
-               let gl = Modules.defined_global id (no_info()) in
+               let gl = Modules.defined_global id (no_info()) (no_info()) in
                let _ = Modules.add_value gl in
                let rty_opt = opt_map translate_te ty_opt in
                let rcomb_opt =
@@ -668,13 +677,13 @@ let translate_impl_item info_chan item =
 
     | Pimpl_exn (name, typ) ->
         let id = Ident.create Ident.gen_constr name.psimple_id Ident.Exn in
-        let gl = Modules.defined_global id (no_info()) in
+        let gl = Modules.defined_global id (no_info()) (no_info()) in
         let _ = Modules.add_constr gl in
         Iexn (gl, opt_map translate_te typ)
 
     | Pimpl_exn_rebind (name, gl_name) ->
         let id = Ident.create Ident.gen_constr name.psimple_id Ident.Exn in
-        let gl = Modules.defined_global id (no_info()) in
+        let gl = Modules.defined_global id (no_info()) (no_info()) in
         let _ = Modules.add_constr gl in
         let gtype = try Modules.pfind_constr_desc gl_name.pident_id with
         | Modules.Desc_not_found ->
@@ -699,7 +708,7 @@ let translate_intf_item info_chan item =
     match item.pintf_desc with
     | Pintf_val (s, t) ->
         let id = Ident.create Ident.gen_var s.psimple_id Ident.Val_ML in
-        let gl = Modules.defined_global id (no_info()) in
+        let gl = Modules.defined_global id (no_info()) (no_info()) in
         let _ = Modules.add_value gl in
         Dval (gl, translate_te t)
 
@@ -709,7 +718,7 @@ let translate_intf_item info_chan item =
 
     | Pintf_exn (name, typ) ->
         let id = Ident.create Ident.gen_constr name.psimple_id Ident.Exn in
-        let gl = Modules.defined_global id (no_info()) in
+        let gl = Modules.defined_global id (no_info()) (no_info()) in
         let _ = Modules.add_constr gl in
         Dexn (gl, opt_map translate_te typ)
 

@@ -64,4 +64,11 @@ type immediate =
   | Const_char of char
   | Const_string of string
 
-type 'a clock = CkTop | CkLocal | CkExpr of 'a
+type 'a clock_expr = CkTop | CkLocal | CkExpr of 'a
+
+type 'a repr =
+    { mutable desc: 'a;
+      mutable index: int;
+      mutable level: int }
+
+type type_var_kind = Ttype_var | Tcarrier_var

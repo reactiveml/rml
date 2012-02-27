@@ -29,11 +29,14 @@ open Asttypes
 open Reac
 open Types
 open Types_utils
+open Clocks
+open Clocks_utils
 
-let make_expr_all e typ static reactivity loc =
+let make_expr_all e typ ck static reactivity loc =
   { e_desc = e;
     e_loc = loc;
     e_type = typ;
+    e_clock = ck;
     e_static = static;
     e_reactivity = reactivity; }
 
@@ -41,13 +44,15 @@ let make_expr e loc =
   { e_desc = e;
     e_loc = loc;
     e_type = no_type_expression;
+    e_clock = no_clock;
     e_static = Static.Dynamic Static.Dontknow;
     e_reactivity = []; }
 
 let make_patt p loc =
   { patt_desc = p;
     patt_loc = loc;
-    patt_type = no_type_expression; }
+    patt_type = no_type_expression;
+    patt_clock = no_clock }
 
 let make_conf c loc =
   { conf_desc = c;

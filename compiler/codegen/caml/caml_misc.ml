@@ -58,25 +58,23 @@ let make_intf it loc =
 let make_instruction s =
   make_expr
     (Cexpr_global
-       { gi = { qual = "Interpreter";
-                id = Ident.create Ident.gen_var s Ident.Internal };
-         info = no_info(); })
+        (Global.only_ident { qual = "Interpreter";
+                             id = Ident.create Ident.gen_var s Ident.Internal }))
     Location.none
 
 let make_constr q s e =
   make_expr
     (Cexpr_construct
-       ({ gi = { qual = q;
-                 id = Ident.create Ident.gen_constr s Ident.Constr };
-           info = no_info(); },
-        e))
+       (Global.only_ident { qual = q;
+                            id = Ident.create Ident.gen_constr s Ident.Constr },
+       e))
     Location.none
 
 let make_rml_type s ty_list =
   make_te
-    (Ctype_constr ({ gi = { qual = "Interpreter";
-			    id = Ident.create Ident.gen_type s Ident.Type };
-		     info = no_info(); }, ty_list))
+    (Ctype_constr (Global.only_ident { qual = "Interpreter";
+			                                 id = Ident.create Ident.gen_type s Ident.Type },
+                  ty_list))
     Location.none
 
 
@@ -97,17 +95,14 @@ let make_raise_RML () =
     (Cexpr_apply
        (make_expr
 	  (Cexpr_global
-	     { gi = { qual = pervasives_module;
-		      id = Ident.create Ident.gen_var "raise" Ident.Val_ML };
-	       info = no_info(); })
+	      (Global.only_ident { qual = pervasives_module;
+		                         id = Ident.create Ident.gen_var "raise" Ident.Val_ML }))
 	  Location.none,
 	[make_expr
 	   (Cexpr_construct
-	      ({ gi = { qual = "Types";
-			id = Ident.create Ident.gen_constr
-			  "RML" Ident.Internal };
-		 info = no_info(); },
-	       None))
+	      (Global.only_ident { qual = "Types";
+			                       id = Ident.create Ident.gen_constr "RML" Ident.Internal },
+	      None))
 	   Location.none]))
     Location.none
 
@@ -145,9 +140,8 @@ let make_ref e =
     (Cexpr_apply
        (make_expr
 	  (Cexpr_global
-	     { gi = { qual = "Pervasives";
-		      id = Ident.create Ident.gen_var "ref" Ident.Internal };
-	       info = no_info(); })
+	      (Global.only_ident { qual = "Pervasives";
+		                         id = Ident.create Ident.gen_var "ref" Ident.Internal }))
 	  Location.none,
 	[e]))
     Location.none
@@ -158,9 +152,8 @@ let deref vref =
     (Cexpr_apply
        (make_expr
 	  (Cexpr_global
-	     { gi = { qual = "Pervasives";
-		      id = Ident.create Ident.gen_var "!" Ident.Internal };
-	       info = no_info(); })
+	     (Global.only_ident { qual = "Pervasives";
+		                        id = Ident.create Ident.gen_var "!" Ident.Internal }))
 	  Location.none,
 	[make_expr_var_local vref]))
     Location.none
@@ -171,9 +164,8 @@ let make_magic () =
   Cexpr_apply
     (make_expr
        (Cexpr_global
-	  { gi = { qual="Obj";
-		   id=Ident.create Ident.gen_var "magic" Ident.Internal };
-	    info = no_info(); })
+	         (Global.only_ident { qual="Obj";
+		                            id=Ident.create Ident.gen_var "magic" Ident.Internal }))
        Location.none,
      [make_unit()])
 
@@ -252,10 +244,8 @@ let rec make_dummy t =
 
 	  else if type_desc = Initialization.type_desc_exn then
 	    Cexpr_construct
-	      ({ gi =
-		 { qual = !interpreter_module;
-		   id = Ident.create Ident.gen_constr "RML" Ident.Internal };
-		 info = no_info(); },
+	      (Global.only_ident { qual = !interpreter_module;
+		                         id = Ident.create Ident.gen_constr "RML" Ident.Internal },
 	       None)
 
 	  else if type_desc = Initialization.type_desc_array then
@@ -285,7 +275,7 @@ let rec make_dummy t =
 
 and dummy_of_type_description t =
   let expr =
-    begin match (Global.info t).type_kind with
+    begin match (Global.ty_info t).type_kind with
     | Type_abstract -> make_magic_expr()
 
     | Type_rebind te -> make_dummy te
@@ -294,12 +284,13 @@ and dummy_of_type_description t =
 	let cstr =
 	  try
 	    List.find
-	      (fun cstr -> (Global.info cstr).cstr_arg = None)
+	      (fun cstr -> (Global.ty_info cstr).cstr_arg = None)
 	      cstr_list
 	  with Not_found -> List.hd cstr_list
 	in
+  let cstr = Types_utils.add_clock_description cstr in
 	let arg =
-	  match (Global.info cstr).cstr_arg with
+	  match (Global.ty_info cstr).cstr_arg with
 	  | None -> None
 	  | Some te -> Some (make_dummy te)
 	in
@@ -310,7 +301,7 @@ and dummy_of_type_description t =
     | Type_record lbl_list ->
 	let body =
 	  List.map
-	    (fun lbl -> (lbl, make_dummy (Global.info lbl).lbl_res))
+	    (fun lbl -> (Types_utils.add_clock_description lbl, make_dummy (Global.ty_info lbl).lbl_res))
 	    lbl_list
 	in
 	make_expr (Cexpr_record body) Location.none

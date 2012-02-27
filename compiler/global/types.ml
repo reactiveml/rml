@@ -33,6 +33,8 @@
 open Asttypes
 open Global
 
+type 'a global = ('a, unit) Global.global
+
 (* types *)
 type type_scheme =
     { ts_binders: type_expression list;        (* generalised variables *)
@@ -112,6 +114,6 @@ type exception_declaration = type_expression list
 let generic = (-1)
 and notgeneric = 0
 
-let type_of_global g = (info g).value_typ
-let type_of_constr_arg g = (info g).cstr_arg
-let type_of_label_res g = (info g).lbl_res
+let type_of_global g = (ty_info g).value_typ
+let type_of_constr_arg g = (ty_info g).cstr_arg
+let type_of_label_res g = (ty_info g).lbl_res

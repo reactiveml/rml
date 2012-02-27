@@ -39,7 +39,8 @@ let unit_value = make_expr (Cexpr_constant Const_unit) Location.none
 let rec translate_te typ =
   let ctyp =
     match typ.cote_desc with
-    | Cotype_var x -> Ctype_var x
+    | Cotype_var (_, Tcarrier_var) -> assert false (* TODO: effacer les variables de carrier *)
+    | Cotype_var (x, Ttype_var) -> Ctype_var x
     | Cotype_arrow (t1, t2) ->
         Ctype_arrow (translate_te t1, translate_te t2)
     | Cotype_product typ_list ->

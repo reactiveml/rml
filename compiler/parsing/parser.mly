@@ -986,7 +986,9 @@ simple_core_type:
 
 simple_core_type2:
     QUOTE ident
-      { mkte(Ptype_var $2) }
+      { mkte(Ptype_var ($2, Asttypes.Ttype_var)) }
+  | QUOTE QUOTE ident
+      { mkte(Ptype_var ($3, Asttypes.Tcarrier_var)) }
   | type_longident
       { mkte(Ptype_constr($1, [])) }
   | simple_core_type2 type_longident

@@ -69,7 +69,7 @@ and expression_desc =
       simple_ident * expression * expression * direction_flag * expression
   | Pexpr_seq of expression * expression
   | Pexpr_nothing
-  | Pexpr_pause of expression Asttypes.clock
+  | Pexpr_pause of expression Asttypes.clock_expr
   | Pexpr_halt
   | Pexpr_emit of expression
   | Pexpr_emit_val of expression * expression
@@ -78,7 +78,7 @@ and expression_desc =
   | Pexpr_merge of expression * expression
   | Pexpr_signal of
       (simple_ident * type_expression option) list *
-        (expression Asttypes.clock (*ck*) * expression Asttypes.clock (*region*)) *
+        (expression Asttypes.clock_expr (*ck*) * expression Asttypes.clock_expr (*region*)) *
         (expression * expression) option * expression
   | Pexpr_process of expression
   | Pexpr_run of expression
@@ -127,7 +127,7 @@ and type_expression =
     {pte_desc: type_expression_desc;
      pte_loc: Location.t;}
 and type_expression_desc =
-  | Ptype_var of string
+  | Ptype_var of string * type_var_kind
   | Ptype_arrow of type_expression * type_expression
   | Ptype_tuple of type_expression list
   | Ptype_constr of ident * type_expression list

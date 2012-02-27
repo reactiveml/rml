@@ -32,11 +32,12 @@
 
 open Asttypes
 open Types
+open Clocks
+open Modules
 
 type ident = Ident.t
 
 (*type global_ident = Global_ident.qualified_ident*)
-type 'a global = 'a Global.global
 
 (* Expressions *)
 
@@ -45,23 +46,24 @@ type expression =
   { e_desc: expression_desc;
     e_loc: Location.t;
     mutable e_type: Types.type_expression;
+    mutable e_clock: Clocks.clock;
     mutable e_static: Static.static;
     mutable e_reactivity: (varpatt * int) list; }
 
 and expression_desc =
   | Elocal of ident
-  | Eglobal of value_type_description global
+  | Eglobal of value_description
   | Econstant of immediate
   | Elet of rec_flag * (pattern * expression) list * expression
   | Efunction of (pattern * expression) list
   | Eapply of expression * expression list
   | Etuple of expression list
-  | Econstruct of constructor_type_description global * expression option
+  | Econstruct of constructor_description * expression option
   | Earray of expression list
-  | Erecord of (label_type_description global * expression) list
-  | Erecord_access of expression * label_type_description global
+  | Erecord of (label_description * expression) list
+  | Erecord_access of expression * label_description
   | Erecord_update of
-      expression * label_type_description global * expression
+      expression * label_description * expression
   | Econstraint of expression * type_expression
   | Etrywith of expression * (pattern * expression) list
   | Eassert of expression
@@ -77,7 +79,7 @@ and expression_desc =
   | Elast of expression
   | Edefault of expression
   | Enothing
-  | Epause of continue_begin_of_instant * expression Asttypes.clock
+  | Epause of continue_begin_of_instant * expression Asttypes.clock_expr
   | Ehalt of continue_begin_of_instant
   | Eemit of expression * expression option
   | Eloop of expression option * expression
@@ -86,7 +88,7 @@ and expression_desc =
   | Epar of expression list
   | Emerge of expression * expression
   | Esignal of
-      (ident * type_expression option) * expression Asttypes.clock * expression Asttypes.clock
+      (ident * type_expression option) * expression Asttypes.clock_expr * expression Asttypes.clock_expr
         * (expression * expression) option * expression
   | Erun of expression
   | Euntil of event_config * expression * (pattern * expression) option
@@ -115,41 +117,42 @@ and event_config_desc =
 and pattern =
     { patt_desc: pattern_desc;
       patt_loc: Location.t;
-      mutable patt_type: Types.type_expression; }
+      mutable patt_type: Types.type_expression;
+      mutable patt_clock : Clocks.clock }
 and pattern_desc =
   | Pany
   | Pvar of varpatt
   | Palias of pattern * varpatt
   | Pconstant of immediate
   | Ptuple of pattern list
-  | Pconstruct of constructor_type_description global * pattern option
+  | Pconstruct of constructor_description * pattern option
   | Por of pattern * pattern
-  | Precord of (label_type_description global * pattern) list
+  | Precord of (label_description * pattern) list
   | Parray of pattern list
   | Pconstraint of pattern * type_expression
 
 and varpatt =
   | Vlocal of ident
-  | Vglobal of value_type_description global
+  | Vglobal of value_description
 
 (* Types *)
 and type_expression =
     { te_desc: type_expression_desc;
       te_loc: Location.t}
 and type_expression_desc =
-    Tvar of string
+    Tvar of string * type_var_kind
   | Tarrow of type_expression * type_expression
   | Tproduct of type_expression list
-  | Tconstr of type_description global * type_expression list
+  | Tconstr of type_description * type_expression list
   | Tprocess of type_expression * Static.instantaneous
 
 and type_declaration =
   | Tabstract
   | Trebind of type_expression
   | Tvariant of
-      (constructor_type_description global * type_expression option) list
+      (constructor_description * type_expression option) list
   | Trecord of
-      (label_type_description global * mutable_flag * type_expression) list
+      (label_description * mutable_flag * type_expression) list
 
 (* Structure *)
 type impl_item =
@@ -159,14 +162,14 @@ and impl_desc =
   | Iexpr of expression
   | Ilet of rec_flag * (pattern * expression) list
   | Isignal of
-      ((value_type_description global * type_expression option)
+      ((value_description * type_expression option)
          * (expression * expression) option) list
   | Itype of
-      (type_description global * string list * type_declaration) list
+      (type_description * string list * type_declaration) list
   | Iexn of
-      constructor_type_description global * type_expression option
+      constructor_description * type_expression option
   | Iexn_rebind of
-      constructor_type_description global * constructor_type_description global
+      constructor_description * constructor_description
   | Iopen of string
 
 (* Signature *)
@@ -174,10 +177,10 @@ type intf_item =
     {intf_desc: intf_desc;
      intf_loc: Location.t;}
 and intf_desc =
-  | Dval of value_type_description global * type_expression
+  | Dval of value_description  * type_expression
   | Dtype of
-      (type_description global * string list * type_declaration) list
+      (type_description * string list * type_declaration) list
   | Dexn of
-      constructor_type_description global * type_expression option
+      constructor_description  * type_expression option
   | Dopen of string
 

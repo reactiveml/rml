@@ -67,8 +67,9 @@ let constr ty_constr ty_list =
 
 let constr_notabbrev name ty_list =
   make_type (Type_constr({ gi = name;
-			   info = Some {constr_abbr = Constr_notabbrev}; },
-			 ty_list))
+                           ty_info = Some {constr_abbr = Constr_notabbrev};
+                           ck_info = no_info (); },
+                        ty_list))
 
 let arrow ty1 ty2 =
   make_type (Type_arrow(ty1, ty2))
@@ -329,12 +330,12 @@ let rec _unify expected_ty actual_ty =
 	  | Invalid_argument _ -> raise Unify
 	  end
       | Type_constr
-	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } }, args),
+	  ({ ty_info = Some { constr_abbr=Constr_abbrev(params,body) } }, args),
 	_ ->
 	  unify (expand_abbrev params body args) actual_ty
       | _,
 	Type_constr
-	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
+	  ({ ty_info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
 	    unify expected_ty (expand_abbrev params body args)
       | Type_process(ty1, pi1), Type_process(ty2, pi2) ->
 	  begin match pi1.proc_static, pi2.proc_static with
@@ -360,7 +361,7 @@ let rec filter_arrow ty =
   let ty = type_repr ty in
   match ty.type_desc with
     Type_arrow(ty1, ty2) -> ty1, ty2
-  | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
+  | Type_constr({ty_info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
       filter_arrow (expand_abbrev params body args)
   | _ ->
       let ty1 = new_var () in
@@ -373,10 +374,15 @@ let rec filter_product arity ty =
   match ty.type_desc with
     Type_product(l) ->
       if List.length l = arity then l else raise Unify
-  | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
+  | Type_constr({ty_info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
       filter_product arity (expand_abbrev params body args)
   | _ ->
       let ty_list = new_var_list arity in
       unify ty (product ty_list);
       ty_list
 
+
+let add_clock_description g =
+  { gi = g.gi;
+    ty_info = g.ty_info;
+    ck_info = None }

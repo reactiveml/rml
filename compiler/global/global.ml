@@ -32,17 +32,24 @@ open Misc
 
 (* values in the symbol table *)
 
-type 'a global =
+type ('a, 'b) global =
   { mutable gi: Global_ident.qualified_ident;
-    mutable info: 'a option }
+    mutable ty_info: 'a option;
+    mutable ck_info : 'b  option; }
 
 let little_name_of_global g = Global_ident.little_name g.gi
 
+let only_ident id =
+  { gi = id; ty_info = None; ck_info = None }
 
 let no_info() = None
 
 let gi gl = gl.gi
-let info gl = 
-  match gl.info with
-  | None -> assert false
+let ty_info gl =
+  match gl.ty_info with
+  | None -> Format.eprintf "Unknown type '%s'@." (little_name_of_global gl); assert false
+  | Some i -> i
+let ck_info gl =
+  match gl.ck_info with
+  | None -> Format.eprintf "Unknown type '%s'@." (little_name_of_global gl); assert false
   | Some i -> i

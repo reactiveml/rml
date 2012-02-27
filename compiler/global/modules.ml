@@ -32,21 +32,28 @@ open Misc
 open Compiler_options
 open Global_ident
 open Types
+open Clocks
 open Global
 open Parse_ident
 
 (* Informations associated with module names *)
 
+type value_description = (value_type_description, value_clock_description) global
+type constructor_description = (constructor_type_description,
+                               constructor_clock_description) global
+type label_description = (label_type_description,
+                           label_clock_description) global
+type type_description = (Types.type_description, clock_description) global
+
 type module0 =
     { mod_name: string;                      (* name of the module *)
-      mod_values: (string, value_type_description global) Hashtbl.t;
+      mod_values: (string, value_description) Hashtbl.t;
                                              (* table of values *)
-      mod_constrs:
-	(string, constructor_type_description global) Hashtbl.t;
+      mod_constrs: (string, constructor_description) Hashtbl.t;
                                              (* table of constructors *)
-      mod_labels: (string, label_type_description global) Hashtbl.t;
+      mod_labels: (string, label_description) Hashtbl.t;
                                              (* table of labels *)
-      mod_types: (string, type_description global) Hashtbl.t;
+      mod_types: (string, type_description) Hashtbl.t;
                                              (* table of type constructors *)
     }
 
@@ -170,8 +177,8 @@ let start_compiling_implementation modname intf =
 let compiled_module_name () =
   !defined_module.mod_name
 
-let defined_global name desc =
-  { gi = { qual=compiled_module_name(); id=name }; info = desc }
+let defined_global name ty_desc ck_desc =
+  { gi = { qual=compiled_module_name(); id=name }; ty_info = ty_desc; ck_info = ck_desc }
 
 (* Additions to the module being compiled *)
 
