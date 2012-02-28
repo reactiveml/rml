@@ -231,7 +231,7 @@ let type_of_type_expression typ_vars typexp =
         in
         constr name (List.map type_of ty_list)
 
-    | Tprocess (ty,k) ->
+    | Tprocess (ty,k,_) ->
         process (type_of ty) { proc_static = Some(Proc_def (ref k)); }
   in
   type_of typexp
@@ -247,7 +247,7 @@ let free_of_type ty =
         List.fold_left vars v t
     | Tconstr(_,t) ->
         List.fold_left vars v t
-    | Tprocess (t, _) -> vars v t
+    | Tprocess (t, _, _) -> vars v t
   in vars [] ty
 
 (* translating a declared type expression into an internal type *)

@@ -40,6 +40,7 @@ exception Escape_case of string
 (* generating fresh names *)
 let names = new Ident.name_generator
 let generic_prefix_name = "_c"
+let generic_activation_name = "_act"
 
 (* The current nesting level of lets *)
 let current_level = ref 0;;
@@ -51,6 +52,7 @@ and push_type_level () =
 and pop_type_level () =
   decr current_level; ()
 ;;
+
 
 (* making types *)
 let make_clock ck =
@@ -84,8 +86,8 @@ let rec arrow_list ck_l ck_res =
   | [ck] -> arrow ck ck_res
   | ck :: ck_l -> arrow ck (arrow_list ck_l ck_res)
 
-let process ck =
-  make_clock (Clock_process ck)
+let process ck activation_car =
+  make_clock (Clock_process (ck, activation_car))
 
 
 let make_carrier s =
@@ -108,7 +110,7 @@ let no_carrier =
 let topck_carrier =
   { desc = Carrier_skolem ("topck", names#name);
     index = -2;
-    level = generic }
+    level = 0 }
 
 let clock_topck =
   make_clock (Clock_depend topck_carrier)
@@ -149,6 +151,9 @@ let forall ck_vars car_vars typ =
   { cs_clock_vars = ck_vars;
     cs_carrier_vars = car_vars;
     cs_desc = typ; }
+
+(* activation clock*)
+let activation_carrier = ref topck_carrier
 
 
 (* To take the canonical representative of a type.
@@ -203,8 +208,8 @@ let rec gen_clock is_gen ck =
         ck.level <- gen_clock_list is_gen ck_list
     | Clock_link(link) ->
         ck.level <- gen_clock is_gen link
-    | Clock_process body_ck ->
-        ck.level <- min generic (gen_clock is_gen body_ck)
+    | Clock_process (body_ck, act_car) ->
+        ck.level <- min (gen_clock is_gen body_ck) (gen_carrier is_gen act_car)
   );
   ck.level
 
@@ -256,7 +261,7 @@ let free_clock_vars level ck =
           List.iter free_vars ck_list
       | Clock_link link ->
           free_vars link
-      | Clock_process ck -> free_vars ck
+      | Clock_process (ck, _) -> free_vars ck
   in
   free_vars ck;
   !fv
@@ -315,9 +320,9 @@ let rec copy_clock ck =
           constr name (List.map copy_clock ck_list)
         else
           ck
-    | Clock_process ck ->
+    | Clock_process (ck, act_car) ->
         if level = generic then
-          process (copy_clock ck)
+          process (copy_clock ck) (copy_carrier act_car)
         else
           ck
 
@@ -386,7 +391,7 @@ let rec occur_check level index ck =
       | Clock_arrow (ck1, ck2) -> check ck1; check ck2
       | Clock_product ck_list | Clock_constr(_, ck_list) -> List.iter check ck_list
       | Clock_link link -> check link
-      | Clock_process ck -> check ck
+      | Clock_process (ck, act_car) -> check ck; carrier_occur_check level no_carrier act_car
   in
   Format.eprintf "Occur_check@.";
   check ck
@@ -403,7 +408,7 @@ and carrier_occur_check level index car =
             car.level <- level
       | Carrier_skolem(s, i) ->
           Format.eprintf "Skolem occur check: %s i:%d  car.level %d, level: %d@." s i car.level level;
-          if level < car.level then
+          if level  < car.level then
             raise (Escape (s, i))
       | Carrier_link link -> check link
   in
@@ -460,7 +465,7 @@ let rec unify expected_ck actual_ck =
         | _, Clock_constr ({ ck_info = Some { constr_abbr = Constr_abbrev(params,body) } }, args) ->
            (* Printf.eprintf "Replacing '%a' with '%a'\n"   Clocks_printer.output actual_ck   Clocks_printer.output (expand_abbrev params body args); *)
             unify expected_ck (expand_abbrev params body args)
-        | Clock_process ck1, Clock_process ck2 -> unify ck1 ck2
+        | Clock_process (ck1, c1), Clock_process (ck2, c2) -> unify ck1 ck2; carrier_unify c1 c2
         | _ ->
             (* Printf.eprintf "Failed to unify '%a' and '%a'\n"  Clocks_printer.output expected_ck  Clocks_printer.output actual_ck; *)
             raise Unify
@@ -472,6 +477,7 @@ and unify_list ck_l1 ck_l2 =
     | Invalid_argument _ -> raise Unify
 
 and carrier_unify expected_car actual_car =
+  Printf.eprintf "Unify carrier '%a' and %a\n" Clocks_printer.output_carrier expected_car  Clocks_printer.output_carrier actual_car;
   if expected_car == actual_car then ()
   else
     let expected_car = carrier_repr expected_car in
@@ -480,6 +486,7 @@ and carrier_unify expected_car actual_car =
     else
       match expected_car.desc, actual_car.desc with
         | Carrier_var(s), _ ->
+  Printf.eprintf "Unify carrier next '%a' of level %d and '%a' of level %d\n" Clocks_printer.output_carrier expected_car expected_car.level  Clocks_printer.output_carrier actual_car actual_car.level;
             carrier_occur_check expected_car.level expected_car actual_car;
             expected_car.desc <- Carrier_link actual_car
         | _, Carrier_var(s) ->

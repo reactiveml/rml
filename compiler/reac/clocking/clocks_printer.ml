@@ -98,10 +98,12 @@ let rec print priority ty =
           | _ -> ()) *)
     | Clock_link(link) ->
         (*print_string "~>";*) print priority link
-    | Clock_process ty ->
+    | Clock_process (ty, c) ->
+        print_string "(";
         print 2 ty;
-        print_space ();
-        print_string "process";
+        print_string ", ";
+        print_carrier c;
+        print_string ") process";
   end;
   close_box ()
 

@@ -144,7 +144,8 @@ and type_expression_desc =
   | Tarrow of type_expression * type_expression
   | Tproduct of type_expression list
   | Tconstr of type_description * type_expression list
-  | Tprocess of type_expression * Static.instantaneous
+  | Tprocess of type_expression * Static.instantaneous * type_expression
+      (* result type, static, activation clock *)
 
 and type_declaration =
   | Tabstract

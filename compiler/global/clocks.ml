@@ -52,7 +52,7 @@ and clock_desc =
     | Clock_product of clock list
     | Clock_constr of clock_constr global * clock list
     | Clock_link of clock
-    | Clock_process of clock
+    | Clock_process of clock * carrier (* result clock, activation carrier *)
 
 and carrier = carrier_desc repr
 

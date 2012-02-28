@@ -43,11 +43,16 @@ open Misc
 open Annot
 
 
-let filter_event ck =
+let filter_event ?(force_activation_ck=false) ck =
   let ck = clock_repr ck in
   let ck1 = new_clock_var() in
   let ck2 = new_clock_var() in
-  let sck = new_carrier_clock_var () in
+  let sck =
+    if force_activation_ck then
+      make_clock (Clock_depend !activation_carrier)
+    else
+      new_carrier_clock_var ()
+  in
   unify ck (constr_notabbrev event_ident [ck1; ck2; sck]);
   ck1, ck2, sck
 
@@ -193,8 +198,13 @@ let clock_of_type_expression ty_vars typexp =
         let ck_desc = Global.ck_info s in
         constr ck_desc.clock_constr (List.map clock_of ty_list)
 
-    | Tprocess (te,_) ->
-        process (clock_of te)
+    | Tprocess (te,_, act) ->
+        let c =
+          match clock_of act with
+            | { desc = Clock_depend c } -> c
+            | _ -> assert false
+        in
+        process (clock_of te) c
   in
   clock_of typexp
 
@@ -217,7 +227,7 @@ let free_of_type ty =
           List.fold_left vars (ty_vars, car_vars) t
       | Tconstr(_,t) ->
           List.fold_left vars (ty_vars, car_vars) t
-      | Tprocess (t, _) -> vars (ty_vars, car_vars) t
+      | Tprocess (t, _, c) -> vars (vars (ty_vars, car_vars) c) t
   in vars ([], []) ty
 
 (* translating a declared type expression into an internal type *)
@@ -546,8 +556,12 @@ let rec clock_of_expression env expr =
         in f e_list
 
     | Eprocess(e) ->
-        let ty = clock_of_expression env e in
-        process ty
+        let old_activation_carrier = !activation_carrier in
+        activation_carrier := make_carrier generic_activation_name;
+        let ck = clock_of_expression env e in
+        let res_ck = process ck !activation_carrier in
+        activation_carrier := old_activation_carrier;
+        res_ck
 
     | Epre (Status, s) ->
         let ty_s = clock_of_expression env s in
@@ -675,8 +689,7 @@ let rec clock_of_expression env expr =
     | Erun (e) ->
         let ty_e = clock_of_expression env e in
         let ty = new_clock_var() in
-        unify_run e.e_loc
-          ty_e (process ty);
+        unify_run e.e_loc ty_e (process ty !activation_carrier);
         ty
 
     | Euntil (s,p,patt_proc_opt) ->
@@ -715,7 +728,7 @@ let rec clock_of_expression env expr =
 
 
     | Ewhen (s,p) ->
-        type_of_event_config env s;
+        type_of_event_config ~force_activation_ck:true env s;
         clock_of_expression env p
 
     | Econtrol (s, None, p) ->
@@ -764,13 +777,13 @@ let rec clock_of_expression env expr =
         clock_of_expression new_env p
 
     | Epresent (s,p1,p2) ->
-        type_of_event_config env s;
+        type_of_event_config ~force_activation_ck:true env s;
         let ty = clock_of_expression env p1 in
         type_expect env p2 ty;
         ty
 
-    | Eawait (_,s) ->
-        type_of_event_config env s;
+    | Eawait (imm,s) ->
+        type_of_event_config ~force_activation_ck:(imm = Immediate) env s;
         Clocks_utils.static
 
     | Eawait_val (_,All,s,patt,p) ->
@@ -814,10 +827,15 @@ let rec clock_of_expression env expr =
       let sch_type = arrow Clocks_utils.static (product [Clocks_utils.static; Clocks_utils.static]) in
       Misc.opt_iter (fun sch -> type_expect env sch sch_type) sch;
       push_type_level ();
-      let new_ck = depend (carrier_skolem id.Ident.name Clocks_utils.names#name) in
+      let c = carrier_skolem id.Ident.name Clocks_utils.names#name in
+      let new_ck = depend c in
       let env = Env.add id (forall [] [] new_ck) env in
+      let old_activation_carrier = !activation_carrier in
+      activation_carrier := c;
+      let ck = clock_of_expression env e in
+      activation_carrier := old_activation_carrier;
       pop_type_level ();
-      clock_of_expression env e
+      ck
 
     | Epauseclock ce ->
         let ty_ce = clock_of_expression env ce in
@@ -838,13 +856,13 @@ let rec clock_of_expression env expr =
 
 
 (* Typing of event configurations *)
-and type_of_event_config env conf =
+and type_of_event_config ?(force_activation_ck=false) env conf =
   match conf.conf_desc with
   | Cpresent s ->
       let ty = clock_of_expression env s in
       let _ =
         try
-          filter_event ty
+          filter_event ~force_activation_ck:force_activation_ck ty
         with Unify ->
           non_event_err s
       in

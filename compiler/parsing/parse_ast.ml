@@ -131,7 +131,7 @@ and type_expression_desc =
   | Ptype_arrow of type_expression * type_expression
   | Ptype_tuple of type_expression list
   | Ptype_constr of ident * type_expression list
-  | Ptype_process of type_expression * Static.instantaneous
+  | Ptype_process of type_expression * Static.instantaneous * type_expression
 
 and type_declaration =
   | Ptype_abstract

@@ -150,7 +150,7 @@ and type_expression_desc =
   | Cotype_arrow of type_expression * type_expression
   | Cotype_product of type_expression list
   | Cotype_constr of type_description * type_expression list
-  | Cotype_process of type_expression
+  | Cotype_process of type_expression * type_expression
 
 and type_declaration =
   | Cotype_abstract

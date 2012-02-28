@@ -146,7 +146,7 @@ let rec type_expression i ppf x =
   | Ptype_constr (pi, l) ->
       line i ppf "Ptype_constr %a\n" fmt_ident pi;
       list i type_expression ppf l
-  | Ptype_process (ct,k) ->
+  | Ptype_process (ct,k,_) ->
       line i ppf "Ptype_process(%s)\n"
 	(Static.string_of_instantaneous k);
       type_expression i ppf ct

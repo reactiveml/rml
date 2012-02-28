@@ -52,7 +52,7 @@ let rec translate_te typ =
         in
         let te_list = List.filter is_type_var te_list in
         Ctype_constr (cstr, List.map translate_te te_list)
-    | Cotype_process t ->
+    | Cotype_process (t, _) ->
         let proc_type = make_rml_type "process" [translate_te t] in
         proc_type.cte_desc
   in

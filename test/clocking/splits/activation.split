@@ -1,0 +1,79 @@
+$$$good
+${
+(*
+  run_test:
+   [
+     Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+let process g =
+  pause
+
+$}
+
+let process f =
+  let process h = pause in
+  run h
+
+$
+
+let process h =
+  newclock ck in
+    run g
+
+$
+
+let process h =
+  run g;
+  newclock ck in
+    run g
+
+$
+
+let process f =
+  signal s at topck in
+    present s then () else ()
+
+$
+
+let process f =
+  signal s at topck in
+    do () when s done
+
+$
+
+let process f =
+  signal s at topck in
+    await immediate s
+
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+let process g =
+  pause
+
+$}
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    present s then () else ()
+
+$
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    do () when s done
+
+$
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    await immediate s
