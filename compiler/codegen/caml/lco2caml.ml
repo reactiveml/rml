@@ -39,13 +39,18 @@ let unit_value = make_expr (Cexpr_constant Const_unit) Location.none
 let rec translate_te typ =
   let ctyp =
     match typ.cote_desc with
-    | Cotype_var (_, Tcarrier_var) -> assert false (* TODO: effacer les variables de carrier *)
+    | Cotype_var (_, Tcarrier_var) -> assert false
     | Cotype_var (x, Ttype_var) -> Ctype_var x
     | Cotype_arrow (t1, t2) ->
         Ctype_arrow (translate_te t1, translate_te t2)
     | Cotype_product typ_list ->
         Ctype_product (List.map translate_te typ_list)
     | Cotype_constr (cstr, te_list) ->
+        let is_type_var te = match te.cote_desc with
+          | Cotype_var (_, Ttype_var) -> true
+          | _ -> false
+        in
+        let te_list = List.filter is_type_var te_list in
         Ctype_constr (cstr, List.map translate_te te_list)
     | Cotype_process t ->
         let proc_type = make_rml_type "process" [translate_te t] in
@@ -978,6 +983,8 @@ let translate_impl_item info_chan item =
         let l =
           List.map
             (fun (name, param, typ) ->
+              let param = List.filter (fun (v, k) -> k = Ttype_var) param in
+              let param = fst (List.split param) in
               (name, param, translate_type_decl typ))
             l
         in
@@ -1000,6 +1007,8 @@ let translate_intf_item info_chan item =
         let l =
           List.map
             (fun (name, param, typ) ->
+              let param = List.filter (fun (v, k) -> k = Ttype_var) param in
+              let param = fst (List.split param) in
               (name, param, translate_type_decl typ))
             l
         in

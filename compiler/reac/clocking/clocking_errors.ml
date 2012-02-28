@@ -72,6 +72,15 @@ let emit_wrong_clock_err loc actual_ty expected_ty =
     Clocks_printer.output expected_ty;
   raise Error
 
+let emit_wrong_clock_escape_err loc s actual_ty =
+  Printf.eprintf
+    "%aThe emitted value has clock %a,\n\
+    and would thus escape its scope %s.\n"
+    Location.print_oc loc
+    Clocks_printer.output actual_ty
+    s;
+  raise Error
+
 let run_wrong_clock_err loc actual_ty expected_ty =
   Printf.eprintf
     "%aThis expression has clock %a,\n\

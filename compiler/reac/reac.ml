@@ -165,7 +165,7 @@ and impl_desc =
       ((value_description * type_expression option)
          * (expression * expression) option) list
   | Itype of
-      (type_description * string list * type_declaration) list
+      (type_description * (string * type_var_kind) list * type_declaration) list
   | Iexn of
       constructor_description * type_expression option
   | Iexn_rebind of
@@ -179,7 +179,7 @@ type intf_item =
 and intf_desc =
   | Dval of value_description  * type_expression
   | Dtype of
-      (type_description * string list * type_declaration) list
+      (type_description * (string * type_var_kind) list * type_declaration) list
   | Dexn of
       constructor_description  * type_expression option
   | Dopen of string

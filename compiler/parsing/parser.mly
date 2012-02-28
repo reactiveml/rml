@@ -944,7 +944,8 @@ type_parameters:
   | LPAREN type_parameter_list RPAREN           { List.rev $2 }
 ;
 type_parameter:
-    QUOTE ident                                 { $2 }
+    QUOTE ident                                 { $2, Asttypes.Ttype_var }
+  | QUOTE QUOTE ident                           { $3, Asttypes.Tcarrier_var }
 ;
 type_parameter_list:
     type_parameter                              { [$1] }

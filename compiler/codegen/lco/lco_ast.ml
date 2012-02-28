@@ -171,7 +171,7 @@ and impl_desc =
       ((value_description * type_expression option)
 	 * (expression * expression) option) list
   | Coimpl_type of
-      (type_description * string list * type_declaration) list
+      (type_description * (string * type_var_kind) list * type_declaration) list
   | Coimpl_exn of
       constructor_description * type_expression option
   | Coimpl_exn_rebind of
@@ -185,7 +185,7 @@ type intf_item =
 and intf_desc =
   | Cointf_val of value_description * type_expression
   | Cointf_type of
-      (type_description * string list * type_declaration) list
+      (type_description * (string * type_var_kind) list * type_declaration) list
   | Cointf_exn of
       constructor_description * type_expression option
   | Cointf_open of string

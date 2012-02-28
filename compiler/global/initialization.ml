@@ -139,12 +139,12 @@ let type_desc_event =
                                      ty_info = None;
 				                             ck_info = Some{ Clocks.constr_abbr = Clocks.Constr_notabbrev} };
 		                 clock_kind = Clock_abstract;
-		                 clock_arity = 2; } }
+		                 clock_arity = 3; } }
 
 let type_event = Types_utils.constr_notabbrev event_ident [Types_utils.new_generic_var();
 						     Types_utils.new_generic_var(); ]
 let clock_event = Clocks_utils.constr_notabbrev event_ident [Clocks_utils.new_generic_clock_var();
-						     Clocks_utils.new_generic_clock_var(); ]
+						     Clocks_utils.new_generic_clock_var(); Clocks_utils.new_generic_carrier_clock_var () ]
 
 (* clock *)
 let clock_ident = pervasives_type "clock"

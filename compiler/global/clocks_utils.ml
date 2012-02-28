@@ -125,6 +125,19 @@ let new_generic_clock_var () =
     level = generic;
     index = names#name }
 
+let make_generic_carrier s =
+  { desc = Carrier_var s;
+    index = names#name;
+    level = generic }
+
+let new_generic_carrier_clock_var () =
+  { desc = Clock_depend (make_generic_carrier generic_prefix_name);
+    level = generic;
+    index = names#name }
+
+let new_carrier_clock_var () =
+  make_clock (Clock_depend (make_carrier generic_prefix_name))
+
 let rec new_clock_var_list n =
   match n with
     | 0 -> []
@@ -390,7 +403,7 @@ and carrier_occur_check level index car =
             car.level <- level
       | Carrier_skolem(s, i) ->
           Format.eprintf "Skolem occur check: %s i:%d  car.level %d, level: %d@." s i car.level level;
-          if level + 1 < car.level then
+          if level < car.level then
             raise (Escape (s, i))
       | Carrier_link link -> check link
   in
@@ -404,8 +417,9 @@ let same_type_constr c1 c2 = Global_ident.same c1.gi c2.gi
 
 (* Expansion of an abbreviation *)
 let bind_variable ck1 ck2 =
-  match ck1.desc with
-    | Clock_var -> ck1.desc <- Clock_link ck2
+  match ck1.desc, ck2.desc with
+    | Clock_var, _ -> ck1.desc <- Clock_link ck2
+    | Clock_depend ({ desc = Carrier_var _ } as c1), Clock_depend c2 -> c2.desc <- Carrier_link c1
     | _ -> fatal_error "bind_variable"
 
 let expand_abbrev params body args =

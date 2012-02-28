@@ -948,7 +948,7 @@ let check_no_repeated_label loc l =
 
 (* Typing of type declatations *)
 let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
-  let typ_vars = List.map (fun v -> (v,new_generic_var ())) typ_params in
+  let typ_vars = List.map (fun (v, _) -> (v,new_generic_var ())) typ_params in
   let final_typ =
     constr_notabbrev type_gl.gi (List.map snd typ_vars)
   in
