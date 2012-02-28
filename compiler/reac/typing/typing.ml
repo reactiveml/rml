@@ -221,6 +221,11 @@ let type_of_type_expression typ_vars typexp =
         product (List.map type_of l)
 
     | Tconstr (s, ty_list) ->
+        let is_not_carrier_var te = match te.te_desc with
+          | Tvar (_, Tcarrier_var) -> false
+          | _ -> true
+        in
+        let ty_list = List.filter is_not_carrier_var ty_list in
         let name =
           check_type_constr_defined typexp.te_loc s (List.length ty_list)
         in
@@ -948,6 +953,7 @@ let check_no_repeated_label loc l =
 
 (* Typing of type declatations *)
 let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
+  let typ_params = List.filter (fun (v, k) -> k = Ttype_var) typ_params in
   let typ_vars = List.map (fun (v, _) -> (v,new_generic_var ())) typ_params in
   let final_typ =
     constr_notabbrev type_gl.gi (List.map snd typ_vars)
