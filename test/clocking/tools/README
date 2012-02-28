@@ -1,0 +1,35 @@
+
+Utilitaire split :
+==================
+
+Usage :  split fichier1.split fichier2.split ...
+coupe un fichier en plusieurs.
+
+La syntaxe des fichiers est : 
+${ preambule $} preambule à mettre au début de chaque fichier
+$ 		point de coupure
+$$ 		commentaire jusqu'à la fin de la ligne
+$$$label	change le label des fichiers créés 
+(ignore la fin de la ligne)
+
+Le nom des fichiers créés est <fichier>-<num>-<label>-testgen.ls.
+Les fichiers sont créés dans le répertoire du fichier source.
+
+Bug: il n'est pas prévu de pouvoir créer un fichier avec un '$' dedans.
+
+
+Utilitaire run_test :
+=====================
+
+Usage : ./tools/run_test file1.ls file2.ls ...
+
+Test la compilation des fichier file1.ls, ...
+Les compilateurs à utiliser et les résultats attendu sont spécifiés
+dans les fichiers à compiler. La syntaxe de descrition des tests est
+la suivante :
+  run_test: 
+   [ Good: "compiler1" 
+     Bad n: "compiler2" 
+     Bad n "regexp": "compiler3" 
+     Warning: "compiler4" 
+     Warning "regexp": "compiler5"  ] 
