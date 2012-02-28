@@ -115,6 +115,24 @@ let is_unit_process desc =
 (* Typing environment *)
 module Env = Symbol_table.Make (Ident)
 
+let print_env table =
+  if not (Env.is_empty table) then begin
+    Env.iter
+      (fun id ty_sch -> Printf.printf "%s:id%d ix%d %s "
+        (Ident.name id)
+        id.Ident.id
+        (* ty_sch.ts_desc.type_region *)
+        ty_sch.ts_desc.type_index
+        (Usages_misc.string_of_signal_usage ty_sch.ts_desc.type_usage);
+        Types_printer.print_scheme ty_sch
+      )
+      table;
+    Printf.printf "\n%!"
+  end
+
+let pu ty =
+  Usages_misc.string_of_signal_usage ty.type_usage
+
 (* Usages environment *)
 module Effects = Usages_misc.Table
 
@@ -696,7 +714,9 @@ let rec type_of_expression env expr =
 	type_unit, Effects.flatten [u1; u2; u3]
 
     | Rexpr_par p_list ->
+        let _ = print_env env in
         let effects_l = List.map (fun p -> type_statement env p) p_list in
+        let _ = print_env env in
 	type_unit, Effects.flatten effects_l
 
     | Rexpr_merge (p1,p2) ->
