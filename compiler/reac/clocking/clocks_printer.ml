@@ -276,6 +276,12 @@ let output oc ty =
   print ty;
   print_flush ()
 
+let output_carrier oc c =
+  set_formatter_out_channel oc;
+(*   print_string "  "; *)
+  print_carrier c;
+  print_flush ()
+
 let output_value_declaration oc global_list =
   set_formatter_out_channel oc;
   List.iter print_value_clock_declaration global_list

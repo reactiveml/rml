@@ -3,8 +3,12 @@ ${
 (*
   run_test:
    [
+    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
    ]
 *)
+
+type req = Ok | Not_ok of int
+
 $}
 let f x = x + 3
 
@@ -12,3 +16,8 @@ $
 let g () =
     let f x = x + 1 in
     f (f 0)
+
+$
+let h x = match x with
+| Ok -> 0
+| Not_ok i -> i

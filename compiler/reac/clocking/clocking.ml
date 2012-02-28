@@ -814,7 +814,7 @@ let rec clock_of_expression env expr =
       let sch_type = arrow Clocks_utils.static (product [Clocks_utils.static; Clocks_utils.static]) in
       Misc.opt_iter (fun sch -> type_expect env sch sch_type) sch;
       push_type_level ();
-      let new_ck = depend (carrier_skolem id.Ident.name !current_level) in
+      let new_ck = depend (carrier_skolem id.Ident.name Clocks_utils.names#name) in
       let env = Env.add id (forall [] [] new_ck) env in
       pop_type_level ();
       clock_of_expression env e

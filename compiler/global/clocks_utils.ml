@@ -106,7 +106,7 @@ let no_carrier =
     index = -1;
     level = generic }
 let topck_carrier =
-  { desc = Carrier_var "topck";
+  { desc = Carrier_skolem ("topck", names#name);
     index = -2;
     level = generic }
 

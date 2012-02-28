@@ -12,10 +12,10 @@
 
 VERBOSE=0
 
-COMPILER="../../compiler/rpmlc.byte -I ../../lib/ -c"
+#COMPILER="../../compiler/rpmlc.byte -I ../../lib/ -c"
 
 SPLIT=tools/split -ext ".rml"
-RUN_TEST=tools/run_test -ext ".rml" -good $(COMPILER) -verbose $(VERBOSE)
+RUN_TEST=tools/run_test -ext ".rml" -verbose $(VERBOSE) #-good $(COMPILER)
 
 FILES= splits/*.rml
 SPLIT_FILES= splits/*.split

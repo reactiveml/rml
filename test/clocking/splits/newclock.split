@@ -1,0 +1,92 @@
+$$$good
+${
+(*
+  run_test:
+   [
+     Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+let process f =
+  newclock ck in
+    pause; 3
+
+$
+
+let process g =
+  signal s at topck default 0 gather (+) in
+  newclock ck in
+    emit s 9
+
+$
+
+let process g =
+  signal s at topck default 0 gather (+) in
+  signal s2 at topck default 0 gather (+) in
+  newclock ck in
+    [s; s2]
+
+$$$scope
+${
+(*
+  run_test:
+   [
+     Bad 2 "escape its scope": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+let process f =
+  newclock ck in
+    pause; ck
+
+$
+
+let process f =
+  newclock ck in
+    ck
+
+$
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    signal s2 at ck in
+    emit s s2
+
+$
+
+let process g =
+  let r = ref None in
+  newclock ck in
+    signal s2 at ck in
+    r := Some s2
+
+$
+
+let process g =
+  newclock ck in
+    signal s2 at ck in
+    let f x = emit s2 x in
+    f
+
+
+
+$$$unify
+${
+(*
+  run_test:
+   [
+     Bad 2 "is used with type": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    signal s2 at ck in
+    let l = [s; s2] in
+    l
