@@ -140,12 +140,34 @@ and type_expression =
     { te_desc: type_expression_desc;
       te_loc: Location.t}
 and type_expression_desc =
-    Tvar of string * type_var_kind
-  | Tarrow of type_expression * type_expression
+    Tvar of string
+  | Tarrow of type_expression * type_expression * effect_expression
   | Tproduct of type_expression list
-  | Tconstr of type_description * type_expression list
-  | Tprocess of type_expression * Static.instantaneous * type_expression
+  | Tconstr of type_description * param_expression list
+  | Tprocess of type_expression * Static.instantaneous * carrier_expression * effect_expression
       (* result type, static, activation clock *)
+  | Tdepend of carrier_expression
+
+and carrier_expression =
+   { ce_desc : carrier_expression_desc;
+     ce_loc : Location.t }
+and carrier_expression_desc =
+    | Cvar of string
+    | Ctopck
+
+and effect_expression =
+    { ee_desc : effect_expression_desc;
+      ee_loc : Location.t }
+and effect_expression_desc =
+    | Effempty
+    | Effvar of string
+    | Effsum of effect_expression * effect_expression
+    | Effdepend of carrier_expression
+
+and param_expression =
+    | Ptype of type_expression
+    | Pcarrier of carrier_expression
+    | Peffect of effect_expression
 
 and type_declaration =
   | Tabstract

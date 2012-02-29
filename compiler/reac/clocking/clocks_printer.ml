@@ -40,6 +40,12 @@ open Modules
 open Global_ident
 open Global
 
+
+let clock_param_iter f_ck f_car f_eff v = match v with
+  | Var_clock c -> f_ck c
+  | Var_carrier c -> f_car c
+  | Var_effect eff -> f_eff eff
+
 (* the long name of an ident is printed *)
 (* if it is different from the current module *)
 (* or if it is from the standard module *)
@@ -53,6 +59,7 @@ let print_qualified_ident q =
 (* type variables are printed 'a, 'b,... *)
 let type_name = new name_assoc_table int_to_alpha
 let carrier_names = new name_assoc_table (fun i -> string_of_int i)
+let effect_names = new name_assoc_table int_to_alpha
 
 let print_carrier_name n i =
   print_string "_";
@@ -61,6 +68,9 @@ let print_carrier_name n i =
 let print_skolem_name (n, i) =
   print_string "?";
   print_carrier_name n i
+let print_effect_name i =
+  print_string "_";
+  print_string (effect_names#name i)
 
 let rec print priority ty =
   open_box 0;
@@ -72,13 +82,15 @@ let rec print priority ty =
         print_string (type_name#name ty.index)
     | Clock_depend c ->
         print_string "{";
-        print_carrier c;
+        print_carrier priority c;
         print_string "}"
-    | Clock_arrow(ty1, ty2) ->
+    | Clock_arrow(ty1, ty2, eff) ->
         if priority >= 1 then print_string "(";
         print 1 ty1;
         print_space ();
-        print_string "->";
+        print_string"-{";
+        print_effect priority eff;
+        print_string "}->";
         print_space ();
         print 0 ty2;
         if priority >= 1 then print_string ")"
@@ -89,7 +101,7 @@ let rec print priority ty =
     | Clock_constr(name,ty_list) ->
         let n = List.length ty_list in
         if n > 1 then print_string "(";
-        print_list 2 "," ty_list;
+        print_param_list 2 "," ty_list;
         if n > 1 then print_string ")";
         if ty_list <> [] then print_space ();
         print_qualified_ident name.gi;
@@ -98,23 +110,45 @@ let rec print priority ty =
           | _ -> ()) *)
     | Clock_link(link) ->
         (*print_string "~>";*) print priority link
-    | Clock_process (ty, c) ->
+    | Clock_process (ty, c, eff) ->
         print_string "(";
         print 2 ty;
         print_string ", ";
-        print_carrier c;
+        print_carrier priority c;
+        print_string ", ";
+        print_effect priority eff;
         print_string ") process";
   end;
   close_box ()
 
-and print_carrier car =
+and print_carrier priority car =
   open_box 0;
   begin match car.desc with
     Carrier_var(s) ->
       print_carrier_name s car.index
   | Carrier_skolem(n, i) ->
       print_skolem_name (n, i)
-  | Carrier_link(link) -> print_carrier link
+  | Carrier_link(link) -> print_carrier priority link
+  end;
+  close_box ()
+
+and print_effect priority eff =
+  open_box 0;
+  begin match eff.desc with
+    | Effect_var ->
+        print_effect_name eff.index
+    | Effect_link(link) -> print_effect priority link
+    | Effect_empty -> print_string "0"
+    | Effect_sum (eff1, eff2) ->
+        print_effect priority eff1;
+        print_space ();
+        print_string "+";
+        print_space ();
+        print_effect priority eff2
+    | Effect_depend c ->
+        print_string "[";
+        print_carrier priority c;
+        print_string "]"
   end;
   close_box ()
 
@@ -132,6 +166,25 @@ and print_list priority sep l =
 	      printrec rest
   in
   printrec l
+
+and print_param priority =
+  clock_param_iter (print priority) (print_carrier priority) (print_effect priority)
+
+and print_param_list priority sep l =
+  let rec printrec l =
+    match l with
+      [] -> ()
+    | [ty] ->
+	      print_param priority ty
+    | ty::rest ->
+	      print_param priority ty;
+	      print_space ();
+	      print_string sep;
+	      print_space ();
+	      printrec rest
+  in
+  printrec l
+
 
 let print ty =
   type_name#reset;
@@ -281,7 +334,13 @@ let output oc ty =
 let output_carrier oc c =
   set_formatter_out_channel oc;
 (*   print_string "  "; *)
-  print_carrier c;
+  print_carrier 0 c;
+  print_flush ()
+
+let output_effect oc eff =
+  set_formatter_out_channel oc;
+(*   print_string "  "; *)
+  print_effect 0 eff;
   print_flush ()
 
 let output_value_declaration oc global_list =

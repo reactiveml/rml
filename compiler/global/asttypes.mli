@@ -71,4 +71,4 @@ type 'a repr =
       mutable index: int;
       mutable level: int }
 
-type type_var_kind = Ttype_var | Tcarrier_var
+type type_var_kind = Ttype_var | Tcarrier_var | Teffect_var

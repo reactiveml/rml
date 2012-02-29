@@ -202,37 +202,41 @@ let type_of_immediate i =
   | Const_char(c) -> type_char
   | Const_string(c) -> type_string
 
+let only_types l =
+  let aux acc x = match x with
+    | Ptype te -> te::acc
+    | _ -> acc
+  in
+  List.rev (List.fold_left aux [] l)
+
 (* Typing of type expressions *)
 let type_of_type_expression typ_vars typexp =
   let rec type_of typexp =
     match typexp.te_desc with
-    | Tvar (s, Ttype_var) ->
+    | Tvar s ->
         begin try
           List.assoc s typ_vars
         with
           Not_found -> unbound_typ_err s typexp.te_loc
         end
-    | Tvar (s, Tcarrier_var) -> assert false
 
-    | Tarrow (t1, t2) ->
+    | Tarrow (t1, t2, _) ->
         arrow (type_of t1) (type_of t2)
 
     | Tproduct (l) ->
         product (List.map type_of l)
 
-    | Tconstr (s, ty_list) ->
-        let is_not_carrier_var te = match te.te_desc with
-          | Tvar (_, Tcarrier_var) -> false
-          | _ -> true
-        in
-        let ty_list = List.filter is_not_carrier_var ty_list in
+    | Tconstr (s, p_list) ->
+        let ty_list = only_types p_list in
         let name =
           check_type_constr_defined typexp.te_loc s (List.length ty_list)
         in
         constr name (List.map type_of ty_list)
 
-    | Tprocess (ty,k,_) ->
+    | Tprocess (ty,k,_,_) ->
         process (type_of ty) { proc_static = Some(Proc_def (ref k)); }
+
+    | Tdepend _ -> type_clock
   in
   type_of typexp
 
@@ -240,14 +244,14 @@ let type_of_type_expression typ_vars typexp =
 let free_of_type ty =
   let rec vars v ty =
     match ty.te_desc with
-      Tvar(x, Ttype_var) -> if List.mem x v then v else x::v
-    | Tvar(x, Tcarrier_var) -> v
-    | Tarrow(t1,t2) -> vars (vars v t1) t2
+      Tvar x -> if List.mem x v then v else x::v
+    | Tarrow(t1,t2, _) -> vars (vars v t1) t2
     | Tproduct(t) ->
         List.fold_left vars v t
     | Tconstr(_,t) ->
-        List.fold_left vars v t
-    | Tprocess (t, _, _) -> vars v t
+        List.fold_left vars v (only_types t)
+    | Tprocess (t, _, _, _) -> vars v t
+    | Tdepend _ -> v
   in vars [] ty
 
 (* translating a declared type expression into an internal type *)

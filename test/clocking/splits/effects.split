@@ -1,0 +1,62 @@
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "escape its scope": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+
+let process g =
+  newclock ck in
+    signal s2 at ck in
+    let f x = emit s2 x in
+    f
+
+$
+
+let g s () = emit s 0
+
+let process f =
+  newclock ck in
+    signal s in
+    g s
+
+
+$$$good
+${
+(*
+  run_test:
+   [
+     Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+
+let process g =
+  let process h =
+    newclock ck in
+      signal s2 at ck in
+      emit s2 0
+ in
+ run h
+
+$
+
+let process g =
+  newclock ck in
+    signal s2 at ck in
+    let f x = emit s2 x; emit s2 x in
+    f 3; f 4
+
+$
+
+let g s = emit s 0
+
+let process f =
+  newclock ck in
+    signal s in
+    g s

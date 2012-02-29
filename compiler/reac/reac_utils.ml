@@ -62,6 +62,14 @@ let make_te t loc =
   { te_desc = t;
     te_loc = loc; }
 
+let make_ce t loc =
+  { ce_desc = t;
+    ce_loc = loc; }
+
+let make_ee t loc =
+  { ee_desc = t;
+    ee_loc = loc; }
+
 let make_impl it loc =
   { impl_desc = it;
     impl_loc = loc; }
@@ -345,6 +353,8 @@ let expr_free_vars e =
         expr_free_vars vars' e1
 
     | Epauseclock e -> expr_free_vars vars e
+
+    | Etopck -> ()
     end
 
   and config_free_vars vars config =

@@ -135,8 +135,8 @@ let rec type_expression i ppf x =
   line i ppf "type_expression %a\n" fmt_location x.pte_loc;
   let i = i+1 in
   match x.pte_desc with
-  | Ptype_var (s, _) -> line i ppf "Ptype_var \'%s\n" s;
-  | Ptype_arrow (ct1, ct2) ->
+  | Ptype_var s -> line i ppf "Ptype_var \'%s\n" s;
+  | Ptype_arrow (ct1, ct2, _) ->
       line i ppf "Ptype_arrow\n";
       type_expression i ppf ct1;
       type_expression i ppf ct2;
@@ -145,11 +145,12 @@ let rec type_expression i ppf x =
       list i type_expression ppf l;
   | Ptype_constr (pi, l) ->
       line i ppf "Ptype_constr %a\n" fmt_ident pi;
-      list i type_expression ppf l
-  | Ptype_process (ct,k,_) ->
+      (* list i type_expression ppf l *)
+  | Ptype_process (ct,k,_,_) ->
       line i ppf "Ptype_process(%s)\n"
 	(Static.string_of_instantaneous k);
       type_expression i ppf ct
+  | Ptype_depend _ -> ()
 ;;
 
 let rec pattern i ppf x =

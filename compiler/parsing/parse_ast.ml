@@ -127,11 +127,33 @@ and type_expression =
     {pte_desc: type_expression_desc;
      pte_loc: Location.t;}
 and type_expression_desc =
-  | Ptype_var of string * type_var_kind
-  | Ptype_arrow of type_expression * type_expression
+  | Ptype_var of string
+  | Ptype_arrow of type_expression * type_expression * effect_expression
   | Ptype_tuple of type_expression list
-  | Ptype_constr of ident * type_expression list
-  | Ptype_process of type_expression * Static.instantaneous * type_expression
+  | Ptype_constr of ident * param_expression list
+  | Ptype_process of type_expression * Static.instantaneous * carrier_expression * effect_expression
+  | Ptype_depend of carrier_expression
+
+and carrier_expression =
+   { pce_desc : carrier_expression_desc;
+     pce_loc : Location.t }
+and carrier_expression_desc =
+    | Pcar_var of string
+    | Pcar_topck
+
+and effect_expression =
+    { pee_desc : effect_expression_desc;
+      pee_loc : Location.t }
+and effect_expression_desc =
+    | Peff_empty
+    | Peff_var of string
+    | Peff_sum of effect_expression * effect_expression
+    | Peff_depend of carrier_expression
+
+and param_expression =
+    | Pptype of type_expression
+    | Ppcarrier of carrier_expression
+    | Ppeffect of effect_expression
 
 and type_declaration =
   | Ptype_abstract

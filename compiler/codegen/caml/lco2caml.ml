@@ -35,28 +35,34 @@ open Misc
 
 let unit_value = make_expr (Cexpr_constant Const_unit) Location.none
 
+let only_types l =
+  let aux acc x = match x with
+    | Cop_type te -> te::acc
+    | _ -> acc
+  in
+  List.rev (List.fold_left aux [] l)
+
 (* Translation of type expressions *)
 let rec translate_te typ =
   let ctyp =
     match typ.cote_desc with
-    | Cotype_var (_, Tcarrier_var) -> assert false
-    | Cotype_var (x, Ttype_var) -> Ctype_var x
-    | Cotype_arrow (t1, t2) ->
+    | Cotype_var x -> Ctype_var x
+    | Cotype_arrow (t1, t2, _) ->
         Ctype_arrow (translate_te t1, translate_te t2)
-    | Cotype_product typ_list ->
-        Ctype_product (List.map translate_te typ_list)
-    | Cotype_constr (cstr, te_list) ->
-        let is_type_var te = match te.cote_desc with
-          | Cotype_var (_, Ttype_var) -> true
-          | _ -> false
-        in
-        let te_list = List.filter is_type_var te_list in
-        Ctype_constr (cstr, List.map translate_te te_list)
-    | Cotype_process (t, _) ->
+    | Cotype_product te_list ->
+        Ctype_product (List.map translate_te te_list)
+    | Cotype_constr (cstr, p_list) ->
+        Ctype_constr (cstr, List.map translate_te (only_types p_list))
+    | Cotype_process (t, _, _) ->
         let proc_type = make_rml_type "process" [translate_te t] in
         proc_type.cte_desc
+    | Cotype_depend _ ->
+        let clock_type = make_rml_type "clock" [] in
+        clock_type.cte_desc
   in
   make_te ctyp typ.cote_loc
+
+
 
 let pattern_of_signal (s,t) =
   let ps =

@@ -143,7 +143,17 @@ let non_clock_err exp =
 (* typing errors *)
 (* unbound *)
 let unbound_clock_err name loc =
+  Printf.eprintf "%aThe type variable \'%s is unbound.\n"
+    Location.print_oc loc name;
+  raise Error
+
+let unbound_carrier_err name loc =
   Printf.eprintf "%aThe clock variable \'%s is unbound.\n"
+    Location.print_oc loc name;
+  raise Error
+
+let unbound_effect_err name loc =
+  Printf.eprintf "%aThe effect variable \'%s is unbound.\n"
     Location.print_oc loc name;
   raise Error
 

@@ -48,6 +48,14 @@ let make_te t loc =
   { cote_desc = t;
     cote_loc = loc; }
 
+let make_ce t loc =
+  { coce_desc = t;
+    coce_loc = loc; }
+
+let make_ee t loc =
+  { coee_desc = t;
+    coee_loc = loc; }
+
 let make_conf c loc =
   { coconf_desc = c;
     coconf_loc = loc; }
@@ -72,17 +80,41 @@ let make_nothing () =
 let rec translate_te typ =
   let cotyp =
     match typ.te_desc with
-    | Tvar (x, k) -> Cotype_var (x, k)
-    | Tarrow (t1, t2) ->
-        Cotype_arrow (translate_te t1, translate_te t2)
+    | Tvar x -> Cotype_var x
+    | Tdepend ce -> Cotype_depend (translate_ce ce)
+    | Tarrow (t1, t2, ee) ->
+        Cotype_arrow (translate_te t1, translate_te t2, translate_ee ee)
     | Tproduct typ_list ->
         Cotype_product (List.map translate_te typ_list)
-    | Tconstr (cstr, te_list) ->
-        Cotype_constr (cstr, List.map translate_te te_list)
-    | Tprocess (t, _, act) ->
-        Cotype_process (translate_te t, translate_te act)
+    | Tconstr (cstr, p_list) ->
+        Cotype_constr (cstr, List.map translate_pe p_list)
+    | Tprocess (t, _, act, ee) ->
+        Cotype_process (translate_te t, translate_ce act, translate_ee ee)
   in
   make_te cotyp typ.te_loc
+
+and translate_ce ce =
+  let coce =
+    match ce.ce_desc with
+      | Cvar s -> Cocar_var s
+      | Ctopck -> Cocar_topck
+  in
+  make_ce coce ce.ce_loc
+
+and translate_ee ee =
+  let coee =
+    match ee.ee_desc with
+      | Effempty -> Coeff_empty
+      | Effvar s -> Coeff_var s
+      | Effsum (ee1, ee2) -> Coeff_sum (translate_ee ee1, translate_ee ee2)
+      | Effdepend ce -> Coeff_depend (translate_ce ce)
+  in
+  make_ee coee ee.ee_loc
+
+and translate_pe pe = match pe with
+  | Ptype te -> Cop_type (translate_te te)
+  | Pcarrier ce -> Cop_carrier (translate_ce ce)
+  | Peffect ee -> Cop_effect (translate_ee ee)
 
 (* Translation of type declatations *)
 let rec translate_type_decl typ =

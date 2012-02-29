@@ -43,27 +43,83 @@ open Misc
 open Annot
 
 
+let add_to_list x l =
+  if List.mem x l then l else x::l
+
 let filter_event ?(force_activation_ck=false) ck =
   let ck = clock_repr ck in
   let ck1 = new_clock_var() in
   let ck2 = new_clock_var() in
   let sck =
     if force_activation_ck then
-      make_clock (Clock_depend !activation_carrier)
+      !activation_carrier
     else
-      new_carrier_clock_var ()
+      make_carrier generic_prefix_name
   in
-  unify ck (constr_notabbrev event_ident [ck1; ck2; sck]);
+  unify ck (constr_notabbrev event_ident [Var_clock ck1; Var_clock ck2; Var_carrier sck]);
   ck1, ck2, sck
 
 let filter_multi_event ck =
   let ck = clock_repr ck in
   let ck1 = new_clock_var() in
-  let sck = new_carrier_clock_var () in
-  unify ck (constr_notabbrev event_ident [ck1;
-                                          constr_notabbrev list_ident [ck1]; sck]);
+  let sck = make_carrier generic_prefix_name in
+  unify ck (constr_notabbrev event_ident
+               [Var_clock ck1; Var_clock (constr_notabbrev list_ident [Var_clock ck1]); Var_carrier sck]);
   ck1, sck
 
+
+(*
+let rec simplify_effect eff =
+  let eff = effect_repr eff in
+  match eff.desc with
+    | Effect_empty | Effect_var | Effect_link _ | Effect_depend _ -> eff
+    | Effect_sum ({ desc = Effect_empty }, eff)
+    | Effect_sum (eff, { desc = Effect_empty }) -> simplify_effect eff
+    | Effect_sum (eff1, eff2) ->
+        { eff with desc = Effect_sum (simplify_effect eff1, simplify_effect eff2) }
+        *)
+
+let simplify_effect eff =
+  let rec mem_effect eff l = match l with
+    | [] -> false
+    | eff2::l -> equal_effect eff eff2 || mem_effect eff l
+  in
+  let add_to_list x l =
+    if mem_effect x l then l else x::l
+  in
+  let rec clocks_of acc eff = match eff.desc with
+    | Effect_empty -> acc
+    | Effect_var | Effect_depend _ -> add_to_list eff acc
+    | Effect_link link -> clocks_of acc link
+    | Effect_sum (eff1, eff2) -> clocks_of (clocks_of acc eff2) eff1
+  in
+  Printf.eprintf "Simplify before: %a\n" Clocks_printer.output_effect eff;
+  let eff = eff_sum_list (clocks_of [] eff) in
+  Printf.eprintf "Simplify after: %a\n" Clocks_printer.output_effect eff;
+  eff
+
+let add_effect eff =
+  current_effect := simplify_effect (eff_sum !current_effect eff)
+let add_effect_ck ck =
+  add_effect (make_effect (Effect_depend ck))
+
+let rec remove_ck_from_effect ck eff =
+  let desc =
+    match eff.desc with
+      | Effect_depend c ->
+          if (carrier_repr c).desc = ck.desc then
+            Effect_empty
+          else
+            eff.desc
+      | Effect_empty | Effect_var -> eff.desc
+      | Effect_link link ->
+          let eff = remove_ck_from_effect ck link in
+          eff.desc
+      | Effect_sum (eff1, eff2) -> Effect_sum (remove_ck_from_effect ck eff1, remove_ck_from_effect ck eff2)
+  in
+  make_effect desc
+let remove_ck_from_effect ck eff =
+  simplify_effect (remove_ck_from_effect ck eff)
 
 let unify_expr expr expected_ty actual_ty =
   try
@@ -179,66 +235,96 @@ and is_nonexpansive_conf c =
 
 (* Typing of type expressions *)
 let clock_of_type_expression ty_vars typexp =
-  let rec clock_of typexp =
+  let rec clock_of_te typexp =
     match typexp.te_desc with
-    | Tvar (s, _) ->
+    | Tvar s ->
         begin try
-          List.assoc s ty_vars
+          expect_clock (List.assoc s ty_vars)
         with
-          Not_found -> unbound_clock_err s typexp.te_loc
+          Not_found | Invalid_argument _ -> unbound_clock_err s typexp.te_loc
         end
 
-    | Tarrow (t1, t2) ->
-        arrow (clock_of t1) (clock_of t2)
+    | Tarrow (t1, t2, ee) ->
+        arrow (clock_of_te t1) (clock_of_te t2) (effect_of_ee ee)
 
     | Tproduct (l) ->
-        product (List.map clock_of l)
+        product (List.map clock_of_te l)
 
-    | Tconstr (s, ty_list) ->
+    | Tconstr (s, p_list) ->
         let ck_desc = Global.ck_info s in
-        constr ck_desc.clock_constr (List.map clock_of ty_list)
+        constr ck_desc.clock_constr (List.map param_of_pe p_list)
 
-    | Tprocess (te,_, act) ->
-        let c =
-          match clock_of act with
-            | { desc = Clock_depend c } -> c
-            | _ -> assert false
-        in
-        process (clock_of te) c
+    | Tprocess (te,_, ce, ee) ->
+        process (clock_of_te te) (carrier_of_ce ce) (effect_of_ee ee)
+
+    | Tdepend ce ->
+        depend (carrier_of_ce ce)
+
+  and carrier_of_ce ce = match ce.ce_desc with
+    | Cvar s ->
+        (try
+            expect_carrier (List.assoc s ty_vars)
+          with
+              Not_found | Invalid_argument _  -> unbound_carrier_err s ce.ce_loc)
+    | Ctopck -> topck_carrier
+
+  and effect_of_ee ee = match ee.ee_desc with
+    | Effempty -> no_effect
+    | Effvar s ->
+        (try
+            expect_effect (List.assoc s ty_vars)
+          with
+              Not_found | Invalid_argument _ -> unbound_effect_err s ee.ee_loc)
+    | Effsum (ee1, ee2) ->
+        eff_sum (effect_of_ee ee1) (effect_of_ee ee2)
+    | Effdepend c ->
+        eff_depend (carrier_of_ce c)
+
+  and param_of_pe pe = match pe with
+    | Ptype te -> Var_clock (clock_of_te te)
+    | Pcarrier ce -> Var_carrier (carrier_of_ce ce)
+    | Peffect ee -> Var_effect (effect_of_ee ee)
   in
-  clock_of typexp
+  clock_of_te typexp
 
 (* Free variables of a type *)
-let free_of_type ty =
-  let rec vars (ty_vars, car_vars) ty =
+let free_of_typeexp ty =
+  let rec vars ty_vars ty =
     match ty.te_desc with
-      | Tvar(x, Ttype_var) ->
-          if List.mem x ty_vars then
-            ty_vars, car_vars
-          else
-            x::ty_vars, car_vars
-      | Tvar(x, Tcarrier_var) ->
-          if List.mem x car_vars then
-            ty_vars, car_vars
-          else
-            ty_vars, x::car_vars
-      | Tarrow(t1,t2) -> vars (vars (ty_vars, car_vars) t1) t2
-      | Tproduct(t) ->
-          List.fold_left vars (ty_vars, car_vars) t
-      | Tconstr(_,t) ->
-          List.fold_left vars (ty_vars, car_vars) t
-      | Tprocess (t, _, c) -> vars (vars (ty_vars, car_vars) c) t
-  in vars ([], []) ty
+      | Tvar s-> add_to_list (s, Ttype_var) ty_vars
+      | Tarrow(t1,t2,eff) ->
+          let ty_vars = vars (vars ty_vars t1) t2 in
+          vars_effect ty_vars eff
+      | Tproduct(t) -> List.fold_left vars ty_vars t
+      | Tconstr(_,t) -> List.fold_left vars_param ty_vars t
+      | Tprocess (t, _, act, eff) ->
+          let ty_vars = vars (vars_carrier ty_vars act) t in
+          vars_effect ty_vars eff
+      | Tdepend c -> vars_carrier ty_vars c
+  and vars_carrier ty_vars ce = match ce.ce_desc with
+    | Cvar s -> add_to_list (s, Tcarrier_var) ty_vars
+    | Ctopck -> ty_vars
+  and vars_effect ty_vars ee = match ee.ee_desc with
+    | Effempty -> ty_vars
+    | Effvar s -> add_to_list (s, Teffect_var) ty_vars
+    | Effsum (ee1, ee2) -> vars_effect (vars_effect ty_vars ee2) ee1
+    | Effdepend ce -> vars_carrier ty_vars ce
+  and vars_param ty_vars p = match p with
+    | Ptype te -> vars ty_vars te
+    | Pcarrier ce -> vars_carrier ty_vars ce
+    | Peffect ee -> vars_effect ty_vars ee
+  in
+  vars [] ty
 
 (* translating a declared type expression into an internal type *)
 let full_clock_of_type_expression typ =
-  let ty_vars, car_vars = free_of_type typ in
-  let ty_vars = List.map (fun v -> v, new_generic_clock_var ()) ty_vars in
-  let car_vars = List.map (fun v -> v, make_generic_carrier v) car_vars in
-  let car_ty_vars = List.map (fun (v, c) -> v, make_clock (Clock_depend c)) car_vars in
-  let typ = clock_of_type_expression (ty_vars @ car_ty_vars) typ in
-  { cs_clock_vars = List.map snd ty_vars;
-    cs_carrier_vars = List.map snd car_vars;
+  let ty_vars = free_of_typeexp typ in
+  let ty_vars = List.map (fun (v, k) -> v, new_generic_var (v, k)) ty_vars in
+  let typ = clock_of_type_expression ty_vars typ in
+  let ck_vars, car_vars, eff_vars = params_split (snd (List.split ty_vars)) in
+  { cs_clock_vars = ck_vars;
+    cs_carrier_vars = car_vars;
+    cs_effect_vars = eff_vars;
     cs_desc = typ }
 
 (* Typing of patterns *)
@@ -252,7 +338,7 @@ let rec clock_of_pattern global_env local_env patt ty =
   | Pvar (Vglobal gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
       then non_linear_pattern_err patt (Ident.name gl.gi.id);
-      gl.ck_info <- Some { value_ck = forall [] [] ty };
+      gl.ck_info <- Some { value_ck = forall [] [] [] ty };
       (gl::global_env, local_env)
   | Pvar (Vlocal x) ->
       if List.mem_assoc x local_env
@@ -262,7 +348,7 @@ let rec clock_of_pattern global_env local_env patt ty =
   | Palias (p,Vglobal gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
       then non_linear_pattern_err patt (Ident.name gl.gi.id);
-      gl.ck_info <- Some { value_ck = forall [] [] ty };
+      gl.ck_info <- Some { value_ck = forall [] [] [] ty };
       clock_of_pattern (gl::global_env) local_env p ty
   | Palias (p,Vlocal x) ->
       if List.mem_assoc x local_env
@@ -354,7 +440,7 @@ let rec clock_of_pattern global_env local_env patt ty =
 
   | Parray (l) ->
       let ty_var = new_clock_var () in
-      unify_patt patt ty (constr_notabbrev array_ident [ty_var]);
+      unify_patt patt ty (constr_notabbrev array_ident [Var_clock ty_var]);
       List.fold_left
         (fun (gl_env,lc_env) p -> clock_of_pattern gl_env lc_env p ty_var)
         (global_env,local_env) l
@@ -392,18 +478,22 @@ let rec clock_of_expression env expr =
     | Efunction (matching)  ->
         let ty_arg = new_clock_var() in
         let ty_res = new_clock_var() in
-        let ty = arrow ty_arg ty_res in
+        let eff = new_effect_var () in
+        let ty = arrow ty_arg ty_res eff in
         List.iter
           (fun (p,e) ->
             let gl_env, loc_env = clock_of_pattern [] [] p ty_arg in
             assert (gl_env = []);
             let new_env =
               List.fold_left
-                (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
+                (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
                 env loc_env
             in
             type_expect new_env e ty_res)
           matching;
+        (* take the current effect and put it in the arrow *)
+        effect_unify eff !current_effect;
+        current_effect := no_effect;
         ty
 
     | Eapply (fct, args) ->
@@ -411,13 +501,14 @@ let rec clock_of_expression env expr =
         let rec type_args ty_res = function
           | [] -> ty_res
           | arg :: args ->
-              let t1, t2 =
+              let t1, t2, eff =
                 try
                   filter_arrow ty_res
                 with Unify ->
                   application_of_non_function_err fct ty_fct
               in
               type_expect env arg t1;
+              add_effect eff;
               type_args t2 args
         in
         type_args ty_fct args
@@ -448,7 +539,7 @@ let rec clock_of_expression env expr =
     | Earray (l) ->
         let ty_var = new_clock_var () in
         List.iter (fun e -> type_expect env e ty_var) l;
-        constr_notabbrev array_ident [ty_var]
+        constr_notabbrev array_ident [Var_clock ty_var]
 
     | Erecord (l) ->
         let ty = new_clock_var() in
@@ -497,7 +588,7 @@ let rec clock_of_expression env expr =
             assert (gl_env = []);
             let new_env =
               List.fold_left
-                (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
+                (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
                 env loc_env
             in
             type_expect new_env e ty)
@@ -523,7 +614,7 @@ let rec clock_of_expression env expr =
             assert (gl_env = []);
             let new_env =
               List.fold_left
-                (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
+                (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
                 env loc_env
             in
             type_expect new_env e ty_res)
@@ -542,7 +633,7 @@ let rec clock_of_expression env expr =
     | Efor(i,e1,e2,flag,e3) ->
         type_expect env e1 Clocks_utils.static;
         type_expect env e2 Clocks_utils.static;
-        type_statement (Env.add i (forall [] [] Clocks_utils.static) env) e3;
+        type_statement (Env.add i (forall [] [] [] Clocks_utils.static) env) e3;
         Clocks_utils.static
 
     | Eseq e_list ->
@@ -559,8 +650,9 @@ let rec clock_of_expression env expr =
         let old_activation_carrier = !activation_carrier in
         activation_carrier := make_carrier generic_activation_name;
         let ck = clock_of_expression env e in
-        let res_ck = process ck !activation_carrier in
+        let res_ck = process ck !activation_carrier !current_effect in
         activation_carrier := old_activation_carrier;
+        current_effect := no_effect;
         res_ck
 
     | Epre (Status, s) ->
@@ -604,18 +696,19 @@ let rec clock_of_expression env expr =
 
     | Eemit (s, None) ->
         let ty_s = clock_of_expression env s in
-        let ty, _, _ =
+        let ty, _, sck =
           try
             filter_event ty_s
           with Unify ->
             non_event_err s
         in
         unify_emit expr.e_loc Clocks_utils.static ty;
+        add_effect_ck sck;
         Clocks_utils.static
 
     | Eemit (s, Some e) ->
         let ty_s = clock_of_expression env s in
-        let ty, _, _ =
+        let ty, _, sck =
           try
             filter_event ty_s
           with Unify ->
@@ -623,13 +716,15 @@ let rec clock_of_expression env expr =
         in
         let ty_e = clock_of_expression env e in
         unify_emit e.e_loc ty ty_e;
+        add_effect_ck sck;
         Clocks_utils.static
 
     | Esignal ((s,te_opt), ce, _, combine_opt, e) ->
         let ty_emit = new_clock_var() in
         let ty_get = new_clock_var() in
         let ty_ck = type_clock_expr env ce in
-        let ty_s = constr_notabbrev event_ident [ty_emit; ty_get; ty_ck] in
+        let ty_s = constr_notabbrev event_ident
+          [Var_clock ty_emit; Var_clock ty_get; Var_carrier ty_ck] in
         opt_iter
           (fun te ->
             unify_event s (instance (full_clock_of_type_expression te)) ty_s)
@@ -639,13 +734,15 @@ let rec clock_of_expression env expr =
           | None ->
               unify_event s
                 (constr_notabbrev event_ident
-                   [ty_emit; (constr_notabbrev list_ident [ty_emit]); ty_ck])
+                   [Var_clock ty_emit;
+                    Var_clock (constr_notabbrev list_ident [Var_clock ty_emit]);
+                    Var_carrier ty_ck])
                 ty_s
           | Some (default,comb) ->
               type_expect env default ty_get;
-              type_expect env comb (arrow ty_emit (arrow ty_get ty_get))
+              type_expect env comb (arrow ty_emit (arrow ty_get ty_get no_effect) no_effect)
         end;
-        clock_of_expression (Env.add s (forall [] [] ty_s) env) e
+        clock_of_expression (Env.add s (forall [] [] [] ty_s) env) e
 
     | Enothing -> Clocks_utils.static
 
@@ -674,7 +771,7 @@ let rec clock_of_expression env expr =
     | Efordopar(i,e1,e2,flag,p) ->
         type_expect env e1 Clocks_utils.static;
         type_expect env e2 Clocks_utils.static;
-        type_statement (Env.add i (forall [] [] Clocks_utils.static) env) p;
+        type_statement (Env.add i (forall [] [] [] Clocks_utils.static) env) p;
         Clocks_utils.static
 
     | Epar p_list ->
@@ -689,7 +786,8 @@ let rec clock_of_expression env expr =
     | Erun (e) ->
         let ty_e = clock_of_expression env e in
         let ty = new_clock_var() in
-        unify_run e.e_loc ty_e (process ty !activation_carrier);
+        let eff = new_effect_var () in
+        unify_run e.e_loc ty_e (process ty !activation_carrier eff);
         ty
 
     | Euntil (s,p,patt_proc_opt) ->
@@ -715,7 +813,7 @@ let rec clock_of_expression env expr =
                     assert (gl_env = []);
                     let new_env =
                       List.fold_left
-                        (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
+                        (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
                         env loc_env
                     in
                     type_expect new_env proc ty_body)
@@ -750,7 +848,7 @@ let rec clock_of_expression env expr =
             assert (gl_env = []);
             let new_env =
               List.fold_left
-                (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
+                (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
                 env loc_env
             in
             type_expect new_env e Clocks_utils.static;
@@ -771,7 +869,7 @@ let rec clock_of_expression env expr =
         assert (gl_env = []);
         let new_env =
           List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
+            (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
             env loc_env
         in
         clock_of_expression new_env p
@@ -798,7 +896,7 @@ let rec clock_of_expression env expr =
         assert (gl_env = []);
         let new_env =
           List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
+            (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
             env loc_env
         in
         clock_of_expression new_env p
@@ -812,29 +910,39 @@ let rec clock_of_expression env expr =
         in
         unify_expr s
           (constr_notabbrev event_ident
-             [ty_emit; (constr_notabbrev list_ident [ty_emit]); ty_ck])
+             [Var_clock ty_emit;
+              Var_clock (constr_notabbrev list_ident [Var_clock ty_emit]);
+              Var_carrier ty_ck])
           ty_s;
         let gl_env, loc_env = clock_of_pattern [] [] patt ty_emit in
         assert (gl_env = []);
         let new_env =
           List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
+            (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
             env loc_env
         in
         clock_of_expression new_env p
 
     | Enewclock (id, sch, e) ->
-      let sch_type = arrow Clocks_utils.static (product [Clocks_utils.static; Clocks_utils.static]) in
+      let sch_type = arrow Clocks_utils.static (product [Clocks_utils.static; Clocks_utils.static]) no_effect in
       Misc.opt_iter (fun sch -> type_expect env sch sch_type) sch;
       push_type_level ();
+      (* create a fresh skolem *)
       let c = carrier_skolem id.Ident.name Clocks_utils.names#name in
       let new_ck = depend c in
-      let env = Env.add id (forall [] [] new_ck) env in
+      let env = Env.add id (forall [] [] [] new_ck) env in
+      (* change activation clock *)
       let old_activation_carrier = !activation_carrier in
       activation_carrier := c;
+      (*type the body*)
       let ck = clock_of_expression env e in
+      (* reset activation clock *)
       activation_carrier := old_activation_carrier;
       pop_type_level ();
+      (* remove clock from current effect *)
+      Printf.eprintf "Effects before: %a\n" Clocks_printer.output_effect !current_effect;
+      current_effect := remove_ck_from_effect c !current_effect;
+      Printf.eprintf "Effects after: %a\n" Clocks_printer.output_effect !current_effect;
       ck
 
     | Epauseclock ce ->
@@ -880,15 +988,12 @@ and type_clock_expr env ce =
   match ce with
     | CkExpr e ->
         let ty_ce = clock_of_expression env e in
-        let _ =
-          (try
-              filter_depend ty_ce
-            with
-              | Unify -> non_clock_err e)
-        in
-        ty_ce
-    | CkTop -> clock_topck
-    | CkLocal -> assert false
+        (try
+            filter_depend ty_ce
+          with
+            | Unify -> non_clock_err e)
+    | CkTop -> topck_carrier
+    | CkLocal -> !activation_carrier
 
 
 (* Typing of let declatations *)
@@ -900,7 +1005,7 @@ and type_let is_rec env patt_expr_list =
   in
   let add_env =
     List.fold_left
-      (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
+      (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
       Env.empty local_env
   in
   let let_env =
@@ -974,13 +1079,7 @@ let check_no_repeated_label loc l =
 
 (* Typing of type declatations *)
 let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
-  let new_type_var (v, k) =
-    if k = Ttype_var then
-      v, new_generic_clock_var ()
-    else
-      v, new_generic_carrier_clock_var ()
-  in
-  let typ_vars = List.map new_type_var typ_params in
+  let typ_vars = List.map (fun (v,k) -> v, new_generic_var (v, k)) typ_params in
   let final_typ =
     constr_notabbrev type_gl.gi (List.map snd typ_vars)
   in
@@ -1066,8 +1165,9 @@ let impl info_chan item =
         (fun ((s,te_opt), combine_opt) ->
           let ty_emit = new_clock_var() in
           let ty_get = new_clock_var() in
-          let ty_ck = clock_topck in
-          let ty_s = constr_notabbrev event_ident [ty_emit; ty_get; ty_ck] in
+          let ty_ck = topck_carrier in
+          let ty_s = constr_notabbrev event_ident
+            [Var_clock ty_emit; Var_clock ty_get; Var_carrier ty_ck] in
           opt_iter
             (fun te ->
               unify_event s.gi.id
@@ -1077,14 +1177,14 @@ let impl info_chan item =
             match combine_opt with
             | None ->
                 unify_event s.gi.id
-                  (constr_notabbrev list_ident [ty_emit])
+                  (constr_notabbrev list_ident [Var_clock ty_emit])
                   ty_get
             | Some (default,comb) ->
                 type_expect Env.empty default ty_get;
                 type_expect Env.empty comb
-                  (arrow ty_emit (arrow ty_get ty_get))
+                  (arrow ty_emit (arrow ty_get ty_get no_effect) no_effect)
           end;
-          s.ck_info <- Some { value_ck = forall [] [] ty_s };
+          s.ck_info <- Some { value_ck = forall [] [] [] ty_s };
           (* verbose mode *)
           if !print_type
           then Clocks_printer.output_value_declaration info_chan [s])

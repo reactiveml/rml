@@ -52,25 +52,50 @@ module Env =
 let rec translate_te typ =
   let rtyp =
     match typ.pte_desc with
-    | Ptype_var (x, k) -> Tvar (x, k)
+    | Ptype_var x -> Tvar x
 
-    | Ptype_arrow (t1, t2) ->
-        Tarrow (translate_te t1, translate_te t2)
+    | Ptype_arrow (t1, t2, ee) ->
+        Tarrow (translate_te t1, translate_te t2, translate_ee ee)
 
     | Ptype_tuple typ_list ->
         Tproduct (List.map translate_te typ_list)
 
-    | Ptype_constr (cstr, te_list) ->
+    | Ptype_constr (cstr, pe_list) ->
         let gcstr = try (Modules.pfind_type_desc cstr.pident_id) with
         | Modules.Desc_not_found ->
             unbound_type_err cstr.pident_id typ.pte_loc
         in
-        Tconstr (gcstr, List.map translate_te te_list)
+        Tconstr (gcstr, List.map translate_pe pe_list)
 
-    | Ptype_process (t,k,act) -> Tprocess ((translate_te t),k, translate_te act)
+    | Ptype_process (t,k,act,ee) -> Tprocess ((translate_te t),k, translate_ce act, translate_ee ee)
 
+    | Ptype_depend ce -> Tdepend (translate_ce ce)
   in
   make_te rtyp typ.pte_loc
+
+and translate_ce pce =
+  let ce =
+    match pce.pce_desc with
+      | Pcar_var s -> Cvar s
+      | Pcar_topck -> Ctopck
+  in
+  make_ce ce pce.pce_loc
+
+and translate_ee pee =
+  let ee =
+    match pee.pee_desc with
+      | Peff_empty -> Effempty
+      | Peff_var s -> Effvar s
+      | Peff_sum (ee1, ee2) -> Effsum (translate_ee ee1, translate_ee ee2)
+      | Peff_depend ce -> Effdepend (translate_ce ce)
+  in
+  make_ee ee pee.pee_loc
+
+and translate_pe ppe = match ppe with
+  | Pptype pte -> Ptype (translate_te pte)
+  | Ppcarrier pce -> Pcarrier (translate_ce pce)
+  | Ppeffect pee -> Peffect (translate_ee pee)
+
 
 (* Translation of type declatations *)
 let rec translate_type_decl typ =

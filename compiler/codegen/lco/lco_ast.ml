@@ -146,11 +146,34 @@ and type_expression =
     { cote_desc: type_expression_desc;
       cote_loc: Location.t}
 and type_expression_desc =
-    Cotype_var of string * type_var_kind
-  | Cotype_arrow of type_expression * type_expression
+    Cotype_var of string
+  | Cotype_arrow of type_expression * type_expression * effect_expression
   | Cotype_product of type_expression list
-  | Cotype_constr of type_description * type_expression list
-  | Cotype_process of type_expression * type_expression
+  | Cotype_constr of type_description * param_expression list
+  | Cotype_process of type_expression * carrier_expression * effect_expression
+  | Cotype_depend of carrier_expression
+
+and carrier_expression =
+   { coce_desc : carrier_expression_desc;
+     coce_loc : Location.t }
+and carrier_expression_desc =
+    | Cocar_var of string
+    | Cocar_topck
+
+and effect_expression =
+    { coee_desc : effect_expression_desc;
+      coee_loc : Location.t }
+and effect_expression_desc =
+    | Coeff_empty
+    | Coeff_var of string
+    | Coeff_sum of effect_expression * effect_expression
+    | Coeff_depend of carrier_expression
+
+and param_expression =
+    | Cop_type of type_expression
+    | Cop_carrier of carrier_expression
+    | Cop_effect of effect_expression
+
 
 and type_declaration =
   | Cotype_abstract

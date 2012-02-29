@@ -64,6 +64,10 @@ let mksimple_loc id loc =
 
 let mkte d =
   { pte_desc = d; pte_loc = symbol_rloc() }
+let mkce d =
+  { pce_desc = d; pce_loc = symbol_rloc() }
+let mkee d =
+  { pee_desc = d; pee_loc = symbol_rloc() }
 let mkpatt d =
   { ppatt_desc = d; ppatt_loc = symbol_rloc() }
 let mkexpr d =
@@ -976,7 +980,7 @@ core_type:
     simple_core_type_or_tuple
       { $1 }
   | core_type MINUSGREATER core_type
-      { mkte(Ptype_arrow($1, $3)) }
+      { mkte(Ptype_arrow($1, $3, mkee Peff_empty)) }
 ;
 
 simple_core_type:
@@ -987,21 +991,19 @@ simple_core_type:
 
 simple_core_type2:
     QUOTE ident
-      { mkte(Ptype_var ($2, Asttypes.Ttype_var)) }
-  | QUOTE QUOTE ident
-      { mkte(Ptype_var ($3, Asttypes.Tcarrier_var)) }
+      { mkte(Ptype_var $2) }
   | type_longident
       { mkte(Ptype_constr($1, [])) }
   | simple_core_type2 type_longident
-      { mkte(Ptype_constr($2, [$1])) }
+      { mkte(Ptype_constr($2, [Pptype $1])) }
   | LPAREN core_type_comma_list RPAREN type_longident
-      { mkte(Ptype_constr($4, List.rev $2)) }
+      { mkte(Ptype_constr($4, List.rev (List.map (fun x -> Pptype x) $2))) }
   | simple_core_type2 PROCESS
-      { mkte(Ptype_process ($1, Static.Dontknow, mkte (Ptype_var ("_act", Tcarrier_var)))) }
+      { mkte(Ptype_process ($1, Static.Dontknow, mkce (Pcar_var "_act"), mkee Peff_empty)) }
   | simple_core_type2 PROCESS PLUS
-      { mkte(Ptype_process ($1, Static.Noninstantaneous, mkte (Ptype_var ("_act", Tcarrier_var)))) }
+      { mkte(Ptype_process ($1, Static.Noninstantaneous, mkce (Pcar_var "_act"), mkee Peff_empty)) }
   | simple_core_type2 PROCESS MINUS
-      { mkte(Ptype_process ($1, Static.Instantaneous, mkte (Ptype_var ("_act", Tcarrier_var)))) }
+      { mkte(Ptype_process ($1, Static.Instantaneous,  mkce (Pcar_var "_act"), mkee Peff_empty)) }
 ;
 simple_core_type_or_tuple:
     simple_core_type                            { $1 }
