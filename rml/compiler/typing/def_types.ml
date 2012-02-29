@@ -42,7 +42,10 @@ type type_scheme =
 and type_expression =
     { mutable type_desc: type_expression_desc;
       mutable type_level: int;
-      type_index: int; }
+      type_index: int;
+      mutable type_usage: Usages.signal_usage;
+    }
+
 and type_expression_desc =
     Type_var
   | Type_arrow of type_expression * type_expression

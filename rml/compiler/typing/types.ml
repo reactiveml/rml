@@ -48,7 +48,9 @@ and pop_type_level () =
 let make_type ty =
   { type_desc = ty;
     type_level = generic;
-    type_index = names#name; }
+    type_index = names#name;
+    type_usage = Usages.mk_zero;
+  }
 
 let product ty_list =
   make_type (Type_product(ty_list))

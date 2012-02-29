@@ -80,8 +80,9 @@ static/static_printer.cmx: reac/reac_ast.cmx static/def_static.cmx \
     global/asttypes.cmi
 typing/usages.cmi:
 typing/usages_misc.cmi: typing/usages.cmi typing/def_types.cmo
+typing/def_types.cmo: typing/usages.cmi global/ident.cmo global/global.cmo \
     static/def_static.cmo global/asttypes.cmi
-typing/def_types.cmx: global/ident.cmx global/global.cmx \
+typing/def_types.cmx: typing/usages.cmx global/ident.cmx global/global.cmx \
     static/def_static.cmx global/asttypes.cmi
 typing/types.cmo: global/misc.cmo global/global_ident.cmo global/global.cmo \
     typing/def_types.cmo
