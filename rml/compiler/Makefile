@@ -84,6 +84,7 @@ OBJ =	global/version.cmo \
 	global/global_ident.cmo \
 	global/global.cmo \
 	static/def_static.cmo \
+	typing/usages.cmo \
 	typing/def_types.cmo \
 	global/modules.cmo \
 	global/initialization.cmo \

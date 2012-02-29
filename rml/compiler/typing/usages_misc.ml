@@ -17,29 +17,7 @@
 (*                                                                    *)
 (**********************************************************************)
 
-type usage =
-  | Affine
-  | Neutral
-  | Zero
-
-type signal_usage = usage * usage
-
-exception Forbidden_usage
-
-let add_u u1 u2 = match u1, u2 with
-  | Zero, u | u, Zero -> u
-  | Neutral, Neutral -> Neutral
-  | _ -> raise Forbidden_usage
-
-let add_s (u1, u2) (v1, v2) =
-  add_u u1 u2,
-  add_u v1 v2
-
-let addable u1 u2 =
-  try
-    ignore (add_u u1 u2);
-    true
-  with Forbidden_usage -> false
+open Usages
 
 let usage_of_type ty =
   let ty = Static.get_type ty in

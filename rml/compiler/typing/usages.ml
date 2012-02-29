@@ -17,25 +17,30 @@
 (*                                                                    *)
 (**********************************************************************)
 
-open Usages
+type usage =
+  | Affine
+  | Neutral
+  | Zero
 
-val usage_of_type : Def_types.type_expression -> usage
+type signal_usage = usage * usage
 
-module Table :
-  sig
-    type key = int
-    type 'a t
+exception Forbidden_usage
 
-    val empty : signal_usage t
+let add_u u1 u2 = match u1, u2 with
+  | Zero, u | u, Zero -> u
+  | Neutral, Neutral -> Neutral
+  | _ -> raise Forbidden_usage
 
-    val mem : key -> signal_usage t -> bool
-    val find : key -> signal_usage t -> signal_usage
+let add_s (u1, u2) (v1, v2) =
+  add_u u1 v1,
+  add_u u2 v2
 
-    val add : key -> Def_types.type_expression -> Def_types.type_expression -> signal_usage t -> signal_usage t
-    val singleton : key -> Def_types.type_expression -> Def_types.type_expression -> signal_usage t
+let addable u1 u2 =
+  try
+    ignore (add_u u1 u2);
+    true
+  with Forbidden_usage -> false
 
-    val merge : signal_usage t -> signal_usage t -> signal_usage t
-    val flatten : signal_usage t list -> signal_usage t
+let mk_zero = Zero, Zero
 
-    val print : signal_usage t -> unit
-  end
+let mk_su su1 su2 = su1, su2

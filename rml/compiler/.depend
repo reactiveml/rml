@@ -78,15 +78,15 @@ static/static_printer.cmo: reac/reac_ast.cmo static/def_static.cmo \
     global/asttypes.cmi
 static/static_printer.cmx: reac/reac_ast.cmx static/def_static.cmx \
     global/asttypes.cmi
-typing/usages_misc.cmi: typing/def_types.cmo
-typing/def_types.cmo: global/ident.cmo global/global.cmo \
+typing/usages.cmi:
+typing/usages_misc.cmi: typing/usages.cmi typing/def_types.cmo
     static/def_static.cmo global/asttypes.cmi
 typing/def_types.cmx: global/ident.cmx global/global.cmx \
     static/def_static.cmx global/asttypes.cmi
-typing/types.cmo: global/misc.cmo global/initialization.cmo \
-    global/global_ident.cmo global/global.cmo typing/def_types.cmo
-typing/types.cmx: global/misc.cmx global/initialization.cmx \
-    global/global_ident.cmx global/global.cmx typing/def_types.cmx
+typing/types.cmo: global/misc.cmo global/global_ident.cmo global/global.cmo \
+    typing/def_types.cmo
+typing/types.cmx: global/misc.cmx global/global_ident.cmx global/global.cmx \
+    typing/def_types.cmx
 typing/types_printer.cmo: global/modules.cmo global/misc.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo typing/def_types.cmo \
     global/asttypes.cmi
@@ -111,10 +111,12 @@ typing/typing_errors.cmo: typing/types_printer.cmo typing/types.cmo \
 typing/typing_errors.cmx: typing/types_printer.cmx typing/types.cmx \
     reac/reac_ast.cmx global/misc.cmx parsing/location.cmx global/ident.cmx \
     global/global_ident.cmx typing/def_types.cmx
-typing/usages_misc.cmo: static/static.cmo global/initialization.cmo \
-    typing/usages_misc.cmi
-typing/usages_misc.cmx: static/static.cmx global/initialization.cmx \
-    typing/usages_misc.cmi
+typing/usages.cmo: typing/usages.cmi
+typing/usages.cmx: typing/usages.cmi
+typing/usages_misc.cmo: typing/usages.cmi static/static.cmo \
+    global/initialization.cmo typing/usages_misc.cmi
+typing/usages_misc.cmx: typing/usages.cmx static/static.cmx \
+    global/initialization.cmx typing/usages_misc.cmi
 other_analysis/instantaneous_loop.cmo: static/static.cmo reac/reac_misc.cmo \
     reac/reac_ast.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo static/def_static.cmo \
