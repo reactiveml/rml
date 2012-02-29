@@ -22,7 +22,7 @@ SPLIT_FILES= splits/*.split
 
 DIRS= splits
 
-all:
+all: realclean tools split test
 
 split:
 	$(SPLIT) $(SPLIT_FILES)

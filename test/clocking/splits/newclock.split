@@ -34,6 +34,26 @@ let process g =
   newclock ck in
     [s; s2]
 
+$
+
+let process f =
+  newclock ck in
+    let id x = x in
+    let ck2 = id ck in
+    id 4
+
+$
+
+let create_sig ck =
+  signal s at ck default 0 gather (+) in
+  s
+
+let process f =
+  let s = create_sig topck in
+  newclock ck in
+    let s2 = create_sig ck in
+    emit s2 3; emit s 4; ()
+
 $$$scope
 ${
 (*
@@ -85,7 +105,7 @@ ${
 (*
   run_test:
    [
-     Bad 2 "is used with type": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+     Bad 2 "is used with clock": "../../compiler/rpmlc.byte -I ../../lib/ -c"
    ]
 *)
 

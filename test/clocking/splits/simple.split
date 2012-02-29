@@ -21,3 +21,27 @@ $
 let h x = match x with
 | Ok -> 0
 | Not_ok i -> i
+
+$
+
+let f () =
+  let id x = x in
+  (id 4, id true)
+
+
+
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+
+let f ()
+  let r = ref [] in
+  r := [3];
+  r := [true]

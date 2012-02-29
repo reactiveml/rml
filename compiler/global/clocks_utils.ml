@@ -393,7 +393,7 @@ let rec occur_check level index ck =
       | Clock_link link -> check link
       | Clock_process (ck, act_car) -> check ck; carrier_occur_check level no_carrier act_car
   in
-  Format.eprintf "Occur_check@.";
+  (*Format.eprintf "Occur_check@.";*)
   check ck
 
 and carrier_occur_check level index car =
@@ -401,18 +401,17 @@ and carrier_occur_check level index car =
     let car = carrier_repr car in
     match car.desc with
       | Carrier_var s ->
-          Format.eprintf "Var occur check: %s car.level %d, level: %d@." s car.level level;
+        (*  Format.eprintf "Var occur check: %s car.level %d, level: %d@." s car.level level; *)
           if car == index then
             raise Unify
           else if car.level > level then
             car.level <- level
       | Carrier_skolem(s, i) ->
-          Format.eprintf "Skolem occur check: %s i:%d  car.level %d, level: %d@." s i car.level level;
+         (* Format.eprintf "Skolem occur check: %s i:%d  car.level %d, level: %d@." s i car.level level; *)
           if level  < car.level then
             raise (Escape (s, i))
       | Carrier_link link -> check link
   in
-  Format.eprintf "Occur_check carrier@.";
   check car
 
 
@@ -477,7 +476,7 @@ and unify_list ck_l1 ck_l2 =
     | Invalid_argument _ -> raise Unify
 
 and carrier_unify expected_car actual_car =
-  Printf.eprintf "Unify carrier '%a' and %a\n" Clocks_printer.output_carrier expected_car  Clocks_printer.output_carrier actual_car;
+ (* Printf.eprintf "Unify carrier '%a' and %a\n" Clocks_printer.output_carrier expected_car  Clocks_printer.output_carrier actual_car; *)
   if expected_car == actual_car then ()
   else
     let expected_car = carrier_repr expected_car in
@@ -486,7 +485,7 @@ and carrier_unify expected_car actual_car =
     else
       match expected_car.desc, actual_car.desc with
         | Carrier_var(s), _ ->
-  Printf.eprintf "Unify carrier next '%a' of level %d and '%a' of level %d\n" Clocks_printer.output_carrier expected_car expected_car.level  Clocks_printer.output_carrier actual_car actual_car.level;
+ (* Printf.eprintf "Unify carrier next '%a' of level %d and '%a' of level %d\n" Clocks_printer.output_carrier expected_car expected_car.level  Clocks_printer.output_carrier actual_car actual_car.level; *)
             carrier_occur_check expected_car.level expected_car actual_car;
             expected_car.desc <- Carrier_link actual_car
         | _, Carrier_var(s) ->
