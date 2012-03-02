@@ -727,9 +727,10 @@ and effect_unify expected_eff actual_eff =
             effect_occur_check actual_eff.level actual_eff expected_eff;
             actual_eff.desc <- Effect_link expected_eff
         | Effect_depend c1, Effect_depend c2 -> carrier_unify c1 c2
+      (* This is not how we unify sets of effects. Anyway we never need this case.
         | Effect_sum(eff1, eff2), Effect_sum(eff3, eff4) ->
             effect_unify eff1 eff3;
-            effect_unify eff2 eff4
+            effect_unify eff2 eff4 *)
         | _ ->
             (* Printf.eprintf "Failed to unify '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff; *)
             raise Unify
@@ -792,6 +793,7 @@ let equal_carrier c1 c2 =
     | Carrier_skolem (_, i1), Carrier_skolem (_, i2) -> i1 = i2
     | _ -> false
 
+(* Compares two effects, but only if they are leaves *)
 let equal_effect eff1 eff2 =
   let eff1 = effect_repr eff1 in
   let eff2 = effect_repr eff2 in
