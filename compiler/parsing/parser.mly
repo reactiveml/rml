@@ -391,7 +391,7 @@ The precedences must be listed from low to high.
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
-          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCk LOOP
+          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCk LOOP TOPCK
 
 
 /* Entry points */
@@ -445,10 +445,10 @@ structure_item:
       { match $3 with
           [{ppatt_desc = Ppatt_any}, exp] -> mkimpl(Pimpl_expr exp)
         | _ -> mkimpl(Pimpl_let($2, List.rev $3)) }
-  | SIGNAL signal_comma_list
+  | SIGNAL signal_comma_list opt_at_expr
       { mkimpl(Pimpl_signal(List.rev $2, None)) }
-  | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr
-      { mkimpl(Pimpl_signal(List.rev $2, Some($4, $6))) }
+  | SIGNAL signal_comma_list opt_at_expr DEFAULT par_expr GATHER par_expr
+      { mkimpl(Pimpl_signal(List.rev $2, Some($5, $7))) }
   | TYPE type_declarations
       { mkimpl(Pimpl_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
@@ -634,6 +634,10 @@ expr:
       { mkexpr(Pexpr_run($2)) }
   | NEWCLOCK LIDENT opt_schedule IN par_expr
       { mkexpr (Pexpr_newclock (mksimple $2 2, $3, $5)) }
+  | PAUSE clock_expr
+      { mkexpr (Pexpr_pause $2) }
+  | PAUSECLOCK simple_expr
+      { mkexpr (Pexpr_pauseclock $2) }
 ;
 simple_expr:
     val_longident
@@ -684,10 +688,6 @@ simple_expr:
       { mkexpr(Pexpr_apply(mkoperator $1 1, [$2])) }
   | NOTHING
       { mkexpr Pexpr_nothing }
-  | PAUSE clock_expr
-      { mkexpr (Pexpr_pause $2) }
-  | PAUSECLOCK simple_expr
-      { mkexpr (Pexpr_pauseclock $2) }
   | TOPCK
       { mkexpr Pexpr_topck }
   | HALT
@@ -728,11 +728,17 @@ simple_expr_list:
   | simple_expr_list simple_expr
       { $2 :: $1 }
 ;
+not_empty_clock_expr:
+ | simple_expr {
+     match $1.pexpr_desc with
+       | Pexpr_topck -> CkTop
+       | _ -> CkExpr $1
+   }
+;
 clock_expr:
     /* empty */ { CkLocal }
-  | simple_expr { CkExpr $1 }
-  | TOPCK       { CkTop }
-
+  | not_empty_clock_expr { $1 }
+;
 opt_schedule:
    /* empty */ { None}
   | SCHEDULE par_expr { Some $2 }
@@ -1118,13 +1124,10 @@ signal_comma_list:
 ;
 opt_at_expr:
     /* empty */       { CkLocal, CkLocal }
-  | AT sig_clock_expr { $2, $2 }
-  | AT sig_clock_expr RESTRICT simple_expr { $2, CkExpr $4 }
+  | AT not_empty_clock_expr { $2, $2 }
+  | AT not_empty_clock_expr RESTRICT simple_expr { $2, CkExpr $4 }
 ;
-sig_clock_expr:
- | TOPCK { CkTop }
- | simple_expr { CkExpr $1 }
-;
+
 
 /* Miscellaneous */
 
