@@ -43,30 +43,6 @@ open Misc
 open Annot
 
 
-let add_to_list x l =
-  if List.mem x l then l else x::l
-
-let filter_event ?(force_activation_ck=false) ck =
-  let ck = clock_repr ck in
-  let ck1 = new_clock_var() in
-  let ck2 = new_clock_var() in
-  let sck =
-    if force_activation_ck then
-      !activation_carrier
-    else
-      make_carrier generic_prefix_name
-  in
-  unify ck (constr_notabbrev event_ident [Var_clock ck1; Var_clock ck2; Var_carrier sck]);
-  ck1, ck2, sck
-
-let filter_multi_event ck =
-  let ck = clock_repr ck in
-  let ck1 = new_clock_var() in
-  let sck = make_carrier generic_prefix_name in
-  unify ck (constr_notabbrev event_ident
-               [Var_clock ck1; Var_clock (constr_notabbrev list_ident [Var_clock ck1]); Var_carrier sck]);
-  ck1, sck
-
 
 (*
 let rec simplify_effect eff =
@@ -120,6 +96,34 @@ let rec remove_ck_from_effect ck eff =
   make_effect desc
 let remove_ck_from_effect ck eff =
   simplify_effect (remove_ck_from_effect ck eff)
+
+
+
+let add_to_list x l =
+  if List.mem x l then l else x::l
+
+let filter_event ?(force_activation_ck=false) ck =
+  let ck = clock_repr ck in
+  let ck1 = new_clock_var() in
+  let ck2 = new_clock_var() in
+  let sck =
+    if force_activation_ck then
+      !activation_carrier
+    else
+      make_carrier generic_prefix_name
+  in
+  unify ck (constr_notabbrev event_ident [Var_clock ck1; Var_clock ck2; Var_carrier sck]);
+  add_effect_ck sck;
+  ck1, ck2, sck
+
+let filter_multi_event ck =
+  let ck = clock_repr ck in
+  let ck1 = new_clock_var() in
+  let sck = make_carrier generic_prefix_name in
+  unify ck (constr_notabbrev event_ident
+               [Var_clock ck1; Var_clock (constr_notabbrev list_ident [Var_clock ck1]); Var_carrier sck]);
+  ck1, sck
+
 
 let unify_expr expr expected_ty actual_ty =
   try
@@ -703,7 +707,6 @@ let rec clock_of_expression env expr =
             non_event_err s
         in
         unify_emit expr.e_loc Clocks_utils.static ty;
-        add_effect_ck sck;
         Clocks_utils.static
 
     | Eemit (s, Some e) ->
@@ -716,7 +719,6 @@ let rec clock_of_expression env expr =
         in
         let ty_e = clock_of_expression env e in
         unify_emit e.e_loc ty ty_e;
-        add_effect_ck sck;
         Clocks_utils.static
 
     | Esignal ((s,te_opt), ce, _, combine_opt, e) ->
