@@ -97,7 +97,6 @@ let mkoperator name pos =
   { pexpr_desc = Pexpr_ident (mkident (Pident name) pos);
     pexpr_loc = rhs_loc pos; }
 
-
 (*
   Ghost expressions and patterns:
   expressions and patterns that do not appear explicitely in the
@@ -226,6 +225,8 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token END                 /* "end" */
 %token EOF
 %token EQUAL               /* "=" */
+%token EQUALGREATER        /* "=>" */
+%token EQUALGREATERLBRACE  /* "=>{" */
 %token EXCEPTION           /* "exception" */
 %token EXTERNAL            /* "external" */
 %token FALSE               /* "false" */
@@ -370,7 +371,7 @@ The precedences must be listed from low to high.
 %left     BAR                           /* pattern (p|p|p) */
 %nonassoc below_COMMA
 %left     COMMA                         /* expr/expr_comma_list (e,e,e) */
-%right    MINUSGREATER                  /* core_type2 (t -> t -> t) */
+%nonassoc   MINUSGREATER EQUALGREATER EQUALGREATERLBRACE                /* core_type2 (t -> t -> t) */
 %right    OR BACKSLASHSLASH             /* expr (e or e or e) */
 %right    AMPERSAND AMPERAMPER SLASHBACKSLASH
                                         /* expr (e && e && e) */
@@ -933,8 +934,9 @@ type_declarations:
 ;
 
 type_declaration:
-    type_parameters LIDENT type_kind
-      { (mksimple $2 2, $1, $3) }
+    type_parameters LIDENT opt_clock_effect_parameters type_kind
+      { let type_params = List.map (fun x -> x, Ttype_var) $1 in
+        (mksimple $2 2, type_params @ $3, $4) }
 ;
 type_kind:
     /*empty*/
@@ -950,16 +952,37 @@ type_kind:
 ;
 type_parameters:
     /*empty*/                                   { [] }
-  | type_parameter                              { [$1] }
+  | type_var                                    { [$1] }
   | LPAREN type_parameter_list RPAREN           { List.rev $2 }
 ;
-type_parameter:
-    QUOTE ident                                 { $2, Asttypes.Ttype_var }
-  | QUOTE QUOTE ident                           { $3, Asttypes.Tcarrier_var }
-;
 type_parameter_list:
-    type_parameter                              { [$1] }
-  | type_parameter_list COMMA type_parameter    { $3 :: $1 }
+    type_var                                    { [$1] }
+  | type_parameter_list COMMA type_var      { $3 :: $1 }
+;
+opt_clock_effect_parameters:
+  | /* empty */ { [] }
+  | LBRACE clock_parameters BAR effect_parameters RBRACE
+      { let clock_params = List.map (fun x -> x, Tcarrier_var) $2 in
+        let effect_params = List.map (fun x -> x, Teffect_var) $4 in
+         clock_params @ effect_params }
+;
+clock_parameters:
+    /*empty*/                                   { [] }
+  | clock_var                                    { [$1] }
+  | LPAREN clock_parameter_list RPAREN           { List.rev $2 }
+;
+clock_parameter_list:
+    clock_var                                    { [$1] }
+  | clock_parameter_list COMMA clock_var    { $3 :: $1 }
+;
+effect_parameters:
+    /*empty*/                                   { [] }
+  | effect_var                                    { [$1] }
+  | LPAREN effect_parameter_list RPAREN           { List.rev $2 }
+;
+effect_parameter_list:
+    effect_var                                    { [$1] }
+  | effect_parameter_list COMMA effect_var    { $3 :: $1 }
 ;
 constructor_declarations:
     constructor_declaration                     { [$1] }
@@ -981,52 +1004,122 @@ label_declaration:
 ;
 
 /* Core types */
-
 core_type:
-    simple_core_type_or_tuple
-      { $1 }
-  | core_type MINUSGREATER core_type
+  | core_type_na { $1 }
+  | core_type_na MINUSGREATER core_type
       { mkte(Ptype_arrow($1, $3, mkee Peff_empty)) }
+  | core_type_na EQUALGREATER core_type
+      { mkte(Ptype_arrow($1, $3, mkee Peff_fresh)) }
+  | core_type_na EQUALGREATERLBRACE effect RBRACKET core_type
+      { mkte(Ptype_arrow($1, $5, $3)) }
 ;
 
-simple_core_type:
-    simple_core_type2
-      { $1}
-  | LPAREN core_type_comma_list RPAREN
-      { match $2 with [sty] -> sty | _ -> raise Parse_error }
+core_type_na:
+  | simple_type
+      { $1 }
+  | type_star_list
+      { mkte(Ptype_tuple(List.rev $1)) }
+;
 
-simple_core_type2:
-    QUOTE ident
-      { mkte(Ptype_var $2) }
+simple_type:
+  | type_var
+      { mkte(Ptype_var $1) }
+  | LBRACKET clock_type RBRACKET
+      { mkte (Ptype_depend $2) }
   | type_longident
       { mkte(Ptype_constr($1, [])) }
-  | simple_core_type2 type_longident
-      { mkte(Ptype_constr($2, [Pptype $1])) }
-  | LPAREN core_type_comma_list RPAREN type_longident
-      { mkte(Ptype_constr($4, List.rev (List.map (fun x -> Pptype x) $2))) }
-  | simple_core_type2 PROCESS
-      { mkte(Ptype_process ($1, Static.Dontknow, mkce (Pcar_var "_act"), mkee Peff_empty)) }
-  | simple_core_type2 PROCESS PLUS
-      { mkte(Ptype_process ($1, Static.Noninstantaneous, mkce (Pcar_var "_act"), mkee Peff_empty)) }
-  | simple_core_type2 PROCESS MINUS
-      { mkte(Ptype_process ($1, Static.Instantaneous,  mkce (Pcar_var "_act"), mkee Peff_empty)) }
+  | type_params type_longident clock_effect_params
+      { mkte(Ptype_constr($2, $1 @ $3)) }
+  | LPAREN core_type RPAREN
+      { $2 }
+  | simple_type PROCESS
+      { mkte(Ptype_process ($1, Static.Dontknow, mkce Pcar_fresh, mkee Peff_fresh)) }
+  | simple_type PROCESS LBRACKET clock_type_or_empty BAR effect_or_empty RBRACKET
+      { mkte(Ptype_process ($1, Static.Dontknow, $4, $6)) }
 ;
-simple_core_type_or_tuple:
-    simple_core_type                            { $1 }
-  | simple_core_type STAR core_type_list
-      { mkte(Ptype_tuple($1 :: List.rev $3)) }
+
+type_params:
+  | simple_type
+      { [Pptype $1] }
+  | LPAREN core_type COMMA core_type_comma_list RPAREN
+      { let l = $2::$4 in List.map (fun x -> Pptype x) l }
+
+clock_effect_params:
+  | /*empty*/  { [] }
+  | LBRACE clock_type_list BAR effect_list RBRACE { $2 @ $4 }
 ;
-core_type_comma_list:
-    core_type                                   { [$1] }
-  | core_type_comma_list COMMA core_type        { $3 :: $1 }
+type_var:
+  | QUOTE ident { $2 }
 ;
-core_type_list:
-    simple_core_type                            { [$1] }
-  | core_type_list STAR simple_core_type        { $3 :: $1 }
+clock_var:
+  | QUOTE ident { $2 }
 ;
+effect_var:
+  | QUOTE QUOTE ident { $3 }
+;
+clock_type:
+  | clock_var { mkce (Pcar_var $1) }
+  | TOPCK { mkce (Pcar_topck) }
+;
+effect:
+  | simple_effect { $1 }
+  | effect PLUS effect { mkee (Peff_sum ($1, $3)) }
+;
+simple_effect:
+ | effect_var { mkee (Peff_var $1) }
+ | clock_type  { mkee (Peff_depend $1) }
+ | LPAREN effect RPAREN  { $2 }
+;
+
 label:
     LIDENT                                      { mksimple $1 1 }
 ;
+
+clock_type_or_empty:
+  | /* empty */ { mkce Pcar_fresh }
+  | clock_type  { $1 }
+;
+effect_or_empty:
+  | /* empty */ { mkee Peff_fresh }
+  | effect  { $1 }
+;
+
+
+type_star_list :
+  | type_star_list STAR simple_type
+      { $3 :: $1 }
+  | simple_type STAR simple_type
+      { [$3;$1] }
+;
+
+core_type_comma_list :
+  | core_type COMMA core_type_comma_list
+      { $1 :: $3 }
+  | core_type
+      { [$1] }
+;
+clock_type_comma_list :
+  | clock_type COMMA clock_type_comma_list
+      { $1 :: $3 }
+  | clock_type
+      { [$1] }
+;
+effect_comma_list :
+  | effect COMMA effect_comma_list
+      { $1 :: $3 }
+  | effect
+      { [$1] }
+;
+
+clock_type_list:
+  | /* empty */ { [] }
+  | clock_type_comma_list { List.map (fun x -> Ppcarrier x) $1 }
+;
+effect_list:
+  | /* empty */ { [] }
+  | effect_comma_list { List.map (fun x -> Ppeffect x) $1 }
+;
+
 
 /* Constants */
 

@@ -46,6 +46,14 @@ let clock_param_iter f_ck f_car f_eff v = match v with
   | Var_carrier c -> f_car c
   | Var_effect eff -> f_eff eff
 
+let params_split l =
+  let aux (ck_l, c_l, eff_l) x = match x with
+    | Var_clock ck -> ck::ck_l, c_l, eff_l
+    | Var_carrier c -> ck_l, c::c_l, eff_l
+    | Var_effect eff -> ck_l, c_l, eff::eff_l
+  in
+  List.fold_left aux ([], [], []) l
+
 (* the long name of an ident is printed *)
 (* if it is different from the current module *)
 (* or if it is from the standard module *)
@@ -58,19 +66,14 @@ let print_qualified_ident q =
 
 (* type variables are printed 'a, 'b,... *)
 let type_name = new name_assoc_table int_to_alpha
-let carrier_names = new name_assoc_table (fun i -> string_of_int i)
-let effect_names = new name_assoc_table int_to_alpha
+let carrier_name = new name_assoc_table (fun i -> "c"^string_of_int i)
+let skolem_name = new name_assoc_table (fun i -> "c"^string_of_int i)
+let effect_name = new name_assoc_table (fun i -> "e"^string_of_int i)
 
-let print_carrier_name n i =
-  print_string "_";
-  print_string n;
-  print_string (carrier_names#name i)
 let print_skolem_name (n, i) =
   print_string "?";
-  print_carrier_name n i
-let print_effect_name i =
-  print_string "_";
-  print_string (effect_names#name i)
+  print_string n;
+  print_string (skolem_name#name i)
 
 let rec print priority ty =
   open_box 0;
@@ -88,9 +91,9 @@ let rec print priority ty =
         if priority >= 1 then print_string "(";
         print 1 ty1;
         print_space ();
-        print_string"-{";
+        print_string"=>{";
         print_effect priority eff;
-        print_string "}->";
+        print_string "}";
         print_space ();
         print 0 ty2;
         if priority >= 1 then print_string ")"
@@ -98,26 +101,33 @@ let rec print priority ty =
         (*if priority >= 2 then*) print_string "(";
         print_list 2 "*" ty_list;
         (*if priority >= 2 then*) print_string ")"
-    | Clock_constr(name,ty_list) ->
+    | Clock_constr(name, p_list) ->
+        let ty_list, car_list, eff_list = params_split p_list in
         let n = List.length ty_list in
         if n > 1 then print_string "(";
-        print_param_list 2 "," ty_list;
+        print_list 2 "," ty_list;
         if n > 1 then print_string ")";
         if ty_list <> [] then print_space ();
         print_qualified_ident name.gi;
+        if car_list <> [] || eff_list <> [] then (
+          print_string "{";
+          print_carrier_list 2 "," car_list;
+          print_string "|";
+          print_effect_list 2 "," eff_list;
+          print_string "}"
+        )
        (* (match name.ck_info with
           | Some { constr_abbr = Constr_abbrev(_, ck) } -> print_string " ----> "; print priority ck
           | _ -> ()) *)
     | Clock_link(link) ->
         (*print_string "~>";*) print priority link
     | Clock_process (ty, c, eff) ->
-        print_string "(";
         print 2 ty;
-        print_string ", ";
+        print_string " process {";
         print_carrier priority c;
-        print_string ", ";
+        print_string "|";
         print_effect priority eff;
-        print_string ") process";
+        print_string "}"
   end;
   close_box ()
 
@@ -125,10 +135,12 @@ and print_carrier priority car =
   open_box 0;
   begin match car.desc with
     Carrier_var(s) ->
-      print_carrier_name s car.index
-  | Carrier_skolem(n, i) ->
-      print_skolem_name (n, i)
-  | Carrier_link(link) -> print_carrier priority link
+        print_string "'";
+        if car.level <> generic then print_string "_";
+        print_string (carrier_name#name car.index)
+    | Carrier_skolem(n, i) ->
+        print_skolem_name (n, i)
+    | Carrier_link(link) -> print_carrier priority link
   end;
   close_box ()
 
@@ -136,7 +148,9 @@ and print_effect priority eff =
   open_box 0;
   begin match eff.desc with
     | Effect_var ->
-        print_effect_name eff.index
+        print_string "'";
+        if eff.level <> generic then print_string "_";
+        print_string (effect_name#name eff.index)
     | Effect_link(link) -> print_effect priority link
     | Effect_empty -> print_string "0"
     | Effect_sum (eff1, eff2) ->
@@ -167,17 +181,29 @@ and print_list priority sep l =
   in
   printrec l
 
-and print_param priority =
-  clock_param_iter (print priority) (print_carrier priority) (print_effect priority)
-
-and print_param_list priority sep l =
+and print_effect_list priority sep l =
   let rec printrec l =
     match l with
       [] -> ()
     | [ty] ->
-	      print_param priority ty
+	      print_effect priority ty
     | ty::rest ->
-	      print_param priority ty;
+	      print_effect priority ty;
+	      print_space ();
+	      print_string sep;
+	      print_space ();
+	      printrec rest
+  in
+  printrec l
+
+and print_carrier_list priority sep l =
+  let rec printrec l =
+    match l with
+      [] -> ()
+    | [ty] ->
+	      print_carrier priority ty
+    | ty::rest ->
+	      print_carrier priority ty;
 	      print_space ();
 	      print_string sep;
 	      print_space ();
@@ -186,8 +212,13 @@ and print_param_list priority sep l =
   printrec l
 
 
+and print_param priority =
+  clock_param_iter (print priority) (print_carrier priority) (print_effect priority)
+
 let print ty =
   type_name#reset;
+  carrier_name#reset;
+  effect_name#reset;
   print 0 ty
 let print_scheme { cs_desc = ty } = print ty
 
@@ -209,31 +240,38 @@ let print_value_clock_declaration global =
   print_flush ()
 
 (* printing type declarations *)
-let print_clock_name tc ta =
-  let print_one_clock_variable i =
-    print_string "''";
-    print_string (int_to_alpha i) in
-  let rec printrec n =
-    if n >= ta then ()
-    else if n = ta - 1 then print_one_clock_variable n
-    else begin
-      print_one_clock_variable n;
-      print_string ",";
-      printrec (n+1)
-    end in
-  if ta = 0 then () else if ta = 1
-  then
-    begin
-      print_one_clock_variable 0;
+let print_clock_name tc (nb_ck, nb_car, nb_eff) =
+  let print_one_variable assoc i =
+    print_string "'";
+    print_string (assoc#name i)
+  in
+  let print_n_variables assoc n =
+    if n = 0 then
+      ()
+    else if n = 1 then (
+      print_one_variable assoc 0;
       print_space ()
-    end
-  else begin
-    print_string "(";
-    printrec 0;
-    print_string ")";
-    print_space ()
-  end;
-  print_string (Ident.name tc.id)
+    ) else (
+      print_string "(";
+      print_one_variable assoc 0;
+      for i = 1 to n-1 do
+        print_string ",";
+        print_space ();
+        print_one_variable assoc i;
+      done;
+      print_string ")";
+      print_space ()
+    )
+  in
+  print_n_variables type_name nb_ck;
+  print_string (Ident.name tc.id);
+  if nb_car > 0 || nb_eff > 0 then (
+    print_string "{";
+    print_n_variables carrier_name nb_car;
+    print_string "|";
+    print_n_variables effect_name nb_eff;
+    print_string "}"
+  )
 
 (* prints one variant *)
 let print_one_variant global =

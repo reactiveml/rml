@@ -46,8 +46,6 @@ module Env =
       let name x = x
     end)
 
-
-
 (* Translation of type expressions *)
 let rec translate_te typ =
   let rtyp =
@@ -61,10 +59,7 @@ let rec translate_te typ =
         Tproduct (List.map translate_te typ_list)
 
     | Ptype_constr (cstr, pe_list) ->
-        let gcstr = try (Modules.pfind_type_desc cstr.pident_id) with
-        | Modules.Desc_not_found ->
-            unbound_type_err cstr.pident_id typ.pte_loc
-        in
+        let gcstr = Modules.pfind_type_desc cstr.pident_id in
         Tconstr (gcstr, List.map translate_pe pe_list)
 
     | Ptype_process (t,k,act,ee) -> Tprocess ((translate_te t),k, translate_ce act, translate_ee ee)
@@ -78,6 +73,7 @@ and translate_ce pce =
     match pce.pce_desc with
       | Pcar_var s -> Cvar s
       | Pcar_topck -> Ctopck
+      | Pcar_fresh -> assert false
   in
   make_ce ce pce.pce_loc
 
@@ -88,6 +84,7 @@ and translate_ee pee =
       | Peff_var s -> Effvar s
       | Peff_sum (ee1, ee2) -> Effsum (translate_ee ee1, translate_ee ee2)
       | Peff_depend ce -> Effdepend (translate_ce ce)
+      | Peff_fresh -> assert false
   in
   make_ee ee pee.pee_loc
 
@@ -653,7 +650,8 @@ let translate_type_declaration l =
                                          ty_info = None;
                                          ck_info = Some { Clocks.constr_abbr = Clocks.Constr_notabbrev} };
                         clock_kind = Clock_abstract;
-                        clock_arity = List.length param; }
+                        clock_arity = Clock_vars.arity_of_type_vars param;
+                        clock_def_arity = Clock_vars.arity_of_type_vars param }
         in
         let _ =
           gl.ty_info <- Some ty_info;
@@ -663,6 +661,7 @@ let translate_type_declaration l =
         (gl, param, typ))
       l
   in
+  let l_rename = Clock_vars.add_missing_vars l_rename in
   List.map
     (fun (gl, param, typ) -> (gl, param, translate_type_decl typ))
     l_rename

@@ -399,6 +399,8 @@ rule token = parse
   | "<"  { LESS }
   | "<-" { LESSMINUS }
   | "="  { EQUAL }
+  | "=>" { EQUALGREATER }
+  | "=>" { EQUALGREATERLBRACE }
   | "["  { LBRACKET }
   | "[|" { LBRACKETBAR }
   | "[<" { LBRACKETLESS }

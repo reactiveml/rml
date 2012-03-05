@@ -139,6 +139,7 @@ and carrier_expression =
      pce_loc : Location.t }
 and carrier_expression_desc =
     | Pcar_var of string
+    | Pcar_fresh
     | Pcar_topck
 
 and effect_expression =
@@ -147,6 +148,7 @@ and effect_expression =
 and effect_expression_desc =
     | Peff_empty
     | Peff_var of string
+    | Peff_fresh
     | Peff_sum of effect_expression * effect_expression
     | Peff_depend of carrier_expression
 

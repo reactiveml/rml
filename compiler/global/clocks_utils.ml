@@ -39,9 +39,9 @@ exception Escape_case of string
 
 (* generating fresh names *)
 let names = new Ident.name_generator
-let generic_prefix_name = "_c"
-let generic_activation_name = "_act"
-let generic_effect_name = "_eff"
+let generic_prefix_name = "c"
+let generic_activation_name = "act"
+let generic_effect_name = "eff"
 
 (* The current nesting level of lets *)
 let current_level = ref 0;;

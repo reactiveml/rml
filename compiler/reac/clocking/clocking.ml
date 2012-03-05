@@ -1124,12 +1124,15 @@ let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
         Constr_abbrev (List.map snd typ_vars, ty_te)
 
   in
+  let ck_vars, car_vars, eff_vars = params_split (snd (List.split typ_vars)) in
+  let def_arity = match type_gl.ck_info with None -> assert false | Some i -> i.clock_def_arity in
   type_gl.ck_info <-
     Some { clock_constr = {gi = type_gl.gi;
                            ty_info = None;
                            ck_info = Some {constr_abbr = abbr}};
            clock_kind = type_desc;
-           clock_arity = List.length typ_vars };
+           clock_arity = List.length ck_vars, List.length car_vars, List.length eff_vars;
+           clock_def_arity = def_arity; };
   type_gl
 
 

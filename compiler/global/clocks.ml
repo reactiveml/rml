@@ -111,7 +111,8 @@ and label_clock_description =
 and clock_description =
     { clock_constr: clock_constr global;
       clock_kind: clock_kind;
-      clock_arity: int; }
+      clock_def_arity : int * int * int;
+      clock_arity: int * int * int; }
 
 and clock_kind =
     Clock_abstract

@@ -65,7 +65,8 @@ let abstract_type_clock id =
                      ck_info = Some { Clocks.constr_abbr =
                          Clocks.Constr_abbrev ([], Clocks_utils.static) } };
     clock_kind = Clock_rebind Clocks_utils.static;
-    clock_arity = 0 }
+    clock_arity = 0, 0, 0;
+    clock_def_arity = 0, 0, 0; }
 let type_desc id =
   { gi = id;
     ty_info = Some (abstract_type id);
@@ -119,7 +120,8 @@ let type_desc_array =
                                      ty_info = None;
 				                             ck_info = Some { Clocks.constr_abbr= Clocks.Constr_notabbrev } };
 		                 clock_kind = Clock_abstract;
-		                 clock_arity = 1; } }
+		                 clock_arity = 1, 0, 0;
+                     clock_def_arity = 1, 0, 0; } }
 
 let type_array = Types_utils.constr_notabbrev array_ident [Types_utils.new_generic_var()]
 let clock_array = Clocks_utils.constr_notabbrev array_ident [Var_clock (Clocks_utils.new_generic_clock_var())]
@@ -139,7 +141,8 @@ let type_desc_event =
                                      ty_info = None;
 				                             ck_info = Some{ Clocks.constr_abbr = Clocks.Constr_notabbrev} };
 		                 clock_kind = Clock_abstract;
-		                 clock_arity = 3; } }
+                     clock_def_arity = 2, 1, 0;
+		                 clock_arity = 2, 1, 0; } }
 
 let type_event = Types_utils.constr_notabbrev event_ident [Types_utils.new_generic_var();
 						     Types_utils.new_generic_var(); ]
@@ -225,7 +228,8 @@ let type_desc_list =
                                       ty_info = None;
 				                              ck_info = Some { Clocks.constr_abbr=Clocks.Constr_notabbrev} };
 		                  clock_kind = Clock_variant [nil_constr_ck_desc; cons_constr_ck_desc];
-		                  clock_arity = 1; } }
+                      clock_def_arity = 1, 0, 0;
+		                  clock_arity = 1, 0, 0; } }
 
 let type_list = Types_utils.constr_notabbrev list_ident [Types_utils.new_generic_var()]
 let clock_list = Clocks_utils.constr_notabbrev list_ident [Var_clock (Clocks_utils.new_generic_clock_var())]
@@ -293,7 +297,8 @@ let type_desc_option =
                                       ty_info = None;
 				                              ck_info = Some { Clocks.constr_abbr = Clocks.Constr_notabbrev} };
 		                 clock_kind = Clock_variant [none_constr_ck_desc; some_constr_ck_desc];
-		                 clock_arity = 1; } }
+                     clock_def_arity = 1, 0, 0;
+		                 clock_arity = 1, 0, 0; } }
 
 let type_option = Types_utils.constr_notabbrev option_ident [Types_utils.new_generic_var()]
 let clock_option = Clocks_utils.constr_notabbrev option_ident [Var_clock (Clocks_utils.new_generic_clock_var())]
