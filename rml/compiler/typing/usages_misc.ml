@@ -19,6 +19,16 @@
 
 open Usages
 
+let string_of_usage = function
+  | Affine -> "1"
+  | Neutral -> "∞"
+  | Zero -> "0"
+
+let string_of_signal_usage (u1,u2) =
+  Printf.sprintf "(%s,%s)"
+    (string_of_usage u1)
+    (string_of_usage u2)
+
 let usage_of_type ty =
   let ty = Static.get_type ty in
   if ty = Initialization.type_affine then
@@ -33,15 +43,10 @@ let add_t ty1 ty2 =
   let u2 = usage_of_type ty2 in
   add_u u1 u2
 
-let string_of_usage = function
-  | Affine -> "1"
-  | neutral -> "_"
-  (* | Zero -> "0" *)
-
-let string_of_signal_usage (u1,u2) =
-  Printf.sprintf "(%s,%s)"
-    (string_of_usage u1)
-    (string_of_usage u2)
+let mk_t u_emit u_get =
+  mk_su
+    (usage_of_type u_emit)
+    (usage_of_type u_get)
 
 module Int = struct
   type t = int

@@ -19,7 +19,10 @@
 
 open Usages
 
+val string_of_usage : usage -> string
 val usage_of_type : Def_types.type_expression -> usage
+val string_of_signal_usage : signal_usage -> string
+val mk_t : Def_types.type_expression -> Def_types.type_expression -> signal_usage
 
 module Table :
   sig
