@@ -238,7 +238,6 @@ let forall ck_vars car_vars eff_vars typ =
 let activation_carrier = ref topck_carrier
 let current_effect = ref no_effect
 
-
 (* To take the canonical representative of a type.
    We do path compression there. *)
 
@@ -264,6 +263,107 @@ let rec effect_repr eff = match eff.desc with
       t
   | _ ->
       eff
+
+(* simplification of effects *)
+
+let equal_carrier c1 c2 =
+  let c1 = carrier_repr c1 in
+  let c2 = carrier_repr c2 in
+  match c1.desc, c2.desc with
+    | Carrier_var _, Carrier_var _ -> c1.index = c2.index
+    | Carrier_skolem (_, i1), Carrier_skolem (_, i2) -> i1 = i2
+    | _ -> false
+
+(* Compares two effects, but only if they are leaves *)
+let equal_effect eff1 eff2 =
+  let eff1 = effect_repr eff1 in
+  let eff2 = effect_repr eff2 in
+  match eff1.desc, eff2.desc with
+    | Effect_var, Effect_var -> eff1.index = eff2.index
+    | Effect_depend c1, Effect_depend c2 -> equal_carrier c1 c2
+    | _ -> false
+
+(*
+let rec simplify_effect eff =
+  let eff = effect_repr eff in
+  match eff.desc with
+    | Effect_empty | Effect_var | Effect_link _ | Effect_depend _ -> eff
+    | Effect_sum ({ desc = Effect_empty }, eff)
+    | Effect_sum (eff, { desc = Effect_empty }) -> simplify_effect eff
+    | Effect_sum (eff1, eff2) ->
+        { eff with desc = Effect_sum (simplify_effect eff1, simplify_effect eff2) }
+        *)
+
+
+let simplify_effect eff =
+  let rec mem_effect eff l = match l with
+    | [] -> false
+    | eff2::l -> equal_effect eff eff2 || mem_effect eff l
+  in
+  let add_to_list x l =
+    if mem_effect x l then l else x::l
+  in
+  let rec clocks_of acc eff = match eff.desc with
+    | Effect_empty -> acc
+    | Effect_var | Effect_depend _ -> add_to_list eff acc
+    | Effect_link link -> clocks_of acc link
+    | Effect_sum (eff1, eff2) -> clocks_of (clocks_of acc eff2) eff1
+  in
+  (*Printf.eprintf "Simplify before: %a with index %d\n" Clocks_printer.output_effect eff  eff.index;*)
+  let eff = effect_repr eff in
+  let new_eff = eff_sum_list (clocks_of [] eff) in
+  (*Printf.eprintf "Simplify after: %a with index %d\n" Clocks_printer.output_effect eff  eff.index;*)
+  new_eff
+
+(*
+let remove_duplicates eff =
+  let used_vars = ref [] in
+  let used_cars = ref [] in
+  let rec aux eff = match eff.desc with
+    | Effect_empty -> ()vars, cars)
+    | Effect_var ->
+        if List.mem eff.index !used_vars then
+
+let remove_empty_effect eff = match eff.desc with
+  | Effect_sum( { desc = Effect_empty }, eff2) ->
+      eff.desc <- Effect_link eff2
+   | Effect_sum(eff1, { desc = Effect_empty }) ->
+       eff.desc <- Effect_link eff1
+   | _ -> ()
+
+let simplify_effect eff =
+  remove_empty_effect eff;
+  effect_repr eff
+  *)
+
+let rec remove_ck_from_effect ck eff = match eff.desc with
+  | Effect_depend c ->
+      if (carrier_repr c).desc = ck.desc then
+        no_effect
+      else
+        eff
+  | Effect_empty | Effect_var -> eff
+  | Effect_link link -> remove_ck_from_effect ck link
+  | Effect_sum (eff1, eff2) ->
+      { eff with desc = Effect_sum (remove_ck_from_effect ck eff1,
+                                   remove_ck_from_effect ck eff2) }
+let remove_ck_from_effect ck eff =
+  simplify_effect (remove_ck_from_effect ck eff)
+
+let rec remove_var_from_effect index eff = match eff.desc with
+  | Effect_var ->
+      if eff.index = index then
+        no_effect
+      else
+        eff
+  | Effect_empty | Effect_depend _ -> eff
+  | Effect_link link -> remove_var_from_effect index link
+  | Effect_sum (eff1, eff2) ->
+      { eff with desc = Effect_sum (remove_var_from_effect index eff1,
+                                   remove_var_from_effect index eff2) }
+let remove_var_from_effect index eff =
+  simplify_effect (remove_var_from_effect index eff)
+
 
 (* To generalize a type *)
 
@@ -606,11 +706,11 @@ and effect_occur_check level index eff =
   let rec check eff =
     let eff = effect_repr eff in
     match eff.desc with
+        (* unification of effects is unification of sets so there is no problem
+           if the same effect appears on both sides *)
       | Effect_var ->
-        if eff == index then
-          raise Unify
-        else if eff.level > level then
-          eff.level <- level
+          if eff.level > level then
+            eff.level <- level;
       | Effect_empty -> ()
       | Effect_depend c -> carrier_occur_check level no_carrier c
       | Effect_sum (eff1, eff2) -> check eff1; check eff2
@@ -700,7 +800,7 @@ and carrier_unify expected_car actual_car =
     else
       match expected_car.desc, actual_car.desc with
         | Carrier_var(s), _ ->
-  Printf.eprintf "Unify carrier next '%a' of level %d and '%a' of level %d\n" Clocks_printer.output_carrier expected_car expected_car.level  Clocks_printer.output_carrier actual_car actual_car.level;
+  (*Printf.eprintf "Unify carrier next '%a' of level %d and '%a' of level %d\n" Clocks_printer.output_carrier expected_car expected_car.level  Clocks_printer.output_carrier actual_car actual_car.level;*)
             carrier_occur_check expected_car.level expected_car actual_car;
             expected_car.desc <- Carrier_link actual_car
         | _, Carrier_var(s) ->
@@ -710,7 +810,7 @@ and carrier_unify expected_car actual_car =
         | _ -> raise Unify
 
 and effect_unify expected_eff actual_eff =
-  (*Printf.eprintf "Unify effects '%a' and %a\n" Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff;*)
+  (* Printf.eprintf "Unify effects '%a' and %a\n" Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff; *)
   if expected_eff == actual_eff then ()
   else
     let expected_eff = effect_repr expected_eff in
@@ -722,10 +822,10 @@ and effect_unify expected_eff actual_eff =
         | Effect_empty, Effect_empty -> ()
         | Effect_var, _ ->
             effect_occur_check expected_eff.level expected_eff actual_eff;
-            expected_eff.desc <- Effect_link actual_eff
+            expected_eff.desc <- Effect_link (remove_var_from_effect expected_eff.index actual_eff)
         | _, Effect_var ->
             effect_occur_check actual_eff.level actual_eff expected_eff;
-            actual_eff.desc <- Effect_link expected_eff
+            actual_eff.desc <- Effect_link (remove_var_from_effect actual_eff.index expected_eff)
         | Effect_depend c1, Effect_depend c2 -> carrier_unify c1 c2
       (* This is not how we unify sets of effects. Anyway we never need this case.
         | Effect_sum(eff1, eff2), Effect_sum(eff3, eff4) ->
@@ -783,21 +883,3 @@ let add_type_description g =
   { gi = g.gi;
     ty_info = None;
     ck_info = g.ck_info }
-
-
-let equal_carrier c1 c2 =
-  let c1 = carrier_repr c1 in
-  let c2 = carrier_repr c2 in
-  match c1.desc, c2.desc with
-    | Carrier_var _, Carrier_var _ -> c1.index = c2.index
-    | Carrier_skolem (_, i1), Carrier_skolem (_, i2) -> i1 = i2
-    | _ -> false
-
-(* Compares two effects, but only if they are leaves *)
-let equal_effect eff1 eff2 =
-  let eff1 = effect_repr eff1 in
-  let eff2 = effect_repr eff2 in
-  match eff1.desc, eff2.desc with
-    | Effect_var, Effect_var -> eff1.index = eff2.index
-    | Effect_depend c1, Effect_depend c2 -> equal_carrier c1 c2
-    | _ -> false

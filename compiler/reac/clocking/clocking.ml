@@ -43,60 +43,10 @@ open Misc
 open Annot
 
 
-
-(*
-let rec simplify_effect eff =
-  let eff = effect_repr eff in
-  match eff.desc with
-    | Effect_empty | Effect_var | Effect_link _ | Effect_depend _ -> eff
-    | Effect_sum ({ desc = Effect_empty }, eff)
-    | Effect_sum (eff, { desc = Effect_empty }) -> simplify_effect eff
-    | Effect_sum (eff1, eff2) ->
-        { eff with desc = Effect_sum (simplify_effect eff1, simplify_effect eff2) }
-        *)
-
-let simplify_effect eff =
-  let rec mem_effect eff l = match l with
-    | [] -> false
-    | eff2::l -> equal_effect eff eff2 || mem_effect eff l
-  in
-  let add_to_list x l =
-    if mem_effect x l then l else x::l
-  in
-  let rec clocks_of acc eff = match eff.desc with
-    | Effect_empty -> acc
-    | Effect_var | Effect_depend _ -> add_to_list eff acc
-    | Effect_link link -> clocks_of acc link
-    | Effect_sum (eff1, eff2) -> clocks_of (clocks_of acc eff2) eff1
-  in
-  Printf.eprintf "Simplify before: %a\n" Clocks_printer.output_effect eff;
-  let eff = eff_sum_list (clocks_of [] eff) in
-  Printf.eprintf "Simplify after: %a\n" Clocks_printer.output_effect eff;
-  eff
-
 let add_effect eff =
   current_effect := simplify_effect (eff_sum !current_effect eff)
 let add_effect_ck ck =
   add_effect (make_effect (Effect_depend ck))
-
-let rec remove_ck_from_effect ck eff =
-  let desc =
-    match eff.desc with
-      | Effect_depend c ->
-          if (carrier_repr c).desc = ck.desc then
-            Effect_empty
-          else
-            eff.desc
-      | Effect_empty | Effect_var -> eff.desc
-      | Effect_link link ->
-          let eff = remove_ck_from_effect ck link in
-          eff.desc
-      | Effect_sum (eff1, eff2) -> Effect_sum (remove_ck_from_effect ck eff1, remove_ck_from_effect ck eff2)
-  in
-  make_effect desc
-let remove_ck_from_effect ck eff =
-  simplify_effect (remove_ck_from_effect ck eff)
-
 
 
 let add_to_list x l =
@@ -484,6 +434,8 @@ let rec clock_of_expression env expr =
         let ty_res = new_clock_var() in
         let eff = new_effect_var () in
         let ty = arrow ty_arg ty_res eff in
+        let old_current_effect = !current_effect in
+        current_effect := no_effect;
         List.iter
           (fun (p,e) ->
             let gl_env, loc_env = clock_of_pattern [] [] p ty_arg in
@@ -497,7 +449,7 @@ let rec clock_of_expression env expr =
           matching;
         (* take the current effect and put it in the arrow *)
         effect_unify eff !current_effect;
-        current_effect := no_effect;
+        current_effect := old_current_effect;
         ty
 
     | Eapply (fct, args) ->
@@ -652,11 +604,13 @@ let rec clock_of_expression env expr =
 
     | Eprocess(e) ->
         let old_activation_carrier = !activation_carrier in
+        let old_current_effect = !current_effect in
         activation_carrier := make_carrier generic_activation_name;
+        current_effect := no_effect;
         let ck = clock_of_expression env e in
         let res_ck = process ck !activation_carrier !current_effect in
         activation_carrier := old_activation_carrier;
-        current_effect := no_effect;
+        current_effect := old_current_effect;
         res_ck
 
     | Epre (Status, s) ->
@@ -942,9 +896,7 @@ let rec clock_of_expression env expr =
       activation_carrier := old_activation_carrier;
       pop_type_level ();
       (* remove clock from current effect *)
-      Printf.eprintf "Effects before: %a\n" Clocks_printer.output_effect !current_effect;
       current_effect := remove_ck_from_effect c !current_effect;
-      Printf.eprintf "Effects after: %a\n" Clocks_printer.output_effect !current_effect;
       ck
 
     | Epauseclock ce ->
