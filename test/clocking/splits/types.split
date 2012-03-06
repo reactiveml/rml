@@ -13,6 +13,26 @@ type 'a siglist{'ck|} = ('a, 'a) event{'ck|} list
 
 $
 
+type siglist{'ck|} = (int, int) event{'ck|} list
+
+$
+
+type actor{|''f} = unit =>{''f} unit
+
+$
+
+type intproc{'ck|''f} = int process{'ck|''f}
+
+$
+
+type intproc{'ck|} = int process{'ck|'ck}
+
+$
+
+type intproc{|''f} = int process{topck|''f + topck}
+
+$
+
 type 'a siglist{'ck|} = { s_list : ('a, 'a) event{'ck|} list }
 
 

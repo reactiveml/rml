@@ -1010,7 +1010,7 @@ core_type:
       { mkte(Ptype_arrow($1, $3, mkee Peff_empty)) }
   | core_type_na EQUALGREATER core_type
       { mkte(Ptype_arrow($1, $3, mkee Peff_fresh)) }
-  | core_type_na EQUALGREATERLBRACE effect RBRACKET core_type
+  | core_type_na EQUALGREATERLBRACE effect RBRACE core_type
       { mkte(Ptype_arrow($1, $5, $3)) }
 ;
 
@@ -1034,7 +1034,7 @@ simple_type:
       { $2 }
   | simple_type PROCESS
       { mkte(Ptype_process ($1, Static.Dontknow, mkce Pcar_fresh, mkee Peff_fresh)) }
-  | simple_type PROCESS LBRACKET clock_type_or_empty BAR effect_or_empty RBRACKET
+  | simple_type PROCESS LBRACE clock_type_or_empty BAR effect_or_empty RBRACE
       { mkte(Ptype_process ($1, Static.Dontknow, $4, $6)) }
 ;
 

@@ -54,6 +54,28 @@ let process f =
     let s2 = create_sig ck in
     emit s2 3; emit s 4; ()
 
+$
+
+let process p =
+  pause
+
+let process q =
+  signal s in
+    emit s
+
+let z = [p; q]
+
+$
+
+let process p s =
+  signal s1 at topck in
+    emit s1 0; emit s 0
+
+let process q s =
+  emit s 0
+
+let l s = [p s; q s]
+
 $$$scope
 ${
 (*

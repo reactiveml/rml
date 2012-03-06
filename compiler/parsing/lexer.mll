@@ -400,7 +400,7 @@ rule token = parse
   | "<-" { LESSMINUS }
   | "="  { EQUAL }
   | "=>" { EQUALGREATER }
-  | "=>" { EQUALGREATERLBRACE }
+  | "=>{" { EQUALGREATERLBRACE }
   | "["  { LBRACKET }
   | "[|" { LBRACKETBAR }
   | "[<" { LBRACKETLESS }
