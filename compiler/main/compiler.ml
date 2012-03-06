@@ -61,7 +61,8 @@ let compile_implementation_front_end info_chan itf impl_list =
     let rml_code = silent_pass "Typing" true (Typing.impl info_chan) rml_code in
 
     (* clocking *)
-    let rml_code = silent_pass "Clocking" true (Clocking.impl info_chan) rml_code in
+    let rml_code = silent_pass "Clocking" (not !Compiler_options.no_clocking)
+      (Clocking.impl info_chan) rml_code in
 
     (* static analysis *)
     let rml_code = silent_pass "Static analysis" true (Static_analysis.impl info_chan) rml_code in
@@ -116,7 +117,8 @@ let compile_implementation module_name filename =
     if Sys.file_exists (filename ^ ".rmli")
        ||  Sys.file_exists (filename ^ ".mli")
     then ()
-    else (Typing.check_nongen_values intermediate_code; Clocking.check_nongen_values intermediate_code);
+    else (Typing.check_nongen_values intermediate_code;
+          if not !Compiler_options.no_clocking then Clocking.check_nongen_values intermediate_code);
 
     (* back-end *)
     if not !no_link then
@@ -144,7 +146,8 @@ let compile_interface_front_end info_chan itf intf_list =
     (* typing *)
     let rml_code = silent_pass "Typing interface" true (Typing.intf info_chan) rml_code in
     (* clocking *)
-    let rml_code = silent_pass "Clocking interface" true (Clocking.intf info_chan) rml_code in
+    let rml_code = silent_pass "Clocking interface" (not !Compiler_options.no_clocking)
+      (Clocking.intf info_chan) rml_code in
     rml_code
   in
   (* compilation of the whole file *)
