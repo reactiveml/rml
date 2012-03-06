@@ -109,26 +109,3 @@ let process f =
     signal s2 at ck in
     let l = [s; s2] in
     l
-
-
-$$$types
-${
-(*
-  run_test:
-   [
-     Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
-   ]
-*)
-
-$}
-
-type ('a, ''ck) siglist = ('a, 'a, ''ck) event list
-
-$
-
-type ('a, ''ck) siglist = { s_list : ('a, 'a, ''ck) event list }
-
-
-let f ck =
-  signal s at ck default 0 gather (+) in
-  { s_list = [s] }
