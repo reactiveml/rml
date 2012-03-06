@@ -68,11 +68,16 @@ let add_opt add_fn bv = function
 
 let rec add_type bv ty =
   match ty.pte_desc with
-  | Ptype_var _ -> ()
-  | Ptype_arrow (t1, t2) -> add_type bv t1; add_type bv t2
+  | Ptype_var _ | Ptype_depend _ -> ()
+  | Ptype_arrow (t1, t2, _) -> add_type bv t1; add_type bv t2
   | Ptype_tuple tl -> List.iter (add_type bv) tl
-  | Ptype_constr (id, tl) -> add bv id; List.iter (add_type bv) tl
-  | Ptype_process (t, _) ->  add_type bv t
+  | Ptype_constr (id, tl) -> add bv id; List.iter (add_type_param bv) tl
+  | Ptype_process (t, _, _, _) ->  add_type bv t
+
+and add_type_param bv p =
+  match p with
+  | Pptype te -> add_type bv te
+  | _ -> ()
 
 let add_type_declaration bv td =
   match td with
