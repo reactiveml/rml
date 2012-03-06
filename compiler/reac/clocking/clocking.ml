@@ -607,6 +607,7 @@ let rec clock_of_expression env expr =
         let old_current_effect = !current_effect in
         activation_carrier := make_carrier generic_activation_name;
         current_effect := no_effect;
+        add_effect_ck !activation_carrier;
         let ck = clock_of_expression env e in
         let res_ck = process ck !activation_carrier !current_effect in
         activation_carrier := old_activation_carrier;
