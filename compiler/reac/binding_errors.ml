@@ -82,6 +82,6 @@ let constr_wrong_arity_err cstr
      and %d effect variables.\n"
     Location.print loc
     (string_of_parseident cstr)
-    found_ck found_car found_eff
-    exp_ck exp_car exp_eff;
+    exp_ck exp_car exp_eff
+    found_ck found_car found_eff;
   raise Error
