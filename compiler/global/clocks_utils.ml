@@ -695,7 +695,7 @@ and carrier_occur_check level index car =
           else if car.level > level then
             car.level <- level
       | Carrier_skolem(s, i) ->
-          Format.eprintf "Skolem occur check: %s i:%d  car.level %d, level: %d\n" s i car.level level;
+          (*Format.eprintf "Skolem occur check: %s i:%d  car.level %d, level: %d\n" s i car.level level;*)
           if level  < car.level then
             raise (Escape (s, i))
       | Carrier_link link -> check link
@@ -827,12 +827,14 @@ and effect_unify expected_eff actual_eff =
             effect_occur_check actual_eff.level actual_eff expected_eff;
             actual_eff.desc <- Effect_link (remove_var_from_effect actual_eff.index expected_eff)
         | Effect_depend c1, Effect_depend c2 -> carrier_unify c1 c2
-      (* This is not how we unify sets of effects. Anyway we never need this case.
-        | Effect_sum(eff1, eff2), Effect_sum(eff3, eff4) ->
-            effect_unify eff1 eff3;
-            effect_unify eff2 eff4 *)
+        | (Effect_depend _ | Effect_empty), Effect_sum (eff1, eff2) ->
+            effect_unify expected_eff eff1; effect_unify expected_eff eff2
+        | Effect_sum (eff1, eff2), (Effect_depend _ | Effect_empty) ->
+            effect_unify eff1 actual_eff; effect_unify eff2 actual_eff
+        | Effect_sum (eff1, eff2), Effect_sum (eff3, eff4) ->
+            effect_unify eff1 eff3; effect_unify eff2 eff4
         | _ ->
-            (* Printf.eprintf "Failed to unify '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff; *)
+             Printf.eprintf "Failed to unify effects '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff;
             raise Unify
 
 and unify_param p1 p2 = clock_param_iter2 unify carrier_unify effect_unify p1 p2
