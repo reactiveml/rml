@@ -21,7 +21,11 @@
 (* created: 2005-06-11  *)
 (* author: Louis Mandel *)
 
-let print_DEBUG s = print_string s; print_newline()
+let debug = ref false
+let print_DEBUG x =
+  if !debug
+  then Printf.eprintf x
+  else Printf.ifprintf stderr x
 
 let show_help = ref false
 let print_help () =
@@ -141,7 +145,7 @@ let init_directory_paths () =
   let stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir in
   let add_dir dir =
     Topdirs.dir_directory dir;
-    Printf.eprintf "Added %s directory to search path.\n" dir
+    print_DEBUG "Added %s directory to search path.\n" dir
   in
   List.iter add_dir
     [ stdlib // "threads";
@@ -152,9 +156,9 @@ let init_directory_paths () =
 let init_toplevel () =
   init_directory_paths ();
   let load_file file =
-    Printf.eprintf "Trying to load %s...\n%!" file;
+    print_DEBUG "Trying to load %s... %!" file;
     if Topdirs.load_file Format.err_formatter file then
-      Printf.eprintf "File %s loaded successfully!\n%!" file
+      print_DEBUG "done%s%!" "\n"
     else
       Printf.eprintf "Cannot find file %s.\n%!" file
   in
@@ -218,14 +222,13 @@ let main s =
   List.iter eval_phrase init_rml;
   ()
 
-let usage = ""
-
 let _ =
   Arg.parse (Arg.align
     [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x),
       "<rate> Sets the sampling rate to <rate> seconds";
-      "-i", Arg.Set show_help, " List known rml directives at startup ";
+      "-i", Arg.Set show_help, " List known rml directives at startup";
+      "-debug", Arg.Set debug, " Enable debug output";
     ])
     (fun _ -> ())
-    usage;
+    "";
   main ""
