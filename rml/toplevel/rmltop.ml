@@ -170,6 +170,39 @@ let init_toplevel () =
       "rmltop_directives.cmo";
       "rmltop_main.cmo"
     ]
+
+let get_error str =
+  let r_error = Pcre.regexp "File _*, line ([0-9]+ as line), characters ([0-9]+ as ofs_a)-([0-9]+ as ofs_b)" in
+  if Pcre.pmatch ~rex:r_error str then
+    try
+      let pos = String.index str '\n' + 1 in
+      String.sub str pos (String.length str - pos)
+    with Not_found ->
+      ""
+  else str
+
+let eval_command ?(silent=false) command =
+  let buffer = Buffer.create 512 in
+  let pp = Format.formatter_of_buffer buffer in
+  Format.pp_set_margin pp max_int;
+  try
+    let _ =
+      Toploop.execute_phrase (not silent) pp
+        (!Toploop.parse_toplevel_phrase (Lexing.from_string (command ^ ";;")))
+    in
+    (true, Buffer.contents buffer)
+  with exn ->
+    let save = !Toploop.parse_use_file in
+    Toploop.parse_use_file := (fun _ -> raise exn);
+    ignore (Toploop.use_silently pp "/dev/null");
+    Toploop.parse_use_file := save;
+    (false, get_error (Buffer.contents buffer))
+
+let eval_phrase phrase =
+  let success, error = eval_command phrase in
+  if not success then
+    Printf.eprintf "%s\n%!" error
+
 let sampling = ref None
 
 let main s =
@@ -179,8 +212,11 @@ let main s =
   | None -> ()
   | Some n -> Rmltop_directives.set_sampling n
   end;
-  init ocaml_in;
-  main_loop stdin rmlc_in rmlc_out ocaml_in
+  Toploop.set_paths ();
+  Toploop.initialize_toplevel_env ();
+  init_toplevel ();
+  List.iter eval_phrase init_rml;
+  ()
 
 let usage = ""
 
