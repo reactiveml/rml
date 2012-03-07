@@ -475,6 +475,8 @@ let rec type_of_expression env expr =
         let g_ty = (Global.info n).value_typ in
         let index_gi = n.gi.Global_ident.id.Ident.id in
         let index = g_ty.ts_desc.type_index in
+        (* DEBUG *)
+        Printf.printf "gi=%d\t ty=%d\t name=%s\n%!" index_gi index (Global.little_name_of_global n);
         let ty = instance g_ty in
         let ty = { ty with type_index = index } in
         let effects =
@@ -483,7 +485,9 @@ let rec type_of_expression env expr =
 	ty, effects
 
     | Rexpr_let (flag, patt_expr_list, e) ->
+        Printf.printf "Rexpr_let\n%!";
 	let gl_env, new_env, effects_1 = type_let (flag = Recursive) env patt_expr_list in
+        Printf.printf "Rexpr_let avec %d effets.\n%!" (List.length effects_1);
         let patt_vars = vars_of_patt patt_expr_list in
         register_effects patt_vars effects_1;
         let ty, effects_2 = type_of_expression new_env e in
@@ -521,6 +525,16 @@ let rec type_of_expression env expr =
                 | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 	      in
               let ty_arg, u2 = type_expect ~regions:true env arg t1 in
+              (* set_usage_type ty_arg arg.expr_loc; *)
+              (* set_usage_type t1 arg.expr_loc; *)
+              (* DEBUG *)
+              Printf.printf "a_arg: ";
+              Printf.printf "%s " (pu ty_arg);
+              Types_printer.print ty_arg;
+              Printf.printf "\nf_arg: ";
+              Printf.printf "%s " (pu t1);
+              Types_printer.print t1;
+              Printf.printf "\n\n%!";
 	      type_args (Effects.merge u2 u) t2 args
 	in
 	type_args effects_f ty_fct args
@@ -710,6 +724,7 @@ let rec type_of_expression env expr =
 	unify_emit expr.expr_loc type_unit ty;
         unify_usage_type expr.expr_loc ty_s affine u_emit u_emit u_get;
         let r_s = ty_s.type_region in
+        let _ = print_env env in
 	type_unit, Effects.add r_s s.expr_loc u_emit u_get u_s
 
     | Rexpr_emit (affine, s, Some e) ->
@@ -773,9 +788,7 @@ let rec type_of_expression env expr =
 	type_unit, Effects.flatten [u1; u2; u3]
 
     | Rexpr_par p_list ->
-        let _ = print_env env in
         let effects_l = List.map (fun p -> type_statement env p) p_list in
-        let _ = print_env env in
 	type_unit, Effects.flatten effects_l
 
     | Rexpr_merge (p1,p2) ->
@@ -893,6 +906,7 @@ let rec type_of_expression env expr =
 	    env loc_env
 	in
         unify_usage_type expr.expr_loc ty_s affine u_get u_emit u_get;
+        (* accumulate_usage ty_s u_emit u_get; *)
         let ty, u_p = type_of_expression new_env p in
         let r_s = ty_s.type_index in
         ty, Effects.flatten [u_s; u_p; Effects.singleton r_s s.expr_loc u_emit u_get]
@@ -911,6 +925,7 @@ let rec type_of_expression env expr =
 	    env loc_env
 	in
         unify_usage_type expr.expr_loc ty_s affine u_get u_emit u_get;
+        (* accumulate_usage ty_s u_emit u_get; *)
         let ty, u_p = type_of_expression new_env p in
         let r_s = ty_s.type_index in
         ty, Effects.flatten [u_s; u_p; Effects.singleton r_s s.expr_loc u_emit u_get]
