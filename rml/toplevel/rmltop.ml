@@ -210,6 +210,19 @@ let eval_phrase ?(silent=false) phrase =
   else
     Printf.printf "%s\n%!" message
 
+let load_script file =
+  (* TODO *)
+  ()
+
+let load_ocamlinit () =
+  if Sys.file_exists ".ocamlinit" then
+    load_script ".ocamlinit"
+  else
+    try
+      let home_init = Filename.concat (Sys.getenv "HOME") ".ocamlinit" in
+      if Sys.file_exists home_init then load_script home_init
+    with Not_found -> ()
+
 let sampling = ref None
 
 let main s =
