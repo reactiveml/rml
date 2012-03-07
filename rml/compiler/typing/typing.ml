@@ -446,7 +446,7 @@ let rec type_of_expression env expr =
 		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
 		  env loc_env
 	      in
-	      type_expect new_env e ty_res)
+	      snd (type_expect new_env e ty_res))
 	    matching
         in
         ty, Effects.flatten effects
@@ -462,7 +462,7 @@ let rec type_of_expression env expr =
 		with Unify ->
 		  application_of_non_function_err fct ty_fct
 	      in
-              let u2 = type_expect ~regions:true env arg t1 in
+              let ty_arg, u2 = type_expect ~regions:true env arg t1 in
 	      type_args (Effects.merge u2 u) t2 args
 	in
 	type_args effects_f ty_fct args
@@ -495,14 +495,14 @@ let rec type_of_expression env expr =
 	  match ty_arg_opt with
 	  | None -> constr_arity_err_2 c.gi expr.expr_loc, Effects.empty
 	  | Some ty_arg ->
-              let effects = type_expect env arg ty_arg in
+              let _, effects = type_expect env arg ty_arg in
               ty_res, effects
 	end
 
     | Rexpr_array (l) ->
 	let ty_var = new_var () in
 	let effects = List.fold_left (fun a e ->
-          let u = type_expect env e ty_var in
+          let _, u = type_expect env e ty_var in
           Effects.merge u a)
           Effects.empty
           l
@@ -521,7 +521,7 @@ let rec type_of_expression env expr =
 	      (* check that the label appears only once *)
 	      if List.mem label label_list
 	      then non_linear_record_err label.gi expr.expr_loc;
-              let u2 = type_expect env label_expr ty_res in
+              let _, u2 = type_expect env label_expr ty_res in
               let effects = Effects.merge u2 effects in
 	      unify_expr expr ty ty_arg;
 	      typing_record effects (label :: label_list) label_expr_list
@@ -533,7 +533,7 @@ let rec type_of_expression env expr =
 	let { lbl_arg = ty_arg; lbl_res = ty_res } =
 	  get_type_of_label label expr.expr_loc
 	in
-        let effects = type_expect env e ty_arg in
+        let _, effects = type_expect env e ty_arg in
         ty_res, effects
 
     | Rexpr_record_update (e1, label, e2) ->
@@ -541,13 +541,13 @@ let rec type_of_expression env expr =
 	  get_type_of_label label expr.expr_loc
 	in
 	if mut = Immutable then label_not_mutable_err expr label.gi;
-	let u1 = type_expect env e1 ty_arg in
-	let u2 = type_expect env e2 ty_res in
+	let _, u1 = type_expect env e1 ty_arg in
+	let _, u2 = type_expect env e2 ty_res in
 	type_unit, Effects.merge u1 u2
 
     | Rexpr_constraint(e,t) ->
 	let expected_ty = instance (full_type_of_type_expression t) in
-        let effects = type_expect env e expected_ty in
+        let _, effects = type_expect env e expected_ty in
 	expected_ty, effects
 
     | Rexpr_trywith (body,matching) ->
@@ -562,7 +562,7 @@ let rec type_of_expression env expr =
 		(fun env (x, ty) -> Env.add x (forall [] ty) env)
 		env loc_env
 	    in
-	    let u = type_expect new_env e ty in
+	    let _, u = type_expect new_env e ty in
             Effects.merge u a)
           Effects.empty
 	  matching
@@ -570,13 +570,13 @@ let rec type_of_expression env expr =
 	ty, Effects.merge effects effects_e
 
     | Rexpr_assert e ->
-        let effects = type_expect env e type_bool in
+        let _, effects = type_expect env e type_bool in
 	new_var(), effects
 
     | Rexpr_ifthenelse (cond,e1,e2) ->
-        let u1 = type_expect env cond type_bool in
+        let _, u1 = type_expect env cond type_bool in
 	let ty, u2 = type_of_expression env e1 in
-	let u3 = type_expect env e2 ty in
+	let _, u3 = type_expect env e2 ty in
 	ty, Effects.flatten [u1; u2; u3]
 
     | Rexpr_match (body,matching) ->
@@ -592,24 +592,24 @@ let rec type_of_expression env expr =
 		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
 		  env loc_env
 	      in
-	      type_expect new_env e ty_res)
+	      snd (type_expect new_env e ty_res))
 	    matching
         in
 	ty_res, Effects.flatten u2
 
     | Rexpr_when_match (e1,e2) ->
-        let u1 = type_expect env e1 type_bool in
+        let _, u1 = type_expect env e1 type_bool in
         let ty, u2 = type_of_expression env e2 in
         ty, Effects.merge u1 u2
 
     | Rexpr_while (e1,e2) ->
-        let u1 = type_expect env e1 type_bool in
+        let _, u1 = type_expect env e1 type_bool in
 	let u2 = type_statement env e2 in
 	type_unit, Effects.merge u1 u2
 
     | Rexpr_for(i,e1,e2,flag,e3) ->
-        let u1 = type_expect env e1 type_int in
-        let u2 = type_expect env e2 type_int in
+        let _, u1 = type_expect env e1 type_int in
+        let _, u2 = type_expect env e2 type_int in
 	let u3 = type_statement (Env.add i (forall [] type_int) env) e3 in
 	type_unit, Effects.flatten [u1; u2; u3]
 
@@ -684,8 +684,8 @@ let rec type_of_expression env expr =
                   ty_get;
                 Effects.empty
 	      | Some (default,comb) ->
-                let u1 = type_expect env default ty_get in
-                let u2 = type_expect env comb (arrow ty_emit (arrow ty_get ty_get)) in
+                let _, _ = type_expect env default ty_get in
+                let _, _ = type_expect env comb (arrow ty_emit (arrow ty_get ty_get)) in
                 Effects.merge u1 u2
 	  end
         in
@@ -703,13 +703,13 @@ let rec type_of_expression env expr =
         type_unit, effects
 
     | Rexpr_loop (Some n, p) ->
-        let u1 = type_expect env n type_int in
+        let _, u1 = type_expect env n type_int in
         let u2 = type_statement env p in
 	type_unit, Effects.merge u1 u2
 
     | Rexpr_fordopar(i,e1,e2,flag,p) ->
-        let u1 = type_expect env e1 type_int in
-        let u2 = type_expect env e2 type_int in
+        let _, u1 = type_expect env e1 type_int in
+        let _, u2 = type_expect env e2 type_int in
 	let u3 = type_statement (Env.add i (forall [] type_int) env) p in
 	type_unit, Effects.flatten [u1; u2; u3]
 
@@ -735,7 +735,7 @@ let rec type_of_expression env expr =
 	begin match patt_proc_opt with
 	| None ->
             let u1 = type_of_event_config env s in
-            let u2 = type_expect env p type_unit in
+            let _, u2 = type_expect env p type_unit in
 	    type_unit, Effects.merge u1 u2
 	| Some _ ->
 	    begin match s.conf_desc with
@@ -752,7 +752,7 @@ let rec type_of_expression env expr =
 			(fun env (x, ty) -> Env.add x (forall [] ty) env)
 			env loc_env
 		    in
-		    type_expect new_env proc ty_body)
+		    snd (type_expect new_env proc ty_body))
 		  patt_proc_opt in
 		ty_body, effects
 	    | _ ->
@@ -784,7 +784,7 @@ let rec type_of_expression env expr =
 		(fun env (x, ty) -> Env.add x (forall [] ty) env)
 		env loc_env
 	    in
-	    let u_e = type_expect new_env e type_bool in
+	    let _, u_e = type_expect new_env e type_bool in
 	    ty_body, Effects.flatten [u_s; u_b; u_e]
 	| _ ->
 	    non_event_err2 s
@@ -806,7 +806,7 @@ let rec type_of_expression env expr =
     | Rexpr_present (s,p1,p2) ->
         let u1 = type_of_event_config env s in
 	let ty, u2 = type_of_expression env p1 in
-	let u3 = type_expect env p2 ty in
+	let _, u3 = type_expect env p2 ty in
 	ty, Effects.flatten [u1; u2; u3]
 
     | Rexpr_await (affine,_,s) ->
@@ -909,7 +909,7 @@ and type_let is_rec env patt_expr_list =
   in
   let effects =
     List.map2
-      (fun (patt,expr) ty -> type_expect let_env expr ty)
+      (fun (patt,expr) ty -> snd (type_expect let_env expr ty))
       patt_expr_list
       ty_list
   in
@@ -932,7 +932,7 @@ and type_let is_rec env patt_expr_list =
 and type_expect ?(regions = false) env expr expected_ty =
   let actual_ty, effects = type_of_expression env expr in
   let () = unify_expr ~regions expr expected_ty actual_ty in
-  effects
+  actual_ty, effects
 
 (* Typing of statements (expressions whose values are ignored) *)
 and type_statement env expr =
@@ -1080,8 +1080,8 @@ let type_impl_item info_chan item =
 		  (constr_notabbrev list_ident [ty_emit])
 		  ty_get
 	    | Some (default,comb) ->
-                let _ = type_expect Env.empty default ty_get in
-                let _ = type_expect Env.empty comb (arrow ty_emit (arrow ty_get ty_get)) in
+                let _, _ = type_expect Env.empty default ty_get in
+                let _, _ = type_expect Env.empty comb (arrow ty_emit (arrow ty_get ty_get)) in
                 ()
 	  end;
 	  s.info <- Some { value_typ = forall [] ty_s };
