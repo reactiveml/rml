@@ -90,10 +90,16 @@ let var_wrong_type_err loc actual_ty expected_ty =
     Types_printer.output expected_ty;
   raise Error
 
-let usage_wrong_type_err loc _ _ =
+let usage_wrong_type_err loc1 loc2 =
+  if loc1 = loc2 then
   Printf.eprintf
-    "%aThe affine signal is used more than once.\n"
-    Location.print_oc loc;
+    "%aAn affine signal is being used more than once.\n"
+    Location.print_oc loc1
+  else
+  Printf.eprintf
+    "%aAn affine signal is being used more than once.\n%aThis is the second usage of the affine signal.\n"
+    Location.print_oc loc1
+    Location.print_oc loc2;
   raise Error
 
 let gather_wrong_effects_err has_effects loc =
