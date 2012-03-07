@@ -202,10 +202,12 @@ let eval_command ?(silent=false) command =
     Toploop.parse_use_file := save;
     (false, get_error (Buffer.contents buffer))
 
-let eval_phrase phrase =
-  let success, error = eval_command phrase in
+let eval_phrase ?(silent=false) phrase =
+  let success, message = eval_command ~silent phrase in
   if not success then
-    Printf.eprintf "%s\n%!" error
+    Printf.eprintf "%s\n%!" message
+  else
+    Printf.printf "%s\n%!" message
 
 let sampling = ref None
 
@@ -219,8 +221,33 @@ let main s =
   Toploop.set_paths ();
   Toploop.initialize_toplevel_env ();
   init_toplevel ();
-  List.iter eval_phrase init_rml;
-  ()
+  Sys.catch_break true;
+  List.iter
+    (fun phrase ->
+      eval_phrase ~silent:(not !debug) phrase
+    )
+    init_rml;
+  try
+    let buf = Buffer.create 512 in
+    Printf.printf "# %!";
+    while true do
+      let line = read_line () in
+      let len = String.length line in
+      let tail = if len < 2 then "" else String.sub line (len-2) 2 in
+      if len = 0 || tail = ";;" then begin
+        if len <> 0 then begin
+          let () = Buffer.add_string buf line in
+          let phrase = Buffer.contents buf in
+          Buffer.reset buf;
+          eval_phrase phrase;
+        end;
+        Printf.printf "# %!";
+      end
+    done
+  with
+    | End_of_file -> exit 0
+    | Sys.Break -> Printf.eprintf "Interrupted.\n%!"
+    | exn -> Printf.eprintf "%s\n%!" (Printexc.to_string exn)
 
 let _ =
   Arg.parse (Arg.align
