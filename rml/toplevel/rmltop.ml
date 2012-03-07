@@ -163,7 +163,8 @@ let init_toplevel () =
       Printf.eprintf "Cannot find file %s.\n%!" file
   in
   List.iter load_file
-    [ "unix.cma";
+    [ "stdlib.cma";
+      "unix.cma";
       "threads.cma";
       "rmllib.cma";
       "rmltop_global.cmo";
