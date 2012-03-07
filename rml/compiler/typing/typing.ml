@@ -710,7 +710,7 @@ let rec type_of_expression env expr =
 	unify_emit expr.expr_loc type_unit ty;
         unify_usage_type expr.expr_loc ty_s affine u_emit u_emit u_get;
         let r_s = ty_s.type_region in
-	type_unit, Effects.add r_s u_emit u_get u_s
+	type_unit, Effects.add r_s s.expr_loc u_emit u_get u_s
 
     | Rexpr_emit (affine, s, Some e) ->
 	let ty_s, u_s = type_of_expression env s in
