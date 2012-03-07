@@ -2,10 +2,11 @@ signal s;;
 signal t;;
 signal x;;
 
-let process f () = !emit x ()
-let process should_not_type = run (f ()) || run (f ())
+let rec process f () = !emit x;;
+let process should_not_type = run (f ());; (* || run (f ());; *)
 
-let process envoyer s = !emit s () || !emit t ();;
+let process envoyer s = !emit s || !emit s;;
 
-let process main () =
-  run (envoyer s) || run (envoyer t)
+let process main () = (* Ne devrait pas typer aussi puisque "t" est utilisé deux fois *)
+  (* run (envoyer s) *)
+  run (envoyer s);; (* || run (envoyer t);; *)
