@@ -47,87 +47,73 @@ let print_help () =
   Printf.printf "  (*): Can be used only while the simulation is suspended.\n\n";
   flush stdout
 
-let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
-  let rmltop_in_lexbuf = Lexing.from_channel rmltop_in in
-  let rmlc_out_lexbuf = Lexing.from_channel rmlc_out in
-  while true do
+let translate_phrase phrase = phrase
+
+let main_loop rml_phrase =
     try
       let ocaml_phrase =
-	match Rmltop_lexer.phrase rmltop_in_lexbuf with
+	match Rmltop_lexer.phrase rml_phrase with
 	| Rmltop_lexer.Rml_phrase s ->
-	    let phrase = [ s; ";;" ] in
-	    (* send phrase to rmlc *)
-	    List.iter (fun line -> output_string rmlc_in line) phrase;
-	    flush rmlc_in;
-	    (* read the compiled phrase *)
-	    let ocaml_phrase = Rmltop_lexer.expr rmlc_out_lexbuf in
-	    [ "let () = Rmltop_global.lock() ;;\n";
-	      ocaml_phrase;";;\n";
-	      "let () = Rmltop_global.unlock();;\n";
+            let ocaml_phrase = translate_phrase (s ^ ";;") in
+	    [ "let () = Rmltop_global.lock() ;;";
+	      ocaml_phrase ^ ";;";
+	      "let () = Rmltop_global.unlock();;";
 	      "let () = Rmltop_global.print_prompt();;" ]
+
 	| Rmltop_lexer.OCaml_phrase s ->
-	    [ s; ";;\n";
+	    [ s ^ ";;";
 	      "let () = Rmltop_global.print_prompt();;" ]
+
 	| Rmltop_lexer.Run s ->
 	    (* add "(process ( run (...); ()));;" *)
-	    let phrase =
-	      [ "let () = Rmltop_global.to_run := ";
-		"(process ( run (";s;"); ())) :: !Rmltop_global.to_run ;;" ]
+	    let ocaml_phrase = translate_phrase
+	       "let ()= Rmltop_global.to_run:=(process(run(" ^s^ ");()))::!Rmltop_global.to_run;;"
 	    in
-	    (* send phrase to rmlc *)
-	    List.iter (fun line -> output_string rmlc_in line) phrase;
-	    flush rmlc_in;
-	    (* read the compiled phrase *)
-	    let ocaml_phrase = Rmltop_lexer.expr rmlc_out_lexbuf in
-	    [ "let () = Rmltop_global.lock();; \n";
-	      ocaml_phrase;";;\n";
-	      "let () = Rmltop_global.unlock();; \n";
+	    [ "let () = Rmltop_global.lock();;";
+	      ocaml_phrase ^ ";;";
+	      "let () = Rmltop_global.unlock();;";
 	      "let () = Rmltop_global.print_prompt ();;" ]
+
 	| Rmltop_lexer.Exec s ->
 	    (* add "(process ( ...; ()));;" *)
-	    let phrase =
-	      [ "let () = Rmltop_global.to_run := ";
-		"(process (";s;"; ())) :: !Rmltop_global.to_run;;" ]
-	    in
-	    (* send phrase to rmlc *)
-	    List.iter (fun line -> output_string rmlc_in line) phrase;
-	    flush rmlc_in;
-	    (* read the compiled phrase *)
-	    let ocaml_phrase = Rmltop_lexer.expr rmlc_out_lexbuf in
-	    [ "let () = Rmltop_global.lock();;\n";
-	      ocaml_phrase;";;\n";
-	      "let () = Rmltop_global.unlock();;\n";
+	    let ocaml_phrase = translate_phrase
+	      "let () = Rmltop_global.to_run := (process ("^s^"; ())) :: !Rmltop_global.to_run;;"
+            in
+	    [ "let () = Rmltop_global.lock();;";
+	      ocaml_phrase ^ ";;";
+	      "let () = Rmltop_global.unlock();;";
 	      "let () = Rmltop_global.print_prompt () ;;"]
+
 	| Rmltop_lexer.Step None ->
-	    [ "let () = Rmltop_directives.set_step 1 ;;\n";
+	    [ "let () = Rmltop_directives.set_step 1 ;;";
 	      "let () = Rmltop_global.print_prompt ();;" ]
+
 	| Rmltop_lexer.Step (Some n) ->
-	    [ "let () = Rmltop_directives.set_step "; string_of_int n; ";;\n";
+	    [ "let () = Rmltop_directives.set_step "^ (string_of_int n) ^ ";;";
 	      "let () = Rmltop_global.print_prompt ();;" ]
+
 	| Rmltop_lexer.Suspend ->
-	    [ "let () = Rmltop_directives.set_suspend () ;;\n";
+	    [ "let () = Rmltop_directives.set_suspend () ;;";
 	      "let () = Rmltop_global.print_prompt ();;" ]
+
 	| Rmltop_lexer.Resume ->
-	    [ "let () = Rmltop_directives.set_resume () ;;\n";
+	    [ "let () = Rmltop_directives.set_resume () ;;";
 	      "let () = Rmltop_global.print_prompt ();;" ]
+
 	| Rmltop_lexer.Sampling n ->
             [ "let () = Rmltop_directives.set_sampling ";
-	      string_of_float n;";;\n";
+	      (string_of_float n) ^";;";
 	      "let () = Rmltop_global.print_prompt ();;" ]
+
 	| Rmltop_lexer.Quit -> exit 0
       in
-      (* send to OCaml *)
-      List.iter (fun line -> output_string ocaml_in line) ocaml_phrase;
-      output_string ocaml_in "\n";
-      flush ocaml_in
+      ocaml_phrase
     with
     | Rmltop_lexer.EOF -> exit 0
     | Rmltop_lexer.Syntax_error ->
 	Printf.fprintf stderr "Syntax error\n";
 	flush stderr;
-	output_string ocaml_in "let () = Rmltop_global.print_prompt ();;\n\n";
-	flush ocaml_in
-  done
+	[ "let () = Rmltop_global.print_prompt ();;" ]
 
 let init_rml = [
   "open Implem;;";
