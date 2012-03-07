@@ -157,6 +157,26 @@ let pu ty =
 (* Usages environment *)
 module Effects = Usages_misc.Table
 
+let gleff = Hashtbl.create 1023
+
+let register_effects patt_vars effects =
+  List.iter (fun (patterns, effects) ->
+    List.iter (function
+      | Varpatt_local x ->
+          Printf.printf "let %s ix%d=...\n\n%!"
+            x.Ident.name
+            x.Ident.id;
+          Hashtbl.add gleff x.Ident.id effects
+      | Varpatt_global x ->
+          Printf.printf "let %s ix%d =...\n\n%!"
+            x.gi.Global_ident.id.Ident.name
+            x.gi.Global_ident.id.Ident.id;
+          Hashtbl.add gleff x.gi.Global_ident.id.Ident.id effects
+      )
+      patterns
+    )
+    (List.combine patt_vars effects)
+
 (* checks that every type is defined *)
 (* and used with the correct arity *)
 let check_type_constr_defined loc gl arity =
@@ -435,6 +455,11 @@ and type_of_pattern_list global_env local_env patt_list ty_list =
       type_of_pattern_list global_env local_env patt_list ty_list
   | _ -> raise (Internal (Location.none, "type_of_pattern_list"))
 
+let rec vars_of_patt = function
+  | [] -> []
+  | (p,e)::patt_expr_list ->
+      (Reac_misc.vars_of_patt p) :: vars_of_patt patt_expr_list
+
 (* Typing of expressions *)
 let rec type_of_expression env expr =
   let t =
@@ -443,15 +468,26 @@ let rec type_of_expression env expr =
 
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
-	instance typ_sch, Effects.empty
+        let ty = instance typ_sch in
+	ty, Effects.empty
 
     | Rexpr_global (n) ->
-	instance (Global.info n).value_typ, Effects.empty
+        let g_ty = (Global.info n).value_typ in
+        let index_gi = n.gi.Global_ident.id.Ident.id in
+        let index = g_ty.ts_desc.type_index in
+        let ty = instance g_ty in
+        let ty = { ty with type_index = index } in
+        let effects =
+          try Hashtbl.find gleff index_gi
+          with Not_found -> Effects.singleton index expr.expr_loc type_zero type_zero in
+	ty, effects
 
     | Rexpr_let (flag, patt_expr_list, e) ->
 	let gl_env, new_env, effects_1 = type_let (flag = Recursive) env patt_expr_list in
+        let patt_vars = vars_of_patt patt_expr_list in
+        register_effects patt_vars effects_1;
         let ty, effects_2 = type_of_expression new_env e in
-        ty, Effects.merge effects_1 effects_2
+        ty, Effects.merge (Effects.flatten effects_1) effects_2
 
     | Rexpr_function (matching)  ->
 	let ty_arg = new_var() in
@@ -948,7 +984,7 @@ and type_let is_rec env patt_expr_list =
       global_env
   in
   let gen_env = Env.map (fun ty -> gen ty.ts_desc) add_env in
-  global_env, Env.append gen_env env, Effects.flatten effects
+  global_env, Env.append gen_env env, effects
 
 
 (* Typing of an expression with an expected type *)
@@ -1077,9 +1113,11 @@ let type_impl_item info_chan item =
       ()
 
   | Rimpl_let (flag, patt_expr_list) ->
-      let global_env, local_env, _ =
+      let global_env, local_env, effects =
 	type_let (flag = Recursive) Env.empty patt_expr_list
       in
+      let patt_vars = vars_of_patt patt_expr_list in
+      register_effects patt_vars effects;
       (* verbose mode *)
       if !print_type
       then Types_printer.output_value_type_declaration info_chan global_env
