@@ -675,22 +675,23 @@ let rec type_of_expression env expr =
 	  (fun te ->
 	    unify_event s (instance (full_type_of_type_expression te)) ty_s)
 	  te_opt;
-        let effects =
+        let gather_has_effects, gather_loc =
 	  begin
 	    match combine_opt with
 	      | None ->
                 unify_event s
                   (constr_notabbrev list_ident [ty_emit])
                   ty_get;
-                Effects.empty
+                false, Location.none
 	      | Some (default,comb) ->
                 let _, _ = type_expect env default ty_get in
-                let _, _ = type_expect env comb (arrow ty_emit (arrow ty_get ty_get)) in
-                Effects.merge u1 u2
+                let _, effects = type_expect env comb (arrow ty_emit (arrow ty_get ty_get)) in
+                not (Effects.is_empty effects), comb.expr_loc
 	  end
         in
+        gather_wrong_effects_err gather_has_effects gather_loc;
         let ty, effects_e = type_of_expression (Env.add s (forall [] ty_s) env) e in
-        ty, Effects.merge effects effects_e
+        ty, effects_e
 
     | Rexpr_nothing -> type_unit, Effects.empty
 

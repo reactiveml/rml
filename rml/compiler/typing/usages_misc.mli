@@ -34,6 +34,7 @@ module Table :
     type 'a t
 
     val empty : signal_usage t
+    val is_empty : signal_usage t -> bool
 
     val mem : key -> signal_usage t -> bool
     val find : key -> signal_usage t -> signal_usage

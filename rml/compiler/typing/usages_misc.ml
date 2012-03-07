@@ -58,6 +58,7 @@ module Table = struct
   type 'a t = 'a M.t
 
   let empty = M.empty
+  let is_empty = M.is_empty
   let mem = M.mem
   let find = M.find
 

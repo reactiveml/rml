@@ -96,6 +96,11 @@ let usage_wrong_type_err loc _ _ =
     Location.print_oc loc;
   raise Error
 
+let gather_wrong_effects_err has_effects loc =
+  if has_effects then
+  Printf.eprintf "%aGather functions has effects while it should not.\n"
+    Location.print_oc loc
+
 let application_of_non_function_err exp ty =
   begin try
     let _ = filter_arrow ty in
