@@ -83,11 +83,13 @@ let unify_run loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
   with Unify -> run_wrong_type_err loc actual_ty expected_ty
+    | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 
 let unify_var loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
   with Unify -> var_wrong_type_err loc actual_ty expected_ty
+    | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 
 (* special cases of unification *)
 let filter_event ty =
@@ -105,6 +107,7 @@ let filter_event_or_err ty s =
     filter_event ty
   with Unify ->
     non_event_err s
+    | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 
 let filter_usage ty s =
   let _, _, u_emit, u_get = filter_event_or_err ty s in
@@ -128,7 +131,7 @@ let is_unit_process desc =
   try
     unify unit_process ty;
     true
-  with Unify -> false
+  with Unify | Usages.Forbidden_usage _ -> false
 
 (* Typing environment *)
 module Env = Symbol_table.Make (Ident)
@@ -479,6 +482,7 @@ let rec type_of_expression env expr =
 		  filter_arrow ~regions:true ty_res
 		with Unify ->
 		  application_of_non_function_err fct ty_fct
+                | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 	      in
               let ty_arg, u2 = type_expect ~regions:true env arg t1 in
 	      type_args (Effects.merge u2 u) t2 args
@@ -1066,6 +1070,7 @@ let check_nongen_values impl_item_list =
 
 (* Typing of implementation items *)
 let type_impl_item info_chan item =
+  try
   match item.impl_desc with
   | Rimpl_expr (e) ->
       let _, _ = type_of_expression Env.empty e in
@@ -1131,6 +1136,8 @@ let type_impl_item info_chan item =
       then Types_printer.output_exception_declaration info_chan gl_cstr1
 
   | Rimpl_open _ -> ()
+  with Usages.Forbidden_usage (loc1, loc2) ->
+    Typing_errors.usage_wrong_type_err loc1 loc2
 
 (* Typing of interface items *)
 let type_intf_item info_chan item =
