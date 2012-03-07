@@ -22,7 +22,11 @@ open Usages
 val string_of_usage : usage -> string
 val usage_of_type : Def_types.type_expression -> usage
 val string_of_signal_usage : signal_usage -> string
-val mk_t : Def_types.type_expression -> Def_types.type_expression -> signal_usage
+val mk_t :
+  Location.t ->
+  Def_types.type_expression ->
+  Def_types.type_expression ->
+  signal_usage
 
 module Table :
   sig
@@ -34,8 +38,20 @@ module Table :
     val mem : key -> signal_usage t -> bool
     val find : key -> signal_usage t -> signal_usage
 
-    val add : key -> Def_types.type_expression -> Def_types.type_expression -> signal_usage t -> signal_usage t
-    val singleton : key -> Def_types.type_expression -> Def_types.type_expression -> signal_usage t
+    val add :
+      key ->
+      Location.t ->
+      Def_types.type_expression ->
+      Def_types.type_expression ->
+      signal_usage t ->
+      signal_usage t
+
+    val singleton :
+      key ->
+      Location.t ->
+      Def_types.type_expression ->
+      Def_types.type_expression ->
+      signal_usage t
 
     val merge : signal_usage t -> signal_usage t -> signal_usage t
     val flatten : signal_usage t list -> signal_usage t

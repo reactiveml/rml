@@ -24,7 +24,8 @@ let string_of_usage = function
   | Neutral -> "∞"
   | Zero -> "0"
 
-let string_of_signal_usage (u1,u2) =
+let string_of_signal_usage su =
+  let _, u1, u2 = Usages.km_su su in
   Printf.sprintf "(%s,%s)"
     (string_of_usage u1)
     (string_of_usage u2)
@@ -38,13 +39,9 @@ let usage_of_type ty =
   else
     Zero
 
-let add_t ty1 ty2 =
-  let u1 = usage_of_type ty1 in
-  let u2 = usage_of_type ty2 in
-  add_u u1 u2
-
-let mk_t u_emit u_get =
+let mk_t loc u_emit u_get =
   mk_su
+    loc
     (usage_of_type u_emit)
     (usage_of_type u_get)
 
@@ -64,13 +61,14 @@ module Table = struct
   let mem = M.mem
   let find = M.find
 
-  let add k ty_emit ty_get m =
+  let add k loc ty_emit ty_get m =
     let u_emit = usage_of_type ty_emit in
     let u_get = usage_of_type ty_get in
-    M.add k (u_emit, u_get) m
+    let su = Usages.mk_su loc u_emit u_get in
+    M.add k su m
 
-  let singleton k ty_emit ty_get =
-    add k ty_emit ty_get empty
+  let singleton k loc ty_emit ty_get =
+    add k loc ty_emit ty_get empty
 
   let merge t1 t2 =
     M.fold (fun k u1 t ->
