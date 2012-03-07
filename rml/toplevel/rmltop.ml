@@ -125,36 +125,55 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
 	flush ocaml_in
   done
 
-let init ocaml_in =
-  output_string ocaml_in ("open Implem;;\n");
-  output_string ocaml_in ("let () = Rmltop_global.print_prompt ();;\n");
-  flush ocaml_in
+let init_rml = [
+  "open Implem;;";
+  "let () = Rmltop_global.print_prompt ();;";
+]
 
 let print_intro () =
   print_string "        ReactiveML version ";
-  let version_ch = Unix.open_process_in "rmlc -version" in
-  let version = input_line version_ch in
-  print_string version;
-  close_in version_ch;
+  print_string Version.version;
   print_newline();
   if !show_help then print_help ()
 
-let rmlc = ref "rmlc -i -interactive -I `rmlc -where`/toplevel"
-let ocaml =
-  ref
-(*"ocaml -I +threads -I `rmlc -where` unix.cma threads.cma rml_interactive.cmo "*)
-    "TERM=norepeat ocaml -noprompt -I +threads -I `rmlc -where` -I `rmlc -where`/toplevel unix.cma threads.cma rmllib.cma rmltop_global.cmo rmltop_implem.cmo rmltop_machine_body.cmo rmltop_reactive_machine.cmo rmltop_controller.cmo rmltop_directives.cmo rmltop_main.cmo "
+let init_directory_paths () =
+  let (//) = Filename.concat in
+  let stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir in
+  let add_dir dir =
+    Topdirs.dir_directory dir;
+    Printf.eprintf "Added %s directory to search path.\n" dir
+  in
+  List.iter add_dir
+    [ stdlib // "threads";
+      Version.stdlib;
+      Version.stdlib // "toplevel";
+    ]
 
+let init_toplevel () =
+  init_directory_paths ();
+  let load_file file =
+    Printf.eprintf "Trying to load %s...\n%!" file;
+    if Topdirs.load_file Format.err_formatter file then
+      Printf.eprintf "File %s loaded successfully!\n%!" file
+    else
+      Printf.eprintf "Cannot find file %s.\n%!" file
+  in
+  List.iter load_file
+    [ "unix.cma";
+      "threads.cma";
+      "rmllib.cma";
+      "rmltop_global.cmo";
+      "rmltop_implem.cmo";
+      "rmltop_machine_body.cmo";
+      "rmltop_reactive_machine.cmo";
+      "rmltop_controller.cmo";
+      "rmltop_directives.cmo";
+      "rmltop_main.cmo"
+    ]
 let sampling = ref None
 
 let main s =
   let _ = print_intro() in
-  (* fork the ReactiveML compiler *)
-  let rmlc_out, rmlc_in = Unix.open_process !rmlc in
-  at_exit (fun () -> ignore (Unix.close_process (rmlc_out, rmlc_in)));
-  (* fork the OCaml toplevel *)
-  let ocaml_in = Unix.open_process_out (!ocaml ^ s) in
-  at_exit (fun () -> ignore (Unix.close_process_out ocaml_in));
   (* start the machine *)
   begin match !sampling with
   | None -> ()
@@ -170,8 +189,7 @@ let _ =
     [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x),
       "<rate> Sets the sampling rate to <rate> seconds";
       "-i", Arg.Set show_help, " List known rml directives at startup ";
-      "--", Arg.Rest (fun x -> ocaml := !ocaml ^ " " ^ x),
-      " Sends all others options to the Ocaml toplevel"])
-    (fun x -> ocaml := !ocaml ^ " " ^ x)
+    ])
+    (fun _ -> ())
     usage;
   main ""
