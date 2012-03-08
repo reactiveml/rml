@@ -27,7 +27,14 @@ let print_DEBUG x =
   then Printf.eprintf x
   else Printf.ifprintf stderr x
 
-let include_dir = ref []
+let (//) = Filename.concat
+let stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir
+
+let include_dir = ref
+  [ stdlib // "threads";
+    Version.stdlib;
+    Version.stdlib // "toplevel";
+  ]
 let include_obj = ref ["stdlib.cma"; "threads.cma"]
 let add_include_dir inc = include_dir := inc :: !include_dir
 let add_include_obj inc = include_obj := inc :: !include_obj
@@ -128,29 +135,19 @@ let print_intro () =
   print_newline();
   if !show_help then print_help ()
 
-let init_directory_paths () =
-  let (//) = Filename.concat in
-  let stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir in
-  let add_dir dir =
-    Topdirs.dir_directory dir;
-    print_DEBUG "Added %s directory to search path.\n" dir
-  in
-  List.iter add_dir
-    [ stdlib // "threads";
-      Version.stdlib;
-      Version.stdlib // "toplevel";
-    ];
-  List.iter add_dir !include_dir
+let load_dir dir =
+  Topdirs.dir_directory dir;
+  print_DEBUG "Added %s directory to search path.\n" dir
+
+let load_file file =
+  print_DEBUG "Trying to load %s... %!" file;
+  if Topdirs.load_file Format.err_formatter file then
+  print_DEBUG "done%s%!" "\n"
+  else
+  Printf.eprintf "Cannot find file %s.\n%!" file
 
 let init_toplevel () =
-  init_directory_paths ();
-  let load_file file =
-    print_DEBUG "Trying to load %s... %!" file;
-    if Topdirs.load_file Format.err_formatter file then
-      print_DEBUG "done%s%!" "\n"
-    else
-      Printf.eprintf "Cannot find file %s.\n%!" file
-  in
+  List.iter load_dir !include_dir;
   List.iter load_file !include_obj
 
 let get_error str =
