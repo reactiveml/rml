@@ -27,6 +27,11 @@ let print_DEBUG x =
   then Printf.eprintf x
   else Printf.ifprintf stderr x
 
+let include_dir = ref []
+let include_obj = ref ["stdlib.cma"]
+let add_include_dir inc = include_dir := inc :: !include_dir
+let add_include_obj inc = include_obj := inc :: !include_obj
+
 let show_help = ref false
 let print_help () =
   print_endline "Toplevel directives:";
@@ -137,7 +142,8 @@ let init_directory_paths () =
     [ stdlib // "threads";
       Version.stdlib;
       Version.stdlib // "toplevel";
-    ]
+    ];
+  List.iter add_dir !include_dir
 
 let init_toplevel () =
   init_directory_paths ();
@@ -148,19 +154,7 @@ let init_toplevel () =
     else
       Printf.eprintf "Cannot find file %s.\n%!" file
   in
-  List.iter load_file
-    [ "stdlib.cma";
-      "unix.cma";
-      "threads.cma";
-      "rmllib.cma";
-      "rmltop_global.cmo";
-      "rmltop_implem.cmo";
-      "rmltop_machine_body.cmo";
-      "rmltop_reactive_machine.cmo";
-      "rmltop_controller.cmo";
-      "rmltop_directives.cmo";
-      "rmltop_main.cmo"
-    ]
+  List.iter load_file !include_obj
 
 let get_error str =
   let r_error = Pcre.regexp "File _*, line ([0-9]+ as line), characters ([0-9]+ as ofs_a)-([0-9]+ as ofs_b)" in
@@ -255,7 +249,8 @@ let _ =
       "<rate> Sets the sampling rate to <rate> seconds";
       "-i", Arg.Set show_help, " List known rml directives at startup";
       "-debug", Arg.Set debug, " Enable debug output";
+      "-I", Arg.String add_include_dir, "<dir>  Add <dir> to the list of include directories";
     ])
-    (fun _ -> ())
+    add_include_obj
     "";
   main ""
