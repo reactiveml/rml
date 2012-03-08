@@ -28,7 +28,7 @@ let print_DEBUG x =
   else Printf.ifprintf stderr x
 
 let include_dir = ref []
-let include_obj = ref ["stdlib.cma"]
+let include_obj = ref ["stdlib.cma"; "threads.cma"]
 let add_include_dir inc = include_dir := inc :: !include_dir
 let add_include_obj inc = include_obj := inc :: !include_obj
 
