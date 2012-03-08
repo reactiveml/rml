@@ -32,8 +32,8 @@ let stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir
 
 let include_dir = ref
   [ stdlib // "threads";
-    Version.stdlib;
-    Version.stdlib // "toplevel";
+    Rmlcompiler.Version.stdlib;
+    Rmlcompiler.Version.stdlib // "toplevel";
   ]
 let include_obj = ref ["stdlib.cma"; "threads.cma"]
 let add_include_dir inc = include_dir := inc :: !include_dir
@@ -59,7 +59,11 @@ let print_help () =
   Printf.printf "  (*): Can be used only while the simulation is suspended.\n\n";
   flush stdout
 
-let translate_phrase phrase = phrase
+let translate_phrase phrase =
+  List.fold_left
+    (^)
+    ""
+    (Rmlcompiler.Interactive.translate_phrase phrase)
 
 let main_loop rml_phrase =
     try
@@ -131,7 +135,7 @@ let init_rml = [
 
 let print_intro () =
   print_string "        ReactiveML version ";
-  print_string Version.version;
+  print_string Rmlcompiler.Version.version;
   print_newline();
   if !show_help then print_help ()
 

@@ -3,7 +3,7 @@ BIN = rmlc
 DIRECTORIES = global parsing external static typing other_analysis reac lco lk caml main
 
 
-GLOBAL = global/asttypes.mli \
+GLOBAL = global/asttypes.ml \
 	global/global.ml \
 	global/global_ident.ml \
 	global/ident.ml \
@@ -66,6 +66,7 @@ CAML = 	caml/caml2caml.ml \
 
 MAIN = 	main/compiler.ml \
 	main/configure.ml \
+	main/options.ml \
 	main/errors.ml \
 	main/interactive.ml \
 	main/main.ml \
@@ -74,6 +75,7 @@ SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(OTHER_ANALYSIS) $(EXTERNAL) $(STA
 
 
 OBJ =	global/version.cmo \
+	global/asttypes.cmo \
 	global/warnings.cmo \
 	parsing/linenum.cmo \
 	parsing/location.cmo \
@@ -89,6 +91,7 @@ OBJ =	global/version.cmo \
 	parsing/syntaxerr.cmo \
 	main/errors.cmo \
 	main/configure.cmo \
+	main/options.cmo \
 	parsing/parse_ast.cmo \
 	parsing/parse_ident.cmo \
 	parsing/parser.cmo \
@@ -140,16 +143,32 @@ GENSOURCES = global/version.ml parsing/parser.mli parsing/lexer.ml parsing/parse
 include ../config
 include ../configure-tools/Makefile.common
 
-all: $(TARGET)
+OCAMLFLAGS+=-for-pack Rmlcompiler
+OCAMLOPTFLAGS+=-for-pack Rmlcompiler
+
+all:: $(TARGET) rmlcompiler.cmo
+ifeq ($(TARGET), opt)
+all:: rmlcompiler.cmx
+endif
+
 install: install.$(TARGET)
 	mv $(BINDIR)/$(BIN).$(TARGET) $(BINDIR)/$(BIN)
+
+C_OBJ_BYTE = $(filter-out main/options.cmo main/main.cmo,$(OBJ))
+C_OBJ_OPT  = $(C_OBJ_BYTE:.cmo=.cmx)
+
+rmlcompiler.cmo: $(C_OBJ_BYTE)
+	$(OCAMLC) -pack -o $@ $(INCLUDES) $^
+
+rmlcompiler.cmx: $(C_OBJ_OPT)
+	$(OCAMLOPT) -pack -o $@ $(INCLUDES) $^
 
 diff: FORCE
 	(cd diff; $(MAKE) diff)
 
 # cleaning:
 clean:
-	(for d in $(DIRECTORIES); \
+	(for d in . $(DIRECTORIES); \
 	 do rm -f $$d/*.cmi $$d/*.cmo $$d/*.cmx $$d/*.o $$d/*.annot; \
 	 done)
 

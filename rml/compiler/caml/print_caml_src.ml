@@ -673,6 +673,19 @@ let output_impl_decl oc module_name decl =
   print_string "\n\n";
   print_flush ()
 
+let output_impl_decl_string module_name decl =
+  current_module := module_name;
+  let buffer = Buffer.create 512 in
+  let my_output = fun s _ _ -> Buffer.add_string buffer s in
+  let my_flush = fun () -> () in
+  set_formatter_output_functions my_output my_flush;
+  force_newline ();
+  print_impl_item decl;
+  print_string "\n\n";
+  let contents = Buffer.contents buffer in
+  Buffer.reset buffer;
+  contents
+
 let output_intf_decl oc module_name decl =
   current_module := module_name;
   set_formatter_out_channel oc;

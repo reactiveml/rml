@@ -156,7 +156,7 @@ let compile_implementation_front_end info_chan itf impl_list =
 
 
 (* back-end *)
-let compile_implementation_back_end info_chan out_chan module_name rml_table =
+let compile_implementation_back_end_buf info_chan module_name rml_table =
   let lk_table = ref [] in
   let lco_table = ref [] in
   let caml_table = ref [] in
@@ -225,10 +225,13 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
   List.iter compile_one_phrase rml_table;
 
   (* emit the caml code *)
-  List.iter
-    (Print_caml_src.output_impl_decl out_chan module_name)
+  List.map
+    (Print_caml_src.output_impl_decl_string module_name)
     (List.rev !caml_table)
 
+let compile_implementation_back_end info_chan out_chan module_name rml_table =
+  let strings = compile_implementation_back_end_buf info_chan module_name rml_table in
+  List.iter (output_string out_chan) strings
 
 (* the main functions *)
 let compile_implementation module_name filename =
