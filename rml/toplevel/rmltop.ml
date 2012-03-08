@@ -197,15 +197,8 @@ let load_ocamlinit () =
       if Sys.file_exists home_init then load_script home_init
     with Not_found -> ()
 
-let sampling = ref None
-
 let main s =
   let _ = print_intro() in
-  (* start the machine *)
-  begin match !sampling with
-  | None -> ()
-  | Some n -> Rmltop_directives.set_sampling n
-  end;
   Toploop.set_paths ();
   Toploop.initialize_toplevel_env ();
   init_toplevel ();
@@ -239,7 +232,7 @@ let main s =
 
 let _ =
   Arg.parse (Arg.align
-    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x),
+    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then Rmltop_directives.set_sampling x),
       "<rate> Sets the sampling rate to <rate> seconds";
       "-i", Arg.Set show_help, " List known rml directives at startup";
       "-debug", Arg.Set debug, " Enable debug output";
