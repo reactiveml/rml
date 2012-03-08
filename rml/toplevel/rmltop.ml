@@ -63,11 +63,11 @@ let main_loop rml_phrase =
 	    [ "let () = Rmltop_global.lock() ;;";
 	      ocaml_phrase ^ ";;";
 	      "let () = Rmltop_global.unlock();;";
-	      "let () = Rmltop_global.print_prompt();;" ]
+            ]
 
 	| Rmltop_lexer.OCaml_phrase s ->
 	    [ s ^ ";;";
-	      "let () = Rmltop_global.print_prompt();;" ]
+            ]
 
 	| Rmltop_lexer.Run s ->
 	    (* add "(process ( run (...); ()));;" *)
@@ -77,7 +77,7 @@ let main_loop rml_phrase =
 	    [ "let () = Rmltop_global.lock();;";
 	      ocaml_phrase ^ ";;";
 	      "let () = Rmltop_global.unlock();;";
-	      "let () = Rmltop_global.print_prompt ();;" ]
+            ]
 
 	| Rmltop_lexer.Exec s ->
 	    (* add "(process ( ...; ()));;" *)
@@ -87,28 +87,27 @@ let main_loop rml_phrase =
 	    [ "let () = Rmltop_global.lock();;";
 	      ocaml_phrase ^ ";;";
 	      "let () = Rmltop_global.unlock();;";
-	      "let () = Rmltop_global.print_prompt () ;;"]
+            ]
 
 	| Rmltop_lexer.Step None ->
 	    [ "let () = Rmltop_directives.set_step 1 ;;";
-	      "let () = Rmltop_global.print_prompt ();;" ]
+            ]
 
 	| Rmltop_lexer.Step (Some n) ->
 	    [ "let () = Rmltop_directives.set_step "^ (string_of_int n) ^ ";;";
-	      "let () = Rmltop_global.print_prompt ();;" ]
+            ]
 
 	| Rmltop_lexer.Suspend ->
 	    [ "let () = Rmltop_directives.set_suspend () ;;";
-	      "let () = Rmltop_global.print_prompt ();;" ]
+            ]
 
 	| Rmltop_lexer.Resume ->
 	    [ "let () = Rmltop_directives.set_resume () ;;";
-	      "let () = Rmltop_global.print_prompt ();;" ]
+            ]
 
 	| Rmltop_lexer.Sampling n ->
-            [ "let () = Rmltop_directives.set_sampling ";
-	      (string_of_float n) ^";;";
-	      "let () = Rmltop_global.print_prompt ();;" ]
+            [ "let () = Rmltop_directives.set_sampling "^(string_of_float n)^";;";
+            ]
 
 	| Rmltop_lexer.Quit -> exit 0
       in
@@ -118,11 +117,10 @@ let main_loop rml_phrase =
     | Rmltop_lexer.Syntax_error ->
 	Printf.fprintf stderr "Syntax error\n";
 	flush stderr;
-	[ "let () = Rmltop_global.print_prompt ();;" ]
+	[ ]
 
 let init_rml = [
   "open Implem;;";
-  "let () = Rmltop_global.print_prompt ();;";
 ]
 
 let print_intro () =
@@ -223,7 +221,7 @@ let main s =
     init_rml;
   try
     let buf = Buffer.create 512 in
-    Printf.printf "# %!";
+    Rmltop_global.print_prompt ();
     while true do
       let line = read_line () in
       let len = String.length line in
@@ -235,7 +233,7 @@ let main s =
           Buffer.reset buf;
           eval_phrase phrase;
         end;
-        Printf.printf "# %!";
+        Rmltop_global.print_prompt ();
       end
     done
   with
