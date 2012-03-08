@@ -38,10 +38,9 @@ let compile_decl_list module_name itf info_chan out_chan decl_list =
 
 (* the main function *)
 let compile () =
-  let filename = Filename.temp_file "rml_" "" in
-  let module_name = String.capitalize filename in
+  let module_name = module_name () in
   let ic = stdin in
-  let itf = open_out_bin (filename ^ ".rzi") in
+  let itf = open_out_bin "/dev/null" in
   let info_chan = stderr in
   let out_chan = stdout in
 
@@ -65,4 +64,3 @@ let compile () =
     flush out_chan;
     flush info_chan
   done
-
