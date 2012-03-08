@@ -115,8 +115,7 @@ let main_loop rml_phrase =
     with
     | Rmltop_lexer.EOF -> exit 0
     | Rmltop_lexer.Syntax_error ->
-	Printf.fprintf stderr "Syntax error\n";
-	flush stderr;
+	Printf.fprintf stderr "Syntax error\n%!";
 	[ ]
 
 let init_rml = [
