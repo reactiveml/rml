@@ -31,10 +31,21 @@ GENSOURCES=	rmltop_controller.ml \
 
 all: rmltop lib
 
-rmltop: rmltop_lexer.cmo rmltop_global.cmo rmltop_directives.cmo rmltop.cmo
-	$(OCAMLC) -o rmltop -I +threads $(RMLLIB) unix.cma str.cma \
+CL_INC=-I +compiler-libs \
+       -I +compiler-libs/typing \
+       -I +compiler-libs/utils \
+       -I +compiler-libs/parsing \
+       -I +ocamlbuild \
+       -I +pcre
+
+rmltop: ../compiler/global/version.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop_directives.cmo rmltop.cmo
+	$(OCAMLC) -o rmltop $(CL_INC) -I +threads -I ../compiler/global $(RMLLIB) unix.cma str.cma \
+		toplevellib.cma \
+		ocamlbuildlib.cma \
 		threads.cma \
+		pcre.cma \
 		rmllib.cma \
+		../compiler/global/version.cmo \
 		rmltop_lexer.cmo \
 		rmltop_global.cmo \
 		rmltop_directives.cmo \
@@ -128,7 +139,7 @@ rmltop_main.cmi rmltop_main.cmo: rmltop_main.ml \
 rmltop_directives.cmo: rmltop_directives.ml rmltop_global.cmi
 	$(OCAMLC) -c $(RMLLIB) -thread rmltop_directives.ml
 
-rmltop.cmo: rmltop.ml rmltop_lexer.cmo rmltop_directives.cmo
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop.ml
+rmltop.cmo: rmltop.ml ../compiler/global/version.cmo rmltop_lexer.cmo rmltop_directives.cmo
+	$(OCAMLC) -c $(CL_INC) -I ../compiler/global $(RMLLIB) -thread rmltop.ml
 
 FORCE:
