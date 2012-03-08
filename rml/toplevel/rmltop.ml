@@ -59,101 +59,6 @@ let print_help () =
   Printf.printf "  (*): Can be used only while the simulation is suspended.\n\n";
   flush stdout
 
-let translate_phrase phrase =
-  List.fold_left
-    (^)
-    ""
-    (Rmlcompiler.Interactive.translate_phrase phrase)
-
-let main_loop rml_phrase =
-    try
-      let ocaml_phrase =
-	match Rmltop_lexer.phrase rml_phrase with
-	| Rmltop_lexer.Rml_phrase s ->
-            let ocaml_phrase = translate_phrase (s ^ ";;") in
-	    [ "let () = Rmltop_global.lock() ;;";
-	      ocaml_phrase ^ ";;";
-	      "let () = Rmltop_global.unlock();;";
-            ]
-
-	| Rmltop_lexer.OCaml_phrase s ->
-	    [ s ^ ";;";
-            ]
-
-	| Rmltop_lexer.Run s ->
-	    (* add "(process ( run (...); ()));;" *)
-	    let ocaml_phrase = translate_phrase
-	       "let ()= Rmltop_global.to_run:=(process(run(" ^s^ ");()))::!Rmltop_global.to_run;;"
-	    in
-	    [ "let () = Rmltop_global.lock();;";
-	      ocaml_phrase ^ ";;";
-	      "let () = Rmltop_global.unlock();;";
-            ]
-
-	| Rmltop_lexer.Exec s ->
-	    (* add "(process ( ...; ()));;" *)
-	    let ocaml_phrase = translate_phrase
-	      "let () = Rmltop_global.to_run := (process ("^s^"; ())) :: !Rmltop_global.to_run;;"
-            in
-	    [ "let () = Rmltop_global.lock();;";
-	      ocaml_phrase ^ ";;";
-	      "let () = Rmltop_global.unlock();;";
-            ]
-
-	| Rmltop_lexer.Step None ->
-	    [ "let () = Rmltop_directives.set_step 1 ;;";
-            ]
-
-	| Rmltop_lexer.Step (Some n) ->
-	    [ "let () = Rmltop_directives.set_step "^ (string_of_int n) ^ ";;";
-            ]
-
-	| Rmltop_lexer.Suspend ->
-	    [ "let () = Rmltop_directives.set_suspend () ;;";
-            ]
-
-	| Rmltop_lexer.Resume ->
-	    [ "let () = Rmltop_directives.set_resume () ;;";
-            ]
-
-	| Rmltop_lexer.Sampling n ->
-            [ "let () = Rmltop_directives.set_sampling "^(string_of_float n)^";;";
-            ]
-
-	| Rmltop_lexer.Quit -> exit 0
-      in
-      ocaml_phrase
-    with
-    | Rmltop_lexer.EOF -> exit 0
-    | Rmltop_lexer.Syntax_error ->
-	Printf.fprintf stderr "Syntax error\n%!";
-	[ ]
-
-let init_rml = [
-  "open Implem;;";
-]
-
-let print_intro () =
-  print_string "        ReactiveML version ";
-  print_string Rmlcompiler.Version.version;
-  print_newline();
-  if !show_help then print_help ()
-
-let load_dir dir =
-  Topdirs.dir_directory dir;
-  print_DEBUG "Added %s directory to search path.\n" dir
-
-let load_file file =
-  print_DEBUG "Trying to load %s... %!" file;
-  if Topdirs.load_file Format.err_formatter file then
-  print_DEBUG "done%s%!" "\n"
-  else
-  Printf.eprintf "Cannot find file %s.\n%!" file
-
-let init_toplevel () =
-  List.iter load_dir !include_dir;
-  List.iter load_file !include_obj
-
 let get_error str =
   let r_error = Pcre.regexp "File _*, line ([0-9]+ as line), characters ([0-9]+ as ofs_a)-([0-9]+ as ofs_b)" in
   if Pcre.pmatch ~rex:r_error str then
@@ -181,12 +86,93 @@ let eval_command ?(silent=false) command =
     Toploop.parse_use_file := save;
     (false, get_error (Buffer.contents buffer))
 
-let eval_phrase ?(silent=false) phrase =
-  let success, message = eval_command ~silent phrase in
-  if not success then
-    Printf.eprintf "%s\n%!" message
+let rec eval_phrases ?(silent=false) = function
+  | [] -> ()
+  | phrase :: phrases ->
+      let success, message = eval_command ~silent phrase in
+      if not success then
+        Printf.eprintf "%s\n%!" message
+      else begin
+        Printf.printf "%s\n%!" message;
+        eval_phrases ~silent phrases
+      end
+
+let translate_and_eval_phrase rml_phrase =
+  let rml_phrase = Lexing.from_string rml_phrase in
+  try
+    let rml_translation = Rmltop_lexer.phrase rml_phrase in
+    match rml_translation with
+    | Rmltop_lexer.Rml_phrase s ->
+      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+      let () = Rmltop_global.lock () in
+      let () = eval_phrases ocaml_phrases in
+      Rmltop_global.unlock ()
+
+    | Rmltop_lexer.OCaml_phrase s ->
+      eval_phrases [ s ]
+
+    | Rmltop_lexer.Run s ->
+      (* add "(process ( run (...); ()));;" *)
+      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase
+	("let ()= Rmltop_global.to_run:=(process(run(" ^s^ ");()))::!Rmltop_global.to_run;;")
+      in
+      let () = Rmltop_global.lock() in
+      let () = eval_phrases ocaml_phrases in
+      Rmltop_global.unlock ()
+
+    | Rmltop_lexer.Exec s ->
+      (* add "(process ( ...; ()));;" *)
+      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase
+	("let () = Rmltop_global.to_run := (process ("^s^"; ())) :: !Rmltop_global.to_run;;")
+      in
+      let () = Rmltop_global.lock () in
+      let () = eval_phrases ocaml_phrases in
+      Rmltop_global.unlock ()
+
+    | Rmltop_lexer.Step None ->
+      eval_phrases [ "let () = Rmltop_directives.set_step 1 ;;"; ]
+
+    | Rmltop_lexer.Step (Some n) ->
+      eval_phrases [ "let () = Rmltop_directives.set_step "^ (string_of_int n) ^ ";;"; ]
+
+    | Rmltop_lexer.Suspend ->
+      eval_phrases [ "let () = Rmltop_directives.set_suspend () ;;"; ]
+
+    | Rmltop_lexer.Resume ->
+      eval_phrases [ "let () = Rmltop_directives.set_resume () ;;"; ]
+
+    | Rmltop_lexer.Sampling n ->
+      eval_phrases [ "let () = Rmltop_directives.set_sampling "^(string_of_float n)^";;"; ]
+
+    | Rmltop_lexer.Quit -> exit 0
+  with
+    | Rmltop_lexer.EOF -> Printf.eprintf "Got an EOF! Exiting...%!"; exit 0
+    | Rmltop_lexer.Syntax_error -> ()
+
+let init_rml = [
+  "open Implem;;";
+]
+
+let print_intro () =
+  print_string "        ReactiveML version ";
+  print_string Rmlcompiler.Version.version;
+  print_newline();
+  if !show_help then print_help ()
+
+let load_dir dir =
+  Topdirs.dir_directory dir;
+  print_DEBUG "Added %s directory to search path.\n" dir
+
+let load_file file =
+  print_DEBUG "Trying to load %s... %!" file;
+  if Topdirs.load_file Format.err_formatter file then
+  print_DEBUG "done%s%!" "\n"
   else
-    Printf.printf "%s\n%!" message
+  Printf.eprintf "Cannot find file %s.\n%!" file
+
+let init_toplevel () =
+  List.iter load_dir !include_dir;
+  List.iter load_file !include_obj
 
 let load_script file =
   (* TODO *)
@@ -207,11 +193,7 @@ let main s =
   Toploop.initialize_toplevel_env ();
   init_toplevel ();
   Sys.catch_break true;
-  List.iter
-    (fun phrase ->
-      eval_phrase ~silent:(not !debug) phrase
-    )
-    init_rml;
+  eval_phrases ~silent:(not !debug) init_rml;
   try
     let buf = Buffer.create 512 in
     Rmltop_global.print_prompt ();
@@ -224,7 +206,7 @@ let main s =
           let () = Buffer.add_string buf line in
           let phrase = Buffer.contents buf in
           Buffer.reset buf;
-          eval_phrase phrase;
+          translate_and_eval_phrase phrase;
         end;
         Rmltop_global.print_prompt ();
       end
