@@ -39,7 +39,7 @@ CL_INC=-I +compiler-libs \
        -I +pcre
 
 rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop_directives.cmo rmltop.cmo
-	$(OCAMLC) -o rmltop $(CL_INC) -I +threads -I ../compiler $(RMLLIB) \
+	$(OCAMLC) $(OCAMLFLAGS) -o rmltop $(CL_INC) -I +threads -I ../compiler $(RMLLIB) \
 		toplevellib.cma \
 		unix.cma \
 		str.cma \
@@ -95,53 +95,53 @@ rmltop_lexer.ml: rmltop_lexer.mll
 	$(OCAMLLEX) rmltop_lexer.mll
 
 rmltop_lexer.cmo: rmltop_lexer.ml
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_lexer.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_lexer.ml
 
 rmltop_global.rzi: rmltop_global.rmli
 	$(RMLC) -c $(RMLLIB) rmltop_global.rmli
 
 rmltop_global.cmi: rmltop_global.mli
-	$(OCAMLC) $(RMLLIB) rmltop_global.mli
+	$(OCAMLC) $(OCAMLFLAGS) $(RMLLIB) rmltop_global.mli
 
 rmltop_global.cmo: rmltop_global.ml rmltop_global.cmi
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_global.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_global.ml
 
 rmltop_machine_body.ml: rmltop_machine_body.rml
 	$(RMLC) $(RMLLIB) -runtime Lco_ctrl_tree rmltop_machine_body.rml
 
 rmltop_machine_body.cmi rmltop_machine_body.cmo: rmltop_machine_body.ml
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_machine_body.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_machine_body.ml
 
 rmltop_reactive_machine.rzi rmltop_reactive_machine.mli: \
 		rmltop_reactive_machine.rmli rmltop_global.rzi
 	$(RMLC) $(RMLLIB) rmltop_reactive_machine.rmli
 
 rmltop_reactive_machine.cmi: rmltop_reactive_machine.mli rmltop_global.cmi
-	$(OCAMLC) $(RMLLIB) rmltop_reactive_machine.mli
+	$(OCAMLC) $(OCAMLFLAGS) $(RMLLIB) rmltop_reactive_machine.mli
 
 rmltop_reactive_machine.cmo: rmltop_reactive_machine.ml \
 		rmltop_machine_body.cmo rmltop_global.cmi \
 		rmltop_reactive_machine.cmi
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_reactive_machine.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_reactive_machine.ml
 
 rmltop_controller.ml: rmltop_controller.rml rmltop_global.rzi
 	$(RMLC) $(RMLLIB) -runtime Rmltop rmltop_controller.rml
 
 rmltop_controller.cmi rmltop_controller.cmo: rmltop_controller.ml \
 		rmltop_reactive_machine.cmi rmltop_implem.cmo rmltop_global.cmi
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_controller.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_controller.ml
 
 rmltop_implem.cmo: rmltop_implem.ml
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_implem.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_implem.ml
 
 rmltop_main.cmi rmltop_main.cmo: rmltop_main.ml \
 		rmltop_implem.cmo rmltop_global.cmi rmltop_controller.cmo
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_main.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_main.ml
 
 rmltop_directives.cmo: rmltop_directives.ml rmltop_global.cmi
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_directives.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_directives.ml
 
 rmltop.cmo: rmltop.ml ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop_directives.cmo
-	$(OCAMLC) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop.ml
 
 FORCE:
