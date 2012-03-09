@@ -35,8 +35,7 @@ CL_INC=-I +compiler-libs \
        -I +compiler-libs/typing \
        -I +compiler-libs/utils \
        -I +compiler-libs/parsing \
-       -I +ocamlbuild \
-       -I +pcre
+       -I +ocamlbuild
 
 rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop_directives.cmo rmltop.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -o rmltop $(CL_INC) -I +threads -I ../compiler $(RMLLIB) \
@@ -45,7 +44,6 @@ rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop_di
 		str.cma \
 		threads.cma \
 		ocamlbuildlib.cma \
-		pcre.cma \
 		rmlcompiler.cmo \
 		rmllib.cma \
 		rmltop_lexer.cmo \

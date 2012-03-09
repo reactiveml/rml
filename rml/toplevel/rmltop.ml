@@ -59,15 +59,9 @@ let print_help () =
   Printf.printf "  (*): Can be used only while the simulation is suspended.\n\n";
   flush stdout
 
-let get_error str =
-  let r_error = Pcre.regexp "File _*, line ([0-9]+ as line), characters ([0-9]+ as ofs_a)-([0-9]+ as ofs_b)" in
-  if Pcre.pmatch ~rex:r_error str then
-    try
-      let pos = String.index str '\n' + 1 in
-      String.sub str pos (String.length str - pos)
-    with Not_found ->
-      ""
-  else str
+let get_error s =
+  let i = String.index s ',' in
+  String.sub s (i+2) (String.length s - i - 2)
 
 let eval_command ?(silent=false) command =
   let buffer = Buffer.create 512 in
