@@ -134,7 +134,7 @@ OBJ_OPT = $(OBJ:.cmo=.cmx)
 
 INCLUDES = $(DIRECTORIES:%=-I %)
 
-GENSOURCES = parsing/parser.mli parsing/lexer.ml parsing/parser.ml \
+GENSOURCES = global/version.ml parsing/parser.mli parsing/lexer.ml parsing/parser.ml \
 	parsing/linenum.ml
 
 -include ../config
