@@ -404,10 +404,6 @@ interface:
     signature EOF                        { List.rev $1 }
 ;
 interactive:
-/*
-    structure_item SEMISEMI              { [$1] }
-  | seq_expr SEMISEMI                    { [ghimpl (Pimpl_expr $1)] }
-*/
     /* empty */                          { exit 0 }
   | interactive_defs                     { $1 }
   | seq_expr SEMISEMI                    { [ghimpl (Pimpl_expr $1)] }
