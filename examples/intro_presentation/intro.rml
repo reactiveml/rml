@@ -1,0 +1,52 @@
+
+type key = Key_none | Key_char of char | Key_ESC
+
+let char_to_key c = match int_of_char c with
+| 27 -> Key_ESC
+| _ -> Key_char c
+
+let draw_line (x1, y1) (x2, y2) =
+  Graphics.moveto x1 y1;
+  Graphics.lineto x2 y2
+
+let process p click keys =
+  loop
+    do
+      await click(p1) in
+      await click(p2) in
+      draw_line p1 p2
+    until keys (Key_ESC) done
+  end
+
+let process keys_listener keys =
+  loop
+    if Graphics.key_pressed () then (
+      let k = Graphics.read_key () in
+      emit keys(char_to_key k);
+     );
+    pause
+  end
+
+let process click_listener click =
+  let old_pos = ref (-2, -2) in
+  loop
+    if Graphics.button_down () then (
+      let new_pos = Graphics.mouse_pos () in
+      if new_pos <> !old_pos then (
+        let x, y = new_pos in
+        old_pos := new_pos;
+        emit click(new_pos)
+     ));
+    pause
+  end
+
+let process main =
+  signal keys default Key_none gather (fun x _ -> x) in
+  signal click default (-1, -1) gather (fun x _ -> x) in
+  Graphics.open_graph "";
+ (* Graphics.resize_window 800 600;*)
+  run (p click keys)
+  ||
+  run (click_listener click)
+  ||
+  run (keys_listener keys)
