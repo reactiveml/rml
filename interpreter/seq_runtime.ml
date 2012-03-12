@@ -17,7 +17,8 @@ struct
           next: D.next;
           next_control : D.next; (* contains control processes that should not be
                                   taken into account to see if macro step is done *)
-          mutable last_activation : (clock_domain * E.clock_index) list
+          mutable last_activation : (clock_domain * E.clock_index) list;
+          mutable instance : int;
         }
     and control_type =
       | Clock_domain of clock
@@ -126,15 +127,18 @@ struct
         cond_v = false;
         next = D.mk_next ();
         next_control = D.mk_next ();
-        last_activation = [] }
+        last_activation = [];
+        instance = 0; }
 
     (* tuer un arbre p *)
     let rec set_kill p =
-      p.alive <- true;
+      p.alive <- true; (* set to true, to show that the node is no longer attached to its parent
+                       and needs to be reattaced if the node is reused *)
       p.susp <- false;
       D.clear_next p.next;
       List.iter set_kill p.children;
-      p.children <- []
+      p.children <- [];
+      p.instance <- p.instance + 1
 
     let start_ctrl cd ctrl new_ctrl =
       new_ctrl.last_activation <- save_clock_state cd;
@@ -173,8 +177,7 @@ struct
           | Kill_handler handler ->
               if p.cond_v
               then
-                (set_kill p;
-                 false)
+                false
               else
                 (p.children <- eval_children p p.children active;
                  if active then next_to_current cd p
@@ -230,7 +233,7 @@ struct
          List.iter (next_to_current cd) p.children)
 
     (** Evaluates the condition of control nodes. This can be called several
-        times for a same control node, zhen doing the eoi of several clocks.
+        times for a same control node, when doing the eoi of several clocks.
         We can keep the last condition (if it was true for the eoi of the fast clock,
         it is also true for the eoi of the slow clock), but we have to make sure
         to fire the handler only once. *)
@@ -376,17 +379,20 @@ struct
         It waits for the next activation of w otherwise,
         or if the call raises Wait_again *)
     let _on_event w sig_cd ctrl f v =
+      let instance = ctrl.instance in
       let rec self _ =
-        if is_active ctrl then
+        if ctrl.instance = instance then (
+          if is_active ctrl then
             (*ctrl is activated, run continuation*)
-          (try
-            f v
-          with
-            | Wait_again -> D.add_waiting self w)
-        else ((*ctrl is not active, wait end of instant*)
-          let is_fired = ref false in
-          D.add_next (ctrl_await is_fired) ctrl.next_control;
-          add_weoi sig_cd (eoi_await is_fired)
+            (try
+                f v
+              with
+                | Wait_again -> D.add_waiting self w)
+          else ((*ctrl is not active, wait end of instant*)
+            let is_fired = ref false in
+            D.add_next (ctrl_await is_fired) ctrl.next_control;
+            add_weoi sig_cd (eoi_await is_fired)
+          )
         )
       and eoi_await is_fired _ =
         if not !is_fired then
@@ -454,14 +460,17 @@ struct
         Waits for the next activation of evt otherwise, or if the call
         raises Wait_again *)
     let _on_event_at_eoi sig_cd ctrl w f =
+      let instance = ctrl.instance in
       let rec self _ =
-        if has_been_active ctrl sig_cd then
+        if ctrl.instance = instance then (
+          if has_been_active ctrl sig_cd then
             (*ctrl is activated, run continuation*)
-          add_weoi sig_cd eoi_work
-        else ((*ctrl is not active, wait end of instant*)
-          let is_fired = ref false in
-          D.add_next (ctrl_await is_fired) ctrl.next_control;
-          add_weoi sig_cd (eoi_await is_fired)
+            add_weoi sig_cd eoi_work
+          else ((*ctrl is not active, wait end of instant*)
+            let is_fired = ref false in
+            D.add_next (ctrl_await is_fired) ctrl.next_control;
+            add_weoi sig_cd (eoi_await is_fired)
+          )
         )
       and eoi_await is_fired _ =
         if not !is_fired then

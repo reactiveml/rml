@@ -104,6 +104,7 @@ struct
           next_control : D.next; (* contains control processes that should not be
                                   taken into account to see if macro step is done *)
           mutable last_activation : clock_state;
+          mutable instance : int;
         }
     and control_type =
       | Clock_domain of clock
@@ -539,16 +540,19 @@ struct
         cond = cond;
         cond_v = false;
         last_activation = [];
+        instance = 0;
         next = D.mk_next ();
         next_control = D.mk_next () }
 
     (* tuer un arbre p *)
     let rec set_kill p =
-      p.alive <- false;
+      p.alive <- true; (* set to true, to show that the node is no longer attached to its parent
+                       and needs to be reattaced if the node is reused *)
       p.susp <- false;
       D.clear_next p.next;
       List.iter set_kill p.children;
-      p.children <- []
+      p.children <- [];
+      p.instance <- p.instance + 1
 
     let start_ctrl cd ctrl new_ctrl =
       new_ctrl.last_activation <- Clock.save_clock_state cd.cd_clock;
@@ -586,8 +590,7 @@ struct
           | Kill_handler handler ->
               if p.cond_v
               then
-                (set_kill p;
-                 false)
+                false
               else
                 (p.children <- eval_children p p.children active;
                  if active then next_to_current cd p
@@ -1270,17 +1273,20 @@ struct
         It waits for the next activation of w otherwise,
         or if the call raises Wait_again *)
     let _on_event ev ev_ck ctrl f v =
+      let instance = ctrl.instance in
       let rec self _ =
-        if is_active ctrl then
+        if ctrl.instance = instance then (
+          if is_active ctrl then
             (*ctrl is activated, run continuation*)
-          (try
-              f v
-            with
-              | Wait_again -> add_waiting (Wsignal_wa ev.ev_gid) self)
-        else ((*ctrl is not active, wait end of instant*)
-          let is_fired = ref false in
-          D.add_next (ctrl_await is_fired) ctrl.next_control;
-          add_waiting (Weoi ev_ck.ck_gid) (eoi_await is_fired)
+            (try
+                f v
+              with
+                | Wait_again -> add_waiting (Wsignal_wa ev.ev_gid) self)
+          else ((*ctrl is not active, wait end of instant*)
+            let is_fired = ref false in
+            D.add_next (ctrl_await is_fired) ctrl.next_control;
+            add_waiting (Weoi ev_ck.ck_gid) (eoi_await is_fired)
+          )
         )
       and eoi_await is_fired _ =
         if not !is_fired then
@@ -1348,14 +1354,17 @@ struct
         Waits for the next activation of evt otherwise, or if the call
         raises Wait_again *)
     let _on_local_event_at_eoi ev ev_ck ctrl f =
+      let instance = ctrl.instance in
       let rec self _ =
-        if has_been_active ctrl ev then
-          (*ctrl is activated, run continuation*)
-          add_waiting (Weoi ev_ck.ck_gid) eoi_work
-        else ((*ctrl is not active, wait end of instant*)
-          let is_fired = ref false in
-          D.add_next (ctrl_await is_fired) ctrl.next_control;
-          add_waiting (Weoi ev_ck.ck_gid) (eoi_await is_fired)
+        if ctrl.instance = instance then (
+          if has_been_active ctrl ev then
+            (*ctrl is activated, run continuation*)
+            add_waiting (Weoi ev_ck.ck_gid) eoi_work
+          else ((*ctrl is not active, wait end of instant*)
+            let is_fired = ref false in
+            D.add_next (ctrl_await is_fired) ctrl.next_control;
+            add_waiting (Weoi ev_ck.ck_gid) (eoi_await is_fired)
+          )
         )
       and eoi_await is_fired _ =
         if not !is_fired then
@@ -1376,12 +1385,15 @@ struct
       add_waiting (Wsignal_wa ev.ev_gid) self
 
     let _on_remote_event_at_eoi ev ev_ck ctrl f =
+      let instance = ctrl.instance in
       let rec self _ =
-        if has_been_active ctrl ev then
-          add_waiting (Weoi ev_ck.ck_gid) eoi_work
-        else (
-          print_debug "Signal %a was emitted, but ctrl is not active so keep waiting@." print_signal ev;
-          add_waiting (Wsignal_wa ev.ev_gid) self
+        if ctrl.instance = instance then (
+          if has_been_active ctrl ev then
+            add_waiting (Weoi ev_ck.ck_gid) eoi_work
+          else (
+            print_debug "Signal %a was emitted, but ctrl is not active so keep waiting@." print_signal ev;
+            add_waiting (Wsignal_wa ev.ev_gid) self
+          )
         )
       and eoi_work _ =
           (try
