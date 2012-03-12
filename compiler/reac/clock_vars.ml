@@ -142,23 +142,27 @@ let add_missing_args env td =
   td
 
 let add_missing_vars l =
-  (* find missing vars and add new vars *)
-  let decl_ids = List.map (fun (gl, _, _) -> gl.gi) l in
-  let add_type_decl env (gl, vars, td) =
-    let td, (vars_list, id_list) = find_new_vars decl_ids td in
-    let env = Env.add gl.gi (vars_list, id_list) env in
-    (gl, vars, td), env
-  in
-  let l, env = mapfold add_type_decl Env.empty l in
-  (* set the correct list of vars and arity for each declared type *)
-  (* put the correct value for recursively defined constructors *)
-  let set_params env (gl, params, td) =
-    let params = params @ (all_vars env gl.gi) in
-    let info = match gl.ck_info with
-      | None -> assert false
-      | Some info -> { info with clock_arity = arity_of_type_vars params }
+  if !Compiler_options.no_clocking then
+    l
+  else (
+    (* find missing vars and add new vars *)
+    let decl_ids = List.map (fun (gl, _, _) -> gl.gi) l in
+    let add_type_decl env (gl, vars, td) =
+      let td, (vars_list, id_list) = find_new_vars decl_ids td in
+      let env = Env.add gl.gi (vars_list, id_list) env in
+      (gl, vars, td), env
     in
-    gl.ck_info <- Some info;
-    (gl, params, add_missing_args env td)
-  in
-  List.map (set_params env) l
+    let l, env = mapfold add_type_decl Env.empty l in
+    (* set the correct list of vars and arity for each declared type *)
+    (* put the correct value for recursively defined constructors *)
+    let set_params env (gl, params, td) =
+      let params = params @ (all_vars env gl.gi) in
+      let info = match gl.ck_info with
+        | None -> assert false
+        | Some info -> { info with clock_arity = arity_of_type_vars params }
+      in
+      gl.ck_info <- Some info;
+      (gl, params, add_missing_args env td)
+    in
+    List.map (set_params env) l
+  )
