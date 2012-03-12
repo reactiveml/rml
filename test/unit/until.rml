@@ -103,6 +103,47 @@ let process until_await_immediate act =
   ||
   pause; emit s2; emit s1
 
+(* [O 0; O 1; O 2; S(O 0; O 3)] *)
+let process until_loop act =
+  signal abort in
+  signal s default 0 gather (+) in
+  loop
+    do
+      act 0;
+      await s(v1) in
+      act v1;
+      await s(v2) in
+      act v2
+    until abort -> act 10 done
+  end
+  ||
+  emit s(1);
+  pause;
+  emit s(2);
+  pause;
+  emit s(3)
+
+(* [O 0; O 1; S(O 10, O 0); N; O 3; N] *)
+let process until_loop2 act =
+  signal abort in
+  signal s default 0 gather (+) in
+  loop
+    do
+      act 0;
+      await s(v1) in
+      act v1;
+      await s(v2) in
+      act (v2 + 1)
+    until abort -> act 10 done
+  end
+  ||
+  emit s(1);
+  pause;
+  emit abort;
+  pause;
+  pause;
+  emit s(3)
+
 
 open Rmltest
 
@@ -114,4 +155,6 @@ let test =
     (until_nested, "until_nested", [O 1; O 2; O 3; N]);
     (until_await, "until_await", [O 1; O 2; O 5]);
     (until_await_2, "until_await_2", [O 1; O 2; O 5]);
-    (until_await_immediate, "until_await_immediate", [O 1; P [O 2; O 4]; O 5]) ]
+    (until_await_immediate, "until_await_immediate", [O 1; P [O 2; O 4]; O 5]);
+    (until_loop, "until_loop", [O 0; O 1; S(O 2, O 0); O 3]);
+    (until_loop2, "until_loop2", [O 0; O 1; S(O 10, O 0); N; O 3; N]) ]
