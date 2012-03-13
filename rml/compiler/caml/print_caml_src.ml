@@ -39,46 +39,47 @@ open Global_ident
 
 
 let current_module = ref ""
+let formatter = ref std_formatter
 
 (** Generic printing of a list.
     This function seems to appear in several places... *)
-let print_list print print_sep l =
+let print_list  print print_sep l =
   let rec printrec l =
     match l with
       [] -> ()
     | [x] ->
 	print x
     | x::l ->
-	open_box 0;
+	pp_open_box !formatter 0;
 	print x;
 	print_sep ();
-	print_space ();
+	pp_print_space !formatter ();
 	printrec l;
-	close_box () in
+	pp_close_box !formatter () in
   printrec l
 
 (** Prints an immediate. A patch is needed on float number for
     [ocaml] < 3.05. *)
 let print_immediate i =
   match i with
-  | Const_unit -> print_string "()"
-  | Const_bool(b) -> print_string (if b then "true" else "false")
+  | Const_unit -> pp_print_string !formatter "()"
+  | Const_bool(b) -> pp_print_string !formatter  (if b then "true" else "false")
   | Const_int(i) ->
       if i < 0 then
-	(print_string "(";
-	 print_int i;
-	 print_string ")")
-      else print_int i
+	(pp_print_string !formatter "(";
+	 pp_print_int !formatter i;
+	 pp_print_string !formatter ")")
+      else pp_print_int !formatter i
   | Const_float(f) ->
       if f < 0.0 then
-	(print_string "(";
-	 print_float f;
-	 print_string ")")
-      else print_float f
+	(pp_print_string !formatter "(";
+	 pp_print_float !formatter f;
+	 pp_print_string !formatter ")")
+      else pp_print_float !formatter f
 	(* patch because "x.0" is printed "x" by C for caml < 3.05 *)
 	(* if (fst (modf f)) = 0.0 then print_string ".0" *)
-  | Const_char(c) -> print_char '\''; print_char c; print_char '\''
-  | Const_string(s) -> print_string ("\""^(String.escaped s)^"\"")
+  | Const_char(c) -> pp_print_char !formatter '\''; print_char c; print_char '\''
+  | Const_string(s) -> pp_print_string !formatter ("\""^(String.escaped s)^"\"")
 
 (** Prints a name. Infix chars are surrounded by parenthesis *)
 let print_name s =
@@ -94,7 +95,7 @@ let print_name s =
 	else
 	"(" ^ s ^ ")"
   in
-  print_string s
+  pp_print_string !formatter s
 
 (** Prints pervasives values *)
 let print_pervasives n =
@@ -110,8 +111,8 @@ let print_pervasives n =
     "Undefined_recursive_module" ->
       print_name n
   | _ ->
-      print_string "Pervasives";
-      print_string ".";
+      pp_print_string !formatter  "Pervasives";
+      pp_print_string !formatter  ".";
       print_name n
 
 
@@ -120,8 +121,8 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
   if gl.gi = Initialization.event_ident then
     (* special case for event type *)
     begin
-      print_string !interpreter_module;
-      print_string ".";
+      pp_print_string !formatter !interpreter_module;
+      pp_print_string !formatter ".";
       print_name (Ident.name n)
     end
   else if q = pervasives_module then
@@ -131,13 +132,13 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
     print_name (Ident.name n)
   else
     begin
-      print_string q;
-      print_string ".";
+      pp_print_string !formatter q;
+      pp_print_string !formatter ".";
       print_name (Ident.name n)
     end
 
 (** Prints a type variables *)
-let print_type_var s = print_string ("'"^s)
+let print_type_var s = pp_print_string !formatter  ("'"^s)
 
 
 let priority exp =
@@ -167,9 +168,9 @@ let priority_te t =
 
 (** Emission of code *)
 let rec print pri e =
-  open_box 2;
+  pp_open_box !formatter 2;
   let pri_e = priority e.cexpr_desc in
-  if pri > pri_e then print_string "(";
+  if pri > pri_e then pp_print_string !formatter  "(";
   begin match e.cexpr_desc with
     Cexpr_constant(im) -> print_immediate im
   | Cexpr_global(gl) -> print_global gl
@@ -180,220 +181,220 @@ let rec print pri e =
 	match expr.cexpr_desc with
 	| Cexpr_tuple [e1;e2] ->
 	    print (1 + pri_e) e1;
-	    print_space ();
-	    print_string "::";
-	    print_space ();
+	    pp_print_space !formatter ();
+	    pp_print_string !formatter "::";
+	    pp_print_space !formatter ();
 	    print (1 + pri_e) e2
 	| _ -> raise (Internal (e.cexpr_loc, "Print_caml_src: ::"))
       end
   | Cexpr_construct(gl,Some e1) ->
       print_global gl;
-      print_space ();
+      pp_print_space !formatter ();
       print (1 + pri_e) e1
   | Cexpr_apply(f,l) ->
       print pri_e f;
-      print_space ();
+      pp_print_space !formatter ();
       print_list (print (pri_e + 1)) (fun () -> ()) l
   | Cexpr_function patt_expr_list ->
-      print_string "function";
-      print_space ();
+      pp_print_string !formatter "function";
+      pp_print_space !formatter ();
       List.iter
 	(fun patt_expr ->
-	  print_string "| ";
+	  pp_print_string !formatter "| ";
 	  print_patt_expr
-            (fun () -> print_string " ->"; print_space ()) patt_expr)
+            (fun () -> pp_print_string !formatter " ->"; pp_print_space !formatter ()) patt_expr)
 	patt_expr_list
   | Cexpr_fun(param_list,e1) ->
-      print_string "fun";
-      print_space ();
+      pp_print_string !formatter "fun";
+      pp_print_space !formatter ();
       print_list (print_pattern 0) (fun () -> ()) param_list;
-      print_space ();
-      print_string "->";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "->";
+      pp_print_space !formatter ();
       print 0 e1
   | Cexpr_let(flag, [patt, { cexpr_desc = Cexpr_fun (param_list, e1) }], e) ->
-      print_string (if flag = Recursive then "let rec " else "let ");
+      pp_print_string !formatter (if flag = Recursive then "let rec " else "let ");
       print_pattern 0 patt;
-      print_space ();
+      pp_print_space !formatter ();
       print_list (print_pattern 0) (fun () -> ()) param_list;
-      print_space ();
-      print_string "=";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "=";
+      pp_print_space !formatter ();
       print 0 e1;
-      print_space ();
-      print_string "in";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "in";
+      pp_print_space !formatter ();
       print 0 e
   | Cexpr_let(flag, l, e) ->
-      print_string (if flag = Recursive then "let rec " else "let ");
+      pp_print_string !formatter (if flag = Recursive then "let rec " else "let ");
       print_list (print_patt_expr
 		    (fun () ->
-		      print_space();
-		      print_string "=";
-		      print_space ()))
+		      pp_print_space !formatter ();
+		      pp_print_string !formatter "=";
+		      pp_print_space !formatter ()))
 	(fun () ->
-	  print_space ();
-	  print_string "and")
+	  pp_print_space !formatter ();
+	  pp_print_string !formatter "and")
         l;
-      print_space ();
-      print_string "in";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "in";
+      pp_print_space !formatter ();
       print 0 e
   | Cexpr_ifthenelse(e1,e2,e3) ->
-      print_string "if";
-      print_space ();
+      pp_print_string !formatter "if";
+      pp_print_space !formatter ();
       print (pri_e - 1) e1;
-      print_space ();
-      print_string "then";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "then";
+      pp_print_space !formatter ();
       print pri_e e2;
-      print_space ();
-      print_string "else";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "else";
+      pp_print_space !formatter ();
       print pri_e e3
   | Cexpr_tuple(l) ->
-      print_string "(";
-      print_list (print (pri_e - 1)) (fun () -> print_string ",") l;
-      print_string ")"
+      pp_print_string !formatter "(";
+      print_list (print (pri_e - 1)) (fun () -> pp_print_string !formatter ",") l;
+      pp_print_string !formatter ")"
   | Cexpr_record(l) ->
-      print_string "{";
+      pp_print_string !formatter "{";
       print_list (fun (gl, e) -> print_global gl;
-                                 print_string "=";
+                                 pp_print_string !formatter "=";
 	                         print (pri_e + 1) e)
-                 (fun () -> print_string ";") l;
-      print_string "}"
+                 (fun () -> pp_print_string !formatter ";") l;
+      pp_print_string !formatter "}"
   | Cexpr_record_access(e, gl) ->
       print pri_e e;
-      print_string ".";
+      pp_print_string !formatter ".";
       print_global gl
   | Cexpr_record_update(e1, gl, e2) ->
       print (pri_e + 2) e1;
-      print_string ".";
+      pp_print_string !formatter ".";
       print_global gl;
-      print_space ();
-      print_string "<-";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "<-";
+      pp_print_space !formatter ();
       print pri_e e2;
   | Cexpr_array(l) ->
-      print_string "[|";
-      print_list (print (pri_e - 1)) (fun () -> print_string ";") l;
-      print_string "|]"
+      pp_print_string !formatter "[|";
+      print_list (print (pri_e - 1)) (fun () -> pp_print_string !formatter ";") l;
+      pp_print_string !formatter "|]"
   | Cexpr_match(e,l) ->
-      close_box ();
-      open_box 0;
-      print_string "match ";
+      pp_close_box !formatter ();
+      pp_open_box !formatter 0;
+      pp_print_string !formatter "match ";
       print 0 e;
-      print_string " with";
-      print_space ();
+      pp_print_string !formatter " with";
+      pp_print_space !formatter ();
       List.iter
 	(fun pat_expr ->
-	  print_string "| ";
+	  pp_print_string !formatter "| ";
 	  print_patt_expr
-            (fun () -> print_string " ->"; print_space ()) pat_expr)
+            (fun () -> pp_print_string !formatter " ->"; pp_print_space !formatter ()) pat_expr)
 	l
   | Cexpr_seq (e1,e2) ->
       print pri_e e1;
-      print_string ";";
-      print_space ();
+      pp_print_string !formatter ";";
+      pp_print_space !formatter ();
       print pri_e e2;
   | Cexpr_trywith (e,l) ->
-      close_box ();
-      open_box 0;
-      print_string "try ";
+      pp_close_box !formatter ();
+      pp_open_box !formatter 0;
+      pp_print_string !formatter "try ";
       print 0 e;
-      print_string " with";
-      print_space ();
+      pp_print_string !formatter " with";
+      pp_print_space !formatter ();
       List.iter
 	(fun pat_expr ->
-	  print_string "| ";
+	  pp_print_string !formatter "| ";
 	  print_patt_expr
-            (fun () -> print_string " ->"; print_space ()) pat_expr)
+            (fun () -> pp_print_string !formatter " ->"; pp_print_space !formatter ()) pat_expr)
 	l
   | Cexpr_assert e ->
-      print_string "assert";
-      print_space ();
+      pp_print_string !formatter "assert";
+      pp_print_space !formatter ();
       print (pri_e + 1) e
   | Cexpr_while (e1,e2) ->
-      print_string "while";
-      print_space ();
+      pp_print_string !formatter "while";
+      pp_print_space !formatter ();
       print (pri_e - 1) e1;
-      print_space ();
-      print_string "do";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "do";
+      pp_print_space !formatter ();
       print (pri_e - 1) e2;
-      print_space ();
-      print_string "done";
+      pp_print_space !formatter ();
+      pp_print_string !formatter "done";
   | Cexpr_for (i,e1,e2,flag,e3) ->
-      print_string "for";
-      print_space ();
+      pp_print_string !formatter "for";
+      pp_print_space !formatter ();
       print_name (Ident.unique_name i);
-      print_string " = ";
+      pp_print_string !formatter " = ";
       print (pri_e - 1) e1;
-      print_space ();
-      print_string (if flag = Upto then "to" else "downto");
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter (if flag = Upto then "to" else "downto");
+      pp_print_space !formatter ();
       print (pri_e - 1) e2;
-      print_space ();
-      print_string "do";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "do";
+      pp_print_space !formatter ();
       print (pri_e - 1) e3;
-      print_space ();
-      print_string "done";
+      pp_print_space !formatter ();
+      pp_print_string !formatter "done";
   | Cexpr_constraint (e,typ) ->
-      print_string "(";
+      pp_print_string !formatter "(";
       print (pri_e - 1) e;
-      print_string ":";
-      print_space ();
+      pp_print_string !formatter ":";
+      pp_print_space !formatter ();
       print_te 0 typ;
-      print_string ")";
+      pp_print_string !formatter ")";
   | Cexpr_when_match _ ->
       raise (Internal (e.cexpr_loc, "Print_caml_src.print Cexpr_when_match"))
   end;
-  if pri > pri_e then print_string ")";
-  close_box()
+  if pri > pri_e then pp_print_string !formatter ")";
+  pp_close_box !formatter ()
 
 and print_te pri typ =
-  open_box 2;
+  pp_open_box !formatter 2;
   let pri_e = priority_te typ.cte_desc in
-  if pri > pri_e then print_string "(";
+  if pri > pri_e then pp_print_string !formatter "(";
   begin match typ.cte_desc with
-  | Ctype_any -> print_string "_"
+  | Ctype_any -> pp_print_string !formatter "_"
   | Ctype_var s -> print_type_var s
   | Ctype_arrow (t1,t2) ->
-      print_string "(";
+      pp_print_string !formatter "(";
       print_te (pri_e + 1) t1;
-      print_space ();
-      print_string "->";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "->";
+      pp_print_space !formatter ();
       print_te pri_e t2;
-      print_string ")";
+      pp_print_string !formatter ")";
   | Ctype_product l ->
-      print_string "(";
-      print_list (print_te (pri_e - 1)) (fun () -> print_string " *") l;
-      print_string ")"
+      pp_print_string !formatter "(";
+      print_list (print_te (pri_e - 1)) (fun () -> pp_print_string !formatter " *") l;
+      pp_print_string !formatter ")"
   | Ctype_constr (n,[]) ->
       print_global n
   | Ctype_constr (n,l) ->
-      print_string "(";
-      print_list (print_te (pri_e - 1)) (fun () -> print_string ",") l;
-      print_string ")";
-      print_space ();
+      pp_print_string !formatter "(";
+      print_list (print_te (pri_e - 1)) (fun () -> pp_print_string !formatter ",") l;
+      pp_print_string !formatter ")";
+      pp_print_space !formatter ();
       print_global n
   end;
-  if pri > pri_e then print_string ")";
-  close_box()
+  if pri > pri_e then pp_print_string !formatter ")";
+  pp_close_box !formatter ()
 
 and print_type_decl typ =
-  open_box 2;
+  pp_open_box !formatter 2;
   match typ with
   | Ctype_abstract -> ()
   | Ctype_rebind t ->
-      print_string "=";
-      print_space ();
+      pp_print_string !formatter "=";
+      pp_print_space !formatter ();
       print_te 0 t
   | Ctype_variant l ->
-      print_string "=";
-      print_space ();
+      pp_print_string !formatter "=";
+      pp_print_space !formatter ();
       print_list
 	(fun (c,typ_opt) ->
 	  print_global c;
@@ -401,35 +402,35 @@ and print_type_decl typ =
 	    match typ_opt with
 	    | None -> ()
 	    | Some typ ->
-		print_space ();
-		print_string "of";
-		print_space ();
+		pp_print_space !formatter ();
+		pp_print_string !formatter "of";
+		pp_print_space !formatter ();
 		print_te 2 typ
 	  end)
 	(fun () -> print_space (); print_string "| ")
 	l
   | Ctype_record l ->
-      print_string "=";
-      print_space ();
-      print_string "{";
-      print_space ();
+      pp_print_string !formatter "=";
+      pp_print_space !formatter ();
+      pp_print_string !formatter "{";
+      pp_print_space !formatter ();
       print_list
 	(fun (lab,flag,typ) ->
 	  if flag = Mutable then print_string "mutable";
-	  print_space ();
+	  pp_print_space !formatter ();
 	  print_global lab;
-	  print_string ":";
-	  print_space ();
+	  pp_print_string !formatter ":";
+	  pp_print_space !formatter ();
 	  print_te 0 typ;)
-	(fun () -> print_space (); print_string "; ")
+	(fun () -> pp_print_space !formatter (); pp_print_string !formatter "; ")
 	l;
-      print_string "}"
+      pp_print_string !formatter "}"
 
 
 and print_pattern pri pat =
-  open_box 2;
+  pp_open_box !formatter 2;
   let pri_e = priority_pattern pat.cpatt_desc in
-  if pri > pri_e then print_string "(";
+  if pri > pri_e then pp_print_string !formatter "(";
   begin match pat.cpatt_desc with
     Cpatt_constant(i) -> print_immediate i
   | Cpatt_var(Cvarpatt_local v) ->
@@ -442,115 +443,115 @@ and print_pattern pri pat =
 	match patt.cpatt_desc with
 	| Cpatt_tuple [p1;p2] ->
 	    print_pattern (1 + pri_e) p1;
-	    print_space ();
-	    print_string "::";
-	    print_space ();
+	    pp_print_space !formatter ();
+	    pp_print_string !formatter "::";
+	    pp_print_space !formatter ();
 	    print_pattern (1 + pri_e) p2
 	| _ -> raise (Internal (patt.cpatt_loc, "Print_caml_src: ::"))
       end
   | Cpatt_construct(gl, Some pat) ->
       print_global gl;
-      print_space ();
+      pp_print_space !formatter ();
       print_pattern 2 pat
   | Cpatt_tuple(pat_list) ->
-      print_string "(";
+      pp_print_string !formatter "(";
       print_list (print_pattern (pri_e - 1))
-        (fun () -> print_string ",") pat_list;
-      print_string ")"
+        (fun () -> pp_print_string !formatter ",") pat_list;
+      pp_print_string !formatter ")"
   | Cpatt_record(l) ->
-      print_string "{";
+      pp_print_string !formatter "{";
       print_list
 	(fun (gl, pat) ->
 	  print_global gl;
-          print_string "=";
+          pp_print_string !formatter "=";
 	  print_pattern (pri_e - 1) pat)
-        (fun () -> print_string ";") l;
-      print_string "}"
+        (fun () -> pp_print_string !formatter ";") l;
+      pp_print_string !formatter "}"
   | Cpatt_or(pat1, pat2) ->
       print_pattern pri_e pat1;
-      print_string "|";
+      pp_print_string !formatter "|";
       print_pattern pri_e pat2
   | Cpatt_alias(pat, s) ->
-      print_string "(";
+      pp_print_string !formatter "(";
       print_pattern pri_e pat;
-      print_space ();
-      print_string "as";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "as";
+      pp_print_space !formatter ();
       begin
 	match s with
 	| Cvarpatt_local id -> print_name (Ident.unique_name id)
 	| Cvarpatt_global gl -> print_global gl
       end;
-      print_string ")"
-  | Cpatt_any -> print_string "_"
+      pp_print_string !formatter ")"
+  | Cpatt_any -> pp_print_string !formatter "_"
   | Cpatt_array l ->
-      print_string "[|";
-      print_list (print_pattern (pri_e - 1)) (fun () -> print_string ";") l;
-      print_string "|]"
+      pp_print_string !formatter "[|";
+      print_list (print_pattern (pri_e - 1)) (fun () -> pp_print_string !formatter ";") l;
+      pp_print_string !formatter "|]"
   | Cpatt_constraint (pat, typ) ->
-      print_string "(";
+      pp_print_string !formatter "(";
       print_pattern 0 pat;
-      print_string ":";
-      print_space ();
+      pp_print_string !formatter ":";
+      pp_print_space !formatter ();
       print_te 0 typ;
-      print_string ")"
+      pp_print_string !formatter ")"
   end;
-  if pri > pri_e then print_string ")";
-  close_box ()
+  if pri > pri_e then pp_print_string !formatter ")";
+  pp_close_box !formatter ()
 
 and print_patt_expr print_sep (pat, expr) =
-  open_box 2;
+  pp_open_box !formatter 2;
   print_pattern 0 pat;
   match expr.cexpr_desc with
   | Cexpr_when_match(e1,e2) ->
-      print_space ();
-      print_string "when";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "when";
+      pp_print_space !formatter ();
       print 1 e1;
       print_sep ();
       print 1 e2;
-      close_box ();
-      print_space ()
+      pp_close_box !formatter ();
+      pp_print_space !formatter ()
   | _ ->
       print_sep ();
       print 1 expr;
-      close_box ();
-      print_space ()
+      pp_close_box !formatter ();
+      pp_print_space !formatter ()
 
 let print_impl_item item =
   match item.cimpl_desc with
   | Cimpl_expr e ->
-      open_box 2;
+      pp_open_box !formatter 2;
       print 0 e;
-      print_newline();
-      print_string ";;";
-      close_box ()
+      pp_print_newline !formatter();
+      pp_print_string !formatter ";;";
+      pp_close_box !formatter ()
   | Cimpl_let(flag, [patt, { cexpr_desc = Cexpr_fun (param_list, e1) }]) ->
-      print_string (if flag = Recursive then "let rec " else "let ");
+      pp_print_string !formatter (if flag = Recursive then "let rec " else "let ");
       print_pattern 0 patt;
-      print_space ();
+      pp_print_space !formatter ();
       print_list (print_pattern 0) (fun () -> ()) param_list;
-      print_space ();
-      print_string "=";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "=";
+      pp_print_space !formatter ();
       print 0 e1;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
   | Cimpl_let(flag, l) ->
-      print_string (if flag = Recursive then "let rec " else "let ");
+      pp_print_string !formatter (if flag = Recursive then "let rec " else "let ");
       print_list (print_patt_expr
 		    (fun () ->
-		      print_space ();
-		      print_string "=";
-		      print_space ();))
+		      pp_print_space !formatter ();
+		      pp_print_string !formatter "=";
+		      pp_print_space !formatter ();))
 	(fun () ->
-	  print_space ();
-	  print_string "and")
+	  pp_print_space !formatter ();
+	  pp_print_string !formatter "and")
         l;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
   | Cimpl_type l ->
-      print_string "type ";
+      pp_print_string !formatter "type ";
       print_list
 	(fun (n,param_list,typ) ->
 	  begin
@@ -558,66 +559,66 @@ let print_impl_item item =
 	    | [] -> ()
 	    | [s] -> print_type_var s;
 	    | l ->
-		print_string "(";
+		pp_print_string !formatter "(";
 		print_list print_type_var
-		  (fun () -> print_string ","; print_space ())
+		  (fun () -> pp_print_string !formatter ","; pp_print_space !formatter ())
 		  l;
-		print_string ")";
+		pp_print_string !formatter ")";
 	  end;
-	  print_space ();
+	  pp_print_space !formatter ();
 	  print_global n;
-	  print_space ();
+	  pp_print_space !formatter ();
 	  print_type_decl typ)
 	(fun () ->
-	  print_space ();
-	  print_string "and")
+	  pp_print_space !formatter ();
+	  pp_print_string !formatter "and")
         l;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
   | Cimpl_exn (n,None) ->
-      print_string "exception ";
+      pp_print_string !formatter "exception ";
       print_global n;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
   | Cimpl_exn (n, Some typ) ->
-      print_string "exception ";
+      pp_print_string !formatter "exception ";
       print_global n;
-      print_space ();
-      print_string "of";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "of";
+      pp_print_space !formatter ();
       print_te 0 typ;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
   | Cimpl_exn_rebind (n,gl) ->
-      print_string "exception ";
+      pp_print_string !formatter "exception ";
       print_global n;
-      print_space ();
-      print_string "=";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "=";
+      pp_print_space !formatter ();
       print_global gl;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
   | Cimpl_open s ->
-      print_string "open ";
-      print_string s;
-      print_space ();
-      print_string ";;"
+      pp_print_string !formatter "open ";
+      pp_print_string !formatter s;
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
 ;;
 
 let print_intf_item item =
   match item.cintf_desc with
   | Cintf_val (n, typ) ->
-      print_string "val ";
+      pp_print_string !formatter "val ";
       print_global n;
-      print_space ();
-      print_string ":";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter ":";
+      pp_print_space !formatter ();
       print_te 0 typ;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
 
   | Cintf_type l ->
-      print_string "type ";
+      pp_print_string !formatter "type ";
       print_list
 	(fun (n,param_list,typ) ->
 	  begin
@@ -625,71 +626,65 @@ let print_intf_item item =
 	    | [] -> ()
 	    | [s] -> print_type_var s;
 	    | l ->
-		print_string "(";
+		pp_print_string !formatter "(";
 		print_list print_type_var
-		  (fun () -> print_string ","; print_space ())
+		  (fun () -> pp_print_string !formatter ","; pp_print_space !formatter ())
 		  l;
-		print_string ")";
+		pp_print_string !formatter ")";
 	  end;
-	  print_space ();
+	  pp_print_space !formatter ();
 	  print_global n;
-	  print_space ();
+	  pp_print_space !formatter ();
 	  print_type_decl typ)
 	(fun () ->
-	  print_space ();
-	  print_string "and")
+	  pp_print_space !formatter ();
+	  pp_print_string !formatter "and")
         l;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
   | Cintf_exn (n,None) ->
-      print_string "exception ";
+      pp_print_string !formatter "exception ";
       print_global n;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
   | Cintf_exn (n, Some typ) ->
-      print_string "exception ";
+      pp_print_string !formatter "exception ";
       print_global n;
-      print_space ();
-      print_string "of";
-      print_space ();
+      pp_print_space !formatter ();
+      pp_print_string !formatter "of";
+      pp_print_space !formatter ();
       print_te 0 typ;
-      print_space ();
-      print_string ";;"
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
   | Cintf_open s ->
-      print_string "open ";
-      print_string s;
-      print_space ();
-      print_string ";;"
+      pp_print_string !formatter "open ";
+      pp_print_string !formatter s;
+      pp_print_space !formatter ();
+      pp_print_string !formatter ";;"
 ;;
 
 (* the main function *)
 set_max_boxes max_int ;;
 
-let output_impl_decl oc module_name decl =
+let output_impl_decl_fmt fmt module_name decl =
   current_module := module_name;
-  set_formatter_out_channel oc;
-  force_newline ();
+  formatter := fmt;
+  pp_force_newline !formatter ();
   print_impl_item decl;
-  print_string "\n\n";
-  print_flush ()
+  pp_print_string !formatter "\n\n";
+  pp_print_flush !formatter ()
+
+let output_impl_decl oc module_name decl =
+  output_impl_decl_fmt (formatter_of_out_channel oc) module_name decl
 
 let output_impl_decl_string module_name decl =
-  current_module := module_name;
-  let buffer = Buffer.create 512 in
-  let my_output = fun s _ _ -> Buffer.add_string buffer s in
-  let my_flush = fun () -> () in
-  set_formatter_output_functions my_output my_flush;
-  force_newline ();
-  print_impl_item decl;
-  print_string "\n\n";
-  let contents = Buffer.contents buffer in
-  Buffer.reset buffer;
-  contents
+  output_impl_decl_fmt str_formatter module_name decl;
+  flush_str_formatter ()
 
 let output_intf_decl oc module_name decl =
   current_module := module_name;
-  set_formatter_out_channel oc;
-  force_newline ();
+  formatter := formatter_of_out_channel oc;
+  pp_force_newline !formatter ();
   print_intf_item decl;
-  print_string "\n\n";
-  print_flush ()
+  pp_print_string !formatter "\n\n";
+  pp_print_flush !formatter ()
