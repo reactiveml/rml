@@ -35,19 +35,21 @@ let compile_decl_list module_name itf info_chan out_chan decl_list =
   Compiler.compile_implementation_back_end info_chan out_chan module_name
     intermediate_code
 
+let filename = "rml_toplevel"
+let module_name () = String.capitalize filename
+
+let init () =
+  let () = Modules.start_compiling_interface (module_name ()) in
+  Initialization.load_initial_modules ()
+
 let translate_phrase phrase =
   (* Initialization *)
-  let module_name = "Rml" in
-  Modules.start_compiling_interface module_name;
-  Initialization.load_initial_modules();
-
+  let module_name = module_name () in
   let itf = open_out_bin "/dev/null" in
-  let lexbuf = Lexing.from_string phrase in
+  Location.reset ();
 
   try
-    Location.init lexbuf "";
-    Lexer.update_loc lexbuf None 1 true 0;
-    let decl_list = Parse.interactive lexbuf in
+    let decl_list = Parse.interactive (Lexing.from_string phrase) in
     (* expend externals *)
     let decl_list = List.map External.expend decl_list in
     (* front-end *)

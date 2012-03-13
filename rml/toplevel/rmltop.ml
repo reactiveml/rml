@@ -181,11 +181,12 @@ let load_ocamlinit () =
       if Sys.file_exists home_init then load_script home_init
     with Not_found -> ()
 
-let main s =
+let main () =
   let _ = print_intro() in
   Toploop.set_paths ();
   Toploop.initialize_toplevel_env ();
   init_toplevel ();
+  Rmlcompiler.Interactive.init ();
   Sys.catch_break true;
   eval_phrases ~silent:(not !debug) init_rml;
   try
@@ -195,15 +196,17 @@ let main s =
       let line = read_line () in
       let len = String.length line in
       let tail = if len < 2 then "" else String.sub line (len-2) 2 in
-      if len = 0 || tail = ";;" then begin
-        if len <> 0 then begin
-          let () = Buffer.add_string buf line in
-          let phrase = Buffer.contents buf in
-          Buffer.reset buf;
-          translate_and_eval_phrase phrase;
-        end;
+      let line = String.concat "" [ line; "\n" ] in
+      if tail = ";;" then begin
+        let () = Buffer.add_string buf line in
+        let phrase = Buffer.contents buf in
+        Buffer.reset buf; Buffer.clear buf;
+        translate_and_eval_phrase (String.copy phrase);
         Rmltop_global.print_prompt ();
       end
+      else if line <> "\n" then begin
+        Buffer.add_string buf line
+      end;
     done
   with
     | End_of_file -> exit 0
@@ -220,4 +223,4 @@ let _ =
     ])
     add_include_obj
     "";
-  main ""
+  main ()
