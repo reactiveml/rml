@@ -68,7 +68,7 @@ let float_literal =
 
 rule phrase = parse
   | sep* '#'         { directive lexbuf }
-  | sep*             { Rml_phrase (expr lexbuf) }
+  | sep*             { Rml_phrase (expr lexbuf ^ ";;") }
   | eof              { raise EOF }
 
 and directive = parse
@@ -80,7 +80,7 @@ and directive = parse
   | "run"            { Run (expr lexbuf) }
   | "exec"           { Exec (expr lexbuf) }
   | "quit"           { end_of_phrase lexbuf; Quit }
-  | sep+             { OCaml_phrase (expr lexbuf) }
+  | sep+             { OCaml_phrase (expr lexbuf ^ ";;") }
   | eof              { raise EOF }
   | _                { error lexbuf; assert false }
 
