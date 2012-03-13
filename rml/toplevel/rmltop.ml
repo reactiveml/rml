@@ -80,16 +80,17 @@ let eval_command ?(silent=false) command =
     Toploop.parse_use_file := save;
     (false, get_error (Buffer.contents buffer))
 
+let print_message message =
+  if String.length message <> 0 then
+    Printf.eprintf "%s\n%!" message
+
 let rec eval_phrases ?(silent=false) = function
   | [] -> ()
   | phrase :: phrases ->
       let success, message = eval_command ~silent phrase in
-      if not success then
-        Printf.eprintf "%s\n%!" message
-      else begin
-        Printf.printf "%s\n%!" message;
+      print_message message;
+      if success then
         eval_phrases ~silent phrases
-      end
 
 let translate_and_eval_phrase rml_phrase =
   let rml_phrase = Lexing.from_string rml_phrase in
