@@ -15,6 +15,8 @@ val clear_sprite : 'a sprite -> unit
 val create_sprite_from_file : 'a viewport -> 'a pos -> int -> int -> string -> 'a sprite
 val create_sprite_box : 'a viewport -> 'a pos -> int -> int -> color -> 'a sprite
 
+val draw_info_box : string -> unit
+
 val flush_key_events : unit -> string list
 val flush_mouse_events : unit -> (mouse_event * int pos) list
 

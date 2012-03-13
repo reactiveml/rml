@@ -7,7 +7,7 @@ let dt = 2.0
 
 type ('a, 'state) agent_state =
     { mutable a_pos : vector;
-      (*a_kill : (unit, unit list) event;*)
+      a_kill : (unit, unit list) event;
       a_relocate : (unit, unit list) event;
       a_state : 'state }
 
@@ -19,11 +19,11 @@ let mk_pos agent_ck init =
   init
 
 let mk_state pos st global_area_ck =
-  (*signal kill at global_area_ck in *)
+  signal kill at global_area_ck in
   signal relocate at global_area_ck in
   { a_pos = pos;
     a_state = st;
-   (* a_kill = kill;*)
+    a_kill = kill;
     a_relocate = relocate }
 
 let rec only_agents l = match l with
@@ -93,13 +93,13 @@ let bounce_wall r w pos sp rad = match w with
 type boundary_kind = Boundary | BrickWall
 
 (*** Agents *)
-let process agent pos st move global_add global_area_ck area env vp =
+let process agent pos st move at_death global_add global_area_ck area env vp =
   let me = mk_state pos st global_area_ck in
-  (*do *)
+  do
     do
       run (move me area env)
-    until me.a_relocate -> emit global_add (me.a_pos, me.a_state, move) done
- (* until me.a_kill done *)
+    until me.a_relocate -> emit global_add (me.a_pos, me.a_state, move, at_death) done
+  until me.a_kill -> at_death () done
 
 (** Wall *)
 let process wall r w area env =
@@ -132,13 +132,13 @@ let process forward_child s s_map =
   run (foreach s forward)
 
 let process adder add global_add global_area_ck area env vp =
-  let process launch_agent (pos, st, move) =
-    run (agent pos st move global_add global_area_ck area env vp)
+  let process launch_agent (pos, st, move, at_death) =
+    run (agent pos st move at_death global_add global_area_ck area env vp)
   in
   run (foreach_p add launch_agent)
 
 let process composed_adder add add_map =
-  let forward ((pos, _, _) as x) =
+  let forward ((pos, _, _, _) as x) =
     let s = Geomap.find_by_pos pos add_map in
     emit s x
   in
@@ -260,10 +260,10 @@ let mk_global_area agent_ck level r vp =
   signal external_add at topck in
   signal clicks at topck in
   let process area_p =
-   newclock global_ck in
+   newclock global_ck schedule (fun nb -> 0, nb) in
     signal add at global_ck in
     signal env at global_ck in
-    newclock area_ck in
+    newclock area_ck schedule (fun nb -> 0, nb) in
       run (area area_ck area_ck agent_ck add add env None level r [N; S; W; E] vp clicks)
       ||
       run (forwarder external_add add)
@@ -275,7 +275,8 @@ type ball_state =
     { mutable b_speed : vector;
       b_sprite : float Mlsdl_client.sprite;
       b_rad : float;
-      b_weight : float; }
+      b_weight : float;
+      b_lethal : bool }
 
 let do_stuff () =
   let r = ref 0 in
@@ -290,23 +291,30 @@ let process_collision me s b = match b with
 
     let d2 = dist2 new_pos_a new_pos_me in
     if d2 > 0. && (sqrt d2) < a.a_state.b_rad +. me.a_state.b_rad then (
-      (*print_endline "collision detected";*)
-      (*collision detected*)
-      (* formula from http://fr.wikipedia.org/wiki/Choc_élastique *)
-      let sum_m = a.a_state.b_weight +. me.a_state.b_weight in
-      let s_I = (* VI = (m1.V1 + m2.V2) / (m1 + m2) *)
-        add_vector
-          (scalar_mult (me.a_state.b_weight /. sum_m) me.a_state.b_speed)
-          (scalar_mult (a.a_state.b_weight /. sum_m) a.a_state.b_speed)
-      in
-      let s = (* v_1' = 2 VI - v_1 *)
-        add_vector
-          (scalar_mult 2.0 s_I)
-          (scalar_mult (-1.0) me.a_state.b_speed)
-      in
-      s
+
+      if me.a_state.b_lethal or a.a_state.b_lethal then (
+        if me.a_state.b_lethal then emit a.a_kill;
+        s
+       ) else (
+        (*print_endline "collision detected";*)
+        (*collision detected*)
+        (* formula from http://fr.wikipedia.org/wiki/Choc_élastique *)
+        let sum_m = a.a_state.b_weight +. me.a_state.b_weight in
+        let s_I = (* VI = (m1.V1 + m2.V2) / (m1 + m2) *)
+          add_vector
+            (scalar_mult (me.a_state.b_weight /. sum_m) me.a_state.b_speed)
+            (scalar_mult (a.a_state.b_weight /. sum_m) a.a_state.b_speed)
+        in
+        let s = (* v_1' = 2 VI - v_1 *)
+          add_vector
+            (scalar_mult 2.0 s_I)
+            (scalar_mult (-1.0) me.a_state.b_speed)
+        in
+        s
+       )
     ) else
       s
+
 | Wall _ -> s
 
 let process_wall me s b = match b with
@@ -324,7 +332,7 @@ let process compute_pos_ball me others =
   pause;
   me.a_pos <- new_pos;
   me.a_state.b_speed <- new_speed;
-  Mlsdl_client.set_sprite_pos me.a_state.b_sprite (new_pos.v_x -. 2.0) (new_pos.v_y -. 2.0);
+  Mlsdl_client.set_sprite_pos me.a_state.b_sprite (new_pos.v_x -. me.a_state.b_rad) (new_pos.v_y -. me.a_state.b_rad);
   Mlsdl_client.draw_sprite me.a_state.b_sprite
 
 let process ball me area env =
@@ -363,13 +371,26 @@ let random_ball_state vp =
   { b_speed = mk_pos topck (random_vector (-. max_speed) (-. max_speed) max_speed max_speed);
     b_sprite = Mlsdl_client.create_sprite_from_file vp Mlsdl_types.null_float_pos 4 4 "ball_small.png";
     b_weight = 5.0;
-    b_rad = 4.0; }
+    b_rad = 2.0;
+    b_lethal = false; }
 
-let ball vp top_adder =
+let mk_ball vp top_adder =
   let pos = mk_pos topck (random_vector 0.0 0.0 w h) in
   let st = random_ball_state vp in
-  emit top_adder (pos, st, ball)
+  let at_death () = Mlsdl_client.clear_sprite st.b_sprite in
+  emit top_adder (pos, st, ball, at_death)
  (* run (print_body vp pos) *)
+
+let mk_pacman vp top_adder =
+  let pos = mk_pos topck (random_vector 0.0 0.0 w h) in
+  let st =
+    { b_speed = mk_pos topck (random_vector (-. max_speed) (-. max_speed) max_speed max_speed);
+      b_sprite = Mlsdl_client.create_sprite_from_file vp Mlsdl_types.null_float_pos 32 32 "pacman.png";
+      b_weight = 5000.0;
+      b_rad = 16.0;
+      b_lethal = true }
+  in
+  emit top_adder (pos, st, ball, fun () -> ())
 
 let process click_watcher vp clicks =
   let process_event (mev, pos) = match mev with
@@ -407,9 +428,12 @@ let process key_listener vp top_adder =
     let evs = Mlsdl_client.flush_key_events () in
     if List.mem "b" evs then (
       for i=1 to 10 do
-        ball vp top_adder
+        mk_ball vp top_adder
       done
      );
+
+    if List.mem "p" evs then
+      mk_pacman vp top_adder;
     pause
   end
 
@@ -424,7 +448,7 @@ let process main =
   run top_area_p
   ||
   for i = 1 to !nb_balls do
-     ball vp top_adder
+    mk_ball vp top_adder
   done
   ||
   run (click_watcher vp clicks)
