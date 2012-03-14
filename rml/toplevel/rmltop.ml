@@ -152,6 +152,7 @@ let print_intro () =
   print_string "        ReactiveML version ";
   print_string Rmlcompiler.Version.version;
   print_newline();
+  print_newline();
   if !show_help then print_help ()
 
 let load_dir dir =
