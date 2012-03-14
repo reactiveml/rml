@@ -184,10 +184,11 @@ let load_ocamlinit () =
     with Not_found -> ()
 
 let main () =
-  let _ = print_intro() in
+  print_intro();
   Toploop.set_paths ();
   Toploop.initialize_toplevel_env ();
   init_toplevel ();
+  Rmlcompiler.Misc.interactive := true;
   Rmlcompiler.Interactive.init ();
   Sys.catch_break true;
   eval_phrases ~silent:(not !debug) init_rml;

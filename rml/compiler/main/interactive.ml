@@ -39,7 +39,7 @@ let filename = "rml_toplevel"
 let module_name () = String.capitalize filename
 
 let init () =
-  let () = Modules.start_compiling_interface (module_name ()) in
+  Modules.start_compiling_interface (module_name ());
   Initialization.load_initial_modules ()
 
 let translate_phrase phrase =
