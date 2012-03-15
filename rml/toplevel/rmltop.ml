@@ -99,9 +99,9 @@ let translate_and_eval_phrase rml_phrase =
     match rml_translation with
     | Rmltop_lexer.Rml_phrase s ->
       let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      let () = Rmltop_global.lock () in
-      let () = eval_phrases ocaml_phrases in
-      Rmltop_global.unlock ()
+      eval_phrases ~silent:true [ "Rmltop_global.lock ();;" ];
+      eval_phrases ocaml_phrases;
+      eval_phrases ~silent:true [ "Rmltop_global.unlock ();;" ]
 
     | Rmltop_lexer.OCaml_phrase s ->
       eval_phrases [ s ]
@@ -112,7 +112,7 @@ let translate_and_eval_phrase rml_phrase =
         "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
         s in
       let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      eval_phrases ocaml_phrases
+      eval_phrases ~silent:true ocaml_phrases
 
     | Rmltop_lexer.Exec s ->
       (* add "(process ( ...; ()));;" *)
@@ -120,22 +120,22 @@ let translate_and_eval_phrase rml_phrase =
         "let () = Rmltop_global.add_to_run (process (%s; ()));;"
         s in
       let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      eval_phrases ocaml_phrases
+      eval_phrases ~silent:true ocaml_phrases
 
     | Rmltop_lexer.Step None ->
-      eval_phrases [ "let () = Rmltop_global.set_step 1 ;;"; ]
+      eval_phrases ~silent:true [ "let () = Rmltop_global.set_step 1 ;;"; ]
 
     | Rmltop_lexer.Step (Some n) ->
-      eval_phrases [ "let () = Rmltop_global.set_step "^ n ^ ";;"; ]
+      eval_phrases ~silent:true [ "let () = Rmltop_global.set_step "^ n ^ ";;"; ]
 
     | Rmltop_lexer.Suspend ->
-      eval_phrases [ "let () = Rmltop_global.set_suspend () ;;"; ]
+      eval_phrases ~silent:true [ "let () = Rmltop_global.set_suspend () ;;"; ]
 
     | Rmltop_lexer.Resume ->
-      eval_phrases [ "let () = Rmltop_global.set_resume () ;;"; ]
+      eval_phrases ~silent:true [ "let () = Rmltop_global.set_resume () ;;"; ]
 
     | Rmltop_lexer.Sampling n ->
-      eval_phrases [ "let () = Rmltop_global.set_sampling "^ n ^";;"; ]
+      eval_phrases ~silent:true [ "let () = Rmltop_global.set_sampling "^ n ^";;"; ]
 
     | Rmltop_lexer.Quit -> exit 0
   with
