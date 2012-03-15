@@ -32,8 +32,8 @@
    | OCaml_phrase of string
    | Suspend
    | Resume
-   | Step of int option
-   | Sampling of float
+   | Step of string option (* should be an int option *)
+   | Sampling of string (* should be a float *)
    | Run of string
    | Exec of string
    | Quit
@@ -93,7 +93,8 @@ and expr = parse
 	               expr lexbuf }
 
 and float_expr = parse
-  | float_literal    { let x = float_of_string (Lexing.lexeme lexbuf) in
+  | float_literal    { let x = Lexing.lexeme lexbuf in
+                       let _ = float_of_string x in
                        end_of_phrase lexbuf;
                        x }
   | eof              { raise EOF }
@@ -101,7 +102,8 @@ and float_expr = parse
   | _                { error lexbuf; assert false }
 
 and int_expr = parse
-  | int_literal      { let x = int_of_string (Lexing.lexeme lexbuf) in
+  | int_literal      { let x = Lexing.lexeme lexbuf in
+                       let _ = int_of_string x in
                         end_of_phrase lexbuf;
                         x }
   | eof              { raise EOF }

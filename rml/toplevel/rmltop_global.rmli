@@ -30,6 +30,12 @@ val resume : unit option ref
 val step : int option ref
 val to_run : unit rml_process list ref
 
+val set_suspend : unit -> unit
+val set_resume : unit -> unit
+val set_step : int -> unit
+val set_sampling : float -> unit
+val add_to_run : unit rml_process -> unit
+
 val lock : unit -> unit
 val unlock : unit -> unit
 

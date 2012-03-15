@@ -17,10 +17,8 @@ INSTALLFILE=	rmltop.cmi \
 		rmltop_reactive_machine.cmo \
 		rmltop_controller.cmo \
 		rmltop_controller.rzi \
-		rmltop_directives.cmi \
 		rmltop_implem.cmi \
 		rmltop_main.cmi \
-		rmltop_directives.cmo \
 		rmltop_implem.cmo \
 		rmltop_main.cmo
 
@@ -37,7 +35,7 @@ CL_INC=-I +compiler-libs \
        -I +compiler-libs/parsing \
        -I +ocamlbuild
 
-rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop_directives.cmo rmltop.cmo
+rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -o rmltop $(CL_INC) -I +threads -I ../compiler $(RMLLIB) \
 		toplevellib.cma \
 		unix.cma \
@@ -48,7 +46,6 @@ rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop_di
 		rmllib.cma \
 		rmltop_lexer.cmo \
 		rmltop_global.cmo \
-		rmltop_directives.cmo \
 		rmltop.cmo
 
 lib: $(INSTALLFILE)
@@ -66,12 +63,13 @@ install.lib: lib
 
 
 test:
-	ledit ocaml -I +threads $(RMLLIB) unix.cma threads.cma \
+	rlwrap ocaml -I +threads $(RMLLIB) unix.cma threads.cma \
 		rmllib.cma \
 		rmltop_global.cmo \
 		rmltop_implem.cmo \
+		rmltop_machine_body.cmo \
+		rmltop_reactive_machine.cmo \
 		rmltop_controller.cmo \
-		rmltop_directives.cmo \
 		rmltop_main.cmo
 
 wc:
@@ -87,7 +85,7 @@ cleanall: realclean
 
 ##
 
-rmltop.cmi: rmltop_lexer.cmi rmltop_global.cmi rmltop_directives.cmi
+rmltop.cmi: rmltop_lexer.cmi rmltop_global.cmi
 
 rmltop_lexer.ml: rmltop_lexer.mll
 	$(OCAMLLEX) rmltop_lexer.mll
@@ -136,10 +134,7 @@ rmltop_main.cmi rmltop_main.cmo: rmltop_main.ml \
 		rmltop_implem.cmo rmltop_global.cmi rmltop_controller.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_main.ml
 
-rmltop_directives.cmo: rmltop_directives.ml rmltop_global.cmi
-	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_directives.ml
-
-rmltop.cmo: rmltop.ml ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop_directives.cmo
+rmltop.cmo: rmltop.ml ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop.ml
 
 FORCE:

@@ -108,36 +108,34 @@ let translate_and_eval_phrase rml_phrase =
 
     | Rmltop_lexer.Run s ->
       (* add "(process ( run (...); ()));;" *)
-      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase
-	("let ()= Rmltop_global.to_run:=(process(run(" ^s^ ");()))::!Rmltop_global.to_run;;")
-      in
-      let () = Rmltop_global.lock() in
-      let () = eval_phrases ocaml_phrases in
-      Rmltop_global.unlock ()
+      let s = Printf.sprintf
+        "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
+        s in
+      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+      eval_phrases ocaml_phrases
 
     | Rmltop_lexer.Exec s ->
       (* add "(process ( ...; ()));;" *)
-      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase
-	("let () = Rmltop_global.to_run := (process ("^s^"; ())) :: !Rmltop_global.to_run;;")
-      in
-      let () = Rmltop_global.lock () in
-      let () = eval_phrases ocaml_phrases in
-      Rmltop_global.unlock ()
+      let s = Printf.sprintf
+        "let () = Rmltop_global.add_to_run (process (%s; ()));;"
+        s in
+      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+      eval_phrases ocaml_phrases
 
     | Rmltop_lexer.Step None ->
-      eval_phrases [ "let () = Rmltop_directives.set_step 1 ;;"; ]
+      eval_phrases [ "let () = Rmltop_global.set_step 1 ;;"; ]
 
     | Rmltop_lexer.Step (Some n) ->
-      eval_phrases [ "let () = Rmltop_directives.set_step "^ (string_of_int n) ^ ";;"; ]
+      eval_phrases [ "let () = Rmltop_global.set_step "^ n ^ ";;"; ]
 
     | Rmltop_lexer.Suspend ->
-      eval_phrases [ "let () = Rmltop_directives.set_suspend () ;;"; ]
+      eval_phrases [ "let () = Rmltop_global.set_suspend () ;;"; ]
 
     | Rmltop_lexer.Resume ->
-      eval_phrases [ "let () = Rmltop_directives.set_resume () ;;"; ]
+      eval_phrases [ "let () = Rmltop_global.set_resume () ;;"; ]
 
     | Rmltop_lexer.Sampling n ->
-      eval_phrases [ "let () = Rmltop_directives.set_sampling "^(string_of_float n)^";;"; ]
+      eval_phrases [ "let () = Rmltop_global.set_sampling "^ n ^";;"; ]
 
     | Rmltop_lexer.Quit -> exit 0
   with
@@ -218,7 +216,7 @@ let main () =
 
 let _ =
   Arg.parse (Arg.align
-    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then Rmltop_directives.set_sampling x),
+    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then Rmltop_global.set_sampling x),
       "<rate> Sets the sampling rate to <rate> seconds";
       "-i", Arg.Set show_help, " List known rml directives at startup";
       "-debug", Arg.Set debug, " Enable debug output";

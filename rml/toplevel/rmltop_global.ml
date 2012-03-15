@@ -34,3 +34,18 @@ let to_run = ref []
 let sampling = ref 0.01
 
 let print_prompt () = print_string "# "
+
+let set ref n =
+  lock();
+  ref := Some n;
+  unlock()
+
+let set_suspend = set suspend
+let set_resume = set resume
+let set_step = set step
+let add_to_run p =
+  lock ();
+  to_run := p :: !to_run;
+  unlock ()
+
+let set_sampling n =  sampling := n
