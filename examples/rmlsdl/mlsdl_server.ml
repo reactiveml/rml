@@ -19,6 +19,7 @@ type world =
       mutable w_zoom : float }
 
 let screen_mutex = Mutex.create ()
+let start_mutex = Mutex.create ()
 let start_condition = Condition.create ()
 let screen_arguments = ref None
 
@@ -187,8 +188,11 @@ let listen_queue ic =
     while true do
       match receive_op () with
         | Init (wd, w, h, color, fps) ->
+            Mutex.lock start_mutex;
             screen_arguments := Some (wd, w, h, color, fps);
-            Condition.signal start_condition
+            Mutex.unlock start_mutex;
+            Condition.signal start_condition;
+            (* wait for the screen to be started *)
         | op ->
             Mutex.lock screen_mutex;
             !screen_ref.s_op_queue <- op :: !screen_ref.s_op_queue;
@@ -295,9 +299,11 @@ let refresh_screen fps =
   done
 
 let _ =
-  ignore (Thread.create listen_queue ());
   Mutex.lock screen_mutex;
-  Condition.wait start_condition screen_mutex;
+  ignore (Thread.create listen_queue ());
+  Mutex.lock start_mutex;
+  Condition.wait start_condition start_mutex;
+  Mutex.unlock start_mutex;
   let wd, w, h, color, fps = match !screen_arguments with Some o -> o | none -> assert false in
   init_server wd w h color;
   Mutex.unlock screen_mutex;
