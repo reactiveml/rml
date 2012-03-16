@@ -1,0 +1,3 @@
+#!/bin/sh
+
+openmpiexec -n 1 ../rmlsdl/mlsdl_server.byte : -n 4 ./collision_nosig.rml.byte -min-rank 1 $*
