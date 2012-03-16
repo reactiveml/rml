@@ -6,6 +6,7 @@ RMLLIB=-I ../stdlib -I ../interpreter
 
 INSTALLFILE=	rmltop.cmi \
 		rmltop_global.cmi \
+		rmltop_global.cmo \
 		rmltop_machine_body.cmi \
 		rmltop_reactive_machine.cmi \
 		rmltop_controller.cmi \
@@ -35,7 +36,7 @@ CL_INC=-I +compiler-libs \
        -I +compiler-libs/parsing \
        -I +ocamlbuild
 
-rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop.cmo
+rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop.cmo rmlrun.cma
 	$(OCAMLC) $(OCAMLFLAGS) -o rmltop $(CL_INC) -I +threads -I ../compiler $(RMLLIB) \
 		toplevellib.cma \
 		unix.cma \
@@ -45,8 +46,10 @@ rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo rmltop.cm
 		rmlcompiler.cmo \
 		rmllib.cma \
 		rmltop_lexer.cmo \
-		rmltop_global.cmo \
 		rmltop.cmo
+
+rmlrun.cma: rmltop_global.cmo rmltop_implem.cmo rmltop_machine_body.cmo rmltop_reactive_machine.cmo rmltop_controller.cmo rmltop_main.cmo
+	$(OCAMLC) $(OCAMLFLAGS) -a -o $@ $^
 
 lib: $(INSTALLFILE)
 

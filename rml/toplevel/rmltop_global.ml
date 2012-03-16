@@ -33,8 +33,6 @@ let step = ref None
 let to_run = ref []
 let sampling = ref 0.01
 
-let print_prompt () = print_string "# "
-
 let set ref n =
   lock();
   ref := Some n;

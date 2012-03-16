@@ -42,7 +42,7 @@ let include_obj = ref
   ["stdlib.cma";
    "threads.cma";
    "rmllib.cma";
-   "rmltop_global.cmo";
+   "rmlrun.cma";
   ]
 let add_include_dir inc = include_dir := inc :: !include_dir
 let add_include_obj inc = include_obj := inc :: !include_obj
@@ -100,6 +100,10 @@ let rec eval_phrases ?(silent=false) = function
       if success then
         eval_phrases ~silent phrases
 
+let sampling = ref None
+let set_sampling f =
+  eval_phrases ~silent:true [ "let () = Rmltop_global.set_sampling "^ f ^";;"; ]
+
 let translate_and_eval_phrase rml_phrase =
   let rml_phrase = Lexing.from_string rml_phrase in
   try
@@ -142,8 +146,8 @@ let translate_and_eval_phrase rml_phrase =
     | Rmltop_lexer.Resume ->
       eval_phrases ~silent:true [ "let () = Rmltop_global.set_resume () ;;"; ]
 
-    | Rmltop_lexer.Sampling n ->
-      eval_phrases ~silent:true [ "let () = Rmltop_global.set_sampling "^ n ^";;"; ]
+    | Rmltop_lexer.Sampling f ->
+      set_sampling f
 
     | Rmltop_lexer.Quit -> exit 0
   with
@@ -189,6 +193,8 @@ let load_ocamlinit () =
       if Sys.file_exists home_init then load_script home_init
     with Not_found -> ()
 
+let print_prompt () = print_string "# "
+
 let main () =
   print_intro();
   Toploop.set_paths ();
@@ -197,10 +203,11 @@ let main () =
   Rmlcompiler.Misc.interactive := true;
   Rmlcompiler.Interactive.init ();
   Sys.catch_break true;
+  Rmlcompiler.Misc.opt_iter set_sampling !sampling;
   eval_phrases ~silent:(not !debug) init_rml;
   try
     let buf = Buffer.create 512 in
-    Rmltop_global.print_prompt ();
+    print_prompt ();
     while true do
       let line = read_line () in
       let len = String.length line in
@@ -211,7 +218,7 @@ let main () =
         let phrase = Buffer.contents buf in
         Buffer.reset buf; Buffer.clear buf;
         translate_and_eval_phrase (String.copy phrase);
-        Rmltop_global.print_prompt ();
+        print_prompt ();
       end
       else if line <> "\n" then begin
         Buffer.add_string buf line
@@ -224,7 +231,7 @@ let main () =
 
 let _ =
   Arg.parse (Arg.align
-    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then Rmltop_global.set_sampling x),
+    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some (string_of_float x)),
       "<rate> Sets the sampling rate to <rate> seconds";
       "-i", Arg.Set show_help, " List known rml directives at startup";
       "-debug", Arg.Set debug, " Enable debug output";

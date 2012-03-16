@@ -38,5 +38,3 @@ val add_to_run : unit rml_process -> unit
 
 val lock : unit -> unit
 val unlock : unit -> unit
-
-val print_prompt : unit -> unit
