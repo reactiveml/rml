@@ -1,4 +1,0 @@
-local_token_impl.o
-local_ref_impl.o
-init.o
-mpi_impl.o

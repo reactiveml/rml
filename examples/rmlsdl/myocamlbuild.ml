@@ -6,8 +6,6 @@ let sdl_dir = "-L/opt/local/lib/ocaml/site-lib/sdl"
 
 let df = function
   | After_rules ->
-      Myocamlbuild_config.rmlbuild_after_rules ();
-
       (* mlmpi *)
       ocaml_lib ~extern:true ~dir:mlmpi_dir "mlmpi";
 

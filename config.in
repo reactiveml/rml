@@ -1,0 +1,27 @@
+srcdir      = @srcdir@
+top_srcdir  = @abs_top_srcdir@
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+libdir      = @libdir@
+
+INSTALL= @INSTALL@
+
+BUILD= _build
+COMPILER=rpmlc
+
+INSTALL_BINDIR=$(bindir)
+INSTALL_LIBDIR=$(libdir)/rpml
+STDLIB_DIR=@stdlib_dir@
+
+OCAMLC=@OCAMLC@
+OCAMLOPT=@OCAMLOPT@
+OCAMLBUILD=@OCAMLBUILD@
+
+RPMLBUILD=@rmlbuild@
+RPMLBUILD_LIBDIR=@rmlbuild_libdir@
+
+TARGET=byte
+
+MPICC=@MPICC@
+CFLAGS=-O2 -Wall

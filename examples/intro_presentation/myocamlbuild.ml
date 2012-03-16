@@ -1,1 +1,0 @@
-../../tools/rpmlbuild/myocamlbuild.ml

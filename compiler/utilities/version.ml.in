@@ -1,0 +1,4 @@
+(* version of the compiler *)
+let version = "0.2"
+let standard_lib = "@stdlib_dir@"
+

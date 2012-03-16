@@ -1,0 +1,6 @@
+open Command
+
+let rmlc = A"@rmlc@";;
+let rmldep = A "@rmldep@";;
+
+let rpmllib_dir = "@rpmllib_dir@"

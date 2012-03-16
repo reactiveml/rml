@@ -17,16 +17,13 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* version of the compiler *)
-let version = "0.1"
+include Version
 
 (* standard module *)
 let pervasives_module = "Pervasives"
 let interpreter_module = ref "Lco_ctrl_tree_n"
 let interpreter_impl = ref "Lco_ctrl_tree_seq_interpreter"
 let machine_kind = ref "Seq"
-
-let standard_lib = "../lib"
 
 (* List of file to compile *)
 let to_compile = ref ([] : string list)
