@@ -28,14 +28,22 @@ let print_DEBUG x =
   else Printf.ifprintf stderr x
 
 let (//) = Filename.concat
-let stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir
+let ocaml_stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir
 
-let include_dir = ref
-  [ stdlib // "threads";
-    Rmlcompiler.Version.stdlib;
-    Rmlcompiler.Version.stdlib // "toplevel";
+let include_dir =
+  let rml_stdlib = Rmlcompiler.Configure.locate_stdlib () in
+  ref
+    [ ocaml_stdlib // "threads";
+      rml_stdlib;
+      rml_stdlib // "toplevel";
   ]
-let include_obj = ref ["stdlib.cma"; "threads.cma"]
+
+let include_obj = ref
+  ["stdlib.cma";
+   "threads.cma";
+   "rmllib.cma";
+   "rmltop_global.cmo";
+  ]
 let add_include_dir inc = include_dir := inc :: !include_dir
 let add_include_obj inc = include_obj := inc :: !include_obj
 
