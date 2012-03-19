@@ -1,7 +1,7 @@
 open Ocamlbuild_plugin
 open Ocamlbuild_plugin.Options
 
-let mlmpi_dir = "../../mpi/_build"
+let mlmpi_dir = "../../mpi"
 
 let df = function
   | After_rules ->

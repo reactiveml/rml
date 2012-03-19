@@ -234,6 +234,8 @@ let init () =
         cp file mllib_file
       end;
 
+      flag ["use_rpmllib"; "link"] (S [A"-cc"; A mpicc]);
+
       flag ["rml"; "compile"; "annot"] (A "-dtypes");
       flag ["rml"; "compile"; "lco"] (S ([A "-runtime"; A "Lco"]));
       flag ["rml"; "compile"; "lco_mpi"] (S [A "-runtime"; A "Lco_mpi"]);

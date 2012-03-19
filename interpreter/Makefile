@@ -4,7 +4,7 @@ RPMLLIB=rpmllib
 
 .PHONY: all clean native byte clean debug install
 
-all: $(TARGET)
+all: byte native
 
 native:
 	$(OCAMLBUILD) $(RPMLLIB).cmxa
