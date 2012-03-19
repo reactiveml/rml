@@ -112,8 +112,8 @@ let link_rml extension env _build =
   let byte_file = Pathname.update_extension extension main_file in
   let rml_byte_file = env ("%.rml."^extension) in
   declare_rmllib ();
-  tag_file byte_file ["use_rpmllib"; "use_unix"];
   tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
+  tag_file byte_file ["use_rpmllib"; "use_unix"];
   List.iter Outcome.ignore_good (_build [[byte_file]]);
   ln_s byte_file rml_byte_file
 ;;

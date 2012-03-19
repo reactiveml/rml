@@ -70,6 +70,13 @@ value caml_mpi_init(value arguments)
   return Val_unit;
 }
 
+value caml_mpi_initialized(value unit)
+{
+  int b;
+  MPI_Initialized(&b);
+  return Val_bool(b);
+}
+
 value caml_mpi_finalize(value unit)
 {
   MPI_Finalize();

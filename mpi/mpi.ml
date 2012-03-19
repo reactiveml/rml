@@ -5,12 +5,15 @@ exception Error of string
 let mpi_error s = raise(Error s)
 
 external init : string array -> unit = "caml_mpi_init"
+external is_initialized : unit -> bool = "caml_mpi_initialized"
 external finalize : unit -> unit = "caml_mpi_finalize"
 
 let _ =
-  Callback.register_exception "Mpi.Error" (Error "");
-  init Sys.argv;
-  at_exit finalize
+  if not (is_initialized ()) then (
+    Callback.register_exception "Mpi.Error" (Error "");
+    init Sys.argv;
+    at_exit finalize
+  )
 
 (* Ranks and tags*)
 type rank = int
