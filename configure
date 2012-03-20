@@ -563,6 +563,7 @@ PACKAGE_URL=''
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+mlmpi_libdir
 rmlbuild_libdir
 rmlbuild
 rmldep
@@ -570,6 +571,7 @@ rmlc
 rpmllib_dir
 stdlib_dir
 INSTALL
+OCAML_PKG_sdl
 MPILIBS
 MPICC
 OBJEXT
@@ -579,6 +581,7 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+OCAMLFIND
 OCAMLBUILD
 OCAMLDOC
 OCAMLMKLIB
@@ -2991,6 +2994,112 @@ case "$OCAMLVERSION" in
      as_fn_error $? "You need Objective Caml 3.10 or higher" "$LINENO" 5;;
 esac
 
+
+  # checking for ocamlfind
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}ocamlfind", so it can be a program name with args.
+set dummy ${ac_tool_prefix}ocamlfind; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_OCAMLFIND+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$OCAMLFIND"; then
+  ac_cv_prog_OCAMLFIND="$OCAMLFIND" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_OCAMLFIND="${ac_tool_prefix}ocamlfind"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+OCAMLFIND=$ac_cv_prog_OCAMLFIND
+if test -n "$OCAMLFIND"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $OCAMLFIND" >&5
+$as_echo "$OCAMLFIND" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_OCAMLFIND"; then
+  ac_ct_OCAMLFIND=$OCAMLFIND
+  # Extract the first word of "ocamlfind", so it can be a program name with args.
+set dummy ocamlfind; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_ac_ct_OCAMLFIND+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$ac_ct_OCAMLFIND"; then
+  ac_cv_prog_ac_ct_OCAMLFIND="$ac_ct_OCAMLFIND" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_OCAMLFIND="ocamlfind"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_OCAMLFIND=$ac_cv_prog_ac_ct_OCAMLFIND
+if test -n "$ac_ct_OCAMLFIND"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_OCAMLFIND" >&5
+$as_echo "$ac_ct_OCAMLFIND" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_ct_OCAMLFIND" = x; then
+    OCAMLFIND="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    OCAMLFIND=$ac_ct_OCAMLFIND
+  fi
+else
+  OCAMLFIND="$ac_cv_prog_OCAMLFIND"
+fi
+
+
+
+if test "$OCAMLFIND" = "no"; then
+  as_fn_error $? "Please install OCaml findlib (the ocamlfind command)" "$LINENO" 5
+fi
+
+OCAMLC_STDLIB=`$OCAMLFIND ocamlc -where`
+OCAMLFIND_STDLIB=`$OCAMLFIND printconf stdlib`
+if test "$OCAMLC_STDLIB" != "$OCAMLFIND_STDLIB"; then
+  as_fn_error $? "OCaml and OCamlfind make different assumptions about the standard library directory" "$LINENO" 5
+fi
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -3969,6 +4078,35 @@ $as_echo "#define HAVE_MPI 1" >>confdefs.h
 fi
 
 
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package sdl" >&5
+$as_echo_n "checking for OCaml findlib package sdl... " >&6; }
+
+  unset found
+  unset pkg
+  found=no
+  for pkg in sdl  ; do
+    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
+$as_echo "found" >&6; }
+      OCAML_PKG_sdl=$pkg
+      found=yes
+      break
+    fi
+  done
+  if test "$found" = "no" ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+    OCAML_PKG_sdl=no
+  fi
+
+
+
+ if test "$OCAML_PKG_sdl" = "no"; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Ocamlsdl is not installed. You won't be able to run some examples." >&5
+$as_echo "$as_me: WARNING: Ocamlsdl is not installed. You won't be able to run some examples." >&2;}
+ fi
+
 if test "$enable_local_stdlib" = "yes"; then
     stdlib_dir=$PWD/lib
     rpmllib_dir=$PWD/interpreter/_build
@@ -3976,6 +4114,7 @@ if test "$enable_local_stdlib" = "yes"; then
     rmldep=$PWD/tools/rpmldep/rpmldep.byte
     rmlbuild=$PWD/tools/rpmlbuild/rpmlbuild/_build/ocamlbuild.byte
     rmlbuild_libdir=$PWD/tools/rpmlbuild/rpmlbuild/_build
+    mlmpi_libdir=$PWD/mpi
 else
     stdlib_dir=$prefix/lib/rpml
     rpmllib_dir=$stdlib_dir
@@ -3983,7 +4122,9 @@ else
     rmldep=rpmldep
     rmlbuild=rpmlbuild
     rmlbuild_libdir=$stdlib_dir/rpmlbuild
+    mlmpi_libdir=$stdlib_dir
 fi
+
 
 
 

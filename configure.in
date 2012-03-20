@@ -16,7 +16,23 @@ case "$OCAMLVERSION" in
      AC_MSG_ERROR(You need Objective Caml 3.10 or higher);;
 esac
 
+AC_PROG_FINDLIB
+if test "$OCAMLFIND" = "no"; then
+  AC_MSG_ERROR([Please install OCaml findlib (the ocamlfind command)])
+fi
+
+OCAMLC_STDLIB=`$OCAMLFIND ocamlc -where`
+OCAMLFIND_STDLIB=`$OCAMLFIND printconf stdlib`
+if test "$OCAMLC_STDLIB" != "$OCAMLFIND_STDLIB"; then
+  AC_MSG_ERROR([OCaml and OCamlfind make different assumptions about the standard library directory])
+fi
+
 AX_MPI()
+
+AC_CHECK_OCAML_PKG([sdl])
+ if test "$OCAML_PKG_sdl" = "no"; then
+   AC_MSG_WARN([Ocamlsdl is not installed. You won't be able to run some examples.])
+ fi
 
 if test "$enable_local_stdlib" = "yes"; then
     stdlib_dir=$PWD/lib
@@ -25,6 +41,7 @@ if test "$enable_local_stdlib" = "yes"; then
     rmldep=$PWD/tools/rpmldep/rpmldep.byte
     rmlbuild=$PWD/tools/rpmlbuild/rpmlbuild/_build/ocamlbuild.byte
     rmlbuild_libdir=$PWD/tools/rpmlbuild/rpmlbuild/_build
+    mlmpi_libdir=$PWD/mpi
 else
     stdlib_dir=$prefix/lib/rpml
     rpmllib_dir=$stdlib_dir
@@ -32,6 +49,7 @@ else
     rmldep=rpmldep
     rmlbuild=rpmlbuild
     rmlbuild_libdir=$stdlib_dir/rpmlbuild
+    mlmpi_libdir=$stdlib_dir
 fi
 
 AC_SUBST(INSTALL)
@@ -41,6 +59,7 @@ AC_SUBST(rmlc)
 AC_SUBST(rmldep)
 AC_SUBST(rmlbuild)
 AC_SUBST(rmlbuild_libdir)
+AC_SUBST(mlmpi_libdir)
 
 AC_CONFIG_COMMANDS_PRE([m4/mkmyocamlbuild_config.sh $prefix $rmlbuild_libdir $OCAMLLIB])
 

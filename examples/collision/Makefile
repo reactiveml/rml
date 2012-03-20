@@ -1,12 +1,16 @@
 include ../../config
 
-.PHONY: clean byte all
+.PHONY: clean byte native all
 
 all: byte
 
 byte:
 	(cd ../rmlsdl; $(MAKE) byte)
-	$(RPMLBUILD) collision_nosig.rml.byte
+	$(RPMLBUILD) -use-ocamlfind collision_nosig.rml.byte
+
+native:
+	(cd ../rmlsdl; $(MAKE) native)
+	$(RPMLBUILD) -use-ocamlfind collision_nosig.rml.native
 
 clean:
 	$(RPMLBUILD) -clean

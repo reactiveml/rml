@@ -20,6 +20,7 @@ OCAMLBUILD=@OCAMLBUILD@
 
 RPMLBUILD=@rmlbuild@
 RPMLBUILD_LIBDIR=@rmlbuild_libdir@
+MLMPI_LIBDIR=@mlmpi_libdir@
 
 TARGET=byte
 

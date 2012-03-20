@@ -4,5 +4,6 @@ let rmlc = A"@rmlc@";;
 let rmldep = A "@rmldep@";;
 
 let rpmllib_dir = "@rpmllib_dir@"
+let mlmpilib_dir = "@mlmpi_libdir@"
 
 let mpicc = "@MPICC@"

@@ -1,3 +1,4 @@
-<*.rml>:  lco_mpi, annot, use_rmlsdl, no_clocking
-<*.ml>: use_rmlsdl, debug
-<*.byte>: thread, use_rmlsdl, debug
+<*.rml>:  lco_mpi, use_rmlsdl, no_clocking
+<*.ml>: use_rmlsdl
+<*.byte>: thread,package(threads),package(sdl),use_rmlsdl
+<*.native>: thread,package(sdl),package(sdl.sdlttf),package(sdl.sdlgfx),package(sdl.sdlimage),use_rmlsdl

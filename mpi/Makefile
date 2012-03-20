@@ -3,8 +3,6 @@ include ../config
 COBJS=init.o local_ref_impl.o local_token_impl.o mpi_impl.o
 OBJS=mpi.cmo local_ref.cmo local_token.cmo
 
-MLMPI_LIBDIR=/Users/ccpasteur/Documents/work/git/rml/mpi
-
 CFLAGS+=-I`$(OCAMLC) -where`
 
 .PHONY: all clean install
@@ -25,7 +23,7 @@ mlmpi.cma: $(OBJS)
 	$(OCAMLC) -a -custom -o mlmpi.cma $(OBJS) -cc $(MPICC) -ccopt -L$(MLMPI_LIBDIR) -dllib -lmlmpi -cclib -lmlmpi
 
 mlmpi.cmxa: $(OBJS:.cmo=.cmx)
-	$(OCAMLOPT) -a -o mlmpi.cmxa $(OBJS:.cmo=.cmx) -cc $(MPICC)
+	$(OCAMLOPT) -a -o mlmpi.cmxa $(OBJS:.cmo=.cmx) -cc $(MPICC) -ccopt -L$(MLMPI_LIBDIR) -cclib -lmlmpi
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 

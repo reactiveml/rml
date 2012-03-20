@@ -1,5 +1,7 @@
-<*.ml>:use_sdl, use_mlmpi, thread, debug
+<*.ml>:package(sdl),use_mlmpi, thread
 <*.rml>:lco_mpi
-<*.mli>:use_sdl
-<*.cma>:thread,custom,use_unix,use_sdl,use_sdlloader,use_sdlgfx,use_sdlttf,use_bigarray
-<*.byte>:use_unix,use_sdl,use_sdlloader,use_sdlgfx,use_sdlttf,use_bigarray,thread,use_mlmpi,debug
+<*.mli>:package(sdl)
+<*.cma>:thread,custom,package(sdl)
+<*.cmxa>:thread
+<mlsdl_server.byte>:use_mlmpi,with_mpicc,package(sdl),package(sdl.sdlttf),package(sdl.sdlgfx),package(sdl.sdlimage)
+<mlsdl_server.native>:thread,use_mlmpi,with_mpicc,package(sdl),package(sdl.sdlttf),package(sdl.sdlgfx),package(sdl.sdlimage)
