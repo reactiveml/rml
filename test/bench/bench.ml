@@ -5,6 +5,7 @@ open Format
 let verbose = ref false
 let nb_mpi_procs = ref 4
 let tests = ref []
+let use_native_code = ref false
 
 let add_test s =
   tests := s :: !tests
@@ -18,7 +19,7 @@ let print_status fmt =
     Format.ifprintf Format.err_formatter fmt
 
 
-let ocamlbuild = "ocamlbuild"
+let ocamlbuild = "../../../tools/rpmlbuild/rpmlbuild/_build/ocamlbuild.byte"
 let mpiexec = "openmpiexec"
 let rpmlc = "../../compiler/rpmlc.byte"
 
@@ -35,15 +36,16 @@ let mk_tags_file backend =
   let oc = open_out "_tags" in
   let ff = formatter_of_out_channel oc in
   fprintf ff "<*.byte>:thread@.";
-  fprintf ff "<*.rml>:%s@." backend;
+  fprintf ff "<*.native>:thread@.";
+  fprintf ff "<*.rml>: no_clocking, %s@." backend;
   close_out oc
 
 let ocamlbuild args =
-  run_prog ("ocamlbuild "^args)
+  run_prog (ocamlbuild^" "^args)
 
 let run_test args f =
   print_status "** Test: %s@." f;
-  let bin = f^".byte" in
+  let bin = if !use_native_code then f^".native" else f^".byte" in
   (*compile*)
   print_status "* Compiling %s@." bin;
   ocamlbuild bin;
@@ -110,6 +112,7 @@ let list_tests () =
 let options =
   ["-v", Arg.Set verbose, " Verbose mode";
    "-list", Arg.Unit list_tests, " List available tests";
+   "-native", Arg.Set use_native_code, "Use native code";
    "-mpi-n", Arg.Set_int nb_mpi_procs, " Number of MPI processes to run"]
 let usage_msg =
 "Benchmark program.
