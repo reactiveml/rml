@@ -27,6 +27,9 @@ if test "$OCAMLC_STDLIB" != "$OCAMLFIND_STDLIB"; then
   AC_MSG_ERROR([OCaml and OCamlfind make different assumptions about the standard library directory])
 fi
 
+AC_ARG_WITH([mpicc], AS_HELP_STRING([--with-mpicc=path], [Path of mpicc compiler]),
+                     [MPICC=$with_mpicc],[])
+
 AX_MPI()
 AX_MPI_THREADS()
 

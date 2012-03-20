@@ -640,6 +640,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_local_stdlib
+with_mpicc
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1262,6 +1263,11 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-local-stdlib   use the in-sources standard library
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-mpicc=path       Path of mpicc compiler
 
 Some influential environment variables:
   CC          C compiler command
@@ -3141,6 +3147,13 @@ OCAMLFIND_STDLIB=`$OCAMLFIND printconf stdlib`
 if test "$OCAMLC_STDLIB" != "$OCAMLFIND_STDLIB"; then
   as_fn_error $? "OCaml and OCamlfind make different assumptions about the standard library directory" "$LINENO" 5
 fi
+
+
+# Check whether --with-mpicc was given.
+if test "${with_mpicc+set}" = set; then :
+  withval=$with_mpicc; MPICC=$with_mpicc
+fi
+
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
