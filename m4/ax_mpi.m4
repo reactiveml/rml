@@ -72,7 +72,7 @@ AC_PREREQ(2.50) dnl for AC_LANG_CASE
 AC_LANG_CASE([C], [
 	AC_REQUIRE([AC_PROG_CC])
 	AC_ARG_VAR(MPICC,[MPI C compiler command])
-	AC_CHECK_PROGS(MPICC, mpicc hcc mpxlc_r mpxlc mpcc cmpicc, $CC)
+	AC_CHECK_PROGS(MPICC, openmpicc mpicc hcc mpxlc_r mpxlc mpcc cmpicc, $CC)
 	ax_mpi_save_CC="$CC"
 	CC="$MPICC"
 	AC_SUBST(MPICC)
@@ -174,3 +174,28 @@ else
         :
 fi
 ])dnl AX_MPI
+
+
+AC_DEFUN([AX_MPI_THREADS],
+[dnl
+old_CC=$CC
+CC=$MPICC
+
+AC_MSG_CHECKING([whether MPI supports MPI_THREAD_MULTIPLE])
+AC_LANG(C)
+AC_RUN_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[
+#include <mpi.h>
+            ]],
+            [[
+  int res;
+  MPI_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &res);
+    if(res != MPI_THREAD_MULTIPLE)
+    return 2;
+  MPI_Finalize();
+             ]])],
+        AC_MSG_RESULT([yes]),
+        AC_MSG_FAILURE([Please compile MPI with support for MPI_THREAD_MULTIPLE]))
+CC=$old_CC
+])

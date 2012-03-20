@@ -28,6 +28,7 @@ if test "$OCAMLC_STDLIB" != "$OCAMLFIND_STDLIB"; then
 fi
 
 AX_MPI()
+AX_MPI_THREADS()
 
 AC_CHECK_OCAML_PKG([sdl])
  if test "$OCAML_PKG_sdl" = "no"; then
