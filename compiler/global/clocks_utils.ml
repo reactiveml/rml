@@ -820,6 +820,7 @@ and effect_unify expected_eff actual_eff =
     else
       match expected_eff.desc, actual_eff.desc with
         | Effect_empty, Effect_empty -> ()
+        | _, Effect_empty -> ()
         | Effect_var, _ ->
             effect_occur_check expected_eff.level expected_eff actual_eff;
             expected_eff.desc <- Effect_link (remove_var_from_effect expected_eff.index actual_eff)
