@@ -4,6 +4,7 @@ COBJS=init.o local_ref_impl.o local_token_impl.o mpi_impl.o
 OBJS=mpi.cmo local_ref.cmo local_token.cmo
 
 CFLAGS+=-I`$(OCAMLC) -where`
+CC=$(MPICC)
 
 .PHONY: all clean install
 .PRECIOUS: %.cmi
