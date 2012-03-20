@@ -29,6 +29,8 @@ fi
 
 AC_ARG_WITH([mpicc], AS_HELP_STRING([--with-mpicc=path], [Path of mpicc compiler]),
                      [MPICC=$with_mpicc],[])
+AC_ARG_WITH([mpiexec], AS_HELP_STRING([--with-mpiexec=path], [Path of mpiexec launcher]),
+                     [MPIEXEC=$with_mpiexec],[])
 
 AX_MPI()
 AX_MPI_THREADS()
@@ -67,4 +69,5 @@ AC_SUBST(mlmpi_libdir)
 
 AC_CONFIG_COMMANDS_PRE([m4/mkmyocamlbuild_config.sh $prefix $rmlbuild_libdir $OCAMLLIB])
 
-AC_OUTPUT(config tools/rpmlbuild/rpmlbuild/rml_version.ml compiler/utilities/version.ml)
+AC_OUTPUT(config tools/rpmlbuild/rpmlbuild/rml_version.ml
+                 compiler/utilities/version.ml test/bench/bench_version.ml)

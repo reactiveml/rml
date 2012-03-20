@@ -69,6 +69,10 @@ AU_ALIAS([ACX_MPI], [AX_MPI])
 AC_DEFUN([AX_MPI], [
 AC_PREREQ(2.50) dnl for AC_LANG_CASE
 
+AC_ARG_VAR(MPIEXEC,[MPI launcher command])
+AC_CHECK_PROGS(MPIEXEC, openmpiexec mpiexec, mpiexec)
+AC_SUBST(MPIEXEC)
+
 AC_LANG_CASE([C], [
 	AC_REQUIRE([AC_PROG_CC])
 	AC_ARG_VAR(MPICC,[MPI C compiler command])

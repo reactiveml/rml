@@ -1,6 +1,7 @@
 open Unix
 open Filename
 open Format
+open Bench_version
 
 let verbose = ref false
 let nb_mpi_procs = ref 4
@@ -17,11 +18,6 @@ let print_status fmt =
     Format.eprintf fmt
   else
     Format.ifprintf Format.err_formatter fmt
-
-
-let ocamlbuild = "../../../tools/rpmlbuild/rpmlbuild/_build/ocamlbuild.byte"
-let mpiexec = "openmpiexec"
-let rpmlc = "../../compiler/rpmlc.byte"
 
 let check_success p s =
   match s with
