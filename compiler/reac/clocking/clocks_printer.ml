@@ -128,6 +128,8 @@ let rec print priority ty =
         print_string "|";
         print_effect priority eff;
         print_string "}"
+    | Clock_forall sch ->
+        print_scheme_full priority sch
   end;
   close_box ()
 
@@ -165,6 +167,25 @@ and print_effect priority eff =
         print_string "]"
   end;
   close_box ()
+
+and print_scheme_full priority { cs_clock_vars = ck_vars; cs_carrier_vars = car_vars;
+                                 cs_effect_vars = eff_vars; cs_desc = ty } =
+  if ck_vars <> [] then (
+    print_string "forall"; print_space ();
+    print_list priority "," ck_vars;
+    print_string "."
+  );
+  if car_vars <> [] then (
+    print_string "forall"; print_space ();
+    print_carrier_list priority "," car_vars;
+    print_string "."
+  );
+  if eff_vars <> [] then (
+    print_string "forall"; print_space ();
+    print_effect_list priority "," eff_vars;
+    print_string "."
+  );
+  print priority ty
 
 and print_list priority sep l =
   let rec printrec l =
@@ -220,7 +241,8 @@ let print ty =
   carrier_name#reset;
   effect_name#reset;
   print 0 ty
-let print_scheme { cs_desc = ty } = print ty
+let print_scheme { cs_desc = ty } =
+  print ty
 
 let print_value_clock_declaration global =
   let prefix = "val" in

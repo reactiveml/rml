@@ -133,7 +133,6 @@ let rec arrow_list ck_l eff_l ck_res =
 let process ck activation_car eff =
   make_clock (Clock_process (ck, activation_car, eff))
 
-
 let make_carrier s =
   { desc = Carrier_var s;
     index = names#name;
@@ -233,6 +232,14 @@ let forall ck_vars car_vars eff_vars typ =
     cs_carrier_vars = car_vars;
     cs_effect_vars = eff_vars;
     cs_desc = typ; }
+
+let ty_forall params ck =
+  let ty_l, c_l, eff_l = params_split params in
+  Misc.assert_empty ty_l;
+  make_clock (Clock_forall (forall [] c_l eff_l ck))
+
+let clock_of_sch sch =
+  make_clock (Clock_forall sch)
 
 (* activation clock*)
 let activation_carrier = ref topck_carrier
@@ -406,6 +413,7 @@ let rec gen_clock is_gen ck =
         let level_body = gen_clock is_gen body_ck in
         let level_act = gen_carrier is_gen act_car in
         ck.level <- min (min level_eff level_body) level_act
+    | Clock_forall sch -> (* TODO *) ()
   );
   ck.level
 
@@ -488,6 +496,7 @@ let free_clock_vars level ck =
           free_vars_carrier act;
           free_vars_effect eff
       | Clock_depend c -> free_vars_carrier c
+      | Clock_forall sch -> (*TODO*) ()
   and free_vars_carrier car =
     let car = carrier_repr car in
     match car.desc with
@@ -574,6 +583,8 @@ let rec copy_clock ck =
           process (copy_clock ck) (copy_carrier act_car) (copy_effect eff)
         else
           ck
+    | Clock_forall _ -> (*TODO*)
+        ck
 
 and copy_carrier car =
   let level = car.level in
@@ -656,6 +667,9 @@ let label_instance { lbl_arg = ck_arg; lbl_res = ck_res; lbl_mut = mut } =
   cleanup ();
   { lbl_arg = ck_arg; lbl_res = ck_res; lbl_mut = mut }
 
+let ensure_monotype ck = match ck.desc with
+  | Clock_forall sch -> instance sch
+  | _ -> ck
 
 (* the occur check *)
 let rec occur_check level index ck =
@@ -680,6 +694,7 @@ let rec occur_check level index ck =
           check ck;
           carrier_occur_check level no_carrier act_car;
           effect_occur_check level no_effect eff
+      | Clock_forall sch -> (*TODO*) ()
   in
   (*Printf.eprintf "Occur_check : level:%d   index:%a   ck:%a\n"  level  Clocks_printer.output index  Clocks_printer.output ck;*)
   check ck
@@ -737,6 +752,18 @@ let bind_variable param1 param2 =
         eff1.desc <- Effect_link eff2
     | _ -> fatal_error "bind_variable"
 
+let bind_carrier car1 car2 =
+  match car1, car2 with
+    | { desc  = Carrier_var _ }, car2 ->
+        car1.desc <- Carrier_link car2
+    | _ -> raise Unify
+
+let bind_effect eff1 eff2 =
+  match eff1, eff2 with
+    | { desc  = Effect_var _ }, eff2 ->
+        eff1.desc <- Effect_link eff2
+    | _ -> raise Unify
+
 let expand_abbrev params body args =
   let params' = List.map copy_param params
   and body' = copy_clock body in
@@ -780,9 +807,19 @@ let rec unify expected_ck actual_ck =
             unify ck1 ck2;
             carrier_unify c1 c2;
             effect_unify eff1 eff2
+        | Clock_forall sch1, Clock_forall sch2 ->
+            unify_schema sch1 sch2
         | _ ->
             (* Printf.eprintf "Failed to unify '%a' and '%a'\n"  Clocks_printer.output expected_ck  Clocks_printer.output actual_ck; *)
             raise Unify
+
+(* TODO: on doit mettre les quantifieurs dans leur ordre d'apparition. Ensuite, on instancie les parametres des deux schemas par les memes skolems frais, on les unifie puis on verifie que les skolems n'ont pas echappe dans l'environnement en verifiant sils apparaissent dans le type des schemas de depart. *)
+and unify_schema expected_sch actual_sch =
+  let _, car_vars1, eff_vars1, actual_ck = instance_and_vars actual_sch in
+  let _, car_vars2, eff_vars2, expected_ck = instance_and_vars expected_sch in
+  List.iter2 bind_carrier car_vars1 car_vars2;
+  List.iter2 bind_effect eff_vars1 eff_vars2;
+  unify actual_ck expected_ck
 
 and unify_list ck_l1 ck_l2 =
   try

@@ -50,6 +50,10 @@ and type_expression_desc funs acc ted = match ted with
   | Ptype_depend ce ->
       let ce, acc = carrier_expression_it funs acc ce in
       Ptype_depend ce, acc
+  | Ptype_forall (pe_list, te) ->
+      let pe_list, acc = mapfold (param_expression_it funs) acc pe_list in
+      let te, acc = type_expression_it funs acc te in
+      Ptype_forall (pe_list, te), acc
 
 
 and carrier_expression_it funs acc e = funs.carrier_expression funs acc e

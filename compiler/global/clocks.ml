@@ -37,7 +37,7 @@ type 'a global = (unit, 'a) Global.global
 
 (* types *)
 type clock_scheme =
-    { cs_clock_vars: clock list;        (* generalised variables *)
+    { cs_clock_vars: clock list;
       cs_carrier_vars : carrier list;
       cs_effect_vars : effect list;
       cs_desc: clock;                (* the type *)
@@ -52,8 +52,9 @@ and clock_desc =
     | Clock_arrow of clock * clock * effect
     | Clock_product of clock list
     | Clock_constr of clock_constr global * clock_param list
-    | Clock_link of clock
     | Clock_process of clock * carrier * effect (* result clock, activation carrier *)
+    | Clock_link of clock
+    | Clock_forall of clock_scheme
 
 and carrier = carrier_desc repr
 

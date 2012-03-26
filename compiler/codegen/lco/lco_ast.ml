@@ -152,6 +152,7 @@ and type_expression_desc =
   | Cotype_constr of type_description * param_expression list
   | Cotype_process of type_expression * carrier_expression * effect_expression
   | Cotype_depend of carrier_expression
+  | Cotype_forall of param_expression list * type_expression
 
 and carrier_expression =
    { coce_desc : carrier_expression_desc;

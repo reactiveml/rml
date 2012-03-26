@@ -82,6 +82,10 @@ let optional_wacc f acc = function
   | None -> None, acc
   | Some x -> let x, acc = f acc x in Some x, acc
 
+let assert_empty l = match l with
+  | [] -> ()
+  | _ -> fatal_error "assert_empty"
+
 (* association table with memoization *)
 class name_assoc_table f =
   object

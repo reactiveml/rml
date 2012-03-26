@@ -1000,10 +1000,15 @@ label_declarations:
   | label_declarations SEMI label_declaration   { $3 :: $1 }
 ;
 label_declaration:
-    mutable_flag label COLON core_type          { ($2, $1, $4) }
+    mutable_flag label COLON poly_type          { ($2, $1, $4) }
 ;
 
 /* Core types */
+poly_type:
+  | core_type { $1 }
+  | annot_vars DOT core_type
+      { mkte (Ptype_forall ($1, $3)) }
+;
 core_type:
   | core_type_na { $1 }
   | core_type_na MINUSGREATER core_type
@@ -1056,6 +1061,14 @@ clock_var:
 ;
 effect_var:
   | QUOTE QUOTE ident { $3 }
+;
+annot_vars:
+  | /* empty*/ { [] }
+  | annot_var annot_vars { $1::$2 }
+;
+annot_var:
+  | clock_var { Ppcarrier (mkce (Pcar_var $1)) }
+  | effect_var { Ppeffect (mkee (Peff_var $1)) }
 ;
 clock_type:
   | clock_var { mkce (Pcar_var $1) }

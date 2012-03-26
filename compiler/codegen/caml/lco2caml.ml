@@ -59,6 +59,9 @@ let rec translate_te typ =
     | Cotype_depend _ ->
         let clock_type = make_rml_type "clock" [] in
         clock_type.cte_desc
+    | Cotype_forall (_, te) ->
+        let cte = translate_te te in
+        cte.cte_desc
   in
   make_te ctyp typ.cote_loc
 

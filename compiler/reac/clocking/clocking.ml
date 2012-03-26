@@ -187,9 +187,14 @@ and is_nonexpansive_conf c =
 
 (* Typing functions *)
 
+let new_generic_var_param pe = match pe with
+  | Pcarrier { ce_desc = Cvar v } -> v, Var_carrier (make_generic_carrier v)
+  | Peffect { ee_desc = Effvar v } -> v, Var_effect (new_generic_effect_var ())
+  | _ -> assert false (* TODO: donner une erreur ?*)
+
 (* Typing of type expressions *)
 let clock_of_type_expression ty_vars typexp =
-  let rec clock_of_te typexp =
+  let rec clock_of_te ty_vars typexp =
     match typexp.te_desc with
     | Tvar s ->
         begin try
@@ -198,23 +203,29 @@ let clock_of_type_expression ty_vars typexp =
           Not_found | Invalid_argument _ -> unbound_clock_err s typexp.te_loc
         end
 
+    | Tforall(params, te) ->
+        let params = List.map new_generic_var_param params in
+        let ty_vars = params@ty_vars in
+        let params = snd (List.split params) in
+        ty_forall params (clock_of_te ty_vars te)
+
     | Tarrow (t1, t2, ee) ->
-        arrow (clock_of_te t1) (clock_of_te t2) (effect_of_ee ee)
+        arrow (clock_of_te ty_vars t1) (clock_of_te ty_vars t2) (effect_of_ee ty_vars ee)
 
     | Tproduct (l) ->
-        product (List.map clock_of_te l)
+        product (List.map (clock_of_te ty_vars) l)
 
     | Tconstr (s, p_list) ->
         let ck_desc = Global.ck_info s in
-        constr ck_desc.clock_constr (List.map param_of_pe p_list)
+        constr ck_desc.clock_constr (List.map (param_of_pe ty_vars) p_list)
 
     | Tprocess (te,_, ce, ee) ->
-        process (clock_of_te te) (carrier_of_ce ce) (effect_of_ee ee)
+        process (clock_of_te ty_vars te) (carrier_of_ce ty_vars ce) (effect_of_ee ty_vars ee)
 
     | Tdepend ce ->
-        depend (carrier_of_ce ce)
+        depend (carrier_of_ce ty_vars ce)
 
-  and carrier_of_ce ce = match ce.ce_desc with
+  and carrier_of_ce ty_vars ce = match ce.ce_desc with
     | Cvar s ->
         (try
             expect_carrier (List.assoc s ty_vars)
@@ -222,7 +233,7 @@ let clock_of_type_expression ty_vars typexp =
               Not_found | Invalid_argument _  -> unbound_carrier_err s ce.ce_loc)
     | Ctopck -> topck_carrier
 
-  and effect_of_ee ee = match ee.ee_desc with
+  and effect_of_ee ty_vars ee = match ee.ee_desc with
     | Effempty -> no_effect
     | Effvar s ->
         (try
@@ -230,16 +241,16 @@ let clock_of_type_expression ty_vars typexp =
           with
               Not_found | Invalid_argument _ -> unbound_effect_err s ee.ee_loc)
     | Effsum (ee1, ee2) ->
-        eff_sum (effect_of_ee ee1) (effect_of_ee ee2)
+        eff_sum (effect_of_ee ty_vars ee1) (effect_of_ee ty_vars ee2)
     | Effdepend c ->
-        eff_depend (carrier_of_ce c)
+        eff_depend (carrier_of_ce ty_vars c)
 
-  and param_of_pe pe = match pe with
-    | Ptype te -> Var_clock (clock_of_te te)
-    | Pcarrier ce -> Var_carrier (carrier_of_ce ce)
-    | Peffect ee -> Var_effect (effect_of_ee ee)
+  and param_of_pe ty_vars pe = match pe with
+    | Ptype te -> Var_clock (clock_of_te ty_vars te)
+    | Pcarrier ce -> Var_carrier (carrier_of_ce ty_vars ce)
+    | Peffect ee -> Var_effect (effect_of_ee ty_vars ee)
   in
-  clock_of_te typexp
+  clock_of_te ty_vars typexp
 
 (* Free variables of a type *)
 let free_of_typeexp ty =
@@ -255,6 +266,7 @@ let free_of_typeexp ty =
           let ty_vars = vars (vars_carrier ty_vars act) t in
           vars_effect ty_vars eff
       | Tdepend c -> vars_carrier ty_vars c
+      | Tforall (_, _) -> (*TODO*) ty_vars
   and vars_carrier ty_vars ce = match ce.ce_desc with
     | Cvar s -> add_to_list (s, Tcarrier_var) ty_vars
     | Ctopck -> ty_vars
@@ -413,17 +425,17 @@ and clock_of_pattern_list global_env local_env patt_list ty_list =
   | _ -> raise (Internal (Location.none, "clock_of_pattern_list"))
 
 (* Typing of expressions *)
-let rec clock_of_expression env expr =
+let rec schema_of_expression env expr =
   let t =
     match expr.e_desc with
     | Econstant (i) -> Clocks_utils.static
 
     | Elocal (n) ->
         let typ_sch = Env.find n env in
-        instance typ_sch
+        (*instance*) clock_of_sch typ_sch
 
     | Eglobal (n) ->
-        instance (Global.ck_info n).value_ck
+        (*instance*) clock_of_sch (Global.ck_info n).value_ck
 
     | Elet (flag, patt_expr_list, e) ->
         let gl_env, new_env = type_let (flag = Recursive) env patt_expr_list in
@@ -509,7 +521,7 @@ let rec clock_of_expression env expr =
               (* check that the label appears only once *)
               if List.mem label label_list
               then non_linear_record_err label.gi expr.e_loc;
-              type_expect env label_expr ty_res;
+              schema_expect env label_expr ty_res;
               unify_expr expr ty ty_arg;
               typing_record (label :: label_list) label_expr_list
         in
@@ -917,6 +929,9 @@ let rec clock_of_expression env expr =
   Stypes.record (Ti_expr expr);
   t
 
+and clock_of_expression env e =
+  ensure_monotype (schema_of_expression env e)
+
 
 (* Typing of event configurations *)
 and type_of_event_config ?(force_activation_ck=false) env conf =
@@ -990,6 +1005,10 @@ and type_let is_rec env patt_expr_list =
 (* Typing of an expression with an expected type *)
 and type_expect env expr expected_ty =
   let actual_ty = clock_of_expression env expr in
+  unify_expr expr expected_ty actual_ty
+
+and schema_expect env expr expected_ty =
+  let actual_ty = schema_of_expression env expr in
   unify_expr expr expected_ty actual_ty
 
 (* Typing of statements (expressions whose values are ignored) *)

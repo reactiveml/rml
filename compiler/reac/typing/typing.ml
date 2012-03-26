@@ -237,6 +237,8 @@ let type_of_type_expression typ_vars typexp =
         process (type_of ty) { proc_static = Some(Proc_def (ref k)); }
 
     | Tdepend _ -> type_clock
+
+    | Tforall (_, te) -> type_of te
   in
   type_of typexp
 
@@ -252,6 +254,7 @@ let free_of_type ty =
         List.fold_left vars v (only_types t)
     | Tprocess (t, _, _, _) -> vars v t
     | Tdepend _ -> v
+    | Tforall (_, _) -> (*TODO*) v
   in vars [] ty
 
 (* translating a declared type expression into an internal type *)

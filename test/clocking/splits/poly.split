@@ -1,0 +1,171 @@
+$$$record_good
+${
+(*
+  run_test:
+   [
+     Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+type t = { lbl : 'ck. (int, int) event{'ck|} =>{'ck} unit }
+
+let f s =
+  emit s 0;
+  ignore (pre? s + 0)
+
+$}
+
+let z = { lbl = f }
+
+$
+
+let z = { lbl = f }
+let z2 = { lbl = z.lbl }
+
+$$$record_bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+type t = { lbl : 'ck. (int, int) event{'ck|} =>{'ck} unit }
+
+$}
+
+let z = { lbl = (fun s -> emit s 0; ignore (pre? s + 0)) }
+
+
+$
+
+let id x = x
+
+let f s =
+  emit s 0;
+  ignore (pre? s + 0)
+
+let z = { lbl = id f }
+
+$$$good
+${
+(*
+  run_test:
+   [
+     Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+
+let process p q =
+  newclock ck in
+    signal s at ck in
+    run (q s)
+
+$
+
+let process p q =
+  newclock ck in
+    signal s at ck in
+    q s
+
+$
+
+let process p q =
+  newclock ck in
+    signal s at ck in
+    q s
+
+let process q s =
+  pause; emit s
+
+let process pp = p q
+
+$
+
+let process p q =
+  newclock ck in
+    signal s at ck in
+    q s
+
+let process q s =
+  present s then () else ()
+
+let process pp = p q
+
+$
+
+let process p q =
+  signal s in
+  run (q s)
+  ||
+  newclock ck in
+    signal s2 at ck in
+    run (q s2)
+
+$
+
+let process p q =
+  signal s in
+  run (q s)
+  ||
+  newclock ck in
+    signal s2 at ck in
+    run (q s2)
+
+let process q s =
+  pause; emit s
+
+let process pp = p q
+
+$
+
+let process p q =
+  signal s in
+  run (q s)
+  ||
+  newclock ck in
+    signal s2 at ck in
+    run (q s2)
+
+let process q s =
+  present s then () else ()
+
+let process pp = p q
+
+$
+
+let process q =
+  signal s at topck in
+  present s then () else ()
+
+let process p q =
+  run q
+
+let process pp = p q
+
+$$$scope
+${
+(*
+  run_test:
+   [
+     Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+
+let process p q =
+  newclock ck in
+    signal s at ck in
+    q s
+
+let process q ck s =
+  signal s2 at ck in
+  present s2 then () else ()
+  ||
+  pause; emit s
+
+let process pp = p q

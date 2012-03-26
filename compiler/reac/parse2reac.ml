@@ -51,6 +51,8 @@ let rec translate_te typ =
   let rtyp =
     match typ.pte_desc with
     | Ptype_var x -> Tvar x
+    | Ptype_forall (params, te) ->
+        Tforall (List.map translate_pe params, translate_te te)
 
     | Ptype_arrow (t1, t2, ee) ->
         Tarrow (translate_te t1, translate_te t2, translate_ee ee)
