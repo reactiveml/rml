@@ -59,45 +59,46 @@ ${
 
 $}
 
-let process p q =
+let process p (q : 'ck. ('a, 'b) event{'ck|} -> unit process{'ck|'ck}) =
   newclock ck in
     signal s at ck in
     run (q s)
 
 $
 
-let process p q =
+let process p (q : 'ck. ('a, 'b) event{'ck|} =>{'ck} unit) =
   newclock ck in
     signal s at ck in
     q s
 
 $
 
-let process p q =
+let process p (q : 'ck. ('a, 'b) event{'ck|} =>{'ck} unit) =
   newclock ck in
     signal s at ck in
     q s
 
-let process q s =
-  pause; emit s
+let q s =
+  emit s 0
 
-let process pp = p q
+let process pp = run (p q)
 
 $
 
-let process p q =
+let process p (q : 'ck. ('a, 'b) event{'ck|} -> unit process{'ck|'ck}) =
   newclock ck in
     signal s at ck in
-    q s
+    run (q s)
 
 let process q s =
   present s then () else ()
 
-let process pp = p q
+let process pp =
+  run (p q)
 
 $
 
-let process p q =
+let process p (q : 'ck. ('a, 'b) event{'ck|} -> unit process{'ck|'ck}) =
   signal s in
   run (q s)
   ||
@@ -107,7 +108,7 @@ let process p q =
 
 $
 
-let process p q =
+let process p (q : 'ck. ('a, 'b) event{'ck|} -> unit process{'ck|'ck}) =
   signal s in
   run (q s)
   ||
@@ -122,7 +123,7 @@ let process pp = p q
 
 $
 
-let process p q =
+let process p (q : 'ck. ('a, 'b) event{'ck|} -> unit process{'ck|'ck}) =
   signal s in
   run (q s)
   ||
@@ -146,7 +147,7 @@ let process p q =
 
 let process pp = p q
 
-$$$scope
+$$$bad
 ${
 (*
   run_test:
@@ -157,10 +158,10 @@ ${
 
 $}
 
-let process p q =
+let process p (q : 'ck. ('a, 'b) event{'ck|} -> unit process{'ck|'ck}) =
   newclock ck in
     signal s at ck in
-    q s
+    run (q s)
 
 let process q ck s =
   signal s2 at ck in

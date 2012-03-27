@@ -667,8 +667,10 @@ let label_instance { lbl_arg = ck_arg; lbl_res = ck_res; lbl_mut = mut } =
   cleanup ();
   { lbl_arg = ck_arg; lbl_res = ck_res; lbl_mut = mut }
 
-let ensure_monotype ck = match ck.desc with
-  | Clock_forall sch -> instance sch
+let rec ensure_monotype ck =
+  let ck = clock_repr ck in
+  match ck.desc with
+  | Clock_forall sch -> ensure_monotype (instance sch)
   | _ -> ck
 
 (* the occur check *)
@@ -817,8 +819,11 @@ let rec unify expected_ck actual_ck =
 and unify_schema expected_sch actual_sch =
   let _, car_vars1, eff_vars1, actual_ck = instance_and_vars actual_sch in
   let _, car_vars2, eff_vars2, expected_ck = instance_and_vars expected_sch in
-  List.iter2 bind_carrier car_vars1 car_vars2;
-  List.iter2 bind_effect eff_vars1 eff_vars2;
+  (try
+    List.iter2 bind_carrier car_vars1 car_vars2;
+    List.iter2 bind_effect eff_vars1 eff_vars2
+  with
+      Invalid_argument _ -> raise Unify);
   unify actual_ck expected_ck
 
 and unify_list ck_l1 ck_l2 =

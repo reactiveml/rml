@@ -53,6 +53,8 @@ let rec translate_te typ =
     | Ptype_var x -> Tvar x
     | Ptype_forall (params, te) ->
         Tforall (List.map translate_pe params, translate_te te)
+    | Ptype_some (params, te) ->
+        Tsome (List.map translate_pe params, translate_te te)
 
     | Ptype_arrow (t1, t2, ee) ->
         Tarrow (translate_te t1, translate_te t2, translate_ee ee)
@@ -231,6 +233,7 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
 
       | Ppatt_constraint (patt,typ) ->
           let vars, rpatt = translate_pattern or_vars is_global patt in
+          let typ = Clock_vars.bind_annot_vars typ in
           let rtyp = translate_te typ in
           vars, Pconstraint (rpatt, rtyp)
 

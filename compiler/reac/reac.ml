@@ -142,6 +142,7 @@ and type_expression =
 and type_expression_desc =
     Tvar of string
   | Tforall of param_expression list * type_expression
+  | Tsome of param_expression list * type_expression
   | Tarrow of type_expression * type_expression * effect_expression
   | Tproduct of type_expression list
   | Tconstr of type_description * param_expression list

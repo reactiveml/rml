@@ -192,6 +192,12 @@ let new_generic_var_param pe = match pe with
   | Peffect { ee_desc = Effvar v } -> v, Var_effect (new_generic_effect_var ())
   | _ -> assert false (* TODO: donner une erreur ?*)
 
+let new_var_param pe = match pe with
+  | Ptype { te_desc = Tvar v } -> v, Var_clock (new_clock_var ())
+  | Pcarrier { ce_desc = Cvar v } -> v, Var_carrier (make_carrier v)
+  | Peffect { ee_desc = Effvar v } -> v, Var_effect (new_effect_var ())
+  | _ -> assert false (* TODO: donner une erreur ?*)
+
 (* Typing of type expressions *)
 let clock_of_type_expression ty_vars typexp =
   let rec clock_of_te ty_vars typexp =
@@ -208,6 +214,10 @@ let clock_of_type_expression ty_vars typexp =
         let ty_vars = params@ty_vars in
         let params = snd (List.split params) in
         ty_forall params (clock_of_te ty_vars te)
+
+    | Tsome (params, te) ->
+        let ty_vars = (List.map new_var_param params)@ty_vars in
+        clock_of_te ty_vars te
 
     | Tarrow (t1, t2, ee) ->
         arrow (clock_of_te ty_vars t1) (clock_of_te ty_vars t2) (effect_of_ee ty_vars ee)
@@ -267,6 +277,7 @@ let free_of_typeexp ty =
           vars_effect ty_vars eff
       | Tdepend c -> vars_carrier ty_vars c
       | Tforall (_, _) -> (*TODO*) ty_vars
+      | Tsome (_, _) -> (* TODO *) ty_vars
   and vars_carrier ty_vars ce = match ce.ce_desc with
     | Cvar s -> add_to_list (s, Tcarrier_var) ty_vars
     | Ctopck -> ty_vars
@@ -475,11 +486,14 @@ let rec schema_of_expression env expr =
                 with Unify ->
                   application_of_non_function_err fct ty_fct
               in
-              type_expect env arg t1;
+              (match t1.desc with
+                | Clock_forall _ -> schema_expect env arg t1
+                | _ ->  type_expect env arg t1);
               add_effect eff;
               type_args t2 args
         in
         type_args ty_fct args
+
     | Etuple (l) ->
         product (List.map (clock_of_expression env) l)
 

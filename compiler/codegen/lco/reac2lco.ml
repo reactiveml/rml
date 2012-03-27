@@ -92,6 +92,8 @@ let rec translate_te typ =
         Cotype_process (translate_te t, translate_ce act, translate_ee ee)
     | Tforall (pe_list, te) ->
         Cotype_forall (List.map translate_pe pe_list, translate_te te)
+    | Tsome (pe_list, te) ->
+        Cotype_some (List.map translate_pe pe_list, translate_te te)
   in
   make_te cotyp typ.te_loc
 

@@ -209,9 +209,13 @@ let only_types l =
   in
   List.rev (List.fold_left aux [] l)
 
+let new_param_var te = match te.te_desc with
+  | Tvar s -> s, new_var ()
+  | _ -> assert false
+
 (* Typing of type expressions *)
 let type_of_type_expression typ_vars typexp =
-  let rec type_of typexp =
+  let rec type_of typ_vars typexp =
     match typexp.te_desc with
     | Tvar s ->
         begin try
@@ -221,26 +225,30 @@ let type_of_type_expression typ_vars typexp =
         end
 
     | Tarrow (t1, t2, _) ->
-        arrow (type_of t1) (type_of t2)
+        arrow (type_of typ_vars t1) (type_of typ_vars t2)
 
     | Tproduct (l) ->
-        product (List.map type_of l)
+        product (List.map (type_of typ_vars) l)
 
     | Tconstr (s, p_list) ->
         let ty_list = only_types p_list in
         let name =
           check_type_constr_defined typexp.te_loc s (List.length ty_list)
         in
-        constr name (List.map type_of ty_list)
+        constr name (List.map (type_of typ_vars) ty_list)
 
     | Tprocess (ty,k,_,_) ->
-        process (type_of ty) { proc_static = Some(Proc_def (ref k)); }
+        process (type_of typ_vars ty) { proc_static = Some(Proc_def (ref k)); }
 
     | Tdepend _ -> type_clock
 
-    | Tforall (_, te) -> type_of te
+    | Tforall (_, te) -> type_of typ_vars te
+    | Tsome (p_list, te) ->
+        let ty_list = only_types p_list in
+        let typ_vars = (List.map new_param_var ty_list)@typ_vars in
+        type_of typ_vars te
   in
-  type_of typexp
+  type_of typ_vars typexp
 
 (* Free variables of a type *)
 let free_of_type ty =
@@ -255,6 +263,7 @@ let free_of_type ty =
     | Tprocess (t, _, _, _) -> vars v t
     | Tdepend _ -> v
     | Tforall (_, _) -> (*TODO*) v
+    | Tsome (_, _) -> (*TODO*) v
   in vars [] ty
 
 (* translating a declared type expression into an internal type *)

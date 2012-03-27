@@ -117,8 +117,9 @@ let application_of_non_function_err exp ty =
       Location.print_oc exp.e_loc
   with Unify ->
     Printf.eprintf
-      "%aThis expression is not a function, it cannot be applied.\n"
+      "%aThis expression is not a function, it cannot be applied (Found type: %a).\n"
       Location.print_oc exp.e_loc
+      Clocks_printer.output ty
   end;
   raise Error
 

@@ -900,7 +900,7 @@ simple_pattern:
       { reloc_patt $2 }
   | LPAREN pattern error
       { unclosed "(" 1 ")" 3 }
-  | LPAREN pattern COLON core_type RPAREN
+  | LPAREN pattern COLON poly_type RPAREN
       { mkpatt(Ppatt_constraint($2, $4)) }
   | LPAREN pattern COLON core_type error
       { unclosed "(" 1 ")" 5 }

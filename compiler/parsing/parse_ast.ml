@@ -129,6 +129,7 @@ and type_expression =
 and type_expression_desc =
   | Ptype_var of string
   | Ptype_forall of param_expression list * type_expression
+  | Ptype_some of param_expression list * type_expression
   | Ptype_arrow of type_expression * type_expression * effect_expression
   | Ptype_tuple of type_expression list
   | Ptype_constr of ident * param_expression list

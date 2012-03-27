@@ -33,6 +33,8 @@ let mkce d =
 let mkee d =
   { pee_desc = d; pee_loc = Location.none }
 
+let mkfresh_type s =
+  s, Ttype_var
 let mkfresh_car () =
   Clocks_utils.generic_prefix_name^(string_of_int Clocks_utils.names#name), Tcarrier_var
 let mkfresh_effect () =
@@ -166,3 +168,55 @@ let add_missing_vars l =
     in
     List.map (set_params env) l
   )
+
+let var_of_param vars pe = match pe with
+  | Pptype { pte_desc = Ptype_var s } -> (s, Ttype_var) :: vars
+  | Ppcarrier { pce_desc = Pcar_var s } -> (s, Tcarrier_var) :: vars
+  | Ppeffect { pee_desc = Peff_var s } -> (s, Teffect_var) :: vars
+  | _ -> vars
+
+(* Bound locally unbounded vars in the type expression. For instance,
+   (x: 'a -> 'b) is transformed into (x: exists 'a, 'b. 'a -> 'b
+
+   (This is different from the interpretation of annotations in OCaml where
+   variables are bound existentially at the nearest toplevel let) *)
+let bind_annot_vars te =
+  let type_expression_desc funs bound_vars ted = match ted with
+    | Ptype_var s ->
+        if not (List.mem_assoc s bound_vars) then
+          let v, k = mkfresh_type s in
+          ted, (v, k)::bound_vars
+        else
+          ted, bound_vars
+    | Ptype_forall (params, te) ->
+        let bound_vars = List.fold_left var_of_param bound_vars params in
+        let _, bound_vars = type_expression_it funs bound_vars te in
+        ted, bound_vars
+    | _ -> raise Global_mapfold.Fallback
+  in
+  let carrier_expression_desc funs bound_vars ced = match ced with
+    | Pcar_var s ->
+        if not (List.mem_assoc s bound_vars) then
+          let v, k = mkfresh_car () in
+          ced, (v, k)::bound_vars
+        else
+          ced, bound_vars
+    | _ -> raise Global_mapfold.Fallback
+  in
+  let effect_expression_desc funs bound_vars eed = match eed with
+    | Peff_var s ->
+        if not (List.mem_assoc s bound_vars) then
+          let v, k = mkfresh_effect () in
+          eed, (v, k)::bound_vars
+        else
+          eed, bound_vars
+    | _ -> raise Global_mapfold.Fallback
+  in
+  let funs = { Parse_mapfold.defaults with
+    type_expression_desc = type_expression_desc;
+    carrier_expression_desc = carrier_expression_desc;
+    effect_expression_desc = effect_expression_desc }
+  in
+  let _, params = Parse_mapfold.type_expression_it funs [] te in
+  let params = List.map param_of_var params in
+  mkte (Ptype_some (params, te))
