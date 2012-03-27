@@ -771,6 +771,7 @@ let rec schema_of_expression env expr =
         let ty = new_clock_var() in
         let eff = new_effect_var () in
         unify_run e.e_loc ty_e (process ty !activation_carrier eff);
+        add_effect eff;
         ty
 
     | Euntil (s,p,patt_proc_opt) ->

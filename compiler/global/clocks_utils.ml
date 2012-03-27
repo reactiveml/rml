@@ -541,7 +541,7 @@ let cleanup () =
   effects#cleanup
 
 (* makes a copy of a type *)
-let rec copy_clock ck =
+let rec copy_subst_clock m ck =
   let level = ck.level in
   match ck.desc with
     | Clock_var ->
@@ -555,66 +555,71 @@ let rec copy_clock ck =
     | Clock_static -> ck
     | Clock_depend c ->
         if level = generic then
-          depend (copy_carrier c)
+          depend (copy_subst_carrier m c)
         else
           ck
     | Clock_link link ->
         if level = generic then
           link
         else
-          copy_clock link
+          copy_subst_clock m link
     | Clock_arrow (ck1, ck2, eff) ->
         if level = generic then
-          arrow (copy_clock ck1) (copy_clock ck2) (copy_effect eff)
+          arrow (copy_subst_clock m ck1) (copy_subst_clock m ck2) (copy_subst_effect m eff)
         else
           ck
     | Clock_product ck_list ->
         if level = generic then
-          product (List.map copy_clock ck_list)
+          product (List.map (copy_subst_clock m) ck_list)
         else
           ck
     | Clock_constr (name, param_list) ->
         if level = generic then
-          constr name (List.map copy_param param_list)
+          constr name (List.map (copy_subst_param m) param_list)
         else
           ck
     | Clock_process (ck, act_car, eff) ->
         if level = generic then
-          process (copy_clock ck) (copy_carrier act_car) (copy_effect eff)
+          process (copy_subst_clock m ck) (copy_subst_carrier m act_car) (copy_subst_effect m eff)
         else
           ck
     | Clock_forall _ -> (*TODO*)
         ck
 
-and copy_carrier car =
+and copy_subst_carrier m car =
   let level = car.level in
   match car.desc with
     | Carrier_var s ->
         if level = generic then
-          let v = make_carrier s in
-          car.desc <- Carrier_link v;
-          carriers#save car (Carrier_var s);
-          v
+          (try
+            List.assoc car.index m
+          with
+            | Not_found ->
+                let v = make_carrier s in
+                car.desc <- Carrier_link v;
+                carriers#save car (Carrier_var s);
+                v
+          )
         else
           car
   | Carrier_link(link) ->
       if level = generic then
         link
       else
-        copy_carrier link
+        copy_subst_carrier m link
   | Carrier_skolem(s, i) ->
       if level = generic then
         carrier_skolem s i
       else
         car
 
-and copy_effect eff =
+and copy_subst_effect m eff =
   let level = eff.level in
   match eff.desc with
     | Effect_empty -> eff
     | Effect_sum (eff1, eff2) ->
         if level = generic then
-          eff_sum (copy_effect eff1) (copy_effect eff2)
+          eff_sum (copy_subst_effect m eff1) (copy_subst_effect m eff2)
         else
           eff
     | Effect_var ->
@@ -629,15 +634,18 @@ and copy_effect eff =
         if level = generic then
           link
         else
-          copy_effect link
+          copy_subst_effect m link
     | Effect_depend c ->
         if level = generic then
-          eff_depend (copy_carrier c)
+          eff_depend (copy_subst_carrier m c)
         else
           eff
 
-and copy_param p = clock_param_map copy_clock copy_carrier copy_effect p
+and copy_subst_param m p = clock_param_map (copy_subst_clock m)
+  (copy_subst_carrier m) (copy_subst_effect m) p
 
+let copy_clock ck = copy_subst_clock [] ck
+let copy_param p = copy_subst_param [] p
 
 (* instanciation *)
 let instance { cs_desc = ck } =
@@ -739,6 +747,64 @@ and param_occur_check level index =
   clock_param_iter (occur_check level index)
     (carrier_occur_check level no_carrier) (effect_occur_check level no_effect)
 
+(* the occur check *)
+let rec skolem_check skolems ck =
+  let rec check ck =
+    let ck = clock_repr ck in
+    match ck.desc with
+      | Clock_var | Clock_static -> ()
+      | Clock_depend c -> carrier_skolem_check skolems c
+      | Clock_arrow (ck1, ck2, eff) ->
+          check ck1; check ck2;
+          effect_skolem_check skolems eff
+      | Clock_product ck_list -> List.iter check ck_list
+      | Clock_constr(_, param_list) -> List.iter (param_skolem_check skolems) param_list
+      | Clock_link link -> check link
+      | Clock_process (ck, act_car, eff) ->
+          check ck;
+          carrier_skolem_check skolems act_car;
+          effect_skolem_check skolems eff
+      | Clock_forall sch -> (*TODO*) ()
+  in
+  check ck
+
+and carrier_skolem_check skolems car =
+  let rec check car =
+    let car = carrier_repr car in
+    match car.desc with
+      | Carrier_var s -> ()
+      | Carrier_skolem(s, i) ->
+          if List.mem i skolems then
+            raise Unify
+      | Carrier_link link -> check link
+  in
+  check car
+
+and effect_skolem_check skolems eff =
+  let rec check eff =
+    let eff = effect_repr eff in
+    match eff.desc with
+      | Effect_var | Effect_empty -> ()
+      | Effect_depend c -> carrier_skolem_check skolems c
+      | Effect_sum (eff1, eff2) -> check eff1; check eff2
+      | Effect_link link -> check link
+  in
+  check eff
+
+and param_skolem_check skolems =
+  clock_param_iter (skolem_check skolems)
+    (carrier_skolem_check skolems) (effect_skolem_check skolems)
+
+let make_fresh_skolem_subst vars =
+  let fresh_skolem (m, skolems) car = match car.desc with
+    | Carrier_var _ ->
+        let sk = carrier_skolem generic_prefix_name names#name in
+        (car.index, sk)::m, sk.index::skolems
+    | _ -> assert false
+  in
+  List.fold_left fresh_skolem ([], []) vars
+
+
 (* type constructor equality *)
 let same_type_constr c1 c2 = Global_ident.same c1.gi c2.gi
 
@@ -817,14 +883,11 @@ let rec unify expected_ck actual_ck =
 
 (* TODO: on doit mettre les quantifieurs dans leur ordre d'apparition. Ensuite, on instancie les parametres des deux schemas par les memes skolems frais, on les unifie puis on verifie que les skolems n'ont pas echappe dans l'environnement en verifiant sils apparaissent dans le type des schemas de depart. *)
 and unify_schema expected_sch actual_sch =
-  let _, car_vars1, eff_vars1, actual_ck = instance_and_vars actual_sch in
-  let _, car_vars2, eff_vars2, expected_ck = instance_and_vars expected_sch in
-  (try
-    List.iter2 bind_carrier car_vars1 car_vars2;
-    List.iter2 bind_effect eff_vars1 eff_vars2
-  with
-      Invalid_argument _ -> raise Unify);
-  unify actual_ck expected_ck
+  let m, skolems = make_fresh_skolem_subst expected_sch.cs_carrier_vars in
+  let expected_ty = copy_subst_clock m expected_sch.cs_desc in
+  let actual_ty = instance actual_sch in
+  unify expected_ty actual_ty;
+  skolem_check skolems actual_sch.cs_desc
 
 and unify_list ck_l1 ck_l2 =
   try
@@ -862,13 +925,13 @@ and effect_unify expected_eff actual_eff =
     else
       match expected_eff.desc, actual_eff.desc with
         | Effect_empty, Effect_empty -> ()
-        | _, Effect_empty -> ()
         | Effect_var, _ ->
             effect_occur_check expected_eff.level expected_eff actual_eff;
             expected_eff.desc <- Effect_link (remove_var_from_effect expected_eff.index actual_eff)
         | _, Effect_var ->
             effect_occur_check actual_eff.level actual_eff expected_eff;
             actual_eff.desc <- Effect_link (remove_var_from_effect actual_eff.index expected_eff)
+        | _, Effect_empty -> ()
         | Effect_depend c1, Effect_depend c2 -> carrier_unify c1 c2
         | (Effect_depend _ | Effect_empty), Effect_sum (eff1, eff2) ->
             effect_unify expected_eff eff1; effect_unify expected_eff eff2
