@@ -181,35 +181,35 @@ let var_of_param vars pe = match pe with
    (This is different from the interpretation of annotations in OCaml where
    variables are bound existentially at the nearest toplevel let) *)
 let bind_annot_vars te =
-  let type_expression_desc funs bound_vars ted = match ted with
+  let type_expression_desc funs (bound_vars, new_vars) ted = match ted with
     | Ptype_var s ->
-        if not (List.mem_assoc s bound_vars) then
-          let v, k = mkfresh_type s in
-          ted, (v, k)::bound_vars
+        if not (List.mem (s, Ttype_var) bound_vars) then
+          let v = mkfresh_type s in
+          ted, (v::bound_vars, v::new_vars)
         else
-          ted, bound_vars
+          ted, (bound_vars, new_vars)
     | Ptype_forall (params, te) ->
         let bound_vars = List.fold_left var_of_param bound_vars params in
-        let _, bound_vars = type_expression_it funs bound_vars te in
-        ted, bound_vars
+        let _, acc = type_expression_it funs (bound_vars, new_vars) te in
+        ted, acc
     | _ -> raise Global_mapfold.Fallback
   in
-  let carrier_expression_desc funs bound_vars ced = match ced with
+  let carrier_expression_desc funs (bound_vars, new_vars) ced = match ced with
     | Pcar_var s ->
-        if not (List.mem_assoc s bound_vars) then
-          let v, k = mkfresh_car () in
-          ced, (v, k)::bound_vars
+        if not (List.mem (s, Tcarrier_var) bound_vars) then
+          let v = mkfresh_car () in
+          ced, (v::bound_vars, v::new_vars)
         else
-          ced, bound_vars
+          ced, (bound_vars, new_vars)
     | _ -> raise Global_mapfold.Fallback
   in
-  let effect_expression_desc funs bound_vars eed = match eed with
+  let effect_expression_desc funs (bound_vars, new_vars) eed = match eed with
     | Peff_var s ->
-        if not (List.mem_assoc s bound_vars) then
-          let v, k = mkfresh_effect () in
-          eed, (v, k)::bound_vars
+        if not (List.mem (s, Teffect_var) bound_vars) then
+          let v = mkfresh_effect () in
+          eed, (v::bound_vars, v::new_vars)
         else
-          eed, bound_vars
+          eed, (bound_vars, new_vars)
     | _ -> raise Global_mapfold.Fallback
   in
   let funs = { Parse_mapfold.defaults with
@@ -217,6 +217,6 @@ let bind_annot_vars te =
     carrier_expression_desc = carrier_expression_desc;
     effect_expression_desc = effect_expression_desc }
   in
-  let _, params = Parse_mapfold.type_expression_it funs [] te in
+  let _, (_, params) = Parse_mapfold.type_expression_it funs ([], []) te in
   let params = List.map param_of_var params in
   mkte (Ptype_some (params, te))
