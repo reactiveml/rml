@@ -1,0 +1,36 @@
+type 'a tree =
+  | Empty
+  | Node of 'a tree * 'a * 'a tree
+
+let rec dfs f t = match t with
+| Empty -> ()
+| Node(l, v, r) -> dfs f l; f v; dfs f r
+
+let rec process bfs f t = match t with
+| Empty -> ()
+| Node (l, v, r) ->
+    f v; pause;
+    run (bfs f l) || run (bfs f r)
+
+(**
+            1
+         /     \
+       2          3
+     /  \
+    21    22
+ *)
+let t =
+  Node (Node (Node (Empty, 21, Empty), 2, Node(Empty, 22, Empty)),
+       1,
+       Node(Empty, 3, Empty))
+
+let print_node i =
+  print_int i;
+  print_newline ()
+
+let process main =
+  print_endline "Depth first:";
+  dfs print_node t;
+  print_newline ();
+  print_endline "Breadth first";
+  run (bfs print_node t)
