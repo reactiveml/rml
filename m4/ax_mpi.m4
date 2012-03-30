@@ -194,7 +194,7 @@ AC_RUN_IFELSE(
             ]],
             [[
   int res;
-  MPI_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &res);
+  MPI_Init_thread(0, 0, MPI_THREAD_MULTIPLE, &res);
     if(res != MPI_THREAD_MULTIPLE)
     return 2;
   MPI_Finalize();
