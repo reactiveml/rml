@@ -36,7 +36,7 @@ CL_INC=-I +compiler-libs \
        -I +compiler-libs/parsing \
        -I +ocamlbuild
 
-rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop.cmo rmlrun.cma
+rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_library.cmo rmltop.cmo rmlrun.cma
 	$(OCAMLC) $(OCAMLFLAGS) -o rmltop $(CL_INC) -I +threads -I ../compiler $(RMLLIB) \
 		toplevellib.cma \
 		unix.cma \
@@ -46,6 +46,7 @@ rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop.cmo rmlrun.cma
 		rmlcompiler.cmo \
 		rmllib.cma \
 		rmltop_lexer.cmo \
+		rmltop_library.cmo \
 		rmltop.cmo
 
 rmlrun.cma: rmltop_global.cmo rmltop_implem.cmo rmltop_machine_body.cmo rmltop_reactive_machine.cmo rmltop_controller.cmo rmltop_main.cmo
@@ -139,5 +140,8 @@ rmltop_main.cmi rmltop_main.cmo: rmltop_main.ml \
 
 rmltop.cmo: rmltop.ml ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop.ml
+
+rmltop_library.cmo: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo
+	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop_library.ml
 
 FORCE:
