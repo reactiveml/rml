@@ -37,6 +37,7 @@
    | Run of string
    | Exec of string
    | Quit
+   | Help
 
  let expr_buffer = Buffer.create 512
 }
@@ -80,6 +81,7 @@ and directive = parse
   | "run"            { Run (expr lexbuf) }
   | "exec"           { Exec (expr lexbuf) }
   | "quit"           { end_of_phrase lexbuf; Quit }
+  | "help"           { end_of_phrase lexbuf; Help }
   | sep+             { OCaml_phrase (expr lexbuf ^ ";;") }
   | eof              { raise EOF }
   | _                { error lexbuf; assert false }

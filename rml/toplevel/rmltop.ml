@@ -150,6 +150,8 @@ let translate_and_eval_phrase rml_phrase =
       set_sampling f
 
     | Rmltop_lexer.Quit -> exit 0
+
+    | Rmltop_lexer.Help -> print_help ()
   with
     | Rmltop_lexer.EOF -> Printf.eprintf "Got an EOF! Exiting...%!"; exit 0
     | Rmltop_lexer.Syntax_error -> ()
