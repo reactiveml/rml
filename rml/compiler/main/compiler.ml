@@ -147,7 +147,7 @@ let compile_implementation_front_end info_chan itf impl_list =
   end else begin
 *)
     (* write interface *)
-    Modules.write_compiled_interface itf;
+    Misc.opt_iter Modules.write_compiled_interface itf;
 (*
   end;
 *)
@@ -244,7 +244,7 @@ let compile_implementation module_name filename =
   and module_name = String.capitalize filename  in
 
   let ic = open_in source_name in
-  let itf = open_out_bin obj_interf_name in
+  let itf = Some (open_out_bin obj_interf_name) in
   let info_chan = stdout in
 
   try
@@ -270,7 +270,7 @@ let compile_implementation module_name filename =
     (* front-end *)
     let intermediate_code = compile_implementation_front_end info_chan itf
 	decl_list in
-    close_out itf;
+    Misc.opt_iter close_out itf;
 
     if Sys.file_exists (filename ^ ".rmli")
        ||  Sys.file_exists (filename ^ ".mli")

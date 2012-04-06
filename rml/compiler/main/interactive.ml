@@ -45,7 +45,6 @@ let init () =
 let translate_phrase phrase =
   (* Initialization *)
   let module_name = module_name () in
-  let itf = open_out_bin "/dev/null" in
   Location.reset ();
 
   try
@@ -54,7 +53,7 @@ let translate_phrase phrase =
     let decl_list = List.map External.expend decl_list in
     (* front-end *)
     let intermediate_code =
-      Compiler.compile_implementation_front_end stderr itf decl_list
+      Compiler.compile_implementation_front_end stderr None decl_list
     in
     (* the implementation *)
     Compiler.compile_implementation_back_end_buf stderr module_name
@@ -83,7 +82,7 @@ let compile () =
 	Location.init lexbuf "";
 	Lexer.update_loc lexbuf None 1 true 0;
 	let decl_list = Parse.interactive lexbuf in
-	compile_decl_list module_name itf info_chan out_chan decl_list
+	compile_decl_list module_name (Some itf) info_chan out_chan decl_list
       with x ->
 	Errors.report_error Format.err_formatter x;
 	output_string out_chan "let () = ();;\n"
