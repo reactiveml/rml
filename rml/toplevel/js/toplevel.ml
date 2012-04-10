@@ -67,12 +67,7 @@ let _ =
 module Html = Dom_html
 
 let s =
-  "let x = 10+10;;\n\
-   let y = x * 3;;\n\
-   String.make x 'a';;\n\
-   sin 1.;;\n\
-   let rec fact n = if n = 0 then 1. else float n *. fact (n - 1);;\n\
-   fact 20;;\n"
+  "let x = 10+10;;"
 
 let doc = Dom_html.document
 let button_type = Js.string "button"
