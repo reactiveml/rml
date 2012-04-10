@@ -77,12 +77,6 @@ let button txt action =
   b##onclick <- Dom_html.handler (fun _ -> action (); Js._true);
   b
 
-let start ppf =
-  Format.fprintf ppf "        ReactiveML version %s@.@." Version.version;
-  Rmltop_library.print_help ();
-  Toploop.initialize_toplevel_env ();
-  Toploop.input_name := ""
-
 let at_bol = ref true
 let consume_nl = ref false
 
@@ -134,6 +128,13 @@ let loop s ppf =
   with End_of_file ->
     ()
   end
+
+let start ppf =
+  Format.fprintf ppf "        ReactiveML version %s@.@." Version.version;
+  Rmltop_library.print_help ();
+  Toploop.initialize_toplevel_env ();
+  Toploop.input_name := ""
+  (* loop false init_code ppf *)
 
 let run _ =
   let top =
