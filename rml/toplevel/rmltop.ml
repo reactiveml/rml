@@ -100,8 +100,8 @@ let main () =
   Rmlcompiler.Misc.interactive := true;
   Rmlcompiler.Interactive.init ();
   Sys.catch_break true;
-  Rmlcompiler.Misc.opt_iter set_sampling !sampling;
-  eval_phrases ~silent:(not !debug) init_rml;
+  Rmlcompiler.Misc.opt_iter (set_sampling Format.std_formatter) !sampling;
+  eval_phrases ~silent:(not !debug) Format.std_formatter init_rml;
   try
     let buf = Buffer.create 512 in
     print_prompt ();
@@ -114,7 +114,7 @@ let main () =
         let () = Buffer.add_string buf line in
         let phrase = Buffer.contents buf in
         Buffer.reset buf; Buffer.clear buf;
-        translate_and_eval_phrase (String.copy phrase);
+        translate_and_eval_phrase Format.std_formatter (String.copy phrase);
         print_prompt ();
       end
       else if line <> "\n" then begin

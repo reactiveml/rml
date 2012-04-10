@@ -40,7 +40,7 @@ let get_error s =
   let i = String.index s ',' in
   String.sub s (i+2) (String.length s - i - 2)
 
-let eval_command ?(silent=false) command =
+let eval_command ?(silent=false) fmt command =
   let buffer = Buffer.create 512 in
   let pp = Format.formatter_of_buffer buffer in
   Format.pp_set_margin pp max_int;
@@ -57,35 +57,35 @@ let eval_command ?(silent=false) command =
     Toploop.parse_use_file := save;
     (false, get_error (Buffer.contents buffer))
 
-let print_message message =
+let print_message fmt message =
   if String.length message <> 0 then
-    Printf.eprintf "%s\n%!" message
+    Format.fprintf fmt "%s@." message
 
-let rec eval_phrases ?(silent=false) = function
+let rec eval_phrases ?(silent=false) fmt = function
   | [] -> ()
   | phrase :: phrases ->
-      let success, message = eval_command ~silent phrase in
-      print_message message;
+      let success, message = eval_command ~silent fmt phrase in
+      print_message fmt message;
       if success then
-        eval_phrases ~silent phrases
+        eval_phrases ~silent fmt phrases
 
 let sampling : string option ref = ref None
-let set_sampling f =
-  eval_phrases ~silent:true [ "let () = Rmltop_global.set_sampling "^ f ^";;"; ]
+let set_sampling fmt f =
+  eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_sampling "^ f ^";;"; ]
 
-let translate_and_eval_phrase rml_phrase =
+let translate_and_eval_phrase fmt rml_phrase =
   let rml_phrase = Lexing.from_string rml_phrase in
   try
     let rml_translation = Rmltop_lexer.phrase rml_phrase in
     match rml_translation with
     | Rmltop_lexer.Rml_phrase s ->
       let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      eval_phrases ~silent:true [ "Rmltop_global.lock ();;" ];
-      eval_phrases ocaml_phrases;
-      eval_phrases ~silent:true [ "Rmltop_global.unlock ();;" ]
+      eval_phrases ~silent:true fmt [ "Rmltop_global.lock ();;" ];
+      eval_phrases fmt ocaml_phrases;
+      eval_phrases fmt ~silent:true [ "Rmltop_global.unlock ();;" ]
 
     | Rmltop_lexer.OCaml_phrase s ->
-      eval_phrases [ s ]
+      eval_phrases fmt [ s ]
 
     | Rmltop_lexer.Run s ->
       (* add "(process ( run (...); ()));;" *)
@@ -93,7 +93,7 @@ let translate_and_eval_phrase rml_phrase =
         "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
         s in
       let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      eval_phrases ~silent:true ocaml_phrases
+      eval_phrases ~silent:true fmt ocaml_phrases
 
     | Rmltop_lexer.Exec s ->
       (* add "(process ( ...; ()));;" *)
@@ -101,27 +101,27 @@ let translate_and_eval_phrase rml_phrase =
         "let () = Rmltop_global.add_to_run (process (%s; ()));;"
         s in
       let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      eval_phrases ~silent:true ocaml_phrases
+      eval_phrases ~silent:true fmt ocaml_phrases
 
     | Rmltop_lexer.Step None ->
-      eval_phrases ~silent:true [ "let () = Rmltop_global.set_step 1 ;;"; ]
+      eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_step 1 ;;"; ]
 
     | Rmltop_lexer.Step (Some n) ->
-      eval_phrases ~silent:true [ "let () = Rmltop_global.set_step "^ n ^ ";;"; ]
+      eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_step "^ n ^ ";;"; ]
 
     | Rmltop_lexer.Suspend ->
-      eval_phrases ~silent:true [ "let () = Rmltop_global.set_suspend () ;;"; ]
+      eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_suspend () ;;"; ]
 
     | Rmltop_lexer.Resume ->
-      eval_phrases ~silent:true [ "let () = Rmltop_global.set_resume () ;;"; ]
+      eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_resume () ;;"; ]
 
     | Rmltop_lexer.Sampling f ->
-      set_sampling f
+      set_sampling fmt f
 
     | Rmltop_lexer.Quit -> exit 0
 
     | Rmltop_lexer.Help -> print_help ()
   with
-    | Rmltop_lexer.EOF -> Printf.eprintf "Got an EOF! Exiting...%!"; exit 0
+    | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...%!"; exit 0
     | Rmltop_lexer.Syntax_error -> ()
 
