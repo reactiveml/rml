@@ -29,6 +29,8 @@ opt: all
 byte: TARGET := byte
 byte: all
 
+.PHONY: install
+
 install:
 	(cd compiler; make install)
 	(cd stdlib; make install)
