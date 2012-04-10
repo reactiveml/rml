@@ -125,3 +125,52 @@ let translate_and_eval_phrase fmt rml_phrase =
     | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...%!"; exit 0
     | Rmltop_lexer.Syntax_error -> ()
 
+let translate_phrase rml_phrase =
+  let rml_phrase = Lexing.from_string rml_phrase in
+  try
+    let rml_translation = Rmltop_lexer.phrase rml_phrase in
+    match rml_translation with
+    | Rmltop_lexer.Rml_phrase s ->
+        Rmlcompiler.Interactive.translate_phrase s
+
+    | Rmltop_lexer.OCaml_phrase s ->
+        [ s ]
+
+    | Rmltop_lexer.Run s ->
+        (* add "(process ( run (...); ()));;" *)
+        let s = Printf.sprintf
+          "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
+          s in
+        Rmlcompiler.Interactive.translate_phrase s
+
+    | Rmltop_lexer.Exec s ->
+        (* add "(process ( ...; ()));;" *)
+        let s = Printf.sprintf
+          "let () = Rmltop_global.add_to_run (process (%s; ()));;"
+          s in
+        Rmlcompiler.Interactive.translate_phrase s
+
+    | Rmltop_lexer.Step None ->
+        [ "let () = Rmltop_global.set_step 1 ;;"; ]
+
+    | Rmltop_lexer.Step (Some n) ->
+        [ "let () = Rmltop_global.set_step "^ n ^ ";;"; ]
+
+    | Rmltop_lexer.Suspend ->
+        [ "let () = Rmltop_global.set_suspend () ;;"; ]
+
+    | Rmltop_lexer.Resume ->
+        [ "let () = Rmltop_global.set_resume () ;;"; ]
+
+    | Rmltop_lexer.Sampling f ->
+        [ "let () = Rmltop_global.set_sampling "^ f ^";;"; ]
+
+    | Rmltop_lexer.Quit ->
+        []
+
+    | Rmltop_lexer.Help ->
+        print_help (); []
+  with
+    | Rmltop_lexer.EOF -> raise End_of_file
+    | Rmltop_lexer.Syntax_error -> []
+
