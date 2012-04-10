@@ -110,7 +110,14 @@ let ensure_at_bol ppf =
     consume_nl := true; at_bol := true
   end
 
-let loop s ppf =
+let loop translate s ppf =
+  let s =
+    if translate then
+      let s = Rmltop_library.translate_phrase s in
+      String.concat "\n" s
+    else
+      s
+  in
   let lb = Lexing.from_function (refill_lexbuf s (ref 0) ppf) in
   begin try
     while true do
@@ -165,7 +172,7 @@ let run _ =
   let b =
     button "Send"
       (fun () ->
-         loop (Js.to_string textbox##value) ppf;
+         loop true (Js.to_string textbox##value) ppf;
          textbox##focus(); textbox##select();
          doc##documentElement##scrollTop <- doc##body##scrollHeight)
   in
