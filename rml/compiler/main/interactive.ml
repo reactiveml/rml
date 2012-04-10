@@ -39,6 +39,7 @@ let filename = "rml_toplevel"
 let module_name () = String.capitalize filename
 
 let init () =
+  Configure.configure ();
   Modules.start_compiling_interface (module_name ());
   Initialization.load_initial_modules ()
 
