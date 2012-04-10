@@ -166,3 +166,6 @@ function caml_mutex_new() {
 function caml_thread_new() {
   return 0;
 }
+function caml_thread_cleanup() {
+  return;
+}
