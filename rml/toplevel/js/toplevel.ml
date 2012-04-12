@@ -136,12 +136,17 @@ let loop translate s ppf =
     ()
   end
 
+let init_code = "open Implem;;\n"
+
 let start ppf =
-  Format.fprintf ppf "        ReactiveML version %s@.@." Version.version;
+  Format.fprintf ppf "        ReactiveML version @.@.";
   Rmltop_library.print_help ();
   Toploop.initialize_toplevel_env ();
-  Toploop.input_name := ""
-  (* loop false init_code ppf *)
+  Toploop.input_name := "";
+  Rmlcompiler.Misc.interactive := true;
+  Rmlcompiler.Configure.configure ();
+  loop false init_code ppf;
+  ()
 
 let run _ =
   let top =
