@@ -8,9 +8,9 @@ DERIVING := $(shell ocamlfind query deriving-ocsigen 2> /dev/null)
 
 LIBDIR=$(shell ocamlc -where)/js_of_ocaml
 JSFILES=$(LIBDIR)/runtime.js $(LIBDIR)/weak.js toplevel_runtime.js
-OCAMLC=ocamlfind ocamlc -annot -package lwt,str,js_of_ocaml -package js_of_ocaml.syntax -syntax camlp4o -I +js_of_ocaml -I +threads -I ../../interpreter/ -I ../../compiler/global/ -I ../ -I ~/debian/pkg-ocaml-maint/js-of-ocaml/compiler
-OPTIONS+=-I ../../interpreter/ -I ../../compiler/global/
-STDLIB= unix.cma threads.cma js_of_ocaml.cma ../../compiler/global/version.cmo compiler.cma ../../interpreter/sig_env.cmo ../../interpreter/lco_ctrl_tree.cmo ../../interpreter/implem.cmo ../rmltop_lexer.cmo ../../compiler/rmlcompiler.cmo toplevellib.cma ../rmltop_library.cmo ../../toplevel/rmlrun.cma
+OCAMLC=ocamlfind ocamlc -annot -package lwt,str,js_of_ocaml -package js_of_ocaml.syntax -syntax camlp4o -I +js_of_ocaml -I +threads -I ../../interpreter/ -I ../ -I ~/debian/pkg-ocaml-maint/js-of-ocaml/compiler -I ../../compiler/
+OPTIONS+=-I ../../interpreter/ -I ../../compiler/
+STDLIB= unix.cma threads.cma js_of_ocaml.cma compiler.cma ../../interpreter/sig_env.cmo ../../interpreter/lco_ctrl_tree.cmo ../../interpreter/lco_ctrl_tree_n.cmo ../../interpreter/lk_implem.cmo ../../interpreter/implem.cmo ../rmltop_lexer.cmo ../../compiler/rmlcompiler.cmo toplevellib.cma ../rmltop_library.cmo ../../toplevel/rmlrun.cma
 EXPUNGE=$(shell ocamlc -where)/expunge
 # Removed gc and sys
 STDLIB_MODULES=\
@@ -58,6 +58,7 @@ STDLIB_MODULES=\
   sig_env \
   lco_ctrl_tree \
   implem \
+  rmlcompiler \
   weak
 PERVASIVES=$(STDLIB_MODULES) outcometree topdirs toploop
 
