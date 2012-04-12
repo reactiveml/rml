@@ -128,7 +128,7 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
   else if q = pervasives_module then
     (* special case for values imported from the standard library *)
     print_pervasives (Ident.name n)
-  else if q = !current_module then
+  else if q = !current_module || q = "" then
     print_name (Ident.name n)
   else
     begin
