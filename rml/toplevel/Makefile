@@ -141,7 +141,7 @@ rmltop_main.cmi rmltop_main.cmo: rmltop_main.ml \
 rmltop.cmo: rmltop.ml ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop.ml
 
-rmltop_library.cmo: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo
+rmltop_library.cmo: errors.cmi ../compiler/rmlcompiler.cmo rmltop_lexer.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop_library.ml
 
 FORCE:

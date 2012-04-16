@@ -51,10 +51,7 @@ let eval_command ?(silent=false) fmt command =
     in
     (true, Buffer.contents buffer)
   with exn ->
-    let save = !Toploop.parse_use_file in
-    Toploop.parse_use_file := (fun _ -> raise exn);
-    ignore (Toploop.use_silently pp "/dev/null");
-    Toploop.parse_use_file := save;
+    Errors.report_error fmt exn;
     (false, get_error (Buffer.contents buffer))
 
 let print_message fmt message =
