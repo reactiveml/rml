@@ -84,6 +84,14 @@ STDLIB_MODULES=\
   lco_ctrl_tree \
   implem \
   rmlcompiler \
+  rmltop_global \
+  rmltop_library \
+  rmltop_implem \
+  rmltop_machine_body \
+  rmltop_reactive_machine \
+  rmltop_controller \
+  rmltop_main \
+  rmlrun \
   weak
 PERVASIVES=$(STDLIB_MODULES) outcometree topdirs toploop
 
