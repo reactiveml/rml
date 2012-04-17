@@ -101,6 +101,9 @@ echo "" >> config
 cat version >> config
 echo "" >> config
 
+echo "let known_modules = [" > compiler/global/rzi.ml
+echo "]" >> compiler/global/rzi.ml
+
 # Where to install
 
 echo "# Where to install" >> config

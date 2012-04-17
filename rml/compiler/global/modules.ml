@@ -33,21 +33,7 @@ open Global_ident
 open Def_types
 open Global
 open Parse_ident
-
-(* Informations associated with module names *)
-
-type module0 =
-    { mod_name: string;                      (* name of the module *)
-      mod_values: (string, value_type_description global) Hashtbl.t;
-                                             (* table of values *)
-      mod_constrs:
-	(string, constructor_type_description global) Hashtbl.t;
-                                             (* table of constructors *)
-      mod_labels: (string, label_type_description global) Hashtbl.t;
-                                             (* table of labels *)
-      mod_types: (string, type_description global) Hashtbl.t;
-                                             (* table of type constructors *)
-    }
+open Def_modules
 
 let name_of_module    md = md.mod_name
 and values_of_module  md = md.mod_values
@@ -90,16 +76,20 @@ let use_extended_interfaces = ref false
 
 let load_module modname =
   let name = String.uncapitalize modname in
-  try
-    let fullname = find_in_path (name ^ ".rzi") in
-    let extname = fullname ^ "x" in
-    read_module name
-      (if !use_extended_interfaces && Sys.file_exists extname
-      then extname else fullname)
-  with Cannot_find_file _ ->
-    Printf.eprintf "Cannot find the compiled interface file %s.rzi.\n" name;
-    raise Error
-
+  let rzi = find_in_path (name ^ ".rzi") in
+  match rzi with
+  | Some rzi ->
+      let extname = rzi ^ "x" in
+      read_module name
+        (if !use_extended_interfaces && Sys.file_exists extname
+         then extname else rzi)
+  | None ->
+    try
+      let md = List.assoc name Rzi.known_modules in
+      (Marshal.from_string md 0 : module0)
+    with Not_found ->
+      Printf.eprintf "Cannot find the compiled interface file %s.rzi.\n" name;
+      raise Error
 
 (* To find an interface by its name *)
 
@@ -236,6 +226,3 @@ and find_type_desc = find_desc types_of_module
 
 let write_compiled_interface oc =
   output_value oc !defined_module
-
-
-

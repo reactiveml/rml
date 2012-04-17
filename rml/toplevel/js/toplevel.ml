@@ -136,7 +136,8 @@ let loop translate s ppf =
     ()
   end
 
-let init_code = "open Implem;;\n"
+let init_ocaml = "open Implem;;\n"
+let init_rml = "open Pervasives;;\n"
 
 let start ppf =
   Format.fprintf ppf "        ReactiveML version @.@.";
@@ -145,7 +146,8 @@ let start ppf =
   Toploop.input_name := "";
   Rmlcompiler.Misc.interactive := true;
   Rmlcompiler.Configure.configure ();
-  loop false init_code ppf;
+  loop false init_ocaml ppf;
+  loop true init_rml ppf;
   ()
 
 let run _ =

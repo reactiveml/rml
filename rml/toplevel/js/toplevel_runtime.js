@@ -147,25 +147,42 @@ function caml_ml_input_char (f) {
   caml_raise_end_of_file ();
 }
 
+//Provides: caml_install_signal_handler
 function caml_install_signal_handler(i,s) {
   return s;
 }
 
+//Provides: unix_inet_addr_of_string
 function unix_inet_addr_of_string(x) {
   return 0;
 }
 
+//Provides: caml_thread_initialize
 function caml_thread_initialize() {
   return 0;
 }
 
+//Provides: caml_thread_new
+function caml_thread_new() {
+  return 0;
+}
+
+//Provides: caml_thread_cleanup
+function caml_thread_cleanup() {
+  return;
+}
+
+//Provides: caml_mutex_lock
+function caml_mutex_lock(x) {
+  return 0;
+}
+
+//Provides: caml_mutex_new
 function caml_mutex_new() {
   return 0;
 }
 
-function caml_thread_new() {
+//Provides: caml_mutex_unlock
+function caml_mutex_unlock(x) {
   return 0;
-}
-function caml_thread_cleanup() {
-  return;
 }

@@ -6,35 +6,56 @@ all: $(NAME).js
 
 DERIVING := $(shell ocamlfind query deriving-ocsigen 2> /dev/null)
 
-LIBDIR=$(shell ocamlc -where)/js_of_ocaml
-JSFILES=$(LIBDIR)/runtime.js $(LIBDIR)/weak.js toplevel_runtime.js
+LIBDIR=js-of-ocaml/lib
+RUNDIR=js-of-ocaml/runtime
+
+JSFILES=\
+ $(RUNDIR)/runtime.js \
+ $(RUNDIR)/weak.js \
+ toplevel_runtime.js
+
 OCAMLC=ocamlfind ocamlc -annot \
- -package lwt,str,js_of_ocaml \
- -package js_of_ocaml.syntax \
- -syntax camlp4o \
- -I +js_of_ocaml \
+ -package lwt,str \
+ -pp "camlp4o js-of-ocaml/lib/syntax/pa_js.cmo" \
+ -I js-of-ocaml/compiler \
+ -I js-of-ocaml/lib \
  -I +threads \
  -I ../../interpreter/ \
  -I ../ \
- -I ~/debian/pkg-ocaml-maint/js-of-ocaml/compiler \
  -I ../../compiler/
 
-OPTIONS+=-I ../../interpreter/ -I ../../compiler/ -I ../
+OPTIONS+=\
+ -I ../../interpreter/ \
+ -I ../../compiler/ \
+ -I ../../compiler/global \
+ -I ../../compiler/lco \
+ -I ../../compiler/typing \
+ -I ../../compiler/other_analysis \
+ -I ../../compiler/reac \
+ -I ../../compiler/caml \
+ -I ../../compiler/parsing \
+ -I ../../compiler/optimization \
+ -I ../../compiler/static \
+ -I ../../compiler/main \
+ -I ../../compiler/lk \
+ -I ../../compiler/external \
+ -I ../
 
-STDLIB= unix.cma \
+STDLIB=\
+ unix.cma \
  threads.cma \
  js_of_ocaml.cma \
  compiler.cma \
- ../../interpreter/sig_env.cmo \
- ../../interpreter/lco_ctrl_tree.cmo \
- ../../interpreter/lco_ctrl_tree_n.cmo \
- ../../interpreter/lk_implem.cmo \
- ../../interpreter/implem.cmo \
- ../rmltop_lexer.cmo \
- ../../compiler/rmlcompiler.cmo \
+ rmlcompiler.cmo \
+ sig_env.cmo \
+ lco_ctrl_tree.cmo \
+ lco_ctrl_tree_n.cmo \
+ lk_implem.cmo \
+ implem.cmo \
+ rmltop_lexer.cmo \
  toplevellib.cma \
- ../rmltop_library.cmo \
- ../../toplevel/rmlrun.cma
+ rmltop_library.cmo \
+ rmlrun.cma
 
 EXPUNGE=$(shell ocamlc -where)/expunge
 # Removed gc and sys
@@ -94,15 +115,18 @@ STDLIB_MODULES=\
   rmlrun \
   weak
 PERVASIVES=$(STDLIB_MODULES) outcometree topdirs toploop
+#STDLIB_MODULES=$(shell ocamlobjinfo toplevel.byte.tmp | sed -rn "s/^\t.*\t//p" | sort -u | tr '[:upper:]' '[:lower:]' | egrep -v "(sys|gc|bytegen|bytelibrarian|bytelink|bytepackager|bytesections|code|compile|conditioni|dgraph|dll|dom|driver|event|file|firebug|flow|form|freevars|generate|genprintval|inline|instr|javascript|js|lambda|linker|lwt|main_args|matching|meta|mutex|phisimpl|pparse|pretty_print|primitive2|pure_fun|regexp|runtimedef|simplif|switch|symtable|tailcall|thread|toplevel|trace|translclass|translcore|translmod|translobj|typed_array|typeopt|url|util|unix)")
 
-#toplevel.byte: $(OBJS:cmx=cmo) toplevel.cmo
-#	ocamlfind ocamlc -linkall -g -package str -linkpkg toplevellib.cma -o $@.tmp $^
+js-of-ocaml-stamp:
+	$(MAKE) -C js-of-ocaml all
+	$(MAKE) -C js-of-ocaml/compiler compiler.cma
+	touch $@
 
 $(NAME).js: $(NAME).byte $(JSFILES)
-	js_of_ocaml -toplevel -noinline -noruntime $(JSFILES) $(NAME).byte $(OPTIONS)
+	js-of-ocaml/compiler/js_of_ocaml -toplevel -noinline -noruntime $(JSFILES) $(NAME).byte $(OPTIONS)
 
 .PHONY: toplevel.byte toplevel.js
-$(NAME).byte: $(OBJS)
+$(NAME).byte: js-of-ocaml-stamp $(OBJS)
 	$(OCAMLC) -linkall -package str -linkpkg -o $@.tmp $(STDLIB) $(OBJS)
 	$(EXPUNGE) $@.tmp $@ $(PERVASIVES)
 	rm -f $@.tmp
@@ -110,13 +134,14 @@ $(NAME).byte: $(OBJS)
 %.cmo: %.ml
 	$(OCAMLC) -c $<
 
-errors.cmi: errors.mli
+%.cmi: %.mli
 	$(OCAMLC) -c $<
 
 clean::
-	rm -f *.cm[io] $(NAME).byte $(NAME).js
+	rm -f *.cm[io] $(NAME).byte $(NAME).js *.annot js-of-ocaml-stamp
+	make -C js-of-ocaml clean
 
 depend:
-	ocamldep -pp "camlp4o $(LIBDIR)/pa_js.cmo" *.ml *.mli > .depend
+	ocamldep -pp "camlp4o $(LIBDIR)/syntax/pa_js.cmo" *.ml *.mli > .depend
 
 -include .depend

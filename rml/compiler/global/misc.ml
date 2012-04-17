@@ -127,16 +127,16 @@ let remove_file filename =
 
 let find_in_path filename =
   if Sys.file_exists filename then
-    filename
+    Some filename
   else if not(Filename.is_implicit filename) then
-    raise(Cannot_find_file filename)
+    None
   else
     let rec find = function
       [] ->
-        raise(Cannot_find_file filename)
+        None
     | a::rest ->
         let b = Filename.concat a filename in
-          if Sys.file_exists b then b else find rest
+          if Sys.file_exists b then Some b else find rest
     in find !load_path
 
 let opt_map f = function

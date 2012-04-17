@@ -10,6 +10,8 @@ GLOBAL = global/asttypes.ml \
 	global/initialization.ml \
 	global/misc.ml \
 	global/modules.ml \
+	global/def_modules.ml \
+	global/rzi.ml \
 	global/symbol_table.ml \
 	global/warnings.ml \
 
@@ -85,6 +87,8 @@ OBJ =	global/version.cmo \
 	global/global.cmo \
 	static/def_static.cmo \
 	typing/def_types.cmo \
+	global/rzi.cmo \
+	global/def_modules.cmo \
 	global/modules.cmo \
 	global/symbol_table.cmo \
 	parsing/lexer.cmo \
@@ -177,7 +181,7 @@ realclean: clean
 	 do rm -f $$d/*~; \
 	 done)
 	rm -f $(BIN).byte $(BIN).opt $(GENSOURCES) parsing/parser.output
-	rm -f rmlc global/version.ml *~
+	rm -f rmlc global/version.ml global/rzi.ml *~
 
 cleanall: realclean
 
@@ -195,6 +199,13 @@ wc:
 parsing/parser.mli parsing/parser.ml: parsing/parser.mly
 	$(OCAMLYACC) -v parsing/parser.mly
 lexer.cmx: parser.cmi
+
+global/embedrzi.cmo: global/def_modules.cmo
+
+.PHONY: global/rzi.ml
+global/rzi.ml: global/rzi.cmi global/embedrzi.cmo
+	ocaml -I global def_modules.cmo global/embedrzi.ml "$(PWD)/../stdlib"
+	touch $@
 
 # version
 global/version.ml:
