@@ -47,6 +47,7 @@ SRC= pervasives.rmli \
 	sys.rmli \
 	unix.rmli \
 	weak.rmli \
+	rmltop_global.rmli \
 
 CIBLE= $(SRC:.rmli=.rzi)
 
