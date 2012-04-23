@@ -4,3 +4,8 @@
 *.o
 *.byte
 .pc
+compiler/js_of_ocaml
+lib/deriving_json/deriving_Json_lexer.ml
+lib/dlljs_of_ocaml.so
+lib/stubs.c
+runtime/runtime.js
