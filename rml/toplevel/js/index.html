@@ -1,12 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-          "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>OCaml toplevel</title>
+    <title>Try OCaml</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <script type="text/javascript" src="toplevel.js"></script>
+    <link type="text/css" href="bootstrap.css" rel="stylesheet" />
+    <link type="text/css" href="style.css" rel="stylesheet" />
   </head>
-  <body id="toplevel">
+  <body>
+    <div>
+      <div>
+        <h1 id="main-title">Try ReactiveML</h1>
+        <p id="short-intro"><b>ReactiveML</b> is a programming
+          language dedicated to the implementation of interactive systems as
+          found in graphical user interfaces, video games or simulation
+          problems. <b>ReactiveML</b> is based on
+          the <a href="http://www-sop.inria.fr/mimosa/rp/generalPresentation/index.html">synchronous
+            reactive model</a> of Boussinot embedded in an ML language
+          (here <a href="http://caml.inria.fr">Objective Caml</a>).
+          <br />
+          The synchronous reactive model provides synchronous
+          parallel composition and dynamic features like the
+          dynamic creation of processes. In <b>ReactiveML</b>,
+          the reactive model is integrated at the language level
+          (not as a library) which leads to a safer and a more
+          natural programming.
+        </p>
+      </div>
+
+      <div>
+        <div id="help">
+          <table class="zebra-striped">
+            <thead><tr><th id="text-commands">Commands</th><th id="text-effects">Effects</th></tr></thead>
+            <tr><td id="text-enter">Enter / Return</td> <td id="text-submit">Submit code</td></tr>
+            <tr><td id="text-arrows">Up / Down</td><td id="text-history">Cycle through history</td></tr>
+            <tr><td id="text-newline">Shift + Enter</td><td id="text-multiline">Multiline edition</td></tr>
+          </table>
+        </div>
+        <div class="ocaml">
+          <div id="toplevel-container">
+            <pre id="output"></pre>
+            <div id="sharp">#</div>
+            <div id="toplevel"></div>
+          </div>
+          <div id="buttons"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="ressources">
+        <a href="http://rml.lri.fr">ReactiveML</a>
+      </div>
+    </div>
+    <script type="text/javascript" src="toplevel.js"></script>
   </body>
 </html>
