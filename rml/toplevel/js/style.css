@@ -15,7 +15,7 @@ body {
     font-style: italic;
     margin-right: 5px;
     float: left;
-    color: #CCC;
+    color: #fff;
 }
 
 #rmlconsole {
@@ -40,7 +40,7 @@ body {
    width: 600px;
    overflow: auto;
    overflow-x: hidden;
-   color: #CCC;
+   color: #fff;
    background-color: black;
    -moz-border-radius: 20px;
    -webkit-border-radius: 20px;
@@ -93,7 +93,7 @@ body {
 
 pre {
     background: transparent;
-    color: #CCC;
+    color: #fff;
     margin-bottom: 0;
     padding-bottom: 0;
 }
