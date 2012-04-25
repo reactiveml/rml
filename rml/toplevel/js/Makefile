@@ -139,6 +139,8 @@ $(NAME).byte: js-of-ocaml-stamp $(OBJS)
 
 clean::
 	rm -f *.cm[io] $(NAME).byte $(NAME).js *.annot js-of-ocaml-stamp
+
+cleanall: clean
 	make -C js-of-ocaml clean
 
 depend:

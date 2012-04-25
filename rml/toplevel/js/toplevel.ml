@@ -95,6 +95,26 @@ let exec ppf s =
     | Exit -> ()
     | x    -> Errors.report_error ppf x
 
+let exec_list ppf l =
+  List.iter
+    (fun (translate, s) ->
+      try
+        let new_s =
+          if translate then
+            let s = Rmltop_library.translate_phrase s in
+            String.concat "\n" s
+          else
+            s
+        in
+        exec ppf new_s
+      with e ->
+        Printf.printf
+          "Exception %s while processing [%s]\n%!"
+          (Printexc.to_string e)
+          s
+    )
+    l
+
 let start ppf =
   Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
   Rmltop_library.print_help ();
@@ -103,14 +123,11 @@ let start ppf =
   Rmlcompiler.Misc.interactive := true;
   Rmlcompiler.Configure.configure ();
 
-  List.iter (fun s ->
-    try
-      exec ppf s
-    with e ->
-      Printf.printf "Exception %s while processing [%s]\n%!" (Printexc.to_string e) s
-  )  [
-    "open Implem";
-  ];
+  exec_list ppf
+    [
+      false, "open Implem;;";
+      true, "open Pervasives;;";
+    ];
   ()
 
 let at_bol = ref true
@@ -267,28 +284,25 @@ let loop s ppf buffer =
       if !need_terminator then s ^ ";;" else s
     end
   in
-  let s =
+  let new_s =
     let s = Rmltop_library.translate_phrase s in
     String.concat "\n" s
   in
-  let lb = Lexing.from_function (refill_lexbuf s (ref 0) ppf) in
+  let lb = Lexing.from_function (refill_lexbuf new_s (ref 0) ppf) in
   begin try
     while true do
       begin
       try
         let phr = try
                     !Toploop.parse_toplevel_phrase lb
-          with End_of_file -> raise End_of_input
-            | e ->
-              let _ (* input *) = string_of_char_list (List.rev !output) in
-              raise e
+          with
+          | End_of_file -> raise End_of_input
+          | e -> raise e
         in
-        let _ (* input *) = string_of_char_list (List.rev !output) in
         output := [];
         ensure_at_bol ppf;
         Buffer.clear buffer;
         ignore (Toploop.execute_phrase true ppf phr);
-        let _ (* res *) = Buffer.contents buffer in
         ()
       with
           End_of_input ->
@@ -306,34 +320,7 @@ let loop s ppf buffer =
             output := []; update_prompt "#"
         | _ ->
           ()
-          (* let s = string_of_char_list (List.rev !output) in *)
-          (* let len = String.length s in *)
-          (* let s = if len >= 5 then String.sub s 0 5 else s in *)
-          (* if s <> " " then *)
-            (* update_prompt (Printf.sprintf "[%s]> " s) *)
   end
-
-let to_update = [
-  "main-title", "Try OCaml";
-
-  "short-intro",
-  "OCaml is a strongly typed functional language. It is concise and fast, enabling you to improve your coding efficiency while producing code with higher quality.";
-
-  "text-commands", "Commands";
-  "text-effects", "Effects";
-  "text-enter", "Enter / Return";
-  "text-submit", "Submit code";
-  "text-arrows", "Up / Down";
-  "text-history", "Cycle through history";
-  "text-newline", "Shift + Enter";
-  "text-multiline",  "Multiline edition";
-  "text-lesson-1", "Move to lesson 1";
-  "text-step-1", "Move to step 1 of the current lesson";
-  "text-lessons", "See available lessons";
-  "text-steps",	"See available steps in the current lesson";
-  "text-next", "Move to the next step";
-  "text-back", "Move to the previous step";
-]
 
 let append_children id list =
   let ele = get_element_by_id id in

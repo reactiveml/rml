@@ -523,7 +523,6 @@ let print_impl_item item =
   | Cimpl_expr e ->
       pp_open_box !formatter 2;
       print 0 e;
-      pp_print_newline !formatter();
       pp_print_string !formatter ";;";
       pp_close_box !formatter ()
   | Cimpl_let(flag, [patt, { cexpr_desc = Cexpr_fun (param_list, e1) }]) ->
@@ -603,7 +602,6 @@ let print_impl_item item =
       pp_print_string !formatter s;
       pp_print_space !formatter ();
       pp_print_string !formatter ";;"
-;;
 
 let print_intf_item item =
   match item.cintf_desc with
@@ -671,7 +669,7 @@ let output_impl_decl_fmt fmt module_name decl =
   formatter := fmt;
   pp_force_newline !formatter ();
   print_impl_item decl;
-  pp_print_string !formatter "\n\n";
+  pp_print_string !formatter "\n";
   pp_print_flush !formatter ()
 
 let output_impl_decl oc module_name decl =
