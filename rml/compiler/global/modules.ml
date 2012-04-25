@@ -66,7 +66,7 @@ let read_module basename filename =
     md
   with End_of_file | Failure _ ->
     close_in ic;
-    Printf.eprintf "Corrupted compiled interface file %s.\n\
+    Format.fprintf !err_fmt "Corrupted compiled interface file %s.\n\
                        Please recompile %s.rml first.\n"
       filename basename;
     raise Error
@@ -88,7 +88,7 @@ let load_module modname =
       let md = List.assoc name Rzi.known_modules in
       (Marshal.from_string md 0 : module0)
     with Not_found ->
-      Printf.eprintf "Cannot find the compiled interface file %s.rzi.\n" name;
+      Format.fprintf !err_fmt "Cannot find the compiled interface file %s.rzi.\n" name;
       raise Error
 
 (* To find an interface by its name *)

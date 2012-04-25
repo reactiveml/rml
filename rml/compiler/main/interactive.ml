@@ -48,38 +48,23 @@ let translate_phrase phrase =
   let module_name = module_name () in
   Location.reset ();
 
-  let err_buf = Buffer.create 256 in
-  let err_fmt = Format.formatter_of_buffer err_buf in
-
   try
     let decl_list = Parse.interactive (Lexing.from_string phrase) in
     (* expend externals *)
     let decl_list = List.map External.expend decl_list in
     (* front-end *)
     let intermediate_code =
-      Compiler.compile_implementation_front_end err_fmt None decl_list
+      Compiler.compile_implementation_front_end !Misc.err_fmt None decl_list
     in
     (* the implementation *)
     let ocaml_code =
-      Compiler.compile_implementation_back_end_buf err_fmt module_name
+      Compiler.compile_implementation_back_end_buf !Misc.err_fmt module_name
         intermediate_code
     in
     None, ocaml_code
   with x ->
-    let buf = Buffer.create 256 in
-    let fmt = Format.formatter_of_buffer buf in
-    let () = Errors.report_error fmt x in
-    let () = Format.pp_print_flush fmt () in
-    let () = Format.pp_print_flush err_fmt () in
-    let err_buf_s = Buffer.contents err_buf in
-    let errors = if err_buf_s = "" then
-        Buffer.contents buf
-      else
-        String.concat "\n"
-          [ Buffer.contents buf;
-            err_buf_s ]
-    in
-    Some errors, [ phrase ]
+    let () = Errors.report_error !Misc.err_fmt x in
+    Some "", [ phrase ]
 
 (* the main function *)
 let compile () =

@@ -32,6 +32,9 @@ exception Internal of Location.t * string
 
 exception Cannot_find_file of string
 
+let std_fmt = ref Format.std_formatter
+let err_fmt = ref Format.err_formatter
+
 let fatal_error msg =
   prerr_string ">> Fatal error: "; prerr_endline msg; raise Error
 

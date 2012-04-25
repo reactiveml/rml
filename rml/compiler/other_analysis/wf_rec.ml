@@ -30,9 +30,9 @@ open Reac_misc
 (* Checks that expression as right-hand side of `let rec' are well formed *)
 
 let error e =
-  Printf.eprintf
+  Format.fprintf !Misc.err_fmt
    "%aThis kind of expression is not allowed as right-hand side of `let rec'.\n"
-   Location.print_oc e.expr_loc;
+   Location.print e.expr_loc;
   raise Misc.Error
 
 let rec empty_intersection l1 l2 =

@@ -250,8 +250,8 @@ let print_list_of_type_declarations global_list =
 (* the main printing functions *)
 let () = set_max_boxes max_int
 
-let output oc ty =
-  set_formatter_out_channel oc;
+let output fmt ty =
+  default_formatter := fmt;
   print ty;
   pp_print_flush !default_formatter ()
 

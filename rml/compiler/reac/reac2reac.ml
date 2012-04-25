@@ -509,9 +509,9 @@ let print_static e =
 (* Check left branche of |> operator and annotate pause statement *)
 let translate_merge =
   let merge_error exp =
-    Printf.eprintf
+    Format.fprintf !Misc.err_fmt
       "%aThis expression is not allowed on the left of a |> operator.\n"
-      Location.print_oc exp.expr_loc;
+      Location.print exp.expr_loc;
     raise Misc.Error
   in
 

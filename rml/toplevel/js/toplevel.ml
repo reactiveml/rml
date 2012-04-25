@@ -113,6 +113,8 @@ let start ppf =
   Toploop.initialize_toplevel_env ();
   Toploop.input_name := "";
   Rmlcompiler.Misc.interactive := true;
+  Rmlcompiler.Misc.err_fmt := ppf;
+  Rmlcompiler.Misc.std_fmt := ppf;
   Rmlcompiler.Configure.configure ();
 
   exec_list ppf
@@ -154,7 +156,7 @@ let rec refill_lexbuf s p ppf buffer len =
         let c = s.[!p] in
         incr p;
         buffer.[0] <- c;
-        if !at_bol then Format.fprintf ppf "# ";
+        if !at_bol then Format.fprintf ppf "> ";
         at_bol := (c = '\n');
         if c = '\n' then
           Format.fprintf ppf "@."
@@ -244,12 +246,13 @@ let loop s ppf =
       if !need_terminator then s ^ ";;" else s
     end
   in
-  let new_s =
-    let s = Rmltop_library.translate_phrase ppf s in
-    String.concat "\n" s
-  in
-  let lb = Lexing.from_function (refill_lexbuf new_s (ref 0) ppf) in
-  begin try
+  try
+    Format.fprintf ppf "@[#@ %s@]@." s;
+    let new_s =
+      let s = Rmltop_library.translate_phrase ppf s in
+      String.concat "\n" s
+    in
+    let lb = Lexing.from_function (refill_lexbuf new_s (ref 0) ppf) in
     while true do
       begin
       try
@@ -261,9 +264,7 @@ let loop s ppf =
         in
         output := [];
         ensure_at_bol ppf;
-        Format.fprintf ppf "@[#@ %s@]@." s;
         ignore (Toploop.execute_phrase true ppf phr);
-        Format.pp_print_newline ppf ();
         ()
       with
           End_of_input ->
@@ -275,13 +276,13 @@ let loop s ppf =
           Errors.report_error ppf x
       end;
     done
-    with End_of_input ->
+    with
+    | End_of_input | Not_found ->
       match !output with
-          [] | [ '\000' ] ->
-            output := []; update_prompt "#"
-        | _ ->
-          ()
-  end
+        [] | [ '\000' ] ->
+          output := []; update_prompt "\n#"
+      | _ ->
+        ()
 
 let append_children id list =
   let ele = get_element_by_id id in

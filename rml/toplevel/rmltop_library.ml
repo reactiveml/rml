@@ -140,7 +140,7 @@ let translate_phrase fmt rml_phrase =
     | Rmltop_lexer.Rml_phrase s ->
         let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
         begin match error with
-        | Some error -> Format.fprintf fmt "# %s%s@." rml_phrase error; []
+        | Some error -> raise Not_found
         | None -> ocaml_phrases
         end
 
@@ -154,7 +154,7 @@ let translate_phrase fmt rml_phrase =
           s in
         let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
         begin match error with
-        | Some error -> Format.fprintf fmt "# %s%s@." rml_phrase error; []
+        | Some error -> raise Not_found
         | None -> ocaml_phrases
         end
 
@@ -165,7 +165,7 @@ let translate_phrase fmt rml_phrase =
           s in
         let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
         begin match error with
-        | Some error -> Format.fprintf fmt "# %s%s@." rml_phrase error; []
+        | Some error -> raise Not_found
         | None -> ocaml_phrases
         end
 
