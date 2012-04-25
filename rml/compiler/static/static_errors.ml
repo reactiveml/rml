@@ -28,26 +28,26 @@ open Reac_ast
 
 (* Printing of error messages during the "static" analysis *)
 
-let expr_wrong_static_err expr =
-  Format.eprintf
+let expr_wrong_static_err fmt expr =
+  Format.fprintf fmt
 (*  "%aThis expression is not static but it is used in a static context.\n" *)
     "%aThis expression must be instantaneous.\n"
     Location.print expr.expr_loc;
   raise Error
 
-let impl_wrong_static_err impl =
-  Format.eprintf
+let impl_wrong_static_err fmt impl =
+  Format.fprintf fmt
 (*  "%aThis expression is not static but it is used in a static context.\n" *)
     "%aThis expression must be instantaneous.\n"
     Location.print impl.impl_loc;
   raise Error
 
 (* Type clash *)
-let unify_err exp actual_k expected_k =
-  Printf.eprintf
+let unify_err fmt exp actual_k expected_k =
+  Format.fprintf fmt
     "%aThis expression is a %s process,\n\
     but it should be a %s process.\n"
-    Location.print_oc exp.expr_loc
+    Location.print exp.expr_loc
     (Def_static.string_of_instantaneous actual_k)
     (Def_static.string_of_instantaneous expected_k);
   raise Error

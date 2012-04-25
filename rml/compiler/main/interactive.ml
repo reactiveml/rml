@@ -48,27 +48,45 @@ let translate_phrase phrase =
   let module_name = module_name () in
   Location.reset ();
 
+  let err_buf = Buffer.create 256 in
+  let err_fmt = Format.formatter_of_buffer err_buf in
+
   try
     let decl_list = Parse.interactive (Lexing.from_string phrase) in
     (* expend externals *)
     let decl_list = List.map External.expend decl_list in
     (* front-end *)
     let intermediate_code =
-      Compiler.compile_implementation_front_end stderr None decl_list
+      Compiler.compile_implementation_front_end err_fmt None decl_list
     in
     (* the implementation *)
-    Compiler.compile_implementation_back_end_buf stderr module_name
-      intermediate_code
+    let ocaml_code =
+      Compiler.compile_implementation_back_end_buf err_fmt module_name
+        intermediate_code
+    in
+    None, ocaml_code
   with x ->
-    Errors.report_error Format.err_formatter x;
-    [ "let () = ();;" ]
+    let buf = Buffer.create 256 in
+    let fmt = Format.formatter_of_buffer buf in
+    let () = Errors.report_error fmt x in
+    let () = Format.pp_print_flush fmt () in
+    let () = Format.pp_print_flush err_fmt () in
+    let err_buf_s = Buffer.contents err_buf in
+    let errors = if err_buf_s = "" then
+        Buffer.contents buf
+      else
+        String.concat "\n"
+          [ Buffer.contents buf;
+            err_buf_s ]
+    in
+    Some errors, [ phrase ]
 
 (* the main function *)
 let compile () =
   let module_name = module_name () in
   let ic = stdin in
   let itf = open_out_bin "/dev/null" in
-  let info_chan = stderr in
+  let info_fmt = Format.std_formatter in
   let out_chan = stdout in
 
   (* Initialization *)
@@ -83,11 +101,11 @@ let compile () =
 	Location.init lexbuf "";
 	Lexer.update_loc lexbuf None 1 true 0;
 	let decl_list = Parse.interactive lexbuf in
-	compile_decl_list module_name (Some itf) info_chan out_chan decl_list
+	compile_decl_list module_name (Some itf) info_fmt out_chan decl_list
       with x ->
 	Errors.report_error Format.err_formatter x;
 	output_string out_chan "let () = ();;\n"
     end;
     flush out_chan;
-    flush info_chan
+    Format.pp_print_flush info_fmt ()
   done

@@ -95,29 +95,33 @@ let exec ppf s =
     | Exit -> ()
     | x    -> Errors.report_error ppf x
 
+exception Stop_exec
+
 let exec_list ppf l =
-  List.iter
-    (fun (translate, s) ->
-      try
-        let new_s =
-          if translate then
-            let s = Rmltop_library.translate_phrase s in
-            String.concat "\n" s
-          else
+  try
+    List.iter
+      (fun (translate, s) ->
+        try
+          let new_s =
+            if translate then
+              let s = Rmltop_library.translate_phrase ppf s in
+              String.concat "\n" s
+            else
+              s
+          in
+          exec ppf new_s
+        with e ->
+          Printf.printf
+            "Exception %s while processing [%s]\n%!"
+            (Printexc.to_string e)
             s
-        in
-        exec ppf new_s
-      with e ->
-        Printf.printf
-          "Exception %s while processing [%s]\n%!"
-          (Printexc.to_string e)
-          s
-    )
-    l
+      )
+      l
+  with Stop_exec -> ()
 
 let start ppf =
   Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
-  Rmltop_library.print_help ();
+  (* Rmltop_library.print_help (); *)
   Toploop.initialize_toplevel_env ();
   Toploop.input_name := "";
   Rmlcompiler.Misc.interactive := true;
@@ -285,7 +289,7 @@ let loop s ppf buffer =
     end
   in
   let new_s =
-    let s = Rmltop_library.translate_phrase s in
+    let s = Rmltop_library.translate_phrase ppf s in
     String.concat "\n" s
   in
   let lb = Lexing.from_function (refill_lexbuf new_s (ref 0) ppf) in

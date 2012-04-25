@@ -76,10 +76,14 @@ let translate_and_eval_phrase fmt rml_phrase =
     let rml_translation = Rmltop_lexer.phrase rml_phrase in
     match rml_translation with
     | Rmltop_lexer.Rml_phrase s ->
-      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      eval_phrases ~silent:true fmt [ "Rmltop_global.lock ();;" ];
-      eval_phrases fmt ocaml_phrases;
-      eval_phrases fmt ~silent:true [ "Rmltop_global.unlock ();;" ]
+      let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+      begin match error with
+      | Some error -> Format.fprintf fmt "%s@." error
+      | None ->
+        eval_phrases ~silent:true fmt [ "Rmltop_global.lock ();;" ];
+        eval_phrases fmt ocaml_phrases;
+        eval_phrases fmt ~silent:true [ "Rmltop_global.unlock ();;" ]
+      end
 
     | Rmltop_lexer.OCaml_phrase s ->
       eval_phrases fmt [ s ]
@@ -89,16 +93,22 @@ let translate_and_eval_phrase fmt rml_phrase =
       let s = Printf.sprintf
         "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
         s in
-      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      eval_phrases ~silent:true fmt ocaml_phrases
+      let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+      begin match error with
+      | Some error -> Format.fprintf fmt "%s@." error
+      | None -> eval_phrases ~silent:true fmt ocaml_phrases
+      end
 
     | Rmltop_lexer.Exec s ->
       (* add "(process ( ...; ()));;" *)
       let s = Printf.sprintf
         "let () = Rmltop_global.add_to_run (process (%s; ()));;"
         s in
-      let ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      eval_phrases ~silent:true fmt ocaml_phrases
+      let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+      begin match error with
+      | Some error -> Format.fprintf fmt "%s@." error
+      | None -> eval_phrases ~silent:true fmt ocaml_phrases
+      end
 
     | Rmltop_lexer.Step None ->
       eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_step 1 ;;"; ]
@@ -122,13 +132,17 @@ let translate_and_eval_phrase fmt rml_phrase =
     | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...%!"; exit 0
     | Rmltop_lexer.Syntax_error -> ()
 
-let translate_phrase rml_phrase =
-  let rml_phrase = Lexing.from_string rml_phrase in
+let translate_phrase fmt rml_phrase =
+  let phrase = Lexing.from_string rml_phrase in
   try
-    let rml_translation = Rmltop_lexer.phrase rml_phrase in
+    let rml_translation = Rmltop_lexer.phrase phrase in
     match rml_translation with
     | Rmltop_lexer.Rml_phrase s ->
-        Rmlcompiler.Interactive.translate_phrase s
+        let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+        begin match error with
+        | Some error -> Format.fprintf fmt "# %s%s@." rml_phrase error; []
+        | None -> ocaml_phrases
+        end
 
     | Rmltop_lexer.OCaml_phrase s ->
         [ s ]
@@ -138,14 +152,22 @@ let translate_phrase rml_phrase =
         let s = Printf.sprintf
           "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
           s in
-        Rmlcompiler.Interactive.translate_phrase s
+        let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+        begin match error with
+        | Some error -> Format.fprintf fmt "# %s%s@." rml_phrase error; []
+        | None -> ocaml_phrases
+        end
 
     | Rmltop_lexer.Exec s ->
         (* add "(process ( ...; ()));;" *)
         let s = Printf.sprintf
           "let () = Rmltop_global.add_to_run (process (%s; ()));;"
           s in
-        Rmlcompiler.Interactive.translate_phrase s
+        let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+        begin match error with
+        | Some error -> Format.fprintf fmt "# %s%s@." rml_phrase error; []
+        | None -> ocaml_phrases
+        end
 
     | Rmltop_lexer.Step None ->
         [ "let () = Rmltop_global.set_step 1 ;;"; ]

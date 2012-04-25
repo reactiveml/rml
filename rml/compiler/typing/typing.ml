@@ -994,7 +994,7 @@ let check_nongen_values impl_item_list =
     impl_item_list
 
 (* Typing of implementation items *)
-let type_impl_item info_chan item =
+let type_impl_item info_fmt item =
   match item.impl_desc with
   | Rimpl_expr (e) ->
       ignore (type_of_expression Env.empty e)
@@ -1005,7 +1005,7 @@ let type_impl_item info_chan item =
       in
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_value_type_declaration info_chan global_env
+      then Types_printer.output_value_type_declaration info_fmt global_env
 
   | Rimpl_signal (l) ->
       List.iter
@@ -1032,7 +1032,7 @@ let type_impl_item info_chan item =
 	  s.info <- Some { value_typ = forall [] ty_s };
 	  (* verbose mode *)
 	  if !print_type
-	  then Types_printer.output_value_type_declaration info_chan [s])
+	  then Types_printer.output_value_type_declaration info_fmt [s])
 	l
   | Rimpl_type (l) ->
       let global_env =
@@ -1040,7 +1040,7 @@ let type_impl_item info_chan item =
       in
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_type_declaration info_chan global_env
+      then Types_printer.output_type_declaration info_fmt global_env
 
   | Rimpl_exn (gl_cstr, te_opt) ->
       gl_cstr.info <-
@@ -1048,25 +1048,25 @@ let type_impl_item info_chan item =
 	      cstr_res = type_exn; };
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_exception_declaration info_chan gl_cstr
+      then Types_printer.output_exception_declaration info_fmt gl_cstr
 
   | Rimpl_exn_rebind (gl_cstr1, gl_cstr2) ->
       gl_cstr1.info <- Some (Global.info gl_cstr2);
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_exception_declaration info_chan gl_cstr1
+      then Types_printer.output_exception_declaration info_fmt gl_cstr1
 
   | Rimpl_open _ -> ()
 
 (* Typing of interface items *)
-let type_intf_item info_chan item =
+let type_intf_item info_fmt item =
   match item.intf_desc with
   | Rintf_val (gl, te) ->
       gl.info <-
 	Some { value_typ = gen (full_type_of_type_expression te).ts_desc };
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_value_type_declaration info_chan [gl]
+      then Types_printer.output_value_type_declaration info_fmt [gl]
 
   | Rintf_type l ->
       let global_env =
@@ -1074,7 +1074,7 @@ let type_intf_item info_chan item =
       in
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_type_declaration info_chan global_env
+      then Types_printer.output_type_declaration info_fmt global_env
 
   | Rintf_exn (gl_cstr, te_opt) ->
       gl_cstr.info <-
@@ -1082,6 +1082,6 @@ let type_intf_item info_chan item =
 	      cstr_res = type_exn; };
       (* verbose mode *)
       if !print_type
-      then Types_printer.output_exception_declaration info_chan gl_cstr
+      then Types_printer.output_exception_declaration info_fmt gl_cstr
 
   | Rintf_open _ -> ()

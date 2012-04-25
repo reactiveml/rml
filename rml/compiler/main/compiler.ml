@@ -58,20 +58,19 @@ module Optimization_timer = Timer (struct let name = "Optimization" end)
 
 
 (* front-end *)
-let compile_implementation_front_end info_chan itf impl_list =
+let compile_implementation_front_end info_fmt itf impl_list =
   let rml_table = ref [] in
   let compile_one_phrase impl =
 
     (* Display the parse code *)
     if !dparse then
       begin
-	Parse_printer.impl_item 0
-	  (Format.formatter_of_out_channel info_chan) impl;
+	Parse_printer.impl_item 0 info_fmt impl;
       end;
 
     (* producing rml code (and openning of modules) *)
     Parse2reac_timer.start();
-    let rml_code = Parse2reac.translate_impl_item info_chan impl in
+    let rml_code = Parse2reac.translate_impl_item info_fmt impl in
     let rml_code = Reac2reac.impl_map Reac2reac.translate_merge rml_code in
     Parse2reac_timer.time();
 
@@ -86,12 +85,12 @@ let compile_implementation_front_end info_chan itf impl_list =
 
     (* typing *)
     Typing_timer.start();
-    Typing.type_impl_item info_chan rml_code;
+    Typing.type_impl_item info_fmt rml_code;
     Typing_timer.time();
 
     (* static analysis *)
     Static_timer.start();
-    Static.static info_chan rml_code;
+    Static.static info_fmt rml_code;
     Static_timer.time();
 
     Optimization_timer.start();
@@ -156,7 +155,7 @@ let compile_implementation_front_end info_chan itf impl_list =
 
 
 (* back-end *)
-let compile_implementation_back_end_buf info_chan module_name rml_table =
+let compile_implementation_back_end_buf info_fmt module_name rml_table =
   let lk_table = ref [] in
   let lco_table = ref [] in
   let caml_table = ref [] in
@@ -165,13 +164,13 @@ let compile_implementation_back_end_buf info_chan module_name rml_table =
 
     (* translation into lk code *)
     Reac2lk_timer.start();
-    let lk_code = Reac2lk.translate_impl_item info_chan impl in
+    let lk_code = Reac2lk.translate_impl_item info_fmt impl in
     lk_table := lk_code :: !lk_table;
     Reac2lk_timer.time();
 
     (* producing caml code *)
     Lk2caml_timer.start();
-    let caml_code = Lk2caml.translate_impl_item info_chan lk_code in
+    let caml_code = Lk2caml.translate_impl_item info_fmt lk_code in
     Lk2caml_timer.time();
 
     (* Optimization *)
@@ -192,13 +191,13 @@ let compile_implementation_back_end_buf info_chan module_name rml_table =
 
     (* translation into lco code *)
     Reac2lco_timer.start();
-    let lco_code = Reac2lco.translate_impl_item info_chan impl in
+    let lco_code = Reac2lco.translate_impl_item info_fmt impl in
     lco_table := lco_code :: !lco_table;
     Reac2lco_timer.time();
 
     (* producing caml code *)
     Lco2caml_timer.start();
-    let caml_code = Lco2caml.translate_impl_item info_chan lco_code in
+    let caml_code = Lco2caml.translate_impl_item info_fmt lco_code in
     Lco2caml_timer.time();
 
     (* Optimization *)
@@ -245,7 +244,7 @@ let compile_implementation module_name filename =
 
   let ic = open_in source_name in
   let itf = Some (open_out_bin obj_interf_name) in
-  let info_chan = stdout in
+  let info_fmt = Format.std_formatter in
 
   try
 (*    Front_end_timer.start();*)
@@ -268,7 +267,7 @@ let compile_implementation module_name filename =
     External_timer.time();
 
     (* front-end *)
-    let intermediate_code = compile_implementation_front_end info_chan itf
+    let intermediate_code = compile_implementation_front_end info_fmt itf
 	decl_list in
     Misc.opt_iter close_out itf;
 
@@ -293,7 +292,7 @@ let compile_implementation module_name filename =
 	output_string out_chan ("open "^ !interpreter_impl ^";;\n");
 
         (* the implementation *)
-	compile_implementation_back_end info_chan out_chan
+	compile_implementation_back_end info_fmt out_chan
 	  module_name intermediate_code;
 
         (* main process *)
@@ -349,15 +348,15 @@ let compile_implementation module_name filename =
 
 (* compiling an interface *)
 (* front-end *)
-let compile_interface_front_end info_chan itf intf_list =
+let compile_interface_front_end info_fmt itf intf_list =
   let rml_table = ref [] in
   let compile_one_phrase phr =
     (* producing rml code (and openning of modules) *)
-    let rml_code = Parse2reac.translate_intf_item info_chan phr in
+    let rml_code = Parse2reac.translate_intf_item info_fmt phr in
     rml_table := rml_code :: !rml_table;
 
     (* typing *)
-    Typing.type_intf_item info_chan rml_code;
+    Typing.type_intf_item info_fmt rml_code;
   in
 
   (* compilation of the whole file *)
@@ -371,7 +370,7 @@ let compile_interface_front_end info_chan itf intf_list =
   List.rev !rml_table
 
 (* back-end *)
-let compile_interface_back_end info_chan out_chan module_name rml_table =
+let compile_interface_back_end info_fmt out_chan module_name rml_table =
   let lk_table = ref [] in
   let lco_table = ref [] in
   let caml_table = ref [] in
@@ -379,22 +378,22 @@ let compile_interface_back_end info_chan out_chan module_name rml_table =
   let lk_compile_one_phrase intf =
 
     (* translation into lk code *)
-    let lk_code = Reac2lk.translate_intf_item info_chan intf in
+    let lk_code = Reac2lk.translate_intf_item info_fmt intf in
     lk_table := lk_code :: !lk_table;
 
     (* producing caml code *)
-    let caml_code = Lk2caml.translate_intf_item info_chan lk_code in
+    let caml_code = Lk2caml.translate_intf_item info_fmt lk_code in
     caml_table := caml_code :: !caml_table;
   in
 
   let lco_compile_one_phrase intf =
 
     (* translation into lco code *)
-    let lco_code = Reac2lco.translate_intf_item info_chan intf in
+    let lco_code = Reac2lco.translate_intf_item info_fmt intf in
     lco_table := lco_code :: !lco_table;
 
     (* producing caml code *)
-    let caml_code = Lco2caml.translate_intf_item info_chan lco_code in
+    let caml_code = Lco2caml.translate_intf_item info_fmt lco_code in
     caml_table := caml_code :: !caml_table;
   in
 
@@ -424,7 +423,7 @@ let compile_interface parse module_name filename filename_end =
 
   let ic = open_in source_name in
   let itf = open_out_bin obj_interf_name in
-  let info_chan = stdout in
+  let info_fmt = Format.std_formatter in
 
   try
 
@@ -439,7 +438,7 @@ let compile_interface parse module_name filename filename_end =
     let decl_list = parse lexbuf in
 
     (* front-end *)
-    let intermediate_code = compile_interface_front_end info_chan itf
+    let intermediate_code = compile_interface_front_end info_fmt itf
 	decl_list in
 
     (* back-end *)
@@ -450,7 +449,7 @@ let compile_interface parse module_name filename filename_end =
 	output_string out_chan ("open "^ !interpreter_impl ^";;\n");
 
         (* the interface *)
-	compile_interface_back_end info_chan out_chan
+	compile_interface_back_end info_fmt out_chan
 	  module_name intermediate_code;
 
 	close_out out_chan

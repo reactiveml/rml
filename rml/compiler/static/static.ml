@@ -31,6 +31,7 @@ open Def_static
 open Static_errors
 
 let id x = x
+let default_fmt = ref Format.err_formatter
 
 exception Unify_static of instantaneous * instantaneous
 
@@ -128,7 +129,7 @@ let rec static_expr ctx e =
     | Rexpr_let (Recursive, patt_expr_list, e1) ->
 	if static_expr_list static_expr max snd ML patt_expr_list = Static
 	then static_expr ctx e1
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
     | Rexpr_let (Nonrecursive, patt_expr_list, e1) ->
 	let typ1 = static_expr_list static_expr max snd ctx patt_expr_list in
 	let typ2 = static_expr ctx e1 in
@@ -137,64 +138,64 @@ let rec static_expr ctx e =
     | Rexpr_function patt_expr_list ->
 	if static_expr_list static_expr max snd ML patt_expr_list = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_apply (e1, expr_list) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr_list static_expr max id ML expr_list in
 	if max typ1 typ2 = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_tuple expr_list ->
 	if static_expr_list static_expr max id ML expr_list = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_construct (_, None) -> Static
     | Rexpr_construct (_, Some e1) ->
 	if static_expr ML e1 = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_array expr_list ->
 	if static_expr_list static_expr max id ML expr_list = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_record ide_expr_list ->
 	if static_expr_list static_expr max snd ML ide_expr_list = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_record_access (e1, _) ->
 	if static_expr ML e1 = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_record_update (e1, _, e2) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in
 	if max typ1 typ2 = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_constraint (e1, _) ->
 	if static_expr ML e1 = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_trywith (e1, patt_expr_list) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr_list static_expr max snd ML patt_expr_list in
 	if max typ1 typ2 = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_assert e1 ->
 	if static_expr ML e1 = Static
 	then Static
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_ifthenelse (e1, e2, e3) ->
 	if static_expr ML e1 = Static
@@ -213,11 +214,11 @@ let rec static_expr ctx e =
 	      Dynamic Noninstantaneous
 	  | Dynamic _, Dynamic _ -> Dynamic Dontknow
 	  end
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_match (e1, patt_expr_list) ->
 	let typ1 = static_expr ML e1 in
-	if typ1 <> Static then expr_wrong_static_err e1;
+	if typ1 <> Static then expr_wrong_static_err !default_fmt e1;
 	let typ2 =
 	  let combine typ1 typ2 =
 	    begin match typ1, typ2 with
@@ -277,7 +278,7 @@ let rec static_expr ctx e =
 	      end
 	  | ty -> ty
 	  end
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_fordopar (_, e1, e2, dir, e3) ->
 	if ctx = Process
@@ -305,8 +306,8 @@ let rec static_expr ctx e =
 		end
 	    | ty -> ty
 	    end
-	  else expr_wrong_static_err e
-	else expr_wrong_static_err e
+	  else expr_wrong_static_err !default_fmt e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_seq e_list ->
 	static_expr_list static_expr max id ctx e_list
@@ -314,30 +315,30 @@ let rec static_expr ctx e =
     | Rexpr_nothing ->
 	if ctx = Process
 	then Dynamic Instantaneous
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_pause _ ->
 	if ctx = Process
 	then Dynamic Noninstantaneous
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_halt _ ->
 	if ctx = Process
 	then Dynamic Noninstantaneous
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_emit (s, None) ->
 	if static_expr ML s = Static
 	then Static
-	else expr_wrong_static_err s
+	else expr_wrong_static_err !default_fmt s
 
     | Rexpr_emit (s, Some e1) ->
 	if static_expr ML s = Static
 	then
 	  if static_expr ML e1 = Static
 	  then Static
-	  else expr_wrong_static_err e1
-	else expr_wrong_static_err s
+	  else expr_wrong_static_err !default_fmt e1
+	else expr_wrong_static_err !default_fmt s
 
     | Rexpr_loop (None, e1) ->
 	if ctx = Process
@@ -351,7 +352,7 @@ let rec static_expr ctx e =
 	  let _ty = static_expr Process e1 in
 	  Dynamic Noninstantaneous
 	else
-	  expr_wrong_static_err e
+	  expr_wrong_static_err !default_fmt e
 
     | Rexpr_loop (Some n, e1) ->
 	if static_expr ML n = Static
@@ -363,8 +364,8 @@ let rec static_expr ctx e =
 	    | ty -> ty
 	    end
 	  else
-	    expr_wrong_static_err e
-	else expr_wrong_static_err n
+	    expr_wrong_static_err !default_fmt e
+	else expr_wrong_static_err !default_fmt n
 
     | Rexpr_par e_list ->
 	if ctx = Process
@@ -375,7 +376,7 @@ let rec static_expr ctx e =
 	  | _ -> ty
 	  end
 	else
-	  expr_wrong_static_err e
+	  expr_wrong_static_err !default_fmt e
 
     | Rexpr_merge (e1,e2) ->
 	if ctx = Process
@@ -387,7 +388,7 @@ let rec static_expr ctx e =
 	  | ty -> ty
 	  end
 	else
-	  expr_wrong_static_err e
+	  expr_wrong_static_err !default_fmt e
 
     | Rexpr_signal (_, None, p) ->
 	static_expr ctx p
@@ -398,7 +399,7 @@ let rec static_expr ctx e =
 	let typ3 = static_expr ctx p in
 	if max typ1 typ2 = Static
 	then typ3
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_process (p) ->
 	let typ = static_expr Process p in
@@ -419,7 +420,7 @@ let rec static_expr ctx e =
 	    begin try
 	      r1 := unify_instantaneous !r2 k
 	    with
-	    | Unify_static (k1, k2) -> unify_err e k1 k2
+	    | Unify_static (k1, k2) -> unify_err !default_fmt e k1 k2
 	    end
 	| _ ->
 	    (* XXX !!! TODO !!! XXX *)
@@ -436,9 +437,9 @@ let rec static_expr ctx e =
             Dynamic Dontknow
 (*	    get_process_status e1.expr_type *)
 	  with
-	  | Unify_static (k1, k2) -> unify_err e1 k2 k1
+	  | Unify_static (k1, k2) -> unify_err !default_fmt e1 k2 k1
         (* Dynamic Dontknow *)
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_until (s, p, p_e_opt) ->
 	if ctx = Process
@@ -453,7 +454,7 @@ let rec static_expr ctx e =
 	   | _ -> typ1
 	   end)
 	else
-	  expr_wrong_static_err e
+	  expr_wrong_static_err !default_fmt e
 
     | Rexpr_when (s, p) ->
 	if ctx = Process
@@ -462,7 +463,7 @@ let rec static_expr ctx e =
 	   let typ1 = static_expr Process p in
 	   max (Dynamic Dontknow) typ1)
 	else
-	  expr_wrong_static_err e
+	  expr_wrong_static_err !default_fmt e
 
     | Rexpr_control (s, p_e_opt, p) ->
 	if ctx = Process
@@ -472,14 +473,14 @@ let rec static_expr ctx e =
 	   Misc.opt_iter
 	     (fun (_,e) ->
 	       if static_expr ML e <> Static
-	       then expr_wrong_static_err e)
+	       then expr_wrong_static_err !default_fmt e)
 	     p_e_opt;
 	   begin match typ1 with
 	   | Static -> Dynamic Instantaneous
 	   | _ -> typ1
 	   end)
 	else
-	  expr_wrong_static_err e
+	  expr_wrong_static_err !default_fmt e
 
     | Rexpr_present (s, p1, p2) ->
 	if ctx = Process
@@ -489,20 +490,20 @@ let rec static_expr ctx e =
 	   let _typ2 = static_expr ctx p2 in
 	   max (Dynamic Dontknow) typ1)
  	else
-	  expr_wrong_static_err e
+	  expr_wrong_static_err !default_fmt e
 
     | Rexpr_await (Immediate, s) ->
 	if ctx = Process
 	then
 	  (static_conf s;
 	   Dynamic Dontknow)
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
     | Rexpr_await (Nonimmediate, s) ->
 	if ctx = Process
 	then
 	  (static_conf s;
 	   Dynamic Noninstantaneous)
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rexpr_await_val (Immediate, One, s, _, p) ->
 	if ctx = Process
@@ -511,9 +512,9 @@ let rec static_expr ctx e =
 	  then
 	    let typ = static_expr Process p in
 	    max (Dynamic Dontknow) typ
-	  else expr_wrong_static_err s
+	  else expr_wrong_static_err !default_fmt s
 	else
-	  expr_wrong_static_err e
+	  expr_wrong_static_err !default_fmt e
     | Rexpr_await_val (_, _, s, _, p) ->
 	if ctx = Process
 	then
@@ -521,24 +522,24 @@ let rec static_expr ctx e =
 	  then
 	    let _typ1 = static_expr Process p in
 	    Dynamic Noninstantaneous
-	  else expr_wrong_static_err s
+	  else expr_wrong_static_err !default_fmt s
 	else
-	  expr_wrong_static_err e
+	  expr_wrong_static_err !default_fmt e
 
     | Rexpr_pre (_, s) ->
 	if static_expr ML s = Static
 	then Static
- 	else expr_wrong_static_err s
+ 	else expr_wrong_static_err !default_fmt s
 
     | Rexpr_last s ->
 	if static_expr ML s = Static
 	then Static
- 	else expr_wrong_static_err s
+ 	else expr_wrong_static_err !default_fmt s
 
     | Rexpr_default s ->
 	if static_expr ML s = Static
 	then Static
- 	else expr_wrong_static_err s
+ 	else expr_wrong_static_err !default_fmt s
 
     | Rexpr_get (s, _, p) ->
  	if ctx = Process
@@ -547,9 +548,9 @@ let rec static_expr ctx e =
 	  then
 	    let _typ = static_expr ctx p in
 	    Dynamic Noninstantaneous
-	  else expr_wrong_static_err s
+	  else expr_wrong_static_err !default_fmt s
  	else
-	  expr_wrong_static_err p
+	  expr_wrong_static_err !default_fmt p
   in
   e.expr_static <- t;
   t
@@ -560,7 +561,7 @@ and static_conf conf =
     | Rconf_present e ->
 	if static_expr ML e = Static
 	then ()
-	else expr_wrong_static_err e
+	else expr_wrong_static_err !default_fmt e
 
     | Rconf_and (c1, c2) ->
 	static_conf c1;
@@ -573,7 +574,8 @@ and static_conf conf =
   t
 
 
-let static info_chan impl =
+let static fmt impl =
+  default_fmt := fmt;
   let typ =
     match impl.impl_desc with
     | Rimpl_expr e -> static_expr ML e
@@ -585,16 +587,16 @@ let static info_chan impl =
 	    match combine with
 	    | Some(e1,e2) ->
 		if (static_expr ML e1) <> Static
-		then expr_wrong_static_err e1
+		then expr_wrong_static_err !default_fmt e1
 		else
 		  if (static_expr ML e2) <> Static
-		  then expr_wrong_static_err e2
+		  then expr_wrong_static_err !default_fmt e2
 		  else ()
 	    | None -> ())
 	  s_list;
 	Static
     | _ -> Static
   in
-  if typ <> Static then impl_wrong_static_err impl
+  if typ <> Static then impl_wrong_static_err !default_fmt impl
 
 
