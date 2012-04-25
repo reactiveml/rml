@@ -170,22 +170,34 @@ let translate_phrase fmt rml_phrase =
         end
 
     | Rmltop_lexer.Step None ->
-        [ "let () = Rmltop_global.set_step 1 ;;"; ]
+        [ "let () =
+                 Rmltop_reactive_machine.rml_react (Rmltop_controller.get_to_run ());;";
+        ]
 
     | Rmltop_lexer.Step (Some n) ->
-        [ "let () = Rmltop_global.set_step "^ n ^ ";;"; ]
+        let s = Printf.sprintf "Rmltop_reactive_machine.rml_react ([process (
+                 for i = 1 to %s do
+                      Rmltop_reactive_machine.rml_react (Rmltop_controller.get_to_run ()) ;
+                      pause
+                 done)]);;" n
+        in
+        let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+        begin match error with
+        | Some error -> raise Not_found
+        | None -> ocaml_phrases
+        end
 
     | Rmltop_lexer.Suspend ->
-        [ "let () = Rmltop_global.set_suspend () ;;"; ]
+        [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]
 
     | Rmltop_lexer.Resume ->
-        [ "let () = Rmltop_global.set_resume () ;;"; ]
+        [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]
 
     | Rmltop_lexer.Sampling f ->
-        [ "let () = Rmltop_global.set_sampling "^ f ^";;"; ]
+        [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]
 
     | Rmltop_lexer.Quit ->
-        []
+        [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]
 
     | Rmltop_lexer.Help ->
         print_help (); []
