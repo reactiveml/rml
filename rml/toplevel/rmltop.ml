@@ -32,13 +32,8 @@ let print_DEBUG x =
 let (//) = Filename.concat
 let ocaml_stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir
 
-let include_dir =
-  let rml_stdlib = Rmlcompiler.Configure.locate_stdlib () in
-  ref
-    [ ocaml_stdlib // "threads";
-      rml_stdlib;
-      rml_stdlib // "toplevel";
-  ]
+let include_dir = ref [ ocaml_stdlib // "threads"; ]
+let hide_rml_dirs = ref true
 
 let include_obj = ref
   ["stdlib.cma";
@@ -93,6 +88,13 @@ let load_ocamlinit () =
 let print_prompt () = print_string "# "
 
 let main () =
+  if not !hide_rml_dirs then begin
+    let rml_stdlib = Rmlcompiler.Configure.locate_stdlib () in
+    include_dir :=
+         rml_stdlib
+      :: rml_stdlib // "toplevel"
+      :: !include_dir
+  end;
   print_intro();
   Toploop.set_paths ();
   Toploop.initialize_toplevel_env ();
@@ -131,6 +133,7 @@ let _ =
     [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some (string_of_float x)),
       "<rate> Sets the sampling rate to <rate> seconds";
       "-i", Arg.Set show_help, " List known rml directives at startup";
+      "-n", Arg.Set hide_rml_dirs, " Do not include RML paths at startup";
       "-debug", Arg.Set debug, " Enable debug output";
       "-I", Arg.String add_include_dir, "<dir>  Add <dir> to the list of include directories";
     ])
