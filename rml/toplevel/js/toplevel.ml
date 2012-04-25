@@ -55,6 +55,7 @@ let _ =
 module Html = Dom_html
 
 let s = ""
+let debug_mode = ref false
 
 let doc = Html.document
 let window = Html.window
@@ -70,7 +71,7 @@ let text_button txt action =
   b##id <- Js.string id;
   registered_buttons := (id, txt) :: !registered_buttons;
   b##className <- Js.string "btn";
-  b##onclick <- Dom_html.handler (fun _ -> action (); Js._true);
+  b##onclick <- Dom_html.handler (fun _ -> action b; Js._true);
   b
 
 let exec ppf s =
@@ -252,7 +253,12 @@ let loop s ppf =
       let s = Rmltop_library.translate_phrase ppf s in
       String.concat "\n" s
     in
-    let lb = Lexing.from_function (refill_lexbuf new_s (ref 0) ppf) in
+    let lb =
+      if !debug_mode then
+        Lexing.from_function (refill_lexbuf new_s (ref 0) ppf)
+      else
+        Lexing.from_string new_s
+    in
     while true do
       begin
       try
@@ -372,8 +378,18 @@ let run _ =
 	     | _ -> Js._true
 	 end
 	 | _ -> Js._true));
-  let send_button = text_button "Send" (fun () -> execute ()) in
-  let save_button =  text_button "Save" (fun () ->
+  let debug_button_text () =
+    if !debug_mode then
+      "Debug (on)"
+    else
+      "Debug (off)"
+  in
+  let debug_button = text_button (debug_button_text ()) (fun b ->
+    debug_mode := not !debug_mode;
+    b##innerHTML <- Js.string (debug_button_text ())
+  ) in
+  let send_button = text_button "Send" (fun _ -> execute ()) in
+  let save_button =  text_button "Save" (fun _ ->
     let content = Js.to_string output_area##innerHTML in
     let l = Regexp.split (Regexp.regexp ("\n")) content in
     let content =
@@ -392,7 +408,10 @@ let run _ =
   in
 
   append_children "buttons" [
-    send_button; save_button];
+    debug_button;
+    send_button;
+    save_button
+  ];
 
   output_area##scrollTop <- output_area##scrollHeight;
   start ppf;
