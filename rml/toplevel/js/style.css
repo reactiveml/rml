@@ -1,22 +1,24 @@
 body {
   font-family: "DejaVu Sans",sans-serif;
-  /* background-color: #EEE; */
   padding: 10px;
 }
 
 #toplevel {
-    width: 300px;
+    width: 550px;
     height: 70px;
 }
 
 #sharp {
-    text-width: 10px;
-    margin-left: 8px;
+    text-width: 5px;
+    font-size: 12px;
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+    font-style: italic;
+    margin-right: 5px;
     float: left;
     color: #CCC;
 }
 
-#toplevel textarea {
+#rmlconsole {
     border: 0;
     background: transparent;
     padding-top: 0;
@@ -24,6 +26,7 @@ body {
     resize: none;
     outline: none;
     font-size: 12px;
+    width: 520px;
     color: white;
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
@@ -45,12 +48,42 @@ body {
    border-radius: 20px;
 }
 
-.content {
-  min-height: 600px;
-  background-color: white;
+#maincontent {
+    vertical-align:top;
+    horizon
+}
+
+#sidebar {
+    float: left;
+    max-width: 300px;
+    text-align: center;
+}
+
+#sidebar hr {
+    width: 92%;
+}
+
+#help {
+    display: inline-block;
+}
+
+#intro {
+    display: inline-block;
+    margin: 10px;
+    text-align: justify;
+    max-width: 300px;
+}
+
+#intro p {
+    margin: 0px;
+}
+
+#ocaml {
+   display: inline-block;
 }
 
 .footer {
+   background-color: #eee;
    margin-top: 10px;
    border-top: 1px #CCC solid;
    padding-top: 10px;
@@ -91,6 +124,9 @@ dl dt {
     text-align: left;
 }
 
-#help {
-    float: right;
-}
+.zebra-striped tbody tr:nth-child(odd) td,.zebra-striped tbody tr:nth-child(odd) th{background-color:#f9f9f9;}
+.zebra-striped tbody tr:hover td,.zebra-striped tbody tr:hover th{background-color:#f5f5f5;}
+table{width:100%;margin-bottom:18px;padding:0;font-size:13px;border-collapse:collapse;}table th,table td{padding:10px 10px 9px;line-height:18px;text-align:left;}
+table th{padding-top:9px;font-weight:bold;vertical-align:middle;}
+table td{vertical-align:top;border-top:1px solid #ddd;}
+table tbody th{border-top:1px solid #ddd;vertical-align:top;}

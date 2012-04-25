@@ -224,43 +224,12 @@ let get_cookie () =
   let reg = Regexp.regexp ";" in
   Regexp.split reg (Js.to_string doc##cookie)
 
-let get_lang_from_cookie () =
-  let s = doc##cookie in
-  let reg = Regexp.regexp ".*lang=([a-z][a-z]).*" in
-  match Regexp.string_match reg (Js.to_string s) 0 with
-    | None -> default_lang
-    | Some r ->
-      match (Regexp.matched_group r 1) with
-          None -> default_lang
-        | Some s -> s
-
-let get_lesson_from_cookie () =
-  let s = doc##cookie in
-  let reg = Regexp.regexp ".*lesson=([0-9]+).*" in
-  match Regexp.string_match reg (Js.to_string s) 0 with
-    | None -> 0
-    | Some r ->
-      match (Regexp.matched_group r 1) with
-          None -> 0
-        | Some s -> int_of_string s
-
-let get_step_from_cookie () =
-  let s = doc##cookie in
-  let reg = Regexp.regexp ".*step=([0-9]+).*" in
-  match Regexp.string_match reg (Js.to_string s) 0 with
-    | None -> 0
-    | Some r ->
-      match (Regexp.matched_group r 1) with
-          None -> 0
-        | Some s -> int_of_string s
-
 let set_cookie key value =
   let today = jsnew Js.date_now () in
   let expire_time = today##setTime
     ((Js.to_float today##getTime()) *. 60. *. 60. *. 24. *. 365.) in
   doc##cookie <- Js.string (Printf.sprintf "%s=%s;expires=%f" key value
                               (Js.to_float expire_time))
-
 
 
 let get_by_id id =
@@ -272,16 +241,6 @@ let get_by_name id =
     List.hd (Dom.list_of_nodeList (doc##getElementsByTagName (Js.string id)))
   in
   Js.to_string container##innerHTML
-
-let update_debug_message =
-  let b = Buffer.create 100 in
-  function () ->
-    let s = Buffer.contents b in
-    Buffer.clear b;
-    set_container_by_id "lesson-debug"
-      (if s = "" then ""
-       else Printf.sprintf
-          "<div class=\"alert-message block-message warning\">%s</div>" s)
 
 exception End_of_input
 
@@ -307,6 +266,10 @@ let loop s ppf buffer =
       output := [];
       if !need_terminator then s ^ ";;" else s
     end
+  in
+  let s =
+    let s = Rmltop_library.translate_phrase s in
+    String.concat "\n" s
   in
   let lb = Lexing.from_function (refill_lexbuf s (ref 0) ppf) in
   begin try
@@ -342,10 +305,12 @@ let loop s ppf buffer =
           [] | [ '\000' ] ->
             output := []; update_prompt "#"
         | _ ->
-          let s = string_of_char_list (List.rev !output) in
-          let len = String.length s in
-          let s = if len >= 5 then String.sub s 0 5 else s in
-          update_prompt (Printf.sprintf "[%s]> " s)
+          ()
+          (* let s = string_of_char_list (List.rev !output) in *)
+          (* let len = String.length s in *)
+          (* let s = if len >= 5 then String.sub s 0 5 else s in *)
+          (* if s <> " " then *)
+            (* update_prompt (Printf.sprintf "[%s]> " s) *)
   end
 
 let to_update = [
@@ -391,7 +356,7 @@ let run _ =
   in
   let textbox = Html.createTextarea doc in
   textbox##value <- Js.string "";
-  textbox##id <- Js.string "console";
+  textbox##id <- Js.string "rmlconsole";
   Dom.appendChild top textbox;
   textbox##focus();
   textbox##select();
@@ -402,7 +367,7 @@ let run _ =
   let history_bckwrd = ref [] in
   let history_frwrd = ref [] in
   let rec make_code_clickable () =
-    let textbox = get_element_by_id "console" in
+    let textbox = get_element_by_id "rmlconsole" in
     let textbox = match Js.Opt.to_option (Html.CoerceTo.textarea textbox) with
       | None   -> assert false
       | Some t -> t in
@@ -427,7 +392,6 @@ let run _ =
     history_frwrd := [];
     textbox##value <- Js.string "";
     (try loop s ppf buffer with _ -> ());
-    update_debug_message ();
     make_code_clickable ();
     textbox##focus();
     container##scrollTop <- container##scrollHeight;
@@ -488,9 +452,9 @@ let run _ =
         String.concat "\n" l)
     in
     let uriContent =
-      Js.string ("data:application/octet-stream," ^
+      Js.string ("data:text/x-ocaml," ^
                     (Js.to_string (Js.encodeURI content))) in
-    window##open_(uriContent, Js.string "Try OCaml", Js.null);
+    ignore (window##open_(uriContent, Js.string "Try OCaml", Js.null));
     window##close ()
   )
   in
