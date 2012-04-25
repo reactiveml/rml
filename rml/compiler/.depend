@@ -256,11 +256,11 @@ main/errors.cmo: global/warnings.cmo parsing/syntaxerr.cmo global/misc.cmo \
     parsing/location.cmo parsing/lexer.cmo
 main/errors.cmx: global/warnings.cmx parsing/syntaxerr.cmx global/misc.cmx \
     parsing/location.cmx parsing/lexer.cmx
-main/interactive.cmo: parsing/parse.cmo global/modules.cmo \
+main/interactive.cmo: parsing/parse.cmo global/modules.cmo global/misc.cmo \
     parsing/location.cmo parsing/lexer.cmo global/initialization.cmo \
     external/external.cmo main/errors.cmo main/configure.cmo \
     main/compiler.cmo
-main/interactive.cmx: parsing/parse.cmx global/modules.cmx \
+main/interactive.cmx: parsing/parse.cmx global/modules.cmx global/misc.cmx \
     parsing/location.cmx parsing/lexer.cmx global/initialization.cmx \
     external/external.cmx main/errors.cmx main/configure.cmx \
     main/compiler.cmx
