@@ -138,10 +138,11 @@ $(NAME).byte: js-of-ocaml-stamp $(OBJS)
 	$(OCAMLC) -c $<
 
 clean::
-	rm -f *.cm[io] $(NAME).byte $(NAME).js *.annot js-of-ocaml-stamp
+	rm -f *.cm[io] $(NAME).byte $(NAME).js *.annot
 
 cleanall: clean
 	make -C js-of-ocaml clean
+	rm -f js-of-ocaml-stamp
 
 depend:
 	ocamldep -pp "camlp4o $(LIBDIR)/syntax/pa_js.cmo" *.ml *.mli > .depend

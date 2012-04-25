@@ -402,7 +402,7 @@ let run _ =
     let uriContent =
       Js.string ("data:text/x-ocaml," ^
                     (Js.to_string (Js.encodeURI content))) in
-    ignore (window##open_(uriContent, Js.string "Try OCaml", Js.null));
+    ignore (window##open_(uriContent, Js.string "Try ReactiveML", Js.null));
     window##close ()
   )
   in
