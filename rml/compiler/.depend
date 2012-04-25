@@ -22,9 +22,11 @@ global/misc.cmx: global/version.cmx parsing/location.cmx
 global/modules.cmo: global/rzi.cmi parsing/parse_ident.cmo global/misc.cmo \
     global/ident.cmo global/global_ident.cmo global/global.cmo \
     typing/def_types.cmo global/def_modules.cmo
-global/modules.cmx: global/rzi.cmi parsing/parse_ident.cmx global/misc.cmx \
+global/modules.cmx: global/rzi.cmx parsing/parse_ident.cmx global/misc.cmx \
     global/ident.cmx global/global_ident.cmx global/global.cmx \
     typing/def_types.cmx global/def_modules.cmx
+global/rzi.cmo: global/rzi.cmi
+global/rzi.cmx: global/rzi.cmi
 global/symbol_table.cmo:
 global/symbol_table.cmx:
 global/version.cmo:
