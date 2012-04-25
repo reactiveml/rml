@@ -664,19 +664,19 @@ let print_intf_item item =
 (* the main function *)
 set_max_boxes max_int ;;
 
-let output_impl_decl_fmt fmt module_name decl =
+let output_impl_decl_fmt fmt nl module_name decl =
   current_module := module_name;
   formatter := fmt;
-  pp_force_newline !formatter ();
+  if nl then pp_force_newline !formatter ();
   print_impl_item decl;
   pp_print_string !formatter "\n";
   pp_print_flush !formatter ()
 
 let output_impl_decl oc module_name decl =
-  output_impl_decl_fmt (formatter_of_out_channel oc) module_name decl
+  output_impl_decl_fmt (formatter_of_out_channel oc) true module_name decl
 
 let output_impl_decl_string module_name decl =
-  output_impl_decl_fmt str_formatter module_name decl;
+  output_impl_decl_fmt str_formatter false module_name decl;
   flush_str_formatter ()
 
 let output_intf_decl oc module_name decl =

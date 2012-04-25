@@ -59,7 +59,6 @@ let s = ""
 let doc = Html.document
 let window = Html.window
 let loc = Js.Unsafe.variable "location"
-let default_lang = "en"
 
 let registered_buttons = ref []
 
@@ -70,16 +69,6 @@ let text_button txt action =
   b##innerHTML <- Js.string txt;
   b##id <- Js.string id;
   registered_buttons := (id, txt) :: !registered_buttons;
-  b##className <- Js.string "btn";
-  b##onclick <- Dom_html.handler (fun _ -> action (); Js._true);
-  b
-
-let image_button  src width txt action =
-  let b = Dom_html.createButton ~_type:button_type doc in
-  let id = "button"^txt in
-  b##innerHTML <- Js.string (
-    Printf.sprintf "<img src=\"%s\" width=\"%d\" text=\"%s\"/>" src width txt);
-  b##id <- Js.string id;
   b##className <- Js.string "btn";
   b##onclick <- Dom_html.handler (fun _ -> action (); Js._true);
   b
@@ -121,7 +110,6 @@ let exec_list ppf l =
 
 let start ppf =
   Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
-  (* Rmltop_library.print_help (); *)
   Toploop.initialize_toplevel_env ();
   Toploop.input_name := "";
   Rmlcompiler.Misc.interactive := true;
@@ -198,38 +186,6 @@ let set_container_by_id id s =
 let update_prompt prompt =
   set_container_by_id "sharp" prompt
 
-let extract_escaped_and_kill html i =
-  let len = String.length html in
-  let rec iter html i len =
-    if i = len then i else
-      match html.[i] with
-          ';' -> i+1
-        | _ -> iter html (i+1) len
-  in
-  let end_pos = iter html (i+1) len in
-  let s = String.sub html i (end_pos - i) in
-  for j = i to end_pos - 1 do
-    html.[j] <- '\000'
-  done;
-  s
-
-let text_of_html html =
-  let b = Buffer.create (String.length html) in
-  for i = 0 to String.length html - 1 do
-    match html.[i] with
-        '&' ->
-          begin
-            match extract_escaped_and_kill html i with
-              | "&gt;" -> Buffer.add_char b '>'
-              | "&lt;" -> Buffer.add_char b '<'
-              | "&amp;" -> Buffer.add_char b '&'
-              | _ -> ()
-          end
-      | '\000' -> ()
-      | c -> Buffer.add_char b c
-  done;
-  Buffer.contents b
-
 (* Some useful functions to handle cookies *)
 let find_in good_input input =
   try
@@ -277,7 +233,7 @@ let string_of_char_list list =
   in
   iter s 0 list
 
-let loop s ppf buffer =
+let loop s ppf =
   let s =
     begin
       let need_terminator = ref true in
@@ -305,8 +261,9 @@ let loop s ppf buffer =
         in
         output := [];
         ensure_at_bol ppf;
-        Buffer.clear buffer;
+        Format.fprintf ppf "@[#@ %s@]@." s;
         ignore (Toploop.execute_phrase true ppf phr);
+        Format.pp_print_newline ppf ();
         ()
       with
           End_of_input ->
@@ -333,17 +290,17 @@ let append_children id list =
 let run _ =
   let top = get_element_by_id "toplevel"  in
   let output_area = get_element_by_id "output" in
-  let buffer = Buffer.create 1000 in
   let ppf =
     let b = Buffer.create 80 in
     Format.make_formatter
       (fun s i l ->
-        Buffer.add_substring buffer s i l;
         Buffer.add_substring b s i l)
       (fun _ ->
+        let text = Buffer.contents b in
+        let () = Buffer.clear b in
         Dom.appendChild output_area
-          (doc##createTextNode(Js.string (Buffer.contents b)));
-        Buffer.clear b)
+          (doc##createTextNode(Js.string text))
+      )
   in
   let textbox = Html.createTextarea doc in
   textbox##value <- Js.string "";
@@ -357,23 +314,7 @@ let run _ =
   let history = ref [] in
   let history_bckwrd = ref [] in
   let history_frwrd = ref [] in
-  let rec make_code_clickable () =
-    let textbox = get_element_by_id "rmlconsole" in
-    let textbox = match Js.Opt.to_option (Html.CoerceTo.textarea textbox) with
-      | None   -> assert false
-      | Some t -> t in
-    let codes = Dom.list_of_nodeList (doc##getElementsByTagName(Js.string "code")) in
-    List.iter (fun code ->
-      let html =  code##innerHTML in
-      let txt = text_of_html (Js.to_string html) in
-      code##title <- Js.string "Click here to execute this code";
-      code##onclick <- Html.handler (fun _ ->
-        textbox##value <- Js.string ( txt ^ ";;" );
-        execute ();
-        Js._true)
-    ) codes
-
-  and execute () =
+  let execute () =
     let s = Js.to_string textbox##value in
     if s <> "" then
       begin
@@ -382,8 +323,7 @@ let run _ =
     history_bckwrd := !history;
     history_frwrd := [];
     textbox##value <- Js.string "";
-    (try loop s ppf buffer with _ -> ());
-    make_code_clickable ();
+    (try loop s ppf with _ -> ());
     textbox##focus();
     container##scrollTop <- container##scrollHeight;
   in
@@ -454,7 +394,6 @@ let run _ =
     send_button; save_button];
 
   output_area##scrollTop <- output_area##scrollHeight;
-  make_code_clickable ();
   start ppf;
 
   Js._false

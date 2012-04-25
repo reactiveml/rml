@@ -130,3 +130,23 @@ table{width:100%;margin-bottom:18px;padding:0;font-size:13px;border-collapse:col
 table th{padding-top:9px;font-weight:bold;vertical-align:middle;}
 table td{vertical-align:top;border-top:1px solid #ddd;}
 table tbody th{border-top:1px solid #ddd;vertical-align:top;}
+
+a:focus {
+    outline:thin dotted;
+}
+
+a:hover, a:active {
+    outline:0;
+}
+
+a {
+    color: #0069d6;
+    text-decoration: none;
+    line-height: inherit;
+    font-weight: inherit;
+}
+
+a:hover {
+    color: #00438a;
+    text-decoration: underline;
+}
