@@ -59,6 +59,7 @@ let print_intro () =
 
 let load_dir dir =
   Topdirs.dir_directory dir;
+  Rmlcompiler.Configure.add_include dir;
   print_DEBUG "Added %s directory to search path.\n" dir
 
 let load_file file =
@@ -96,13 +97,13 @@ let main () =
       :: !include_dir
   end;
   print_intro();
+  Sys.catch_break true;
+  Rmlcompiler.Misc.interactive := true;
+  Rmlcompiler.Misc.print_type := true;
   Toploop.set_paths ();
   Toploop.initialize_toplevel_env ();
   init_toplevel ();
-  Rmlcompiler.Misc.interactive := true;
-  Rmlcompiler.Misc.print_type := true;
   Rmlcompiler.Interactive.init ();
-  Sys.catch_break true;
   Rmlcompiler.Misc.opt_iter (set_sampling Format.std_formatter) !sampling;
   eval_phrases ~silent:(not !debug) Format.std_formatter init_rml;
   try
