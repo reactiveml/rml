@@ -55,7 +55,7 @@ let print_qualified_ident q =
 let type_name = new name_assoc_table int_to_alpha
 
 let rec print priority ty =
-  open_box 0;
+  pp_open_box !default_formatter 0;
   begin match ty.type_desc with
     Type_var ->
       pp_print_string !default_formatter "'";
@@ -209,14 +209,14 @@ let print_type_declaration gl =
   | Type_abstract -> ()
   | Type_variant global_list ->
       pp_print_string !default_formatter " =";
-      open_hvbox 0;
+      pp_open_hvbox !default_formatter 0;
       List.iter print_one_variant global_list;
       pp_close_box !default_formatter ()
   | Type_record global_list ->
       pp_print_string !default_formatter " =";
       pp_print_space !default_formatter ();
       pp_print_string !default_formatter "{";
-      open_hvbox 1;
+      pp_open_hvbox !default_formatter 1;
       print_label_list global_list;
       pp_close_box !default_formatter ();
       pp_print_space !default_formatter ();
@@ -241,14 +241,15 @@ let print_list_of_type_declarations global_list =
   match global_list with
     [] -> ()
   | global_list ->
-      open_vbox 0;
+      pp_open_vbox !default_formatter 0;
       pp_print_string !default_formatter "type ";
       printrec global_list;
       pp_close_box !default_formatter ();
       pp_print_string !default_formatter "\n";;
 
 (* the main printing functions *)
-let () = set_max_boxes max_int
+let () = Format.pp_set_max_boxes !default_formatter max_int
+let () = Format.pp_set_margin !default_formatter max_int
 
 let output fmt ty =
   default_formatter := fmt;
@@ -257,11 +258,15 @@ let output fmt ty =
 
 let output_value_type_declaration fmt global_list =
   default_formatter := fmt;
-  List.iter print_value_type_declaration global_list
+  pp_open_box !default_formatter 0;
+  List.iter print_value_type_declaration global_list;
+  pp_close_box !default_formatter ()
 
 let output_type_declaration fmt global_list =
   default_formatter := fmt;
+  pp_open_box !default_formatter 0;
   print_list_of_type_declarations global_list;
+  pp_close_box !default_formatter ();
   pp_print_flush !default_formatter ()
 
 let output_exception_declaration fmt gl =
