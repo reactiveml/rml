@@ -177,17 +177,11 @@ let translate_phrase fmt rml_phrase =
         ]
 
     | Rmltop_lexer.Step (Some n) ->
-        let s = Printf.sprintf "Rmltop_reactive_machine.rml_react ([process (
-                 for i = 1 to %s do
-                      Rmltop_reactive_machine.rml_react (Rmltop_controller.get_to_run ()) ;
-                      pause
-                 done)]);;" n
-        in
-        let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-        begin match error with
-        | Some error -> raise Not_found
-        | None -> ocaml_phrases
-        end
+        [ Printf.sprintf "for i = 1 to %s do
+              Rmltop_reactive_machine.rml_react (Rmltop_controller.get_to_run ());
+              Rmltop_reactive_machine.rml_react ([fun () -> Lco_ctrl_tree_record.rml_pause])
+           done;;" n
+        ]
 
     | Rmltop_lexer.Suspend ->
         [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]
