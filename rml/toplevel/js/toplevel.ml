@@ -271,7 +271,7 @@ let loop s ppf =
         in
         output := [];
         ensure_at_bol ppf;
-        ignore (Toploop.execute_phrase !debug_mode ppf phr);
+        ignore (Toploop.execute_phrase true ppf phr);
         ()
       with
           End_of_input ->
