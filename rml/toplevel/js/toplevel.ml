@@ -114,6 +114,7 @@ let start ppf =
   Toploop.initialize_toplevel_env ();
   Toploop.input_name := "";
   Rmlcompiler.Misc.interactive := true;
+  Rmlcompiler.Misc.print_type := true;
   Rmlcompiler.Misc.err_fmt := ppf;
   Rmlcompiler.Misc.std_fmt := ppf;
   Rmlcompiler.Configure.configure ();
@@ -270,7 +271,7 @@ let loop s ppf =
         in
         output := [];
         ensure_at_bol ppf;
-        ignore (Toploop.execute_phrase true ppf phr);
+        ignore (Toploop.execute_phrase !debug_mode ppf phr);
         ()
       with
           End_of_input ->
