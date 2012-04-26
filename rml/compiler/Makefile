@@ -162,10 +162,10 @@ C_OBJ_BYTE = $(filter-out main/options.cmo main/main.cmo,$(OBJ))
 C_OBJ_OPT  = $(C_OBJ_BYTE:.cmo=.cmx)
 
 rmlcompiler.cmo: $(C_OBJ_BYTE)
-	$(OCAMLC) -pack -o $@ $(INCLUDES) $^
+	$(OCAMLC) -g -pack -o $@ $(INCLUDES) $^
 
 rmlcompiler.cmx: $(C_OBJ_OPT)
-	$(OCAMLOPT) -pack -o $@ $(INCLUDES) $^
+	$(OCAMLOPT) -g -pack -o $@ $(INCLUDES) $^
 
 diff: FORCE
 	(cd diff; $(MAKE) diff)
