@@ -84,12 +84,12 @@ let load_module modname =
         (if !use_extended_interfaces && Sys.file_exists extname
          then extname else rzi)
   | None ->
-    try
-      let md = List.assoc name Rzi.known_modules in
-      (Marshal.from_string md 0 : module0)
-    with Not_found ->
-      Format.fprintf !err_fmt "Cannot find the compiled interface file %s.rzi.\n" name;
-      raise Error
+      try
+        let md = List.assoc name Rzi.known_modules in
+        (Marshal.from_string md 0 : module0)
+      with Not_found ->
+        Format.fprintf !err_fmt "Cannot find the compiled interface file %s.rzi.\n" name;
+        raise Error
 
 (* To find an interface by its name *)
 
