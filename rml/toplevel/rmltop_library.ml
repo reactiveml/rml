@@ -37,8 +37,10 @@ let print_help () =
   flush stdout
 
 let get_error s =
-  let i = String.index s ',' in
-  String.sub s (i+2) (String.length s - i - 2)
+  try
+    let i = String.index s ',' in
+    String.sub s (i+2) (String.length s - i - 2)
+  with Not_found -> s
 
 let eval_command ?(silent=false) fmt command =
   let buffer = Buffer.create 512 in
