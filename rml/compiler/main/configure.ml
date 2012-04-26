@@ -32,7 +32,7 @@ let add_to_compile file =
 (* standard libraries and includes *)
 let set_init_stdlib () =
   let standard_lib = try Sys.getenv "RMLLIB" with Not_found -> standard_lib in
-  load_path := [standard_lib]
+  load_path := standard_lib :: !load_path
 
 let set_stdlib p =
   load_path := [p]
