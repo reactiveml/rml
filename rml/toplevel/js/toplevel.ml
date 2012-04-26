@@ -123,6 +123,7 @@ let start ppf =
     [
       false, "open Implem;;";
       true, "open Pervasives;;";
+      false, "let controller_react = Rmltop_implem.Machine_controler_machine.rml_make Rmltop_controller.controller;;"
     ];
   ()
 
@@ -389,6 +390,15 @@ let run _ =
     debug_mode := not !debug_mode;
     b##innerHTML <- Js.string (debug_button_text ())
   ) in
+  let step_button = text_button "Step" (fun b ->
+    exec ppf "Rmltop_global.set_step 1;;"
+  ) in
+  let suspend_button = text_button "Suspend" (fun b ->
+    exec ppf "Rmltop_global.set_suspend ();;"
+  ) in
+  let resume_button = text_button "Resume" (fun b ->
+    exec ppf "Rmltop_global.set_resume ();;"
+  ) in
   let send_button = text_button "Send" (fun _ -> execute ()) in
   let save_button =  text_button "Save" (fun _ ->
     let content = Js.to_string output_area##innerHTML in
@@ -411,11 +421,35 @@ let run _ =
   append_children "buttons" [
     debug_button;
     send_button;
-    save_button
+    save_button;
+    suspend_button;
+    step_button;
+    resume_button;
   ];
 
   output_area##scrollTop <- output_area##scrollHeight;
   start ppf;
+
+  Rmltop_global.enter_step_by_step_mode :=
+    (fun () ->
+      step_button##disabled <- Js._false;
+      resume_button##disabled <- Js._false;
+    );
+
+  Rmltop_global.exit_step_by_step_mode :=
+    (fun () ->
+      step_button##disabled <- Js._true;
+      resume_button##disabled <- Js._true;
+    );
+
+  !Rmltop_global.exit_step_by_step_mode ();
+
+  let (>>=) = Lwt.bind in
+  let rec exec_machine_controller () =
+    Lwt_js.sleep !Rmltop_global.sampling >>= fun () ->
+      let () = exec ppf "controller_react ();;" in
+      exec_machine_controller () in
+  exec_machine_controller ();
 
   Js._false
 

@@ -172,24 +172,19 @@ let translate_phrase fmt rml_phrase =
         end
 
     | Rmltop_lexer.Step None ->
-        [ "let () =
-                 Rmltop_reactive_machine.rml_react (Rmltop_controller.get_to_run ());;";
-        ]
+        [ "let () = Rmltop_global.set_step 1 ;;"; ]
 
     | Rmltop_lexer.Step (Some n) ->
-        [ Printf.sprintf "for i = 1 to %s do
-              Rmltop_reactive_machine.rml_react (Rmltop_controller.get_to_run ());
-           done;;" n
-        ]
+        [ "let () = Rmltop_global.set_step " ^ n ^ " ;;"; ]
 
     | Rmltop_lexer.Suspend ->
-        [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]
+        [ "let () = Rmltop_global.set_suspend () ;;"; ]
 
     | Rmltop_lexer.Resume ->
-        [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]
+        [ "let () = Rmltop_global.set_resume () ;;"; ]
 
     | Rmltop_lexer.Sampling f ->
-        [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]
+        [ "let () = Rmltop_global.set_sampling "^ f ^";;"; ]
 
     | Rmltop_lexer.Quit ->
         [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]

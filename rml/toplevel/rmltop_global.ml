@@ -47,3 +47,6 @@ let add_to_run p =
   unlock ()
 
 let set_sampling n =  sampling := n
+
+let enter_step_by_step_mode = ref (fun () -> ())
+let exit_step_by_step_mode = ref (fun () -> ())

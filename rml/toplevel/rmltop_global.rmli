@@ -36,5 +36,8 @@ val set_step : int -> unit
 val set_sampling : float -> unit
 val add_to_run : unit rml_process -> unit
 
+val enter_step_by_step_mode : (unit -> unit) ref
+val exit_step_by_step_mode : (unit -> unit) ref
+
 val lock : unit -> unit
 val unlock : unit -> unit

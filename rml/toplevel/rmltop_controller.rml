@@ -73,8 +73,9 @@ let process machine_controller =
       run sampled
     until suspend done;
     do
+      !Rmltop_global.enter_step_by_step_mode ();
       run step_by_step
-    until resume done
+    until resume -> !Rmltop_global.exit_step_by_step_mode () done
   end
 
 let set_suspend () = emit suspend
