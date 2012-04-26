@@ -90,7 +90,7 @@ let compile_implementation_front_end info_fmt itf impl_list =
 
     (* static analysis *)
     Static_timer.start();
-    Static.static info_fmt rml_code;
+    Static.static rml_code;
     Static_timer.time();
 
     Optimization_timer.start();
@@ -244,7 +244,7 @@ let compile_implementation module_name filename =
 
   let ic = open_in source_name in
   let itf = Some (open_out_bin obj_interf_name) in
-  let info_fmt = Format.std_formatter in
+  let info_fmt = !Misc.std_fmt in
 
   try
 (*    Front_end_timer.start();*)
