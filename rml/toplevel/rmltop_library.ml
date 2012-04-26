@@ -56,7 +56,7 @@ let eval_command ?(silent=false) fmt command =
 
 let print_message fmt message =
   if String.length message <> 0 then
-    Format.fprintf fmt "%s@." message
+    Format.fprintf fmt "@[%s@]@." message
 
 let rec eval_phrases ?(silent=false) fmt = function
   | [] -> ()
@@ -78,7 +78,7 @@ let translate_and_eval_phrase fmt rml_phrase =
     | Rmltop_lexer.Rml_phrase s ->
       let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
       begin match error with
-      | Some error -> Format.fprintf fmt "%s@." error
+      | Some error -> Format.fprintf fmt "@[%s@]@." error
       | None ->
         eval_phrases ~silent:true fmt [ "Rmltop_global.lock ();;" ];
         eval_phrases fmt ocaml_phrases;
@@ -95,7 +95,7 @@ let translate_and_eval_phrase fmt rml_phrase =
         s in
       let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
       begin match error with
-      | Some error -> Format.fprintf fmt "%s@." error
+      | Some error -> Format.fprintf fmt "@[%s@]@." error
       | None -> eval_phrases ~silent:true fmt ocaml_phrases
       end
 
@@ -106,7 +106,7 @@ let translate_and_eval_phrase fmt rml_phrase =
         s in
       let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
       begin match error with
-      | Some error -> Format.fprintf fmt "%s@." error
+      | Some error -> Format.fprintf fmt "@[%s@]@." error
       | None -> eval_phrases ~silent:true fmt ocaml_phrases
       end
 
