@@ -41,8 +41,8 @@ let include_obj = ref
    "rmllib.cma";
    "rmlrun.cma";
   ]
-let add_include_dir inc = include_dir := inc :: !include_dir
-let add_include_obj inc = include_obj := inc :: !include_obj
+let add_include_dir inc = include_dir := !include_dir @ [ inc ]
+let add_include_obj inc = include_obj := !include_obj @ [ inc ]
 
 let show_help = ref false
 
