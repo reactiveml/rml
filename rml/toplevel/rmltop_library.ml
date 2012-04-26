@@ -179,7 +179,6 @@ let translate_phrase fmt rml_phrase =
     | Rmltop_lexer.Step (Some n) ->
         [ Printf.sprintf "for i = 1 to %s do
               Rmltop_reactive_machine.rml_react (Rmltop_controller.get_to_run ());
-              Rmltop_reactive_machine.rml_react ([fun () -> Lco_ctrl_tree_record.rml_pause])
            done;;" n
         ]
 
