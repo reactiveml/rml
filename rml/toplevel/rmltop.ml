@@ -100,6 +100,7 @@ let main () =
   Toploop.initialize_toplevel_env ();
   init_toplevel ();
   Rmlcompiler.Misc.interactive := true;
+  Rmlcompiler.Misc.print_type := true;
   Rmlcompiler.Interactive.init ();
   Sys.catch_break true;
   Rmlcompiler.Misc.opt_iter (set_sampling Format.std_formatter) !sampling;
