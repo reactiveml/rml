@@ -5,22 +5,21 @@ RMLC=../compiler/rmlc
 RMLLIB=-I ../stdlib -I ../interpreter
 
 INSTALLFILE=	rmltop.cmi \
+		rmltop_reactive_machine.cmi \
+		rmltop_reactive_machine.cmo \
+		rmltop_machine_body.cmi \
+		rmltop_machine_body.cmo \
+		rmltop_controller.rzi \
+		rmltop_controller.cmi \
+		rmltop_controller.cmo \
+		rmltop_global.rzi \
 		rmltop_global.cmi \
 		rmltop_global.cmo \
-		rmltop_machine_body.cmi \
-		rmltop_reactive_machine.cmi \
-		rmltop_controller.cmi \
-		rmltop_lexer.cmo \
-		rmltop.cmo \
-		rmltop_global.cmo \
-		rmltop_global.rzi \
-		rmltop_machine_body.cmo \
-		rmltop_reactive_machine.cmo \
-		rmltop_controller.cmo \
-		rmltop_controller.rzi \
 		rmltop_implem.cmi \
-		rmltop_main.cmi \
 		rmltop_implem.cmo \
+		rmltop_lexer.cmo \
+		rmltop_main.cmi \
+		rmltop.cmo \
 		rmltop_main.cmo
 
 GENSOURCES=	rmltop_controller.ml \
@@ -30,13 +29,13 @@ GENSOURCES=	rmltop_controller.ml \
 
 all: rmltop lib
 
-CL_INC=-I +compiler-libs \
-       -I +compiler-libs/typing \
-       -I +compiler-libs/utils \
-       -I +compiler-libs/parsing \
-       -I +ocamlbuild
+CL_INC=-I +ocamlbuild
 
-rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_library.cmo rmltop.cmo rmlrun.cma
+rmltop: ../compiler/rmlcompiler.cmo \
+	rmltop_lexer.cmo \
+	rmltop_library.cmo \
+	rmltop.cmo \
+	rmlrun.cma
 	$(OCAMLC) $(OCAMLFLAGS) -o rmltop $(CL_INC) -I +threads -I ../compiler $(RMLLIB) \
 		toplevellib.cma \
 		unix.cma \
@@ -49,11 +48,16 @@ rmltop: ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_library.cmo rmltop.c
 		rmltop_library.cmo \
 		rmltop.cmo
 
-rmlrun.cma: rmltop_global.cmo rmltop_implem.cmo rmltop_machine_body.cmo rmltop_reactive_machine.cmo rmltop_controller.cmo rmltop_main.cmo
+rmlrun.cma: \
+	rmltop_global.cmo \
+	rmltop_implem.cmo \
+	rmltop_machine_body.cmo \
+	rmltop_reactive_machine.cmo \
+	rmltop_controller.cmo \
+	rmltop_main.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -a -o $@ $^
 
 lib: $(INSTALLFILE)
-
 
 install: install.lib install.bin
 
@@ -65,19 +69,11 @@ install.lib: lib
 	$(INSTALL) -d $(LIBDIR)/toplevel
 	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/toplevel
 
-
 test:
-	rlwrap ocaml -I +threads $(RMLLIB) unix.cma threads.cma \
-		rmllib.cma \
-		rmltop_global.cmo \
-		rmltop_implem.cmo \
-		rmltop_machine_body.cmo \
-		rmltop_reactive_machine.cmo \
-		rmltop_controller.cmo \
-		rmltop_main.cmo
+	rlwrap ./rmltop -n -I . -I ../interpreter
 
 wc:
-	wc -l *.ml *.mli *.rml *.rmli *.mll
+	wc -l *.*ml*
 
 clean:
 	rm -f *.cm* *.rzi
