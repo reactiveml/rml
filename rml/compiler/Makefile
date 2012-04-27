@@ -200,12 +200,9 @@ parsing/parser.mli parsing/parser.ml: parsing/parser.mly
 	$(OCAMLYACC) -v parsing/parser.mly
 lexer.cmx: parser.cmi
 
-global/embedrzi.cmo: global/def_modules.cmo
-
-.PHONY: global/rzi.ml
-global/rzi.ml: global/rzi.cmi global/embedrzi.cmo
-	ocaml -I global def_modules.cmo global/embedrzi.ml "$(PWD)/../stdlib"
-	touch $@
+#.PHONY: global/rzi.ml
+global/rzi.ml: global/rzi.cmi global/def_modules.cmo
+	ocaml -I global def_modules.cmo global/embedrzi.ml "$(CURDIR)/../stdlib"
 
 # version
 global/version.ml:
