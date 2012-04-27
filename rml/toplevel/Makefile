@@ -71,7 +71,7 @@ install.lib: lib
 	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/toplevel
 
 test:
-	rlwrap ./rmltop -n -I . -I ../interpreter
+	./rmltop -debug -n -I . -I ../interpreter
 
 wc:
 	wc -l *.*ml*
