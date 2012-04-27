@@ -101,8 +101,13 @@ echo "" >> config
 cat version >> config
 echo "" >> config
 
-echo "let known_modules = [" > compiler/global/rzi.ml
-echo "]" >> compiler/global/rzi.ml
+# Generate a dummy rzi.ml file
+if [ ! -f ../compiler/global/rzi.ml ]; then
+  echo "creating compiler/global/rzi.ml"
+  echo "let known_modules = [" > rzi.ml
+  echo "]" >> rzi.ml
+  mv rzi.ml ../compiler/global
+fi
 
 # Where to install
 
