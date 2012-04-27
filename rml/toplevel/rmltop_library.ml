@@ -45,28 +45,21 @@ let get_error s =
   with Not_found -> s
 
 let eval_command ?(silent=false) fmt command =
-  let buffer = Buffer.create 512 in
-  let pp = Format.formatter_of_buffer buffer in
-  Format.pp_set_margin pp max_int;
   try
+    let lb = Lexing.from_string (command ^ ";;") in
     let _ =
-      Toploop.execute_phrase (not silent) pp
-        (!Toploop.parse_toplevel_phrase (Lexing.from_string (command ^ ";;")))
+      Toploop.execute_phrase (not silent) fmt
+        (!Toploop.parse_toplevel_phrase lb)
     in
-    (true, Buffer.contents buffer)
+    true
   with exn ->
     Errors.report_error fmt exn;
-    (false, get_error (Buffer.contents buffer))
-
-let print_message fmt message =
-  if String.length message <> 0 then
-    Format.fprintf fmt "@[%s@]@." message
+    false
 
 let rec eval_phrases ?(silent=false) fmt = function
   | [] -> ()
   | phrase :: phrases ->
-      let success, message = eval_command ~silent fmt phrase in
-      print_message fmt message;
+      let success = eval_command ~silent fmt phrase in
       if success then
         eval_phrases ~silent fmt phrases
 
