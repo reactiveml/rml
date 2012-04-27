@@ -54,6 +54,7 @@ STDLIB=\
  implem.cmo \
  rmltop_lexer.cmo \
  toplevellib.cma \
+ rmltop_global.cmo \
  rmltop_library.cmo \
  rmlrun.cma
 

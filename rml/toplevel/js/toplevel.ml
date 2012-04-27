@@ -74,59 +74,6 @@ let text_button txt action =
   b##onclick <- Dom_html.handler (fun _ -> action b; Js._true);
   b
 
-let exec ppf s =
-  let lb = Lexing.from_string s in
-  try
-    List.iter
-      (fun phr ->
-        if not (Toploop.execute_phrase false ppf phr) then raise Exit)
-      (!Toploop.parse_use_file lb)
-  with
-    | Exit -> ()
-    | x    -> Errors.report_error ppf x
-
-exception Stop_exec
-
-let exec_list ppf l =
-  try
-    List.iter
-      (fun (translate, s) ->
-        try
-          let new_s =
-            if translate then
-              let s = Rmltop_library.translate_phrase ppf s in
-              String.concat "\n" s
-            else
-              s
-          in
-          exec ppf new_s
-        with e ->
-          Printf.printf
-            "Exception %s while processing [%s]\n%!"
-            (Printexc.to_string e)
-            s
-      )
-      l
-  with Stop_exec -> ()
-
-let start ppf =
-  Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
-  Toploop.initialize_toplevel_env ();
-  Toploop.input_name := "";
-  Rmlcompiler.Misc.interactive := true;
-  Rmlcompiler.Misc.print_type := true;
-  Rmlcompiler.Misc.err_fmt := ppf;
-  Rmlcompiler.Misc.std_fmt := ppf;
-  Rmlcompiler.Configure.configure ();
-
-  exec_list ppf
-    [
-      false, "open Implem;;";
-      true, "open Pervasives;;";
-      false, "let controller_react = Rmltop_implem.Machine_controler_machine.rml_make Rmltop_controller.controller;;"
-    ];
-  ()
-
 let at_bol = ref true
 let consume_nl = ref false
 
@@ -168,6 +115,31 @@ let rec refill_lexbuf s p ppf buffer len =
         output := c :: !output;
         1
       end
+
+let parse ppf s =
+  let lb =
+    if !debug_mode then
+      Lexing.from_function (refill_lexbuf s (ref 0) ppf)
+    else
+      Lexing.from_string s
+  in
+  Rmltop_lexer.phrase lb
+
+let start ppf =
+  Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
+  Toploop.initialize_toplevel_env ();
+  Toploop.input_name := "";
+  Rmlcompiler.Misc.interactive := true;
+  Rmlcompiler.Misc.print_type := true;
+  Rmlcompiler.Misc.err_fmt := ppf;
+  Rmlcompiler.Misc.std_fmt := ppf;
+  Rmlcompiler.Configure.configure ();
+
+  let _ = Rmltop_library.eval_command ppf false "open Implem;;" in
+  let _ = Rmltop_library.eval_command ppf false "let controller_react =
+    Rmltop_implem.Machine_controler_machine.rml_make Rmltop_controller.controller;;" in
+  let _ = Rmltop_library.eval ppf (parse ppf) "open Pervasives;;" in
+  ()
 
 let ensure_at_bol ppf =
   if not !at_bol then begin
@@ -251,46 +223,17 @@ let loop s ppf =
   in
   try
     Format.fprintf ppf "@[#@ %s@]@." s;
-    let new_s =
-      let s = Rmltop_library.translate_phrase ppf s in
-      String.concat "\n" s
-    in
-    let lb =
-      if !debug_mode then
-        Lexing.from_function (refill_lexbuf new_s (ref 0) ppf)
-      else
-        Lexing.from_string new_s
-    in
-    while true do
-      begin
-      try
-        let phr = try
-                    !Toploop.parse_toplevel_phrase lb
-          with
-          | End_of_file -> raise End_of_input
-          | e -> raise e
-        in
-        output := [];
-        ensure_at_bol ppf;
-        ignore (Toploop.execute_phrase true ppf phr);
-        ()
-      with
-          End_of_input ->
-            ensure_at_bol ppf;
-            raise End_of_input
-        | x ->
-          output := [];
-          ensure_at_bol ppf;
-          Errors.report_error ppf x
-      end;
-    done
-    with
+    output := [];
+    ensure_at_bol ppf;
+    Rmltop_library.eval ppf (parse ppf) s;
+    ensure_at_bol ppf;
+  with
     | End_of_input | Not_found ->
       match !output with
-        [] | [ '\000' ] ->
+        | [] | [ '\000' ] ->
           output := []; update_prompt "\n#"
-      | _ ->
-        ()
+        | _ ->
+          ()
 
 let append_children id list =
   let ele = get_element_by_id id in
@@ -391,13 +334,13 @@ let run _ =
     b##innerHTML <- Js.string (debug_button_text ())
   ) in
   let step_button = text_button "Step" (fun b ->
-    exec ppf "Rmltop_global.set_step 1;;"
+    Rmltop_global.set_step 1
   ) in
   let suspend_button = text_button "Suspend" (fun b ->
-    exec ppf "Rmltop_global.set_suspend ();;"
+    Rmltop_global.set_suspend ()
   ) in
   let resume_button = text_button "Resume" (fun b ->
-    exec ppf "Rmltop_global.set_resume ();;"
+    Rmltop_global.set_resume ()
   ) in
   let send_button = text_button "Send" (fun _ -> execute ()) in
   let save_button =  text_button "Save" (fun _ ->
@@ -447,9 +390,9 @@ let run _ =
   let (>>=) = Lwt.bind in
   let rec exec_machine_controller () =
     Lwt_js.sleep !Rmltop_global.sampling >>= fun () ->
-      let () = exec ppf "controller_react ();;" in
+      let _ = Rmltop_library.eval_command ppf false "controller_react ();;" in
       exec_machine_controller () in
-  exec_machine_controller ();
+  let _ = exec_machine_controller () in
 
   Js._false
 
