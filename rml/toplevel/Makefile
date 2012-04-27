@@ -20,6 +20,7 @@ INSTALLFILE=	rmltop.cmi \
 		rmltop_lexer.cmo \
 		rmltop_main.cmi \
 		rmltop.cmo \
+		rmlrun.cma \
 		rmltop_main.cmo
 
 GENSOURCES=	rmltop_controller.ml \
