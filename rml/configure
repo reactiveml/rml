@@ -266,6 +266,7 @@ echo "OCAMLDEPFLAGS=-slash" >> config
 echo "OCAMLBEST=$ocamlbest" >> config
 echo
 mv config ..
+touch ../config-stamp
 
 # Configure rmlbuild
 ./mkmyocamlbuild_config.sh "$prefix" "$libdir" "$ocamllib"
