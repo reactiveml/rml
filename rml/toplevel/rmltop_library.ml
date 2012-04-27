@@ -17,6 +17,8 @@
 (*                                                                    *)
 (**********************************************************************)
 
+let sampling : float option ref = ref None
+
 let print_help () =
   print_endline "Toplevel directives:";
   let list =
@@ -68,130 +70,66 @@ let rec eval_phrases ?(silent=false) fmt = function
       if success then
         eval_phrases ~silent fmt phrases
 
-let sampling : string option ref = ref None
-let set_sampling fmt f =
-  eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_sampling "^ f ^";;"; ]
+let parse rml =
+  let lb = Lexing.from_string rml in
+  Rmltop_lexer.phrase lb
 
-let translate_and_eval_phrase fmt rml_phrase =
-  let rml_phrase = Lexing.from_string rml_phrase in
-  try
-    let rml_translation = Rmltop_lexer.phrase rml_phrase in
-    match rml_translation with
-    | Rmltop_lexer.Rml_phrase s ->
-      let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      begin match error with
-      | Some error -> Format.fprintf fmt "@[%s@]@." error
-      | None ->
-        eval_phrases ~silent:true fmt [ "Rmltop_global.lock ();;" ];
-        eval_phrases fmt ocaml_phrases;
-        eval_phrases fmt ~silent:true [ "Rmltop_global.unlock ();;" ]
-      end
+let eval fmt parse rml_phrase =
+  let rec aux fmt directive =
+    try
+      match directive with
+      | Rmltop_lexer.Rml_phrases l ->
+          List.iter (aux fmt)  l
+      | Rmltop_lexer.Rml_phrase s ->
+          let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+          begin match error with
+            | Some error -> Format.fprintf fmt "@[%s@]@." error
+            | None ->
+                Rmltop_global.lock ();
+                eval_phrases fmt ocaml_phrases;
+                Rmltop_global.unlock ()
+          end
 
-    | Rmltop_lexer.OCaml_phrase s ->
-      eval_phrases fmt [ s ]
+      | Rmltop_lexer.OCaml_phrase s ->
+          eval_phrases fmt [ s ]
 
-    | Rmltop_lexer.Run s ->
-      (* add "(process ( run (...); ()));;" *)
-      let s = Printf.sprintf
-        "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
-        s in
-      let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      begin match error with
-      | Some error -> Format.fprintf fmt "@[%s@]@." error
-      | None -> eval_phrases ~silent:true fmt ocaml_phrases
-      end
+      | Rmltop_lexer.Run s ->
+          (* add "(process ( run (...); ()));;" *)
+          let s = Printf.sprintf
+            "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
+            s in
+          let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+          begin match error with
+            | Some error -> Format.fprintf fmt "@[%s@]@." error
+            | None -> eval_phrases ~silent:true fmt ocaml_phrases
+          end
 
-    | Rmltop_lexer.Exec s ->
-      (* add "(process ( ...; ()));;" *)
-      let s = Printf.sprintf
-        "let () = Rmltop_global.add_to_run (process (%s; ()));;"
-        s in
-      let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-      begin match error with
-      | Some error -> Format.fprintf fmt "@[%s@]@." error
-      | None -> eval_phrases ~silent:true fmt ocaml_phrases
-      end
+      | Rmltop_lexer.Exec s ->
+          (* add "(process ( ...; ()));;" *)
+          let s = Printf.sprintf
+            "let () = Rmltop_global.add_to_run (process (%s; ()));;"
+            s in
+          let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
+          begin match error with
+            | Some error -> Format.fprintf fmt "@[%s@]@." error
+            | None -> eval_phrases ~silent:true fmt ocaml_phrases
+          end
 
-    | Rmltop_lexer.Step None ->
-      eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_step 1 ;;"; ]
+      | Rmltop_lexer.Step None -> Rmltop_global.set_step 1
 
-    | Rmltop_lexer.Step (Some n) ->
-      eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_step "^ n ^ ";;"; ]
+      | Rmltop_lexer.Step (Some n) -> Rmltop_global.set_step n
 
-    | Rmltop_lexer.Suspend ->
-      eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_suspend () ;;"; ]
+      | Rmltop_lexer.Suspend -> Rmltop_global.set_suspend ()
 
-    | Rmltop_lexer.Resume ->
-      eval_phrases ~silent:true fmt [ "let () = Rmltop_global.set_resume () ;;"; ]
+      | Rmltop_lexer.Resume -> Rmltop_global.set_resume ()
 
-    | Rmltop_lexer.Sampling f ->
-      set_sampling fmt f
+      | Rmltop_lexer.Sampling f -> Rmltop_global.set_sampling f
 
-    | Rmltop_lexer.Quit -> exit 0
+      | Rmltop_lexer.Quit -> exit 0
 
-    | Rmltop_lexer.Help -> print_help ()
-  with
-    | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...%!"; exit 0
-    | Rmltop_lexer.Syntax_error -> ()
-
-let translate_phrase fmt rml_phrase =
-  let phrase = Lexing.from_string rml_phrase in
-  try
-    let rml_translation = Rmltop_lexer.phrase phrase in
-    match rml_translation with
-    | Rmltop_lexer.Rml_phrase s ->
-        let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-        begin match error with
-        | Some error -> raise Not_found
-        | None -> ocaml_phrases
-        end
-
-    | Rmltop_lexer.OCaml_phrase s ->
-        [ s ]
-
-    | Rmltop_lexer.Run s ->
-        (* add "(process ( run (...); ()));;" *)
-        let s = Printf.sprintf
-          "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
-          s in
-        let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-        begin match error with
-        | Some error -> raise Not_found
-        | None -> ocaml_phrases
-        end
-
-    | Rmltop_lexer.Exec s ->
-        (* add "(process ( ...; ()));;" *)
-        let s = Printf.sprintf
-          "let () = Rmltop_global.add_to_run (process (%s; ()));;"
-          s in
-        let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
-        begin match error with
-        | Some error -> raise Not_found
-        | None -> ocaml_phrases
-        end
-
-    | Rmltop_lexer.Step None ->
-        [ "let () = Rmltop_global.set_step 1 ;;"; ]
-
-    | Rmltop_lexer.Step (Some n) ->
-        [ "let () = Rmltop_global.set_step " ^ n ^ " ;;"; ]
-
-    | Rmltop_lexer.Suspend ->
-        [ "let () = Rmltop_global.set_suspend () ;;"; ]
-
-    | Rmltop_lexer.Resume ->
-        [ "let () = Rmltop_global.set_resume () ;;"; ]
-
-    | Rmltop_lexer.Sampling f ->
-        [ "let () = Rmltop_global.set_sampling "^ f ^";;"; ]
-
-    | Rmltop_lexer.Quit ->
-        [ "let () = print_endline \"Not implemented in JS.\" ;;"; ]
-
-    | Rmltop_lexer.Help ->
-        print_help (); []
-  with
-    | Rmltop_lexer.EOF -> raise End_of_file
-    | Rmltop_lexer.Syntax_error -> []
-
+      | Rmltop_lexer.Help -> print_help ()
+    with
+      | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...%!"; exit 0
+      | Rmltop_lexer.Syntax_error -> ()
+  in
+  aux fmt (parse rml_phrase)

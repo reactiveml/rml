@@ -104,7 +104,7 @@ let main () =
   Toploop.initialize_toplevel_env ();
   init_toplevel ();
   Rmlcompiler.Interactive.init ();
-  Rmlcompiler.Misc.opt_iter (set_sampling Format.std_formatter) !sampling;
+  Rmlcompiler.Misc.opt_iter Rmltop_global.set_sampling !sampling;
   eval_phrases ~silent:(not !debug) Format.std_formatter init_rml;
   try
     let buf = Buffer.create 512 in
@@ -118,7 +118,7 @@ let main () =
         let () = Buffer.add_string buf line in
         let phrase = Buffer.contents buf in
         Buffer.reset buf; Buffer.clear buf;
-        translate_and_eval_phrase Format.std_formatter (String.copy phrase);
+        eval Format.std_formatter Rmltop_library.parse (String.copy phrase);
         print_prompt ();
       end
       else if line <> "\n" then begin
@@ -132,7 +132,7 @@ let main () =
 
 let _ =
   Arg.parse (Arg.align
-    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some (string_of_float x)),
+    [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x),
       "<rate> Sets the sampling rate to <rate> seconds";
       "-i", Arg.Set show_help, " List known rml directives at startup";
       "-n", Arg.Set hide_rml_dirs, " Do not include RML paths at startup";
