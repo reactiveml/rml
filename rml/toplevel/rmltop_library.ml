@@ -44,24 +44,25 @@ let get_error s =
     String.sub s (i+2) (String.length s - i - 2)
   with Not_found -> s
 
-let eval_command ?(silent=false) fmt command =
+let eval_command fmt verbose command =
   try
     let lb = Lexing.from_string (command ^ ";;") in
     let _ =
-      Toploop.execute_phrase (not silent) fmt
+      Toploop.execute_phrase verbose fmt
         (!Toploop.parse_toplevel_phrase lb)
     in
     true
-  with exn ->
-    Errors.report_error fmt exn;
-    false
+  with
+    | exn ->
+        Errors.report_error fmt exn;
+        false
 
-let rec eval_phrases ?(silent=false) fmt = function
+let rec eval_phrases fmt verbose = function
   | [] -> ()
   | phrase :: phrases ->
-      let success = eval_command ~silent fmt phrase in
+      let success = eval_command fmt verbose phrase in
       if success then
-        eval_phrases ~silent fmt phrases
+        eval_phrases fmt verbose phrases
 
 let parse rml =
   let lb = Lexing.from_string rml in
@@ -79,12 +80,12 @@ let eval fmt parse rml_phrase =
             | Some error -> Format.fprintf fmt "@[%s@]@." error
             | None ->
                 Rmltop_global.lock ();
-                eval_phrases fmt ocaml_phrases;
+                eval_phrases fmt true ocaml_phrases;
                 Rmltop_global.unlock ()
           end
 
       | Rmltop_lexer.OCaml_phrase s ->
-          eval_phrases fmt [ s ]
+          eval_phrases fmt true [ s ]
 
       | Rmltop_lexer.Run s ->
           (* add "(process ( run (...); ()));;" *)
@@ -94,7 +95,7 @@ let eval fmt parse rml_phrase =
           let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
           begin match error with
             | Some error -> Format.fprintf fmt "@[%s@]@." error
-            | None -> eval_phrases ~silent:true fmt ocaml_phrases
+            | None -> eval_phrases fmt false ocaml_phrases
           end
 
       | Rmltop_lexer.Exec s ->
@@ -105,7 +106,7 @@ let eval fmt parse rml_phrase =
           let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
           begin match error with
             | Some error -> Format.fprintf fmt "@[%s@]@." error
-            | None -> eval_phrases ~silent:true fmt ocaml_phrases
+            | None -> eval_phrases fmt true ocaml_phrases
           end
 
       | Rmltop_lexer.Step None -> Rmltop_global.set_step 1

@@ -105,7 +105,7 @@ let main () =
   init_toplevel ();
   Rmlcompiler.Interactive.init ();
   Rmlcompiler.Misc.opt_iter Rmltop_global.set_sampling !sampling;
-  eval_phrases ~silent:(not !debug) Format.std_formatter init_rml;
+  eval_phrases Format.std_formatter !debug init_rml;
   try
     let buf = Buffer.create 512 in
     print_prompt ();
