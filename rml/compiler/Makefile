@@ -155,6 +155,12 @@ ifeq ($(TARGET), opt)
 all:: rmlcompiler.cmx
 endif
 
+rzi:
+	$(MAKE) $(TARGET)
+	$(MAKE) -C ../stdlib all
+	-$(RM) -f global/rzi.ml
+	$(MAKE) rmlcompiler.cmo
+
 install: install.$(TARGET)
 	mv $(BINDIR)/$(BIN).$(TARGET) $(BINDIR)/$(BIN)
 
