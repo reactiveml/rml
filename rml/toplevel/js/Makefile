@@ -55,7 +55,7 @@ STDLIB=\
  rmltop_lexer.cmo \
  toplevellib.cma \
  rmltop_global.cmo \
- rmltop_library.cmo \
+ rmltop_compiler.cmo \
  rmlrun.cma
 
 EXPUNGE=$(shell ocamlc -where)/expunge
@@ -107,7 +107,7 @@ STDLIB_MODULES=\
   implem \
   rmlcompiler \
   rmltop_global \
-  rmltop_library \
+  rmltop_compiler \
   rmltop_implem \
   rmltop_machine_body \
   rmltop_reactive_machine \

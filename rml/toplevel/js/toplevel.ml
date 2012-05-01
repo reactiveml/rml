@@ -135,8 +135,8 @@ let start ppf =
   Rmlcompiler.Misc.std_fmt := ppf;
   Rmlcompiler.Configure.configure ();
 
-  let _ = Rmltop_library.eval_command ppf false "open Implem;;" in
-  let _ = Rmltop_library.eval ppf (parse ppf) "open Pervasives;;" in
+  let _ = Rmltop_compiler.eval_command ppf false "open Implem;;" in
+  let _ = Rmltop_compiler.eval ppf (parse ppf) "open Pervasives;;" in
   ()
 
 let ensure_at_bol ppf =
@@ -223,7 +223,7 @@ let loop s ppf =
     Format.fprintf ppf "@[#@ %s@]@." s;
     output := [];
     ensure_at_bol ppf;
-    Rmltop_library.eval ppf (parse ppf) s;
+    Rmltop_compiler.eval ppf (parse ppf) s;
     ensure_at_bol ppf;
   with
     | End_of_input | Not_found ->

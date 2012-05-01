@@ -21,7 +21,7 @@
 (* created: 2005-06-11  *)
 (* author: Louis Mandel *)
 
-open Rmltop_library
+open Rmltop_compiler
 
 let debug = ref false
 let print_DEBUG x =
@@ -118,7 +118,7 @@ let main () =
         let () = Buffer.add_string buf line in
         let phrase = Buffer.contents buf in
         Buffer.reset buf; Buffer.clear buf;
-        eval Format.std_formatter Rmltop_library.parse (String.copy phrase);
+        eval Format.std_formatter Rmltop_compiler.parse (String.copy phrase);
         print_prompt ();
       end
       else if line <> "\n" then begin
