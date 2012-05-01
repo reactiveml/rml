@@ -18,16 +18,16 @@ INSTALLFILE=	rmltop.cmi \
 		rmltop_implem.cmi \
 		rmltop_implem.cmo \
 		rmltop_lexer.cmo \
-		rmltop_main.cmi \
+		rmltop_core.cmi \
 		rmltop.cmo \
 		rmlrun.cma \
-		rmltop_main.cmo
+		rmltop_core.cmo
 
 RMLRUNFILES = rmltop_implem.cmo \
 	rmltop_machine_body.cmo \
 	rmltop_reactive_machine.cmo \
 	rmltop_controller.cmo \
-	rmltop_main.cmo
+	rmltop_core.cmo
 
 GENSOURCES=	rmltop_controller.ml \
 		rmltop_machine_body.ml \
@@ -135,9 +135,9 @@ rmltop_controller.cmi rmltop_controller.cmo: rmltop_controller.ml \
 rmltop_implem.cmo: rmltop_implem.ml
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_implem.ml
 
-rmltop_main.cmi rmltop_main.cmo: rmltop_main.ml \
+rmltop_core.cmi rmltop_core.cmo: rmltop_core.ml \
 		rmltop_implem.cmo rmltop_global.cmi rmltop_controller.cmo
-	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_main.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_core.ml
 
 rmltop.cmo: rmltop.ml ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop.ml

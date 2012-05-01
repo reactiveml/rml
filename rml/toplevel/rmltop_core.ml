@@ -17,7 +17,7 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: rmltop_main.ml *)
+(* file: rmltop_core.ml *)
 (* author: Louis Mandel *)
 (* created: 2005-10-25  *)
 

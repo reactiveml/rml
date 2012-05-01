@@ -112,7 +112,7 @@ STDLIB_MODULES=\
   rmltop_machine_body \
   rmltop_reactive_machine \
   rmltop_controller \
-  rmltop_main \
+  rmltop_core \
   rmlrun \
   weak
 PERVASIVES=$(STDLIB_MODULES) outcometree topdirs toploop
