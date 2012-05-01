@@ -21,14 +21,14 @@
 (* author: Louis Mandel *)
 (* created: 2005-10-25  *)
 
+let react =
+  Rmltop_implem.Machine_controler_machine.rml_make
+    Rmltop_controller.controller
+
 let exec_machine_controller () =
   let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
   let debut = ref 0.0 in
   let sleep = ref 0.0 in
-  let react =
-    Rmltop_implem.Machine_controler_machine.rml_make
-      Rmltop_controller.controller
-  in
   while true do
     let _ = debut := Sys.time() in
     let _ = react () in

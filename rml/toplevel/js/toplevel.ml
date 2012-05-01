@@ -136,8 +136,6 @@ let start ppf =
   Rmlcompiler.Configure.configure ();
 
   let _ = Rmltop_library.eval_command ppf false "open Implem;;" in
-  let _ = Rmltop_library.eval_command ppf false "let controller_react =
-    Rmltop_implem.Machine_controler_machine.rml_make Rmltop_controller.controller;;" in
   let _ = Rmltop_library.eval ppf (parse ppf) "open Pervasives;;" in
   ()
 
@@ -390,7 +388,7 @@ let run _ =
   let (>>=) = Lwt.bind in
   let rec exec_machine_controller () =
     Lwt_js.sleep !Rmltop_global.sampling >>= fun () ->
-      let _ = Rmltop_library.eval_command ppf false "controller_react ();;" in
+      let _ = Rmltop_main.react () in
       exec_machine_controller () in
   let _ = exec_machine_controller () in
 
