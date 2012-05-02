@@ -142,7 +142,6 @@ let parse rml =
 
 let eval fmt rml_phrase =
   let rec aux fmt directive =
-    try
       match directive with
       | Rmltop_lexer.Rml_phrase s ->
           let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
@@ -194,8 +193,9 @@ let eval fmt rml_phrase =
       | Rmltop_lexer.Help -> print_help ()
 
       | Rmltop_lexer.Debug -> toggle_debug ()
-    with
-      | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...%!"; exit 0
-      | Rmltop_lexer.Syntax_error -> ()
   in
-  aux fmt (parse rml_phrase)
+  try
+    aux fmt (parse rml_phrase)
+  with
+    | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...@."; exit 0
+    | Rmltop_lexer.Syntax_error -> Format.fprintf fmt "Syntax error.\n@."
