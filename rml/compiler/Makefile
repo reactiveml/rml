@@ -158,7 +158,7 @@ endif
 rzi:
 	$(MAKE) $(TARGET)
 	$(MAKE) -C ../stdlib all
-	./$(RMLC) -c -I ../stdlib ../toplevel/rmltop_global.rmli
+	$(MAKE) -C ../toplevel rmltop_global.rzi
 	-$(RM) -f global/rzi.ml
 	$(MAKE) $(TARGET) rmlcompiler.cmo
 
