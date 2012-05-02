@@ -107,7 +107,6 @@ let main () =
       let line = read_line () in
       let len = String.length line in
       let tail = if len < 2 then "" else String.sub line (len-2) 2 in
-      let line = String.concat "" [ line; "\n" ] in
       if tail = ";;" then begin
         let () = Buffer.add_string buf line in
         let phrase = Buffer.contents buf in
