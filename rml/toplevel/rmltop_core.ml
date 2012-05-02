@@ -103,7 +103,7 @@ let add_terminator s =
   output := [];
   if !need_terminator then s ^ ";;" else s
 
-let eval_command fmt verbose command =
+let eval_ocaml_phrase fmt verbose command =
   try
     let lb =
       if !debug then
@@ -129,12 +129,12 @@ let eval_command fmt verbose command =
         Errors.report_error fmt exn;
         false
 
-let rec eval_phrases fmt verbose = function
+let rec eval_ocaml_phrases fmt verbose = function
   | [] -> ()
   | phrase :: phrases ->
-      let success = eval_command fmt verbose phrase in
+      let success = eval_ocaml_phrase fmt verbose phrase in
       if success then
-        eval_phrases fmt verbose phrases
+        eval_ocaml_phrases fmt verbose phrases
 
 let parse rml =
   let lb = Lexing.from_string rml in
@@ -149,12 +149,12 @@ let eval fmt rml_phrase =
             | Some error -> Format.fprintf fmt "@[%s@]@." error
             | None ->
                 Rmltop_global.lock ();
-                eval_phrases fmt true ocaml_phrases;
+                eval_ocaml_phrases fmt true ocaml_phrases;
                 Rmltop_global.unlock ()
           end
 
       | Rmltop_lexer.OCaml_phrase s ->
-          eval_phrases fmt true [ s ]
+          eval_ocaml_phrases fmt true [ s ]
 
       | Rmltop_lexer.Run s ->
           (* add "(process ( run (...); ()));;" *)
@@ -164,7 +164,7 @@ let eval fmt rml_phrase =
           let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
           begin match error with
             | Some error -> Format.fprintf fmt "@[%s@]@." error
-            | None -> eval_phrases fmt false ocaml_phrases
+            | None -> eval_ocaml_phrases fmt false ocaml_phrases
           end
 
       | Rmltop_lexer.Exec s ->
@@ -175,7 +175,7 @@ let eval fmt rml_phrase =
           let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
           begin match error with
             | Some error -> Format.fprintf fmt "@[%s@]@." error
-            | None -> eval_phrases fmt true ocaml_phrases
+            | None -> eval_ocaml_phrases fmt true ocaml_phrases
           end
 
       | Rmltop_lexer.Step None -> Rmltop_global.set_step 1

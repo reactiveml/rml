@@ -136,7 +136,7 @@ rmltop_implem.cmo: rmltop_implem.ml
 rmltop.cmo: rmltop.ml ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop.ml
 
-rmltop_core.cmo: errors.cmi ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo \
+rmltop_core.cmo: rmltop_core.cmi errors.cmi ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo \
 		rmltop_implem.cmo rmltop_global.cmi rmltop_controller.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop_core.ml
 

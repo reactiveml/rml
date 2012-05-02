@@ -116,7 +116,7 @@ let main () =
   init_toplevel ();
   Rmlcompiler.Interactive.init ();
   Rmlcompiler.Misc.opt_iter Rmltop_global.set_sampling !sampling;
-  eval_phrases Format.std_formatter !debug init_rml;
+  eval_ocaml_phrases Format.std_formatter !debug init_rml;
   start ();
   try
     let buf = Buffer.create 512 in

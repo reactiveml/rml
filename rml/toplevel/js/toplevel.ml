@@ -83,7 +83,7 @@ let start ppf =
   Rmlcompiler.Misc.std_fmt := ppf;
   Rmlcompiler.Configure.configure ();
 
-  let _ = Rmltop_core.eval_command ppf false "open Implem;;" in
+  let _ = Rmltop_core.eval_ocaml_phrase ppf false "open Implem;;" in
   let _ = Rmltop_core.eval ppf "open Pervasives;;" in
   ()
 
