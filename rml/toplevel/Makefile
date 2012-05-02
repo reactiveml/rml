@@ -18,16 +18,12 @@ INSTALLFILE=	rmltop.cmi \
 		rmltop_implem.cmi \
 		rmltop_implem.cmo \
 		rmltop_lexer.cmo \
-		rmltop_core.cmi \
-		rmltop.cmo \
-		rmlrun.cma \
-		rmltop_core.cmo
+		rmltop.cmo
 
 RMLRUNFILES = rmltop_implem.cmo \
 	rmltop_machine_body.cmo \
 	rmltop_reactive_machine.cmo \
-	rmltop_controller.cmo \
-	rmltop_core.cmo
+	rmltop_controller.cmo
 
 GENSOURCES=	rmltop_controller.ml \
 		rmltop_machine_body.ml \
@@ -40,7 +36,7 @@ CL_INC=-I +ocamlbuild
 
 rmltop: ../compiler/rmlcompiler.cmo \
 	$(RMLRUNFILES) \
-	rmlrun.cma \
+	rmltop_global.cmo \
 	rmltop_lexer.cmo \
 	rmltop_compiler.cmo \
 	rmltop.cmo
@@ -53,14 +49,16 @@ rmltop: ../compiler/rmlcompiler.cmo \
 		rmlcompiler.cmo \
 		rmltop_global.cmo \
 		rmltop_lexer.cmo \
+		rmllib.cma \
+		rmltop_implem.cmo \
+		rmltop_machine_body.cmo \
+		rmltop_reactive_machine.cmo \
+		rmltop_controller.cmo \
 		rmltop_compiler.cmo \
 		rmltop.cmo
 
 ../compiler/rmlcompiler.cmo:
 	$(MAKE) -C ../compiler rzi
-
-rmlrun.cma: $(RMLRUNFILES)
-	$(OCAMLC) $(OCAMLFLAGS) -a -o $@ $^
 
 lib: $(INSTALLFILE)
 
@@ -135,14 +133,11 @@ rmltop_controller.cmi rmltop_controller.cmo: rmltop_controller.ml \
 rmltop_implem.cmo: rmltop_implem.ml
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_implem.ml
 
-rmltop_core.cmi rmltop_core.cmo: rmltop_core.ml \
-		rmltop_implem.cmo rmltop_global.cmi rmltop_controller.cmo
-	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_core.ml
-
 rmltop.cmo: rmltop.ml ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop.ml
 
-rmltop_compiler.cmo: errors.cmi ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo
+rmltop_compiler.cmo: errors.cmi ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo \
+		rmltop_implem.cmo rmltop_global.cmi rmltop_controller.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler $(RMLLIB) -thread rmltop_compiler.ml
 
 FORCE:

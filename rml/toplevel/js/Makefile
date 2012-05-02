@@ -55,8 +55,11 @@ STDLIB=\
  rmltop_lexer.cmo \
  toplevellib.cma \
  rmltop_global.cmo \
+ rmltop_implem.cmo \
+ rmltop_machine_body.cmo \
+ rmltop_reactive_machine.cmo \
+ rmltop_controller.cmo \
  rmltop_compiler.cmo \
- rmlrun.cma
 
 EXPUNGE=$(shell ocamlc -where)/expunge
 # Removed gc and sys
@@ -112,8 +115,6 @@ STDLIB_MODULES=\
   rmltop_machine_body \
   rmltop_reactive_machine \
   rmltop_controller \
-  rmltop_core \
-  rmlrun \
   weak
 PERVASIVES=$(STDLIB_MODULES) outcometree topdirs toploop
 #STDLIB_MODULES=$(shell ocamlobjinfo toplevel.byte.tmp | sed -rn "s/^\t.*\t//p" | sort -u | tr '[:upper:]' '[:lower:]' | egrep -v "(sys|gc|bytegen|bytelibrarian|bytelink|bytepackager|bytesections|code|compile|conditioni|dgraph|dll|dom|driver|event|file|firebug|flow|form|freevars|generate|genprintval|inline|instr|javascript|js|lambda|linker|lwt|main_args|matching|meta|mutex|phisimpl|pparse|pretty_print|primitive2|pure_fun|regexp|runtimedef|simplif|switch|symtable|tailcall|thread|toplevel|trace|translclass|translcore|translmod|translobj|typed_array|typeopt|url|util|unix)")

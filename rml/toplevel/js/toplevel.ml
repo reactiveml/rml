@@ -311,7 +311,7 @@ let run _ =
   let (>>=) = Lwt.bind in
   let rec exec_machine_controller () =
     Lwt_js.sleep !Rmltop_global.sampling >>= fun () ->
-      let _ = Rmltop_core.react () in
+      let _ = Rmltop_compiler.controller_react () in
       exec_machine_controller () in
   let _ = exec_machine_controller () in
 

@@ -33,7 +33,6 @@ let include_obj = ref
   ["stdlib.cma";
    "threads.cma";
    "rmllib.cma";
-   "rmlrun.cma";
   ]
 let add_include_dir inc = include_dir := !include_dir @ [ inc ]
 let add_include_obj inc = include_obj := !include_obj @ [ inc ]
@@ -82,6 +81,24 @@ let load_ocamlinit () =
 
 let print_prompt () = print_string "# "
 
+let exec_machine_controller () =
+  let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
+  let debut = ref 0.0 in
+  let sleep = ref 0.0 in
+  while true do
+    let _ = debut := Sys.time() in
+    let _ = Rmltop_compiler.controller_react () in
+    let _ =
+      sleep := !Rmltop_global.sampling -. ((Sys.time()) -. !debut);
+      if !sleep > 0.001 then
+	begin try Thread.delay !sleep
+	with Unix.Unix_error _ -> () end
+    in ()
+  done
+
+let start () =
+  Thread.create exec_machine_controller ()
+
 let main () =
   if not !hide_rml_dirs then begin
     let rml_stdlib = Rmlcompiler.Configure.locate_stdlib () in
@@ -100,6 +117,7 @@ let main () =
   Rmlcompiler.Interactive.init ();
   Rmlcompiler.Misc.opt_iter Rmltop_global.set_sampling !sampling;
   eval_phrases Format.std_formatter !debug init_rml;
+  start ();
   try
     let buf = Buffer.create 512 in
     print_prompt ();

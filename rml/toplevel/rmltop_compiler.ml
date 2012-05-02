@@ -199,3 +199,7 @@ let eval fmt rml_phrase =
   with
     | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...@."; exit 0
     | Rmltop_lexer.Syntax_error -> Format.fprintf fmt "Syntax error.\n@."
+
+let controller_react =
+  Rmltop_implem.Machine_controler_machine.rml_make
+    Rmltop_controller.controller
