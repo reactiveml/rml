@@ -113,10 +113,9 @@ let eval_command fmt verbose command =
     in
     output := [];
     ensure_at_bol fmt;
-    let _ =
-      Toploop.execute_phrase verbose fmt
-        (!Toploop.parse_toplevel_phrase lb)
-    in
+    let phr = !Toploop.parse_toplevel_phrase lb in
+    let _ = if verbose && !debug then Format.fprintf fmt "@." in
+    let _ = Toploop.execute_phrase verbose fmt phr in
     ensure_at_bol fmt;
     true
   with
