@@ -19,6 +19,12 @@
 
 let sampling : float option ref = ref None
 
+let debug = ref false
+let print_DEBUG x =
+  if !debug
+  then Printf.eprintf x
+  else Printf.ifprintf stderr x
+
 let print_help () =
   print_endline "Toplevel directives:";
   let list =

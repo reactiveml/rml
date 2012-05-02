@@ -23,12 +23,6 @@
 
 open Rmltop_compiler
 
-let debug = ref false
-let print_DEBUG x =
-  if !debug
-  then Printf.eprintf x
-  else Printf.ifprintf stderr x
-
 let (//) = Filename.concat
 let ocaml_stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir
 

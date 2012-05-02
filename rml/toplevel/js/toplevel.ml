@@ -55,7 +55,6 @@ let _ =
 module Html = Dom_html
 
 let s = ""
-let debug_mode = ref false
 
 let doc = Html.document
 let window = Html.window
@@ -118,7 +117,7 @@ let rec refill_lexbuf s p ppf buffer len =
 
 let parse ppf s =
   let lb =
-    if !debug_mode then
+    if !Rmltop_compiler.debug then
       Lexing.from_function (refill_lexbuf s (ref 0) ppf)
     else
       Lexing.from_string s
@@ -322,13 +321,13 @@ let run _ =
 	 end
 	 | _ -> Js._true));
   let debug_button_text () =
-    if !debug_mode then
+    if !Rmltop_compiler.debug then
       "Debug (on)"
     else
       "Debug (off)"
   in
   let debug_button = text_button (debug_button_text ()) (fun b ->
-    debug_mode := not !debug_mode;
+    Rmltop_compiler.debug := not !Rmltop_compiler.debug;
     b##innerHTML <- Js.string (debug_button_text ())
   ) in
   let step_button = text_button "Step" (fun b ->
