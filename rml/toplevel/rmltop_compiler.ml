@@ -47,12 +47,6 @@ let print_help () =
   Printf.printf "  (*): Can be used only while the simulation is suspended.\n\n";
   flush stdout
 
-let get_error s =
-  try
-    let i = String.index s ',' in
-    String.sub s (i+2) (String.length s - i - 2)
-  with Not_found -> s
-
 let at_bol = ref true
 let consume_nl = ref false
 
