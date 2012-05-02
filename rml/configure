@@ -149,6 +149,18 @@ install=$cmd_name
 echo "# Program used" >> config
 echo >> config
 
+# checking for ocaml
+set dummy ocaml; compiler_name=$2
+echo -n "checking for $compiler_name... "
+if sh ./searchpath $compiler_name; then
+    echo "$compiler_name"
+    compiler=$compiler_name
+else
+    echo "not found"
+    { echo "configure: error: Cannot find $compiler_name." 1>&2; exit 1; }
+fi
+ocaml=$compiler
+
 # checking for ocamlc
 set dummy ocamlc; compiler_name=$2
 echo -n "checking for $compiler_name... "
@@ -262,6 +274,7 @@ ocamlcp=$compiler
 # Finish generated files
 
 echo "INSTALL=$install" >> config
+echo "OCAML=$ocaml" >> config
 echo "OCAMLCP=$ocamlcp" >> config
 echo "OCAMLC=$ocamlc" >> config
 echo "OCAMLOPT=$ocamlopt" >> config
