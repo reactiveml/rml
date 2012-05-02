@@ -208,7 +208,7 @@ lexer.cmx: parser.cmi
 
 #.PHONY: global/rzi.ml
 global/rzi.ml: global/rzi.cmi global/def_modules.cmo
-	ocaml -I global def_modules.cmo global/embedrzi.ml "$(CURDIR)/../stdlib"
+	ocaml -I $(CURDIR)/global global/def_modules.cmo $(CURDIR)/../configure-tools/embedrzi.ml "$(CURDIR)/../stdlib"
 
 # version
 global/version.ml:

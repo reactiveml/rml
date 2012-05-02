@@ -3,8 +3,6 @@ global/asttypes.cmo:
 global/asttypes.cmx:
 global/def_modules.cmo: global/global.cmo typing/def_types.cmo
 global/def_modules.cmx: global/global.cmx typing/def_types.cmx
-global/embedrzi.cmo: global/def_modules.cmo
-global/embedrzi.cmx: global/def_modules.cmx
 global/global.cmo: global/misc.cmo global/global_ident.cmo
 global/global.cmx: global/misc.cmx global/global_ident.cmx
 global/global_ident.cmo: global/ident.cmo
