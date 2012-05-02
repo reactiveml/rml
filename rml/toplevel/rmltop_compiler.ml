@@ -151,8 +151,6 @@ let eval fmt rml_phrase =
   let rec aux fmt directive =
     try
       match directive with
-      | Rmltop_lexer.Rml_phrases l ->
-          List.iter (aux fmt)  l
       | Rmltop_lexer.Rml_phrase s ->
           let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
           begin match error with
