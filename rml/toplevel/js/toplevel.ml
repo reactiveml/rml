@@ -83,8 +83,8 @@ let start ppf =
   Rmlcompiler.Misc.std_fmt := ppf;
   Rmlcompiler.Configure.configure ();
 
-  let _ = Rmltop_compiler.eval_command ppf false "open Implem;;" in
-  let _ = Rmltop_compiler.eval ppf "open Pervasives;;" in
+  let _ = Rmltop_core.eval_command ppf false "open Implem;;" in
+  let _ = Rmltop_core.eval ppf "open Pervasives;;" in
   ()
 
 let get_element_by_id id =
@@ -150,9 +150,9 @@ let string_of_char_list list =
 
 let loop s ppf =
   if String.length s <> 0 then begin
-    let s = Rmltop_compiler.add_terminator s in
+    let s = Rmltop_core.add_terminator s in
     Format.fprintf ppf "@[#@ %s@]@." s;
-    Rmltop_compiler.eval ppf s
+    Rmltop_core.eval ppf s
   end
 
 let append_children id list =
@@ -187,13 +187,13 @@ let run _ =
   let history_bckwrd = ref [] in
   let history_frwrd = ref [] in
   let debug_button_text () =
-    if !Rmltop_compiler.debug then
+    if !Rmltop_core.debug then
       "Debug (on)"
     else
       "Debug (off)"
   in
   let debug_button = text_button (debug_button_text ()) (fun b ->
-    Rmltop_compiler.toggle_debug ();
+    Rmltop_core.toggle_debug ();
     b##innerHTML <- Js.string (debug_button_text ())
   ) in
   let execute () =
@@ -311,7 +311,7 @@ let run _ =
   let (>>=) = Lwt.bind in
   let rec exec_machine_controller () =
     Lwt_js.sleep !Rmltop_global.sampling >>= fun () ->
-      let _ = Rmltop_compiler.controller_react () in
+      let _ = Rmltop_core.controller_react () in
       exec_machine_controller () in
   let _ = exec_machine_controller () in
 

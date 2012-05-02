@@ -59,7 +59,7 @@ STDLIB=\
  rmltop_machine_body.cmo \
  rmltop_reactive_machine.cmo \
  rmltop_controller.cmo \
- rmltop_compiler.cmo \
+ rmltop_core.cmo \
 
 EXPUNGE=$(shell ocamlc -where)/expunge
 # Removed gc and sys
@@ -110,7 +110,7 @@ STDLIB_MODULES=\
   implem \
   rmlcompiler \
   rmltop_global \
-  rmltop_compiler \
+  rmltop_core \
   rmltop_implem \
   rmltop_machine_body \
   rmltop_reactive_machine \

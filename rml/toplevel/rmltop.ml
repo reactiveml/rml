@@ -21,7 +21,7 @@
 (* created: 2005-06-11  *)
 (* author: Louis Mandel *)
 
-open Rmltop_compiler
+open Rmltop_core
 
 let (//) = Filename.concat
 let ocaml_stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir
@@ -87,7 +87,7 @@ let exec_machine_controller () =
   let sleep = ref 0.0 in
   while true do
     let _ = debut := Sys.time() in
-    let _ = Rmltop_compiler.controller_react () in
+    let _ = Rmltop_core.controller_react () in
     let _ =
       sleep := !Rmltop_global.sampling -. ((Sys.time()) -. !debut);
       if !sleep > 0.001 then
