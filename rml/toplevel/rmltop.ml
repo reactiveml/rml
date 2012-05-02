@@ -112,7 +112,7 @@ let main () =
         let () = Buffer.add_string buf line in
         let phrase = Buffer.contents buf in
         Buffer.reset buf; Buffer.clear buf;
-        eval Format.std_formatter Rmltop_compiler.parse (String.copy phrase);
+        eval Format.std_formatter (String.copy phrase);
         print_prompt ();
       end
       else if line <> "\n" then begin

@@ -73,57 +73,6 @@ let text_button txt action =
   b##onclick <- Dom_html.handler (fun _ -> action b; Js._true);
   b
 
-let at_bol = ref true
-let consume_nl = ref false
-
-let input = ref []
-let output = ref []
-
-let rec refill_lexbuf s p ppf buffer len =
-  match !input with
-    | '\000' :: tail ->
-      input := tail;
-      refill_lexbuf s p ppf buffer len
-    | c :: tail ->
-      input := tail;
-      output := c :: !output;
-      buffer.[0] <- c;
-      1
-    | [] ->
-      if !consume_nl then begin
-        let l = String.length s in
-        if (!p < l && s.[!p] = '\n') then
-          incr p
-        else if (!p + 1 < l && s.[!p] = '\r' && s.[!p + 1] = '\n') then
-          p := !p + 2;
-        consume_nl := false
-      end;
-      if !p = String.length s then begin
-        output := '\000' :: !output;
-        0
-      end else begin
-        let c = s.[!p] in
-        incr p;
-        buffer.[0] <- c;
-        if !at_bol then Format.fprintf ppf "> ";
-        at_bol := (c = '\n');
-        if c = '\n' then
-          Format.fprintf ppf "@."
-        else
-          Format.fprintf ppf "%c" c;
-        output := c :: !output;
-        1
-      end
-
-let parse ppf s =
-  let lb =
-    if !Rmltop_compiler.debug then
-      Lexing.from_function (refill_lexbuf s (ref 0) ppf)
-    else
-      Lexing.from_string s
-  in
-  Rmltop_lexer.phrase lb
-
 let start ppf =
   Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
   Toploop.initialize_toplevel_env ();
@@ -135,14 +84,8 @@ let start ppf =
   Rmlcompiler.Configure.configure ();
 
   let _ = Rmltop_compiler.eval_command ppf false "open Implem;;" in
-  let _ = Rmltop_compiler.eval ppf (parse ppf) "open Pervasives;;" in
+  let _ = Rmltop_compiler.eval ppf "open Pervasives;;" in
   ()
-
-let ensure_at_bol ppf =
-  if not !at_bol then begin
-    Format.fprintf ppf "@.";
-    consume_nl := true; at_bol := true
-  end
 
 let get_element_by_id id =
   Js.Opt.get (doc##getElementById (Js.string id))
@@ -193,8 +136,6 @@ let get_by_name id =
   in
   Js.to_string container##innerHTML
 
-exception End_of_input
-
 let string_of_char_list list =
   let len = List.length list in
   let s = String.create len in
@@ -208,29 +149,11 @@ let string_of_char_list list =
   iter s 0 list
 
 let loop s ppf =
-  let s =
-    begin
-      let need_terminator = ref true in
-      for i = 0 to String.length s - 2 do
-        if s.[i] = ';' && s.[i+1] = ';' then need_terminator := false;
-      done;
-      output := [];
-      if !need_terminator then s ^ ";;" else s
-    end
-  in
-  try
+  if String.length s <> 0 then begin
+    let s = Rmltop_compiler.add_terminator s in
     Format.fprintf ppf "@[#@ %s@]@." s;
-    output := [];
-    ensure_at_bol ppf;
-    Rmltop_compiler.eval ppf (parse ppf) s;
-    ensure_at_bol ppf;
-  with
-    | End_of_input | Not_found ->
-      match !output with
-        | [] | [ '\000' ] ->
-          output := []; update_prompt "\n#"
-        | _ ->
-          ()
+    Rmltop_compiler.eval ppf s
+  end
 
 let append_children id list =
   let ele = get_element_by_id id in
