@@ -32,6 +32,7 @@
    | OCaml_phrase of string
    | Suspend
    | Resume
+   | Debug
    | Step of int option
    | Sampling of float
    | Run of string
@@ -75,6 +76,7 @@ rule phrase = parse
 and directive = parse
   | "suspend"        { end_of_phrase lexbuf; Suspend }
   | "resume"         { end_of_phrase lexbuf; Resume }
+  | "debug"          { end_of_phrase lexbuf; Debug }
   | "step" sep* ";;" { Step None }
   | "step" sep*      { Step (Some (int_expr lexbuf)) }
   | "sampling" sep*  { Sampling (float_expr lexbuf) }

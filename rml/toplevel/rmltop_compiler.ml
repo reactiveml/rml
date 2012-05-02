@@ -20,6 +20,8 @@
 let sampling : float option ref = ref None
 
 let debug = ref false
+let toggle_debug () =
+  debug := not !debug
 let print_DEBUG x =
   if !debug
   then Printf.eprintf x
@@ -31,6 +33,7 @@ let print_help () =
     ["#run e;;",      "spawn the execution of a process e.";
      "#exec e;;",     "execute a reactive expression e.";
      "#suspend;;",    "suspend the simulation.";
+     "#debug;;",      "toggle on/off debug mode.";
      "#step;;",       "execute one instant of the system. (*)";
      "#step n;;",     "execute n instants of the system. (*)";
      "#resume;;",     "go back to the sampled mode.";
@@ -198,6 +201,8 @@ let eval fmt rml_phrase =
       | Rmltop_lexer.Quit -> exit 0
 
       | Rmltop_lexer.Help -> print_help ()
+
+      | Rmltop_lexer.Debug -> toggle_debug ()
     with
       | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...%!"; exit 0
       | Rmltop_lexer.Syntax_error -> ()

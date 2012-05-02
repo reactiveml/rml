@@ -186,6 +186,16 @@ let run _ =
   let history = ref [] in
   let history_bckwrd = ref [] in
   let history_frwrd = ref [] in
+  let debug_button_text () =
+    if !Rmltop_compiler.debug then
+      "Debug (on)"
+    else
+      "Debug (off)"
+  in
+  let debug_button = text_button (debug_button_text ()) (fun b ->
+    Rmltop_compiler.toggle_debug ();
+    b##innerHTML <- Js.string (debug_button_text ())
+  ) in
   let execute () =
     let s = Js.to_string textbox##value in
     if s <> "" then
@@ -196,6 +206,7 @@ let run _ =
     history_frwrd := [];
     textbox##value <- Js.string "";
     (try loop s ppf with _ -> ());
+    debug_button##innerHTML <- Js.string (debug_button_text ());
     textbox##focus();
     container##scrollTop <- container##scrollHeight;
   in
@@ -243,16 +254,6 @@ let run _ =
 	     | _ -> Js._true
 	 end
 	 | _ -> Js._true));
-  let debug_button_text () =
-    if !Rmltop_compiler.debug then
-      "Debug (on)"
-    else
-      "Debug (off)"
-  in
-  let debug_button = text_button (debug_button_text ()) (fun b ->
-    Rmltop_compiler.debug := not !Rmltop_compiler.debug;
-    b##innerHTML <- Js.string (debug_button_text ())
-  ) in
   let step_button = text_button "Step" (fun b ->
     Rmltop_global.set_step 1
   ) in
