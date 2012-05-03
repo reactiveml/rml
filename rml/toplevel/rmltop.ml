@@ -113,6 +113,7 @@ let main () =
   Rmlcompiler.Misc.print_type := true;
   Toploop.set_paths ();
   Toploop.initialize_toplevel_env ();
+  Toploop.input_name := "";
   init_toplevel ();
   Rmlcompiler.Interactive.init ();
   Rmlcompiler.Misc.opt_iter Rmltop_global.set_sampling !sampling;
