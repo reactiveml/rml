@@ -63,6 +63,7 @@ let load_file file =
   Printf.eprintf "Cannot find file %s.\n%!" file
 
 let init_toplevel () =
+  Toploop.set_paths ();
   List.iter load_dir !include_dir;
   List.iter load_file !include_obj
 
@@ -109,11 +110,7 @@ let main () =
   end;
   print_intro();
   Sys.catch_break true;
-  Rmlcompiler.Misc.interactive := true;
-  Rmlcompiler.Misc.print_type := true;
-  Toploop.set_paths ();
-  Toploop.initialize_toplevel_env ();
-  Toploop.input_name := "";
+  Rmltop_core.init ();
   init_toplevel ();
   Rmlcompiler.Interactive.init ();
   Rmlcompiler.Misc.opt_iter Rmltop_global.set_sampling !sampling;

@@ -75,10 +75,7 @@ let text_button txt action =
 
 let start ppf =
   Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
-  Toploop.initialize_toplevel_env ();
-  Toploop.input_name := "";
-  Rmlcompiler.Misc.interactive := true;
-  Rmlcompiler.Misc.print_type := true;
+  Rmltop_core.init ();
   Rmlcompiler.Misc.err_fmt := ppf;
   Rmlcompiler.Misc.std_fmt := ppf;
   Rmlcompiler.Configure.configure ();

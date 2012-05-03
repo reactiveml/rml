@@ -47,6 +47,12 @@ let print_help () =
   Printf.printf "  (*): Can be used only while the simulation is suspended.\n\n";
   flush stdout
 
+let init () =
+  Toploop.initialize_toplevel_env ();
+  Toploop.input_name := "";
+  Rmlcompiler.Misc.interactive := true;
+  Rmlcompiler.Misc.print_type := true
+
 let at_bol = ref true
 let consume_nl = ref false
 
