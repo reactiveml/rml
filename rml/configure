@@ -37,7 +37,7 @@ while : ; do
             manext=1;;
         esac
         shift;;
-    -debug)
+    -debug|--debug)
         debug='-g -dtypes';
         shift;
         continue;;
@@ -53,7 +53,7 @@ Options: [defaults in brackets after descriptions]
   --bindir DIR            user executables in DIR [PREFIX/bin]
   --libdir DIR            object code libraries in DIR [PREFIX/lib]
   --mandir DIR            man documentation in DIR [PREFIX/man]
-  --target TARGET         [byte]
+  --target TARGET         must be byte or opt [byte]
   --debug                 add "-g -dtypes" to ocaml flags
   --with-emacs-dir DIR    set emacs dir to DIR
   -with-emacs-dir DIR     (same as above)
