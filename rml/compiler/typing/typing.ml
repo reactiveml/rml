@@ -163,12 +163,12 @@ let register_effects patt_vars effects =
   List.iter (fun (patterns, effects) ->
     List.iter (function
       | Varpatt_local x ->
-          Printf.printf "let %s ix%d=...\n\n%!"
+          Printf.printf "(l)let %s ix%d =...\n\n%!"
             x.Ident.name
             x.Ident.id;
           Hashtbl.add gleff x.Ident.id effects
       | Varpatt_global x ->
-          Printf.printf "let %s ix%d =...\n\n%!"
+          Printf.printf "(g)let %s ix%d =...\n\n%!"
             x.gi.Global_ident.id.Ident.name
             x.gi.Global_ident.id.Ident.id;
           Hashtbl.add gleff x.gi.Global_ident.id.Ident.id effects
@@ -725,7 +725,10 @@ let rec type_of_expression env expr =
         unify_usage_type expr.expr_loc ty_s affine u_emit u_emit u_get;
         let r_s = ty_s.type_region in
         let _ = print_env env in
-	type_unit, Effects.add r_s s.expr_loc u_emit u_get u_s
+        let effects = Effects.add r_s s.expr_loc u_emit u_get u_s in
+        let () = Printf.printf "Rexpr_emit %!" in
+        let () = Effects.print effects in
+	type_unit, effects
 
     | Rexpr_emit (affine, s, Some e) ->
 	let ty_s, u_s = type_of_expression env s in
@@ -789,6 +792,17 @@ let rec type_of_expression env expr =
 
     | Rexpr_par p_list ->
         let effects_l = List.map (fun p -> type_statement env p) p_list in
+        Printf.printf "TC Rexpr_par\n%!";
+        let _ = List.fold_left
+          (fun acc effs ->
+            let acc = acc + 1 in
+            Printf.printf "Effects par#%d:\n" acc;
+            Effects.print effs;
+            acc
+          )
+          0
+        in
+        Printf.printf "TC Rexpr_par (end)\n%!";
 	type_unit, Effects.flatten effects_l
 
     | Rexpr_merge (p1,p2) ->
