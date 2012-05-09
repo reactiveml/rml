@@ -183,15 +183,9 @@ let run _ =
   let history = ref [] in
   let history_bckwrd = ref [] in
   let history_frwrd = ref [] in
-  let debug_button_text () =
-    if !Rmltop_core.debug then
-      "Debug (on)"
-    else
-      "Debug (off)"
-  in
-  let debug_button = text_button (debug_button_text ()) (fun b ->
-    Rmltop_core.toggle_debug ();
-    b##innerHTML <- Js.string (debug_button_text ())
+  let debug_button = text_button (Rmltop_core.debug_status ()) (fun b ->
+    Rmltop_core.toggle_debug ppf;
+    b##innerHTML <- Js.string (Rmltop_core.debug_status ())
   ) in
   let execute () =
     let s = Js.to_string textbox##value in
@@ -203,7 +197,7 @@ let run _ =
     history_frwrd := [];
     textbox##value <- Js.string "";
     (try loop s ppf with _ -> ());
-    debug_button##innerHTML <- Js.string (debug_button_text ());
+    debug_button##innerHTML <- Js.string (Rmltop_core.debug_status ());
     textbox##focus();
     container##scrollTop <- container##scrollHeight;
   in

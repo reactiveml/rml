@@ -20,7 +20,8 @@
 val sampling : float option ref
 
 val debug : bool ref
-val toggle_debug : unit -> unit
+val debug_status : unit -> string
+val toggle_debug : Format.formatter -> unit
 val print_DEBUG : ('a, out_channel, unit) format -> 'a
 
 val print_help : unit -> unit

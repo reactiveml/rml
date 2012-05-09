@@ -20,8 +20,18 @@
 let sampling : float option ref = ref None
 
 let debug = ref false
-let toggle_debug () =
-  debug := not !debug
+let status_of_bool b =
+  if b
+  then "on"
+  else "off"
+
+let debug_status () =
+  Printf.sprintf "Debug (%s)" (status_of_bool !debug)
+
+let toggle_debug fmt =
+  debug := not !debug;
+  Format.fprintf fmt "Debug mode is now %s.@." (status_of_bool !debug)
+
 let print_DEBUG x =
   if !debug
   then Printf.eprintf x
@@ -198,7 +208,7 @@ let eval fmt rml_phrase =
 
       | Rmltop_lexer.Help -> print_help ()
 
-      | Rmltop_lexer.Debug -> toggle_debug ()
+      | Rmltop_lexer.Debug -> toggle_debug fmt
   in
   try
     aux fmt (parse rml_phrase)
