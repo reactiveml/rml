@@ -31,3 +31,5 @@ val eval_ocaml_phrases : Format.formatter -> bool -> string list -> unit
 
 val eval : Format.formatter -> string -> unit
 val controller_react : unit -> unit option
+
+val init : unit -> unit
