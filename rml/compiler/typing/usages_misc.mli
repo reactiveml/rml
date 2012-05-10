@@ -21,6 +21,7 @@ open Usages
 
 val string_of_usage : usage -> string
 val usage_of_type : Def_types.type_expression -> usage
+val type_of_usage : usage -> Def_types.type_expression
 val string_of_signal_usage : signal_usage -> string
 val mk_t :
   Location.t ->

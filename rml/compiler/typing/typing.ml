@@ -139,11 +139,9 @@ module Env = Symbol_table.Make (Ident)
 let print_env table =
   if not (Env.is_empty table) then begin
     Env.iter
-      (fun id ty_sch -> Printf.printf "%s:id%d ix%d %s "
+      (fun id ty_sch -> Printf.printf "%s:id%d %s "
         (Ident.name id)
         id.Ident.id
-        (* ty_sch.ts_desc.type_region *)
-        ty_sch.ts_desc.type_index
         (Usages_misc.string_of_signal_usage ty_sch.ts_desc.type_usage);
         Types_printer.print_scheme ty_sch
       )
@@ -159,16 +157,21 @@ module Effects = Usages_misc.Table
 
 let gleff = Hashtbl.create 1023
 
+let eprint msg e =
+  Printf.printf "BEGIN %s:\n%!" msg;
+  Effects.print e;
+  Printf.printf "END;\n%!"
+
 let register_effects patt_vars effects =
   List.iter (fun (patterns, effects) ->
     List.iter (function
       | Varpatt_local x ->
-          Printf.printf "(l)let %s ix%d =...\n\n%!"
+          Printf.printf "(l)let %s idx%d =...\n\n%!"
             x.Ident.name
             x.Ident.id;
           Hashtbl.add gleff x.Ident.id effects
       | Varpatt_global x ->
-          Printf.printf "(g)let %s ix%d =...\n\n%!"
+          Printf.printf "(g)let %s idx%d =...\n\n%!"
             x.gi.Global_ident.id.Ident.name
             x.gi.Global_ident.id.Ident.id;
           Hashtbl.add gleff x.gi.Global_ident.id.Ident.id effects
@@ -460,6 +463,20 @@ let rec vars_of_patt = function
   | (p,e)::patt_expr_list ->
       (Reac_misc.vars_of_patt p) :: vars_of_patt patt_expr_list
 
+let effects_of_event id loc typ_sch =
+  try
+    Printf.printf " ... looking for usage of type ";
+    Types_printer.print_scheme typ_sch;
+    Printf.printf "\n%!";
+    let _, u_emit, u_get = Usages.km_su typ_sch.ts_desc.type_usage in
+    let u_emit = Usages_misc.type_of_usage u_emit
+    and u_get = Usages_misc.type_of_usage u_get in
+    (* FIXME ptet faut juste renvoyer type_zero, type_zero *)
+    (* Effects.singleton id loc u_emit u_get *)
+    Effects.singleton id loc type_zero type_zero
+  with _ ->
+    Effects.empty
+
 (* Typing of expressions *)
 let rec type_of_expression env expr =
   let t =
@@ -469,19 +486,24 @@ let rec type_of_expression env expr =
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
         let ty = instance typ_sch in
-	ty, Effects.empty
+        let effects = effects_of_event n.Ident.id expr.expr_loc typ_sch in
+        let msg = Printf.sprintf "Rexpr_local %s id=%d"
+          n.Ident.name
+          n.Ident.id in
+        let () = eprint msg effects in
+	ty, effects
 
     | Rexpr_global (n) ->
         let g_ty = (Global.info n).value_typ in
         let index_gi = n.gi.Global_ident.id.Ident.id in
-        let index = g_ty.ts_desc.type_index in
         (* DEBUG *)
-        Printf.printf "gi=%d\t ty=%d\t name=%s\n%!" index_gi index (Global.little_name_of_global n);
+        Printf.printf "Rexpr_global %s id=%d\n%!"
+          (Global.little_name_of_global n)
+          index_gi;
         let ty = instance g_ty in
-        let ty = { ty with type_index = index } in
         let effects =
           try Hashtbl.find gleff index_gi
-          with Not_found -> Effects.singleton index expr.expr_loc type_zero type_zero in
+          with Not_found -> Effects.empty in
 	ty, effects
 
     | Rexpr_let (flag, patt_expr_list, e) ->
@@ -726,8 +748,7 @@ let rec type_of_expression env expr =
         let r_s = ty_s.type_region in
         let _ = print_env env in
         let effects = Effects.add r_s s.expr_loc u_emit u_get u_s in
-        let () = Printf.printf "Rexpr_emit %!" in
-        let () = Effects.print effects in
+        let () = eprint "Rexpr_emit (None)" effects in
 	type_unit, effects
 
     | Rexpr_emit (affine, s, Some e) ->

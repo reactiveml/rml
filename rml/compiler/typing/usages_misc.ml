@@ -24,6 +24,11 @@ let string_of_usage = function
   | Neutral -> "∞"
   | Zero -> "0"
 
+let type_of_usage = function
+  | Affine -> Initialization.type_affine
+  | Neutral -> Initialization.type_neutral
+  | Zero -> Initialization.type_zero
+
 let string_of_signal_usage su =
   let _, u1, u2 = Usages.km_su su in
   Printf.sprintf "(%s,%s)"
@@ -88,6 +93,7 @@ module Table = struct
 
   let print t =
     if not (M.is_empty t) then begin
+      Printf.printf "  ";
       M.iter (fun k v ->
         Printf.printf "%d:%s;" k (string_of_signal_usage v)
       )
