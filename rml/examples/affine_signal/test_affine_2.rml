@@ -1,0 +1,3 @@
+signal s;;
+
+let process envoyer s = !emit s || !emit s;;
