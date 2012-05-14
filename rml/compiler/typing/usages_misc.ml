@@ -91,6 +91,9 @@ module Table = struct
     | [] -> empty
     | a::l -> merge a (flatten l)
 
+  let apply u m =
+    M.map (Usages.add_s u) m
+
   let print t =
     if not (M.is_empty t) then begin
       Printf.printf "  ";
@@ -100,5 +103,8 @@ module Table = struct
         t;
       Printf.printf "\n%!"
     end
+
+  let print_l l =
+    List.iter print l
 
 end

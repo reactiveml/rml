@@ -58,5 +58,11 @@ module Table :
     val merge : signal_usage t -> signal_usage t -> signal_usage t
     val flatten : signal_usage t list -> signal_usage t
 
+    val apply :
+      Usages.signal_usage ->
+      Usages.signal_usage t ->
+      Usages.signal_usage t
+
     val print : signal_usage t -> unit
+    val print_l : signal_usage t list -> unit
   end
