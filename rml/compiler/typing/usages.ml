@@ -50,6 +50,20 @@ let km_su_loc su =
   let loc, emit, get = km_su su in
   mk_loc loc emit, mk_loc loc get
 
+let send_u loc affine =
+  mk_loc
+    loc
+    ((if affine then Affine else Neutral),
+     Zero
+    )
+
+let await_u loc affine =
+  mk_loc
+    loc
+    (Zero,
+     if affine then Affine else Neutral
+    )
+
 exception Forbidden_usage of Location.t * Location.t
 
 let add_u u1 u2 = match u1.node, u2.node with

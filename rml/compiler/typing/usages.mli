@@ -33,3 +33,6 @@ val add_s : signal_usage -> signal_usage -> signal_usage
 val mk_zero : signal_usage
 val mk_su : Location.t -> usage -> usage -> signal_usage
 val km_su : signal_usage -> Location.t * usage * usage
+
+val send_u : Location.t -> bool -> signal_usage
+val await_u : Location.t -> bool -> signal_usage
