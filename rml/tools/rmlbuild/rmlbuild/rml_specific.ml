@@ -176,7 +176,7 @@ let init () =
 
         let file = env "%.rmli" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc] @ includes @ [P file]))
+        Cmd(S ([rmlc] @ [A "-c"] @ includes @ [P file]))
       end;
 
       rule "rml: rml -> ml, rzi"
