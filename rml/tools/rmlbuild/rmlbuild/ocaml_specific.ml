@@ -268,7 +268,7 @@ rule "ocaml dependencies mli"
 
 rule "ocamllex"
   ~tags:["ocaml"] (* FIXME "lexer" *)
-  ~prod:"%.ml"
+  ~prod:"%.rml"
   ~dep:"%.mll"
   (Ocaml_tools.ocamllex "%.mll");;
 

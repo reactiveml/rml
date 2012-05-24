@@ -86,7 +86,8 @@ let ocamlyacc mly env _build =
 
 let ocamllex mll env _build =
   let mll = env mll in
-  Cmd(S[!Options.ocamllex; T(tags_of_pathname mll++"ocaml"++"lexer"++"ocamllex"); Px mll])
+  let gen_file = env "%.rml" in
+  Cmd(S[!Options.ocamllex; T(tags_of_pathname mll++"ocaml"++"lexer"++"ocamllex"); A "-o"; A gen_file; Px mll])
 
 let infer_interface ml mli env build =
   let ml = env ml and mli = env mli in
