@@ -11,7 +11,7 @@ COMPILER_OPTIONS=
 OCAMLC=ocamlc
 OCAMLC_OPTIONS="-g -I ../../interpreter/_build -I ../../lib/ unix.cma rpmllib.cma"
 
-OCAMLBUILD=ocamlbuild
+OCAMLBUILD=../../tools/rpmlbuild/rpmlbuild/_build/ocamlbuild.byte
 
 build_compiler () {
     cd $COMPILER_DIR
@@ -24,7 +24,7 @@ compile () {
         echo "    ** Building $1"
     fi
     #$COMPILER_DIR/$COMPILER_FILE -I ../../lib -t test $1.rml >/dev/null 2>&1 && $OCAMLC $OCAMLC_OPTIONS $1.ml >/dev/null 2>&1
-    $OCAMLBUILD $1.rml.byte >/dev/null 2>&1
+    $OCAMLBUILD $1.rml.t.byte >/dev/null 2>&1
 
     rc=$?
     if [ $rc != 0 ]; then
@@ -44,8 +44,8 @@ check() {
 
     echo "Starting tests"
 
-    for f in *.rmlsim ; do
-        bn=`basename $f .rmlsim`
+    for f in *.rml ; do
+        bn=`basename $f .rml`
         if [ $VERBOSE ]; then
             echo "  ** Test $bn:"
         fi
@@ -54,7 +54,7 @@ check() {
         if [ $VERBOSE ]; then
             echo "    ** Launching $bn"
         fi
-        if ./$bn.rml.byte >/dev/null 2>&1; then
+        if ./$bn.rml.t.byte >/dev/null 2>&1; then
             {
                 if [ $VERBOSE ]; then
                     echo "    ** Test $bn passed successfully"

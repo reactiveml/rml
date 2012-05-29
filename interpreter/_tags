@@ -1,5 +1,5 @@
 <mpi>: include
 <*.ml>: debug,annot,thread
-<rpmllib.cma>:use_mlmpi,thread
-<rpmllib.cmxa>:thread
+<rpmllib_mpi.cma>:use_mlmpi,thread
+<rpmllib_mpi.cmxa>:thread
 <distributed_runtime.ml>:use_mlmpi

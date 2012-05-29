@@ -1,6 +1,7 @@
 
 let doc_load_balancer = "<name> Load balancer to use (local, robin)"
 let doc_number_steps = "<n> Number of steps to execute"
+let doc_sampling = "<f> Minimum step period"
 let doc_min_rank = "<n> Use only ranks starting from n (only for MPI backend)"
 let doc_debug = "Print debugging information"
 let doc_bench = "Print the elapsed time on the standard output"
@@ -8,6 +9,7 @@ let doc_signals_remote = "Do not use a remote set for each signal"
 let doc_local_slow_signals = "Do not allocate slow local signals"
 
 let number_steps = ref (- 1)
+let sampling_rate = ref (-1.0)
 let min_rank = ref 0
 let debug_mode = ref false
 let bench_mode = ref false
@@ -34,6 +36,7 @@ let errmsg = ""
 let rml_cli_options =
     [ "-load-balancer", Arg.String ignore, doc_load_balancer;
       "-n", Arg.Int ignore, doc_number_steps;
+      "-sampling", Arg.Float ignore, doc_sampling;
       "-min-rank", Arg.Int ignore, doc_min_rank;
       "-debug", Arg.Unit ignore, doc_debug;
       "-bench", Arg.Unit ignore, doc_bench;
@@ -67,6 +70,11 @@ let parse_cli () =
               if !current = n then
                 raise (Arg.Bad ("Expected a number of steps after -n"));
               number_steps := int_of_string Sys.argv.(!current);
+              incr current
+          | "-sampling" ->
+              if !current = n then
+                raise (Arg.Bad ("Expected a period after -sampling"));
+              sampling_rate := float_of_string Sys.argv.(!current);
               incr current
           | "-help" | "--help" -> raise (Arg.Help (Arg.usage_string rml_cli_options "Usage:"))
           | _ -> ()

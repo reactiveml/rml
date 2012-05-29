@@ -861,12 +861,3 @@ module Fake =
   (Rml_interpreter :
      (functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
        Lco_interpreter.S))
-
-module Lco_ctrl_tree_seq_interpreter =
-  Rml_interpreter(Seq_runtime.SeqRuntime)
-
-module Lco_ctrl_tree_mpi_interpreter =
-  Rml_interpreter(Distributed_runtime.MpiRuntime)
-
-module Lco_ctrl_tree_mpi_buffer_interpreter =
-  Rml_interpreter(Distributed_runtime.MpiBufferedRuntime)

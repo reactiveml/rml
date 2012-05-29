@@ -34,23 +34,8 @@ let gen_main_fun out_chan =
   let main_id = Ident.name main.Global.gi.Global_ident.id in
   if not (Typing.is_unit_process (Global.ty_info main)) then
     bad_type_main !simulation_process (Global.ty_info main);
-  match !number_of_instant >= 0, !sampling >= 0.0 with
-    | true, true ->
-      output_string out_chan
-        ("let _ = Machine.rml_exec_n_sampling "^
-            main_id^" "^(string_of_int !number_of_instant)^" "^
-            (string_of_float !sampling)^"\n")
-    | true, false ->
-      output_string out_chan
-        ("let _ = Machine.rml_exec_n "^
-            main_id^" "^(string_of_int !number_of_instant)^"\n")
-    | false, true ->
-      output_string out_chan
-        ("let _ = Machine.rml_exec_sampling "^
-            main_id^" "^(string_of_float !sampling)^"\n")
-    | false, false ->
-      output_string out_chan
-        ("let _ = Machine.rml_exec "^main_id^"\n")
+  output_string out_chan
+    ("let _ = Machine.rml_exec "^main_id^"\n")
 
 let gen_test_fun out_chan =
   output_string out_chan
@@ -65,7 +50,7 @@ let compile_impl info_chan filename module_name intermediate_code =
         "*)\n\n");
         (* selection of the interpreter *)
   output_string out_chan ("module Interpreter = "^ !interpreter_module ^"."^ !interpreter_impl^"\n");
-  output_string out_chan ("module Machine = Rml_machine."^ !machine_kind ^"(Interpreter)\n");
+  output_string out_chan ("module Machine = "^ !machine_module ^"(Interpreter)\n");
 
   (* the implementation *)
   compile_implementation_back_end info_chan out_chan module_name intermediate_code;

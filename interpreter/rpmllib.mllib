@@ -1,14 +1,5 @@
 Types
 Sig_env
-Counter
-Weak_map
-Callbacks
-Dhandle
-Dhandle_typed
-Mpi_communication
-Mpi_buffer_communication
-Load_balancer
-Distributed_runtime
 Seq_runtime
 Lco_ctrl_tree_n
 Rmltest

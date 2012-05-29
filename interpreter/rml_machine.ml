@@ -32,118 +32,114 @@ module type MACHINE_INTERPRETER = sig
     (unit -> 'a option) * (unit -> unit)
 end
 
+let exec_forever react finalize =
+  let rec exec () =
+    match react () with
+      | None -> exec()
+      | Some v -> finalize (); Some v
+  in
+  exec ()
+
+let exec_n n react finalize =
+  let rec exec n =
+    if n > 0 then (
+      match react () with
+        | None -> exec (n-1)
+        | v -> finalize (); v
+    ) else (
+      finalize ();
+      None
+    )
+  in
+  exec n
+
+let exec_sampling_forever min react finalize =
+  let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
+  let debut = ref 0.0 in
+  let fin = ref 0.0 in
+  let diff = ref 0.0 in
+  let rec exec () =
+    let _ = debut := Sys.time() in
+    let v = react () in
+    let _ =
+      fin := Sys.time();
+      diff := min -. (!fin -. !debut);
+      if !diff > 0.001 then (
+        ignore (Unix.setitimer
+                   Unix.ITIMER_REAL
+                   {Unix.it_interval = 0.0; Unix.it_value = !diff});
+        Unix.pause())
+      else ();
+    in
+    match v with
+      | None -> exec ()
+      | Some v -> finalize (); Some v
+  in
+  exec ()
+
+let exec_sampling_n n min react finalize =
+  let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
+  let debut = ref 0.0 in
+  let fin = ref 0.0 in
+  let diff = ref 0.0 in
+  let instant = ref 0 in
+  let rec exec n =
+    if n > 0 then
+      let _ =
+        print_string ("************ Instant "^
+                         (string_of_int !instant)^
+                         " ************");
+        print_newline();
+        debut := Sys.time();
+        incr instant
+      in
+      let _ = debut := Sys.time() in
+      let v = react () in
+      let _ =
+        fin := Sys.time();
+        diff := min -. (!fin -. !debut);
+        if !diff > 0.001 then (
+          ignore (Unix.setitimer
+                     Unix.ITIMER_REAL
+                     {Unix.it_interval = 0.0; Unix.it_value = !diff});
+          Unix.pause())
+        else
+          (print_string "Instant ";
+           print_int !instant;
+           print_string " : depassement = ";
+           print_float (-. !diff);
+           print_newline());
+      in
+      match v with
+        | None -> exec (n-1)
+        | v -> v
+    else
+    None
+  in
+  exec n
+
 module M (I : MACHINE_INTERPRETER) =
   struct
     let rml_exec p =
       Runtime_options.parse_cli ();
       let react, finalize = I.rml_make p in
-      let rec exec () =
-        match react () with
-          | None -> exec()
-          | Some v -> finalize (); v
+      let react_fun =
+        match !Runtime_options.number_steps > 0, !Runtime_options.sampling_rate > 0.0 with
+          | false, false -> exec_forever
+          | true, false -> exec_n !Runtime_options.number_steps
+          | false, true -> exec_sampling_forever !Runtime_options.sampling_rate
+          | true, true -> exec_sampling_n !Runtime_options.number_steps !Runtime_options.sampling_rate
       in
       try
-        exec ()
+        react_fun react finalize
       with
         | _ -> Format.eprintf "An error occurred. aborting all processes@."; finalize (); exit 2
-
-    let rml_exec_n p n =
-      Runtime_options.parse_cli ();
-      let react, finalize = I.rml_make p in
-      let rec exec n =
-        if n > 0 then (
-          match react () with
-            | None -> exec (n-1)
-            | v -> finalize (); v
-        ) else (
-          finalize ();
-          None
-        )
-      in
-      let n = if !Runtime_options.number_steps = -1 then n else !Runtime_options.number_steps in
-      try
-        exec n
-      with
-        | _ -> Format.eprintf "An error occurred. Aborting all processes@."; finalize (); exit 2
-
-    let rml_exec_sampling p min =
-      Runtime_options.parse_cli ();
-      let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
-      let debut = ref 0.0 in
-      let fin = ref 0.0 in
-      let diff = ref 0.0 in
-      let react, finalize = I.rml_make p in
-      let rec exec () =
-        let _ = debut := Sys.time() in
-        let v = react () in
-        let _ =
-          fin := Sys.time();
-          diff := min -. (!fin -. !debut);
-          if !diff > 0.001 then (
-            ignore (Unix.setitimer
-                      Unix.ITIMER_REAL
-                      {Unix.it_interval = 0.0; Unix.it_value = !diff});
-            Unix.pause())
-          else ();
-        in
-        match v with
-        | None -> exec ()
-        | Some v -> finalize (); v
-      in exec ()
-
-
-    let rml_exec_n_sampling p n min =
-      Runtime_options.parse_cli ();
-      let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
-      let debut = ref 0.0 in
-      let fin = ref 0.0 in
-      let diff = ref 0.0 in
-      let instant = ref 0 in
-      let react, finalize = I.rml_make p in
-      let rec exec n =
-        if n > 0 then
-          let _ =
-            print_string ("************ Instant "^
-                          (string_of_int !instant)^
-                          " ************");
-            print_newline();
-            debut := Sys.time();
-            incr instant
-          in
-          let _ = debut := Sys.time() in
-          let v = react () in
-          let _ =
-            fin := Sys.time();
-            diff := min -. (!fin -. !debut);
-            if !diff > 0.001 then (
-              ignore (Unix.setitimer
-                        Unix.ITIMER_REAL
-                        {Unix.it_interval = 0.0; Unix.it_value = !diff});
-              Unix.pause())
-            else
-              (print_string "Instant ";
-               print_int !instant;
-               print_string " : depassement = ";
-               print_float (-. !diff);
-               print_newline());
-          in
-          match v with
-          | None -> exec (n-1)
-          | v -> finalize (); v
-        else
-          None
-      in exec n
 
     let rml_test test_list =
       Runtime_options.parse_cli ();
       let react, finalize = I.rml_make_test test_list in
-      let rec exec () =
-        match react () with
-        | None -> exec()
-        | Some v -> finalize (); v
-      in
       try
-        exec ()
+        exec_forever react finalize
       with
         | Rmltest.Test_success -> finalize (); exit 0
         | Rmltest.Test_failed _ -> finalize (); exit 2
@@ -152,7 +148,7 @@ module M (I : MACHINE_INTERPRETER) =
 
 
 
-module type SEQ_INTERPRETER =
+module type INTERPRETER =
   sig
     type 'a process
     type ('a, 'b) event
@@ -172,9 +168,9 @@ module type SEQ_INTERPRETER =
     val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
   end
 
-module Seq = functor (I : SEQ_INTERPRETER) ->
+module Machine = functor (I : INTERPRETER) ->
 struct
-  module T = Rmltest.DistributedTest(Mpi_communication.Test)
+  module T = Rmltest.Test
 
   module MyInterpreter = struct
     type 'a process = 'a I.process
@@ -218,85 +214,5 @@ struct
   include M(MyInterpreter)
 end
 
-
-module type DISTRIBUTED_INTERPRETER =
-  sig
-    type 'a process
-    type ('a, 'b) event
-
-    module R : (sig
-      type clock_domain
-      type ('a, 'b) event
-      type 'a step
-
-      val mk_top_clock_domain : unit -> clock_domain
-      val finalize_top_clock_domain : clock_domain -> unit
-      val react : clock_domain -> unit
-      val on_current_instant : clock_domain -> unit step -> unit
-
-      val is_master : unit -> bool
-      val start_slave : unit -> unit
-    end)
-
-    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
-    val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
-  end
-
-module Distributed (I : DISTRIBUTED_INTERPRETER) =
-struct
-  module T = Rmltest.DistributedTest(Mpi_communication.Test)
-
-  module MyInterpreter = struct
-    type 'a process = 'a I.process
-
-    let rml_make p =
-      if I.R.is_master () then (
-        let start_t = Unix.gettimeofday () in
-        let result = ref None in
-        let cd = I.R.mk_top_clock_domain () in
-        let step = I.rml_make cd result p in
-        I.R.on_current_instant cd step;
-        let react () =
-          I.R.react cd;
-          !result
-        in
-        let finalize () =
-          I.R.finalize_top_clock_domain cd;
-          if !Runtime_options.bench_mode then
-            let end_t = Unix.gettimeofday () in
-            Format.printf "%f@." (end_t -. start_t)
-        in
-        react, finalize
-      ) else
-        (fun _ -> print_debug "Launching slave@."; I.R.start_slave (); None), (fun () -> ())
-
-    let rml_make_test test_list =
-      if I.R.is_master () then (
-        let result = ref None in
-        let cd = I.R.mk_top_clock_domain () in
-        let mk_test (p, name, expected) =
-          let act = T.new_test name expected in
-          p act
-        in
-        let pl = List.map mk_test test_list in
-        let steps = I.rml_make_n cd result pl in
-        List.iter (fun step -> I.R.on_current_instant cd step) steps;
-        let react () =
-          print_debug "@.********************* Doing one step@.";
-          I.R.react cd;
-          T.next_step ();
-          !result
-        in
-        let finalize () =
-          T.end_test ();
-          I.R.finalize_top_clock_domain cd
-        in
-        react, finalize
-      ) else
-        (fun _ -> I.R.start_slave (); None), (fun () -> ())
-
-  end
-
-  include M(MyInterpreter)
-end
-
+module Lco_ctrl_tree_seq_interpreter =
+  Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqRuntime)

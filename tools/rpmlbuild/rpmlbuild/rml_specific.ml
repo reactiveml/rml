@@ -49,66 +49,44 @@ let read_depends file =
   with
     | _ -> []
 
-let read_rmlsim_lines inc =
-  let rec read_rmlsim_line inc cmds =
-    try
-      let l = input_line inc in
-      let i = String.index l ':' in
-      let cmd = String.sub l 0 i in
-      let value = remove_spaces (String.sub l (i+1) (String.length l - i - 1)) in
-      read_rmlsim_line inc ((cmd, value) :: cmds)
-    with
-      | _ -> cmds
-  in
-  read_rmlsim_line inc []
-
-
-let read_rmlsim file filename =
-  let inc = open_in (Pathname.to_string file) in
-  let cmds = read_rmlsim_lines inc in
-  close_in inc;
-  tag_file filename ["simulation_file"];
-  let specs = [A "-s"; A (List.assoc "sim" cmds)] in
-  let specs =
-    if List.mem_assoc "sampling" cmds then
-      specs@[A "-sampling"; A (List.assoc "sampling" cmds)]
-    else
-      specs
-  in
-  let specs =
-    if List.mem_assoc "n" cmds then
-      specs@[A "-n"; A (List.assoc "n" cmds)]
-    else
-      specs
-  in
-  flag ["rml";"compile";"simulation_file"] (S specs)
-
 let mk_includes dir =
   let add_include acc i =
     if i = Pathname.current_dir_name then acc else A"-I" :: A i :: acc
   in
   List.fold_left add_include [] (Pathname.include_dirs_of dir)
 
-let link_rml extension env _build =
-  let rmlsim_file = env "%.rmlsim" in
+let uses_mpi main_file =
+  let rml_file_tags = tags_of_pathname main_file in
+  Tags.mem "lco_mpi" rml_file_tags || Tags.mem "lco_mpi_buffer" rml_file_tags
+
+let link_rml_core tag ml_extension rml_extension env _build =
   let main_file = env "%.rml" in
-  let () = read_rmlsim rmlsim_file main_file in
-  let byte_file = Pathname.update_extension extension main_file in
-  let rml_byte_file = env ("%.rml."^extension) in
-  tag_file byte_file ["use_mlmpi"; "use_rpmllib"; "with_mpicc"];
+  let byte_file = Pathname.update_extension ml_extension main_file in
+  let rml_byte_file = env ("%.rml."^rml_extension) in
+  tag_file byte_file ["use_rpmllib"];
+  if uses_mpi main_file then
+    tag_file byte_file ["use_mlmpi"; "use_rpmllib_mpi"; "with_mpicc"];
   if !Options.use_ocamlfind then
     tag_file byte_file ["package(unix)"]
   else
     tag_file byte_file ["use_unix"];
   tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
+  tag_file main_file [tag];
   List.iter Outcome.ignore_good (_build [[byte_file]]);
   ln_s byte_file rml_byte_file
 ;;
+
+let link_rml extension env _build =
+  link_rml_core "simulation_file" extension extension env _build
+
+let link_rml_test extension env _build =
+  link_rml_core "test_file" extension ("t."^extension) env _build
 
 let init () =
 
      Ocaml_utils.ocaml_lib ~extern:true ~native:true ~dir:mlmpilib_dir "mlmpi";
      Ocaml_utils.ocaml_lib ~extern:true ~native:true ~dir:rpmllib_dir "rpmllib";
+     Ocaml_utils.ocaml_lib ~extern:true ~native:true ~dir:rpmllib_dir "rpmllib_mpi";
 
       rule "rmldep: rml -> rmldepends"
         ~prod:"%.rmldepends"
@@ -179,31 +157,38 @@ let init () =
 
         let gen_file = env "%.ml" in
         tag_file gen_file ["use_rpmllib"];
+        if uses_mpi (env "%.rml") then
+          tag_file gen_file ["use_rpmllib_mpi"];
 
         let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmlc]@includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
-      rule "rml: rmlsim -> byte"
+      rule "rml: rml -> byte"
         ~prod:"%.rml.byte"
-        ~dep:"%.rmlsim"
+        ~dep:"%.rml"
         (link_rml "byte");;
 
-      rule "rml: rmlsim -> d.byte"
+      rule "rml: rml -> d.byte"
         ~prod:"%.rml.d.byte"
-        ~dep:"%.rmlsim"
+        ~dep:"%.rml"
         (link_rml "d.byte");;
 
-      rule "rml: rmlsim -> native"
+      rule "rml: rml -> native"
         ~prod:"%.rml.native"
-        ~dep:"%.rmlsim"
+        ~dep:"%.rml"
         (link_rml "native");;
 
-      rule "rml: rmlsim -> p.native"
+      rule "rml: rml -> p.native"
         ~prod:"%.rml.native"
-        ~dep:"%.rmlsim"
+        ~dep:"%.rml"
         (link_rml "p.native");;
+
+     rule "rml: rml -> t.byte"
+        ~prod:"%.rml.t.byte"
+        ~dep:"%.rml"
+        (link_rml_test "byte");;
 
       rule "rml: rmllib -> mllib"
         ~prod:"%.mllib"
@@ -223,6 +208,8 @@ let init () =
       end;
 
       flag ["with_mpicc"] (S [A "-thread"; A"-cc"; A mpicc]);
+      flag ["rml";"compile";"simulation_file"] (S [A "-s"; A "main"]);
+      flag ["rml";"compile";"test_file"] (S [A "-t"; A "test"]);
 
       flag ["rml"; "compile"; "annot"] (A "-dtypes");
       flag ["rml"; "compile"; "lco"] (S ([A "-runtime"; A "Lco"]));

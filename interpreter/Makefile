@@ -1,16 +1,17 @@
 include ../config
 
-RPMLLIB=rpmllib
+RPMLLIB=rpmllib.cma rpmllib_mpi.cma
+
 
 .PHONY: all clean native byte clean debug install
 
 all: byte native
 
 native:
-	$(OCAMLBUILD) $(RPMLLIB).cmxa
+	$(OCAMLBUILD) $(RPMLLIB:.cma=.cmxa)
 
 byte:
-	$(OCAMLBUILD) $(RPMLLIB).cma
+	$(OCAMLBUILD) $(RPMLLIB)
 
 install: all
 	$(INSTALL) -d $(INSTALL_BINDIR)

@@ -23,7 +23,7 @@ include Version
 let pervasives_module = "Pervasives"
 let interpreter_module = ref "Lco_ctrl_tree_n"
 let interpreter_impl = ref "Lco_ctrl_tree_seq_interpreter"
-let machine_kind = ref "Seq"
+let machine_module = ref "Rml_machine.Machine"
 
 (* List of file to compile *)
 let to_compile = ref ([] : string list)
@@ -33,7 +33,7 @@ let default_used_modules = ref ([] : string list)
 (* interpreter *)
 let set_interpreter_impl s = interpreter_impl := s
 let set_interpreter_module s = interpreter_module := s
-let set_machine_kind s = machine_kind := s
+let set_machine_module s = machine_module := s
 
 (* different translations *)
 type translations = Lco
@@ -51,14 +51,8 @@ let no_link = ref false
 (* simulation process *)
 let simulation_process = ref ""
 
-(* number_of_instant to execute *)
-let number_of_instant = ref (-1)
-
 (* test definition *)
 let test_name = ref ""
-
-(* samplin rate *)
-let sampling = ref (-. 1.0)
 
 (* verbose *)
 let verbose = ref false
@@ -140,12 +134,6 @@ let show_where () =
 (* sets the simulation process *)
 let set_simulation_process n = simulation_process := n
 
-(* sets the number of instant to execute *)
-let set_number_of_instant n = number_of_instant := n
-
-(* sets the sampling rate *)
-let set_sampling n = sampling := n
-
 let set_test_name n = test_name := n
 
 (* print information *)
@@ -169,20 +157,20 @@ let set_runtime s =
   match s with
     | "Lco" ->
       set_interpreter_impl "Lco_ctrl_tree_seq_interpreter";
-      set_interpreter_module "Lco_ctrl_tree_n";
-      set_machine_kind "Seq";
+      set_interpreter_module "Rml_machine";
+      set_machine_module "Rml_machine.Machine";
       set_translation Lco
 
     | "Lco_mpi" ->
       set_interpreter_impl "Lco_ctrl_tree_mpi_interpreter";
-      set_interpreter_module "Lco_ctrl_tree_n";
-      set_machine_kind "Distributed";
+      set_interpreter_module "Rml_machine_mpi";
+      set_machine_module "Rml_machine_mpi.Machine";
       set_translation Lco
 
     | "Lco_mpi_buffer" ->
       set_interpreter_impl "Lco_ctrl_tree_mpi_buffer_interpreter";
-      set_interpreter_module "Lco_ctrl_tree_n";
-      set_machine_kind "Distributed";
+      set_interpreter_module "Rml_machine_mpi";
+      set_machine_module "Rml_machine_mpi.Machine";
       set_translation Lco
 
     | _ -> raise (Arg.Bad ("Invalid runtime:" ^ s))
@@ -222,8 +210,6 @@ and doc_no_for = "(undocumented)"
 and doc_compilation = "Compile only (produces a .rzi file)"
 and doc_libraries = "<dir> Add <dir> to the list of include directories"
 and doc_simulation = "<proc> Executes the process <proc>."
-and doc_number_of_instant = "<n> Executes the main process <n> instants"
-and doc_sampling = "<rate> Sets the sampling rate to <rate> seconds"
 and doc_test_name = "<name> Sets the name of the unit test"
 and doc_verbose = "Print types"
 and doc_save_types = "Save type information in <filename>.?annot"
@@ -262,8 +248,6 @@ let parse_cli () =
         "-c",Arg.Set no_link, doc_compilation;
         "-I",Arg.String add_include,doc_libraries;
         "-s", Arg.String set_simulation_process, doc_simulation;
-        "-n", Arg.Int set_number_of_instant, doc_number_of_instant;
-        "-sampling", Arg.Float set_sampling, doc_sampling;
         "-t", Arg.String set_test_name, doc_test_name;
         "-i", Arg.Unit set_verbose, doc_verbose;
         "-dtypes", Arg.Unit set_save_types, doc_save_types;
