@@ -1,0 +1,2 @@
+<*.ml>: use_unix, use_mlmpi, debug
+<*.byte>: use_unix, use_mlmpi, with_mpicc, debug

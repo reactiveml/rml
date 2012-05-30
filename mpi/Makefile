@@ -1,9 +1,9 @@
 include ../config
 
-COBJS=init.o local_ref_impl.o local_token_impl.o mpi_impl.o
-OBJS=mpi.cmo local_ref.cmo local_token.cmo
+COBJS=init.o local_ref_impl.o local_token_impl.o mpi_impl.o mpi_queue_impl.o
+OBJS=mpi.cmo local_ref.cmo local_token.cmo mpi_queue.cmo
 
-CFLAGS+=-I`$(OCAMLC) -where`
+CFLAGS+=-I`$(OCAMLC) -where` -g
 CC=$(MPICC)
 
 .PHONY: all clean install
