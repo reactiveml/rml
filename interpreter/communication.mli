@@ -2,6 +2,7 @@
 module type TAG_TYPE = sig
   type 'gid t
 
+  val dummy : 'gid t
   val flush_after : 'gid t -> bool
   val print : (Format.formatter -> 'gid -> unit) -> Format.formatter -> 'gid t -> unit
 end
@@ -15,6 +16,8 @@ module type S = sig
   type msg
   type 'gid tag
   type site
+
+  val dummy_tag : 'gid tag
 
   val print_here : Format.formatter -> unit -> unit
   val print_gid : Format.formatter -> gid -> unit

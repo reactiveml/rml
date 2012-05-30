@@ -19,9 +19,11 @@ module type S = sig
   val remove_callback : tag -> dispatcher -> unit
 
   val mk_dispatcher : unit -> dispatcher
-  val receive : msg_queue -> unit
+  val start_receiving : msg_queue -> unit
   val stop_receiving : msg_queue -> unit
 end
 
 module Make : functor (C: Communication.S) ->
+  S with type msg = C.msg and type tag = C.gid C.tag
+module MakeC : functor (C: Communication.S) ->
   S with type msg = C.msg and type tag = C.gid C.tag

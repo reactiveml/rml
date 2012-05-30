@@ -58,6 +58,7 @@ let mk_includes dir =
 let uses_mpi main_file =
   let rml_file_tags = tags_of_pathname main_file in
   Tags.mem "lco_mpi" rml_file_tags || Tags.mem "lco_mpi_buffer" rml_file_tags
+  ||  Tags.mem "lco_mpi_c" rml_file_tags
 
 let link_rml_core tag ml_extension rml_extension env _build =
   let main_file = env "%.rml" in
@@ -215,6 +216,7 @@ let init () =
       flag ["rml"; "compile"; "lco"] (S ([A "-runtime"; A "Lco"]));
       flag ["rml"; "compile"; "lco_mpi"] (S [A "-runtime"; A "Lco_mpi"]);
       flag ["rml"; "compile"; "lco_mpi_buffer"] (S [A "-runtime"; A "Lco_mpi_buffer"]);
+      flag ["rml"; "compile"; "lco_mpi_c"] (S [A "-runtime"; A "Lco_mpi_c"]);
       flag ["rml"; "compile"; "no_clocking"] (A "-no-clocking");
 ;;
 

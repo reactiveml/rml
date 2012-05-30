@@ -87,3 +87,6 @@ module Lco_ctrl_tree_mpi_interpreter =
 
 module Lco_ctrl_tree_mpi_buffer_interpreter =
   Lco_ctrl_tree_n.Rml_interpreter(Distributed_runtime.MpiBufferedRuntime)
+
+module Lco_ctrl_tree_mpi_c_interpreter =
+  Lco_ctrl_tree_n.Rml_interpreter(Distributed_runtime.MpiCRuntime)

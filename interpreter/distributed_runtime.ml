@@ -3,6 +3,7 @@ open Runtime_options
 module Make
   (D: Runtime.SEQ_DATA_STRUCT)
   (CF : functor (T : Communication.TAG_TYPE) -> Communication.S with type 'gid tag = 'gid T.t)
+  (CALL : functor (C: Communication.S) -> Callbacks.S with type msg = C.msg and type tag = C.gid C.tag)
   (E: Sig_env.S) =
 struct
     module D = D(struct
@@ -36,6 +37,8 @@ struct
           | Mreq_signal of 'gid (* Request the value of the signal *)
           | Mcreate_signal
           | Msignal_created of 'gid
+
+      let dummy = Mdummy
 
       let flush_after tag = match tag with
          | Mfinalize | Mdummy | Mhas_next _ | Mvalue _ | Mnew_cd | Mcd_created _
@@ -72,7 +75,7 @@ struct
 
     module C = CF(SiteMsgs)
 
-    module Callbacks = Callbacks.Make (C)
+    module Callbacks = CALL(C)
     module L = Load_balancer.Make (C)
 
     module GidHandle = Dhandle_typed.Make (struct
@@ -162,7 +165,6 @@ struct
       mutable s_clock_domains : clock_domain C.GidMap.t;
       s_msg_queue : Callbacks.msg_queue;
       s_callbacks : Callbacks.dispatcher;
-      mutable s_msg_thread : Thread.t option;
       s_clock_cache : E.clock GidHandle.cache;
       mutable s_signal_cache : SignalHandle.cache;
       mutable s_waiting : D.waiting_list WaitingMap.t; (* waiting lists for parent cds and slow signals *)
@@ -1130,9 +1132,6 @@ struct
 
     let terminate_site site =
       Callbacks.stop_receiving site.s_msg_queue;
-      (* send dummy messsage to stop the receiving thread *)
-      Msgs.send_dummy site.s_comm_site ();
-      (match site.s_msg_thread with Some t -> Thread.join t | _ -> assert false);
       if not (C.is_master ()) then (
         print_debug "Exiting slave@.";
         exit 0
@@ -1157,7 +1156,6 @@ struct
         s_msg_queue = Callbacks.mk_queue ();
         s_callbacks = Callbacks.mk_dispatcher ();
         s_waiting = WaitingMap.empty;
-        s_msg_thread = None;
         s_clock_cache = GidHandle.mk_cache (fun ck -> ck);
         s_signal_cache = SignalHandle.mk_cache { SignalHandle.c_local_value = Event.signal_local_value };
         s_seed = C.mk_seed ();
@@ -1172,12 +1170,11 @@ struct
       add_callback Mnext_instant receive_next_instant;
       add_callback Mcreate_signal receive_create_signal;
       add_callback Mfinalize receive_finalize_site;
-      s.s_msg_thread <- Some (Thread.create Callbacks.receive s.s_msg_queue)
+      Callbacks.start_receiving s.s_msg_queue
 
     let start_slave () =
       init_site ();
       while true do
-        (*  Format.eprintf "Waiting for messages@."; *)
         process_msgs ()
       done
 
@@ -1455,12 +1452,20 @@ module MpiRuntime =
   Make
     (Seq_runtime.ListDataStruct)
     (Mpi_communication.Make)
+    (Callbacks.Make)
     (Sig_env.Record)
 
+module MpiCRuntime =
+  Make
+    (Seq_runtime.ListDataStruct)
+    (Mpi_communication.Make)
+    (Callbacks.MakeC)
+    (Sig_env.Record)
 
 module MpiBufferedRuntime =
   Make
     (Seq_runtime.ListDataStruct)
     (Mpi_buffer_communication.Make)
+    (Callbacks.Make)
     (Sig_env.Record)
 

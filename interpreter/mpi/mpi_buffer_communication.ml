@@ -12,6 +12,8 @@ module Make (P : Communication.TAG_TYPE) = struct
       { g_rank : Mpi.rank; g_id : lid } (* global unique id *)
   type 'gid tag = 'gid P.t
 
+  let dummy_tag = P.dummy
+
   module Gid = struct
     type t = gid
     let compare = compare
