@@ -21,7 +21,10 @@ static struct custom_operations queue_ops = {
 };
 
 struct node { char* data; struct node* next; } ALIGN_CACHE_LINE;
-struct queue { struct node volatile* hd; int msg_tag; int stop ALIGN_CACHE_LINE; };
+struct queue {
+  struct node volatile* hd; int msg_tag;
+  pthread_t thread_id; int stop ALIGN_CACHE_LINE;
+};
 
 #define Queue_val(v) (*((struct queue **) Data_custom_val(v)))
 
@@ -99,11 +102,10 @@ void* receive_fun(void *arg)
 value mlmpi_start_receiving(value msg_queue, value msg_tag)
 {
   CAMLparam2(msg_queue, msg_tag);
-  pthread_t tid;
 
   struct queue *q = Queue_val(msg_queue);
   q->msg_tag = Int_val(msg_tag);
-  pthread_create(&tid, NULL, receive_fun, (void*) q);
+  pthread_create(&q->thread_id, NULL, receive_fun, (void*) q);
 
   CAMLreturn (Val_unit);
 }
@@ -111,8 +113,18 @@ value mlmpi_start_receiving(value msg_queue, value msg_tag)
 value mlmpi_stop_receiving(value msg_queue)
 {
   CAMLparam1(msg_queue);
+  void* status;
+  int rank;
+  char c = '\0';
+
   struct queue *q = Queue_val(msg_queue);
   q->stop = 1;
+  /* Send a dummy message to exit the send */
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Send(&c, 1, MPI_BYTE, rank, q->msg_tag, MPI_COMM_WORLD);
+  /*Wait for the thread to terminate*/
+  pthread_join(q->thread_id, &status);
+
   CAMLreturn (Val_unit);
 }
 

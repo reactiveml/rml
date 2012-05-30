@@ -309,7 +309,5 @@ module MakeC (C : Communication.S) = struct
     Mpi_queue.start_receiving q.q_mpi_queue Mpi_communication.msg_tag
 
   let stop_receiving q =
-    Mpi_queue.stop_receiving q.q_mpi_queue;
-    (* send dummy messsage to stop the receiving thread *)
-    C.send (C.local_site ()) C.dummy_tag ();
+    Mpi_queue.stop_receiving q.q_mpi_queue
 end
