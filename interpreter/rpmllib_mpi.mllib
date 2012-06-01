@@ -6,6 +6,7 @@ Dhandle_typed
 Mpi_communication
 Mpi_buffer_communication
 Load_balancer
+Distributed_runtime_old
 Distributed_runtime
 Rmltest_mpi
 Rml_machine_mpi

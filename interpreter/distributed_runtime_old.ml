@@ -22,6 +22,7 @@ struct
           | Mstep_done of 'gid (* a clock domain has finished its step *)
           | Mdone of 'gid (* global step done *)
           | Mpauseclock of 'gid
+          | Mbefore_eoi (* Before the end of instant of clock domain *)
           | Meoi (* End of instant of clock domain *)
           | Meoi_control of 'gid
           | Mnext_instant (* Go to next instant *)
@@ -55,6 +56,7 @@ struct
         | Mdone gid -> fprintf ff "Mdone %a" print_gid gid
         | Mpauseclock gid -> fprintf ff "Mpauseclock %a" print_gid gid
         | Meoi -> fprintf ff "Mbefore_eoi"
+        | Mbefore_eoi -> fprintf ff "Meoi"
         | Meoi_control gid -> fprintf ff "Meoi_control %a" print_gid gid
         | Mnext_instant -> fprintf ff "Mnext_instant"
         | Mreq_has_next gid -> fprintf ff "Mreq_has_next %a" print_gid gid
@@ -117,7 +119,6 @@ struct
     type waiting_kind =
         | Wbefore_eoi of C.gid (* before the eoi *)
         | Weoi of C.gid (* eoi of the current clock domain *)
-     (*   | Wafter_eoi of C.gid (* after the eoi *) *)
         | Wnext_instant of C.gid (* next instant of the current clock domain, after eoi*)
         | Wsignal_wa of C.gid (* On emission of signal *)
         | Wsignal_wp of C.gid (* On emission of signal or end of instant of parent clock domain *)
@@ -157,8 +158,7 @@ struct
           cd_location : L.kind;
           mutable cd_children_have_next : bool;
           mutable cd_remaining_async : int ref;
-          mutable cd_direct_remotes : C.SiteSet.t; (* remotes with direct child clock domains*)
-          mutable cd_other_remotes : C.SiteSet.t; (* remotes with grand-child clock domains*)
+          mutable cd_remotes : C.SiteSet.t; (* remotes with child clock domains*)
         }
 
     type site = {
@@ -171,7 +171,7 @@ struct
       s_seed : C.seed;
       s_comm_site : C.site;
       mutable s_signals_remotes : C.SiteSet.t C.GidMap.t;
-      mutable s_remotes : C.SiteSet.t; (* remotes with child clock domains*)
+     (* mutable s_children : C.SiteSet.t; (* remotes with child clock domains*) *)
     }
 
     let print_clock ff ck =
@@ -273,6 +273,7 @@ struct
         let send id (d:'a) = C.send_owner id (Mpauseclock id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
+      let broadcast_before_eoi, recv_before_eoi = mk_broadcast_set_recv Mbefore_eoi
       let broadcast_eoi, recv_eoi = mk_broadcast_set_recv Meoi
       let send_eoi_control, recv_eoi_control =
         let send id (d:'a) = C.send_owner id (Meoi_control id) d in
@@ -386,7 +387,7 @@ struct
             if !Runtime_options.use_signals_users_set then
               get_signal_remotes ev.ev_gid
             else
-              C.SiteSet.union cd.cd_direct_remotes cd.cd_other_remotes
+              cd.cd_remotes
           in
           C.broadcast_set remotes (Mvalue ev.ev_gid) (E.value n)
 
@@ -674,8 +675,7 @@ struct
         cd_load_balancer = balancer;
         cd_location = location;
         cd_remaining_async = ref 0;
-        cd_other_remotes = C.SiteSet.empty;
-        cd_direct_remotes = C.SiteSet.empty;
+        cd_remotes = C.SiteSet.empty;
       } in
       site.s_clock_domains <- C.GidMap.add clock.ck_gid cd site.s_clock_domains;
       cd.cd_top.last_activation <- Clock.save_clock_state cd.cd_clock;
@@ -810,19 +810,18 @@ struct
     let eoi cd =
       print_debug "Eoi of clock domain %a@." print_cd cd;
       wake_up_now (Wbefore_eoi cd.cd_clock.ck_gid);
+      Msgs.broadcast_before_eoi cd.cd_remotes cd.cd_clock.ck_gid;
       cd.cd_eoi <- true;
       eoi_control cd cd.cd_top;
       wake_up_now (Weoi cd.cd_clock.ck_gid);
-      (* send Meoi only to direct children *)
-      Msgs.broadcast_eoi cd.cd_direct_remotes cd.cd_clock.ck_gid;
+      Msgs.broadcast_eoi cd.cd_remotes cd.cd_clock.ck_gid;
       List.iter wake_up_now cd.cd_wake_up;
       cd.cd_wake_up <- []
 
     let next_instant cd =
       print_debug "Next instant of clock domain %a@." print_cd cd;
       (* next instant of child clock domains *)
-      let remotes = C.SiteSet.union cd.cd_direct_remotes cd.cd_other_remotes in
-      Msgs.broadcast_next_instant remotes cd.cd_clock;
+      Msgs.broadcast_next_instant cd.cd_remotes cd.cd_clock;
       (*increment the clock after sending because the receiver will increment it*)
       E.next (get_clock cd.cd_clock.ck_clock);
       wake_up_now (Wnext_instant cd.cd_clock.ck_gid);
@@ -966,42 +965,27 @@ struct
       (* wake up cd to emit the done message *)
       wake_up_cd_if_done cd
 
-    let rec update_remote_set cd is_direct site =
-      let set =
-        if is_direct then
-          cd.cd_direct_remotes
-        else
-          cd.cd_other_remotes
-      in
-      if not (C.SiteSet.mem site set) then (
-        if C.SiteSet.is_empty cd.cd_direct_remotes then (
+    let rec update_remote_set cd site =
+      if not (C.SiteSet.mem site cd.cd_remotes) then (
+        if C.SiteSet.is_empty cd.cd_remotes then (
           print_debug "Allocating callbacks for %a@." print_cd cd;
           register_cd_callbacks cd
         );
         print_debug "Adding site %a to remote sites of %a@." C.print_site site  print_cd cd;
-        if is_direct then
-          cd.cd_direct_remotes <- C.SiteSet.add site cd.cd_direct_remotes
-        else
-          cd.cd_other_remotes <- C.SiteSet.add site cd.cd_other_remotes;
-        (* add to the site site too *)
-        if is_direct then (
-          let here = get_site() in
-          print_debug "Adding site %a to site remotes." C.print_site site;
-          here.s_remotes <- C.SiteSet.add site here.s_remotes
-        );
+        cd.cd_remotes <- C.SiteSet.add site cd.cd_remotes;
         (* propagate the information to the parent *)
         match cd.cd_clock.ck_parent with
           | None -> ()
           | Some pck when C.is_local pck.ck_gid ->
               let pcd = get_clock_domain pck in
-              update_remote_set pcd is_direct site
+              update_remote_set pcd site
           | Some pck -> Msgs.send_new_remote pck.ck_gid site
       )
 
     (* After receiving Mnew_remote *)
     and receive_new_remote cd msg =
       let site = Msgs.recv_new_remote msg in
-      update_remote_set cd false site
+      update_remote_set cd site
 
     (* Registers callbacks for messages sent by child cds *)
     and register_cd_callbacks cd =
@@ -1069,7 +1053,7 @@ struct
       let new_ck = Msgs.recv_cd_created msg in
       print_debug "--%a" print_cd cd;
       decr cd.cd_remaining_async;
-      update_remote_set cd true (C.site_of_gid new_ck.ck_gid);
+      update_remote_set cd (C.site_of_gid new_ck.ck_gid);
       let new_ctrl = new_ctrl (Clock_domain new_ck) in
       (* add local callbacks *)
       Callbacks.add_callback ~kind:Callbacks.Once
@@ -1123,15 +1107,14 @@ struct
      with
        | Not_found -> print_debug "Error: Received Start for unknown clock domain.@."
 
+   (* After receiving Mbefore_eoi *)
+    let receive_before_eoi msg =
+      let ck_id:C.gid = C.from_msg msg in
+      wake_up_now (Wbefore_eoi ck_id)
+
    (* After receiving Meoi *)
     let receive_eoi msg =
       let ck_id:C.gid = C.from_msg msg in
-      (* first, emit the value of local slow signals to remotes *)
-      wake_up_now (Wbefore_eoi ck_id);
-      (* then forward eoi to remotes *)
-      let site = get_site () in
-      Msgs.broadcast_eoi site.s_remotes ck_id;
-      (* and do local eoi *)
       wake_up_now (Weoi ck_id)
 
     (* After receving Mnext_instant *)
@@ -1178,7 +1161,7 @@ struct
         s_seed = C.mk_seed ();
         s_comm_site = C.local_site ();
         s_signals_remotes = C.GidMap.empty;
-        s_remotes = C.SiteSet.empty;
+       (* s_children = C.SiteSet.empty; *)
       } in
       Local_ref.init 0 s;
       add_callback Mnew_cd create_cd;

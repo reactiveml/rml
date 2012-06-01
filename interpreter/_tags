@@ -2,4 +2,4 @@
 <*.ml>: debug,annot,thread
 <rpmllib_mpi.cma>:use_mlmpi,thread
 <rpmllib_mpi.cmxa>:thread
-<distributed_runtime.ml>:use_mlmpi
+<distributed_runtime*.ml>:use_mlmpi
