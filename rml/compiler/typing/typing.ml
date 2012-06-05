@@ -62,25 +62,6 @@ let unify_emit loc expected_ty actual_ty =
     unify ~regions:true expected_ty actual_ty
   with Unify -> emit_wrong_type_err loc actual_ty expected_ty
 
-let accumulate_usage ty loc u_new =
-  try
-    let u_result = Usages.add_s ty.type_usage u_new in
-    ty.type_usage <- u_result
-  with Usages.Forbidden_usage (loc1, loc2) ->
-    usage_wrong_type_err loc1 loc2
-
-(* let unify_usage_type loc ty affine actual_u u_emit u_get = *)
-  (* let expected_u = *)
-    (* if affine *)
-    (* then type_affine *)
-    (* else type_neutral *)
-  (* in *)
-  (* try *)
-    (* unify ~regions:true expected_u actual_u; *)
-    (* accumulate_usage ty loc u_emit u_get *)
-  (* with Unify -> usage_wrong_type_err loc Location.none *)
-    (* | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2 *)
-
 let unify_run loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
@@ -118,13 +99,19 @@ let filter_usage ty s =
     (Usages_misc.usage_of_type u_emit)
     (Usages_misc.usage_of_type u_get)
 
-(* let set_usage_type ty loc = *)
-  (* try *)
-    (* let _, _, u_emit, u_get = filter_event ty in *)
-    (* accumulate_usage ty loc u_emit u_get *)
-  (* with *)
-    (* | Unify -> () *)
-    (* | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2 *)
+let unify_usage loc ty_emit ty_get u_new =
+  let new_u_emit, new_u_get = Usages.km_s u_new in
+  let new_ty_emit = Usages_misc.type_of_usage new_u_emit
+  and new_ty_get = Usages_misc.type_of_usage new_u_get in
+  unify_emit loc ty_emit new_ty_emit;
+  unify_emit loc ty_get new_ty_get
+
+let accumulate_usage ty loc u_new =
+  try
+    let u_result = Usages.add_s ty.type_usage u_new in
+    ty.type_usage <- u_result
+  with Usages.Forbidden_usage (loc1, loc2) ->
+    usage_wrong_type_err loc1 loc2
 
 let is_unit_process desc =
   let sch = desc.value_typ in
@@ -158,6 +145,14 @@ let pu ty =
 module Effects = Usages_misc.Table
 
 let gleff = Hashtbl.create 1023
+
+let apply_eff effs ty loc =
+  try
+    let _, _, u_emit, u_get = filter_event ty in
+    let eff = Usages_misc.mk_t loc u_emit u_get in
+    Effects.apply eff effs
+  with _ ->
+    effs
 
 let eprint msg e =
   Printf.printf "BEGIN %s:\n%!" msg;
@@ -475,17 +470,14 @@ let rec vars_of_patt = function
   | (p,e)::patt_expr_list ->
       (Reac_misc.vars_of_patt p) :: vars_of_patt patt_expr_list
 
-let effects_of_event id loc typ_sch =
-  try
-    raise Not_found
-    (* let _, u_emit, u_get = Usages.km_su typ_sch.ts_desc.type_usage in *)
-    (* let u_emit = Usages_misc.type_of_usage u_emit *)
-    (* and u_get = Usages_misc.type_of_usage u_get in *)
-    (* FIXME ptet faut juste renvoyer type_zero, type_zero *)
-    (* Effects.singleton id loc u_emit u_get *)
-    (* Effects.singleton id loc type_zero type_zero *)
-  with _ ->
-    Effects.empty
+let ids_of_patt patts =
+  List.fold_left
+    (fun acc -> function
+    | Varpatt_local x -> x.Ident.id :: acc
+    | Varpatt_global x -> x.gi.Global_ident.id.Ident.id :: acc
+    )
+    []
+    patts
 
 (* Typing of expressions *)
 let rec type_of_expression env expr =
@@ -527,6 +519,7 @@ let rec type_of_expression env expr =
 	let ty_arg = new_var() in
 	let ty_res = new_var() in
 	let ty = arrow ty_arg ty_res in
+        let local_vars = ids_of_patt (List.flatten (vars_of_patt matching)) in
         let effects =
 	  List.map
 	    (fun (p,e) ->
@@ -537,10 +530,11 @@ let rec type_of_expression env expr =
 		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
 		  env loc_env
 	      in
-	      snd (type_expect new_env e ty_res))
+              snd (type_expect ~regions:true new_env e ty_res)
+            )
 	    matching
         in
-        ty, Effects.flatten effects
+        ty, Effects.filter (Effects.flatten effects) local_vars
 
     | Rexpr_apply (fct, args) ->
 	let ty_fct, effects_f = type_of_expression env fct in
@@ -558,7 +552,7 @@ let rec type_of_expression env expr =
                 | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 	      in
               let ty_arg, u2 = type_expect ~regions:true env arg t1 in
-              let effects = Effects.merge u2 u in
+              let effects = Effects.merge (apply_eff u2 ty_arg arg.expr_loc) u in
               (* DEBUG *)
               (* let () = eprint "f_arg" [effects] in *)
               (* Printf.printf "a_arg: "; *)
@@ -754,8 +748,11 @@ let rec type_of_expression env expr =
     | Rexpr_emit (affine, s, None) ->
 	let ty_s, u_s = type_of_expression env s in
 	let ty, _, u_emit, u_get = filter_event_or_err ty_s s in
+        let new_usage = Usages.send_u s.expr_loc affine in
+        accumulate_usage ty_s expr.expr_loc new_usage;
+        unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;
 	unify_emit expr.expr_loc type_unit ty;
-        let effects = Effects.apply (Usages.send_u s.expr_loc affine) u_s in
+        let effects = Effects.apply new_usage u_s in
         (* DEBUG *)
         (* let () = eprint "Rexpr_emit (None)" [effects] in *)
 	type_unit, effects
@@ -764,8 +761,10 @@ let rec type_of_expression env expr =
 	let ty_s, u_s = type_of_expression env s in
 	let ty, _, u_emit, u_get = filter_event_or_err ty_s s in
 	let ty_e, u_e = type_of_expression env e in
+        let new_usage = Usages.send_u s.expr_loc affine in
+        accumulate_usage ty_s expr.expr_loc new_usage;
+        unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;
 	unify_emit e.expr_loc ty ty_e;
-        (* unify_usage_type expr.expr_loc ty_s affine u_emit u_emit u_get; *)
         let r_s = ty_s.type_index in
         let effects = Effects.flatten [u_s; u_e; Effects.singleton r_s s.expr_loc u_emit u_get] in
         let () = eprint "Rexpr_emit (Some _)" [effects] in
@@ -921,8 +920,9 @@ let rec type_of_expression env expr =
         let l = List.map (fun s ->
             let ty_s, u_s = type_of_expression env s in
             let _, _, u_emit, u_get = filter_event_or_err ty_s s in
-            (* unify_usage_type s.expr_loc ty_s affine u_get u_emit u_get; *)
-            (* accumulate_usage ty_s u_emit u_get; *)
+            let new_usage = Usages.await_u s.expr_loc affine in
+            accumulate_usage ty_s s.expr_loc new_usage;
+            unify_usage s.expr_loc u_emit u_get ty_s.type_usage;
             let r_s = ty_s.type_index in
             Effects.merge u_s (Effects.singleton r_s s.expr_loc u_emit u_get)
           )
@@ -940,13 +940,14 @@ let rec type_of_expression env expr =
 	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
 	    env loc_env
 	in
-        (* unify_usage_type expr.expr_loc ty_s affine u_get u_emit u_get; *)
-        (* accumulate_usage ty_s u_emit u_get; *)
+        let new_usage = Usages.await_u expr.expr_loc affine in
+        accumulate_usage ty_s expr.expr_loc new_usage;
+        unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;
         let ty, u_p = type_of_expression new_env p in
         let r_s = ty_s.type_index in
         ty, Effects.flatten [u_s; u_p; Effects.singleton r_s s.expr_loc u_emit u_get]
 
-    | Rexpr_await_val (affine,_,One,s,patt,p) ->
+    | Rexpr_await_val (_,_,One,s,patt,p) ->
 	let ty_s, u_s = type_of_expression env s in
 	let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
         unify_expr s
@@ -959,8 +960,10 @@ let rec type_of_expression env expr =
 	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
 	    env loc_env
 	in
-        (* unify_usage_type expr.expr_loc ty_s affine u_get u_emit u_get; *)
-        (* accumulate_usage ty_s u_emit u_get; *)
+        let affine = true (* Always the case here since it is an "await one" *) in
+        let new_usage = Usages.await_u expr.expr_loc affine in
+        accumulate_usage ty_s expr.expr_loc new_usage;
+        unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;
         let ty, u_p = type_of_expression new_env p in
         let r_s = ty_s.type_index in
         ty, Effects.flatten [u_s; u_p; Effects.singleton r_s s.expr_loc u_emit u_get]

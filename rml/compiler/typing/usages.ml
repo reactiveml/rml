@@ -50,6 +50,8 @@ let km_su_loc su =
   let loc, emit, get = km_su su in
   mk_loc loc emit, mk_loc loc get
 
+let km_s { node = (a,b) ; _ } = a,b
+
 let send_u loc affine =
   mk_loc
     loc
