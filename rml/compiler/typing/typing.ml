@@ -128,7 +128,7 @@ module Env = Symbol_table.Make (Ident)
 let print_env table =
   if not (Env.is_empty table) then begin
     Env.iter
-      (fun id ty_sch -> Printf.printf "%s:id%d %s "
+      (fun id ty_sch -> Printf.printf "%s(id=%d){eff=%s}:"
         (Ident.name id)
         id.Ident.id
         (Usages_misc.string_of_signal_usage ty_sch.ts_desc.type_usage);
@@ -154,27 +154,21 @@ let apply_eff effs ty loc =
   with _ ->
     effs
 
-let eprint msg e =
-  Printf.printf "BEGIN %s:\n%!" msg;
-  Effects.print_l e;
-  Printf.printf "END;\n%!"
+(* let dprint msg f x = *)
+  (* Printf.printf "BEGIN %s:\n%!" msg; *)
+  (* f x; *)
+  (* Printf.printf "END;\n%!" *)
 
 let register_effects patt_vars effects =
   List.iter (fun (patterns, effects) ->
     List.iter (function
       | Varpatt_local x ->
           let id = x.Ident.id in
-          (* DEBUG *)
           (* let name = x.Ident.name in *)
-          (* Printf.printf "(l)let %s (id:%d) =%!" name id; *)
-          (* Effects.print effects; *)
           Hashtbl.add gleff id effects
       | Varpatt_global x ->
           let id = x.gi.Global_ident.id.Ident.id in
-          (* DEBUG *)
           (* let name = x.gi.Global_ident.id.Ident.name in *)
-          (* Printf.printf "(g)let %s (id:%d) =%!" name id; *)
-          (* Effects.print effects; *)
           Hashtbl.add gleff id effects
       )
       patterns
@@ -488,10 +482,6 @@ let rec type_of_expression env expr =
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
         let ty = instance typ_sch in
-        (* DEBUG *)
-        (* Printf.printf "Rexpr_local %s id=%d\n%!" *)
-          (* n.Ident.name *)
-          (* n.Ident.id; *)
 	ty, Effects.singleton n.Ident.id expr.expr_loc type_zero type_zero
 
     | Rexpr_global (n) ->
@@ -499,17 +489,10 @@ let rec type_of_expression env expr =
         let ty = instance g_ty in
         let idx = n.gi.Global_ident.id.Ident.id in
         let effects = get_effects idx expr.expr_loc in
-        (* DEBUG *)
-        (* Printf.printf "Rexpr_global %s id=%d\n%!" *)
-          (* (Global.little_name_of_global n) *)
-          (* idx; *)
 	ty, effects
 
     | Rexpr_let (flag, patt_expr_list, e) ->
-        (* DEBUG *)
-        (* Printf.printf "Rexpr_let\n%!"; *)
 	let gl_env, new_env, effects_1 = type_let (flag = Recursive) env patt_expr_list in
-        (* Printf.printf "Rexpr_let avec %d effets.\n%!" (List.length effects_1); *)
         let patt_vars = vars_of_patt patt_expr_list in
         register_effects patt_vars effects_1;
         let ty, effects_2 = type_of_expression new_env e in
@@ -538,9 +521,6 @@ let rec type_of_expression env expr =
 
     | Rexpr_apply (fct, args) ->
 	let ty_fct, effects_f = type_of_expression env fct in
-          (* DEBUG *)
-        (* let _ = Printf.printf "f_ty: " in *)
-        (* let _ = print_env env in *)
 	let rec type_args u ty_res = function
 	  | [] -> ty_res, u
 	  | arg :: args ->
@@ -553,15 +533,6 @@ let rec type_of_expression env expr =
 	      in
               let ty_arg, u2 = type_expect ~regions:true env arg t1 in
               let effects = Effects.merge (apply_eff u2 ty_arg arg.expr_loc) u in
-              (* DEBUG *)
-              (* let () = eprint "f_arg" [effects] in *)
-              (* Printf.printf "a_arg: "; *)
-              (* Printf.printf "%s " (pu ty_arg); *)
-              (* Types_printer.print ty_arg; *)
-              (* Printf.printf "\nf_arg: "; *)
-              (* Printf.printf "%s " (pu t1); *)
-              (* Types_printer.print t1; *)
-              (* Printf.printf "\n\n%!"; *)
 	      type_args effects t2 args
 	in
 	type_args effects_f ty_fct args
@@ -753,8 +724,6 @@ let rec type_of_expression env expr =
         unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;
 	unify_emit expr.expr_loc type_unit ty;
         let effects = Effects.apply new_usage u_s in
-        (* DEBUG *)
-        (* let () = eprint "Rexpr_emit (None)" [effects] in *)
 	type_unit, effects
 
     | Rexpr_emit (affine, s, Some e) ->
@@ -767,7 +736,6 @@ let rec type_of_expression env expr =
 	unify_emit e.expr_loc ty ty_e;
         let r_s = ty_s.type_index in
         let effects = Effects.flatten [u_s; u_e; Effects.singleton r_s s.expr_loc u_emit u_get] in
-        let () = eprint "Rexpr_emit (Some _)" [effects] in
 	type_unit, effects
 
     | Rexpr_signal ((s,te_opt), combine_opt, e) ->
@@ -821,8 +789,6 @@ let rec type_of_expression env expr =
 
     | Rexpr_par p_list ->
         let effects_l = List.map (fun p -> type_statement env p) p_list in
-        (* DEBUG *)
-        (* eprint "Rexpr_par" effects_l; *)
 	type_unit, Effects.flatten effects_l
 
     | Rexpr_merge (p1,p2) ->
