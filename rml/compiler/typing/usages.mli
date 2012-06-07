@@ -17,7 +17,7 @@
 (*                                                                    *)
 (**********************************************************************)
 
-type 'a loc = { loc : Location.t; node : 'a }
+type 'a loc = { mutable loc : Location.t; node : 'a }
 
 (* Usages *)
 type usage = Affine | Neutral | Zero
@@ -33,6 +33,8 @@ val mk_zero : signal_usage
 val mk_su : Location.t -> usage -> usage -> signal_usage
 val km_su : signal_usage -> Location.t * usage * usage
 val km_s : signal_usage -> usage * usage
+
+val update_loc : Location.t -> signal_usage -> signal_usage
 
 val send_u : Location.t -> bool -> signal_usage
 val await_u : Location.t -> bool -> signal_usage

@@ -64,6 +64,8 @@ module Table :
       Usages.signal_usage t ->
       Usages.signal_usage t
 
+    val update_loc : Usages.signal_usage t -> Location.t -> Usages.signal_usage t
+
     val print : signal_usage t -> unit
     val print_l : signal_usage t list -> unit
   end

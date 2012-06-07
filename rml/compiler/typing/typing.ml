@@ -521,6 +521,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_apply (fct, args) ->
 	let ty_fct, effects_f = type_of_expression env fct in
+        let effects_f = Effects.update_loc effects_f fct.expr_loc in
 	let rec type_args u ty_res = function
 	  | [] -> ty_res, u
 	  | arg :: args ->

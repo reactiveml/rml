@@ -105,6 +105,9 @@ module Table = struct
   let apply u m =
     M.map (Usages.add_s u) m
 
+  let update_loc m loc =
+    M.map (Usages.update_loc loc) m
+
   let print t =
     if not (M.is_empty t) then begin
       Printf.printf "  ";

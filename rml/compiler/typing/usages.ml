@@ -18,7 +18,7 @@
 (**********************************************************************)
 
 type 'a loc = {
-  loc : Location.t;
+  mutable loc : Location.t;
   node : 'a
 }
 
@@ -75,6 +75,9 @@ let best_loc l1 l2 =
   if l1 = Location.none
   then l2
   else l1
+
+let update_loc loc su =
+  su.loc <- loc; su
 
 let add_s u v =
   let u1, u2 = km_su_loc u in
