@@ -18,7 +18,6 @@
 (**********************************************************************)
 
 type 'a loc = { loc : Location.t; node : 'a }
-type 'a loc_step = Location.t -> 'a
 
 (* Usages *)
 type usage = Affine | Neutral | Zero

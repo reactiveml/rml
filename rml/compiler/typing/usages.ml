@@ -22,8 +22,6 @@ type 'a loc = {
   node : 'a
 }
 
-type 'a loc_step = Location.t -> 'a
-
 type usage =
   | Affine
   | Neutral
