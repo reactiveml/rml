@@ -49,3 +49,6 @@ backup-*-pre-rml.tgz
 
 # Backup files
 \#*#
+
+# Local directory
+local/*
