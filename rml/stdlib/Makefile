@@ -42,6 +42,7 @@ SRC= pervasives.rmli \
 	random.rmli \
 	sort.rmli \
 	stack.rmli \
+	str.rmli \
 	string.rmli \
 	sys.rmli \
 	unix.rmli \
