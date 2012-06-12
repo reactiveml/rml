@@ -1,3 +1,26 @@
+ReactiveML 1.08.01 (XXXX-XX-XX):
+--------------------------------
+ - New tool: rmlbuild, allows to build rml programs more easily using
+   .rmlsim files. A foo.rmlsim would look like the following:
+   /--------------
+   | sim: main
+   | sampling: 0.1
+   | n : 100
+   \--------------
+   It tells the compiler that the main file is "foo.rml" has a main
+   function called "main". The parameters "sampling" and "n" are not
+   mandatory. They have the same semantics as the compiler's command
+   line options -sampling and -n.
+   Please check tools/rmlbuild/plugin/README for further information.
+ - "rmltop -i" lists known toplevel's directives.
+ - New configure options:
+   + "-target|--target" to choose a default compilation target ("opt"
+     or "byte") The configure script will choose the best option if
+     "-target" is not specified.
+   + "-debug|--debug" adds "-g -dtypes" to OCAMLFLAGS and OCAMLOPTFLAGS.
+ - Provide the Str library.
+
+
 ReactiveML 1.07.08 (2010-12-16):
 --------------------------------
  - rmlc: bug fixes.
