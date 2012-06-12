@@ -6,21 +6,21 @@ include configure-tools/version
 include config
 
 all: config-stamp
-	(cd compiler; touch .depend; make depend; make $(TARGET))
-	(cd stdlib; make all)
-	(cd interpreter; touch .depend; make depend; make all)
-	(cd toplevel; make all)
-	(cd tools; make $(TARGET))
+	(cd compiler; touch .depend; $(MAKE) depend; $(MAKE) $(TARGET))
+	(cd stdlib; $(MAKE) all)
+	(cd interpreter; touch .depend; $(MAKE) depend; $(MAKE) all)
+	(cd toplevel; $(MAKE) all)
+	(cd tools; $(MAKE) $(TARGET))
 
 config-stamp:
 	./configure
 	touch $@
 
 toplevel: FORCE
-	(cd toplevel; make all)
+	(cd toplevel; $(MAKE) all)
 
 toplevel-install:
-	(cd toplevel; make install)
+	(cd toplevel; $(MAKE) install)
 
 
 opt: TARGET := opt
@@ -32,13 +32,13 @@ byte: all
 .PHONY: install
 
 install:
-	(cd compiler; make install)
-	(cd stdlib; make install)
-	(cd interpreter; make install)
-	(cd man; make install)
-	(cd emacs; make install)
-	(cd toplevel; make install)
-	(cd tools; make install)
+	(cd compiler; $(MAKE) install)
+	(cd stdlib; $(MAKE) install)
+	(cd interpreter; $(MAKE) install)
+	(cd man; $(MAKE) install)
+	(cd emacs; $(MAKE) install)
+	(cd toplevel; $(MAKE) install)
+	(cd tools; $(MAKE) install)
 
 checkinstall: config
 	checkinstall -D --deldoc=yes --deldesc=yes --nodoc -y --install=no
@@ -67,37 +67,37 @@ uninstall.findlib:
 
 doc: dvi
 dvi:
-	(cd doc; make dvi)
+	(cd doc; $(MAKE) dvi)
 html:
-	(cd doc; make html)
+	(cd doc; $(MAKE) html)
 
 wc:
-	(cd compiler;make wc)
-	(cd interpreter; make wc)
-	(cd toplevel; make wc)
-	(cd tools; make wc)
+	(cd compiler;$(MAKE) wc)
+	(cd interpreter; $(MAKE) wc)
+	(cd toplevel; $(MAKE) wc)
+	(cd tools; $(MAKE) wc)
 
 clean:
-	(cd compiler;make clean)
-	(cd stdlib; make clean)
-	(cd interpreter; make clean)
-	(cd toplevel; make clean)
-	(cd tools; make clean)
-	(cd man; make clean)
-	(cd doc; make clean)
-	(cd patch; make clean)
-	(cd examples; make clean)
+	(cd compiler;$(MAKE) clean)
+	(cd stdlib; $(MAKE) clean)
+	(cd interpreter; $(MAKE) clean)
+	(cd toplevel; $(MAKE) clean)
+	(cd tools; $(MAKE) clean)
+	(cd man; $(MAKE) clean)
+	(cd doc; $(MAKE) clean)
+	(cd patch; $(MAKE) clean)
+	(cd examples; $(MAKE) clean)
 
 realclean: clean-distrib
-	(cd compiler;make realclean)
-	(cd stdlib; make realclean)
-	(cd interpreter; make realclean)
-	(cd toplevel; make realclean)
-	(cd tools; make realclean)
-	(cd man; make realclean)
-	(cd doc; make realclean)
-	(cd patch; make realclean)
-	(cd examples; make realclean)
+	(cd compiler;$(MAKE) realclean)
+	(cd stdlib; $(MAKE) realclean)
+	(cd interpreter; $(MAKE) realclean)
+	(cd toplevel; $(MAKE) realclean)
+	(cd tools; $(MAKE) realclean)
+	(cd man; $(MAKE) realclean)
+	(cd doc; $(MAKE) realclean)
+	(cd patch; $(MAKE) realclean)
+	(cd examples; $(MAKE) realclean)
 	rm -rf META
 	rm -rf config config-stamp Makefile.common distrib/rml/rmlc.in distrib/rml/Makefile *~
 	touch config
@@ -110,7 +110,7 @@ DATE=`date "+%Y-%m-%d"`
 
 public-distrib:
 	touch config
-	make realclean
+	$(MAKE) realclean
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
 	cp -r compiler interpreter stdlib toplevel tools emacs doc man examples \
 		distrib/rml-$(VERSION)-$(DATE)
@@ -121,7 +121,7 @@ public-distrib:
 		distrib/rmlc.in.byte distrib/rmlc.in.opt \
 		distrib/rml-$(VERSION)-$(DATE)/distrib
 	(cd distrib/rml-$(VERSION)-$(DATE)/patch; \
-	 make public-distrib)
+	 $(MAKE) public-distrib)
 	(cd distrib; \
 	 tar --exclude=CVS --exclude=.svn -zcvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
 	 rm -rf rml-$(VERSION)-$(DATE); \
@@ -130,7 +130,7 @@ public-distrib:
 
 source-distrib:
 	touch config
-	make realclean
+	$(MAKE) realclean
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
 	cp -r compiler interpreter stdlib toplevel tools emacs doc man examples \
 		distrib/rml-$(VERSION)-$(DATE)
@@ -149,13 +149,13 @@ binary-distrib: binary-distrib.opt
 
 binary-distrib.opt: clean-distrib
 	touch config
-	make realclean
+	$(MAKE) realclean
 	./configure
-	(cd compiler; touch .depend; make depend; make opt)
-	(cd stdlib; make all)
-	(cd interpreter; make all)
-	(cd toplevel; make all)
-	(cd tools; make opt)
+	(cd compiler; touch .depend; $(MAKE) depend; $(MAKE) opt)
+	(cd stdlib; $(MAKE) all)
+	(cd interpreter; $(MAKE) all)
+	(cd toplevel; $(MAKE) all)
+	(cd tools; $(MAKE) opt)
 	(cd distrib/rml/; \
 	 mkdir bin lib lib/rml; \
 	 cp ../../compiler/rmlc.opt bin/rmlc.opt ; \
@@ -173,13 +173,13 @@ binary-distrib.opt: clean-distrib
 
 binary-distrib.byte: clean-distrib
 	touch config
-	make realclean
+	$(MAKE) realclean
 	./configure
-	(cd compiler; touch .depend; make depend; make byte)
-	(cd stdlib; make all)
-	(cd interpreter; make all)
-	(cd toplevel; make all)
-	(cd tools; make all)
+	(cd compiler; touch .depend; $(MAKE) depend; $(MAKE) byte)
+	(cd stdlib; $(MAKE) all)
+	(cd interpreter; $(MAKE) all)
+	(cd toplevel; $(MAKE) all)
+	(cd tools; $(MAKE) all)
 	(cd distrib/rml/ ; \
 	 mkdir bin lib lib/rml ; \
 	 cp ../../compiler/rmlc.byte bin/rmlc.byte ; \

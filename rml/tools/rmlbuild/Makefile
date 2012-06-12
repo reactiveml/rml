@@ -1,19 +1,19 @@
 
 all:
-	cd rmlbuild; make
+	cd rmlbuild; $(MAKE)
 
 opt: all
 byte: all
 
 
 install:
-	cd rmlbuild; make install
+	cd rmlbuild; $(MAKE) install
 
 clean:
-	cd rmlbuild; make clean
+	cd rmlbuild; $(MAKE) clean
 
 realclean:
-	cd rmlbuild; make realclean
+	cd rmlbuild; $(MAKE) realclean
 
 cleanall: realclean
 

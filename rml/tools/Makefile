@@ -4,7 +4,7 @@ TARGET=byte
 
 all:
 	(for d in $(DIRECTORIES); \
-	 do (cd $$d ; make $(TARGET)) ; \
+	 do (cd $$d ; $(MAKE) $(TARGET)) ; \
 	 done)
 
 opt: TARGET := opt
@@ -16,19 +16,19 @@ byte: all
 
 install:
 	(for d in $(DIRECTORIES); \
-	 do (cd $$d ; make install) ; \
+	 do (cd $$d ; $(MAKE) install) ; \
 	 done)
 
 
 # cleaning:
 clean:
 	(for d in $(DIRECTORIES); \
-	 do (cd $$d ; make clean) ; \
+	 do (cd $$d ; $(MAKE) clean) ; \
 	 done)
 
 realclean: clean
 	(for d in $(DIRECTORIES); \
-	 do (cd $$d ; make realclean) ; \
+	 do (cd $$d ; $(MAKE) realclean) ; \
 	 done)
 	rm -rf *~
 
@@ -37,5 +37,5 @@ cleanall: realclean
 # utilities
 wc:
 	(for d in $(DIRECTORIES); \
-	 do (cd $$d ; make wc) ; \
+	 do (cd $$d ; $(MAKE) wc) ; \
 	 done)
