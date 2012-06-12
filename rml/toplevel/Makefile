@@ -1,4 +1,4 @@
--include ../config
+include ../config
 include ../configure-tools/Makefile.common
 
 RMLC=../compiler/rmlc

@@ -3,7 +3,7 @@
 # Organization : SPI team, LIP6 laboratory, University Paris 6
 
 include configure-tools/version
--include config
+include config
 
 all: config-stamp
 	(cd compiler; touch .depend; make depend; make $(TARGET))
@@ -100,6 +100,7 @@ realclean: clean-distrib
 	(cd examples; make realclean)
 	rm -rf META
 	rm -rf config config-stamp Makefile.common distrib/rml/rmlc.in distrib/rml/Makefile *~
+	touch config
 	rm -rf configure-tools/rmlbuild.config
 
 cleanall: realclean

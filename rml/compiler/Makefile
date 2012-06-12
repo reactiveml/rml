@@ -137,7 +137,7 @@ INCLUDES = $(DIRECTORIES:%=-I %)
 GENSOURCES = global/version.ml parsing/parser.mli parsing/lexer.ml parsing/parser.ml \
 	parsing/linenum.ml
 
--include ../config
+include ../config
 include ../configure-tools/Makefile.common
 
 all: $(TARGET)
