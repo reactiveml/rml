@@ -273,13 +273,15 @@ let run _ =
   )
   in
 
-  append_children "buttons" [
-    debug_button;
-    send_button;
-    save_button;
+  append_children "buttons-left" [
     suspend_button;
     step_button;
     resume_button;
+  ];
+  append_children "buttons-right" [
+    debug_button;
+    send_button;
+    save_button;
   ];
 
   output_area##scrollTop <- output_area##scrollHeight;
