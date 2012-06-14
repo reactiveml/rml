@@ -1,4 +1,4 @@
-ReactiveML 1.08.01 (XXXX-XX-XX):
+ReactiveML 1.08.01 (2012-06-14):
 --------------------------------
  - New tool: rmlbuild, allows to build rml programs more easily using
    .rmlsim files. A foo.rmlsim would look like the following:
@@ -10,9 +10,9 @@ ReactiveML 1.08.01 (XXXX-XX-XX):
    It tells the compiler that the main file is "foo.rml" has a main
    function called "main". The parameters "sampling" and "n" are not
    mandatory. They have the same semantics as the compiler's command
-   line options -sampling and -n.
-   Please check tools/rmlbuild/plugin/README for further information.
- - "rmltop -i" lists known toplevel's directives.
+   line options -sampling and -n. Then the command to compile the
+   program is "rmlbuild foo.rml.byte" or "rmlbuild foo.rml.native".
+ - rmltop: "rmltop -i" lists known toplevel's directives.
  - New configure options:
    + "-target|--target" to choose a default compilation target ("opt"
      or "byte") The configure script will choose the best option if
@@ -41,7 +41,7 @@ ReactiveML 1.07.05 (2009-06-18):
 --------------------------------
  - rmlc: bug fixes.
  - rmlc: check shape of rec.
- - rmlc: small optimisations.
+ - rmlc: small optimizations.
 
 
 ReactiveML 1.07.04 (2009-04-18):
@@ -72,7 +72,7 @@ ReactiveML 1.07.01 (2008-07-08):
 
 ReactiveML 1.06.09 (2008-04-05):
 --------------------------------
- - rmlc: bug fixe in the type system.
+ - rmlc: bug fix in the type system.
 
 
 ReactiveML 1.06.08 (2008-04-05):
