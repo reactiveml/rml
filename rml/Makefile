@@ -114,7 +114,7 @@ public-distrib:
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
 	cp -r compiler interpreter stdlib toplevel tools emacs doc man examples \
 		distrib/rml-$(VERSION)-$(DATE)
-	cp -r configure configure-tools  patch Makefile INSTALL LICENSE \
+	cp -r configure configure-tools  patch Makefile CHANGES INSTALL LICENSE \
 		distrib/rml-$(VERSION)-$(DATE)
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)/distrib
 	cp -r distrib/rml distrib/Makefile.byte distrib/Makefile.opt \
@@ -123,7 +123,7 @@ public-distrib:
 	(cd distrib/rml-$(VERSION)-$(DATE)/patch; \
 	 $(MAKE) public-distrib)
 	(cd distrib; \
-	 tar --exclude=CVS --exclude=.svn -zcvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
+	 tar --exclude=CVS --exclude=.svn --exclude=.git -zcvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
 	 rm -rf rml-$(VERSION)-$(DATE); \
 	 mv rml-$(VERSION)-$(DATE).tar.gz ..)
 
@@ -134,14 +134,14 @@ source-distrib:
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)
 	cp -r compiler interpreter stdlib toplevel tools emacs doc man examples \
 		distrib/rml-$(VERSION)-$(DATE)
-	cp -r configure configure-tools patch Makefile INSTALL LICENSE \
+	cp -r configure configure-tools patch Makefile CHANGES INSTALL LICENSE \
 		distrib/rml-$(VERSION)-$(DATE)
 	mkdir -p distrib/rml-$(VERSION)-$(DATE)/distrib
 	cp -r distrib/rml distrib/Makefile.byte distrib/Makefile.opt \
 		distrib/rmlc.in.byte distrib/rmlc.in.opt \
 		distrib/rml-$(VERSION)-$(DATE)/distrib
 	(cd distrib; \
-	 tar --exclude=CVS --exclude=.svn -zcvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
+	 tar --exclude=CVS --exclude=.svn --exclude=.git -zcvf rml-$(VERSION)-$(DATE).tar.gz rml-$(VERSION)-$(DATE); \
 	 rm -rf rml-$(VERSION)-$(DATE); \
 	 mv rml-$(VERSION)-$(DATE).tar.gz ..)
 
@@ -168,7 +168,7 @@ binary-distrib.opt: clean-distrib
 	 cp ../Makefile.opt Makefile; \
 	 cp ../rmlc.in.opt rmlc.in; \
          cd ..; \
-	 tar --exclude=CVS --exclude=.svn -zcvf rml-`../compiler/rmlc -version`.opt.tar.gz rml; \
+	 tar --exclude=CVS --exclude=.svn --exclude=.git -zcvf rml-`../compiler/rmlc -version`.opt.tar.gz rml; \
          mv rml-`../compiler/rmlc -version`.opt.tar.gz ..)
 
 binary-distrib.byte: clean-distrib
@@ -191,7 +191,7 @@ binary-distrib.byte: clean-distrib
 	 cp -r ../../emacs . ; \
 	 cp ../Makefile.byte Makefile ; \
 	 cp ../rmlc.in.byte rmlc.in ; \
-         cd ..; tar --exclude=CVS --exclude=.svn -zcvf rml-`../compiler/rmlc -version`.byte.tar.gz rml ; \
+         cd ..; tar --exclude=CVS --exclude=.svn --exclude=.git -zcvf rml-`../compiler/rmlc -version`.byte.tar.gz rml ; \
          mv rml-`../compiler/rmlc -version`.byte.tar.gz ..)
 
 clean-distrib:
