@@ -4,7 +4,7 @@
 #FILE=prime-val
 FILE=prime-kahn
 
-# Reactive ML compiler
+# ReactiveML compiler
 RMLC=rmlc
 N=-1
 SAMPLING=-1.0

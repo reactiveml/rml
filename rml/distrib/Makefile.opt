@@ -1,4 +1,4 @@
-# Makefile for Reactive-ML
+# Makefile for ReactiveML
 # Taken from Lucid-synchrone
 # Organization : SPI team, LIP6 laboratory, University Paris 6
 

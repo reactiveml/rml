@@ -1,6 +1,6 @@
 # Warning: This file has been modified to be ReactiveML compatible.
 
-# Makefile for Reactive-ML
+# Makefile for ReactiveML
 # Taken from Lucid-synchrone
 
 include ../config

@@ -465,7 +465,7 @@ let compile_scalar_interface module_name filename =
   no_link := true;
   compile_interface Parse.interface module_name filename ".mli"
 
-(* compiling a Reactive ML interface *)
+(* compiling a ReactiveML interface *)
 let compile_interface module_name filename =
   compile_interface Parse.interface module_name filename ".rmli"
 

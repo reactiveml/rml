@@ -1,7 +1,7 @@
 # File to compile
 FILE=reflex
 
-# Reactive ML compiler
+# ReactiveML compiler
 RMLC=rmlc
 N=-1
 SAMPLING=-1.0

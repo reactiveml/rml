@@ -8,12 +8,12 @@
 ;; indentation code adapted for Objective Caml by Jacques Garrigue,
 ;; july 1997. <garrigue@kurims.kyoto-u.ac.jp>
 
-;; indentation code adapted for Reactive-ML by Sarah Maarek,
+;; indentation code adapted for ReactiveML by Sarah Maarek,
 ;; july 2004.
 
 ;;user customizable variables
 (defvar rml-quote-char "'"
-  "*Quote for character constants. \"'\" for  Reactive-ML??, \"`\" for Caml-Light.")
+  "*Quote for character constants. \"'\" for  ReactiveML??, \"`\" for Caml-Light.")
 
 (defvar rml-imenu-enable nil
   "*Enable Imenu support.")

@@ -55,7 +55,7 @@ let set_no_pervasives () =
 
 (* show version *)
 let show_v () =
-  Printf.printf "The Reactive ML compiler, version %s\n" version;
+  Printf.printf "The ReactiveML compiler, version %s\n" version;
   print_string "Standard library: "; print_string (locate_stdlib ());
   print_newline ()
 
@@ -201,7 +201,7 @@ and doc_runtime =
 and doc_dparse = "(undocumented)"
 and doc_dtime = "(undocumented)"
 and errmsg =
-"\nrmlc - The Reactive ML Compiler
+"\nrmlc - The ReactiveML Compiler
 Usage: rmlc [options] -s <process> <file>.rml
   <process> : name of the main process
   <file>.rml : file containing the source of <process>

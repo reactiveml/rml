@@ -18,7 +18,7 @@
 
 ;; modified by Jacques Garrigue, july 1997.
 
-;; indentation code adapted for Reactive-ML by Sarah Maarek,
+;; indentation code adapted for ReactiveML by Sarah Maarek,
 ;; july 2004.
 
 (require 'comint)

@@ -1,7 +1,7 @@
 # File to compile
 FILE=fibo
 
-# Reactive ML compiler
+# ReactiveML compiler
 RMLC=rmlc
 N=-1
 SAMPLING=-1.0

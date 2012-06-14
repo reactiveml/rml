@@ -1,4 +1,4 @@
-;;; rml.el --- Reactive ML code editing commands for Emacs
+;;; rml.el --- ReactiveML code editing commands for Emacs
 
 ;; Xavier Leroy, july 1993.
 
@@ -8,12 +8,12 @@
 ;; indentation code adapted for Objective Caml by Jacques Garrigue,
 ;; july 1997. <garrigue@kurims.kyoto-u.ac.jp>
 
-;; indentation code adapted for Reactive-ML by Sarah Maarek,
+;; indentation code adapted for ReactiveML by Sarah Maarek,
 ;; july 2004.
 
 ;;user customizable variables
 (defvar rml-quote-char "'"
-  "*Quote for character constants. \"'\" for  Reactive-ML??, \"`\" for Caml-Light.")
+  "*Quote for character constants. \"'\" for  ReactiveML??, \"`\" for Caml-Light.")
 
 (defvar rml-imenu-enable nil
   "*Enable Imenu support.")
@@ -375,11 +375,11 @@ have rml-electric-indent on, which see.")
   (define-key rml-mode-map "\M-\C-x" 'rml-eval-phrase)
 
   (if running-xemacs nil ; if not running xemacs
-    (let ((map (make-sparse-keymap "Reactive-ML"))
+    (let ((map (make-sparse-keymap "ReactiveML"))
           (forms (make-sparse-keymap "Forms")))
       (define-key rml-mode-map "\C-c\C-d" 'rml-show-imenu)
       (define-key rml-mode-map [menu-bar] (make-sparse-keymap))
-      (define-key rml-mode-map [menu-bar rml] (cons "Reactive-ML" map))
+      (define-key rml-mode-map [menu-bar rml] (cons "ReactiveML" map))
       ;; rml-help
 
       (define-key map [open] '("Open add path" . rml-add-path ))
@@ -433,7 +433,7 @@ have rml-electric-indent on, which see.")
 
 (defvar rml-mode-xemacs-menu
   (if running-xemacs
-      '("Reactive-ML"
+      '("ReactiveML"
         [ "Indent phrase" rml-indent-phrase :keys "C-M-q" ]
         [ "Eval phrase" rml-eval-phrase
           :active rml-shell-active :keys "C-M-x" ]
@@ -560,7 +560,7 @@ have rml-electric-indent on, which see.")
   (interactive)
   (kill-all-local-variables)
   (setq major-mode 'rml-mode)
-  (setq mode-name "Reactive-ML")
+  (setq mode-name "ReactiveML")
   (use-local-map rml-mode-map)
   (set-syntax-table rml-mode-syntax-table)
   (setq local-abbrev-table rml-mode-abbrev-table)

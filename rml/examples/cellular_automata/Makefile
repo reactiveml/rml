@@ -1,7 +1,7 @@
 # File to compile
 FILE=cellular_automata
 
-# Reactive ML compiler
+# ReactiveML compiler
 RMLC=rmlc
 N=-1
 SAMPLING=-1.0
