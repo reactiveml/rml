@@ -149,4 +149,11 @@ cleanall: clean
 depend:
 	ocamldep -pp "camlp4o $(LIBDIR)/syntax/pa_js.cmo" *.ml *.mli > .depend
 
+tryrml-bundle.tar.gz:
+	mkdir tryrml-bundle
+	cp $(NAME).js index.html style.css tryrml-bundle/
+	cp -r lessons tryrml-bundle/
+	tar czvf try-rmlbundle.tar.gz tryrml-bundle/
+	-rm -rf tryrml-bundle/
+
 -include .depend
