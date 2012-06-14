@@ -58,26 +58,26 @@ module M =
       let debut = ref 0.0 in
       let fin = ref 0.0 in
       let diff = ref 0.0 in
-      let instant = ref 0 in
+      (* let instant = ref 0 in *)
       let react = Interpretor.rml_make p in
       let rec exec () =
 	let _ = debut := Sys.time() in
 	let v = react () in
 	let _ =
 	  fin := Sys.time();
-	  incr instant;
+	  (* incr instant; *)
 	  diff := min -. (!fin -. !debut);
 	  if !diff > 0.001 then (
 	    ignore (Unix.setitimer
 		      Unix.ITIMER_REAL
 		      {Unix.it_interval = 0.0; Unix.it_value = !diff});
 	    Unix.pause())
-	  else
-	      (print_string "Instant ";
-	       print_int !instant;
-	       print_string " : depassement = ";
-	       print_float (-. !diff);
-	       print_newline());
+	  else ();
+	      (* (print_string "Instant "; *)
+	      (*  print_int !instant; *)
+	      (*  print_string " : depassement = "; *)
+	      (*  print_float (-. !diff); *)
+	      (*  print_newline()); *)
 	in
 	match v with
 	| None -> exec ()
