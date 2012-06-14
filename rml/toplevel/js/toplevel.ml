@@ -31,6 +31,9 @@ let split_primitives p =
 
 (****)
 
+let (>>=) = Lwt.bind
+let (>|=) = Lwt.(>|=)
+
 class type global_data = object
   method toc : (string * string) list Js.readonly_prop
   method compile : (string -> string) Js.writeonly_prop
@@ -68,10 +71,13 @@ let text_button txt action =
   let id = "button"^txt in
   b##innerHTML <- Js.string txt;
   b##id <- Js.string id;
-  registered_buttons := (id, txt) :: !registered_buttons;
+  registered_buttons := (id, b) :: !registered_buttons;
   b##className <- Js.string "btn";
   b##onclick <- Dom_html.handler (fun _ -> action b; Js._true);
   b
+
+let set_action b action =
+  b##onclick <- Dom_html.handler (fun _ -> action b; Js._true)
 
 let start ppf =
   Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
@@ -122,7 +128,6 @@ let set_cookie key value =
   doc##cookie <- Js.string (Printf.sprintf "%s=%s;expires=%f" key value
                               (Js.to_float expire_time))
 
-
 let get_by_id id =
   let container = get_element_by_id id in
   Js.to_string container##innerHTML
@@ -132,6 +137,124 @@ let get_by_name id =
     List.hd (Dom.list_of_nodeList (doc##getElementsByTagName (Js.string id)))
   in
   Js.to_string container##innerHTML
+
+let cur_lesson = ref 0
+let cur_step = ref 1
+
+let get_lessons () =
+  XmlHttpRequest.perform_raw_url "lessons/index.json" >|=
+    (fun frame ->
+      let content = frame.XmlHttpRequest.content in
+      Deriving_Json.from_string Json.t<(string * string * int) array> content
+    )
+
+let info_msg msg =
+  let textbox = get_element_by_id "info" in
+  textbox##innerHTML <- Js.string msg
+
+let update_info lesson lessons step steps =
+  let msg = Printf.sprintf
+    "<h3>Lesson #%d<small>/%d</small>, step #%d<small>/%d</small></h3>"
+    lesson
+    lessons
+    step
+    steps
+  in
+  info_msg msg
+
+let safe_state_buttons lessons steps =
+  let b_next_lesson = List.assoc "button>>" !registered_buttons in
+  let b_prev_lesson = List.assoc "button<<" !registered_buttons in
+  let b_next_step = List.assoc "button>" !registered_buttons in
+  let b_prev_step = List.assoc "button<" !registered_buttons in
+  b_next_lesson##disabled <- Js.bool (!cur_lesson = lessons);
+  b_prev_lesson##disabled <- Js.bool (!cur_lesson <= 1);
+  b_next_step##disabled <- Js.bool (!cur_step = steps);
+  b_prev_step##disabled <- Js.bool (!cur_step <= 1)
+
+let load_lesson_step lessons =
+  let len = Array.length lessons in
+  let path, _, steps = Array.get lessons (!cur_lesson - 1) in
+  safe_state_buttons len steps;
+  update_info !cur_lesson len !cur_step steps;
+  let lesson_url =
+    Printf.sprintf
+      "lessons/%s/step%d.html"
+      path
+      !cur_step
+  in
+  XmlHttpRequest.perform_raw_url lesson_url >|=
+      (fun frame ->
+        frame.XmlHttpRequest.content
+      )
+
+let load_next_lesson lessons =
+  let len = Array.length lessons in
+  if !cur_lesson < len then begin
+    cur_step := 1;
+    incr cur_lesson;
+    load_lesson_step lessons;
+  end
+  else
+    Lwt.return "No more lessons found!"
+
+let load_previous_lesson lessons =
+  if !cur_lesson > 0 then begin
+    cur_step := 1;
+    decr cur_lesson;
+    load_lesson_step lessons;
+  end
+  else
+    Lwt.return "No previous lessons found!"
+
+let load_next_step lessons =
+  let path, _, steps = Array.get lessons (!cur_lesson - 1) in
+  if !cur_step < steps then begin
+    incr cur_step;
+    load_lesson_step lessons;
+  end
+  else
+    Lwt.return "No more steps found!"
+
+let load_previous_step lessons =
+  if !cur_step > 1 then begin
+    decr cur_step;
+    load_lesson_step lessons;
+  end
+  else
+    Lwt.return "No previous steps found!"
+
+let extract_escaped_and_kill html i =
+  let len = String.length html in
+  let rec iter html i len =
+    if i = len then i else
+      match html.[i] with
+          ';' -> i+1
+        | _ -> iter html (i+1) len
+  in
+  let end_pos = iter html (i+1) len in
+  let s = String.sub html i (end_pos - i) in
+  for j = i to end_pos - 1 do
+    html.[j] <- '\000'
+  done;
+  s
+
+let text_of_html html =
+  let b = Buffer.create (String.length html) in
+  for i = 0 to String.length html - 1 do
+    match html.[i] with
+        '&' ->
+          begin
+            match extract_escaped_and_kill html i with
+              | "&gt;" -> Buffer.add_char b '>'
+              | "&lt;" -> Buffer.add_char b '<'
+              | "&amp;" -> Buffer.add_char b '&'
+              | _ -> ()
+          end
+      | '\000' -> ()
+      | c -> Buffer.add_char b c
+  done;
+  Buffer.contents b
 
 let string_of_char_list list =
   let len = List.length list in
@@ -171,15 +294,15 @@ let run _ =
           (doc##createTextNode(Js.string text))
       )
   in
-  let textbox = Html.createTextarea doc in
-  textbox##value <- Js.string "";
-  textbox##id <- Js.string "rmlconsole";
-  Dom.appendChild top textbox;
-  textbox##focus();
-  textbox##select();
+  let rmlconsole = Html.createTextarea doc in
+  rmlconsole##value <- Js.string "";
+  rmlconsole##id <- Js.string "rmlconsole";
+  Dom.appendChild top rmlconsole;
+  rmlconsole##focus();
+  rmlconsole##select();
   let container = get_element_by_id "toplevel-container" in
   container##onclick <- Dom_html.handler (fun _ ->
-    textbox##focus();  textbox##select();  Js._true);
+    rmlconsole##focus();  rmlconsole##select();  Js._true);
   let history = ref [] in
   let history_bckwrd = ref [] in
   let history_frwrd = ref [] in
@@ -187,22 +310,34 @@ let run _ =
     Rmltop_core.toggle_debug ppf;
     b##innerHTML <- Js.string (Rmltop_core.debug_status ())
   ) in
-  let execute () =
-    let s = Js.to_string textbox##value in
+  let rec make_code_clickable () =
+    List.iter (fun code ->
+      let html =  code##innerHTML in
+      let txt = text_of_html (Js.to_string html) in
+      code##title <- Js.string "Click here to execute this code";
+      code##onclick <- Html.handler (fun _ ->
+        rmlconsole##value <- Js.string txt;
+        execute ();
+        Js._true)
+      )
+      (Dom.list_of_nodeList (doc##getElementsByTagName(Js.string "code")))
+  and execute () =
+    let s = Js.to_string rmlconsole##value in
     if s <> "" then
       begin
         history := Js.string s :: !history;
       end;
     history_bckwrd := !history;
     history_frwrd := [];
-    textbox##value <- Js.string "";
+    rmlconsole##value <- Js.string "";
     (try loop s ppf with _ -> ());
+    make_code_clickable ();
     debug_button##innerHTML <- Js.string (Rmltop_core.debug_status ());
-    textbox##focus();
+    rmlconsole##focus();
     container##scrollTop <- container##scrollHeight;
   in
 
-  let tbox_init_size = textbox##style##height in
+  let tbox_init_size = rmlconsole##style##height in
   Html.document##onkeydown <-
     (Html.handler
        (fun e -> match e##keyCode with
@@ -212,24 +347,24 @@ let run _ =
              | Some t -> t in
            (* Special handling of ctrl key *)
            if keyEv##ctrlKey = Js._true then
-             textbox##value <- Js.string ((Js.to_string textbox##value) ^ "\n");
+             rmlconsole##value <- Js.string ((Js.to_string rmlconsole##value) ^ "\n");
            if keyEv##ctrlKey = Js._true || keyEv##shiftKey = Js._true then
-             let rows_height = textbox##scrollHeight / (textbox##rows + 1) in
-             let h = string_of_int (rows_height * (textbox##rows + 1) + 20) ^ "px" in
-             textbox##style##height <- Js.string h;
+             let rows_height = rmlconsole##scrollHeight / (rmlconsole##rows + 1) in
+             let h = string_of_int (rows_height * (rmlconsole##rows + 1) + 20) ^ "px" in
+             rmlconsole##style##height <- Js.string h;
              Js._true
            else begin
              execute ();
-             textbox##style##height <- tbox_init_size;
-             textbox##value <- Js.string "";
+             rmlconsole##style##height <- tbox_init_size;
+             rmlconsole##value <- Js.string "";
              Js._false
            end
 	 | 38 -> (* UP ARROW key *) begin
 	   match !history_bckwrd with
 	     | s :: l ->
-	       let str = Js.to_string textbox##value in
+	       let str = Js.to_string rmlconsole##value in
 	       history_frwrd := Js.string str :: !history_frwrd;
-	       textbox##value <- s;
+	       rmlconsole##value <- s;
 	       history_bckwrd := l;
 	       Js._false
 	     | _ -> Js._true
@@ -237,14 +372,57 @@ let run _ =
 	 | 40 -> (* DOWN ARROW key *) begin
 	   match !history_frwrd with
 	     | s :: l ->
-	       let str = Js.to_string textbox##value in
+	       let str = Js.to_string rmlconsole##value in
 	       history_bckwrd := Js.string str :: !history_bckwrd;
-	       textbox##value <- s;
+	       rmlconsole##value <- s;
 	       history_frwrd := l;
 	       Js._false
 	     | _ -> Js._true
 	 end
 	 | _ -> Js._true));
+  let tutorial_div = get_element_by_id "tutorial" in
+  let tutorial_action load_page lessons _ =
+    load_page lessons >|=
+    (fun content ->
+      tutorial_div##innerHTML <- Js.string content;
+        make_code_clickable ();
+        Lwt.return ()
+    ) in
+  let start_tutorial_button = text_button "Start tutorial" (fun b ->
+    get_lessons () >|= fun lessons -> (
+      b##disabled <- Js._true;
+      let previous_lesson = text_button "<<"
+        (tutorial_action load_previous_lesson lessons)
+      in
+      let next_lesson = text_button ">>"
+        (tutorial_action load_next_lesson lessons)
+      in
+      let previous_step = text_button "<"
+        (tutorial_action load_previous_step lessons)
+      in
+      let next_step = text_button ">"
+        (tutorial_action load_next_step lessons)
+      in
+
+      previous_step##title <- Js.string "Go back to previous step";
+      previous_lesson##title <- Js.string "Go back to previous lesson";
+      next_step##title <- Js.string "Go to next step";
+      next_lesson##title <- Js.string "Go to next lesson";
+
+      (* Ugly *)
+      Lwt.ignore_result (
+        tutorial_action load_next_lesson lessons next_lesson
+      );
+
+      append_children "navbar" [
+        previous_lesson;
+        previous_step;
+        next_step;
+        next_lesson
+      ]
+    );
+    Js._true
+  ) in
   let step_button = text_button "Step" (fun b ->
     Rmltop_global.set_step 1
   ) in
@@ -284,6 +462,11 @@ let run _ =
     save_button;
   ];
 
+  append_children "tutorial" [
+    start_tutorial_button;
+  ];
+
+
   output_area##scrollTop <- output_area##scrollHeight;
   start ppf;
 
@@ -301,7 +484,6 @@ let run _ =
 
   !Rmltop_global.exit_step_by_step_mode ();
 
-  let (>>=) = Lwt.bind in
   let rec exec_machine_controller () =
     Lwt_js.sleep !Rmltop_global.sampling >>= fun () ->
       let _ = Rmltop_core.controller_react () in

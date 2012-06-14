@@ -1,0 +1,40 @@
+<h3>OCaml code</h3>
+
+<p>ReactiveML is an extension of OCaml. Therefore, OCaml phrases are
+also ReactiveML phrases. For example:</p>
+
+<p><code>1 + 2 ;;</code></p>
+<br />
+
+<p><code>[ 'a' ; 'b' ; 'c' ] ;;</code></p>
+<br />
+
+<p><code>(fun x -> x + 1) 3 ;;</code></p>
+<br />
+
+<p><code>let a = 1 ;;</code></p>
+<br />
+
+<p><code>let sqr x = x *. x ;;</code></p>
+<br />
+
+<p><code>type 'a tree =
+  | Leaf of 'a
+  | Node of 'a * 'a tree * 'a tree
+;;</code></p>
+<br />
+
+<p><code>let rec depth t =
+  match t with
+  | Leaf _ -> 1
+  | Node (_, t1, t2) -> 1 + max (depth t1) (depth t2)
+;;</code></p>
+<br />
+
+<p><code>let n = depth (Node (1, Node (2, Leaf 4, Leaf 5), Leaf 3)) ;;</code></p>
+<br />
+
+<p>Functions of the OCaml standard library are also available.</p>
+
+<p><code>List.rev [ 'a' ; 'b' ; 'c' ] ;;</code></p>
+<br />

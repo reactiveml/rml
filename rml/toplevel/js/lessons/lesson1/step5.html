@@ -1,0 +1,25 @@
+<h3>Preemption</h3>
+
+<p>The execution of a process can be stop on the reception of an event
+using the [do/until] construct (note that it is not a loop
+construct).</p>
+
+<p><code>signal kill;;</code></p>
+<br />
+
+<p><code>let process p =
+  do
+    for i = 1 to max_int do
+      print_int i;
+      print_newline ();
+      pause
+    done
+  until kill done
+;;</code></p>
+<br />
+
+<p><code>#run p;;</code></p>
+<br />
+
+<p><code>emit kill;;</code></p>
+<br />

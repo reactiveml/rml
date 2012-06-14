@@ -1,11 +1,12 @@
 
 NAME=toplevel
-OBJS=toplevel.cmo
+OBJS=$(NAME).cmo
 
 all: $(NAME).js
 
 DERIVING := $(shell ocamlfind query deriving-ocsigen 2> /dev/null)
 
+JSLIB=js-of-ocaml
 LIBDIR=js-of-ocaml/lib
 RUNDIR=js-of-ocaml/runtime
 
@@ -16,12 +17,14 @@ JSFILES=\
 
 OCAMLC=ocamlfind ocamlc -annot \
  -package lwt,str \
- -pp "camlp4o js-of-ocaml/lib/syntax/pa_js.cmo" \
- -I js-of-ocaml/compiler \
- -I js-of-ocaml/lib \
+ -I $(JSLIB)/compiler \
+ -I $(LIBDIR) \
+ -I $(LIBDIR)/syntax \
+ -I $(LIBDIR)/deriving_json \
+ -pp "camlp4o -I /usr/lib/ocaml/deriving-ocsigen -I $(LIBDIR)/syntax pa_deriving.cma pa_deriving_Json.cmo $(LIBDIR)/syntax/pa_js.cmo" \
  -I +threads \
- -I ../../interpreter/ \
  -I ../ \
+ -I ../../interpreter/ \
  -I ../../compiler/
 
 OPTIONS+=\
@@ -45,6 +48,8 @@ STDLIB=\
  unix.cma \
  threads.cma \
  js_of_ocaml.cma \
+ deriving_Json_lexer.cmo \
+ deriving_json.cma \
  compiler.cma \
  rmlcompiler.cmo \
  sig_env.cmo \
@@ -129,7 +134,7 @@ $(NAME).js: $(NAME).byte $(JSFILES)
 
 .PHONY: toplevel.byte toplevel.js
 $(NAME).byte: js-of-ocaml-stamp $(OBJS)
-	$(OCAMLC) -linkall -package str -linkpkg -o $@.tmp $(STDLIB) $(OBJS)
+	$(OCAMLC) -linkall -linkpkg -o $@.tmp $(STDLIB) $(OBJS)
 	$(EXPUNGE) $@.tmp $@ $(PERVASIVES)
 	rm -f $@.tmp
 
