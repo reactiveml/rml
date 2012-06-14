@@ -4,57 +4,45 @@
 is a succession of instants. Any OCaml function is considered to be
 instantaneous.</p>
 
-<p><code>let instantaneous_loop n =
+<p class="code"><code>let instantaneous_loop n =
   for i = 1 to n do
     print_int i;
     print_newline ()
-  done
-;;</code></p>
-<br />
+  done ;;</code></p>
 
-<p><code>instantaneous_loop 10;;</code></p>
-<br />
+<p class="code"><code>instantaneous_loop 10;;</code></p>
 
 <p>Functions that can be executed through several instants are
 processes. The [pause] statement waits for the end of instant.</p>
 
-<p><code>let process non_instantaneous_loop n =
+<p class="code"><code>let process non_instantaneous_loop n =
   for i = 1 to n do
     print_int i;
     print_newline ();
     pause
-  done
-;;</code></p>
-<br />
+  done ;;</code></p>
 
-<p><code>#run (non_instantaneous_loop 10);;</code></p>
-<br />
+<p class="code"><code>#run (non_instantaneous_loop 10);;</code></p>
 
 <p>The notion of instant is really illustrated when parallel
 computations occurs. The parallel execution of two expressions is
 denoted [e1 || e2]. It guaranties that the two expressions are
 executed at each instant.</p>
 
-<p><code>let process ex1 =
-  run (non_instantaneous_loop 10) || run (non_instantaneous_loop 10)
-;;</code></p>
-<br />
+<p class="code"><code>let process ex1 =
+  run (non_instantaneous_loop 10) || run (non_instantaneous_loop 10) ;;</code></p>
 
-<p><code>#run ex1;;</code></p>
-<br />
+<p class="code"><code>#run ex1;;</code></p>
 
 <p>In the previous example ([ex1]), we can observe that each instance
 of the process [non_instantaneous_loop] prints one number per
 instant. In the following example, the function [instantaneous_loop]
 is executed in one instant.</p>
 
-<p><code>let process ex2 =
-  run (non_instantaneous_loop 10) || instantaneous_loop 10
-;;</code></p>
-<br />
+<p class="code"><code>let process ex2 =
+  run (non_instantaneous_loop 10) || instantaneous_loop 10 ;;</code></p>
 
-<p><code>#run ex2;;</code></p>
-<br />
+<p class="code"><code>#run ex2;;</code></p>
 
 <p>Remark: You can use the button "suspend" (or use the directive
 [#suspend;;]) to execute the program in a step by step mode. The to

@@ -55,12 +55,28 @@ body {
 
 #sidebar {
     float: left;
-    max-width: 300px;
+    max-width: 500px;
     text-align: center;
 }
 
 #sidebar hr {
     width: 92%;
+}
+
+#tutorial {
+    text-align: justify;
+    display: inline-block;
+    max-width: 500px;
+    padding-right: 5px;
+}
+
+#info small {
+    font-size: 70%;
+}
+
+p.code {
+    border: 1px #000 solid;
+    background-color: #ffff66;
 }
 
 #help {
@@ -71,7 +87,7 @@ body {
     display: inline-block;
     margin: 10px;
     text-align: justify;
-    max-width: 300px;
+    max-width: 500px;
 }
 
 #intro p {
