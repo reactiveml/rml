@@ -78,7 +78,7 @@ let print_immediate i =
       else pp_print_float !formatter f
 	(* patch because "x.0" is printed "x" by C for caml < 3.05 *)
 	(* if (fst (modf f)) = 0.0 then print_string ".0" *)
-  | Const_char(c) -> pp_print_char !formatter '\''; print_char c; print_char '\''
+  | Const_char(c) -> pp_print_char !formatter '\''; pp_print_char !formatter c; pp_print_char !formatter '\''
   | Const_string(s) -> pp_print_string !formatter ("\""^(String.escaped s)^"\"")
 
 (** Prints a name. Infix chars are surrounded by parenthesis *)
@@ -407,7 +407,7 @@ and print_type_decl typ =
 		pp_print_space !formatter ();
 		print_te 2 typ
 	  end)
-	(fun () -> print_space (); print_string "| ")
+	(fun () -> pp_print_space !formatter (); pp_print_string !formatter "| ")
 	l
   | Ctype_record l ->
       pp_print_string !formatter "=";
@@ -416,7 +416,7 @@ and print_type_decl typ =
       pp_print_space !formatter ();
       print_list
 	(fun (lab,flag,typ) ->
-	  if flag = Mutable then print_string "mutable";
+	  if flag = Mutable then pp_print_string !formatter "mutable";
 	  pp_print_space !formatter ();
 	  print_global lab;
 	  pp_print_string !formatter ":";
