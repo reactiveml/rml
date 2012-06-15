@@ -8,23 +8,23 @@ values into a list.).</p>
 <p>Here, we define a signal [s] which sums the values it receives
 during an instant.</p>
 
-<p class="code"><code>signal s default 0 gather (+);;</code></p>
+<p><pre class="code">signal s default 0 gather (+);;</pre></p>
 
 <p>To get the value of a signal, we can use the constructs [await s(x)
 in e] which waits that [s] is emitted and then executes [e] where [x]
 get the value carried by the signal [s].</p>
 
-<p class="code"><code>let process print_s =
+<p><pre class="code">let process print_s =
   loop
     await s(x) in
     print_int x;
     print_newline ()
-  end ;;</code></p>
+  end ;;</pre></p>
 
-<p class="code"><code>#run print_s;;</code></p>
+<p><pre class="code">#run print_s;;</pre></p>
 
-<p class="code"><code>emit s 1;;</code></p>
+<p><pre class="code">emit s 1;;</pre></p>
 
-<p class="code"><code>emit s 2;;</code></p>
+<p><pre class="code">emit s 2;;</pre></p>
 
-<p class="code"><code>emit s 3; emit s 4;;</code></p>
+<p><pre class="code">emit s 3; emit s 4;;</pre></p>

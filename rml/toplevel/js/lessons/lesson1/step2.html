@@ -4,25 +4,25 @@
 is a succession of instants. Any OCaml function is considered to be
 instantaneous.</p>
 
-<p class="code"><code>let instantaneous_loop n =
+<p><pre class="code">let instantaneous_loop n =
   for i = 1 to n do
     print_int i;
     print_newline ()
-  done ;;</code></p>
+  done ;;</pre></p>
 
-<p class="code"><code>instantaneous_loop 10;;</code></p>
+<p><pre class="code">instantaneous_loop 10;;</pre></p>
 
 <p>Functions that can be executed through several instants are
 processes. The [pause] statement waits for the end of instant.</p>
 
-<p class="code"><code>let process non_instantaneous_loop n =
+<p><pre class="code">let process non_instantaneous_loop n =
   for i = 1 to n do
     print_int i;
     print_newline ();
     pause
-  done ;;</code></p>
+  done ;;</pre></p>
 
-<p class="code"><code>#run (non_instantaneous_loop 10);;</code></p>
+<p><pre class="code">#run (non_instantaneous_loop 10);;</pre></p>
 
 <p>Remark: You can use the button "suspend" (or use the directive
 [#suspend;;]) to execute the program in a step by step mode. The to

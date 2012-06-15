@@ -5,17 +5,18 @@ computations occurs. The parallel execution of two expressions is
 denoted [e1 || e2]. It guaranties that the two expressions are
 executed at each instant.</p>
 
-<p class="code"><code>let process ex1 =
-  run (non_instantaneous_loop 10) || run (non_instantaneous_loop 10) ;;</code></p>
+<p><pre class="code">let process ex1 =
+    run (non_instantaneous_loop 10)
+ || run (non_instantaneous_loop 10) ;;</pre></p>
 
-<p class="code"><code>#run ex1;;</code></p>
+<p><pre class="code">#run ex1;;</pre></p>
 
 <p>In the previous example ([ex1]), we can observe that each instance
 of the process [non_instantaneous_loop] prints one number per
 instant. In the following example, the function [instantaneous_loop]
 is executed in one instant.</p>
 
-<p class="code"><code>let process ex2 =
-  run (non_instantaneous_loop 10) || instantaneous_loop 10 ;;</code></p>
+<p><pre class="code">let process ex2 =
+  run (non_instantaneous_loop 10) || instantaneous_loop 10 ;;</pre></p>
 
-<p class="code"><code>#run ex2;;</code></p>
+<p><pre class="code">#run ex2;;</pre></p>

@@ -312,15 +312,17 @@ let run _ =
   ) in
   let rec make_code_clickable () =
     List.iter (fun code ->
-      let html =  code##innerHTML in
-      let txt = text_of_html (Js.to_string html) in
-      code##title <- Js.string "Click here to execute this code";
-      code##onclick <- Html.handler (fun _ ->
-        rmlconsole##value <- Js.string txt;
-        execute ();
-        Js._true)
+      if Js.to_bool (code##classList##contains (Js.string "code")) then begin
+        let html =  code##innerHTML in
+        let txt = text_of_html (Js.to_string html) in
+        code##title <- Js.string "Click here to execute this code";
+        code##onclick <- Html.handler (fun _ ->
+          rmlconsole##value <- Js.string txt;
+          execute ();
+          Js._true)
+      end
       )
-      (Dom.list_of_nodeList (doc##getElementsByTagName(Js.string "code")))
+      (Dom.list_of_nodeList (doc##getElementsByTagName(Js.string "pre")))
   and execute () =
     let s = Js.to_string rmlconsole##value in
     if s <> "" then

@@ -74,7 +74,7 @@ body {
     font-size: 70%;
 }
 
-p.code {
+pre.code {
     border: 1px #000 solid;
     background-color: #ffff66;
 }
@@ -107,7 +107,7 @@ p.code {
    text-align: center;
 }
 
-pre {
+pre#output {
     background: transparent;
     color: #fff;
     margin-bottom: 0;

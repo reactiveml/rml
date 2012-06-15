@@ -3,27 +3,27 @@
 <p>ReactiveML is an extension of OCaml. Therefore, OCaml phrases are
 also ReactiveML phrases. For example:</p>
 
-<p class="code"><code>1 + 2 ;;</code></p>
+<p><pre class="code">1 + 2 ;;</pre></p>
 
-<p class="code"><code>[ "a" ; "b" ; "c" ] ;;</code></p>
+<p><pre class="code">[ "a" ; "b" ; "c" ] ;;</pre></p>
 
-<p class="code"><code>(fun x -> x + 1) 3 ;;</code></p>
+<p><pre class="code">(fun x -> x + 1) 3 ;;</pre></p>
 
-<p class="code"><code>let a = 1 ;;</code></p>
+<p><pre class="code">let a = 1 ;;</pre></p>
 
-<p class="code"><code>let sqr x = x *. x ;;</code></p>
+<p><pre class="code">let sqr x = x *. x ;;</pre></p>
 
-<p class="code"><code>type 'a tree =
+<p><pre class="code">type 'a tree =
   | Leaf of 'a
-  | Node of 'a * 'a tree * 'a tree ;;</code></p>
+  | Node of 'a * 'a tree * 'a tree ;;</pre></p>
 
-<p class="code"><code>let rec depth t =
+<p><pre class="code">let rec depth t =
   match t with
   | Leaf _ -> 1
-  | Node (_, t1, t2) -> 1 + max (depth t1) (depth t2) ;;</code></p>
+  | Node (_, t1, t2) -> 1 + max (depth t1) (depth t2) ;;</pre></p>
 
-<p class="code"><code>let n = depth (Node (1, Node (2, Leaf 4, Leaf 5), Leaf 3)) ;;</code></p>
+<p><pre class="code">let n = depth (Node (1, Node (2, Leaf 4, Leaf 5), Leaf 3)) ;;</pre></p>
 
 <p>Functions of the OCaml standard library are also available.</p>
 
-<p class="code"><code>List.rev [ "a" ; "b" ; "c" ] ;;</code></p>
+<p><pre class="code">List.rev [ "a" ; "b" ; "c" ] ;;</pre></p>

@@ -7,17 +7,17 @@ absent.</p>
 
 <p>An event is declare with the construct [signal].</p>
 
-<p class="code"><code>signal s;;</code></p>
+<p><pre class="code">signal s;;</pre></p>
 
 <p>The construct [await s] waits the next instant where s is
 broadcasted.</p>
 
-<p class="code"><code>let process p =
+<p><pre class="code">let process p =
   await s;
-  print_endline "Hello!" ;;</code></p>
+  print_endline "Hello!" ;;</pre></p>
 
-<p class="code"><code>#run p;;</code></p>
+<p><pre class="code">#run p;;</pre></p>
 
 <p>An event is broadcasted using [emit].</p>
 
-<p class="code"><code>emit s;;</code></p>
+<p><pre class="code">emit s;;</pre></p>
