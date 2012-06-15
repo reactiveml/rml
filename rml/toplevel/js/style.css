@@ -99,6 +99,7 @@ pre.code {
 }
 
 .footer {
+   clear: both;
    background-color: #eee;
    margin-top: 10px;
    border-top: 1px #CCC solid;
