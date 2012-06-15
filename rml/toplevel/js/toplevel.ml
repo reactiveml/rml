@@ -142,7 +142,7 @@ let cur_lesson = ref 0
 let cur_step = ref 1
 
 let get_lessons () =
-  XmlHttpRequest.perform_raw_url "lessons/index.json" >|=
+  XmlHttpRequest.get "lessons/index.json" >|=
     (fun frame ->
       let content = frame.XmlHttpRequest.content in
       Deriving_Json.from_string Json.t<(string * string * int) array> content
@@ -183,7 +183,7 @@ let load_lesson_step lessons =
       path
       !cur_step
   in
-  XmlHttpRequest.perform_raw_url lesson_url >|=
+  XmlHttpRequest.get lesson_url >|=
       (fun frame ->
         frame.XmlHttpRequest.content
       )
