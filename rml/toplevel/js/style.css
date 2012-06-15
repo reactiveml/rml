@@ -59,10 +59,6 @@ body {
     text-align: center;
 }
 
-#sidebar hr {
-    width: 92%;
-}
-
 #tutorial {
     text-align: justify;
     display: inline-block;

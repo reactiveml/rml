@@ -416,6 +416,10 @@ let run _ =
         tutorial_action load_next_lesson lessons next_lesson
       );
 
+      let intro = get_element_by_id "intro"
+      and sidebar = get_element_by_id "sidebar" in
+      Dom.removeChild sidebar intro;
+
       append_children "navbar" [
         previous_lesson;
         previous_step;
