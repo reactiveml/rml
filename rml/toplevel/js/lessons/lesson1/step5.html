@@ -1,20 +1,30 @@
-<h3>Preemption</h3>
+<h3>Valued events</h3>
 
-<p>The execution of a process can be stop on the reception of an event
-using the [do/until] construct (note that it is not a loop
-construct).</p>
+<p>Events can carry values. When the signal is declared, the
+programmer can specify how values that are emitted during the same
+instant are combined (the default behavior is to collect all the
+values into a list.).</p>
 
-<p class="code"><code>signal kill;;</code></p>
+<p>Here, we define a signal [s] which sums the values it receives
+during an instant.</p>
 
-<p class="code"><code>let process p =
-  do
-    for i = 1 to max_int do
-      print_int i;
-      print_newline ();
-      pause
-    done
-  until kill done ;;</code></p>
+<p class="code"><code>signal s default 0 gather (+);;</code></p>
 
-<p class="code"><code>#run p;;</code></p>
+<p>To get the value of a signal, we can use the constructs [await s(x)
+in e] which waits that [s] is emitted and then executes [e] where [x]
+get the value carried by the signal [s].</p>
 
-<p class="code"><code>emit kill;;</code></p>
+<p class="code"><code>let process print_s =
+  loop
+    await s(x) in
+    print_int x;
+    print_newline ()
+  end ;;</code></p>
+
+<p class="code"><code>#run print_s;;</code></p>
+
+<p class="code"><code>emit s 1;;</code></p>
+
+<p class="code"><code>emit s 2;;</code></p>
+
+<p class="code"><code>emit s 3; emit s 4;;</code></p>

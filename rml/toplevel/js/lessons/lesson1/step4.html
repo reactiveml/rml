@@ -1,30 +1,21 @@
-<h3>Valued events</h3>
+<h3>Parallel composition</h3>
 
-<p>Events can carry values. When the signal is declared, the
-programmer can specify how values that are emitted during the same
-instant are combined (the default behavior is to collect all the
-values into a list.).</p>
+<p>The notion of instant is really illustrated when parallel
+computations occurs. The parallel execution of two expressions is
+denoted [e1 || e2]. It guaranties that the two expressions are
+executed at each instant.</p>
 
-<p>Here, we define a signal [s] which sums the values it receives
-during an instant.</p>
+<p class="code"><code>let process ex1 =
+  run (non_instantaneous_loop 10) || run (non_instantaneous_loop 10) ;;</code></p>
 
-<p class="code"><code>signal s default 0 gather (+);;</code></p>
+<p class="code"><code>#run ex1;;</code></p>
 
-<p>To get the value of a signal, we can use the constructs [await s(x)
-in e] which waits that [s] is emitted and then executes [e] where [x]
-get the value carried by the signal [s].</p>
+<p>In the previous example ([ex1]), we can observe that each instance
+of the process [non_instantaneous_loop] prints one number per
+instant. In the following example, the function [instantaneous_loop]
+is executed in one instant.</p>
 
-<p class="code"><code>let process print_s =
-  loop
-    await s(x) in
-    print_int x;
-    print_newline ()
-  end ;;</code></p>
+<p class="code"><code>let process ex2 =
+  run (non_instantaneous_loop 10) || instantaneous_loop 10 ;;</code></p>
 
-<p class="code"><code>#run print_s;;</code></p>
-
-<p class="code"><code>emit s 1;;</code></p>
-
-<p class="code"><code>emit s 2;;</code></p>
-
-<p class="code"><code>emit s 3; emit s 4;;</code></p>
+<p class="code"><code>#run ex2;;</code></p>
