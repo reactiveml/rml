@@ -5,14 +5,15 @@ programmer can specify how values that are emitted during the same
 instant are combined (the default behavior is to collect all the
 values into a list.).</p>
 
-<p>Here, we define a signal [s] which sums the values it receives
+<p>Here, we define a signal <code>s</code> which sums the values it receives
 during an instant.</p>
 
 <p><pre class="code">signal s default 0 gather (+);;</pre></p>
 
-<p>To get the value of a signal, we can use the constructs [await s(x)
-in e] which waits that [s] is emitted and then executes [e] where [x]
-get the value carried by the signal [s].</p>
+<p>To get the value of a signal, we can use the constructs <code>await s(x)
+in e</code> which waits that <code>s</code> is emitted and then executes
+<code>e</code> where <code>x</code> get the value carried by the signal
+<code>s</code>.</p>
 
 <p><pre class="code">let process print_s =
   loop

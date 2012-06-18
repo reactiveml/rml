@@ -13,7 +13,7 @@ instantaneous.</p>
 <p><pre class="code">instantaneous_loop 10;;</pre></p>
 
 <p>Functions that can be executed through several instants are
-processes. The [pause] statement waits for the end of instant.</p>
+processes. The <code>pause</code> statement waits for the end of instant.</p>
 
 <p><pre class="code">let process non_instantaneous_loop n =
   for i = 1 to n do
@@ -25,6 +25,6 @@ processes. The [pause] statement waits for the end of instant.</p>
 <p><pre class="code">#run (non_instantaneous_loop 10);;</pre></p>
 
 <p>Remark: You can use the button "suspend" (or use the directive
-[#suspend;;]) to execute the program in a step by step mode. The to
+<code>#suspend;;</code>) to execute the program in a step by step mode. The to
 return into the sampled mode you can use the button "resume" (or the
-directive [#resume;;]).</p>
+directive <code>#resume;;</code>).</p>
