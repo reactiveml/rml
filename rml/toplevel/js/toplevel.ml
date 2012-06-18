@@ -106,28 +106,6 @@ let set_container_by_id id s =
 let update_prompt prompt =
   set_container_by_id "sharp" prompt
 
-(* Some useful functions to handle cookies *)
-let find_in good_input input =
-  try
-    let len = String.length good_input in
-    for i = 0 to String.length input - len  do
-      if String.sub input i len = good_input then
-        raise Exit
-    done;
-    false
-  with Exit -> true
-
-let get_cookie () =
-  let reg = Regexp.regexp ";" in
-  Regexp.split reg (Js.to_string doc##cookie)
-
-let set_cookie key value =
-  let today = jsnew Js.date_now () in
-  let expire_time = today##setTime
-    ((Js.to_float today##getTime()) *. 60. *. 60. *. 24. *. 365.) in
-  doc##cookie <- Js.string (Printf.sprintf "%s=%s;expires=%f" key value
-                              (Js.to_float expire_time))
-
 let get_by_id id =
   let container = get_element_by_id id in
   Js.to_string container##innerHTML
