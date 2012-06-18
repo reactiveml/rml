@@ -428,14 +428,14 @@ let run _ =
       next_step##title <- Js.string "Go to next step";
       next_lesson##title <- Js.string "Go to next lesson";
 
-      (* Ugly *)
       Lwt.ignore_result (
-        tutorial_action load_next_lesson lessons next_lesson
+        tutorial_action load_next_lesson lessons next_lesson >>=
+          (fun _ ->
+            let intro = get_element_by_id "intro"
+            and sidebar = get_element_by_id "sidebar" in
+            Lwt.return (Dom.removeChild sidebar intro)
+          )
       );
-
-      let intro = get_element_by_id "intro"
-      and sidebar = get_element_by_id "sidebar" in
-      Dom.removeChild sidebar intro;
 
       append_children "navbar" [
         previous_lesson;
