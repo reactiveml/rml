@@ -20,8 +20,7 @@ OCAMLC=ocamlfind ocamlc -annot \
  -I $(JSLIB)/compiler \
  -I $(LIBDIR) \
  -I $(LIBDIR)/syntax \
- -I $(LIBDIR)/deriving_json \
- -pp "camlp4o -I /usr/lib/ocaml/deriving-ocsigen -I $(LIBDIR)/syntax pa_deriving.cma pa_deriving_Json.cmo $(LIBDIR)/syntax/pa_js.cmo" \
+ -pp "camlp4o $(LIBDIR)/syntax/pa_js.cmo" \
  -I +threads \
  -I ../ \
  -I ../../interpreter/ \
@@ -48,8 +47,6 @@ STDLIB=\
  unix.cma \
  threads.cma \
  js_of_ocaml.cma \
- deriving_Json_lexer.cmo \
- deriving_json.cma \
  compiler.cma \
  rmlcompiler.cmo \
  sig_env.cmo \

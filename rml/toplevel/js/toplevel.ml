@@ -141,11 +141,28 @@ let get_by_name id =
 let cur_lesson = ref 0
 let cur_step = ref 1
 
+let parse_lessons_index content =
+  let lessons = Regexp.split (Regexp.regexp "[ \t]*\n+[ \t]*") content in
+  let lessons = List.fold_left
+    (fun lessons line ->
+      if String.length line > 0 && line.[0] <> '#' then
+        let lesson = Regexp.split (Regexp.regexp "[ \t]*;[ \t]*") line in
+        match lesson with
+          | path::title::steps::[] ->
+              (path, title, int_of_string steps) :: lessons
+          | _ -> lessons
+      else
+        lessons
+    )
+    []
+    (List.rev lessons) in
+  Array.of_list lessons
+
 let get_lessons () =
   XmlHttpRequest.get "lessons/index.json" >|=
     (fun frame ->
       let content = frame.XmlHttpRequest.content in
-      Deriving_Json.from_string Json.t<(string * string * int) array> content
+      parse_lessons_index content
     )
 
 let info_msg msg =
