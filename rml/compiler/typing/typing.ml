@@ -62,6 +62,16 @@ let unify_emit loc expected_ty actual_ty =
     unify ~regions:true expected_ty actual_ty
   with Unify -> emit_wrong_type_err loc actual_ty expected_ty
 
+let unify_emit_usage loc expected_ty actual_ty =
+  try
+    unify ~regions:true expected_ty actual_ty
+  with Unify -> emit_wrong_usage_err loc actual_ty expected_ty
+
+let unify_get_usage loc expected_ty actual_ty =
+  try
+    unify ~regions:true expected_ty actual_ty
+  with Unify -> get_wrong_usage_err loc actual_ty expected_ty
+
 let unify_run loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
@@ -103,8 +113,8 @@ let unify_usage loc ty_emit ty_get u_new =
   let new_u_emit, new_u_get = Usages.km_s u_new in
   let new_ty_emit = Usages_misc.type_of_usage new_u_emit
   and new_ty_get = Usages_misc.type_of_usage new_u_get in
-  unify_emit loc ty_emit new_ty_emit;
-  unify_emit loc ty_get new_ty_get
+  unify_emit_usage loc ty_emit new_ty_emit;
+  unify_get_usage loc ty_get new_ty_get
 
 let accumulate_usage ty loc u_new =
   try

@@ -72,6 +72,24 @@ let emit_wrong_type_err loc actual_ty expected_ty =
     Types_printer.output expected_ty;
   raise Error
 
+let emit_wrong_usage_err loc actual_ty expected_ty =
+  Printf.eprintf
+    "%aEmits on this signal should be used according\n\
+    to usage %a, but is used with usage %a.\n"
+    Location.print_oc loc
+    Types_printer.output actual_ty
+    Types_printer.output expected_ty;
+  raise Error
+
+let get_wrong_usage_err loc actual_ty expected_ty =
+  Printf.eprintf
+    "%aReads on this signal should be used according\n\
+    to usage %a, but is used with usage %a.\n"
+    Location.print_oc loc
+    Types_printer.output actual_ty
+    Types_printer.output expected_ty;
+  raise Error
+
 let run_wrong_type_err loc actual_ty expected_ty =
   Printf.eprintf
     "%aThis expression has type %a,\n\
