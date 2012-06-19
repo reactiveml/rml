@@ -21,6 +21,8 @@ rml/tools/rmlbuild/rmlbuild/ocamlbuild_Myocamlbuild_config.ml
 
 # Annot files
 *.annot
+*.tannot
+*.sannot
 
 # ReactiveML binaries
 rmlc
