@@ -47,7 +47,7 @@ oprof: opt
 	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) $<
 
 .rmli.rzi:
-	$(RMLC) -c $<
+	$(RMLC) -c $(RMLFLAGS) $<
 
 .ml.cmx:
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $(INCLUDES) $<

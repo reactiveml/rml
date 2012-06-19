@@ -85,7 +85,7 @@ rmltop_lexer.cmo: rmltop_lexer.ml
 	$(OCAMLC) -c $(OCAMLFLAGS) $(RMLLIB) -thread rmltop_lexer.ml
 
 rmltop_global.rzi: rmltop_global.rmli
-	$(RMLC) -c $(RMLLIB) rmltop_global.rmli
+	$(RMLC) -c $(RMLFLAGS) $(RMLFLAGS) $(RMLLIB) rmltop_global.rmli
 
 rmltop_global.cmi: rmltop_global.mli
 	$(OCAMLC) $(OCAMLFLAGS) $(RMLLIB) rmltop_global.mli
@@ -94,14 +94,14 @@ rmltop_global.cmo: rmltop_global.ml rmltop_global.cmi
 	$(OCAMLC) -c $(OCAMLFLAGS) $(RMLLIB) -thread rmltop_global.ml
 
 rmltop_machine_body.ml: rmltop_machine_body.rml
-	$(RMLC) $(RMLLIB) -runtime Lco_ctrl_tree rmltop_machine_body.rml
+	$(RMLC) $(RMLFLAGS) $(RMLLIB) -runtime Lco_ctrl_tree rmltop_machine_body.rml
 
 rmltop_machine_body.cmi rmltop_machine_body.cmo: rmltop_machine_body.ml
 	$(OCAMLC) -c $(OCAMLFLAGS) $(RMLLIB) -thread rmltop_machine_body.ml
 
 rmltop_reactive_machine.rzi rmltop_reactive_machine.mli: \
 		rmltop_reactive_machine.rmli rmltop_global.rzi
-	$(RMLC) $(RMLLIB) rmltop_reactive_machine.rmli
+	$(RMLC) $(RMLFLAGS) $(RMLLIB) rmltop_reactive_machine.rmli
 
 rmltop_reactive_machine.cmi: rmltop_reactive_machine.mli rmltop_global.cmi
 	$(OCAMLC) $(OCAMLFLAGS) $(RMLLIB) rmltop_reactive_machine.mli
@@ -112,7 +112,7 @@ rmltop_reactive_machine.cmo: rmltop_reactive_machine.ml \
 	$(OCAMLC) -c $(OCAMLFLAGS) $(RMLLIB) -thread rmltop_reactive_machine.ml
 
 rmltop_controller.ml: rmltop_controller.rml rmltop_global.rzi
-	$(RMLC) $(RMLLIB) -runtime Rmltop rmltop_controller.rml
+	$(RMLC) $(RMLFLAGS) $(RMLLIB) -runtime Rmltop rmltop_controller.rml
 
 rmltop_controller.cmi rmltop_controller.cmo: rmltop_controller.ml \
 		rmltop_reactive_machine.cmi rmltop_implem.cmo rmltop_global.cmi
