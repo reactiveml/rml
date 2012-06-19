@@ -120,7 +120,7 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
   if gl.gi = Initialization.event_ident
   || gl.gi = Initialization.affine_ident
   || gl.gi = Initialization.neutral_ident
-  || gl.gi = Initialization.zero_ident then
+  then
     (* special case for event/usage type *)
     begin
       print_string !interpreter_module;

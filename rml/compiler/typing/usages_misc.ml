@@ -27,7 +27,7 @@ let string_of_usage = function
 let type_of_usage = function
   | Affine -> Initialization.type_affine
   | Neutral -> Initialization.type_neutral
-  | Zero -> Initialization.type_zero
+  | Zero -> Def_types.new_var ()
 
 let string_of_signal_usage su =
   let _, u1, u2 = Usages.km_su su in

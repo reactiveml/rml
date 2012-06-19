@@ -124,10 +124,6 @@ let neutral_ident = pervasives_type "neutral"
 let type_desc_neutral = type_desc neutral_ident
 let type_neutral = Def_types.constr_notabbrev neutral_ident []
 
-let zero_ident = pervasives_type "zero"
-let type_desc_zero = type_desc zero_ident
-let type_zero = Def_types.constr_notabbrev zero_ident []
-
 (* list *)
 let list_ident = pervasives_type "list"
 
@@ -208,7 +204,6 @@ let list_of_type_desc =
     type_desc_event;
     type_desc_affine;
     type_desc_neutral;
-    type_desc_zero;
 ]
 
 let list_of_constr_desc =

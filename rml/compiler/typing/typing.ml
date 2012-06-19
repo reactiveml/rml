@@ -189,7 +189,7 @@ let get_effects id loc =
   try
     Hashtbl.find gleff id
   with _ ->
-    Effects.singleton id loc type_zero type_zero
+    Effects.singleton id loc (new_var ()) (new_var ())
 
 (* checks that every type is defined *)
 (* and used with the correct arity *)
@@ -492,7 +492,7 @@ let rec type_of_expression env expr =
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
         let ty = instance typ_sch in
-	ty, Effects.singleton n.Ident.id expr.expr_loc type_zero type_zero
+	ty, Effects.singleton n.Ident.id expr.expr_loc (new_var ()) (new_var ())
 
     | Rexpr_global (n) ->
         let g_ty = (Global.info n).value_typ in
