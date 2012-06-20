@@ -1,3 +1,4 @@
+open Runtime
 open Runtime_options
 
 module Make
@@ -97,7 +98,7 @@ struct
     let dummy_step () = ()
 
     type control_tree =
-        { kind: control_type;
+        { kind: (unit step, clock) control_type;
           mutable alive: bool;
           mutable susp: bool;
           mutable cond: (unit -> bool);
@@ -109,12 +110,6 @@ struct
           mutable last_activation : clock_state;
           mutable instance : int;
         }
-    and control_type =
-      | Clock_domain of clock
-      | Kill of unit step
-      | Kill_handler of (unit -> unit step)
-      | Susp
-      | When
 
     type waiting_kind =
         | Wbefore_eoi of C.gid (* before the eoi *)
@@ -653,12 +648,6 @@ struct
 
     let is_active ctrl =
       ctrl.alive && not ctrl.susp
-
-    let set_suspended ctrl v =
-      ctrl.susp <- v
-
-    let set_condition ctrl c =
-      ctrl.cond <- c
 
     (** clock domains operations *)
     let mk_clock_domain clock balancer location parent_ctrl =
@@ -1444,6 +1433,40 @@ struct
          List.iter (fun (w,sig_cd) -> _on_event_at_eoi sig_cd ctrl w f) w_list
 *)
 
+    let create_control kind body f_k ctrl cd =
+      let new_ctrl = new_ctrl When in
+      let f = body (end_ctrl new_ctrl f_k) new_ctrl in
+      match kind with
+        | When ->
+            fun evt other_cond ->
+              let rec when_act _ =
+                wake_up_ctrl new_ctrl cd;
+                on_next_instant ctrl f_when
+              and f_when _ =
+                on_event evt ctrl when_act unit_value
+              in
+              new_ctrl.cond <- (fun () -> Event.status evt);
+              fun () ->
+                start_ctrl cd ctrl new_ctrl;
+                new_ctrl.susp <- true;
+                on_next_instant new_ctrl f;
+                f_when ()
+        | _ ->
+            fun evt other_cond ->
+              new_ctrl.cond <-
+                (fun () -> Event.status ~only_at_eoi:true evt && other_cond (Event.value evt));
+              fun () ->
+                start_ctrl cd ctrl new_ctrl;
+                f ()
+
+    let create_control_evt_conf kind body f_k ctrl cd =
+      let new_ctrl = new_ctrl kind in
+      let f = body (end_ctrl new_ctrl f_k) new_ctrl in
+      fun evt_cfg ->
+        new_ctrl.cond <- (fun () -> Event.cfg_status ~only_at_eoi:true evt_cfg);
+        fun () ->
+          start_ctrl cd ctrl new_ctrl;
+          f ()
 
 
 end
