@@ -24,7 +24,6 @@ struct
           | Mdone of 'gid (* global step done *)
           | Mpauseclock of 'gid
           | Meoi (* End of instant of clock domain *)
-          | Meoi_control of 'gid
           | Mnext_instant (* Go to next instant *)
           | Mreq_has_next of 'gid
           | Mhas_next of 'gid
@@ -56,7 +55,6 @@ struct
         | Mdone gid -> fprintf ff "Mdone %a" print_gid gid
         | Mpauseclock gid -> fprintf ff "Mpauseclock %a" print_gid gid
         | Meoi -> fprintf ff "Mbefore_eoi"
-        | Meoi_control gid -> fprintf ff "Meoi_control %a" print_gid gid
         | Mnext_instant -> fprintf ff "Mnext_instant"
         | Mreq_has_next gid -> fprintf ff "Mreq_has_next %a" print_gid gid
         | Mhas_next gid -> fprintf ff "Mhas_next %a" print_gid gid
@@ -99,7 +97,6 @@ struct
         { kind: (unit step, clock) control_type;
           mutable alive: bool;
           mutable susp: bool;
-          mutable cond: (unit -> bool);
           mutable cond_v : bool;
           mutable children: control_tree list;
           next: D.next;
@@ -269,10 +266,6 @@ struct
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
       let broadcast_eoi, recv_eoi = mk_broadcast_set_recv Meoi
-      let send_eoi_control, recv_eoi_control =
-        let send id (d:'a) = C.send_owner id (Meoi_control id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
       let broadcast_next_instant, recv_next_instant = mk_broadcast_set_recv Mnext_instant
       let send_has_next, recv_has_next =
         let send id (d:'a) = C.send_owner id (Mhas_next id) d in
@@ -528,12 +521,11 @@ struct
 (**************************************)
 (* control tree                       *)
 (**************************************)
-    let new_ctrl ?(cond = (fun () -> false)) kind =
+    let new_ctrl kind =
       { kind = kind;
         alive = true;
         susp = false;
         children = [];
-        cond = cond;
         cond_v = false;
         last_activation = [];
         instance = 0;
@@ -552,9 +544,10 @@ struct
 
     let start_ctrl cd ctrl new_ctrl =
       new_ctrl.last_activation <- Clock.save_clock_state cd.cd_clock;
-      if new_ctrl.alive then
-        ctrl.children <- new_ctrl :: ctrl.children
-      else (* reset new_ctrl *)
+      if new_ctrl.alive then (
+        ctrl.children <- new_ctrl :: ctrl.children;
+        new_ctrl.cond_v <- false
+      ) else (* reset new_ctrl *)
         (new_ctrl.alive <- true;
          new_ctrl.susp <- false;
          D.clear_next new_ctrl.next)
@@ -575,9 +568,7 @@ struct
             | Kill f_k ->
               if p.cond_v
               then
-                (D.add_next f_k pere.next;
-                 set_kill p;
-                 false)
+                false
               else
                 (p.children <- eval_children p p.children active;
                  if active then next_to_current cd p
@@ -648,12 +639,6 @@ struct
     let is_active ctrl =
       ctrl.alive && not ctrl.susp
 
-    let set_suspended ctrl v =
-      ctrl.susp <- v
-
-    let set_condition ctrl c =
-      ctrl.cond <- c
-
     (** clock domains operations *)
     let mk_clock_domain clock balancer location parent_ctrl =
       let site = get_site () in
@@ -712,35 +697,6 @@ struct
       in
       f_cd
         *)
-
-    (** Evaluates the condition of control nodes. This can be called several
-        times for a same control node, zhen doing the eoi of several clocks.
-        We can keep the last condition (if it was true for the eoi of the fast clock,
-        it is also true for the eoi of the slow clock), but we have to make sure
-        to fire the handler only once. *)
-    let rec eoi_control cd ctrl =
-      let rec _eoi_control pere ctrl =
-        if ctrl.alive then (
-          (match ctrl.kind with
-            | Clock_domain ck when not (C.is_local ck.ck_gid) ->
-                Msgs.send_eoi_control ck.ck_gid ()
-            | Clock_domain ck -> (*local clock domain*)
-                let cd = get_clock_domain ck in
-                eoi_control cd cd.cd_top
-            | _ ->
-                ctrl.cond_v <- ctrl.cond ();
-                (match ctrl.kind with
-                  | Kill_handler handler ->
-                      if ctrl.cond_v then (
-                        D.add_next (handler()) pere.next;
-                        set_kill ctrl
-                      )
-                  | _ -> ());
-                List.iter (_eoi_control ctrl) ctrl.children;
-          )
-        )
-      in
-      List.iter (_eoi_control ctrl) ctrl.children
 
     let rec has_next cd ctrl =
       if not ctrl.alive then
@@ -806,7 +762,6 @@ struct
       print_debug "Eoi of clock domain %a@." print_cd cd;
       wake_up_now (Wbefore_eoi cd.cd_clock.ck_gid);
       cd.cd_eoi <- true;
-      eoi_control cd cd.cd_top;
       wake_up_now (Weoi cd.cd_clock.ck_gid);
       (* send Meoi only to direct children *)
       Msgs.broadcast_eoi cd.cd_direct_remotes cd.cd_clock.ck_gid;
@@ -883,10 +838,6 @@ struct
       )
 *)
     let react cd = exec_cd cd ()
-
-    (* After receiving Meoi_control *)
-    let receive_eoi_control cd _ =
-      eoi_control cd cd.cd_top
 
     (* After receiving Mreq_has_next *)
     let receive_req_has_next cd _ =
@@ -1006,13 +957,11 @@ struct
 
     (* Registers callbacks for messages sent by the parent cd *)
     let register_parent_callbacks cd =
-      add_callback (Meoi_control cd.cd_clock.ck_gid) (receive_eoi_control cd);
       add_callback (Mreq_has_next cd.cd_clock.ck_gid) (receive_req_has_next cd)
 
     let unregister_cd_callbacks cd =
       let site = get_site () in
       Callbacks.remove_callback (Mhas_next cd.cd_clock.ck_gid) site.s_callbacks;
-      Callbacks.remove_callback (Meoi_control cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Mreq_has_next cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Mpauseclock cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Mnew_remote cd.cd_clock.ck_gid) site.s_callbacks
@@ -1461,32 +1410,71 @@ struct
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       match kind with
         | When ->
-            fun evt other_cond ->
+            (fun evt other_cond ->
               let rec when_act _ =
                 wake_up_ctrl new_ctrl cd;
                 on_next_instant ctrl f_when
               and f_when _ =
                 on_event evt ctrl when_act unit_value
               in
-              new_ctrl.cond <- (fun () -> Event.status evt);
               fun () ->
                 start_ctrl cd ctrl new_ctrl;
                 new_ctrl.susp <- true;
                 on_next_instant new_ctrl f;
-                f_when ()
-        | _ ->
-            fun evt other_cond ->
-              new_ctrl.cond <-
-                (fun () -> Event.status ~only_at_eoi:true evt && other_cond (Event.value evt));
+                f_when ())
+        | Kill_handler f_handler ->
+            (fun evt other_cond ->
+              let rec handler () =
+                if other_cond (Event.value evt) then (
+                  new_ctrl.cond_v <- true;
+                  D.add_next (f_handler ()) ctrl.next;
+                  set_kill new_ctrl
+                ) else
+                  (* wait again *)
+                  on_next_instant ctrl f_until
+              and f_until () =
+                on_event_at_eoi evt ctrl handler
+              in
               fun () ->
+                on_event_at_eoi evt ctrl handler;
                 start_ctrl cd ctrl new_ctrl;
-                f ()
+                f ())
+        | Kill f_k ->
+            (fun evt other_cond ->
+              let rec handler () =
+                if other_cond (Event.value evt) then (
+                  new_ctrl.cond_v <- true;
+                  D.add_next f_k ctrl.next;
+                  set_kill new_ctrl
+                ) else
+                  on_next_instant ctrl f_until
+              and f_until () =
+                on_event_at_eoi evt ctrl handler
+              in
+              fun () ->
+                on_event_at_eoi evt ctrl handler;
+                start_ctrl cd ctrl new_ctrl;
+                f ())
+        | Susp ->
+            (fun evt other_cond ->
+              let rec handler () =
+                if other_cond (Event.value evt) then
+                  new_ctrl.cond_v <- true;
+                  on_next_instant ctrl f_susp
+              and f_susp () =
+                on_event_at_eoi evt ctrl handler
+              in
+              fun () ->
+                on_event_at_eoi evt ctrl handler;
+                start_ctrl cd ctrl new_ctrl;
+                f ())
+        | Clock_domain _ -> assert false
 
     let create_control_evt_conf kind body f_k ctrl cd =
       let new_ctrl = new_ctrl kind in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       fun evt_cfg ->
-        new_ctrl.cond <- (fun () -> Event.cfg_status ~only_at_eoi:true evt_cfg);
+        (*new_ctrl.cond <- (fun () -> Event.cfg_status ~only_at_eoi:true evt_cfg);*)
         fun () ->
           start_ctrl cd ctrl new_ctrl;
           f ()
