@@ -515,7 +515,7 @@ struct
 
 
     let create_control kind body f_k ctrl cd =
-      let new_ctrl = new_ctrl When in
+      let new_ctrl = new_ctrl kind in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       match kind with
         | When ->
