@@ -38,6 +38,7 @@
 (*   Gestion du parallele n-aire                                      *)
 
 open Runtime_options
+open Runtime
 
 module Rml_interpreter =
   functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
@@ -614,34 +615,28 @@ let rml_loop p =
 (* until                              *)
 (**************************************)
 
+    let true_cond _ = true
+
     let rml_until expr_evt p =
       fun f_k ctrl jp cd ->
-        let new_ctrl = new_ctrl (Kill f_k) in
-        let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
-        fun _ ->
+        let body f_k new_ctrl = p f_k new_ctrl None cd in
+        let f = create_control (Kill f_k) body f_k ctrl cd in
+        fun () ->
           let evt = expr_evt () in
-          R.set_condition new_ctrl (fun () -> R.Event.status ~only_at_eoi:true evt);
-          start_ctrl cd ctrl new_ctrl;
-          f unit_value
+          f evt true_cond ()
 
     let rml_until' evt p =
       fun f_k ctrl jp cd ->
-        let new_ctrl = new_ctrl (Kill f_k) in
-        R.set_condition new_ctrl (fun () -> R.Event.status ~only_at_eoi:true evt);
-        let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
-        fun _ ->
-          start_ctrl cd ctrl new_ctrl;
-          f unit_value
+        let body f_k new_ctrl = p f_k new_ctrl None cd in
+        create_control (Kill f_k) body f_k ctrl cd evt true_cond
 
     let rml_until_conf expr_cfg p =
       fun f_k ctrl jp cd ->
-        let new_ctrl = new_ctrl (Kill f_k) in
-        let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
-        fun _ ->
+        let body f_k new_ctrl = p f_k new_ctrl None cd in
+        let f = create_control_evt_conf (Kill f_k) body f_k ctrl cd in
+        fun () ->
           let evt_cfg = expr_cfg () in
-          R.set_condition new_ctrl (fun () -> R.Event.cfg_status ~only_at_eoi:true evt_cfg);
-          start_ctrl cd ctrl new_ctrl;
-          f unit_value
+          f evt_cfg ()
 
 (**************************************)
 (* until handler                      *)
@@ -654,20 +649,16 @@ let rml_loop p =
           let x = R.Event.value !evt in
           p_handler x f_k ctrl jp cd
         in
-        let new_ctrl = new_ctrl (Kill_handler handler) in
-        let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
-        fun _ ->
+        let body f_k new_ctrl = p f_k new_ctrl None cd in
+        let f = create_control (Kill_handler handler) body f_k ctrl cd in
+        let cond =
+          match matching_opt with
+            | None -> true_cond
+            | Some cond -> cond
+        in
+        fun () ->
           evt := expr_evt ();
-          begin match matching_opt with
-            | None ->
-              R.set_condition new_ctrl (fun () -> R.Event.status ~only_at_eoi:true !evt)
-            | Some matching ->
-              R.set_condition new_ctrl
-                (fun () -> R.Event.status ~only_at_eoi:true !evt
-                  && matching (R.Event.value !evt))
-          end;
-          start_ctrl cd ctrl new_ctrl;
-          f unit_value
+          f !evt cond ()
 
     let rml_until_handler_local' evt matching_opt p p_handler =
       fun f_k ctrl jp cd ->
@@ -675,19 +666,14 @@ let rml_loop p =
           let x = R.Event.value evt in
           p_handler x f_k ctrl jp cd
         in
-        let new_ctrl = new_ctrl (Kill_handler handler) in
-        let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
-        begin match matching_opt with
-        | None ->
-            R.set_condition new_ctrl (fun () -> R.Event.status ~only_at_eoi:true evt)
-        | Some matching ->
-            R.set_condition new_ctrl
-              (fun () -> R.Event.status ~only_at_eoi:true evt
-                && matching (R.Event.value evt))
-        end;
-        fun () ->
-          start_ctrl cd ctrl new_ctrl;
-          f ()
+        let body f_k new_ctrl = p f_k new_ctrl None cd in
+        let f = create_control (Kill_handler handler) body f_k ctrl cd in
+        let cond =
+          match matching_opt with
+            | None -> true_cond
+            | Some cond -> cond
+        in
+        f evt cond
 
     let rml_until_handler expr_evt p p_handler =
       rml_until_handler_local expr_evt None p p_handler
@@ -705,90 +691,52 @@ let rml_loop p =
 (**************************************)
 (* control                            *)
 (**************************************)
-    let step_control_static cond p f_k ctrl jp cd =
-      let new_ctrl = new_ctrl Susp in
-      let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
-      R.set_condition new_ctrl cond;
-      fun () ->
-        start_ctrl cd ctrl new_ctrl;
-        f ()
 
-    let step_control cond p f_k ctrl jp cd =
-      let new_ctrl = new_ctrl Susp in
-      let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
-      fun () ->
-        R.set_condition new_ctrl (cond ());
-        start_ctrl cd ctrl new_ctrl;
-        f ()
-
-    let rml_control' evt p =
+    let step_control_static evt cond p =
       fun f_k ctrl jp cd ->
-        step_control_static (fun () -> R.Event.status ~only_at_eoi:true evt) p
-          f_k ctrl jp cd
+        let body f_k new_ctrl = p f_k new_ctrl None cd in
+        create_control Susp body f_k ctrl cd evt cond
 
-    let rml_control expr_evt p =
+    let step_control expr_evt cond p =
       fun f_k ctrl jp cd ->
-        let cond () =
+        let body f_k new_ctrl = p f_k new_ctrl None cd in
+        let f = create_control Susp body f_k ctrl cd in
+        fun () ->
           let evt = expr_evt () in
-          fun () -> R.Event.status ~only_at_eoi:true evt
-        in
-        step_control cond p f_k ctrl jp cd
+          f evt cond ()
 
-    let rml_control_match' evt matching p =
-      fun f_k ctrl jp cd ->
-        step_control_static
-          (fun () -> R.Event.status ~only_at_eoi:true evt
-            && matching (R.Event.value evt)) p f_k ctrl jp cd
+    let rml_control' evt p = step_control_static evt true_cond p
 
-    let rml_control_match expr_evt matching p =
-      fun f_k ctrl jp cd ->
-        let cond () =
-          let evt = expr_evt () in
-          fun () -> R.Event.status ~only_at_eoi:true evt
-            && matching (R.Event.value evt)
-        in
-        step_control cond p f_k ctrl jp cd
+    let rml_control expr_evt p = step_control expr_evt true_cond p
+
+    let rml_control_match' evt matching p = step_control_static evt matching p
+
+    let rml_control_match expr_evt matching p = step_control expr_evt matching p
 
     let rml_control_conf expr_cfg p =
       fun f_k ctrl jp cd ->
-        let cond () =
+        let body f_k new_ctrl = p f_k new_ctrl None cd in
+        let f = create_control_evt_conf Susp body f_k ctrl cd in
+        fun () ->
           let evt_cfg = expr_cfg () in
-          fun () -> R.Event.cfg_status ~only_at_eoi:true evt_cfg
-        in
-        step_control cond p f_k ctrl jp cd
+          f evt_cfg ()
 
 (**************************************)
 (* when                               *)
 (**************************************)
 
-    let step_when f_k ctrl jp cd p evt =
-      let dummy = ref dummy_step in
-      let new_ctrl = R.new_ctrl When in
-      let rec when_act _ =
-        R.wake_up_ctrl new_ctrl cd;
-        R.on_next_instant ctrl f_when
-      and f_when _ =
-        R.on_event evt ctrl when_act unit_value
-      in
-      let f = p (R.end_ctrl new_ctrl f_k) new_ctrl None cd in
-      dummy := f_when;
-      fun () ->
-        R.start_ctrl cd ctrl new_ctrl;
-        R.set_condition new_ctrl (fun () -> R.Event.status evt);
-        R.set_suspended new_ctrl true;
-        R.on_next_instant new_ctrl f;
-        f_when ()
-
     let rml_when expr_evt p =
       fun f_k ctrl jp cd ->
-        let f = step_when f_k ctrl jp cd p in
-        fun _ ->
+       let body f_k new_ctrl = p f_k new_ctrl None cd in
+        let f = create_control When body f_k ctrl cd in
+        fun () ->
           let evt = expr_evt () in
-          f evt unit_value
+          f evt true_cond ()
 
     let rml_when' evt p =
       fun f_k ctrl jp cd ->
-        step_when f_k ctrl jp cd p evt
+        let body f_k new_ctrl = p f_k new_ctrl None cd in
+        R.create_control When body f_k ctrl cd evt true_cond
 
     let rml_when_conf expr_cfg =
       fun f_k ctrl ->

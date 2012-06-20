@@ -37,18 +37,18 @@ sig
   val is_empty_next : next -> bool
 end
 
+type ('step, 'clock) control_type =
+    | Clock_domain of 'clock
+    | Kill of 'step
+    | Kill_handler of (unit -> 'step)
+    | Susp
+    | When
 
 module type CONTROL_TREE_R =
 sig
   type 'a step
 
   type control_tree
-  and control_type =
-    | Clock_domain of clock
-    | Kill of unit step
-    | Kill_handler of (unit -> unit step)
-    | Susp
-    | When
   and clock_domain
   and clock
   type region
@@ -79,13 +79,23 @@ sig
      end)
 
   (* functions on the control tree *)
-  val new_ctrl : ?cond: (unit -> bool) -> control_type -> control_tree
-  val start_ctrl : clock_domain -> control_tree -> control_tree -> unit
-  val end_ctrl : control_tree -> 'a step -> 'a -> unit
-  val wake_up_ctrl : control_tree -> clock_domain -> unit
-  val set_kill : control_tree -> unit
-  val set_condition : control_tree -> (unit -> bool) -> unit
-  val set_suspended : control_tree -> bool -> unit
+  (* let f = create_control kind (fun f_k new_ctrl -> body new_ctrl f_k) f_k ctrl s (fun v -> .) in]
+     f ()
+
+     OR for partial application:
+
+     let f = create_control kind (fun f_k new_ctrl -> body new_ctrl f_k) f_k ctrl in
+     fun () ->
+       let s = e () in
+       f s (fun v -> .) ()
+  *)
+  val create_control : (unit step, clock) control_type ->
+    ('a step -> control_tree -> unit step) -> 'a step -> control_tree -> clock_domain ->
+    ('b, 'c) event -> ('c -> bool) -> unit step
+
+  val create_control_evt_conf : (unit step, clock) control_type ->
+    ('a step -> control_tree -> unit step) -> 'a step -> control_tree -> clock_domain ->
+    event_cfg -> unit step
 
   (* various functions on the clock domain *)
   val is_eoi : clock_domain -> bool
@@ -95,7 +105,7 @@ sig
   val top_clock : unit -> clock
   val new_clock_domain : clock_domain -> control_tree ->
     (clock_domain -> control_tree -> unit step -> unit step) ->
-    (int -> int * int) option ->unit step -> unit step
+    (int -> int * int) option -> unit step -> unit step
 
   (* step scheduling *)
   exception Wait_again
