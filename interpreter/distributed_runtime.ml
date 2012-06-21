@@ -1,6 +1,10 @@
 open Runtime
 open Runtime_options
 
+let assert_some v = match v with
+  | None -> assert false
+  | Some v -> v
+
 module Make
   (D: Runtime.SEQ_DATA_STRUCT)
   (CF : functor (T : Communication.TAG_TYPE) -> Communication.S with type 'gid tag = 'gid T.t)
@@ -25,7 +29,6 @@ struct
           | Mpauseclock of 'gid
           | Meoi (* End of instant of clock domain *)
           | Mnext_instant (* Go to next instant *)
-          | Mreq_has_next of 'gid
           | Mhas_next of 'gid
               (* Whether there is processes to execute in the next local step *)
           | Mnew_remote of 'gid
@@ -56,7 +59,6 @@ struct
         | Mpauseclock gid -> fprintf ff "Mpauseclock %a" print_gid gid
         | Meoi -> fprintf ff "Mbefore_eoi"
         | Mnext_instant -> fprintf ff "Mnext_instant"
-        | Mreq_has_next gid -> fprintf ff "Mreq_has_next %a" print_gid gid
         | Mhas_next gid -> fprintf ff "Mhas_next %a" print_gid gid
         | Mnew_remote gid -> fprintf ff "Mnew_remote %a" print_gid gid
             (* Whether there is processes to execute in the next local step *)
@@ -109,7 +111,7 @@ struct
     type waiting_kind =
         | Wbefore_eoi of C.gid (* before the eoi *)
         | Weoi of C.gid (* eoi of the current clock domain *)
-     (*   | Wafter_eoi of C.gid (* after the eoi *) *)
+        | Wafter_eoi of C.gid (* after the eoi *)
         | Wnext_instant of C.gid (* next instant of the current clock domain, after eoi*)
         | Wsignal_wa of C.gid (* On emission of signal *)
         | Wsignal_wp of C.gid (* On emission of signal or end of instant of parent clock domain *)
@@ -148,7 +150,9 @@ struct
           cd_load_balancer : L.load_balancer;
           cd_location : L.kind;
           mutable cd_children_have_next : bool;
-          mutable cd_remaining_async : int ref;
+          cd_active_children : int ref;
+          mutable cd_last_activation : clock_state;
+          cd_remaining_async : int ref;
           mutable cd_direct_remotes : C.SiteSet.t; (* remotes with direct child clock domains*)
           mutable cd_other_remotes : C.SiteSet.t; (* remotes with grand-child clock domains*)
         }
@@ -271,10 +275,6 @@ struct
         let send id (d:'a) = C.send_owner id (Mhas_next id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
-      let send_req_has_next, recv_req_has_next =
-        let send id (d:'a) = C.send_owner id (Mreq_has_next id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
       let send_new_remote, recv_new_remote =
         let send id (d:'a) = C.send_owner id (Mnew_remote id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
@@ -305,6 +305,8 @@ struct
       let get_clock_index ck =
         let site = get_site () in
         E.get (GidHandle.get site.s_clock_cache ck.ck_clock)
+
+      let empty_clock_state = []
 
       (** Returns the current index of ck and all its ancestors *)
       let rec save_clock_state ck =
@@ -527,7 +529,7 @@ struct
         susp = false;
         children = [];
         cond_v = false;
-        last_activation = [];
+        last_activation = Clock.empty_clock_state;
         instance = 0;
         next = D.mk_next ();
         next_control = D.mk_next () }
@@ -651,6 +653,8 @@ struct
         cd_top = new_ctrl (Clock_domain clock);
         cd_parent_ctrl = parent_ctrl;
         cd_children_have_next = false;
+        cd_active_children = ref 0;
+        cd_last_activation = Clock.empty_clock_state;
         cd_load_balancer = balancer;
         cd_location = location;
         cd_remaining_async = ref 0;
@@ -707,13 +711,9 @@ struct
               if C.is_local ck.ck_gid then
                 let cd = get_clock_domain ck in
                 has_next_cd cd
-              else (
+              else
                 (* waiting for a Mhas_next message from this clock domain *)
-                print_debug "++%a@." print_cd cd;
-                incr cd.cd_remaining_async;
-                Msgs.send_req_has_next ck.ck_gid ();
                 false
-              )
           | Kill _ | Kill_handler _ ->
             ctrl.cond_v || has_next_children cd ctrl
           | Susp ->
@@ -726,7 +726,6 @@ struct
     (* Computes has_next, waiting for child clock domains if necessary *)
     and has_next_cd cd =
       print_debug "Before Waiting: %d@." !(cd.cd_remaining_async);
-      cd.cd_children_have_next <- false;
       let has_next_ctrl = has_next_children cd cd.cd_top in
       (* Awaits Mhas_next from all remote clock domains *)
       C.flush ();
@@ -737,6 +736,34 @@ struct
       done;
       has_next_ctrl || cd.cd_children_have_next
 
+    let prepare_has_next cd _ =
+      (* the top clock domain does not receive Mhas_next msgs*)
+      if cd.cd_clock.ck_parent <> None then (
+        cd.cd_children_have_next <- false;
+        print_debug "Waiting for %d Mhas_next msgs@." !(cd.cd_active_children);
+        cd.cd_remaining_async := !(cd.cd_remaining_async) + !(cd.cd_active_children)
+      )
+
+    let send_has_next cd _ =
+      let pck = assert_some cd.cd_clock.ck_parent in
+      Msgs.send_has_next pck.ck_gid (has_next cd)
+
+    let register_send_has_next cd =
+      let rec aux ck = match ck.ck_parent with
+        | None -> () (* top ck, do nothing*)
+        | Some pck ->
+            (* make sure to register only once per instant of ck *)
+            if not (C.is_local ck.ck_gid) && not (Clock.check_clock_state cd.cd_last_activation ck) then (
+              (* if we have children, prepare to receive their Mhas_next msgs *)
+              if !(cd.cd_active_children) > 0 then
+                add_waiting (Wbefore_eoi ck.ck_gid) (prepare_has_next cd);
+              add_waiting (Wafter_eoi ck.ck_gid) (send_has_next cd)
+            );
+            aux pck
+      in
+      aux (assert_some cd.cd_clock.ck_parent);
+      (* remember when we last registered has_next handlers *)
+      cd.cd_last_activation <- Clock.save_clock_state cd.cd_clock
 
     let macro_step_done cd =
       let has_next = has_next_cd cd in
@@ -763,6 +790,7 @@ struct
       wake_up_now (Wbefore_eoi cd.cd_clock.ck_gid);
       cd.cd_eoi <- true;
       wake_up_now (Weoi cd.cd_clock.ck_gid);
+      prepare_has_next cd ();
       (* send Meoi only to direct children *)
       Msgs.broadcast_eoi cd.cd_direct_remotes cd.cd_clock.ck_gid;
       List.iter wake_up_now cd.cd_wake_up;
@@ -781,7 +809,8 @@ struct
       (* reset the clock domain *)
       cd.cd_eoi <- false;
       cd.cd_pause_clock <- false;
-      cd.cd_children_have_next <- false
+      cd.cd_children_have_next <- false;
+      cd.cd_active_children := 0
 
     let rec exec_cd cd () =
       print_debug "Executing clock domain %a@." print_cd cd;
@@ -798,9 +827,10 @@ struct
                   print_debug "Macro step of clock domain %a is done@." print_cd cd;
                   add_waiting (Wnext_instant ck.ck_gid) (fun () -> next_instant cd);
                   (* if the parent clock is not here, send Done message*)
-                  if not (C.is_local ck.ck_gid) then
+                  if not (C.is_local ck.ck_gid) then (
+                    register_send_has_next cd;
                     Msgs.send_step_done ck.ck_gid cd.cd_clock.ck_gid ()
-                  else (
+                  ) else (
                     (match cd.cd_parent_ctrl with
                       | None -> assert false
                       | Some ctrl -> D.add_next (exec_cd cd) ctrl.next_control)
@@ -838,14 +868,6 @@ struct
       )
 *)
     let react cd = exec_cd cd ()
-
-    (* After receiving Mreq_has_next *)
-    let receive_req_has_next cd _ =
-      match cd.cd_clock.ck_parent with
-        | None -> assert false
-        | Some ck ->
-            let has_next = has_next_cd cd in
-            Msgs.send_has_next ck.ck_gid has_next
 
     (* After receiving Mhas_next *)
     let gather_has_next cd msg =
@@ -896,6 +918,7 @@ struct
       D.add_next (step_remote_clock_domain cd remote_ck_id) ctrl.next_control;
       print_debug "--%a@." print_cd cd;
       decr cd.cd_remaining_async;
+      incr cd.cd_active_children;
       if !debug_mode && !(cd.cd_remaining_async) < 0 then
         print_debug "Error: counter of %a is < 0@." print_cd cd;
       (* wake up cd to emit the done message *)
@@ -955,14 +978,9 @@ struct
       add_callback (Mpauseclock cd.cd_clock.ck_gid) (gather_pauseclock cd);
       add_callback (Mnew_remote cd.cd_clock.ck_gid) (receive_new_remote cd)
 
-    (* Registers callbacks for messages sent by the parent cd *)
-    let register_parent_callbacks cd =
-      add_callback (Mreq_has_next cd.cd_clock.ck_gid) (receive_req_has_next cd)
-
     let unregister_cd_callbacks cd =
       let site = get_site () in
       Callbacks.remove_callback (Mhas_next cd.cd_clock.ck_gid) site.s_callbacks;
-      Callbacks.remove_callback (Mreq_has_next cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Mpauseclock cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Mnew_remote cd.cd_clock.ck_gid) site.s_callbacks
 
@@ -996,7 +1014,6 @@ struct
       print_debug "newcd@.";
       let new_ck = mk_clock (Some parent_ck) in
       let new_cd = mk_clock_domain new_ck new_balancer location None in
-      register_parent_callbacks new_cd;
       print_debug "Created local clock domain %a after request by %a@."
         print_cd new_cd   print_clock parent_ck;
       let new_ctrl = control_tree new_cd in
@@ -1076,7 +1093,9 @@ struct
       let site = get_site () in
       Msgs.broadcast_eoi site.s_remotes ck_id;
       (* and do local eoi *)
-      wake_up_now (Weoi ck_id)
+      wake_up_now (Weoi ck_id);
+      (* wake up processes that send has_next msgs *)
+      wake_up_now (Wafter_eoi ck_id)
 
     (* After receving Mnext_instant *)
     let receive_next_instant msg =
