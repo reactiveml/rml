@@ -13,8 +13,8 @@ OCAMLC_OPTIONS="-g -I ../../interpreter/_build -I ../../lib/ unix.cma rpmllib.cm
 
 OCAMLBUILD=../../tools/rpmlbuild/rpmlbuild/_build/ocamlbuild.byte
 
-MPIEXEC=mpiexec
-MPIEXEC_OPTIONS="-l -n 4"
+MPIEXEC=openmpiexec
+MPIEXEC_OPTIONS="-n 4"
 
 load_balancers=("local" "robin" "user_local" "user_robin" "remote")
 RUNTIME_OPTIONS=""
@@ -30,7 +30,7 @@ compile () {
         echo "    ** Building $1"
     fi
     #$COMPILER_DIR/$COMPILER_FILE -I ../../lib -t test $1.rml >/dev/null 2>&1 && $OCAMLC $OCAMLC_OPTIONS $1.ml >/dev/null 2>&1
-    $OCAMLBUILD $1.rml.t.byte >/dev/null 2>&1
+    $OCAMLBUILD $1.rml.t.byte # >/dev/null 2>&1
 
     rc=$?
     if [ $rc != 0 ]; then
@@ -44,6 +44,7 @@ clean() {
     $OCAMLBUILD -clean >/dev/null 2>&1
     rm *.byte >/dev/null 2>&1
 }
+ls
 
 check() {
     echo "Building compiler"

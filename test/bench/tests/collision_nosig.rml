@@ -335,9 +335,8 @@ let process ball me area env =
     run (compute_pos_ball me others)
   end
 
-
 (* test case *)
-let nb_balls = 2000
+let nb_balls = 4000
 let max_speed = 0.2
 
 let w = 8000.

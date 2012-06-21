@@ -10,7 +10,7 @@ let process do_lot_stuff =
   done
 
 let process main =
-  for i = 1 to 50 dopar
+  for i = 1 to 500 dopar
     newclock ck in
       do_stuff ()
   done

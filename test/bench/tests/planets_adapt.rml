@@ -232,7 +232,7 @@ let process sun center compute env error adapt_ck =
 let w = 1000
 let h = 800
 let nb_procs = 8
-let nb_planets_per_procs = 20
+let nb_planets_per_procs = 200
 
 let _ = Random.self_init ()
 

@@ -92,4 +92,4 @@ module Lco_ctrl_tree_mpi_c_interpreter =
   Lco_ctrl_tree_n.Rml_interpreter(Distributed_runtime_old.MpiCRuntime)
 
 module Lco_ctrl_tree_mpi_new_interpreter =
-  Lco_ctrl_tree_n.Rml_interpreter(Distributed_runtime.MpiRuntime)
+  Lco_ctrl_tree_n.Rml_interpreter(Distributed_runtime.MpiCRuntime)

@@ -5,7 +5,7 @@ let do_small_stuff () =
   done
 
 let process main =
-  for i = 1 to 50000 dopar
+  for i = 1 to 1000 dopar
     newclock ck in
       do_small_stuff ()
   done
