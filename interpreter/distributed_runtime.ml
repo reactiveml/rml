@@ -758,11 +758,14 @@ struct
         print_debug "Waiting for %d has_next msgs@." !(cd.cd_remaining_async);
         Callbacks.dispatch_given_msg site.s_msg_queue site.s_callbacks (Mhas_next cd.cd_clock.ck_gid)
       done;
+      print_debug "has_next of %a: has_next_children=%b, self=%b@." print_cd cd cd.cd_children_have_next has_next_ctrl;
       has_next_ctrl || cd.cd_children_have_next
 
     let prepare_has_next cd _ =
       (* the top clock domain does not receive Mhas_next msgs*)
       if cd.cd_clock.ck_parent <> None then (
+        if cd.cd_children_have_next = true then
+          print_debug "have_next_children of %a is already true@." print_cd cd;
         cd.cd_children_have_next <- false;
         print_debug "Waiting for %d Mhas_next msgs@." !(cd.cd_active_children);
         cd.cd_remaining_async := !(cd.cd_remaining_async) + !(cd.cd_active_children)
@@ -770,22 +773,43 @@ struct
 
     let send_has_next cd _ =
       let pck = assert_some cd.cd_clock.ck_parent in
-      Msgs.send_has_next pck.ck_gid (has_next cd)
+      let has_next = has_next_cd cd in
+      print_debug "send_has_next=%b from %a to %a@." has_next  print_cd cd  print_clock pck;
+      Msgs.send_has_next pck.ck_gid has_next
 
-    let register_send_has_next cd =
+    (* Register a handler to send Has_next msg to paremt clock for each
+       ancestor clock that is not local*)
+    let register_send_has_next cd pck =
       let rec aux ck = match ck.ck_parent with
         | None -> () (* top ck, do nothing*)
         | Some pck ->
             (* make sure to register only once per instant of ck *)
-            if not (C.is_local ck.ck_gid) && not (Clock.check_clock_state cd.cd_last_activation ck) then (
-              (* if we have children, prepare to receive their Mhas_next msgs *)
-              if !(cd.cd_active_children) > 0 then
-                add_waiting (Wbefore_eoi ck.ck_gid) (prepare_has_next cd);
-              add_waiting (Wafter_eoi ck.ck_gid) (send_has_next cd)
-            );
+            if not (C.is_local ck.ck_gid) && not (Clock.check_clock_state cd.cd_last_activation ck) then
+              add_waiting (Wafter_eoi ck.ck_gid) (send_has_next cd);
             aux pck
       in
-      aux (assert_some cd.cd_clock.ck_parent);
+      aux pck
+
+    (* Register a handler that prepares for receiving has_next msgs from children
+       for all ancestor clocks (except topck) *)
+    let register_prepare_has_next cd pck =
+      let rec aux ck = match ck.ck_parent with
+        | None -> () (* top ck, do nothing*)
+        | Some pck ->
+            (* make sure to register only once per instant of ck *)
+            if not (Clock.check_clock_state cd.cd_last_activation ck) then
+              add_waiting (Wbefore_eoi ck.ck_gid) (prepare_has_next cd);
+            aux pck
+      in
+      aux pck
+
+    let register_has_next_handlers cd pck =
+      (* if parent is not local, we will send has_next msgs *)
+      if not (C.is_local pck.ck_gid) then
+        register_send_has_next cd pck;
+      (* if we have remote cds, we will receive has_next msgs *)
+      if !(cd.cd_active_children) > 0 then
+        register_prepare_has_next cd pck;
       (* remember when we last registered has_next handlers *)
       cd.cd_last_activation <- Clock.save_clock_state cd.cd_clock
 
@@ -846,9 +870,10 @@ struct
                 if macro_step_done cd then (
                   print_debug "Macro step of clock domain %a is done@." print_cd cd;
                   add_waiting (Wnext_instant ck.ck_gid) (fun () -> next_instant cd);
+                  (* register handlers for sending and receiving Mhas_next msgs *)
+                  register_has_next_handlers cd ck;
                   (* if the parent clock is not here, send Done message*)
                   if not (C.is_local ck.ck_gid) then (
-                    register_send_has_next cd;
                     Msgs.send_step_done ck.ck_gid cd.cd_clock.ck_gid ()
                   ) else (
                     (match cd.cd_parent_ctrl with
@@ -891,11 +916,12 @@ struct
 
     (* After receiving Mhas_next *)
     let gather_has_next cd msg =
-      let has_next = Msgs.recv_has_next msg in
+      let has_next:bool = Msgs.recv_has_next msg in
       print_debug "--%a@." print_cd cd;
       decr cd.cd_remaining_async;
       if !debug_mode && !(cd.cd_remaining_async) < 0 then
         print_debug "Error: counter of %a is < 0@." print_cd cd;
+      print_debug "Received has_next=%b for %a@." has_next print_cd cd;
       cd.cd_children_have_next <- has_next or cd.cd_children_have_next
 
     let set_pauseclock cd ck =
