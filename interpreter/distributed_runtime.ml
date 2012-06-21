@@ -28,7 +28,6 @@ struct
           | Mdone of 'gid (* global step done *)
           | Mpauseclock of 'gid
           | Meoi (* End of instant of clock domain *)
-          | Mnext_instant (* Go to next instant *)
           | Mhas_next of 'gid
               (* Whether there is processes to execute in the next local step *)
           | Mnew_remote of 'gid
@@ -58,7 +57,6 @@ struct
         | Mdone gid -> fprintf ff "Mdone %a" print_gid gid
         | Mpauseclock gid -> fprintf ff "Mpauseclock %a" print_gid gid
         | Meoi -> fprintf ff "Mbefore_eoi"
-        | Mnext_instant -> fprintf ff "Mnext_instant"
         | Mhas_next gid -> fprintf ff "Mhas_next %a" print_gid gid
         | Mnew_remote gid -> fprintf ff "Mnew_remote %a" print_gid gid
             (* Whether there is processes to execute in the next local step *)
@@ -270,7 +268,6 @@ struct
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
       let broadcast_eoi, recv_eoi = mk_broadcast_set_recv Meoi
-      let broadcast_next_instant, recv_next_instant = mk_broadcast_set_recv Mnext_instant
       let send_has_next, recv_has_next =
         let send id (d:'a) = C.send_owner id (Mhas_next id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
@@ -328,6 +325,26 @@ struct
                 check_last_activation l
         in
           check_last_activation st
+
+      (** [update_clock ck] makes sure that the local copy of ck and
+          all its ancestors in the clock tree are equal to the value stored in [ck]
+          (which should have been received in a message). *)
+      let update_clock ck =
+        let site = get_site () in
+        let rec aux ck =
+          let local_ck = GidHandle.get_local site.s_clock_cache ck.ck_clock in
+          let stored_value = E.get (GidHandle.get_stored ck.ck_clock) in
+          if not (E.equal stored_value (E.get local_ck)) then (
+            print_debug "Updating value of clock %a from %a to %a@."
+              print_clock ck  E.print_clock_index (E.get local_ck)
+              E.print_clock_index stored_value;
+            E.set local_ck stored_value;
+            match ck.ck_parent with
+              | None -> ()
+              | Some pck -> aux pck
+          )
+        in
+        aux ck
     end
 
     module Event =
@@ -798,10 +815,6 @@ struct
 
     let next_instant cd =
       print_debug "Next instant of clock domain %a@." print_cd cd;
-      (* next instant of child clock domains *)
-      let remotes = C.SiteSet.union cd.cd_direct_remotes cd.cd_other_remotes in
-      Msgs.broadcast_next_instant remotes cd.cd_clock;
-      (*increment the clock after sending because the receiver will increment it*)
       E.next (get_clock cd.cd_clock.ck_clock);
       wake_up_now (Wnext_instant cd.cd_clock.ck_gid);
       (* next instant of this clock domain *)
@@ -893,7 +906,7 @@ struct
     let step_remote_clock_domain cd ck_id () =
       print_debug "++%a@." print_cd cd;
       incr cd.cd_remaining_async;
-      Msgs.send_step ck_id ck_id
+      Msgs.send_step ck_id (cd.cd_clock, ck_id)
 
     let rec wake_up_cd_if_done cd =
       if !(cd.cd_remaining_async) = 0 then (
@@ -1075,12 +1088,17 @@ struct
       C.is_master ()
 
     (* After receiving Mstep *)
-   let start_cd msg =
-     let cd_id = Msgs.recv_step msg in
+   let receive_step msg =
+     let pck, cd_id = Msgs.recv_step msg in
      try
-       print_debug "Starting local clock domain %a on request@." C.print_gid cd_id;
        let site = get_site () in
-       exec_cd (C.GidMap.find cd_id site.s_clock_domains) ()
+       let cd = C.GidMap.find cd_id site.s_clock_domains in
+       (* first do the end of instant*)
+       Clock.update_clock pck;
+       next_instant cd;
+       (* then do the new step *)
+       print_debug "Starting local clock domain %a on request@." C.print_gid cd_id;
+       exec_cd cd ()
      with
        | Not_found -> print_debug "Error: Received Start for unknown clock domain.@."
 
@@ -1096,13 +1114,6 @@ struct
       wake_up_now (Weoi ck_id);
       (* wake up processes that send has_next msgs *)
       wake_up_now (Wafter_eoi ck_id)
-
-    (* After receving Mnext_instant *)
-    let receive_next_instant msg =
-      (* update the status of the clock *)
-      let ck = Msgs.recv_next_instant msg in
-      E.next (get_clock ck.ck_clock);
-      wake_up_now (Wnext_instant ck.ck_gid)
 
     (* After receiving Mcreate_signal *)
     let receive_create_signal msg =
@@ -1145,9 +1156,8 @@ struct
       } in
       Local_ref.init 0 s;
       add_callback Mnew_cd create_cd;
-      add_callback Mstep start_cd;
+      add_callback Mstep receive_step;
       add_callback Meoi receive_eoi;
-      add_callback Mnext_instant receive_next_instant;
       add_callback Mcreate_signal receive_create_signal;
       add_callback Mfinalize receive_finalize_site;
       Callbacks.start_receiving s.s_msg_queue

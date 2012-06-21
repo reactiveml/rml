@@ -57,6 +57,7 @@ module type S =
     val init_clock : unit -> clock
     val next: clock -> unit
     val get : clock -> clock_index
+    val set : clock -> clock_index -> unit
     val equal : clock_index -> clock_index -> bool
     val print_clock_index : Format.formatter -> clock_index -> unit
    (* val remote_emit :  ('a, 'b) t -> 'a -> unit *)
@@ -155,6 +156,7 @@ module Record  (*: S*)  =
       incr ck
 
     let get ck = !ck
+    let set ck v = ck := v
 
     let equal ck1 ck2 =
       ck1 = ck2

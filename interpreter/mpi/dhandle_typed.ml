@@ -7,6 +7,9 @@ module type S = sig
 
   val init : 'a cache -> key -> 'a -> 'a handle
   val get : 'a cache -> 'a handle -> 'a
+
+  val get_stored : 'a handle -> 'a
+  val get_local : 'a cache -> 'a handle -> 'a
 end
 
 
@@ -49,6 +52,10 @@ module Make (T : Map.OrderedType) = struct
       dr.d_value
     else
       find_local memo dr
+
+  let get_stored dr = dr.d_value
+  let get_local memo dr =
+    find_local memo dr
 
   let init (_, memo) key v =
     let dr = { d_key = key;

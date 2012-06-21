@@ -7,6 +7,9 @@ module type S = sig
 
   val init : 'a cache -> key -> 'a -> 'a handle
   val get : 'a cache -> 'a handle -> 'a
+
+  val get_stored : 'a handle -> 'a
+  val get_local : 'a cache -> 'a handle -> 'a
 end
 
 module Make : functor (T : Map.OrderedType) ->
