@@ -56,7 +56,7 @@ struct
         | Mstep_done gid -> fprintf ff "Mstep_done %a" print_gid gid
         | Mdone gid -> fprintf ff "Mdone %a" print_gid gid
         | Mpauseclock gid -> fprintf ff "Mpauseclock %a" print_gid gid
-        | Meoi -> fprintf ff "Mbefore_eoi"
+        | Meoi -> fprintf ff "Meoi"
         | Mhas_next gid -> fprintf ff "Mhas_next %a" print_gid gid
         | Mnew_remote gid -> fprintf ff "Mnew_remote %a" print_gid gid
             (* Whether there is processes to execute in the next local step *)
@@ -251,35 +251,42 @@ struct
       let send_dummy, recv_dummy = mk_send_recv Mdummy
       let send_new_cd, recv_new_cd = mk_send_recv Mnew_cd
       let send_cd_created, recv_cd_created =
-        let send id (d:'a) = C.send_owner id (Mcd_created id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
+        (fun () ->
+          let send id (d:'a) = C.send_owner id (Mcd_created id) d in
+          let recv = (C.from_msg : C.msg -> 'a) in
+          send, recv) ()
       let send_step, recv_step = mk_send_owner_recv Mstep
       let send_step_done, recv_step_done =
-        let send dest_id id (d:'a) = C.send_owner dest_id (Mstep_done id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
+        (fun () ->
+          let send dest_id id (d:'a) = C.send_owner dest_id (Mstep_done id) d in
+          let recv = (C.from_msg : C.msg -> 'a) in
+          send, recv) ()
       let send_done, recv_done =
-        let send dest_id id (d:'a) = C.send_owner dest_id (Mdone id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
+        (fun () ->
+          let send dest_id id (d:'a) = C.send_owner dest_id (Mdone id) d in
+          let recv = (C.from_msg : C.msg -> 'a) in
+          send, recv) ()
       let send_pauseclock, recv_pauseclock =
-        let send id (d:'a) = C.send_owner id (Mpauseclock id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
+        (fun () ->
+          let send id (d:'a) = C.send_owner id (Mpauseclock id) d in
+          let recv = (C.from_msg : C.msg -> 'a) in
+          send, recv) ()
       let broadcast_eoi, recv_eoi = mk_broadcast_set_recv Meoi
       let send_has_next, recv_has_next =
-        let send id (d:'a) = C.send_owner id (Mhas_next id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
+        (fun () ->
+          let send id (d:'a) = C.send_owner id (Mhas_next id) d in
+          let recv = (C.from_msg : C.msg -> 'a) in
+          send, recv) ()
       let send_new_remote, recv_new_remote =
-        let send id (d:'a) = C.send_owner id (Mnew_remote id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
+        (fun () ->
+          let send id (d:'a) = C.send_owner id (Mnew_remote id) d in
+          let recv = (C.from_msg : C.msg -> 'a) in
+          send, recv) ()
       let send_req_signal, recv_req_signal =
-        let send id (d:'a) = C.send_owner id (Mreq_signal id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
+        (fun () ->
+          let send id (d:'a) = C.send_owner id (Mreq_signal id) d in
+          let recv = (C.from_msg : C.msg -> 'a) in
+          send, recv) ()
       let send_create_signal, recv_create_signal = mk_send_owner_recv Mcreate_signal
     end
 
