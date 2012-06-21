@@ -17,6 +17,8 @@ global/modules.cmo: parsing/parse_ident.cmo global/misc.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo typing/def_types.cmo
 global/modules.cmx: parsing/parse_ident.cmx global/misc.cmx global/ident.cmx \
     global/global_ident.cmx global/global.cmx typing/def_types.cmx
+global/rzi.cmo:
+global/rzi.cmx:
 global/symbol_table.cmo:
 global/symbol_table.cmx:
 global/version.cmo:
