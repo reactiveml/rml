@@ -59,7 +59,7 @@ module Make (T : DHANDLE_TYPE) = struct
             dr.d_value
 
   let get cache dr =
-    if is_valid dr then
+    if Local_token.is_valid dr.d_token then
       dr.d_value
     else
       find_local cache dr
