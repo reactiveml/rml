@@ -182,7 +182,7 @@ let init () =
         (link_rml "native");;
 
       rule "rml: rml -> p.native"
-        ~prod:"%.rml.native"
+        ~prod:"%.rml.p.native"
         ~dep:"%.rml"
         (link_rml "p.native");;
 
