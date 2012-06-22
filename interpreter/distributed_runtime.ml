@@ -470,6 +470,7 @@ struct
         let new_remote_evt_combine site ck r default (combine : 'a -> 'b -> 'b) =
           let tmp_id = C.fresh site.s_seed in
           let create_signal () =
+            let site = get_site () in
             let ev = new_local_evt_combine site ck r default combine in
             if !Runtime_options.use_signals_users_set then
               add_signal_remote site (C.site_of_gid tmp_id) ev.ev_gid;
