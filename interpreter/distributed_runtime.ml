@@ -178,8 +178,7 @@ struct
     let get_site () =
       (Local_ref.get 0:site)
 
-    let find_waiting wk =
-      let site = get_site () in
+    let find_waiting site wk =
       try
         WaitingMap.find wk site.s_waiting
       with
@@ -187,46 +186,38 @@ struct
             let w = D.mk_waiting_list () in
             site.s_waiting <- WaitingMap.add wk w site.s_waiting;
             w
-    let add_waiting wk f =
-      let w = find_waiting wk in
+    let add_waiting site wk f =
+      let w = find_waiting site wk in
         D.add_waiting f w
-    let wake_up_now wk =
-      let w = find_waiting wk in
+    let wake_up_now site wk =
+      let w = find_waiting site wk in
       List.iter (fun f -> f ()) (D.take_all w)
 
-    let add_callback msg f =
-      let site = get_site () in
+    let add_callback site msg f =
       Callbacks.add_callback msg f site.s_callbacks
 
-    let get_clock ck =
-      let site = get_site () in
+    let get_clock site ck =
       GidHandle.get site.s_clock_cache ck
-    let get_clock_domain ck =
+    let get_clock_domain site ck =
       try
-        let site = get_site () in
         C.GidMap.find ck.ck_gid site.s_clock_domains
       with
         | Not_found ->
             print_debug "Error: Cannot find clock domain %a@." C.print_gid ck.ck_gid;
             assert false
-    let get_event ev =
-      let site = get_site () in
+    let get_event site ev =
       let n, _, _ =  SignalHandle.get site.s_signal_cache ev.ev_handle in
       n
-    let get_event_clock ev =
-      let site = get_site () in
+    let get_event_clock site ev =
       let _, ck, _ = SignalHandle.get site.s_signal_cache ev.ev_handle in
       ck
-    let get_event_region ev =
-      let site = get_site () in
+    let get_event_region site ev =
       let _, _, r = SignalHandle.get site.s_signal_cache ev.ev_handle in
       r
-    let get_event_whole ev =
-      let site = get_site () in
+    let get_event_whole site ev =
       SignalHandle.get site.s_signal_cache ev.ev_handle
 
-    let process_msgs () =
-      let site = get_site () in
+    let process_msgs site () =
       C.flush ();
       Callbacks.await_new_msg site.s_msg_queue;
       Callbacks.dispatch_all site.s_msg_queue site.s_callbacks
@@ -306,28 +297,27 @@ struct
         | None -> ck
         | Some ck -> top_clock ck
 
-      let get_clock_index ck =
-        let site = get_site () in
+      let get_clock_index site ck =
         E.get (GidHandle.get site.s_clock_cache ck.ck_clock)
 
       let empty_clock_state = []
 
       (** Returns the current index of ck and all its ancestors *)
-      let rec save_clock_state ck =
+      let rec save_clock_state site ck =
         let l = match ck.ck_parent with
           | None -> []
-          | Some ck -> save_clock_state ck
+          | Some ck -> save_clock_state site ck
         in
-          (ck, get_clock_index ck)::l
+          (ck, get_clock_index site ck)::l
 
       (** [check_clock_state st clock] checks that the index of [clock] saved in
           [st] is the same as its current index. *)
-      let check_clock_state st clock =
+      let check_clock_state site st clock =
         let rec check_last_activation l = match l with
           | [] -> false
           | (ck, saved_idx)::l ->
               if equal_clock ck clock then
-                E.equal saved_idx (get_clock_index ck)
+                E.equal saved_idx (get_clock_index site ck)
               else
                 check_last_activation l
         in
@@ -336,8 +326,7 @@ struct
       (** [update_clock ck] makes sure that the local copy of ck and
           all its ancestors in the clock tree are equal to the value stored in [ck]
           (which should have been received in a message). *)
-      let update_clock ck =
-        let site = get_site () in
+      let update_clock site ck =
         let rec aux ck =
           let local_ck = GidHandle.get_local site.s_clock_cache ck.ck_clock in
           let stored_value = E.get (GidHandle.get_stored ck.ck_clock) in
@@ -357,10 +346,10 @@ struct
     module Event =
       struct
         let lift_handle f ev =
-          f (get_event ev)
+          f (get_event (get_site ()) ev)
 
         let value ev =
-          let n = get_event ev in
+          let n = get_event (get_site ()) ev in
           if E.status n then
             E.value n
           else (
@@ -373,19 +362,17 @@ struct
         let pre_value ev = lift_handle E.pre_value ev
         let last ev = lift_handle E.last ev
         let default ev = lift_handle E.default ev
-        let clock ev = get_event_clock ev
+        let clock ev = get_event_clock (get_site ()) ev
 
         let region_of_clock ck = ck
 
-        let get_signal_remotes gid =
-          let site = get_site () in
+        let get_signal_remotes site gid =
           try
             C.GidMap.find gid site.s_signals_remotes
           with
             | Not_found -> C.SiteSet.empty
 
-        let add_signal_remote s gid =
-          let site = get_site () in
+        let add_signal_remote site s gid =
           let set =
             if C.GidMap.mem gid site.s_signals_remotes then
               let set = C.GidMap.find gid site.s_signals_remotes in
@@ -395,58 +382,61 @@ struct
           in
           site.s_signals_remotes <- C.GidMap.add gid set site.s_signals_remotes
 
-        let send_value_to_remotes cd ev n () =
+        let send_value_to_remotes site cd ev n () =
           let remotes =
             if !Runtime_options.use_signals_users_set then
-              get_signal_remotes ev.ev_gid
+              get_signal_remotes site ev.ev_gid
             else
               C.SiteSet.union cd.cd_direct_remotes cd.cd_other_remotes
           in
           C.broadcast_set remotes (Mvalue ev.ev_gid) (E.value n)
 
-        let do_emit ev v =
+        let do_emit site ev v =
           print_debug "Emitting a value for %a@." print_signal ev;
-          let n, ev_ck, ev_r = get_event_whole ev in
+          let n, ev_ck, ev_r = get_event_whole site ev in
           let already_present = E.status n in
           if not (C.is_local ev_r.ck_gid) then
             print_debug "Error: do_emit on remote signal %a at region %a of clock %a@."
               C.print_gid ev.ev_gid   print_clock ev_r  print_clock ev_ck;
           E.emit n v;
           (* wake up processes awaiting this signal *)
-          wake_up_now (Wsignal_wa ev.ev_gid);
-          wake_up_now (Wsignal_wp ev.ev_gid);
+          wake_up_now site (Wsignal_wa ev.ev_gid);
+          wake_up_now site (Wsignal_wp ev.ev_gid);
           (* if we have remote clock domains, we should send them the value later *)
-          let cd = get_clock_domain ev_r in
-          if not already_present && cd.cd_location = L.Lany then
-            add_waiting (Wbefore_eoi ev_ck.ck_gid) (send_value_to_remotes cd ev n)
+          if not already_present then (
+            let cd = get_clock_domain site ev_r in
+            if cd.cd_location = L.Lany then
+              add_waiting site (Wbefore_eoi ev_ck.ck_gid)
+                (send_value_to_remotes site cd ev n)
+          )
 
         let emit ev v =
           if C.is_local ev.ev_gid then (
-            do_emit ev v
+            do_emit (get_site ()) ev v
           ) else
             C.send_owner ev.ev_gid (Memit ev.ev_gid) v
 
         (* Called after receiving Mreq_signal id *)
-        let receive_req (n : ('a, 'b) E.t) gid msg =
+        let receive_req site (n : ('a, 'b) E.t) gid msg =
           let req_id = Msgs.recv_req_signal msg in
           if !Runtime_options.use_signals_users_set then
-            add_signal_remote (C.site_of_gid req_id) gid;
+            add_signal_remote site (C.site_of_gid req_id) gid;
           C.send_owner req_id (Msignal gid) n
 
         (* Called after receiving Memit id *)
-        let receive_emit (ev:('a, 'b) event) msg =
+        let receive_emit site (ev:('a, 'b) event) msg =
           let v:'a = C.from_msg msg in
-            do_emit ev v
+            do_emit site ev v
 
         (* Called after receiving Mvalue id *)
-        let update_local_value gid (n : ('a, 'b) E.t) msg =
+        let update_local_value site gid (n : ('a, 'b) E.t) msg =
           let v:'b = C.from_msg msg in
             E.set_value n v;
-            wake_up_now (Wsignal_wa gid)
+            wake_up_now site (Wsignal_wa gid)
 
-        let setup_local_copy gid n ck =
-          add_callback (Mvalue gid) (update_local_value gid n);
-          E.set_clock n (get_clock ck.ck_clock)
+        let setup_local_copy site gid n ck =
+          add_callback site (Mvalue gid) (update_local_value site gid n);
+          E.set_clock n (get_clock site ck.ck_clock)
 
         (* Called when a local process tries to access a remote signal for the first time.
            Creates local callbacks for this signal. *)
@@ -455,16 +445,15 @@ struct
           let site = get_site () in
           (* request the current value of the signal *)
           Msgs.send_req_signal gid (C.fresh site.s_seed);
-          setup_local_copy gid n ck;
+          setup_local_copy site gid n ck;
           let msg = Callbacks.recv_given_msg site.s_msg_queue (Msignal gid) in
           (* set the local value to the one received *)
           let new_n = C.from_msg msg in
           E.copy n new_n;
           n, ck, r
 
-        let new_local_evt_combine ck r default combine =
-          let site = get_site () in
-          let n = E.create (get_clock ck.ck_clock) default combine in
+        let new_local_evt_combine site ck r default combine =
+          let n = E.create (get_clock site ck.ck_clock) default combine in
           let gid = C.fresh site.s_seed in
           let ev  =
             { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck, r);
@@ -472,19 +461,18 @@ struct
           in
           print_debug "Created signal %a at region %a of clock %a@." print_signal ev
             print_clock r  print_clock ck;
-          if (get_clock_domain r).cd_location = L.Lany then (
-            add_callback (Memit gid) (receive_emit ev);
-            add_callback (Mreq_signal gid) (receive_req n gid)
+          if (get_clock_domain site r).cd_location = L.Lany then (
+            add_callback site (Memit gid) (receive_emit site ev);
+            add_callback site (Mreq_signal gid) (receive_req site n gid)
           );
           ev
 
-        let new_remote_evt_combine ck r default (combine : 'a -> 'b -> 'b) =
-          let site = get_site () in
+        let new_remote_evt_combine site ck r default (combine : 'a -> 'b -> 'b) =
           let tmp_id = C.fresh site.s_seed in
           let create_signal () =
-            let ev = new_local_evt_combine ck r default combine in
+            let ev = new_local_evt_combine site ck r default combine in
             if !Runtime_options.use_signals_users_set then
-              add_signal_remote (C.site_of_gid tmp_id) ev.ev_gid;
+              add_signal_remote site (C.site_of_gid tmp_id) ev.ev_gid;
             print_debug "Created signal %a at region %a of clock %a from request by %a@." print_signal ev
               print_clock r   print_clock ck  C.print_gid tmp_id;
             C.send_owner tmp_id (Msignal_created tmp_id) ev
@@ -494,22 +482,23 @@ struct
           (* setup the local copy of the signal  *)
           let ev:('a, 'b) event = C.from_msg msg in
           SignalHandle.set_valid ev.ev_handle;
-          let n = get_event ev in
-          setup_local_copy ev.ev_gid n ck;
+          let n = get_event site ev in
+          setup_local_copy site ev.ev_gid n ck;
           ev
 
         let new_evt_combine ck r default combine =
+          let site = get_site () in
           let r = if !Runtime_options.use_local_slow_signals then r else ck in
           if C.is_local r.ck_gid then
-            new_local_evt_combine ck r default combine
+            new_local_evt_combine site ck r default combine
           else
-            new_remote_evt_combine ck r default combine
+            new_remote_evt_combine site ck r default combine
 
         let new_evt ck r =
           new_evt_combine ck r [] (fun x y -> x :: y)
 
         let status ?(only_at_eoi=false) ev =
-          let n = get_event ev in
+          let n = get_event (get_site ()) ev in
           E.status n (* && (not only_at_eoi || !(sig_cd.cd_eoi)) *)
             (** TODO: remettre only_at_eoi pour les configs *)
 
@@ -569,7 +558,7 @@ struct
       p.instance <- p.instance + 1
 
     let start_ctrl cd ctrl new_ctrl =
-      new_ctrl.last_activation <- Clock.save_clock_state cd.cd_clock;
+      new_ctrl.last_activation <- Clock.save_clock_state (get_site ()) cd.cd_clock;
       if new_ctrl.alive then (
         ctrl.children <- new_ctrl :: ctrl.children;
         new_ctrl.cond_v <- false
@@ -586,7 +575,7 @@ struct
 (* calculer le nouvel etat de l'arbre de control *)
 (* et deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
-    let eval_control_and_next_to_current cd =
+    let eval_control_and_next_to_current site cd =
       let rec eval pere p active =
         if p.alive then
           match p.kind with
@@ -637,7 +626,7 @@ struct
         List.filter (fun node -> eval p node active) nodes
 
       and next_to_current cd node =
-        node.last_activation <- Clock.save_clock_state cd.cd_clock;
+        node.last_activation <- Clock.save_clock_state site cd.cd_clock;
         D.add_current_next node.next cd.cd_current;
         D.add_current_next node.next_control cd.cd_current;
       and next_to_father pere node = ()
@@ -655,7 +644,7 @@ struct
       if p.alive && not p.susp then
         (D.add_current_next p.next cd.cd_current;
          D.add_current_next p.next_control cd.cd_current;
-         p.last_activation <- Clock.save_clock_state cd.cd_clock;
+         p.last_activation <- Clock.save_clock_state (get_site ()) cd.cd_clock;
          List.iter (next_to_current cd) p.children)
 
     let wake_up_ctrl new_ctrl cd =
@@ -666,8 +655,7 @@ struct
       ctrl.alive && not ctrl.susp
 
     (** clock domains operations *)
-    let mk_clock_domain clock balancer location parent_ctrl =
-      let site = get_site () in
+    let mk_clock_domain site clock balancer location parent_ctrl =
       let cd = {
         cd_current = D.mk_current ();
         cd_pause_clock = false;
@@ -686,7 +674,7 @@ struct
         cd_direct_remotes = C.SiteSet.empty;
       } in
       site.s_clock_domains <- C.GidMap.add clock.ck_gid cd site.s_clock_domains;
-      cd.cd_top.last_activation <- Clock.save_clock_state cd.cd_clock;
+      cd.cd_top.last_activation <- Clock.save_clock_state site cd.cd_clock;
       cd
 
     let is_eoi cd = cd.cd_eoi
@@ -726,34 +714,33 @@ struct
       f_cd
         *)
 
-    let rec has_next cd ctrl =
+    let rec has_next site cd ctrl =
       if not ctrl.alive then
         false
       else
         match ctrl.kind with
           | Clock_domain ck ->
               if C.is_local ck.ck_gid then
-                let cd = get_clock_domain ck in
-                has_next_cd cd
+                let cd = get_clock_domain site ck in
+                has_next_cd site cd
               else
                 (* waiting for a Mhas_next message from this clock domain *)
                 false
           | Kill _ | Kill_handler _ ->
-            ctrl.cond_v || has_next_children cd ctrl
+            ctrl.cond_v || has_next_children site cd ctrl
           | Susp ->
             let active = (ctrl.susp && ctrl.cond_v) || (not ctrl.susp && not (ctrl.cond_v)) in
-              active && has_next_children cd ctrl
+              active && has_next_children site cd ctrl
           | When ->
-            not ctrl.susp && has_next_children cd ctrl
-    and has_next_children cd ctrl =
-      not (D.is_empty_next ctrl.next) || List.exists (has_next cd) ctrl.children
+            not ctrl.susp && has_next_children site cd ctrl
+    and has_next_children site cd ctrl =
+      not (D.is_empty_next ctrl.next) || List.exists (has_next site cd) ctrl.children
     (* Computes has_next, waiting for child clock domains if necessary *)
-    and has_next_cd cd =
+    and has_next_cd site cd =
       print_debug "Before Waiting: %d@." !(cd.cd_remaining_async);
-      let has_next_ctrl = has_next_children cd cd.cd_top in
+      let has_next_ctrl = has_next_children site cd cd.cd_top in
       (* Awaits Mhas_next from all remote clock domains *)
       C.flush ();
-      let site = get_site () in
       while !(cd.cd_remaining_async) > 0 do
         print_debug "Waiting for %d has_next msgs@." !(cd.cd_remaining_async);
         Callbacks.dispatch_given_msg site.s_msg_queue site.s_callbacks (Mhas_next cd.cd_clock.ck_gid)
@@ -771,50 +758,51 @@ struct
         cd.cd_remaining_async := !(cd.cd_remaining_async) + !(cd.cd_active_children)
       )
 
-    let send_has_next cd _ =
+    let send_has_next site cd _ =
       let pck = assert_some cd.cd_clock.ck_parent in
-      let has_next = has_next_cd cd in
+      let has_next = has_next_cd site cd in
       print_debug "send_has_next=%b from %a to %a@." has_next  print_cd cd  print_clock pck;
       Msgs.send_has_next pck.ck_gid has_next
 
     (* Register a handler to send Has_next msg to paremt clock for each
        ancestor clock that is not local*)
-    let register_send_has_next cd pck =
+    let register_send_has_next site cd pck =
       let rec aux ck = match ck.ck_parent with
         | None -> () (* top ck, do nothing*)
         | Some pck ->
             (* make sure to register only once per instant of ck *)
-            if not (C.is_local ck.ck_gid) && not (Clock.check_clock_state cd.cd_last_activation ck) then
-              add_waiting (Wafter_eoi ck.ck_gid) (send_has_next cd);
+            if not (C.is_local ck.ck_gid)
+              && not (Clock.check_clock_state site cd.cd_last_activation ck) then
+              add_waiting site (Wafter_eoi ck.ck_gid) (send_has_next site cd);
             aux pck
       in
       aux pck
 
     (* Register a handler that prepares for receiving has_next msgs from children
        for all ancestor clocks (except topck) *)
-    let register_prepare_has_next cd pck =
+    let register_prepare_has_next site cd pck =
       let rec aux ck = match ck.ck_parent with
         | None -> () (* top ck, do nothing*)
         | Some pck ->
             (* make sure to register only once per instant of ck *)
-            if not (Clock.check_clock_state cd.cd_last_activation ck) then
-              add_waiting (Wbefore_eoi ck.ck_gid) (prepare_has_next cd);
+            if not (Clock.check_clock_state site cd.cd_last_activation ck) then
+              add_waiting site (Wbefore_eoi ck.ck_gid) (prepare_has_next cd);
             aux pck
       in
       aux pck
 
-    let register_has_next_handlers cd pck =
+    let register_has_next_handlers site cd pck =
       (* if parent is not local, we will send has_next msgs *)
       if not (C.is_local pck.ck_gid) then
-        register_send_has_next cd pck;
+        register_send_has_next site cd pck;
       (* if we have remote cds, we will receive has_next msgs *)
       if !(cd.cd_active_children) > 0 then
-        register_prepare_has_next cd pck;
+        register_prepare_has_next site cd pck;
       (* remember when we last registered has_next handlers *)
-      cd.cd_last_activation <- Clock.save_clock_state cd.cd_clock
+      cd.cd_last_activation <- Clock.save_clock_state site cd.cd_clock
 
-    let macro_step_done cd =
-      let has_next = has_next_cd cd in
+    let macro_step_done site cd =
+      let has_next = has_next_cd site cd in
       print_debug "Macro step of clock domain %a: pauseclock = %b and has_next = %b@."
         print_cd cd  cd.cd_pause_clock  has_next;
       cd.cd_pause_clock || not has_next
@@ -833,69 +821,69 @@ struct
         ()
       done
 
-    let eoi cd =
+    let eoi site cd =
       print_debug "Eoi of clock domain %a@." print_cd cd;
-      wake_up_now (Wbefore_eoi cd.cd_clock.ck_gid);
+      wake_up_now site (Wbefore_eoi cd.cd_clock.ck_gid);
       cd.cd_eoi <- true;
-      wake_up_now (Weoi cd.cd_clock.ck_gid);
+      wake_up_now site (Weoi cd.cd_clock.ck_gid);
       prepare_has_next cd ();
       (* send Meoi only to direct children *)
       Msgs.broadcast_eoi cd.cd_direct_remotes cd.cd_clock.ck_gid;
-      List.iter wake_up_now cd.cd_wake_up;
+      List.iter (wake_up_now site) cd.cd_wake_up;
       cd.cd_wake_up <- []
 
-    let next_instant cd =
+    let next_instant site cd =
       print_debug "Next instant of clock domain %a@." print_cd cd;
-      E.next (get_clock cd.cd_clock.ck_clock);
-      wake_up_now (Wnext_instant cd.cd_clock.ck_gid);
+      E.next (get_clock site cd.cd_clock.ck_clock);
+      wake_up_now site (Wnext_instant cd.cd_clock.ck_gid);
       (* next instant of this clock domain *)
-      eval_control_and_next_to_current cd;
+      eval_control_and_next_to_current site cd;
       (* reset the clock domain *)
       cd.cd_eoi <- false;
       cd.cd_pause_clock <- false;
       cd.cd_children_have_next <- false;
       cd.cd_active_children := 0
 
-    let rec exec_cd cd () =
+    let rec exec_cd site cd () =
       print_debug "Executing clock domain %a@." print_cd cd;
       schedule cd;
       if cd.cd_top.alive then (
         if !(cd.cd_remaining_async) = 0 then (
-          eoi cd;
+          eoi site cd;
           match cd.cd_clock.ck_parent with
             | None -> (* top clock domain *)
-                next_instant cd
+                next_instant site cd
                   (*Format.eprintf "Top clock domain next_instnt done : %d@." !(cd.cd_remaining_async)*)
             | Some ck ->
-                if macro_step_done cd then (
+                if macro_step_done site cd then (
                   print_debug "Macro step of clock domain %a is done@." print_cd cd;
-                  add_waiting (Wnext_instant ck.ck_gid) (fun () -> next_instant cd);
+                  add_waiting site (Wnext_instant ck.ck_gid) (fun () -> next_instant site cd);
                   (* register handlers for sending and receiving Mhas_next msgs *)
-                  register_has_next_handlers cd ck;
+                  register_has_next_handlers site cd ck;
                   (* if the parent clock is not here, send Done message*)
                   if not (C.is_local ck.ck_gid) then (
                     Msgs.send_step_done ck.ck_gid cd.cd_clock.ck_gid ()
                   ) else (
                     (match cd.cd_parent_ctrl with
                       | None -> assert false
-                      | Some ctrl -> D.add_next (exec_cd cd) ctrl.next_control)
+                      | Some ctrl -> D.add_next (exec_cd site cd) ctrl.next_control)
                   )
                 ) else (
-                  next_instant cd;
+                  next_instant site cd;
                   (* do another step*)
-                  exec_cd  cd ()
+                  exec_cd site cd ()
                 )
         ) else
           match cd.cd_clock.ck_parent with
             | None -> (* top clock, wait for msgs *)
                 print_debug "Top clock domain %a is waiting for %d children@."
                   print_cd cd  !(cd.cd_remaining_async);
-                process_msgs ();
-                exec_cd cd ()
+                process_msgs site ();
+                exec_cd site cd ()
             | Some ck ->
                 (* parent is local, increment its async counter before returning *)
                 if C.is_local ck.ck_gid then (
-                  let parent_cd = get_clock_domain ck in
+                  let parent_cd = get_clock_domain site ck in
                   incr parent_cd.cd_remaining_async
                 );
                 print_debug "Execution of clock domain %a is suspended until a message is received@."
@@ -912,7 +900,7 @@ struct
         react cd
       )
 *)
-    let react cd = exec_cd cd ()
+    let react cd = exec_cd (get_site ()) cd ()
 
     (* After receiving Mhas_next *)
     let gather_has_next cd msg =
@@ -925,8 +913,9 @@ struct
       cd.cd_children_have_next <- has_next or cd.cd_children_have_next
 
     let set_pauseclock cd ck =
+      let site = get_site () in
       if C.is_local ck.ck_gid then
-        let cd = get_clock_domain ck in
+        let cd = get_clock_domain site ck in
           cd.cd_pause_clock <- true
       else
         Msgs.send_pauseclock ck.ck_gid ()
@@ -941,26 +930,26 @@ struct
       incr cd.cd_remaining_async;
       Msgs.send_step ck_id (cd.cd_clock, ck_id)
 
-    let rec wake_up_cd_if_done cd =
+    let rec wake_up_cd_if_done site cd =
       if !(cd.cd_remaining_async) = 0 then (
         match cd.cd_clock.ck_parent with
           | None -> () (* the cd is already executing, waiting for messages *)
           | Some ck ->
               print_debug "Waking up clock domain %a after receiving a message@." print_cd cd;
               if C.is_local ck.ck_gid then (
-                let parent_cd = get_clock_domain ck in
-                exec_cd cd ();
+                let parent_cd = get_clock_domain site ck in
+                exec_cd site cd ();
                 print_debug "--%a@." print_cd parent_cd;
                 decr parent_cd.cd_remaining_async;
                 if !debug_mode && !(parent_cd.cd_remaining_async) < 0 then
                   print_debug "Error: counter of %a is < 0@." print_cd parent_cd;
-                wake_up_cd_if_done parent_cd
+                wake_up_cd_if_done site parent_cd
               ) else
-                exec_cd cd ()
+                exec_cd site cd ()
       )
 
     (* After receving Mstep_done*)
-    let receive_step_done cd ctrl remote_ck_id _ =
+    let receive_step_done site cd ctrl remote_ck_id _ =
       D.add_next (step_remote_clock_domain cd remote_ck_id) ctrl.next_control;
       print_debug "--%a@." print_cd cd;
       decr cd.cd_remaining_async;
@@ -968,10 +957,10 @@ struct
       if !debug_mode && !(cd.cd_remaining_async) < 0 then
         print_debug "Error: counter of %a is < 0@." print_cd cd;
       (* wake up cd to emit the done message *)
-      wake_up_cd_if_done cd
+      wake_up_cd_if_done site cd
 
     (* After receiving Mdone *)
-    let receive_done_cd cd new_ctrl f_k _ =
+    let receive_done_cd site cd new_ctrl f_k _ =
       set_kill new_ctrl;
       print_debug "--%a@." print_cd cd;
       decr cd.cd_remaining_async;
@@ -979,9 +968,9 @@ struct
         print_debug "Error: counter of %a is < 0@." print_cd cd;
       D.add_current f_k cd.cd_current;
       (* wake up cd to emit the done message *)
-      wake_up_cd_if_done cd
+      wake_up_cd_if_done site cd
 
-    let rec update_remote_set cd is_direct site =
+    let rec update_remote_set here cd is_direct site =
       let set =
         if is_direct then
           cd.cd_direct_remotes
@@ -991,7 +980,7 @@ struct
       if not (C.SiteSet.mem site set) then (
         if C.SiteSet.is_empty cd.cd_direct_remotes then (
           print_debug "Allocating callbacks for %a@." print_cd cd;
-          register_cd_callbacks cd
+          register_cd_callbacks here cd
         );
         print_debug "Adding site %a to remote sites of %a@." C.print_site site  print_cd cd;
         if is_direct then
@@ -1000,7 +989,6 @@ struct
           cd.cd_other_remotes <- C.SiteSet.add site cd.cd_other_remotes;
         (* add to the site site too *)
         if is_direct then (
-          let here = get_site() in
           print_debug "Adding site %a to site remotes." C.print_site site;
           here.s_remotes <- C.SiteSet.add site here.s_remotes
         );
@@ -1008,33 +996,31 @@ struct
         match cd.cd_clock.ck_parent with
           | None -> ()
           | Some pck when C.is_local pck.ck_gid ->
-              let pcd = get_clock_domain pck in
-              update_remote_set pcd is_direct site
+              let pcd = get_clock_domain here pck in
+              update_remote_set here pcd is_direct site
           | Some pck -> Msgs.send_new_remote pck.ck_gid site
       )
 
     (* After receiving Mnew_remote *)
-    and receive_new_remote cd msg =
+    and receive_new_remote here cd msg =
       let site = Msgs.recv_new_remote msg in
-      update_remote_set cd false site
+      update_remote_set here cd false site
 
     (* Registers callbacks for messages sent by child cds *)
-    and register_cd_callbacks cd =
-      add_callback (Mhas_next cd.cd_clock.ck_gid) (gather_has_next cd);
-      add_callback (Mpauseclock cd.cd_clock.ck_gid) (gather_pauseclock cd);
-      add_callback (Mnew_remote cd.cd_clock.ck_gid) (receive_new_remote cd)
+    and register_cd_callbacks site cd =
+      add_callback site (Mhas_next cd.cd_clock.ck_gid) (gather_has_next cd);
+      add_callback site (Mpauseclock cd.cd_clock.ck_gid) (gather_pauseclock cd);
+      add_callback site (Mnew_remote cd.cd_clock.ck_gid) (receive_new_remote site cd)
 
-    let unregister_cd_callbacks cd =
-      let site = get_site () in
+    let unregister_cd_callbacks site cd =
       Callbacks.remove_callback (Mhas_next cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Mpauseclock cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Mnew_remote cd.cd_clock.ck_gid) site.s_callbacks
 
-    let end_clock_domain new_cd new_ctrl f_k () =
+    let end_clock_domain site new_cd new_ctrl f_k () =
       print_debug "End of clock domain %a@." print_cd new_cd;
-      let site = get_site () in
       site.s_clock_domains <- C.GidMap.remove new_cd.cd_clock.ck_gid site.s_clock_domains;
-      unregister_cd_callbacks new_cd;
+      unregister_cd_callbacks site new_cd;
       match new_cd.cd_clock.ck_parent with
         | Some ck ->
             if not (C.is_local ck.ck_gid) then
@@ -1042,68 +1028,65 @@ struct
             end_ctrl new_ctrl f_k ()
         | None -> assert false
 
-    let new_local_clock_domain cd new_balancer location ctrl p f_k =
+    let new_local_clock_domain site cd new_balancer location ctrl p f_k =
       let new_ck = mk_clock (Some cd.cd_clock) in
       print_debug "Creating local clock domain %a@." C.print_gid new_ck.ck_gid;
-      let new_cd = mk_clock_domain new_ck new_balancer location (Some ctrl) in
+      let new_cd = mk_clock_domain site new_ck new_balancer location (Some ctrl) in
       let new_ctrl = control_tree new_cd in
-      let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl f_k) in
+      let f = p new_cd new_ctrl (end_clock_domain site new_cd new_ctrl f_k) in
       fun _ ->
         D.add_current f new_cd.cd_current;
         start_ctrl new_cd ctrl new_ctrl;
-        exec_cd new_cd ()
+        exec_cd site new_cd ()
 
     (* After receving Mnew_cd *)
-    let create_cd msg =
-      print_debug "newcd@.";
+    let create_cd site msg =
       let tmp_id, parent_ck, new_balancer, location, p = Msgs.recv_new_cd msg in
-      print_debug "newcd@.";
       let new_ck = mk_clock (Some parent_ck) in
-      let new_cd = mk_clock_domain new_ck new_balancer location None in
+      let new_cd = mk_clock_domain site new_ck new_balancer location None in
       print_debug "Created local clock domain %a after request by %a@."
         print_cd new_cd   print_clock parent_ck;
       let new_ctrl = control_tree new_cd in
-      let f = p new_cd new_ctrl (end_clock_domain new_cd new_ctrl dummy_step) in
+      let f = p new_cd new_ctrl (end_clock_domain site new_cd new_ctrl dummy_step) in
       D.add_current f new_cd.cd_current;
       (* we wait for the start of the clock domain *)
       Msgs.send_cd_created tmp_id new_ck;
       print_debug "newcd done@."
 
     (* After receiving Mcd_created *)
-    let start_remote_clock_domain cd ctrl f_k msg =
+    let start_remote_clock_domain site cd ctrl f_k msg =
       print_debug "Starting remote clock domain@.";
-      let site = get_site () in
       let new_ck = Msgs.recv_cd_created msg in
       print_debug "--%a" print_cd cd;
       decr cd.cd_remaining_async;
-      update_remote_set cd true (C.site_of_gid new_ck.ck_gid);
+      update_remote_set site cd true (C.site_of_gid new_ck.ck_gid);
       let new_ctrl = new_ctrl (Clock_domain new_ck) in
       (* add local callbacks *)
       Callbacks.add_callback ~kind:Callbacks.Once
-        (Mdone new_ck.ck_gid) (receive_done_cd cd new_ctrl f_k) site.s_callbacks;
-      add_callback (Mstep_done new_ck.ck_gid) (receive_step_done cd ctrl new_ck.ck_gid);
+        (Mdone new_ck.ck_gid) (receive_done_cd site cd new_ctrl f_k) site.s_callbacks;
+      add_callback site (Mstep_done new_ck.ck_gid) (receive_step_done site cd ctrl new_ck.ck_gid);
       start_ctrl cd ctrl new_ctrl;
       (* send a message to start the execution *)
       step_remote_clock_domain cd new_ck.ck_gid ()
 
-    let new_remote_clock_domain remote_site new_balancer location cd ctrl p f_k =
-      let site = get_site () in
+    let new_remote_clock_domain site remote_site new_balancer location cd ctrl p f_k =
       let tmp_id = C.fresh site.s_seed in
-      add_callback (Mcd_created tmp_id) (start_remote_clock_domain cd ctrl f_k);
+      add_callback site (Mcd_created tmp_id) (start_remote_clock_domain site cd ctrl f_k);
       print_debug "++%a@." print_cd cd;
       incr cd.cd_remaining_async;
       Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, location, p)
 
     let new_clock_domain cd ctrl p user_balancer f_k _ =
+      let site = get_site () in
       if cd.cd_location = L.Lleaf then
-        new_local_clock_domain cd cd.cd_load_balancer L.Lleaf ctrl p f_k ()
+        new_local_clock_domain site cd cd.cd_load_balancer L.Lleaf ctrl p f_k ()
       else (
         let remote_site, location, new_balancer = cd.cd_load_balancer#new_child user_balancer  in
         if remote_site <> C.local_site () then (
           print_debug "Distributing new cd to site %a@." C.print_site remote_site;
-          new_remote_clock_domain remote_site new_balancer location cd ctrl p f_k
+          new_remote_clock_domain site remote_site new_balancer location cd ctrl p f_k
         ) else
-          new_local_clock_domain cd new_balancer location ctrl p f_k ()
+          new_local_clock_domain site cd new_balancer location ctrl p f_k ()
      )
 
 
@@ -1121,32 +1104,30 @@ struct
       C.is_master ()
 
     (* After receiving Mstep *)
-   let receive_step msg =
+   let receive_step site msg =
      let pck, cd_id = Msgs.recv_step msg in
      try
-       let site = get_site () in
        let cd = C.GidMap.find cd_id site.s_clock_domains in
        (* first do the end of instant*)
-       Clock.update_clock pck;
-       next_instant cd;
+       Clock.update_clock site pck;
+       next_instant site cd;
        (* then do the new step *)
        print_debug "Starting local clock domain %a on request@." C.print_gid cd_id;
-       exec_cd cd ()
+       exec_cd site cd ()
      with
        | Not_found -> print_debug "Error: Received Start for unknown clock domain.@."
 
    (* After receiving Meoi *)
-    let receive_eoi msg =
+    let receive_eoi site msg =
       let ck_id:C.gid = C.from_msg msg in
       (* first, emit the value of local slow signals to remotes *)
-      wake_up_now (Wbefore_eoi ck_id);
+      wake_up_now site (Wbefore_eoi ck_id);
       (* then forward eoi to remotes *)
-      let site = get_site () in
       Msgs.broadcast_eoi site.s_remotes ck_id;
       (* and do local eoi *)
-      wake_up_now (Weoi ck_id);
+      wake_up_now site (Weoi ck_id);
       (* wake up processes that send has_next msgs *)
-      wake_up_now (Wafter_eoi ck_id)
+      wake_up_now site (Wafter_eoi ck_id)
 
     (* After receiving Mcreate_signal *)
     let receive_create_signal msg =
@@ -1162,8 +1143,7 @@ struct
       )
 
     (* After receiving Mfinalize *)
-    let receive_finalize_site msg =
-      let site = get_site () in
+    let receive_finalize_site site msg =
       (* stop sending messages, but keep receiving from others *)
       let main_site = Msgs.recv_finalize msg in
       Msgs.send_dummy main_site ();
@@ -1188,17 +1168,18 @@ struct
         s_remotes = C.SiteSet.empty;
       } in
       Local_ref.init 0 s;
-      add_callback Mnew_cd create_cd;
-      add_callback Mstep receive_step;
-      add_callback Meoi receive_eoi;
-      add_callback Mcreate_signal receive_create_signal;
-      add_callback Mfinalize receive_finalize_site;
+      add_callback s Mnew_cd (create_cd s);
+      add_callback s Mstep (receive_step s);
+      add_callback s Meoi (receive_eoi s);
+      add_callback s Mcreate_signal receive_create_signal;
+      add_callback s Mfinalize (receive_finalize_site s);
       Callbacks.start_receiving s.s_msg_queue
 
     let start_slave () =
       init_site ();
+      let site = get_site () in
       while true do
-        process_msgs ()
+        process_msgs site ()
       done
 
     let finalize_top_clock_domain cd =
@@ -1220,7 +1201,7 @@ struct
       init_site ();
       let ck = mk_clock None in
       let balancer = L.mk_top_balancer () in
-      let cd = mk_clock_domain ck balancer L.Lany None in
+      let cd = mk_clock_domain (get_site ()) ck balancer L.Lany None in
       cd
 
 (* ------------------------------------------------------------------------ *)
@@ -1234,15 +1215,16 @@ struct
     (** [on_eoi cd f] executes 'f ()' during the eoi of cd. *)
     let on_eoi ck f =
      (* Format.eprintf "On eoi@."; *)
-      if C.is_local ck.ck_gid && is_eoi (get_clock_domain ck) then
+      let site = get_site () in
+      if C.is_local ck.ck_gid && is_eoi (get_clock_domain site ck) then
         f unit_value
       else
-        add_waiting (Weoi ck.ck_gid) f
+        add_waiting site (Weoi ck.ck_gid) f
 
   (** [on_event_or_next evt f_w v_w cd ctrl f_next] executes 'f_w v_w' if
       evt is emitted before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
-    let _on_event_or_next ev f_w v_w cd ctrl f_next =
+    let _on_event_or_next site  ev f_w v_w cd ctrl f_next =
       let act _ =
         if is_eoi cd then
           (*eoi was reached, launch fallback*)
@@ -1251,15 +1233,16 @@ struct
           (* signal activated *)
           f_w v_w
       in
-      add_waiting (Wsignal_wp ev.ev_gid) act;
+      add_waiting site (Wsignal_wp ev.ev_gid) act;
       add_weoi_waiting_list cd (Wsignal_wp ev.ev_gid)
 
     let on_event_or_next ev f_w v_w cd ctrl f_next =
-      let n = get_event ev in
+      let site = get_site () in
+      let n = get_event site ev in
       if E.status n then
         f_w v_w
       else
-        _on_event_or_next ev f_w v_w cd ctrl f_next
+        _on_event_or_next site ev f_w v_w cd ctrl f_next
 
     let on_event_cfg_or_next evt_cfg f_w v_w cd ctrl f_next =
       ()
@@ -1292,7 +1275,7 @@ struct
         ctrl is active in the same step.
         It waits for the next activation of w otherwise,
         or if the call raises Wait_again *)
-    let _on_event ev ev_ck ctrl f v =
+    let _on_event site ev ev_ck ctrl f v =
       let instance = ctrl.instance in
       let rec self _ =
         if ctrl.instance = instance then (
@@ -1301,38 +1284,39 @@ struct
             (try
                 f v
               with
-                | Wait_again -> add_waiting (Wsignal_wa ev.ev_gid) self)
+                | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self)
           else ((*ctrl is not active, wait end of instant*)
             let is_fired = ref false in
             D.add_next (ctrl_await is_fired) ctrl.next_control;
-            add_waiting (Weoi ev_ck.ck_gid) (eoi_await is_fired)
+            add_waiting site (Weoi ev_ck.ck_gid) (eoi_await is_fired)
           )
         )
       and eoi_await is_fired _ =
         if not !is_fired then
             (*ctrl was not activated, await the signal again *)
           (is_fired := true;
-           add_waiting (Wsignal_wa ev.ev_gid) self)
+           add_waiting site (Wsignal_wa ev.ev_gid) self)
       and ctrl_await is_fired _ =
         if not !is_fired then
           (* ctrl was activated, signal is present*)
           (try
              is_fired := true; f v
            with
-             | Wait_again -> add_waiting (Wsignal_wa ev.ev_gid) self)
+             | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self)
       in
-      add_waiting (Wsignal_wa ev.ev_gid) self
+      add_waiting site (Wsignal_wa ev.ev_gid) self
 
     let on_event ev ctrl f v =
-      let n = get_event ev in
-      let ev_ck = get_event_clock ev in
+      let site = get_site () in
+      let n = get_event site ev in
+      let ev_ck = get_event_clock site ev in
       if E.status n then
         (try
            f v
          with
-           | Wait_again -> _on_event ev ev_ck ctrl f v)
+           | Wait_again -> _on_event site ev ev_ck ctrl f v)
       else
-        _on_event ev ev_ck ctrl f v
+        _on_event site ev ev_ck ctrl f v
 
     let on_event_cfg evt_cfg ctrl f v  =
       ()
@@ -1365,80 +1349,81 @@ struct
         wait_event_cfg ()
 *)
 
-    let has_been_active ctrl ev =
-      let ev_ck = get_event_clock ev in
-      Clock.check_clock_state ctrl.last_activation ev_ck
+    let has_been_active site ctrl ev =
+      let ev_ck = get_event_clock site ev in
+      Clock.check_clock_state site ctrl.last_activation ev_ck
 
     (** [on_event_at_eoi evt ctrl f] executes 'f ()' during the eoi
         (of evt's clock domain) if ctrl is active in the same step.
         Waits for the next activation of evt otherwise, or if the call
         raises Wait_again *)
-    let _on_local_event_at_eoi ev ev_ck ctrl f =
+    let _on_local_event_at_eoi site ev ev_ck ctrl f =
       let instance = ctrl.instance in
       let rec self _ =
         if ctrl.instance = instance then (
-          if has_been_active ctrl ev then
+          if has_been_active site ctrl ev then
             (*ctrl is activated, run continuation*)
-            add_waiting (Weoi ev_ck.ck_gid) eoi_work
+            add_waiting site (Weoi ev_ck.ck_gid) eoi_work
           else ((*ctrl is not active, wait end of instant*)
             let is_fired = ref false in
             D.add_next (ctrl_await is_fired) ctrl.next_control;
-            add_waiting (Weoi ev_ck.ck_gid) (eoi_await is_fired)
+            add_waiting site (Weoi ev_ck.ck_gid) (eoi_await is_fired)
           )
         )
       and eoi_await is_fired _ =
         if not !is_fired then
           (*ctrl was not activated, await the signal again *)
           (is_fired := true;
-           add_waiting (Wsignal_wa ev.ev_gid) self)
+           add_waiting site (Wsignal_wa ev.ev_gid) self)
       and ctrl_await is_fired _ =
         if not !is_fired then
          (* ctrl was activated, signal is present*)
           (is_fired :=  true;
-           add_waiting (Weoi ev_ck.ck_gid) eoi_work)
+           add_waiting site (Weoi ev_ck.ck_gid) eoi_work)
       and eoi_work _ =
           (try
             f unit_value
           with
-            | Wait_again -> add_waiting (Wsignal_wa ev.ev_gid) self)
+            | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self)
       in
-      add_waiting (Wsignal_wa ev.ev_gid) self
+      add_waiting site (Wsignal_wa ev.ev_gid) self
 
-    let _on_remote_event_at_eoi ev ev_ck ctrl f =
+    let _on_remote_event_at_eoi site ev ev_ck ctrl f =
       let instance = ctrl.instance in
       let rec self _ =
         if ctrl.instance = instance then (
-          if has_been_active ctrl ev then
-            add_waiting (Weoi ev_ck.ck_gid) eoi_work
+          if has_been_active site ctrl ev then
+            add_waiting site (Weoi ev_ck.ck_gid) eoi_work
           else (
             print_debug "Signal %a was emitted, but ctrl is not active so keep waiting@." print_signal ev;
-            add_waiting (Wsignal_wa ev.ev_gid) self
+            add_waiting site (Wsignal_wa ev.ev_gid) self
           )
         )
       and eoi_work _ =
           (try
             f unit_value
           with
-            | Wait_again -> add_waiting (Wsignal_wa ev.ev_gid) self)
+            | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self)
       in
-        add_waiting (Wsignal_wa ev.ev_gid) self
+        add_waiting site (Wsignal_wa ev.ev_gid) self
 
      let on_event_at_eoi ev ctrl f =
-       let n = get_event ev in
-       let ev_ck = get_event_clock ev in
+       let site = get_site () in
+       let n = get_event site ev in
+       let ev_ck = get_event_clock site ev in
          if C.is_local ev.ev_gid then (
            if E.status n then
              let eoi_work _ =
                (try
                    f unit_value
                  with
-                   | Wait_again -> _on_local_event_at_eoi ev ev_ck ctrl f)
+                   | Wait_again -> _on_local_event_at_eoi site ev ev_ck ctrl f)
              in
-               add_waiting (Weoi ev_ck.ck_gid) eoi_work
+               add_waiting site (Weoi ev_ck.ck_gid) eoi_work
            else
-               _on_local_event_at_eoi ev ev_ck ctrl f
+               _on_local_event_at_eoi site ev ev_ck ctrl f
          ) else
-             _on_remote_event_at_eoi ev ev_ck ctrl f
+             _on_remote_event_at_eoi site ev ev_ck ctrl f
 
      let on_event_cfg_at_eoi evt_cfg ctrl f =
        ()
