@@ -1,3 +1,1 @@
-<*.ml>:debug
-<*.byte>:debug,thread
-<*.rml>:lco_mpi
+<*.byte>:use_unix

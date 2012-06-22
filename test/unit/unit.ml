@@ -18,42 +18,29 @@ let mpi_one_launcher balancer p =
 let rml_backends =
   [
     ("lco", seq_launcher, "Sequential (Lco)");
+
     ("lco_mpi", mpi_one_launcher "local", "MPI with local load balancer");
- (*   ("lco_mpi", mpi_launcher "user_local" "", "MPI with user annotations and local load balancer");
-    ("lco_mpi", mpi_launcher "robin" "", "MPI with round robin load balancer"); *)
-    ("lco_mpi", mpi_launcher "user_robin" "", "MPI with user annotations and round robin balancer");
-  (* ("lco_mpi_c", mpi_launcher "user_robin" "", "MPI C with user annotations and round robin balancer"); *)
- (*   ("lco_mpi", mpi_launcher "user_robin" " -no-signals-remote ",
-      "MPI with user annotations and round robin balancer and no signals remotes");
-    ("lco_mpi", mpi_launcher "user_robin" " -no-local-slow-signals ",
-      "MPI with user annotations and round robin balancer and no local slow signals");
-    ("lco_mpi", mpi_launcher "user_robin" " -no-local-slow-signals -no-signals-remote ",
-      "MPI with user annotations and round robin balancer and no local slow signals and no signals remotes"); *)
+    ("lco_mpi", mpi_launcher "robin" "", "MPI with round robin load balancer");
+    ("lco_mpi", mpi_launcher "remote" "", "MPI with user annotations and round robin balancer");
+
+    ("lco_mpi_c", mpi_one_launcher "local", "MPI with local load balancer");
+    ("lco_mpi_c", mpi_launcher "robin" "", "MPI with round robin load balancer");
+    ("lco_mpi_c", mpi_launcher "remote" "", "MPI with user annotations and round robin balancer");
 
     ("lco_mpi_new", mpi_one_launcher "local", "MPI New with local load balancer");
-    ("lco_mpi_new", mpi_launcher "user_robin" "", "MPI New with user annotations and round robin balancer");
+    ("lco_mpi_new", mpi_launcher "robin" "", "MPI New with user annotations and round robin balancer");
+    ("lco_mpi_new", mpi_launcher "remote" "", "MPI New with user annotations and all remote balancer");
 
-  (*  ("lco_mpi_buffer", mpi_launcher "user_local" "", "MPI+buffering with user annotations and local load balancer");
+    ("lco_mpi_buffer", mpi_launcher "local" "", "MPI+buffering with user annotations and local load balancer");
     ("lco_mpi_buffer", mpi_launcher "robin" "", "MPI+buffering with round robin load balancer");
-    ("lco_mpi_buffer", mpi_launcher "user_robin" "", "MPI+buffering with user annotations and round robin balancer") *)
+    ("lco_mpi_buffer", mpi_launcher "remote" "", "MPI+buffering with user annotations and round robin balancer")
   ]
 
 let all_tests =
   [
-    ("balance.rml", "");
-    ("cd_creation.rml", "");
-    ("cds.rml", "");
-    ("cds_pause.rml", "");
-    ("collision.rml", " -n 100 ");
-    ("collision_nosig.rml", " -n 100 ");
-    ("manual.rml", "");
-    ("mapreduce.rml", "");
-    ("parallel.rml", "");
-    ("planets.rml", " -n 100 ");
-    ("planets_adapt.rml", " -n 100 ");
-    ("planets_fixed_step.rml", " -n 100 ");
-    ("planets_pos.rml", " -n 100 ");
-    ("planets_pos_sig.rml", " -n 100 ");
+    "await_ck.rml"; "newck.rml"; "present.rml"; "present_ck.rml"; "rml_basics.rml";
+    "sigat.rml"; "signal_ck.rml"; "signals.rml"; "until.rml"; "until_ck.rml";
+    "when.rml"; "when_ck.rml"
   ]
 
 
@@ -88,10 +75,10 @@ let mk_tags_file backend =
 let ocamlbuild args =
   run_prog (ocamlbuild^" "^args)
 
-let run_test args (f, test_arg) =
+let run_test args f =
   print_status "** Test: %s@." f;
-  let bin = if !use_native_code then f^".native" else f^".byte" in
-  let cmd = args ("./"^bin)^" -bench"^test_arg in
+  let bin = if !use_native_code then f^".t.native" else f^".t.byte" in
+  let cmd = args ("./"^bin)^" > /dev/null 2>&1" in
   if !no_run then (
     print_status "* Running '%s'@." cmd
   ) else (
@@ -102,10 +89,8 @@ let run_test args (f, test_arg) =
     (* run *)
     try
       print_status "* Running '%s'@." cmd;
-      let ic = open_process_in cmd in
-      let t = float_of_string (input_line ic) in
-      check_success cmd (close_process_in ic);
-      Format.printf "%s: %f ms@." f (t *. 1000.)
+      check_success cmd (system cmd);
+      Format.printf "Test: %s -> OK@." f
     with
         _ -> Format.eprintf "Test '%s' failed.@." f; raise Command_failed
   )
@@ -122,14 +107,14 @@ let do_all_tests () =
     if !tests = [] then
       all_tests
     else
-      List.filter (fun (f, _) -> List.mem f !tests) all_tests
+      !tests
   in
-  print_status "Doing tests: %a@.@." (fun ff l -> List.iter (fun (s, _) -> fprintf ff "%s " s) l) rml_files;
+  print_status "Doing tests: %a@.@." (fun ff l -> List.iter (fun s -> fprintf ff "%s " s) l) rml_files;
   Sys.chdir "tests/";
   List.iter (do_tests rml_files) rml_backends
 
 let list_tests () =
-  Format.printf "Available tests: %a@." (fun ff l -> List.iter (fun (s, _) -> fprintf ff "%s " s) l) all_tests;
+  Format.printf "Available tests: %a@." (fun ff l -> List.iter (fun s -> fprintf ff "%s " s) l) all_tests;
   exit 0
 
 let options =
@@ -139,7 +124,7 @@ let options =
    "-native", Arg.Set use_native_code, "Use native code";
    "-mpi-n", Arg.Set_int nb_mpi_procs, " Number of MPI processes to run"]
 let usage_msg =
-"Benchmark program.
+"Unit test program.
   '"^Sys.executable_name^"' runs alls the tests in the tests/ dir.
   You can also specify tests as arguments: '"^Sys.executable_name^" test1.rml test2.rml'
 
