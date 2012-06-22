@@ -893,19 +893,8 @@ let rec type_of_expression env expr =
 	ty, Effects.flatten [u1; u2; u3]
 
     | Rexpr_await (affine,_,s) ->
-        let u = type_of_event_config env s in
-        let l = List.map (fun s ->
-            let ty_s, u_s = type_of_expression env s in
-            let _, _, u_emit, u_get = filter_event_or_err ty_s s in
-            let new_usage = Usages.await_u s.expr_loc affine in
-            accumulate_usage ty_s s.expr_loc new_usage;
-            unify_usage s.expr_loc u_emit u_get ty_s.type_usage;
-            let r_s = ty_s.type_index in
-            Effects.merge u_s (Effects.singleton r_s s.expr_loc u_emit u_get)
-          )
-          (events_from_event_config s)
-        in
-	type_unit, Effects.flatten (u::l)
+        let effects = type_of_event_config env s in
+        type_unit, effects
 
     | Rexpr_await_val (affine,_,All,s,patt,p) ->
 	let ty_s, u_s = type_of_expression env s in
