@@ -55,7 +55,7 @@ let mk_includes dir =
   in
   List.fold_left add_include [] (Pathname.include_dirs_of dir)
 
-let mpi_backends = ["lco_mpi"; "lco_mpi_c"; "lco_mpi_new"]
+let mpi_backends = ["lco_mpi"; "lco_mpi_c"; "lco_mpi_new"; "lco_mpi_buffer"]
 let uses_mpi main_file =
   let rml_file_tags = tags_of_pathname main_file in
   List.exists (fun t -> Tags.mem t rml_file_tags) mpi_backends
