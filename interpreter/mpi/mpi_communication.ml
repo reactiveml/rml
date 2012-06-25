@@ -77,13 +77,17 @@ module Make (P : Communication.TAG_TYPE) = struct
     Marshal.from_string s 0
 
   let send_owner gid tag d =
-    print_debug "%a: Send '%a' to gid '%a' at site '%d'@."
-      print_here ()  print_tag tag  print_gid gid  gid.g_rank;
+    IFDEF RML_DEBUG THEN
+      print_debug "%a: Send '%a' to gid '%a' at site '%d'@."
+        print_here ()  print_tag tag  print_gid gid  gid.g_rank
+    ELSE () END;
     Mpi.send (tag, to_msg d) gid.g_rank msg_tag
 
   let send site tag d =
-    print_debug "%a: Send '%a' to site '%a'@."
-      print_here ()  print_tag tag  print_site site;
+    IFDEF RML_DEBUG THEN
+      print_debug "%a: Send '%a' to site '%a'@."
+        print_here ()  print_tag tag  print_site site
+    ELSE () END;
     Mpi.send (tag, to_msg d) site msg_tag
 
   let broadcast tag d =
@@ -94,8 +98,10 @@ module Make (P : Communication.TAG_TYPE) = struct
 
   let receive () =
     let tag, (msg:msg) = Mpi.receive Mpi.any_source msg_tag in
-      print_debug "%a: Received '%a'@."
-        print_here ()  print_tag tag;
+      IFDEF RML_DEBUG THEN
+        print_debug "%a: Received '%a'@."
+          print_here ()  print_tag tag
+      ELSE () END;
       tag, msg
 
   let flush () = ()

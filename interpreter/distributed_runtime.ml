@@ -203,7 +203,9 @@ struct
         C.GidMap.find ck.ck_gid site.s_clock_domains
       with
         | Not_found ->
-            print_debug "Error: Cannot find clock domain %a@." C.print_gid ck.ck_gid;
+            IFDEF RML_DEBUG THEN
+              print_debug "Error: Cannot find clock domain %a@." C.print_gid ck.ck_gid
+            ELSE () END;
             assert false
     let get_event site ev =
       let n, _, _ =  SignalHandle.get site.s_signal_cache ev.ev_handle in
@@ -331,9 +333,11 @@ struct
           let local_ck = GidHandle.get_local site.s_clock_cache ck.ck_clock in
           let stored_value = E.get (GidHandle.get_stored ck.ck_clock) in
           if not (E.equal stored_value (E.get local_ck)) then (
-            print_debug "Updating value of clock %a from %a to %a@."
-              print_clock ck  E.print_clock_index (E.get local_ck)
-              E.print_clock_index stored_value;
+            IFDEF RML_DEBUG THEN
+              print_debug "Updating value of clock %a from %a to %a@."
+                print_clock ck  E.print_clock_index (E.get local_ck)
+                E.print_clock_index stored_value
+            ELSE () END;
             E.set local_ck stored_value;
             match ck.ck_parent with
               | None -> ()
@@ -353,7 +357,9 @@ struct
           if E.status n then
             E.value n
           else (
-            print_debug "Error: Reading the value of an absent signal %a@." C.print_gid ev.ev_gid;
+            IFDEF RML_DEBUG THEN
+              print_debug "Error: Reading the value of an absent signal %a@." C.print_gid ev.ev_gid
+            ELSE () END;
             raise Types.RML
           )
 
@@ -392,12 +398,16 @@ struct
           C.broadcast_set remotes (Mvalue ev.ev_gid) (E.value n)
 
         let do_emit site ev v =
-          print_debug "Emitting a value for %a@." print_signal ev;
+          IFDEF RML_DEBUG THEN
+            print_debug "Emitting a value for %a@." print_signal ev
+          ELSE () END;
           let n, ev_ck, ev_r = get_event_whole site ev in
           let already_present = E.status n in
-          if not (C.is_local ev_r.ck_gid) then
-            print_debug "Error: do_emit on remote signal %a at region %a of clock %a@."
-              C.print_gid ev.ev_gid   print_clock ev_r  print_clock ev_ck;
+          IFDEF RML_DEBUG THEN
+            if not (C.is_local ev_r.ck_gid) then
+              print_debug "Error: do_emit on remote signal %a at region %a of clock %a@."
+                C.print_gid ev.ev_gid   print_clock ev_r  print_clock ev_ck
+          ELSE () END;
           E.emit n v;
           (* wake up processes awaiting this signal *)
           wake_up_now site (Wsignal_wa ev.ev_gid);
@@ -459,8 +469,10 @@ struct
             { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck, r);
               ev_gid = gid }
           in
-          print_debug "Created signal %a at region %a of clock %a@." print_signal ev
-            print_clock r  print_clock ck;
+          IFDEF RML_DEBUG THEN
+            print_debug "Created signal %a at region %a of clock %a@." print_signal ev
+              print_clock r  print_clock ck
+          ELSE () END;
           if (get_clock_domain site r).cd_location = L.Lany then (
             add_callback site (Memit gid) (receive_emit site ev);
             add_callback site (Mreq_signal gid) (receive_req site n gid)
@@ -474,8 +486,10 @@ struct
             let ev = new_local_evt_combine site ck r default combine in
             if !Runtime_options.use_signals_users_set then
               add_signal_remote site (C.site_of_gid tmp_id) ev.ev_gid;
-            print_debug "Created signal %a at region %a of clock %a from request by %a@." print_signal ev
-              print_clock r   print_clock ck  C.print_gid tmp_id;
+            IFDEF RML_DEBUG THEN
+              print_debug "Created signal %a at region %a of clock %a from request by %a@." print_signal ev
+                print_clock r   print_clock ck  C.print_gid tmp_id
+            ELSE () END;
             C.send_owner tmp_id (Msignal_created tmp_id) ev
           in
           Msgs.send_create_signal r.ck_gid (tmp_id, create_signal);
@@ -689,7 +703,7 @@ struct
    (* let top_clock cd =
       Clock.top_clock cd.cd_clock *)
     let top_clock () = match !any_clock_ref with
-      | None -> print_debug "No top clock@."; raise Types.RML
+      | None -> IFDEF RML_DEBUG THEN print_debug "No top clock@." ELSE () END; raise Types.RML
       | Some ck -> Clock.top_clock ck
     let mk_clock parent_ck =
       let ck = Clock.mk_clock parent_ck in
@@ -738,31 +752,42 @@ struct
       not (D.is_empty_next ctrl.next) || List.exists (has_next site cd) ctrl.children
     (* Computes has_next, waiting for child clock domains if necessary *)
     and has_next_cd site cd =
-      print_debug "Before Waiting: %d@." !(cd.cd_remaining_async);
+      IFDEF RML_DEBUG THEN
+        print_debug "Before Waiting: %d@." !(cd.cd_remaining_async)
+      ELSE () END;
       let has_next_ctrl = has_next_children site cd cd.cd_top in
       (* Awaits Mhas_next from all remote clock domains *)
       C.flush ();
       while !(cd.cd_remaining_async) > 0 do
-        print_debug "Waiting for %d has_next msgs@." !(cd.cd_remaining_async);
+        IFDEF RML_DEBUG THEN
+          print_debug "Waiting for %d has_next msgs@." !(cd.cd_remaining_async)
+        ELSE () END;
         Callbacks.dispatch_given_msg site.s_msg_queue site.s_callbacks (Mhas_next cd.cd_clock.ck_gid)
       done;
-      print_debug "has_next of %a: has_next_children=%b, self=%b@." print_cd cd cd.cd_children_have_next has_next_ctrl;
+      IFDEF RML_DEBUG THEN
+        print_debug "has_next of %a: has_next_children=%b, self=%b@."
+          print_cd cd cd.cd_children_have_next has_next_ctrl
+      ELSE () END;
       has_next_ctrl || cd.cd_children_have_next
 
     let prepare_has_next cd _ =
       (* the top clock domain does not receive Mhas_next msgs*)
       if cd.cd_clock.ck_parent <> None then (
-        if cd.cd_children_have_next = true then
-          print_debug "have_next_children of %a is already true@." print_cd cd;
+        IFDEF RML_DEBUG THEN
+          if cd.cd_children_have_next = true then
+            print_debug "have_next_children of %a is already true@." print_cd cd;
+          print_debug "Waiting for %d Mhas_next msgs@." !(cd.cd_active_children)
+        ELSE () END;
         cd.cd_children_have_next <- false;
-        print_debug "Waiting for %d Mhas_next msgs@." !(cd.cd_active_children);
         cd.cd_remaining_async := !(cd.cd_remaining_async) + !(cd.cd_active_children)
       )
 
     let send_has_next site cd _ =
       let pck = assert_some cd.cd_clock.ck_parent in
       let has_next = has_next_cd site cd in
-      print_debug "send_has_next=%b from %a to %a@." has_next  print_cd cd  print_clock pck;
+      IFDEF RML_DEBUG THEN
+        print_debug "send_has_next=%b from %a to %a@." has_next  print_cd cd  print_clock pck
+      ELSE () END;
       Msgs.send_has_next pck.ck_gid has_next
 
     (* Register a handler to send Has_next msg to paremt clock for each
@@ -804,8 +829,10 @@ struct
 
     let macro_step_done site cd =
       let has_next = has_next_cd site cd in
-      print_debug "Macro step of clock domain %a: pauseclock = %b and has_next = %b@."
-        print_cd cd  cd.cd_pause_clock  has_next;
+      IFDEF RML_DEBUG THEN
+        print_debug "Macro step of clock domain %a: pauseclock = %b and has_next = %b@."
+          print_cd cd  cd.cd_pause_clock  has_next
+      ELSE () END;
       cd.cd_pause_clock || not has_next
 
     (* cd.cd_current_lock should be locked when calling schedule and is still locked
@@ -823,7 +850,9 @@ struct
       done
 
     let eoi site cd =
-      print_debug "Eoi of clock domain %a@." print_cd cd;
+      IFDEF RML_DEBUG THEN
+        print_debug "Eoi of clock domain %a@." print_cd cd
+      ELSE () END;
       wake_up_now site (Wbefore_eoi cd.cd_clock.ck_gid);
       cd.cd_eoi <- true;
       wake_up_now site (Weoi cd.cd_clock.ck_gid);
@@ -834,7 +863,9 @@ struct
       cd.cd_wake_up <- []
 
     let next_instant site cd =
-      print_debug "Next instant of clock domain %a@." print_cd cd;
+      IFDEF RML_DEBUG THEN
+        print_debug "Next instant of clock domain %a@." print_cd cd
+      ELSE () END;
       E.next (get_clock site cd.cd_clock.ck_clock);
       wake_up_now site (Wnext_instant cd.cd_clock.ck_gid);
       (* next instant of this clock domain *)
@@ -846,7 +877,9 @@ struct
       cd.cd_active_children := 0
 
     let rec exec_cd site cd () =
-      print_debug "Executing clock domain %a@." print_cd cd;
+      IFDEF RML_DEBUG THEN
+        print_debug "Executing clock domain %a@." print_cd cd
+      ELSE () END;
       schedule cd;
       if cd.cd_top.alive then (
         if !(cd.cd_remaining_async) = 0 then (
@@ -857,7 +890,9 @@ struct
                   (*Format.eprintf "Top clock domain next_instnt done : %d@." !(cd.cd_remaining_async)*)
             | Some ck ->
                 if macro_step_done site cd then (
-                  print_debug "Macro step of clock domain %a is done@." print_cd cd;
+                  IFDEF RML_DEBUG THEN
+                    print_debug "Macro step of clock domain %a is done@." print_cd cd
+                  ELSE () END;
                   add_waiting site (Wnext_instant ck.ck_gid) (fun () -> next_instant site cd);
                   (* register handlers for sending and receiving Mhas_next msgs *)
                   register_has_next_handlers site cd ck;
@@ -877,8 +912,10 @@ struct
         ) else
           match cd.cd_clock.ck_parent with
             | None -> (* top clock, wait for msgs *)
-                print_debug "Top clock domain %a is waiting for %d children@."
-                  print_cd cd  !(cd.cd_remaining_async);
+                IFDEF RML_DEBUG THEN
+                  print_debug "Top clock domain %a is waiting for %d children@."
+                    print_cd cd  !(cd.cd_remaining_async)
+                ELSE () END;
                 process_msgs site ();
                 exec_cd site cd ()
             | Some ck ->
@@ -887,10 +924,14 @@ struct
                   let parent_cd = get_clock_domain site ck in
                   incr parent_cd.cd_remaining_async
                 );
-                print_debug "Execution of clock domain %a is suspended until a message is received@."
-                  print_cd cd
+                IFDEF RML_DEBUG THEN
+                  print_debug "Execution of clock domain %a is suspended until a message is received@."
+                    print_cd cd
+                ELSE () END
       ) else
-        print_debug "Clock domain %a is dead@." print_cd cd
+        IFDEF RML_DEBUG THEN
+          print_debug "Clock domain %a is dead@." print_cd cd
+        ELSE () END
 (*
     let rec react cd =
       exec_cd cd ();
@@ -906,11 +947,15 @@ struct
     (* After receiving Mhas_next *)
     let gather_has_next cd msg =
       let has_next:bool = Msgs.recv_has_next msg in
-      print_debug "--%a@." print_cd cd;
+      IFDEF RML_DEBUG THEN
+        print_debug "--%a@." print_cd cd
+      ELSE () END;
       decr cd.cd_remaining_async;
-      if !debug_mode && !(cd.cd_remaining_async) < 0 then
-        print_debug "Error: counter of %a is < 0@." print_cd cd;
-      print_debug "Received has_next=%b for %a@." has_next print_cd cd;
+      IFDEF RML_DEBUG THEN
+        if !(cd.cd_remaining_async) < 0 then
+          print_debug "Error: counter of %a is < 0@." print_cd cd;
+        print_debug "Received has_next=%b for %a@." has_next print_cd cd
+      ELSE () END;
       cd.cd_children_have_next <- has_next or cd.cd_children_have_next
 
     let set_pauseclock cd ck =
@@ -927,7 +972,7 @@ struct
 
 
     let step_remote_clock_domain cd ck_id () =
-      print_debug "++%a@." print_cd cd;
+      IFDEF RML_DEBUG THEN print_debug "++%a@." print_cd cd ELSE () END;
       incr cd.cd_remaining_async;
       Msgs.send_step ck_id (cd.cd_clock, ck_id)
 
@@ -936,14 +981,18 @@ struct
         match cd.cd_clock.ck_parent with
           | None -> () (* the cd is already executing, waiting for messages *)
           | Some ck ->
-              print_debug "Waking up clock domain %a after receiving a message@." print_cd cd;
+              IFDEF RML_DEBUG THEN
+                print_debug "Waking up clock domain %a after receiving a message@." print_cd cd
+              ELSE () END;
               if C.is_local ck.ck_gid then (
                 let parent_cd = get_clock_domain site ck in
                 exec_cd site cd ();
-                print_debug "--%a@." print_cd parent_cd;
+                IFDEF RML_DEBUG THEN print_debug "--%a@." print_cd parent_cd ELSE () END;
                 decr parent_cd.cd_remaining_async;
-                if !debug_mode && !(parent_cd.cd_remaining_async) < 0 then
-                  print_debug "Error: counter of %a is < 0@." print_cd parent_cd;
+                IFDEF RML_DEBUG THEN
+                  if !(parent_cd.cd_remaining_async) < 0 then
+                    print_debug "Error: counter of %a is < 0@." print_cd parent_cd
+                ELSE () END;
                 wake_up_cd_if_done site parent_cd
               ) else
                 exec_cd site cd ()
@@ -952,21 +1001,25 @@ struct
     (* After receving Mstep_done*)
     let receive_step_done site cd ctrl remote_ck_id _ =
       D.add_next (step_remote_clock_domain cd remote_ck_id) ctrl.next_control;
-      print_debug "--%a@." print_cd cd;
+      IFDEF RML_DEBUG THEN print_debug "--%a@." print_cd cd ELSE () END;
       decr cd.cd_remaining_async;
       incr cd.cd_active_children;
-      if !debug_mode && !(cd.cd_remaining_async) < 0 then
-        print_debug "Error: counter of %a is < 0@." print_cd cd;
+      IFDEF RML_DEBUG THEN
+        if !(cd.cd_remaining_async) < 0 then
+          print_debug "Error: counter of %a is < 0@." print_cd cd
+      ELSE () END;
       (* wake up cd to emit the done message *)
       wake_up_cd_if_done site cd
 
     (* After receiving Mdone *)
     let receive_done_cd site cd new_ctrl f_k _ =
       set_kill new_ctrl;
-      print_debug "--%a@." print_cd cd;
+      IFDEF RML_DEBUG THEN print_debug "--%a@." print_cd cd ELSE () END;
       decr cd.cd_remaining_async;
-      if !debug_mode && !(cd.cd_remaining_async) < 0 then
-        print_debug "Error: counter of %a is < 0@." print_cd cd;
+      IFDEF RML_DEBUG THEN
+        if !(cd.cd_remaining_async) < 0 then
+          print_debug "Error: counter of %a is < 0@." print_cd cd
+      ELSE () END;
       D.add_current f_k cd.cd_current;
       (* wake up cd to emit the done message *)
       wake_up_cd_if_done site cd
@@ -980,17 +1033,23 @@ struct
       in
       if not (C.SiteSet.mem site set) then (
         if C.SiteSet.is_empty cd.cd_direct_remotes then (
-          print_debug "Allocating callbacks for %a@." print_cd cd;
+          IFDEF RML_DEBUG THEN
+            print_debug "Allocating callbacks for %a@." print_cd cd
+          ELSE () END;
           register_cd_callbacks here cd
         );
-        print_debug "Adding site %a to remote sites of %a@." C.print_site site  print_cd cd;
+        IFDEF RML_DEBUG THEN
+          print_debug "Adding site %a to remote sites of %a@." C.print_site site  print_cd cd
+        ELSE () END;
         if is_direct then
           cd.cd_direct_remotes <- C.SiteSet.add site cd.cd_direct_remotes
         else
           cd.cd_other_remotes <- C.SiteSet.add site cd.cd_other_remotes;
         (* add to the site site too *)
         if is_direct then (
-          print_debug "Adding site %a to site remotes." C.print_site site;
+          IFDEF RML_DEBUG THEN
+            print_debug "Adding site %a to site remotes." C.print_site site
+          ELSE () END;
           here.s_remotes <- C.SiteSet.add site here.s_remotes
         );
         (* propagate the information to the parent *)
@@ -1019,7 +1078,7 @@ struct
       Callbacks.remove_callback (Mnew_remote cd.cd_clock.ck_gid) site.s_callbacks
 
     let end_clock_domain site new_cd new_ctrl f_k () =
-      print_debug "End of clock domain %a@." print_cd new_cd;
+      IFDEF RML_DEBUG THEN print_debug "End of clock domain %a@." print_cd new_cd ELSE () END;
       site.s_clock_domains <- C.GidMap.remove new_cd.cd_clock.ck_gid site.s_clock_domains;
       unregister_cd_callbacks site new_cd;
       match new_cd.cd_clock.ck_parent with
@@ -1031,7 +1090,9 @@ struct
 
     let new_local_clock_domain site cd new_balancer location ctrl p f_k =
       let new_ck = mk_clock (Some cd.cd_clock) in
-      print_debug "Creating local clock domain %a@." C.print_gid new_ck.ck_gid;
+      IFDEF RML_DEBUG THEN
+        print_debug "Creating local clock domain %a@." C.print_gid new_ck.ck_gid
+      ELSE () END;
       let new_cd = mk_clock_domain site new_ck new_balancer location (Some ctrl) in
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain site new_cd new_ctrl f_k) in
@@ -1045,20 +1106,22 @@ struct
       let tmp_id, parent_ck, new_balancer, location, p = Msgs.recv_new_cd msg in
       let new_ck = mk_clock (Some parent_ck) in
       let new_cd = mk_clock_domain site new_ck new_balancer location None in
-      print_debug "Created local clock domain %a after request by %a@."
-        print_cd new_cd   print_clock parent_ck;
+      IFDEF RML_DEBUG THEN
+        print_debug "Created local clock domain %a after request by %a@."
+          print_cd new_cd   print_clock parent_ck
+      ELSE () END;
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain site new_cd new_ctrl dummy_step) in
       D.add_current f new_cd.cd_current;
       (* we wait for the start of the clock domain *)
       Msgs.send_cd_created tmp_id new_ck;
-      print_debug "newcd done@."
+      IFDEF RML_DEBUG THEN print_debug "newcd done@." ELSE () END
 
     (* After receiving Mcd_created *)
     let start_remote_clock_domain site cd ctrl f_k msg =
-      print_debug "Starting remote clock domain@.";
+      IFDEF RML_DEBUG THEN print_debug "Starting remote clock domain@." ELSE () END;
       let new_ck = Msgs.recv_cd_created msg in
-      print_debug "--%a" print_cd cd;
+      IFDEF RML_DEBUG THEN print_debug "--%a" print_cd cd ELSE () END;
       decr cd.cd_remaining_async;
       update_remote_set site cd true (C.site_of_gid new_ck.ck_gid);
       let new_ctrl = new_ctrl (Clock_domain new_ck) in
@@ -1073,7 +1136,7 @@ struct
     let new_remote_clock_domain site remote_site new_balancer location cd ctrl p f_k =
       let tmp_id = C.fresh site.s_seed in
       add_callback site (Mcd_created tmp_id) (start_remote_clock_domain site cd ctrl f_k);
-      print_debug "++%a@." print_cd cd;
+      IFDEF RML_DEBUG THEN print_debug "++%a@." print_cd cd ELSE () END;
       incr cd.cd_remaining_async;
       Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, location, p)
 
@@ -1084,7 +1147,9 @@ struct
       else (
         let remote_site, location, new_balancer = cd.cd_load_balancer#new_child user_balancer  in
         if remote_site <> C.local_site () then (
-          print_debug "Distributing new cd to site %a@." C.print_site remote_site;
+          IFDEF RML_DEBUG THEN
+            print_debug "Distributing new cd to site %a@." C.print_site remote_site
+          ELSE () END;
           new_remote_clock_domain site remote_site new_balancer location cd ctrl p f_k
         ) else
           new_local_clock_domain site cd new_balancer location ctrl p f_k ()
@@ -1113,7 +1178,9 @@ struct
        Clock.update_clock site pck;
        next_instant site cd;
        (* then do the new step *)
-       print_debug "Starting local clock domain %a on request@." C.print_gid cd_id;
+       IFDEF RML_DEBUG THEN
+         print_debug "Starting local clock domain %a on request@." C.print_gid cd_id
+       ELSE () END;
        exec_cd site cd ()
      with
        | Not_found -> print_debug "Error: Received Start for unknown clock domain.@."
@@ -1139,7 +1206,7 @@ struct
     let terminate_site site =
       Callbacks.stop_receiving site.s_msg_queue;
       if not (C.is_master ()) then (
-        print_debug "Exiting slave@.";
+        IFDEF RML_DEBUG THEN print_debug "Exiting slave@." ELSE () END;
         exit 0
       )
 
@@ -1154,7 +1221,7 @@ struct
       terminate_site site
 
     let init_site () =
-      print_debug "Init site@.";
+      IFDEF RML_DEBUG THEN print_debug "Init site@." ELSE () END;
       let s = {
         s_clock_domains = C.GidMap.empty;
         (*  s_top_clock_domains = clock_domain list; *)
@@ -1199,6 +1266,7 @@ struct
       terminate_site site
 
     let mk_top_clock_domain () =
+      IFDEF RML_DEBUG THEN Format.eprintf "Blabla@." ELSE () END;
       init_site ();
       let ck = mk_clock None in
       let balancer = L.mk_top_balancer () in
@@ -1396,7 +1464,9 @@ struct
           if has_been_active site ctrl ev then
             add_waiting site (Weoi ev_ck.ck_gid) eoi_work
           else (
-            print_debug "Signal %a was emitted, but ctrl is not active so keep waiting@." print_signal ev;
+            IFDEF RML_DEBUG THEN
+              print_debug "Signal %a was emitted, but ctrl is not active so keep waiting@." print_signal ev
+            ELSE () END;
             add_waiting site (Wsignal_wa ev.ev_gid) self
           )
         )

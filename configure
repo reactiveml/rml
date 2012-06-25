@@ -563,6 +563,7 @@ PACKAGE_URL=''
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+enable_release
 mlmpi_libdir
 rmlbuild_libdir
 rmlbuild
@@ -641,6 +642,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_local_stdlib
+enable_release
 with_mpicc
 with_mpiexec
 '
@@ -1266,6 +1268,7 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-local-stdlib   use the in-sources standard library
+  --enable-release   remove debugging output
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -2037,6 +2040,14 @@ if test "${enable_local_stdlib+set}" = set; then :
   enableval=$enable_local_stdlib;
 else
   enable_local_stdlib=no
+fi
+
+
+# Check whether --enable-release was given.
+if test "${enable_release+set}" = set; then :
+  enableval=$enable_release;
+else
+  enable_release=no
 fi
 
 
@@ -4287,6 +4298,7 @@ else
     rmlbuild_libdir=$stdlib_dir/rpmlbuild
     mlmpi_libdir=$stdlib_dir
 fi
+
 
 
 

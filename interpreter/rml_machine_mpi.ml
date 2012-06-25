@@ -50,7 +50,8 @@ struct
         in
         react, finalize
       ) else
-        (fun _ -> print_debug "Launching slave@."; I.R.start_slave (); None), (fun () -> ())
+        (fun _ -> IFDEF RML_DEBUG THEN print_debug "Launching slave@." ELSE () END;
+                  I.R.start_slave (); None), (fun () -> ())
 
     let rml_make_test test_list =
       if I.R.is_master () then (
@@ -64,7 +65,9 @@ struct
         let steps = I.rml_make_n cd result pl in
         List.iter (fun step -> I.R.on_current_instant cd step) steps;
         let react () =
-          print_debug "@.********************* Doing one step@.";
+          IFDEF RML_DEBUG THEN
+            print_debug "@.********************* Doing one step@."
+          ELSE () END;
           I.R.react cd;
           T.next_step ();
           !result

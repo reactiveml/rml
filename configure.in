@@ -6,6 +6,10 @@ AC_ARG_ENABLE(local_stdlib,
     [  --enable-local-stdlib   use the in-sources standard library],,
     enable_local_stdlib=no)
 
+AC_ARG_ENABLE(release,
+    [  --enable-release   remove debugging output],,
+    enable_release=no)
+
 AC_PROG_OCAML
 if test "$OCAMLC" = "no"; then
   AC_MSG_ERROR([Please install the OCaml compiler])
@@ -66,6 +70,7 @@ AC_SUBST(rmldep)
 AC_SUBST(rmlbuild)
 AC_SUBST(rmlbuild_libdir)
 AC_SUBST(mlmpi_libdir)
+AC_SUBST(enable_release)
 
 AC_CONFIG_COMMANDS_PRE([m4/mkmyocamlbuild_config.sh $prefix $rmlbuild_libdir $OCAMLLIB])
 
