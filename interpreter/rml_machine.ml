@@ -133,7 +133,7 @@ module M (I : MACHINE_INTERPRETER) =
       try
         react_fun react finalize
       with
-        | _ -> Format.eprintf "An error occurred. aborting all processes@."; finalize (); exit 2
+        | e -> Format.eprintf "An exeception occurred: %s.@.Aborting all processes@." (Printexc.to_string e); finalize (); exit 2
 
     let rml_test test_list =
       Runtime_options.parse_cli ();
@@ -216,3 +216,5 @@ end
 
 module Lco_ctrl_tree_seq_interpreter =
   Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqRuntime)
+module Lco_ctrl_tree_seq_list_interpreter =
+  Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqListRuntime)

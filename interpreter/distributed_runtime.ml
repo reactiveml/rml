@@ -835,19 +835,14 @@ struct
       ELSE () END;
       cd.cd_pause_clock || not has_next
 
-    (* cd.cd_current_lock should be locked when calling schedule and is still locked
-       when it returns.  *)
     let schedule cd =
-      let ssched () =
-        try
+      try
+        while true do
           let f = D.take_current cd.cd_current in
-          f (); false
-        with
-            D.Empty_current -> true
-      in
-      while not (ssched ()) do
-        ()
-      done
+          f ()
+        done
+      with
+        | D.Empty_current -> ()
 
     let eoi site cd =
       IFDEF RML_DEBUG THEN

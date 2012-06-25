@@ -550,18 +550,14 @@ struct
           f ()
 
 
-
     let schedule cd =
-      let ssched () =
-        try
+      try
+        while true do
           let f = D.take_current cd.cd_current in
-          f (); false
-        with
-            D.Empty_current -> true
-      in
-      while not (ssched ()) do
-        ()
-      done
+          f ()
+        done
+      with
+        | D.Empty_current -> ()
 
     let eoi cd =
       cd.cd_eoi := true;
@@ -688,4 +684,63 @@ struct
     !next = []
 end
 
+
+module ListListDataStruct (S: Runtime.STEP) =
+struct
+  module Step = S
+
+  type next = unit Step.t list ref
+  type current = unit Step.t list list ref
+  type waiting_list = unit Step.t list ref
+
+  let mk_current () = ref ([] : unit Step.t list list)
+  let add_current p c = match !c with
+    | [] -> c := [[p]]
+    | l::tl -> c := (p::l)::tl
+  let add_current_list pl c = match pl with
+    | [] -> ()
+    | _ -> c := pl::!c
+  let add_current_waiting_list w c =
+    match !w with
+      | [] -> ()
+      | l -> c := l::!c; w := []
+  let add_current_next next c =
+    match !next with
+      | [] -> ()
+      | l -> c := l::!c; next := []
+
+  let current_length c =
+    List.fold_left (fun acc l -> (List.length l) + acc) 0 !c
+
+  exception Empty_current
+  let take_current c = match !c with
+    | [] -> raise Empty_current
+    | [f] :: tl -> c := tl; f
+    | (f::l) :: tl -> c := l::tl; f
+    | _ -> assert false
+
+  let mk_waiting_list () = ref ([]:unit Step.t list)
+  let add_waiting p w =
+    w := p :: ! w
+  let take_all w =
+    let l = !w in
+    w := [];
+    l
+  let waiting_length w =
+    List.length !w
+
+  let mk_next () = ref ([]:unit Step.t list)
+  let add_next p next =
+    next := p :: !next
+  let add_next_next n1 n2 =
+    n2 := List.rev_append !n1 !n2;
+    n1 := []
+  let clear_next next =
+    next := []
+  let is_empty_next next =
+    !next = []
+end
+
+
 module SeqRuntime = Make(ListDataStruct)(Sig_env.Record)
+module SeqListRuntime = Make(ListListDataStruct)(Sig_env.Record)

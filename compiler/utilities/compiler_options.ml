@@ -161,6 +161,12 @@ let set_runtime s =
       set_machine_module "Rml_machine.Machine";
       set_translation Lco
 
+   | "Lco_new" ->
+      set_interpreter_impl "Lco_ctrl_tree_seq_list_interpreter";
+      set_interpreter_module "Rml_machine";
+      set_machine_module "Rml_machine.Machine";
+      set_translation Lco
+
     | "Lco_mpi" ->
       set_interpreter_impl "Lco_ctrl_tree_mpi_interpreter";
       set_interpreter_module "Rml_machine_mpi";
