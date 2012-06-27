@@ -151,6 +151,33 @@ let clock_event = Clocks_utils.constr_notabbrev event_ident
    Var_clock (Clocks_utils.new_generic_clock_var());
    Var_carrier (Clocks_utils.make_generic_carrier Clocks_utils.generic_prefix_name) ]
 
+
+(* memory *)
+let memory_ident = pervasives_type "memory"
+let memory_gather = pervasives_val "memory_gather"
+
+let type_desc_memory =
+  { gi = memory_ident;
+    ty_info = Some { type_constr = { gi = memory_ident;
+				                             ty_info = Some{ constr_abbr=Constr_notabbrev};
+                                     ck_info = None };
+		                 type_kind = Type_abstract;
+		                 type_arity = 1; };
+    ck_info = Some { clock_constr = { gi = memory_ident;
+                                     ty_info = None;
+				                             ck_info = Some{ Clocks.constr_abbr = Clocks.Constr_notabbrev} };
+		                 clock_kind = Clock_abstract;
+                     clock_def_arity = 1, 1, 0;
+		                 clock_arity = 1, 1, 0; } }
+
+let type_memory = Types_utils.constr_notabbrev memory_ident [Types_utils.new_generic_var();
+						     Types_utils.new_generic_var(); ]
+let clock_memory = Clocks_utils.constr_notabbrev memory_ident
+  [Var_clock (Clocks_utils.new_generic_clock_var());
+   Var_carrier (Clocks_utils.make_generic_carrier Clocks_utils.generic_prefix_name) ]
+
+
+
 (* clock *)
 let clock_ident = pervasives_type "clock"
 
@@ -315,6 +342,7 @@ let list_of_type_desc =
     type_desc_list;
     type_desc_option;
     type_desc_event;
+    type_desc_memory;
     type_desc_clock;
 ]
 

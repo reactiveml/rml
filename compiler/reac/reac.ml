@@ -103,6 +103,12 @@ and expression_desc =
   | Enewclock of ident * expression option * expression
   | Epauseclock of expression
   | Etopck
+(*memory*)
+  | Ememory of ident * expression Asttypes.clock_expr * expression * expression
+  | Elast_mem of expression
+  | Eupdate of expression * expression
+  | Eset_mem of expression * expression
+  | Eawait_new of expression * pattern * expression
 
 (* event configuration *)
 and event_config =

@@ -1,0 +1,32 @@
+(* [O 1; O 3]*)
+let process memory_update_ck act =
+  newclock ck in
+    memory s last 0 in
+    s <<- (+) 1;
+    pause ck;
+    act !!s;
+    s <<- (+) 2;
+    pause topck;
+    act !!s
+
+(* [N; N; N; O 12]*)
+let process memory_await_new_match_ck act =
+  newclock ck in (
+    memory s at ck last 0 in
+    loop
+      s <<- (+) 2;
+      pause ck;
+      s <<- (+) 2;
+      pause topck
+    end
+    ||
+    await new s(v) when v > 10 in act v
+  )
+
+open Rmltest
+
+let test =
+  [
+   (memory_update_ck, "memory_update_ck",  [O 1; O 3]);
+   (memory_await_new_match_ck, "memory_await_new_match_ck", [N; N; N; O 12])
+  ]

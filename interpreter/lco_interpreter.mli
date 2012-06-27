@@ -44,6 +44,7 @@ module type S =
     and 'a process
     and clock_expr = R.clock Types.clock
     and region_expr = clock_expr
+    type 'a memory
 
     val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
     val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
@@ -52,9 +53,12 @@ module type S =
     val rml_pre_value: ('a, 'b) R.event -> 'b
     val rml_last: ('a, 'b) R.event -> 'b
     val rml_default: ('a, 'b) R.event -> 'b
+    val rml_last_mem : 'a memory -> 'a
 
     val rml_expr_emit: (unit, 'b) R.event -> unit
     val rml_expr_emit_val: ('a, 'b) R.event -> 'a -> unit
+    val rml_expr_update : 'a memory -> ('a -> 'a) -> unit
+    val rml_expr_set_mem : 'a memory -> 'a -> unit
 
     val rml_global_signal: clock_expr -> region_expr -> ('a, 'a list) R.event
     val rml_global_signal_combine: clock_expr -> region_expr -> 'b ->
@@ -97,6 +101,12 @@ module type S =
         ('a , 'a list) R.event -> ('a -> 'c expr) -> 'c expr
     val rml_await_immediate_one:
         (unit -> ('a , 'a list) R.event) -> ('a -> 'c expr) -> 'c expr
+    val rml_await_new' : 'a memory -> ('a -> 'b expr) -> 'b expr
+    val rml_await_new : (unit -> 'a memory) -> ('a -> 'b expr) -> 'b expr
+    val rml_update' : 'a memory -> (unit -> 'a -> 'a) -> unit expr
+    val rml_update : (unit -> 'a memory) -> (unit -> 'a -> 'a) -> unit expr
+    val rml_set_mem' : 'a memory -> (unit -> 'a) -> unit expr
+    val rml_set_mem : (unit -> 'a memory) -> (unit -> 'a) -> unit expr
     val rml_present': ('a, 'b) R.event -> 'c expr -> 'c expr -> 'c expr
     val rml_present: (unit -> ('a, 'b) R.event) -> 'c expr -> 'c expr -> 'c expr
     val rml_present_conf: event_cfg_gen -> 'a expr -> 'a expr -> 'a expr
@@ -116,6 +126,9 @@ module type S =
     val rml_signal_combine:
         clock_expr -> region_expr -> (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
           (('a, 'b) R.event -> 'c expr) -> 'c expr
+    val rml_memory :
+      clock_expr -> (unit -> 'a) ->
+      ('a memory -> 'b expr) -> 'b expr
     val rml_def: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
     val rml_def_dyn: 'a expr -> ('a -> 'b expr) -> 'b expr
 (*    val rml_def_and_dyn: expr array -> (value array -> expr) -> expr *)

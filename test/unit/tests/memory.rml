@@ -1,0 +1,49 @@
+(* [N; O 1; O 3]*)
+let process memory_update act =
+  memory s last 0 in
+  s <<- (+) 1;
+  pause;
+  act !!s;
+  s <<- (+) 2;
+  pause;
+  act !!s
+
+(* [N; O 1; O 3; O 3]*)
+let process memory_set act =
+  memory s last 0 in
+  s ::= 1;
+  pause;
+  act !!s;
+  s ::= 3;
+  pause;
+  act !!s;
+  pause;
+  act !!s
+
+(* [N; N; N; O 4]*)
+let process memory_await_new act =
+  memory s last 0 in
+  pause; pause; s ::= 4
+  ||
+  await new s(v) in act v
+
+(* [N; N; N; O 12]*)
+let process memory_await_new_match act =
+  memory s last 0 in
+  loop
+    s <<- (+) 4;
+    pause
+  end
+  ||
+  await new s(v) when v > 10 in act v
+
+
+open Rmltest
+
+let test =
+  [
+   (memory_update, "memory_update",  [N; O 1; O 3]);
+   (memory_set, "memory_set",  [N; O 1; O 3; O 3]);
+   (memory_await_new, "memory_await_new", [N; N; N; O 4]);
+   (memory_await_new_match, "memory_await_new_match", [N; N; N; O 12])
+  ]

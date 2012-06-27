@@ -74,6 +74,19 @@ let filter_multi_event ck =
                [Var_clock ck1; Var_clock (constr_notabbrev list_ident [Var_clock ck1]); Var_carrier sck]);
   ck1, sck
 
+let filter_memory ?(force_activation_ck=false) ck =
+  let ck = clock_repr ck in
+  let ck1 = new_clock_var() in
+  let sck =
+    if force_activation_ck then
+      !activation_carrier
+    else
+      make_carrier generic_prefix_name
+  in
+  unify ck (constr_notabbrev event_ident [Var_clock ck1; Var_carrier sck]);
+  add_effect_ck sck;
+  ck1, sck
+
 
 let unify_expr expr expected_ty actual_ty =
   try
@@ -98,6 +111,14 @@ let unify_emit loc expected_ty actual_ty =
   with
     | Unify -> emit_wrong_clock_err loc actual_ty expected_ty
     | Escape (s, _) -> emit_wrong_clock_escape_err loc s actual_ty
+
+let unify_update loc expected_ty actual_ty =
+  try
+    unify expected_ty actual_ty
+  with
+    | Unify -> update_wrong_clock_err loc actual_ty expected_ty
+    | Escape (s, _) -> update_wrong_clock_escape_err loc s actual_ty
+
 
 let unify_run loc expected_ty actual_ty =
   try
@@ -158,7 +179,7 @@ let rec is_nonexpansive expr =
       is_nonexpansive_conf e && is_nonexpansive e1 && is_nonexpansive e2
   | Eawait (_, e) ->
       is_nonexpansive_conf e
-  | Eawait_val (_, _, s, _, e) ->
+  | Eawait_val (_, _, s, _, e) | Eawait_new (s, _, e) ->
       is_nonexpansive s && is_nonexpansive e
   | Euntil (c, e, None) ->
       is_nonexpansive_conf c && is_nonexpansive e
@@ -938,6 +959,65 @@ let rec schema_of_expression env expr =
         Clocks_utils.static
 
     | Etopck -> clock_topck
+
+    | Ememory (s, ce, v, e) ->
+        let ty_res = new_clock_var() in
+        let ty_ck = type_clock_expr env ce in
+        let ty_s = constr_notabbrev memory_ident [Var_clock ty_res; Var_carrier ty_ck] in
+        type_expect env v ty_res;
+        clock_of_expression (Env.add s (forall [] [] [] ty_s) env) e
+
+    | Elast_mem s ->
+        let ty_s = clock_of_expression env s in
+        let ty, _ =
+          try
+            filter_memory ty_s
+          with Unify ->
+            non_memory_err s
+        in
+        ty
+
+    | Eupdate(s, e) ->
+        let ty_s = clock_of_expression env s in
+        let ty, _ =
+          try
+            filter_memory ty_s
+          with Unify ->
+            non_memory_err s
+        in
+        let ty_fun = arrow ty ty no_effect in
+        let ty_e = clock_of_expression env e in
+        unify_update e.e_loc ty_fun ty_e;
+        Clocks_utils.static
+
+    | Eset_mem(s, e) ->
+        let ty_s = clock_of_expression env s in
+        let ty, _ =
+          try
+            filter_memory ty_s
+          with Unify ->
+            non_memory_err s
+        in
+        let ty_e = clock_of_expression env e in
+        unify_update e.e_loc ty ty_e;
+        Clocks_utils.static
+
+    | Eawait_new(s, patt, e) ->
+        let ty_s = clock_of_expression env s in
+        let ty, _ =
+          try
+            filter_memory ty_s
+          with Unify ->
+            non_memory_err s
+        in
+        let gl_env, loc_env = clock_of_pattern [] [] patt ty in
+        assert (gl_env = []);
+        let new_env =
+          List.fold_left
+            (fun env (x, ty) -> Env.add x (forall [] [] [] ty) env)
+            env loc_env
+        in
+        clock_of_expression new_env e
 
   in
   expr.e_clock <- t;

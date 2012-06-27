@@ -71,6 +71,9 @@ and expression_desc =
       (ident * type_expression option) * expression Asttypes.clock_expr * expression Asttypes.clock_expr
     * (expression * expression) option * expression
   | Coexpr_topck
+  | Coexpr_last_mem of expression
+  | Coexpr_update of expression * expression
+  | Coexpr_set_mem of expression * expression
 
 (* Process expressions *)
 and process =
@@ -111,6 +114,10 @@ and process_desc =
       immediate_flag * await_kind * expression * pattern * process
   | Coproc_newclock of ident * expression option * process
   | Coproc_pauseclock of expression
+  | Coproc_memory of ident * expression Asttypes.clock_expr * expression * process
+  | Coproc_await_new of expression * pattern * process
+  | Coproc_update of expression * expression
+  | Coproc_set_mem of expression * expression
 
 (* event configuration *)
 and event_config =

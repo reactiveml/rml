@@ -48,6 +48,7 @@ module Rml_interpreter =
     and 'a process = unit -> 'a expr
 
     type ('a, 'b) event = ('a, 'b) R.event
+    type 'a memory = ('a -> 'a, 'a) R.event
     type event_cfg_gen = unit -> R.event_cfg
     type clock_expr = R.clock Types.clock
     type region_expr = clock_expr
@@ -79,17 +80,23 @@ module Rml_interpreter =
 
     let rml_default evt = R.Event.default evt
 
+    let rml_last_mem evt = R.Event.last evt
+
 (* ------------------------------------------------------------------------ *)
+
+    let default_combine x y = x :: y
+    let default_default = []
+    let memory_combine f old = f old
 
     let rml_global_signal ce re =
       let ck = ensure_clock_expr ce in
       let r = R.Event.region_of_clock (ensure_clock_expr re) in
-      R.Event.new_evt ck r
+      R.Event.new_evt ck r false default_default default_combine
 
     let rml_global_signal_combine ce re default combine =
       let ck = ensure_clock_expr ce in
       let r = R.Event.region_of_clock (ensure_clock_expr re) in
-      R.Event.new_evt_combine ck r default combine
+      R.Event.new_evt ck r false default combine
 
 (* ------------------------------------------------------------------------ *)
 
@@ -163,6 +170,26 @@ module Rml_interpreter =
 
     let rml_expr_emit evt =
       rml_expr_emit_val evt ()
+
+    let rml_update' = rml_emit_val'
+    let rml_update = rml_emit_val
+
+    let rml_set_mem' evt e =
+      fun f_k ctrl jp cd _ ->
+        let v = e () in
+        R.Event.emit evt (fun _ -> v);
+        f_k unit_value
+
+    let rml_set_mem expr_evt e =
+      fun f_k ctrl jp cd _ ->
+        let evt = expr_evt() in
+        let v = e () in
+        R.Event.emit evt (fun _ -> v);
+        f_k unit_value
+
+    let rml_expr_update = rml_expr_emit_val
+    let rml_expr_set_mem evt v =
+      R.Event.emit evt (fun _ -> v)
 
 (**************************************)
 (* await_immediate                    *)
@@ -276,6 +303,11 @@ module Rml_interpreter =
     let rml_await_conf expr_cfg =
       fun f_k ctrl jp cd _ ->
         R.on_event_cfg_at_eoi (expr_cfg ()) ctrl (fun () -> R.on_next_instant ctrl f_k)
+
+    let rml_await_new' = rml_await_all'
+    let rml_await_new = rml_await_all
+    let rml_await_new_match' = rml_await_all_match'
+    let rml_await_new_match = rml_await_all_match
 
 (**************************************)
 (* present                            *)
@@ -407,13 +439,20 @@ let rml_loop p =
       fun f_k ctrl jp cd _ ->
         let ck = eval_clock_expr cd ce in
         let r = R.Event.region_of_clock (eval_clock_expr cd re) in
-        p (R.Event.new_evt ck r) f_k ctrl jp cd unit_value
+        p (R.Event.new_evt ck r false default_default default_combine) f_k ctrl jp cd unit_value
 
     let rml_signal_combine ce re default comb p =
       fun f_k ctrl jp cd _ ->
         let ck = eval_clock_expr cd ce in
         let r = R.Event.region_of_clock (eval_clock_expr cd re) in
-        let evt = R.Event.new_evt_combine ck r (default()) (comb()) in
+        let evt = R.Event.new_evt ck r false (default()) (comb()) in
+        p evt f_k ctrl jp cd unit_value
+
+    let rml_memory ce default p =
+      fun f_k ctrl jp cd _ ->
+        let ck = eval_clock_expr cd ce in
+        let r = R.Event.region_of_clock ck in
+        let evt = R.Event.new_evt ck r true (default()) memory_combine in
         p evt f_k ctrl jp cd unit_value
 
 (**************************************)

@@ -169,6 +169,12 @@ let rec add_expr bv exp =
   | Pexpr_newclock (_, opt_e1, e2) -> Misc.opt_iter (add_expr bv) opt_e1; add_expr bv e2
   | Pexpr_pauseclock e1 -> add_expr bv e1
   | Pexpr_topck -> ()
+  | Pexpr_memory(_, ck, e1, e2) ->
+      add_clock_expr bv ck;
+      add_expr bv e1; add_expr bv e2
+  | Pexpr_last_mem e -> add_expr bv e
+  | Pexpr_update (e1, e2) | Pexpr_set_mem (e1, e2) -> add_expr bv e1; add_expr bv e2
+  | Pexpr_await_new(e1, _, e2) ->add_expr bv e1; add_expr bv e2
   | Pconf_present(e1) -> add_expr bv e1
   | Pconf_and(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pconf_or(e1, e2) -> add_expr bv e1; add_expr bv e2

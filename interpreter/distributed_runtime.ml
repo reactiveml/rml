@@ -462,8 +462,8 @@ struct
           E.copy n new_n;
           n, ck, r
 
-        let new_local_evt_combine site ck r default combine =
-          let n = E.create (get_clock site ck.ck_clock) default combine in
+        let new_local_evt site ck r is_memory default combine =
+          let n = E.create (get_clock site ck.ck_clock) is_memory default combine in
           let gid = C.fresh site.s_seed in
           let ev  =
             { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck, r);
@@ -479,11 +479,11 @@ struct
           );
           ev
 
-        let new_remote_evt_combine site ck r default (combine : 'a -> 'b -> 'b) =
+        let new_remote_evt site ck r is_memory default (combine : 'a -> 'b -> 'b) =
           let tmp_id = C.fresh site.s_seed in
           let create_signal () =
             let site = get_site () in
-            let ev = new_local_evt_combine site ck r default combine in
+            let ev = new_local_evt site ck r is_memory default combine in
             if !Runtime_options.use_signals_users_set then
               add_signal_remote site (C.site_of_gid tmp_id) ev.ev_gid;
             IFDEF RML_DEBUG THEN
@@ -501,16 +501,13 @@ struct
           setup_local_copy site ev.ev_gid n ck;
           ev
 
-        let new_evt_combine ck r default combine =
+        let new_evt ck r is_memory default combine =
           let site = get_site () in
           let r = if !Runtime_options.use_local_slow_signals then r else ck in
           if C.is_local r.ck_gid then
-            new_local_evt_combine site ck r default combine
+            new_local_evt site ck r is_memory default combine
           else
-            new_remote_evt_combine site ck r default combine
-
-        let new_evt ck r =
-          new_evt_combine ck r [] (fun x y -> x :: y)
+            new_remote_evt site ck r is_memory default combine
 
         let status ?(only_at_eoi=false) ev =
           let n = get_event (get_site ()) ev in

@@ -50,11 +50,9 @@ struct
 
     module Event =
       struct
-        let new_evt_combine cd _ default combine =
-          (E.create cd.cd_clock default combine, cd, D.mk_waiting_list (), D.mk_waiting_list ())
-
-        let new_evt sig_cd _ =
-          new_evt_combine sig_cd sig_cd [] (fun x y -> x :: y)
+        let new_evt cd _ is_memory default combine =
+          (E.create cd.cd_clock is_memory default combine, cd,
+          D.mk_waiting_list (), D.mk_waiting_list ())
 
         let status ?(only_at_eoi=false) (n,sig_cd,_,_) =
           E.status n && (not only_at_eoi || !(sig_cd.cd_eoi))

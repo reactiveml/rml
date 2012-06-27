@@ -72,9 +72,27 @@ let emit_wrong_clock_err loc actual_ty expected_ty =
     Clocks_printer.output expected_ty;
   raise Error
 
+let update_wrong_clock_err loc actual_ty expected_ty =
+  Printf.eprintf
+    "%aThe assigned value has clock %a,\n\
+    but is used with clock %a.\n"
+    Location.print_oc loc
+    Clocks_printer.output actual_ty
+    Clocks_printer.output expected_ty;
+  raise Error
+
 let emit_wrong_clock_escape_err loc s actual_ty =
   Printf.eprintf
     "%aThe emitted value has clock %a,\n\
+    and would thus escape its scope %s.\n"
+    Location.print_oc loc
+    Clocks_printer.output actual_ty
+    s;
+  raise Error
+
+let update_wrong_clock_escape_err loc s actual_ty =
+  Printf.eprintf
+    "%aThe assigned value has clock %a,\n\
     and would thus escape its scope %s.\n"
     Location.print_oc loc
     Clocks_printer.output actual_ty
@@ -133,6 +151,12 @@ let non_event_err2 conf =
   Printf.eprintf
     "%aThis expression is not an event.\n"
     Location.print_oc conf.conf_loc;
+  raise Error
+
+let non_memory_err exp =
+  Printf.eprintf
+    "%aThis expression is not a memory.\n"
+    Location.print_oc exp.e_loc;
   raise Error
 
 let non_clock_err exp =

@@ -355,6 +355,24 @@ let expr_free_vars e =
     | Epauseclock e -> expr_free_vars vars e
 
     | Etopck -> ()
+
+    | Ememory(s, ck, v, e) ->
+        let vars' = (Vlocal s) :: vars in
+        (match ck with
+          | CkExpr e1 -> expr_free_vars vars e1
+          | _ -> ());
+        expr_free_vars vars v;
+        expr_free_vars vars' e
+
+    | Elast_mem e ->
+        expr_free_vars vars e
+    | Eupdate (s, e) | Eset_mem (s, e) ->
+        expr_free_vars vars s;
+        expr_free_vars vars e
+    | Eawait_new (s, patt, e) ->
+        expr_free_vars vars s;
+        let vars' = (vars_of_patt patt) @ vars in
+        expr_free_vars vars' e
     end
 
   and config_free_vars vars config =

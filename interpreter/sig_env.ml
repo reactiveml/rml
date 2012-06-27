@@ -39,7 +39,8 @@ module type S =
     type clock_index
     type ('a, 'b) t
 
-    val create: clock -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) t
+    (* create ck is_memory default combine *)
+    val create: clock -> bool -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) t
     val status: ('a, 'b) t -> bool
     val value: ('a, 'b) t -> 'b
     val pre_status: ('a, 'b) t -> bool
@@ -69,6 +70,7 @@ module Record  (*: S*)  =
     type clock_index = int
     type ('a, 'b) t =
         { mutable clock : clock;
+          is_memory : bool;
           mutable status: int;
           mutable value: 'b;
           mutable pre_status: int;
@@ -78,8 +80,9 @@ module Record  (*: S*)  =
 
     let absent = -2
 
-    let create ck default combine =
+    let create ck is_memory default combine =
       { clock = ck;
+        is_memory = is_memory;
         status = absent;
         value = default;
         pre_status = absent;
@@ -126,7 +129,7 @@ module Record  (*: S*)  =
         (n.pre_status <- n.status;
          n.last <- n.value;
          n.status <- !(n.clock);
-         n.value <- n.combine v n.default)
+         n.value <- if n.is_memory then n.combine v n.value else n.combine v n.default)
       else
         n.value <- n.combine v n.value
 

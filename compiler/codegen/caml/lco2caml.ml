@@ -293,6 +293,16 @@ let rec translate_ml e =
 
     | Coexpr_topck ->
         (make_instruction "rml_top_clock").cexpr_desc
+
+    | Coexpr_last_mem s ->
+        Cexpr_apply
+          (make_instruction "rml_last_mem", [translate_ml s])
+    | Coexpr_update (s, e) ->
+        Cexpr_apply
+          (make_instruction "rml_expr_update", [translate_ml s; translate_ml e])
+    | Coexpr_set_mem (s, e) ->
+        Cexpr_apply
+          (make_instruction "rml_expr_set_mem", [translate_ml s; translate_ml e])
   in
   make_expr cexpr e.coexpr_loc
 
@@ -923,6 +933,110 @@ and translate_proc e =
       else
         Cexpr_apply (make_instruction "rml_pauseclock", [embed_ml e])
 
+    | Coproc_memory (s, ck, e, k) ->
+        let patt = make_patt (Cpatt_var (Cvarpatt_local s)) Location.none in
+        Cexpr_apply
+          (make_instruction "rml_memory",
+           [translate_clock_expr ck;
+            embed_ml e;
+            make_expr
+              (Cexpr_function [patt, translate_proc k])
+              Location.none])
+
+    | Coproc_update (s, e) ->
+        if Lco_misc.is_value s then
+          Cexpr_apply
+            (make_instruction "rml_update'",
+             [translate_ml s;
+              embed_ml e;])
+        else
+          Cexpr_apply
+            (make_instruction "rml_update",
+             [embed_ml s;
+              embed_ml e;])
+
+    | Coproc_set_mem (s, e) ->
+        if Lco_misc.is_value s then
+          Cexpr_apply
+            (make_instruction "rml_set_mem'",
+             [translate_ml s;
+              embed_ml e;])
+        else
+          Cexpr_apply
+            (make_instruction "rml_set_mem",
+             [embed_ml s;
+              embed_ml e;])
+
+    | Coproc_await_new (s, patt, k) ->
+        let cpatt = translate_pattern patt in
+        begin match Caml_misc.partial_match cpatt, k.coproc_desc with
+          | partial_match, Coproc_when_match (e1, k) ->
+              let matching =
+              make_expr
+                (Cexpr_function
+                   [cpatt,
+                    make_expr
+                      (Cexpr_when_match(translate_ml e1,
+                                        make_expr
+                                          (Cexpr_constant (Const_bool true))
+                                          Location.none))
+                      Location.none;
+                    make_patt Cpatt_any Location.none,
+                    make_expr
+                      (Cexpr_constant (Const_bool false)) Location.none;])
+                Location.none
+            in
+            Cexpr_apply
+              (make_instruction ("rml_await_new_match"),
+               [embed_ml s;
+                matching;
+                make_expr
+                  (Cexpr_function
+                     ((cpatt, translate_proc k)::
+                      if partial_match then
+                        [(make_patt Cpatt_any Location.none, make_raise_RML())]
+                      else
+                        []))
+                  Location.none])
+
+          | true, _ ->
+              let matching =
+                make_expr
+                  (Cexpr_function
+                      [cpatt,
+                      make_expr
+                        (Cexpr_constant (Const_bool true)) Location.none;
+                       make_patt Cpatt_any Location.none,
+                      make_expr
+                        (Cexpr_constant (Const_bool false)) Location.none;])
+                  Location.none
+              in
+              Cexpr_apply
+                (make_instruction ("rml_await_new_match"),
+                [embed_ml s;
+                 matching;
+                 make_expr
+                   (Cexpr_function
+                       [(cpatt, translate_proc k);
+                        (make_patt Cpatt_any Location.none, make_raise_RML())])
+                   Location.none])
+
+          | false, _ ->
+              if Lco_misc.is_value s then
+                Cexpr_apply
+                  (make_instruction ("rml_await_new'"),
+                  [translate_ml s;
+                   make_expr
+                     (Cexpr_function [cpatt, translate_proc k])
+                     Location.none])
+              else
+                Cexpr_apply
+                  (make_instruction ("rml_await_new"),
+                  [embed_ml s;
+                   make_expr
+                     (Cexpr_function [cpatt, translate_proc k])
+                     Location.none])
+        end
 
   in
   make_expr cexpr e.coproc_loc

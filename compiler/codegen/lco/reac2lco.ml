@@ -321,6 +321,10 @@ let rec translate_ml e =
 
     | Etopck -> Coexpr_topck
 
+    | Elast_mem s -> Coexpr_last_mem (translate_ml s)
+    | Eupdate (s, e) -> Coexpr_update (translate_ml s, translate_ml e)
+    | Eset_mem (s, e) -> Coexpr_set_mem (translate_ml s, translate_ml e)
+
     | _ ->
         raise (Internal (e.e_loc,
                          "Reac2lco.translate_ml: expr"))
@@ -502,6 +506,21 @@ and translate_proc p =
 
         | Epauseclock e1 ->
           Coproc_pauseclock (translate_ml e1)
+
+        (* translate memories to signals *)
+        | Ememory (s, ck, v, proc) ->
+            Coproc_memory(s, clock_map translate_ml ck,
+                         translate_ml v,
+                         translate_proc proc)
+
+        | Eawait_new (s, patt, proc) ->
+            Coproc_await_new (translate_ml s, translate_pattern patt, translate_proc proc)
+
+        | Eupdate(s, e) ->
+            Coproc_update (translate_ml s, translate_ml e)
+
+        | Eset_mem(s, e) ->
+            Coproc_set_mem (translate_ml s, translate_ml e)
 
         | _ ->
             raise (Internal (p.e_loc,

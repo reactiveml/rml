@@ -609,6 +609,49 @@ let rec static_expr ctx e =
 
     | Etopck -> Static
 
+    | Ememory(s, ck, e1, p) ->
+        let typ1 = static_expr ML e1 in
+        let typ2 = static_expr ctx p in
+        let ty =
+          if typ1 = Static
+          then typ2
+          else expr_wrong_static_err e
+        in
+        (match ck with
+          | CkLocal ->
+              if ctx <> Process then
+                expr_wrong_static_err e;
+              max (Dynamic Instantaneous) ty
+          | CkExpr e1 ->
+              if static_expr ML e1 <> Static then
+                expr_wrong_static_err e1;
+              ty
+          | _ -> ty)
+
+    | Elast_mem s ->
+        if static_expr ML s = Static
+        then Static
+        else expr_wrong_static_err s
+
+    | Eupdate (s, e1) | Eset_mem (s, e1) ->
+        if static_expr ML s = Static
+        then
+          if static_expr ML e1 = Static
+          then Static
+          else expr_wrong_static_err e1
+        else expr_wrong_static_err s
+
+    | Eawait_new (s, _, p) ->
+        if ctx = Process
+        then
+          if static_expr ML s = Static
+          then
+            let _typ1 = static_expr Process p in
+            Dynamic Noninstantaneous
+          else expr_wrong_static_err s
+        else
+          expr_wrong_static_err e
+
   in
   e.e_static <- t;
   t

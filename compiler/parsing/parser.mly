@@ -199,6 +199,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token AWAIT               /* "await" */
 %token BACKQUOTE           /* "`" */
 %token BACKSLASHSLASH      /* " \/ " */
+%token BANGBANG            /* "!!" */
 %token BAR                 /* "|" */
 %token BARBAR              /* "||" */
 %token BARRBRACKET         /* "|]" */
@@ -209,6 +210,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token COLON               /* ":" */
 %token COLONCOLON          /* "::" */
 %token COLONEQUAL          /* ":=" */
+%token COLONCOLONEQUAL     /* "::=" */
 %token COLONGREATER        /* ":>" */
 %token COMMA               /* "," */
 %token CONSTRAINT          /* "constraint" */
@@ -265,11 +267,13 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token LBRACKETLESS        /* "[<" */
 %token LESS                /* "<" */
 %token LESSMINUS           /* "<-" */
+%token LESSLESSMINUS       /* "<<-" */
 %token LET                 /* "let" */
 %token <string> LIDENT
 %token LOOP                /* "loop" */
 %token LPAREN              /* "(" */
 %token MATCH               /* "match" */
+%token MEMORY              /* "memory" */
 %token METHOD              /* "method" */
 %token MINUS               /* "-" */
 %token MINUSDOT            /* "-." */
@@ -367,6 +371,8 @@ The precedences must be listed from low to high.
 %nonassoc ELSE                          /* (if ... then ... else ...) */
 %nonassoc LESSMINUS                     /* below COLONEQUAL (lbl <- x := e) */
 %right    COLONEQUAL                    /* expr (e := e := e) */
+%right    LESSLESSMINUS
+%right    COLONCOLONEQUAL
 %nonassoc AS
 %left     BAR                           /* pattern (p|p|p) */
 %nonassoc below_COMMA
@@ -392,7 +398,7 @@ The precedences must be listed from low to high.
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
-          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCk LOOP TOPCK
+          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCk LOOP TOPCK BANGBANG
 
 
 /* Entry points */
@@ -639,6 +645,17 @@ expr:
       { mkexpr (Pexpr_pause $2) }
   | PAUSECLOCK simple_expr
       { mkexpr (Pexpr_pauseclock $2) }
+  | MEMORY LIDENT opt_at_expr LAST par_expr IN par_expr
+      { mkexpr (Pexpr_memory (mksimple $2 2, fst $3, $5, $7)) }
+  | expr LESSLESSMINUS expr
+      { mkexpr (Pexpr_update($1, $3)) }
+  | expr COLONCOLONEQUAL expr
+      { mkexpr (Pexpr_set_mem($1, $3)) }
+  | AWAIT NEW simple_expr LPAREN pattern RPAREN IN par_expr
+      { mkexpr (Pexpr_await_new($3, $5, $8)) }
+  | AWAIT NEW simple_expr LPAREN pattern RPAREN WHEN par_expr IN par_expr
+      { let e = mkexpr (Pexpr_when_match ($8, $10)) in
+        mkexpr (Pexpr_await_new($3, $5, e)) }
 ;
 simple_expr:
     val_longident
@@ -691,6 +708,8 @@ simple_expr:
       { mkexpr Pexpr_nothing }
   | TOPCK
       { mkexpr Pexpr_topck }
+  | BANGBANG simple_expr
+      { mkexpr(Pexpr_last_mem $2) }
   | HALT
       { mkexpr Pexpr_halt }
   | LOOP par_expr END

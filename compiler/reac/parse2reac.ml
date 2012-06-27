@@ -533,7 +533,7 @@ let rec translate env e =
                          translate new_env expr)
 
     | Pexpr_newclock (x, sch, e) ->
-      let id = Ident.create Ident.gen_var x.psimple_id Ident.Val_ML in
+      let id = Ident.create Ident.gen_var x.psimple_id Ident.Clock in
       let env = Env.add x.psimple_id id env in
       let sch = Misc.opt_map (translate env) sch in
       Enewclock (id, sch, translate env e)
@@ -542,6 +542,27 @@ let rec translate env e =
       Epauseclock (translate env e)
 
     | Pexpr_topck -> Etopck
+
+    | Pexpr_memory(x, ck,  v, e) ->
+      let id = Ident.create Ident.gen_var x.psimple_id Ident.Mem in
+      let v = translate env v in
+      let ck = Misc.clock_map (translate env) ck in
+      let env = Env.add x.psimple_id id env in
+      Ememory(id, ck, v, translate env e)
+
+    | Pexpr_last_mem e ->
+        Elast_mem (translate env e)
+
+    | Pexpr_update (s, e) ->
+        Eupdate (translate env s, translate env e)
+
+    | Pexpr_set_mem (s, e) ->
+        Eset_mem (translate env s, translate env e)
+
+    | Pexpr_await_new (s, patt, e) ->
+        let vars, rpatt = translate_pattern false patt in
+        let new_env = add_varpatt env vars in
+        Eawait_new (translate env s, rpatt, translate new_env e)
 
     | Pexpr_get _ ->
         raise (Internal (e.pexpr_loc,

@@ -102,6 +102,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "loop", LOOP;
     "match", MATCH;
     "method", METHOD;
+    "memory", MEMORY;
     "module", MODULE;
     "mutable", MUTABLE;
     "new", NEW;
@@ -415,6 +416,9 @@ rule token = parse
   | ">]" { GREATERRBRACKET }
   | "}"  { RBRACE }
   | ">}" { GREATERRBRACE }
+  | "<<-" { LESSLESSMINUS }
+  | "!!" { BANGBANG }
+  | "::=" { COLONCOLONEQUAL }
 
   | "!=" { INFIXOP0 "!=" }
   | "+"  { PLUS }

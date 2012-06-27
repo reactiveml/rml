@@ -99,6 +99,12 @@ and expression_desc =
   | Pexpr_newclock of simple_ident * expression option * expression (* ck, scheduling annotation, body *)
   | Pexpr_pauseclock of expression
   | Pexpr_topck
+(* memory *)
+  | Pexpr_memory of simple_ident * expression Asttypes.clock_expr * expression * expression
+  | Pexpr_last_mem of expression
+  | Pexpr_update of expression * expression
+  | Pexpr_set_mem of expression * expression
+  | Pexpr_await_new of expression * pattern * expression
 (* event configuration *)
   | Pconf_present of expression
   | Pconf_and of event_config * event_config

@@ -65,6 +65,11 @@ let unify_emit loc expected_ty actual_ty =
     unify expected_ty actual_ty
   with _ -> emit_wrong_type_err loc actual_ty expected_ty
 
+let unify_update loc expected_ty actual_ty =
+  try
+    unify expected_ty actual_ty
+  with _ -> update_wrong_type_err loc actual_ty expected_ty
+
 let unify_run loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
@@ -88,6 +93,12 @@ let filter_multi_event ty =
   let ty1 = new_var() in
   unify ty (constr_notabbrev event_ident [ty1;
                                           constr_notabbrev list_ident [ty1]]);
+  ty1
+
+let filter_memory ty =
+  let ty = type_repr ty in
+  let ty1 = new_var() in
+  unify ty (constr_notabbrev memory_ident [ty1]);
   ty1
 
 let is_unit_process desc =
@@ -163,7 +174,7 @@ let rec is_nonexpansive expr =
       is_nonexpansive_conf e && is_nonexpansive e1 && is_nonexpansive e2
   | Eawait (_, e) ->
       is_nonexpansive_conf e
-  | Eawait_val (_, _, s, _, e) ->
+  | Eawait_val (_, _, s, _, e) | Eawait_new (s, _, e) ->
       is_nonexpansive s && is_nonexpansive e
   | Euntil (c, e, None) ->
       is_nonexpansive_conf c && is_nonexpansive e
@@ -858,6 +869,63 @@ let rec type_of_expression env expr =
 
     | Etopck -> type_clock
 
+    | Ememory (s, _, v, e) ->
+        let ty_res = new_var() in
+        let ty_s = constr_notabbrev memory_ident [ty_res] in
+        type_expect env v ty_res;
+        type_of_expression (Env.add s (forall [] ty_s) env) e
+
+    | Elast_mem s ->
+        let ty_s = type_of_expression env s in
+        let ty =
+          try
+            filter_memory ty_s
+          with Unify ->
+            non_memory_err s
+        in
+        ty
+
+    | Eupdate(s, e) ->
+        let ty_s = type_of_expression env s in
+        let ty =
+          try
+            filter_memory ty_s
+          with Unify ->
+            non_memory_err s
+        in
+        let ty_fun = arrow ty ty in
+        let ty_e = type_of_expression env e in
+        unify_update e.e_loc ty_fun ty_e;
+        type_unit
+
+    | Eset_mem(s, e) ->
+        let ty_s = type_of_expression env s in
+        let ty =
+          try
+            filter_memory ty_s
+          with Unify ->
+            non_memory_err s
+        in
+        let ty_e = type_of_expression env e in
+        unify_update e.e_loc ty ty_e;
+        type_unit
+
+    | Eawait_new(s, patt, e) ->
+        let ty_s = type_of_expression env s in
+        let ty =
+          try
+            filter_memory ty_s
+          with Unify ->
+            non_memory_err s
+        in
+        let gl_env, loc_env = type_of_pattern [] [] patt ty in
+        assert (gl_env = []);
+        let new_env =
+          List.fold_left
+            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            env loc_env
+        in
+        type_of_expression new_env e
   in
   expr.e_type <- t;
   Stypes.record (Ti_expr expr);

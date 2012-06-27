@@ -26,10 +26,10 @@
 (* first modification: 2004-04-23  *)
 (* modified by: Louis Mandel *)
 
-(* $Id$ *) 
+(* $Id$ *)
 
-type kind = 
-    Val_ML | Val_RML | Sig 
+type kind =
+    Val_ML | Val_RML | Sig | Clock | Mem
   | Constr | Label | Exn | Type | Internal
 
 type t = { id: int; name: string; kind: kind; }
@@ -47,11 +47,13 @@ let string_of_kind = function
   | Exn -> "exn"
   | Type -> "ty"
   | Internal -> "loc"
+  | Mem -> "mem"
+  | Clock -> "clock"
 
-let unique_name i = 
+let unique_name i =
   match String.get i.name 0 with
   | '=' | '<' | '>' | '@' | '^' | '|' | '&' | '+' | '-' | '*' | '/' | '$' | '%'
-  | '!' | '?' | '~' -> 
+  | '!' | '?' | '~' ->
       "__" ^ (string_of_kind i.kind) ^ "_" ^ (string_of_int i.id)
   | _ ->
       i.name ^ "__" ^ (string_of_kind i.kind) ^ "_" ^ (string_of_int i.id)
@@ -80,5 +82,5 @@ let create gen s k =
   {id = gen#name;
    name = s;
    kind = k; }
-      
-let same i1 i2 = i1.id = i2.id 
+
+let same i1 i2 = i1.id = i2.id
