@@ -185,7 +185,7 @@ let register_effects patt_vars effects =
     )
     (List.combine patt_vars effects)
 
-let get_effects id loc =
+let get_gleff id loc =
   try
     Hashtbl.find gleff id
   with _ ->
@@ -498,7 +498,7 @@ let rec type_of_expression env expr =
         let g_ty = (Global.info n).value_typ in
         let ty = instance g_ty in
         let idx = n.gi.Global_ident.id.Ident.id in
-        let effects = get_effects idx expr.expr_loc in
+        let effects = get_gleff idx expr.expr_loc in
 	ty, effects
 
     | Rexpr_let (flag, patt_expr_list, e) ->
