@@ -69,7 +69,7 @@ value caml_mpi_send_int(value data, value dest, value tag)
 value caml_mpi_receive(value src, value tag)
 {
   MPI_Status status;
-  int count;
+  int count, msrc, mtag;
   value res;
   char * buffer;
 #ifdef SEMI_ACTIVE_WAITING
@@ -77,6 +77,9 @@ value caml_mpi_receive(value src, value tag)
 #endif
 
   CAMLparam2(src, tag);
+
+  msrc = Int_val(src);
+  mtag = Int_val(tag);
 
   caml_release_runtime_system();
 
@@ -87,7 +90,7 @@ value caml_mpi_receive(value src, value tag)
     if (!msg_received) { usleep(SEMI_ACTIVE_WAITING_DELAY); };
   }
 #else
-  MPI_Probe(Int_val(src), Int_val(tag), MPI_COMM_WORLD, &status);
+  MPI_Probe(msrc, mtag, MPI_COMM_WORLD, &status);
 #endif
   /* allocate a buffer big enough */
   MPI_Get_count(&status, MPI_BYTE, &count);
@@ -116,4 +119,27 @@ value caml_mpi_receive_int(value source, value tag)
   CAMLreturn(Val_long(n));
 }
 
+value caml_mpi_receive_int_timeout(value source, value tag, value timeout)
+{
+  MPI_Status status;
+  long n;
+  int flag;
 
+  CAMLparam3(source, tag, timeout);
+
+  caml_release_runtime_system();
+  MPI_Iprobe(Int_val(source), Int_val(tag), MPI_COMM_WORLD, &flag, &status);
+  if(flag) /* message received */
+    MPI_Recv(&n, 1, MPI_LONG, Int_val(source), Int_val(tag), MPI_COMM_WORLD, &status);
+  else {
+    usleep(Int_val(timeout));
+    MPI_Iprobe(Int_val(source), Int_val(tag), MPI_COMM_WORLD, &flag, &status);
+    if(flag) /* message received */
+      MPI_Recv(&n, 1, MPI_LONG, Int_val(source), Int_val(tag), MPI_COMM_WORLD, &status);
+    else
+      n = -1; /* signal the absence of message */
+  }
+  caml_acquire_runtime_system() ;
+
+  CAMLreturn(Val_long(n));
+}

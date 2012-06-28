@@ -37,6 +37,7 @@ external send_int: int -> rank -> tag -> unit = "caml_mpi_send_int"
 external receive: rank -> tag -> 'a = "caml_mpi_receive"
 
 external receive_int : rank -> tag -> int = "caml_mpi_receive_int"
+external receive_int_timeout : rank -> tag -> int -> int = "caml_mpi_receive_int_timeout"
 
 (* Global state *)
 

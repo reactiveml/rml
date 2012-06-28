@@ -3,4 +3,4 @@
 <rpmllib_mpi.cma>:use_mlmpi,thread
 <rpmllib_mpi.cmxa>:thread
 <distributed_runtime*.ml>:use_mlmpi, use_macro
-<distributed_runtime.ml> or <rml_machine_mpi.ml>: syntax(camlp4o), package(camlp4.macro)
+<distributed_runtime.ml> or <rml_machine_mpi.ml> or <rmltest_mpi.ml>: syntax(camlp4o), package(camlp4.macro)

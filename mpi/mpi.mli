@@ -26,6 +26,9 @@ val receive: rank -> tag -> 'a
 
 (** Same as [receive] but specialized for integers. *)
 val receive_int: rank -> tag -> int
+(** Same as [receive] but specialized for integers and with an additional
+    argument that is a timeout in us. *)
+val receive_int_timeout : rank -> tag -> int -> int
 
 
 (** Number of nodes in the global communicator *)

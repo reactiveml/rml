@@ -118,6 +118,9 @@ module Test = struct
     let receive () =
       Mpi.receive_int Mpi.any_source tag
     in
-    send, receive
+    let receive_timeout timeout =
+      Mpi.receive_int_timeout Mpi.any_source tag timeout
+    in
+    send, receive, receive_timeout
 end
 

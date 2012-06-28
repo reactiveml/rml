@@ -56,5 +56,5 @@ module type S = sig
 end
 
 module type T = sig
-  val fresh_channel : unit -> (int -> unit) * (unit -> int)
+  val fresh_channel : unit -> (int -> unit) * (unit -> int) * (int -> int)
 end
