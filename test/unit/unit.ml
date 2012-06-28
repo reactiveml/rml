@@ -18,7 +18,8 @@ let mpi_one_launcher balancer p =
 
 let rml_backends =
   [
-   ("lco", seq_launcher, "Sequential (Lco)");
+    ("lco", seq_launcher, "Sequential (Lco)");
+    ("lco_new", seq_launcher, "Sequential (Lco_new)");
 
     ("lco_mpi", mpi_one_launcher "local", "MPI with local load balancer");
     ("lco_mpi", mpi_launcher "robin" "", "MPI with round robin load balancer");
@@ -35,7 +36,6 @@ let rml_backends =
     ("lco_mpi_buffer", mpi_launcher "local" "", "MPI+buffering with user annotations and local load balancer");
     ("lco_mpi_buffer", mpi_launcher "robin" "", "MPI+buffering with round robin load balancer");
     ("lco_mpi_buffer", mpi_launcher "remote" "", "MPI+buffering with user annotations and round robin balancer")
-
   ]
 
 let all_tests =
