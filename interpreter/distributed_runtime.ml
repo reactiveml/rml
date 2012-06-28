@@ -208,6 +208,8 @@ struct
 
     let add_callback site msg f =
       Callbacks.add_callback msg f site.s_callbacks
+    let add_callback_once site msg f =
+      Callbacks.add_callback ~kind:Callbacks.Once msg f site.s_callbacks
 
     let get_clock site ck =
       GidHandle.get site.s_clock_cache ck
@@ -355,203 +357,6 @@ struct
         aux ck
     end
 
-    module Event =
-      struct
-        let lift_handle f ev =
-          f (get_event (get_site ()) ev)
-
-        let value ev =
-          let n = get_event (get_site ()) ev in
-          if E.status n then
-            E.value n
-          else (
-            IFDEF RML_DEBUG THEN
-              print_debug "Error: Reading the value of an absent signal %a@." C.print_gid ev.ev_gid
-            ELSE () END;
-            raise Types.RML
-          )
-
-        let one ev = lift_handle E.one ev
-        let pre_status ev = lift_handle E.pre_status ev
-        let pre_value ev = lift_handle E.pre_value ev
-        let last ev = lift_handle E.last ev
-        let default ev = lift_handle E.default ev
-        let clock ev = get_event_clock (get_site ()) ev
-
-        let region_of_clock ck = ck
-
-        let get_signal_remotes site gid =
-          try
-            C.GidMap.find gid site.s_signals_remotes
-          with
-            | Not_found -> C.SiteSet.empty
-
-        let add_signal_remote site s gid =
-          let set =
-            if C.GidMap.mem gid site.s_signals_remotes then
-              let set = C.GidMap.find gid site.s_signals_remotes in
-              C.SiteSet.add s set
-            else
-              C.SiteSet.singleton s
-          in
-          site.s_signals_remotes <- C.GidMap.add gid set site.s_signals_remotes
-
-        let send_value_to_remotes site cd ev n () =
-          let remotes =
-            if !Runtime_options.use_signals_users_set then
-              get_signal_remotes site ev.ev_gid
-            else
-              C.SiteSet.union cd.cd_direct_remotes cd.cd_other_remotes
-          in
-          C.broadcast_set remotes (Mvalue ev.ev_gid) (E.value n)
-
-        let do_emit site ev v =
-          IFDEF RML_DEBUG THEN
-            print_debug "Emitting a value for %a@." print_signal ev
-          ELSE () END;
-          let n, ev_ck, ev_r = get_event_whole site ev in
-          let already_present = E.status n in
-          IFDEF RML_DEBUG THEN
-            if not (C.is_local ev_r.ck_gid) then
-              print_debug "Error: do_emit on remote signal %a at region %a of clock %a@."
-                C.print_gid ev.ev_gid   print_clock ev_r  print_clock ev_ck
-          ELSE () END;
-          E.emit n v;
-          (* wake up processes awaiting this signal *)
-          wake_up_now site (Wsignal_wa ev.ev_gid);
-          wake_up_now site (Wsignal_wp ev.ev_gid);
-          (* if we have remote clock domains, we should send them the value later *)
-          if not already_present then (
-            let cd = get_clock_domain site ev_r in
-            if cd.cd_location = L.Lany then
-              add_waiting site (Wbefore_eoi ev_ck.ck_gid)
-                (send_value_to_remotes site cd ev n)
-          )
-
-        let emit ev v =
-          if C.is_local ev.ev_gid then (
-            do_emit (get_site ()) ev v
-          ) else
-            C.send_owner ev.ev_gid (Memit ev.ev_gid) v
-
-        (* Called after receiving Mreq_signal id *)
-        let receive_req site (n : ('a, 'b) E.t) gid msg =
-          let req_id = Msgs.recv_req_signal msg in
-          if !Runtime_options.use_signals_users_set then
-            add_signal_remote site (C.site_of_gid req_id) gid;
-          C.send_owner req_id (Msignal gid) n
-
-        (* Called after receiving Memit id *)
-        let receive_emit site (ev:('a, 'b) event) msg =
-          let v:'a = C.from_msg msg in
-            do_emit site ev v
-
-        (* Called after receiving Mvalue id *)
-        let update_local_value site gid (n : ('a, 'b) E.t) msg =
-          let v:'b = C.from_msg msg in
-            E.set_value n v;
-            wake_up_now site (Wsignal_wa gid)
-
-        let setup_local_copy site gid n ck =
-          add_callback site (Mvalue gid) (update_local_value site gid n);
-          E.set_clock n (get_clock site ck.ck_clock)
-
-        (* Called when a local process tries to access a remote signal for the first time.
-           Creates local callbacks for this signal. *)
-        (** TODO: remove callbacks when signal is no longer needed *)
-        let signal_local_value gid (n, ck, r) =
-          let site = get_site () in
-          (* request the current value of the signal *)
-          Msgs.send_req_signal gid (C.fresh site.s_seed);
-          setup_local_copy site gid n ck;
-          let msg = Callbacks.recv_given_msg site.s_msg_queue (Msignal gid) in
-          (* set the local value to the one received *)
-          let new_n = C.from_msg msg in
-          E.copy n new_n;
-          n, ck, r
-
-        let new_local_evt site ck r is_memory default combine =
-          let n = E.create (get_clock site ck.ck_clock) is_memory default combine in
-          let gid = C.fresh site.s_seed in
-          let ev  =
-            { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck, r);
-              ev_gid = gid }
-          in
-          IFDEF RML_DEBUG THEN
-            print_debug "Created signal %a at region %a of clock %a@." print_signal ev
-              print_clock r  print_clock ck
-          ELSE () END;
-          if (get_clock_domain site r).cd_location = L.Lany then (
-            add_callback site (Memit gid) (receive_emit site ev);
-            add_callback site (Mreq_signal gid) (receive_req site n gid)
-          );
-          ev
-
-        let new_remote_evt site ck r is_memory default (combine : 'a -> 'b -> 'b) =
-          let tmp_id = C.fresh site.s_seed in
-          let create_signal () =
-            let site = get_site () in
-            let ev = new_local_evt site ck r is_memory default combine in
-            if !Runtime_options.use_signals_users_set then
-              add_signal_remote site (C.site_of_gid tmp_id) ev.ev_gid;
-            IFDEF RML_DEBUG THEN
-              print_debug "Created signal %a at region %a of clock %a from request by %a@." print_signal ev
-                print_clock r   print_clock ck  C.print_gid tmp_id
-            ELSE () END;
-            C.send_owner tmp_id (Msignal_created tmp_id) ev
-          in
-          Msgs.send_create_signal r.ck_gid (tmp_id, create_signal);
-          let msg = Callbacks.recv_given_msg site.s_msg_queue (Msignal_created tmp_id) in
-          (* setup the local copy of the signal  *)
-          let ev:('a, 'b) event = C.from_msg msg in
-          SignalHandle.set_valid ev.ev_handle;
-          let n = get_event site ev in
-          setup_local_copy site ev.ev_gid n ck;
-          ev
-
-        let new_evt ck r is_memory default combine =
-          let site = get_site () in
-          let r = if !Runtime_options.use_local_slow_signals then r else ck in
-          if C.is_local r.ck_gid then
-            new_local_evt site ck r is_memory default combine
-          else
-            new_remote_evt site ck r is_memory default combine
-
-        let status ?(only_at_eoi=false) ev =
-          let n = get_event (get_site ()) ev in
-          E.status n (* && (not only_at_eoi || !(sig_cd.cd_eoi)) *)
-            (** TODO: remettre only_at_eoi pour les configs *)
-
-        let cfg_present ev = ()
-        let cfg_or c1 c2 = ()
-        let cfg_and c1 c2 = ()
-        let cfg_status ?(only_at_eoi=false) evt_cfg =
-          false
-
-        (* let cfg_present ((n,sig_cd,wa,wp) as evt) =
-          Cevent ((fun eoi -> status ~only_at_eoi:eoi evt), sig_cd, wa, wp)
-        let cfg_or ev1 ev2 =
-          Cor (ev1, ev2)
-        let cfg_and ev1 ev2 =
-          Cand (ev1, ev2)
-
-        let cfg_status ?(only_at_eoi=false) evt_cfg =
-          let rec status k = match k with
-            | Cevent (c, _, _, _) -> c only_at_eoi
-            | Cand (cfg1, cfg2) -> status cfg1 && status cfg2
-            | Cor (cfg1, cfg2) -> status cfg1 || status cfg2
-          in
-          status evt_cfg
-
-        let cfg_events evt_cfg long_wait =
-          let rec events k = match k with
-            | Cevent (_, cd, wa, wp) -> [(if long_wait then wa else wp), cd]
-            | Cand (cfg1, cfg2) | Cor (cfg1, cfg2) ->
-              List.rev_append (events cfg1) (events cfg2)
-          in
-          events evt_cfg
-        *)
-      end
 
 (**************************************)
 (* control tree                       *)
@@ -945,11 +750,9 @@ struct
     (* After receiving Mhas_next *)
     let gather_has_next cd msg =
       let has_next:bool = Msgs.recv_has_next msg in
-      IFDEF RML_DEBUG THEN
-        print_debug "--%a@." print_cd cd
-      ELSE () END;
       decr cd.cd_remaining_async;
       IFDEF RML_DEBUG THEN
+        print_debug "--%a@." print_cd cd;
         if !(cd.cd_remaining_async) < 0 then
           print_debug "Error: counter of %a is < 0@." print_cd cd;
         print_debug "Received has_next=%b for %a@." has_next print_cd cd
@@ -1124,8 +927,7 @@ struct
       update_remote_set site cd true remote_site;
       let new_ctrl = new_ctrl (Clock_domain None) in
       (* add local callbacks *)
-      Callbacks.add_callback ~kind:Callbacks.Once
-        (Mdone tmp_id) (receive_done_cd site cd new_ctrl f_k) site.s_callbacks;
+      add_callback_once site (Mdone tmp_id) (receive_done_cd site cd new_ctrl f_k);
       add_callback site (Mstep_done tmp_id) (receive_step_done site cd ctrl);
       start_ctrl cd ctrl new_ctrl;
       (* send a message to start the execution *)
@@ -1148,6 +950,229 @@ struct
         ) else
           new_local_clock_domain site cd new_balancer location ctrl p f_k ()
      )
+
+
+   module Event =
+      struct
+        let lift_handle f ev =
+          f (get_event (get_site ()) ev)
+
+        let value ev =
+          let n = get_event (get_site ()) ev in
+          if E.status n then
+            E.value n
+          else (
+            IFDEF RML_DEBUG THEN
+              print_debug "Error: Reading the value of an absent signal %a@." C.print_gid ev.ev_gid
+            ELSE () END;
+            raise Types.RML
+          )
+
+        let one ev = lift_handle E.one ev
+        let pre_status ev = lift_handle E.pre_status ev
+        let pre_value ev = lift_handle E.pre_value ev
+        let last ev = lift_handle E.last ev
+        let default ev = lift_handle E.default ev
+        let clock ev = get_event_clock (get_site ()) ev
+
+        let region_of_clock ck = ck
+
+        let get_signal_remotes site gid =
+          try
+            C.GidMap.find gid site.s_signals_remotes
+          with
+            | Not_found -> C.SiteSet.empty
+
+        let add_signal_remote site s gid =
+          let set =
+            if C.GidMap.mem gid site.s_signals_remotes then
+              let set = C.GidMap.find gid site.s_signals_remotes in
+              C.SiteSet.add s set
+            else
+              C.SiteSet.singleton s
+          in
+          site.s_signals_remotes <- C.GidMap.add gid set site.s_signals_remotes
+
+        let send_value_to_remotes site cd ev n () =
+          let remotes =
+            if !Runtime_options.use_signals_users_set then
+              get_signal_remotes site ev.ev_gid
+            else
+              C.SiteSet.union cd.cd_direct_remotes cd.cd_other_remotes
+          in
+          C.broadcast_set remotes (Mvalue ev.ev_gid) (E.value n)
+
+        let do_emit site ev v =
+          IFDEF RML_DEBUG THEN
+            print_debug "Emitting a value for %a@." print_signal ev
+          ELSE () END;
+          let n, ev_ck, ev_r = get_event_whole site ev in
+          let already_present = E.status n in
+          IFDEF RML_DEBUG THEN
+            if not (C.is_local ev_r.ck_gid) then
+              print_debug "Error: do_emit on remote signal %a at region %a of clock %a@."
+                C.print_gid ev.ev_gid   print_clock ev_r  print_clock ev_ck
+          ELSE () END;
+          E.emit n v;
+          (* wake up processes awaiting this signal *)
+          wake_up_now site (Wsignal_wa ev.ev_gid);
+          wake_up_now site (Wsignal_wp ev.ev_gid);
+          (* if we have remote clock domains, we should send them the value later *)
+          if not already_present then (
+            let cd = get_clock_domain site ev_r in
+            if cd.cd_location = L.Lany then
+              add_waiting site (Wbefore_eoi ev_ck.ck_gid)
+                (send_value_to_remotes site cd ev n)
+          )
+
+        let emit ev v =
+          if C.is_local ev.ev_gid then (
+            do_emit (get_site ()) ev v
+          ) else
+            C.send_owner ev.ev_gid (Memit ev.ev_gid) v
+
+        (* Called after receiving Mreq_signal id *)
+        let receive_req site (n : ('a, 'b) E.t) gid msg =
+          let req_id = Msgs.recv_req_signal msg in
+          if !Runtime_options.use_signals_users_set then
+            add_signal_remote site (C.site_of_gid req_id) gid;
+          C.send_owner req_id (Msignal gid) n
+
+        (* Called after receiving Memit id *)
+        let receive_emit site (ev:('a, 'b) event) msg =
+          let v:'a = C.from_msg msg in
+            do_emit site ev v
+
+        (* Called after receiving Mvalue id *)
+        let update_local_value site gid (n : ('a, 'b) E.t) msg =
+          let v:'b = C.from_msg msg in
+            E.set_value n v;
+            wake_up_now site (Wsignal_wa gid)
+
+        let setup_local_copy site gid n ck =
+          add_callback site (Mvalue gid) (update_local_value site gid n);
+          E.set_clock n (get_clock site ck.ck_clock)
+
+        (* Called when a local process tries to access a remote signal for the first time.
+           Creates local callbacks for this signal. *)
+        (** TODO: remove callbacks when signal is no longer needed *)
+        let signal_local_value gid (n, ck, r) =
+          let site = get_site () in
+          (* request the current value of the signal *)
+          Msgs.send_req_signal gid (C.fresh site.s_seed);
+          setup_local_copy site gid n ck;
+          let msg = Callbacks.recv_given_msg site.s_msg_queue (Msignal gid) in
+          (* set the local value to the one received *)
+          let new_n = C.from_msg msg in
+          E.copy n new_n;
+          n, ck, r
+
+        let new_local_evt site ck r is_memory default combine =
+          let n = E.create (get_clock site ck.ck_clock) is_memory default combine in
+          let gid = C.fresh site.s_seed in
+          let ev  =
+            { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck, r);
+              ev_gid = gid }
+          in
+          IFDEF RML_DEBUG THEN
+            print_debug "Created signal %a at region %a of clock %a@." print_signal ev
+              print_clock r  print_clock ck
+          ELSE () END;
+          if (get_clock_domain site r).cd_location = L.Lany then (
+            add_callback site (Memit gid) (receive_emit site ev);
+            add_callback site (Mreq_signal gid) (receive_req site n gid)
+          );
+          ev
+
+        let new_remote_evt site local_cd ck r is_memory default (combine : 'a -> 'b -> 'b) k =
+          let tmp_id = C.fresh site.s_seed in
+          let create_signal () =
+            let site = get_site () in
+            let ev = new_local_evt site ck r is_memory default combine in
+            if !Runtime_options.use_signals_users_set then
+              add_signal_remote site (C.site_of_gid tmp_id) ev.ev_gid;
+            IFDEF RML_DEBUG THEN
+              print_debug "Created signal %a at region %a of clock %a from request by %a@." print_signal ev
+                print_clock r   print_clock ck  C.print_gid tmp_id
+            ELSE () END;
+            C.send_owner tmp_id (Msignal_created tmp_id) ev
+          in
+          let recv_signal_created msg =
+            let ev:('a, 'b) event = C.from_msg msg in
+            decr local_cd.cd_remaining_async;
+            IFDEF RML_DEBUG THEN
+              print_debug "Received created signal %a at %a@." print_signal ev print_cd local_cd;
+              print_debug "--%a@." print_cd local_cd;
+              if !(local_cd.cd_remaining_async) < 0 then
+                print_debug "Error: counter of %a is < 0@." print_cd local_cd;
+            ELSE () END;
+            SignalHandle.set_valid ev.ev_handle;
+            let n = get_event site ev in
+            setup_local_copy site ev.ev_gid n ck;
+            D.add_current (k ev) local_cd.cd_current;
+            wake_up_cd_if_done site local_cd
+          in
+          add_callback_once site (Msignal_created tmp_id) recv_signal_created;
+          IFDEF RML_DEBUG THEN print_debug "++%a@." print_cd local_cd ELSE () END;
+          incr local_cd.cd_remaining_async;
+          Msgs.send_create_signal r.ck_gid (tmp_id, create_signal)
+
+        let new_evt local_cd ck r is_memory default combine k _ =
+          let site = get_site () in
+          let r = if !Runtime_options.use_local_slow_signals then r else ck in
+          if C.is_local r.ck_gid then
+            let evt = new_local_evt site ck r is_memory default combine in
+            k evt ()
+          else
+            new_remote_evt site local_cd ck r is_memory default combine k
+
+        let new_evt_expr ck r is_memory default combine =
+          let site = get_site () in
+          let r = if !Runtime_options.use_local_slow_signals then r else ck in
+          if C.is_local r.ck_gid then (
+            new_local_evt site ck r is_memory default combine
+          ) else (
+            IFDEF RML_DEBUG THEN
+              print_debug "Trying to create a remote signal inside an expression@.";
+            ELSE () END;
+            raise Types.RML
+          )
+
+        let status ?(only_at_eoi=false) ev =
+          let n = get_event (get_site ()) ev in
+          E.status n (* && (not only_at_eoi || !(sig_cd.cd_eoi)) *)
+            (** TODO: remettre only_at_eoi pour les configs *)
+
+        let cfg_present ev = ()
+        let cfg_or c1 c2 = ()
+        let cfg_and c1 c2 = ()
+        let cfg_status ?(only_at_eoi=false) evt_cfg =
+          false
+
+        (* let cfg_present ((n,sig_cd,wa,wp) as evt) =
+          Cevent ((fun eoi -> status ~only_at_eoi:eoi evt), sig_cd, wa, wp)
+        let cfg_or ev1 ev2 =
+          Cor (ev1, ev2)
+        let cfg_and ev1 ev2 =
+          Cand (ev1, ev2)
+
+        let cfg_status ?(only_at_eoi=false) evt_cfg =
+          let rec status k = match k with
+            | Cevent (c, _, _, _) -> c only_at_eoi
+            | Cand (cfg1, cfg2) -> status cfg1 && status cfg2
+            | Cor (cfg1, cfg2) -> status cfg1 || status cfg2
+          in
+          status evt_cfg
+
+        let cfg_events evt_cfg long_wait =
+          let rec events k = match k with
+            | Cevent (_, cd, wa, wp) -> [(if long_wait then wa else wp), cd]
+            | Cand (cfg1, cfg2) | Cor (cfg1, cfg2) ->
+              List.rev_append (events cfg1) (events cfg2)
+          in
+          events evt_cfg
+        *)
+      end
 
 
     (** Sites operations *)

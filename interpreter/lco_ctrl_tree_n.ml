@@ -91,12 +91,12 @@ module Rml_interpreter =
     let rml_global_signal ce re =
       let ck = ensure_clock_expr ce in
       let r = R.Event.region_of_clock (ensure_clock_expr re) in
-      R.Event.new_evt ck r false default_default default_combine
+      R.Event.new_evt_expr ck r false default_default default_combine
 
     let rml_global_signal_combine ce re default combine =
       let ck = ensure_clock_expr ce in
       let r = R.Event.region_of_clock (ensure_clock_expr re) in
-      R.Event.new_evt ck r false default combine
+      R.Event.new_evt_expr ck r false default combine
 
 (* ------------------------------------------------------------------------ *)
 
@@ -435,25 +435,26 @@ let rml_loop p =
 (* signal                             *)
 (**************************************)
 
-    let rml_signal ce re p =
-      fun f_k ctrl jp cd _ ->
-        let ck = eval_clock_expr cd ce in
-        let r = R.Event.region_of_clock (eval_clock_expr cd re) in
-        p (R.Event.new_evt ck r false default_default default_combine) f_k ctrl jp cd unit_value
-
     let rml_signal_combine ce re default comb p =
       fun f_k ctrl jp cd _ ->
         let ck = eval_clock_expr cd ce in
         let r = R.Event.region_of_clock (eval_clock_expr cd re) in
-        let evt = R.Event.new_evt ck r false (default()) (comb()) in
-        p evt f_k ctrl jp cd unit_value
+        let k evt = p evt f_k ctrl jp cd in
+        R.Event.new_evt cd ck r false (default()) (comb()) k ()
+
+    let rml_signal ce re p =
+      fun f_k ctrl jp cd _ ->
+        let ck = eval_clock_expr cd ce in
+        let r = R.Event.region_of_clock (eval_clock_expr cd re) in
+        let k evt = p evt f_k ctrl jp cd in
+        R.Event.new_evt cd ck r false default_default default_combine k ()
 
     let rml_memory ce default p =
       fun f_k ctrl jp cd _ ->
         let ck = eval_clock_expr cd ce in
         let r = R.Event.region_of_clock ck in
-        let evt = R.Event.new_evt ck r true (default()) memory_combine in
-        p evt f_k ctrl jp cd unit_value
+        let k evt = p evt f_k ctrl jp cd in
+        R.Event.new_evt cd ck r true (default()) memory_combine k ()
 
 (**************************************)
 (* def                                *)

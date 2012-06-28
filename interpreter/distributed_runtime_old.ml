@@ -480,12 +480,16 @@ struct
           setup_local_copy ev.ev_gid n ck;
           ev
 
-        let new_evt ck r is_memory default combine =
+        let new_evt_expr ck r is_memory default combine =
           let r = if !Runtime_options.use_local_slow_signals then r else ck in
           if C.is_local r.ck_gid then
             new_local_evt ck r is_memory default combine
           else
             new_remote_evt ck r is_memory default combine
+
+        let new_evt _ ck r is_memory default combine k =
+          let evt = new_evt_expr ck r is_memory default combine in
+          k evt
 
         let status ?(only_at_eoi=false) ev =
           let n = get_event ev in

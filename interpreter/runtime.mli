@@ -57,7 +57,9 @@ sig
   type event_cfg
   module Event :
     (sig
-      val new_evt : clock -> region -> bool -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+      val new_evt_expr : clock -> region -> bool -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+      val new_evt : clock_domain -> clock -> region ->
+        bool -> 'b -> ('a -> 'b -> 'b) -> (('a, 'b) event -> unit step) -> unit step
 
       val status: ?only_at_eoi:bool -> ('a, 'b) event -> bool
       val value: ('a, 'b) event -> 'b
