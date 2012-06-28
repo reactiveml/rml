@@ -1,0 +1,75 @@
+open Definitions
+open Routing
+
+
+
+(*****************************************)
+(*Nouvelle Couche Application            *)
+(*****************************************)
+
+(**Quand on a au moins un interet qui nous concerne,*)
+(** on teste la présence du nuage,*)
+(**s'il est présent et qu'il n'était pas présent le coup d'avant, on repond à *)
+(**l'interet en envoyant une alerte*)
+
+
+let present_nuage self nuage_pos =
+  (distance2 self.node_pos nuage_pos) < cloud_range2 
+;;
+
+(**process qui decide s'il faut envoyer une alerte,*)
+(** mais qui detecte le front montant*)
+(**dans ce cas creation d un interest_resp*)
+
+let send_alerte self nuage_pos my_interest =
+  if (present_nuage self nuage_pos) then
+    (if (not self.node_pre_present_nuage) then
+      (response self my_interest;
+       self.node_pre_present_nuage <- true;
+      )
+    )
+  else self.node_pre_present_nuage <- false;;
+
+
+
+let process application_interest self (cloud_x, cloud_y) =
+  loop
+    (**test si on a au moins un interet qui nous concerne*)
+    begin try
+      let my_interest =
+	List.find (fun x -> x.for_me) self.node_network.interest_list 
+      in
+      (send_alerte self {x = pre ?cloud_x; y = pre ?cloud_y} my_interest);
+    with Not_found -> () 
+    end;
+    pause
+  end
+;;
+
+
+
+(**Process qui envoie un nouvel interet*)
+(**nodesConcernedList, la liste des noeuds cibles*)
+(**self est a priori sink*)
+let make_interest self (nodesConcernedList : node list) =
+  let ir = {
+    interest_id_req = get_id_int();
+    concerned = nodesConcernedList;
+  }
+  in
+  let p3 = {
+    header3 = Interest_request ir;
+    packet_id3 = get_id3();
+    ack = false;
+    len3 = 40;
+    mac_ack =  false;
+    from3 = self;
+  } 
+  in
+  emit self.application_to_routing (p3);
+  let my_interest = {
+    interest_id_n = ir.interest_id_req;
+    from_in = self;
+    for_me = false;
+  } in
+  self.node_network.interest_list <- my_interest :: self.node_network.interest_list;

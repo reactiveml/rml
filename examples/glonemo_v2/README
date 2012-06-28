@@ -1,0 +1,52 @@
+GLONEMO
+
+
+Version du 12 juin 2006
+Nouveau SVN !!!
+
+
+Version du 28 février 2006
+Cette version semble bien marcher.
+Les caracteristiques:
+routage: directed diffusion implemente. Le noeud sink (1) envoie des interets 
+qui concernent une liste de noeuds, ceux-ci renvoie des messages d'alerte 
+quand ils voient le nuage.
+mac: couche mac a echantillonnage de preambule Tw avec les noeuds "synchronises":
+les noeuds ecoutent le canal tous les Tw et pas Tw apres leur derniere ecoute. 
+On va donc pouvoir implementer WiseMAC, c'est a dire un preambule qui s'adapte a 
+la periode de veille de ses voisins.
+On peut en plus "piloter" le nuage en ajoutant du vent.
+
+-------------------------------------------------
+Le 08 février 2006
+J'ai implémenté directed diffusion. Ca ne marche pas, la simulation se boque. 
+Avant de virer du code et de faire qq chose de propre, je vais faire une sauvegarde.
+-------------------------------------------------
+
+Le 13 janvier 2006
+Je sauvegarde cette version avant de faire les changement pour passer  la version RML 1.04... 
+C'est-a-dire, maintenant await s equivaut a await imediate s; pause
+alors que avant, on avait await s equivaut a pause; await imediate
+-------------------------------------------------
+
+Makefile
+
+#
+Makefile  
+README  
+application.rml  
+definitions.rml  
+energy.rml  
+environment.rml  
+graphic.rml  
+init.rml  
+mac.rml  
+main.rml
+print.rml  
+rml_graphics.rml  
+routing.rml 
+
+
+#lucky
+nuage.luc
+wind.luc

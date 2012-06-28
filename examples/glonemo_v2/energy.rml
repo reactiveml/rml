@@ -1,0 +1,65 @@
+open Definitions
+
+let process consume_energy self = 
+  loop
+    (match self.node_etat with
+    | Veille ->
+	self.node_energy <- self.node_energy -. conso_veille *. unite_temps
+    | Reveil ->
+	self.node_energy <- self.node_energy -. conso_reveil *. unite_temps
+    | Idle ->
+	self.node_energy <- self.node_energy -. conso_idle *. unite_temps
+    | Idle_a_Transmet ->
+	self.node_energy <- self.node_energy -. conso_idle_a_transmet *. unite_temps
+    | Veille_a_Transmet ->
+	self.node_energy <- self.node_energy -. conso_veille_a_transmet *. unite_temps
+    | Idle_a_Recoit ->
+	self.node_energy <- self.node_energy -. conso_idle_a_recoit *. unite_temps
+    | Transmet ->
+	self.node_energy <- self.node_energy -. conso_transmet *. unite_temps
+    | Transmet_a_Recoit ->
+	self.node_energy <- self.node_energy -. conso_transmet_a_recoit *. unite_temps
+    | Recoit ->
+	self.node_energy <- self.node_energy -. conso_recoit *. unite_temps
+    | Recoit_a_Transmet ->
+	self.node_energy <- self.node_energy -. conso_recoit_a_transmet *. unite_temps);
+    (match self.node_cpu with
+    | Off ->
+	self.node_energy <- self.node_energy -. conso_cpu0 *. unite_temps
+    | One ->
+	self.node_energy <- self.node_energy -. conso_cpu1 *. unite_temps
+    | Two ->
+	self.node_energy <- self.node_energy -. conso_cpu2 *. unite_temps
+    | Three ->
+	self.node_energy <- self.node_energy -. conso_cpu3 *. unite_temps);
+    (match self.node_memory with
+    | Active ->
+	self.node_energy <- self.node_energy -. conso_active *. unite_temps
+    | Standby ->
+	self.node_energy <- self.node_energy -. conso_standby *. unite_temps
+    | Napping ->
+	self.node_energy <- self.node_energy -. conso_napping *. unite_temps
+    | Powerdown ->
+	self.node_energy <- self.node_energy -. conso_powerdown *. unite_temps
+    | Disabled ->
+	self.node_energy <- self.node_energy -. conso_disabled *. unite_temps
+    | Standby_to_Active ->
+	self.node_energy <- self.node_energy -. conso_active *. unite_temps
+    | Napping_to_Active ->
+	self.node_energy <- self.node_energy -. conso_active *. unite_temps
+    | Powerdown_to_Active ->
+	self.node_energy <- self.node_energy -. conso_active *. unite_temps
+    | Disabled_to_Active ->
+	self.node_energy <- self.node_energy -. conso_active *. unite_temps);
+    (match self.node_flash with
+    | Off_flash ->
+	self.node_energy <- self.node_energy -. conso_off *. unite_temps
+    | Write ->
+	self.node_energy <- self.node_energy -. conso_write *. unite_temps
+    | Read ->
+	self.node_energy <- self.node_energy -. conso_read *. unite_temps
+    | Delete ->
+	self.node_energy <- self.node_energy -. conso_delete *. unite_temps);
+    pause
+  end
+;;

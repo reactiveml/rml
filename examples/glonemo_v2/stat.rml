@@ -1,0 +1,24 @@
+open Definitions
+
+let end_stat t_init t_end =
+  let proc_time = Sys.time() in
+  let gc_stat = Gc.stat() in
+  print_int number_of_nodes;
+  print_char '\t';
+  print_float max_x;
+  print_char '\t';
+  print_float coverage_range;
+  print_char '\t';
+  print_string "???";
+  print_char '\t';
+  print_float (t_end -. t_init);
+  print_char '\t';
+  print_float proc_time;
+  print_char '\t';
+  print_int gc_stat.Gc.top_heap_words;
+  print_char '\t';
+  print_float ((t_end -. t_init) /. float_of_int number_of_instants);
+  print_char '\t';
+  print_float (proc_time /. float_of_int number_of_instants);
+  print_char '\t';
+  print_newline();

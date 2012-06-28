@@ -1,0 +1,262 @@
+open Graphics
+open Definitions
+open Routing
+
+
+
+
+(* let darkgrey = rgb 85 85 85 *)
+let darkgrey = rgb 55 55 55
+let darkred = rgb 128 0 0
+let darkgreen = rgb 0 128 0
+let darkblue = rgb 0 0 128
+let darkyellow = rgb 128 128 0
+let darkmagenta = rgb 128 0 128
+let golg = rgb 255 215 0
+let orange = rgb 255 165 0
+
+
+
+
+let color_of_node self =
+  match self.node_etat with
+  | Veille -> black
+  | Reveil -> yellow
+  | Idle -> orange
+  | Idle_a_Transmet -> darkred
+  | Veille_a_Transmet -> darkmagenta
+  | Idle_a_Recoit -> darkgreen
+  | Transmet -> red
+  | Transmet_a_Recoit -> darkyellow
+  | Recoit -> green
+  | Recoit_a_Transmet -> darkyellow
+  
+
+
+let rec closer tab_nodes click_pos node_fav =
+  if Array.length tab_nodes = 0 then node_fav
+  else 
+    let node_fav_inter = 
+      if (distance2 node_fav.node_pos click_pos < 
+	  distance2 tab_nodes.(Array.length tab_nodes - 1).node_pos click_pos)
+      then node_fav
+      else tab_nodes.(Array.length tab_nodes - 1) in
+    closer (Array.sub tab_nodes 0 (Array.length tab_nodes - 1)) click_pos node_fav_inter 
+
+
+let draw_clear_node self =
+(**afficher les arretes en blanc*)
+  set_color white;
+  List.iter
+    (fun n ->
+      moveto 
+       (int_of_float n.node_pos.x) 
+	(int_of_float n.node_pos.y);
+      lineto
+	(int_of_float self.node_pos.x) 
+	(int_of_float self.node_pos.y))
+    self.node_neighbors;
+  set_color black;
+  (fill_circle
+     (int_of_float (self.node_pos.x))
+     (int_of_float (self.node_pos.y))
+     (10));
+;;
+
+let draw_node self =
+  if self.node_id = 1 then begin
+    set_color (color_of_node self);
+    fill_poly
+      [|(int_of_float self.node_pos.x) - 10, (int_of_float self.node_pos.y) - 40;
+	(int_of_float self.node_pos.x) + 10, (int_of_float self.node_pos.y) - 40;
+	(int_of_float self.node_pos.x), (int_of_float self.node_pos.y); |]
+  end else
+    begin match self.node_energy with
+    | e when e > 0.0 ->
+	set_color (color_of_node self);
+	moveto 
+	  (int_of_float self.node_pos.x) 
+	  (int_of_float self.node_pos.y);
+	draw_string (string_of_int self.node_id)
+    | _ -> draw_clear_node self;
+    end
+;;
+
+let draw_neighbors self =
+  set_color darkgrey;
+  List.iter
+    (fun n ->
+      moveto 
+	(int_of_float n.node_pos.x) 
+	(int_of_float n.node_pos.y);
+      lineto
+	(int_of_float self.node_pos.x) 
+        (int_of_float self.node_pos.y))
+   self.node_neighbors;
+  set_color black;
+;;
+   
+let draw_topologie nodes =
+   for i = 0 to Array.length nodes - 1 do
+   (draw_node nodes.(i));
+(*      (if (pre (nodes.(i)).node_network.first_received) then *)
+(*        (set_color black; *)
+(* 	draw_circle *)
+(* 	  (int_of_float (nodes.(i)).node_pos.x) *)
+(* 	  (int_of_float (nodes.(i)).node_pos.y) *)
+(* 	    15);); *)
+(*      (if (pre (nodes.(i)).node_mac.emits_packet) then  *)
+(*        (set_color blue; *)
+(* 	draw_circle *)
+(* 	  (int_of_float (nodes.(i)).node_pos.x) *)
+(* 	  (int_of_float (nodes.(i)).node_pos.y) *)
+(* 	  20);) *)
+  done
+(**decommenter la region ci-dessus pour que des cercles s'affichent*)
+(**a l'emission et a le reception d'un paquet*)
+
+(* let process read_click nodes =  *)
+(*   signal click in *)
+(*   run (Rml_graphics.read_click click) *)
+(*   || *)
+(*   loop  *)
+(*     present click then *)
+(*       pause *)
+(*     else *)
+(*       await immediate one click(x,y) in *)
+(*       let click_pos = { *)
+(* 	x = float_of_int x; *)
+(* 	y = float_of_int y; *)
+(*       } in *)
+(*       let sender = closer nodes click_pos  nodes.(0) in *)
+      
+(*       let nouveau_paquet = make_packet sender in *)
+(*       (emit sender.application_to_routing (nouveau_paquet); *)
+(*        print_string("packet_id3 = "); *)
+(*        print_int(nouveau_paquet.packet_id3); *)
+(*        print_newline()); *)
+(*       pause *)
+(*   end *)
+  
+
+
+(* let process draw_nuage pos_nuage =   *)
+(*   auto_synchronize true; *)
+(*   remember_mode false; *)
+(*    (set_color red; *)
+(*     fill_circle *)
+(*       (int_of_float (pos_nuage.x)) *)
+(*       (int_of_float (pos_nuage.y)) *)
+(*       (int_of_float cloud_range)); *)
+(*   remember_mode true; *)
+(* (\*   for i = 1 to 20 do pause done; *\) *)
+(*     auto_synchronize false; *)
+(* (\*   synchronize();    *\) *)
+(* ;;   *)
+
+(**Nouveau draw_nuage*)
+let draw_nuage pos_nuage =  
+  (set_color red;
+   fill_circle
+     (int_of_float (pos_nuage.x))
+     (int_of_float (pos_nuage.y))
+     (int_of_float cloud_range));
+;;
+
+
+
+(* let process draw nodes = *)
+(*   open_graph (" "^(string_of_int ((int_of_float max_x)+50))^ *)
+(* 	      "x"^ *)
+(* 	      (string_of_int ((int_of_float max_y)+50))); *)
+(*   set_window_title "Simulation Glonemo"; *)
+(*   remember_mode false; *)
+(*   loop *)
+(*     draw_topologie nodes;  *)
+(*     pause; *)
+(*   end *)
+(*  || *)
+(*    run (read_click nodes); *)
+(**Decommenter cette ligne pour que un click=un paquet*)
+ 
+
+
+
+let draw_init () =
+  open_graph (" "^(string_of_int ((int_of_float max_x)+50))^
+	      "x"^
+	      (string_of_int ((int_of_float max_y)+50)));
+  set_window_title ("Simulation Glonemo: "^(string_of_int number_of_nodes)^" nodes");
+  auto_synchronize false;
+;;
+
+let draw_all nodes cloud_pos =
+  clear_graph();
+  for i = 0 to Array.length nodes - 1 do
+    draw_neighbors nodes.(i);
+  done;
+  draw_topologie nodes;
+  if !Init.with_cloud then draw_nuage cloud_pos;
+  synchronize();
+;;
+
+
+let update_title n = 
+  set_window_title ("Simulation Glonemo: "^(string_of_int n)^" nodes")
+
+(*----------------------------------------------------*)
+(* machine read_key []                                *)
+(*----------------------------------------------------*)
+(*   let process read_key =  *)
+(*   signal key in *)
+(*   run (Rml_graphics.read_key key) *)
+(*     || *)
+(*     loop  *)
+(*       await immediate one key(c) in *)
+(*       begin *)
+(* 	match c with *)
+(* 	| '8' -> emit wind_y 100.0 *)
+(* 	| '2' -> emit wind_y (-100.0) *)
+(* 	| '4' -> emit wind_x (-100.0) *)
+(* 	| '6' -> emit wind_x 100.0 *)
+(* 	| '7' -> emit wind_y 100.0; *)
+(* 	    emit wind_x (-100.0) *)
+(* 	| '9' -> emit wind_y 100.0; *)
+(* 	    emit wind_x 100.0 *)
+(* 	| '3' -> emit wind_y (-100.0); *)
+(* 	    emit wind_x (100.0) *)
+(* 	| '1' -> emit wind_y (-100.0); *)
+(* 	    emit wind_x (-100.0)  *)
+(* 	| _ -> nothing *)
+(*       end; *)
+(*       pause *)
+(*     end *)
+
+let process fan_and_plane wind_x wind_y kill_cloud add_nodes = 
+  signal key in
+  let power_fan = 1000000.0 in
+  run (Rml_graphics.read_key key)
+    ||
+    loop 
+      await immediate one key(c) in
+      begin
+	match c with
+	| '8' -> emit wind_y power_fan
+	| '2' -> emit wind_y (-. power_fan)
+	| '4' -> emit wind_x (-. power_fan)
+	| '6' -> emit wind_x power_fan
+	| '7' -> emit wind_y power_fan;
+	    emit wind_x (-. power_fan)
+	| '9' -> emit wind_y power_fan;
+	    emit wind_x power_fan
+	| '3' -> emit wind_y (-. power_fan);
+	    emit wind_x (power_fan)
+	| '1' -> emit wind_y (-. power_fan);
+	    emit wind_x (-. power_fan)
+	| 'd' -> emit kill_cloud
+	| 'a' -> emit add_nodes
+	| 'q' -> exit 0
+	| _ -> ()
+      end;
+      pause
+    end

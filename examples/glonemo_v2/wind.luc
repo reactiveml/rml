@@ -1,0 +1,33 @@
+inputs { }
+outputs {
+    Wind_x : float ~min -500000.0 ~max 500000.0 ~init 0.0;
+    Wind_y : float ~min -500000.0 ~max 500000.0 ~init 0.0;
+}
+locals { }
+
+nodes {
+  init : stable;
+}
+
+start_node { init }
+
+transitions {  
+   init -> init ~cond 
+
+(*       (if ((Wind_y - pre Wind_y) >= 0.0) then *)
+(*             ((Wind_y - pre Wind_y) < 500000.0) *)
+(*       else ((Wind_y - pre Wind_y) > - 500000.0)) *)
+(* and *)
+(*       (if ((Wind_x - pre Wind_x) >= 0.0) then *)
+(*             ((Wind_x - pre Wind_x) < 500000.0) *)
+(*       else ((Wind_x - pre Wind_x) > - 500000.0)) *)
+
+      abs (Wind_y - pre Wind_y) < 500000.0 and
+      abs (Wind_x - pre Wind_x) < 500000.0
+
+
+
+}
+
+(*       abs (Wind_y - pre Wind_y) < 50000.0 and *)
+(*       abs (Wind_x - pre Wind_x) < 50000.0 *)
