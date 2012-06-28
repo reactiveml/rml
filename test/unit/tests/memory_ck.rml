@@ -9,14 +9,14 @@ let process memory_update_ck act =
     pause topck;
     act !!s
 
-(* [N; N; N; O 12]*)
+(* [N; O 12]*)
 let process memory_await_new_match_ck act =
   newclock ck in (
     memory s at ck last 0 in
     loop
-      s <<- (+) 2;
+      s <<- (+) 4;
       pause ck;
-      s <<- (+) 2;
+      s <<- (+) 4;
       pause topck
     end
     ||
@@ -28,5 +28,5 @@ open Rmltest
 let test =
   [
    (memory_update_ck, "memory_update_ck",  [O 1; O 3]);
-   (memory_await_new_match_ck, "memory_await_new_match_ck", [N; N; N; O 12])
+   (memory_await_new_match_ck, "memory_await_new_match_ck", [N; O 12])
   ]
