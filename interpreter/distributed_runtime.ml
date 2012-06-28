@@ -1285,7 +1285,6 @@ struct
       terminate_site site
 
     let mk_top_clock_domain () =
-      IFDEF RML_DEBUG THEN Format.eprintf "Blabla@." ELSE () END;
       init_site ();
       let ck = mk_clock None in
       let balancer = L.mk_top_balancer () in
