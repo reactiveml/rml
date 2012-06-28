@@ -22,7 +22,6 @@ struct
           | Mdummy
           (* scheduling *)
           | Mnew_cd
-          | Mcd_created of 'gid
           | Mstep (* do one global step of the clock domain *)
           | Mstep_done of 'gid (* a clock domain has finished its step *)
           | Mdone of 'gid (* global step done *)
@@ -42,7 +41,7 @@ struct
       let dummy = Mdummy
 
       let flush_after tag = match tag with
-         | Mfinalize | Mdummy | Mhas_next _ | Mvalue _ | Mnew_cd | Mcd_created _
+         | Mfinalize | Mdummy | Mhas_next _ | Mvalue _ | Mnew_cd
          | Mreq_signal _ | Msignal_created _ | Mcreate_signal -> true
          | _ -> false
 
@@ -51,7 +50,6 @@ struct
         | Mdummy -> fprintf ff "Mdummy"
         | Mfinalize -> fprintf ff "Mfinalize"
         | Mnew_cd -> fprintf ff "Mnew_cd"
-        | Mcd_created gid -> fprintf ff "Mcd_created %a" print_gid gid
         | Mstep -> fprintf ff "Mstep"
         | Mstep_done gid -> fprintf ff "Mstep_done %a" print_gid gid
         | Mdone gid -> fprintf ff "Mdone %a" print_gid gid
@@ -93,8 +91,22 @@ struct
     let unit_value = ()
     let dummy_step () = ()
 
+    type control_type =
+        | Clock_domain of clock option
+        | Kill of unit step
+        | Kill_handler of (unit -> unit step)
+        | Susp
+        | When
+
+    let control_of_runtime_control k = match k with
+      | Runtime.Kill h -> Kill h
+      | Runtime.Kill_handler h -> Kill_handler h
+      | Runtime.Susp -> Susp
+      | Runtime.When -> When
+      | _ -> assert false
+
     type control_tree =
-        { kind: (unit step, clock) control_type;
+        { kind: control_type;
           mutable alive: bool;
           mutable susp: bool;
           mutable cond_v : bool;
@@ -144,6 +156,7 @@ struct
           cd_clock : clock;
           mutable cd_top : control_tree;
           cd_parent_ctrl : control_tree option;
+          cd_parent_self_id : C.gid option; (* id to send Mstep_done msgs to *)
 
           cd_load_balancer : L.load_balancer;
           cd_location : L.kind;
@@ -243,11 +256,6 @@ struct
       let broadcast_finalize, recv_finalize = mk_broadcast_set_recv Mfinalize
       let send_dummy, recv_dummy = mk_send_recv Mdummy
       let send_new_cd, recv_new_cd = mk_send_recv Mnew_cd
-      let send_cd_created, recv_cd_created =
-        (fun () ->
-          let send id (d:'a) = C.send_owner id (Mcd_created id) d in
-          let recv = (C.from_msg : C.msg -> 'a) in
-          send, recv) ()
       let send_step, recv_step = mk_send_owner_recv Mstep
       let send_step_done, recv_step_done =
         (fun () ->
@@ -591,7 +599,7 @@ struct
       let rec eval pere p active =
         if p.alive then
           match p.kind with
-            | Clock_domain ck -> true
+            | Clock_domain _ -> true
             | Kill f_k ->
               if p.cond_v
               then
@@ -667,15 +675,16 @@ struct
       ctrl.alive && not ctrl.susp
 
     (** clock domains operations *)
-    let mk_clock_domain site clock balancer location parent_ctrl =
+    let mk_clock_domain site clock balancer location parent_ctrl parent_self_id =
       let cd = {
         cd_current = D.mk_current ();
         cd_pause_clock = false;
         cd_eoi = false;
         cd_wake_up = [];
         cd_clock = clock;
-        cd_top = new_ctrl (Clock_domain clock);
+        cd_top = new_ctrl (Clock_domain (Some clock));
         cd_parent_ctrl = parent_ctrl;
+        cd_parent_self_id = parent_self_id;
         cd_children_have_next = false;
         cd_active_children = ref 0;
         cd_last_activation = Clock.empty_clock_state;
@@ -731,13 +740,10 @@ struct
         false
       else
         match ctrl.kind with
-          | Clock_domain ck ->
-              if C.is_local ck.ck_gid then
-                let cd = get_clock_domain site ck in
-                has_next_cd site cd
-              else
-                (* waiting for a Mhas_next message from this clock domain *)
-                false
+          | Clock_domain None -> false (* waiting for a Mhas_next message from this clock domain *)
+          | Clock_domain (Some ck) ->
+              let cd = get_clock_domain site ck in
+              has_next_cd site cd
           | Kill _ | Kill_handler _ ->
             ctrl.cond_v || has_next_children site cd ctrl
           | Susp ->
@@ -890,7 +896,7 @@ struct
                   register_has_next_handlers site cd ck;
                   (* if the parent clock is not here, send Done message*)
                   if not (C.is_local ck.ck_gid) then (
-                    Msgs.send_step_done ck.ck_gid cd.cd_clock.ck_gid ()
+                    Msgs.send_step_done ck.ck_gid (assert_some cd.cd_parent_self_id) cd.cd_clock.ck_gid
                   ) else (
                     (match cd.cd_parent_ctrl with
                       | None -> assert false
@@ -991,7 +997,8 @@ struct
       )
 
     (* After receving Mstep_done*)
-    let receive_step_done site cd ctrl remote_ck_id _ =
+    let receive_step_done site cd ctrl msg =
+      let remote_ck_id = Msgs.recv_step_done msg in
       D.add_next (step_remote_clock_domain cd remote_ck_id) ctrl.next_control;
       IFDEF RML_DEBUG THEN print_debug "--%a@." print_cd cd ELSE () END;
       decr cd.cd_remaining_async;
@@ -1076,7 +1083,7 @@ struct
       match new_cd.cd_clock.ck_parent with
         | Some ck ->
             if not (C.is_local ck.ck_gid) then
-              Msgs.send_done ck.ck_gid new_cd.cd_clock.ck_gid ();
+              Msgs.send_done ck.ck_gid (assert_some new_cd.cd_parent_self_id) ();
             end_ctrl new_ctrl f_k ()
         | None -> assert false
 
@@ -1085,7 +1092,7 @@ struct
       IFDEF RML_DEBUG THEN
         print_debug "Creating local clock domain %a@." C.print_gid new_ck.ck_gid
       ELSE () END;
-      let new_cd = mk_clock_domain site new_ck new_balancer location (Some ctrl) in
+      let new_cd = mk_clock_domain site new_ck new_balancer location (Some ctrl) None in
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain site new_cd new_ctrl f_k) in
       fun _ ->
@@ -1097,7 +1104,7 @@ struct
     let create_cd site msg =
       let tmp_id, parent_ck, new_balancer, location, p = Msgs.recv_new_cd msg in
       let new_ck = mk_clock (Some parent_ck) in
-      let new_cd = mk_clock_domain site new_ck new_balancer location None in
+      let new_cd = mk_clock_domain site new_ck new_balancer location None (Some tmp_id) in
       IFDEF RML_DEBUG THEN
         print_debug "Created local clock domain %a after request by %a@."
           print_cd new_cd   print_clock parent_ck
@@ -1105,29 +1112,24 @@ struct
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain site new_cd new_ctrl dummy_step) in
       D.add_current f new_cd.cd_current;
-      (* we wait for the start of the clock domain *)
-      Msgs.send_cd_created tmp_id new_ck;
-      IFDEF RML_DEBUG THEN print_debug "newcd done@." ELSE () END
-
-    (* After receiving Mcd_created *)
-    let start_remote_clock_domain site cd ctrl f_k msg =
-      IFDEF RML_DEBUG THEN print_debug "Starting remote clock domain@." ELSE () END;
-      let new_ck = Msgs.recv_cd_created msg in
-      IFDEF RML_DEBUG THEN print_debug "--%a" print_cd cd ELSE () END;
-      decr cd.cd_remaining_async;
-      update_remote_set site cd true (C.site_of_gid new_ck.ck_gid);
-      let new_ctrl = new_ctrl (Clock_domain new_ck) in
-      (* add local callbacks *)
-      Callbacks.add_callback ~kind:Callbacks.Once
-        (Mdone new_ck.ck_gid) (receive_done_cd site cd new_ctrl f_k) site.s_callbacks;
-      add_callback site (Mstep_done new_ck.ck_gid) (receive_step_done site cd ctrl new_ck.ck_gid);
-      start_ctrl cd ctrl new_ctrl;
-      (* send a message to start the execution *)
-      step_remote_clock_domain cd new_ck.ck_gid ()
+      (* execute the first step *)
+      IFDEF RML_DEBUG THEN
+        print_debug "Starting local clock domain %a on request@." C.print_gid new_ck.ck_gid
+      ELSE () END;
+      Clock.update_clock site parent_ck;
+      exec_cd site new_cd ()
 
     let new_remote_clock_domain site remote_site new_balancer location cd ctrl p f_k =
       let tmp_id = C.fresh site.s_seed in
-      add_callback site (Mcd_created tmp_id) (start_remote_clock_domain site cd ctrl f_k);
+      update_remote_set site cd true remote_site;
+      let new_ctrl = new_ctrl (Clock_domain None) in
+      (* add local callbacks *)
+      Callbacks.add_callback ~kind:Callbacks.Once
+        (Mdone tmp_id) (receive_done_cd site cd new_ctrl f_k) site.s_callbacks;
+      add_callback site (Mstep_done tmp_id) (receive_step_done site cd ctrl);
+      start_ctrl cd ctrl new_ctrl;
+      (* send a message to start the execution *)
+      IFDEF RML_DEBUG THEN print_debug "Starting remote clock domain@." ELSE () END;
       IFDEF RML_DEBUG THEN print_debug "++%a@." print_cd cd ELSE () END;
       incr cd.cd_remaining_async;
       Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, location, p)
@@ -1262,7 +1264,7 @@ struct
       init_site ();
       let ck = mk_clock None in
       let balancer = L.mk_top_balancer () in
-      let cd = mk_clock_domain (get_site ()) ck balancer L.Lany None in
+      let cd = mk_clock_domain (get_site ()) ck balancer L.Lany None None in
       cd
 
 (* ------------------------------------------------------------------------ *)
@@ -1515,7 +1517,8 @@ struct
          List.iter (fun (w,sig_cd) -> _on_event_at_eoi sig_cd ctrl w f) w_list
 *)
 
-   let create_control kind body f_k ctrl cd =
+    let create_control kind body f_k ctrl cd =
+      let kind = control_of_runtime_control kind in
       let new_ctrl = new_ctrl kind in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       match kind with
@@ -1581,6 +1584,7 @@ struct
         | Clock_domain _ -> assert false
 
     let create_control_evt_conf kind body f_k ctrl cd =
+      let kind = control_of_runtime_control kind in
       let new_ctrl = new_ctrl kind in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       fun evt_cfg ->
