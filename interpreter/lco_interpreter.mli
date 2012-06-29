@@ -60,9 +60,13 @@ module type S =
     val rml_expr_update : 'a memory -> ('a -> 'a) -> unit
     val rml_expr_set_mem : 'a memory -> 'a -> unit
 
-    val rml_global_signal: clock_expr -> region_expr -> ('a, 'a list) R.event
-    val rml_global_signal_combine: clock_expr -> region_expr -> 'b ->
-      ('a -> 'b -> 'b) -> ('a, 'b) R.event
+    val rml_global_signal: unit -> ('a, 'a list) R.event
+    val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
+    val rml_global_memory: 'a -> 'a memory
+
+    val rml_expr_signal: clock_expr -> region_expr -> ('a, 'a list) R.event
+    val rml_expr_signal_combine: clock_expr -> region_expr ->
+      'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
 
     type event_cfg_gen = unit -> R.event_cfg
     val cfg_present': ('a,'b) R.event -> event_cfg_gen

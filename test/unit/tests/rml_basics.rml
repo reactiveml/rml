@@ -75,6 +75,24 @@ let process many_await act =
       act 2; pause
     end
 
+(* [N; O 3] *)
+signal sglob
+let process global_signal act =
+  pause;
+  emit sglob
+  ||
+  await immediate sglob;
+  act 3
+
+(* [N; N; O 4] *)
+signal sglob_comb default 0 gather (+)
+let process global_signal_combine act =
+  pause;
+  emit sglob_comb 4
+  ||
+  await sglob_comb(v) in
+  act v
+
 open Rmltest
 
 let test =
@@ -87,5 +105,8 @@ let test =
     (await_immediate_2, "await_immediate_2", [O 0]);
     (await_immediate_one, "await_immediate_one", [N; N; O 9]);
     (await_one, "await_one", [N; N; N; O 9]);
-    (many_await, "many_await", [O 2]) ]
+    (many_await, "many_await", [O 2]);
+    (global_signal, "global_signal", [N; O 3]);
+    (global_signal_combine, "global_signal_combine", [N; N; O 4])
+  ]
 

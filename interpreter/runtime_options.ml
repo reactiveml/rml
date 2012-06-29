@@ -83,6 +83,13 @@ let parse_cli () =
     | Arg.Bad s -> Format.eprintf "%s@." s; exit 2
     | Arg.Help s -> Format.eprintf "%s@." s; exit 0
 
+let parsing_done = ref false
+let parse_cli () =
+  if not !parsing_done then (
+    parse_cli ();
+    parsing_done := true
+  )
+
 let print_debug fmt =
   if !debug_mode then
     Format.eprintf fmt

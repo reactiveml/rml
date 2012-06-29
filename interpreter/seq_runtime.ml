@@ -47,6 +47,11 @@ struct
 
     let unit_value = ()
 
+    let top_clock_ref = ref None
+    let get_top_clock_domain () =
+      match !top_clock_ref with
+        | None -> raise Types.RML
+        | Some cd -> cd
 
     module Event =
       struct
@@ -57,6 +62,10 @@ struct
         let new_evt _ cd r is_memory default combine k =
           let evt = new_evt_expr cd r is_memory default combine in
           k evt
+
+        let new_evt_global is_memory default combine =
+          let cd = get_top_clock_domain () in
+          new_evt_expr cd cd is_memory default combine
 
         let status ?(only_at_eoi=false) (n,sig_cd,_,_) =
           E.status n && (not only_at_eoi || !(sig_cd.cd_eoi))
@@ -272,14 +281,15 @@ struct
       cd.cd_top.last_activation <- save_clock_state cd;
       cd
 
-    let top_clock_ref = ref None
-
-    let mk_top_clock_domain () =
-      let cd = mk_clock_domain None in
-      top_clock_ref := Some cd;
-      cd
     let finalize_top_clock_domain _ =
       ()
+    let init () =
+      match !top_clock_ref with
+        | None ->
+            (* create top clock domain *)
+            let cd = mk_clock_domain None in
+            top_clock_ref := Some cd
+        | Some _ -> () (* init already done *)
 
     let is_eoi cd = !(cd.cd_eoi)
     let set_pauseclock _ cd =

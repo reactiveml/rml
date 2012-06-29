@@ -121,7 +121,7 @@ let exec_sampling_n n min react finalize =
 module M (I : MACHINE_INTERPRETER) =
   struct
     let rml_exec p =
-      Runtime_options.parse_cli ();
+
       let react, finalize = I.rml_make p in
       let react_fun =
         match !Runtime_options.number_steps > 0, !Runtime_options.sampling_rate > 0.0 with
@@ -133,17 +133,24 @@ module M (I : MACHINE_INTERPRETER) =
       try
         react_fun react finalize
       with
-        | e -> Format.eprintf "An exeception occurred: %s.@.Aborting all processes@." (Printexc.to_string e); finalize (); exit 2
+        | e ->
+            Format.eprintf "Error: An exception occurred: %s.@.Aborting all processes@."
+              (Printexc.to_string e);
+            finalize ();
+            exit 2
 
     let rml_test test_list =
-      Runtime_options.parse_cli ();
       let react, finalize = I.rml_make_test test_list in
       try
         exec_forever react finalize
       with
         | Rmltest.Test_success -> finalize (); exit 0
         | Rmltest.Test_failed _ -> finalize (); exit 2
-        | _ -> Format.eprintf "Error: An exception was raised. Aborting@."; finalize (); exit 2
+        | e ->
+            Format.eprintf "Error: An exception occurred: %s.@.Aborting all processes@."
+              (Printexc.to_string e);
+            finalize ();
+            exit 2
   end
 
 
@@ -159,7 +166,10 @@ module type INTERPRETER =
        type ('a, 'b) event
        type 'a step
 
-       val mk_top_clock_domain : unit -> clock_domain
+       (* Initialize the backend. This function can be called several times during
+          the execution of the program *)
+       val init : unit -> unit
+       val get_top_clock_domain : unit -> clock_domain
        val react : clock_domain -> unit
        val on_current_instant : clock_domain -> unit step -> unit
       end)
@@ -172,13 +182,15 @@ module Machine = functor (I : INTERPRETER) ->
 struct
   module T = Rmltest.Test
 
+  let _ = Runtime_options.parse_cli (); I.R.init()
+
   module MyInterpreter = struct
     type 'a process = 'a I.process
 
     let rml_make p =
       let start_t = Unix.gettimeofday () in
       let result = ref None in
-      let cd = I.R.mk_top_clock_domain () in
+      let cd = I.R.get_top_clock_domain () in
       let step = I.rml_make cd result p in
       I.R.on_current_instant cd step;
       let react () =
@@ -194,7 +206,7 @@ struct
 
     let rml_make_test test_list =
       let result = ref None in
-      let cd = I.R.mk_top_clock_domain () in
+      let cd = I.R.get_top_clock_domain () in
       let mk_test (p, name, expected) =
         let act = T.new_test name expected in
         p act

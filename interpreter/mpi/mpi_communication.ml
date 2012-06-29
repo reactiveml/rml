@@ -67,6 +67,9 @@ module Make (P : Communication.TAG_TYPE) = struct
     { g_rank = local_site ();
       g_id = !counter }
 
+  let relocate_gid gid site =
+    { gid with g_rank = site }
+
   let is_local gid =
     gid.g_rank = local_site ()
 

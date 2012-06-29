@@ -1138,6 +1138,36 @@ struct
             raise Types.RML
           )
 
+
+        let new_evt_global is_memory default (combine : 'a -> 'b -> 'b) =
+          let site = get_site () in
+          if C.is_master () then (
+            (* create the signal *)
+            let ck = top_clock () in
+            let ev = new_local_evt site ck ck is_memory default combine in
+            (* send it to all other sites *)
+            print_debug "Sending global signal %a@." print_signal ev;
+            C.broadcast (Msignal ev.ev_gid) ev;
+            if !Runtime_options.use_signals_users_set then
+              C.SiteSet.iter
+                (fun s -> if s <> C.local_site () then add_signal_remote site s ev.ev_gid)
+                (C.all_sites ());
+            ev
+          ) else (
+            (* get the value sent by the master site *)
+            let tmp_id = C.fresh site.s_seed in
+            let ev_id = C.relocate_gid tmp_id (C.master_site ()) in
+            print_debug "Waiting for global signal %a@." C.print_gid ev_id;
+            let msg = Callbacks.recv_given_msg site.s_msg_queue (Msignal ev_id) in
+            let ev : ('a, 'b) event = C.from_msg msg in
+            print_debug "Received global signal %a@." C.print_gid ev_id;
+            (* setup the local copy *)
+            SignalHandle.set_valid ev.ev_handle;
+            let n, ck, _ = get_event_whole site ev in
+            setup_local_copy site ev.ev_gid n ck;
+            ev
+          )
+
         let status ?(only_at_eoi=false) ev =
           let n = get_event (get_site ()) ev in
           E.status n (* && (not only_at_eoi || !(sig_cd.cd_eoi)) *)
@@ -1263,7 +1293,6 @@ struct
       Callbacks.start_receiving s.s_msg_queue
 
     let start_slave () =
-      init_site ();
       let site = get_site () in
       while true do
         process_msgs site ()
@@ -1284,12 +1313,33 @@ struct
         Thread.delay 0.050;
       terminate_site site
 
-    let mk_top_clock_domain () =
-      init_site ();
-      let ck = mk_clock None in
-      let balancer = L.mk_top_balancer () in
-      let cd = mk_clock_domain (get_site ()) ck balancer L.Lany None None in
-      cd
+    let top_clock_domain_ref = ref None
+    let init_done = ref false
+    let init () =
+      if not !init_done then (
+        init_done := true;
+        init_site ();
+        if C.is_master () then (
+          (* create top clock domain *)
+          let ck = mk_clock None in
+          let balancer = L.mk_top_balancer () in
+          let cd = mk_clock_domain (get_site ()) ck balancer L.Lany None None in
+          top_clock_domain_ref := Some cd
+        ) else (
+          (* just create a fresh id to keep the counters of
+             all sites synchronized with the master, so that
+             they can receive global signals *)
+          let site = get_site () in
+          let _ = C.fresh site.s_seed in ()
+        )
+      )
+
+    let get_top_clock_domain () =
+      match !top_clock_domain_ref with
+        | None ->
+            IFDEF RML_DEBUG THEN print_debug "No top clock domain@." ELSE () END;
+            raise Types.RML
+        | Some cd -> cd
 
 (* ------------------------------------------------------------------------ *)
 

@@ -39,6 +39,7 @@ module type S = sig
 
   val mk_seed : unit -> seed
   val fresh : seed -> gid
+  val relocate_gid : gid -> site -> gid
   val is_local : gid -> bool
 
   val to_msg : 'a -> msg

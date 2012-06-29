@@ -37,6 +37,15 @@ let process memory_await_new_match act =
   ||
   await new s(v) when v > 10 in act v
 
+(* [N; O 1; O 3] *)
+memory mglob last 0
+let process memory_global act =
+  mglob <<- (+) 1;
+  pause;
+  act !!mglob;
+  mglob <<- (+) 5;
+  pause;
+  act !!mglob
 
 open Rmltest
 
@@ -45,5 +54,6 @@ let test =
    (memory_update, "memory_update",  [N; O 1; O 3]);
    (memory_set, "memory_set",  [N; O 1; O 3; O 3]);
    (memory_await_new, "memory_await_new", [N; N; N; O 4]);
-   (memory_await_new_match, "memory_await_new_match", [N; N; N; O 12])
+   (memory_await_new_match, "memory_await_new_match", [N; N; N; O 12]);
+   (memory_global, "memory_global", [N; O 1; O 6]);
   ]

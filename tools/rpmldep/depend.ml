@@ -216,6 +216,8 @@ and add_struct_item bv item =
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
       Misc.opt_iter (fun (e1, e2) -> add_expr bv e1; add_expr bv e2) oee;
       bv
+  | Pimpl_memory(_, e) ->
+      add_expr bv e; bv
   | Pimpl_type dcls ->
       List.iter (fun (_, _, td) -> add_type_declaration bv td) dcls; bv
   | Pimpl_exn(id, oty) ->

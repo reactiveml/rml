@@ -58,6 +58,7 @@ sig
   module Event :
     (sig
       val new_evt_expr : clock -> region -> bool -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+      val new_evt_global : bool -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
       val new_evt : clock_domain -> clock -> region ->
         bool -> 'b -> ('a -> 'b -> 'b) -> (('a, 'b) event -> unit step) -> unit step
 
@@ -152,7 +153,8 @@ sig
     clock_domain -> control_tree -> unit step -> unit
 
   (* scheduling *)
-  val mk_top_clock_domain : unit -> clock_domain
+  val init : unit -> unit
+  val get_top_clock_domain : unit -> clock_domain
   val react : clock_domain -> unit
   (** [step_clock_domain ctrl new_ctrl cd new_cd] creates the step
       function of the new clock domain [new_cd]. *)

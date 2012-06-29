@@ -11,7 +11,8 @@ module type INTERPRETER =
       type ('a, 'b) event
       type 'a step
 
-      val mk_top_clock_domain : unit -> clock_domain
+      val init : unit -> unit
+      val get_top_clock_domain : unit -> clock_domain
       val finalize_top_clock_domain : clock_domain -> unit
       val react : clock_domain -> unit
       val on_current_instant : clock_domain -> unit step -> unit
@@ -31,11 +32,13 @@ struct
   module MyInterpreter = struct
     type 'a process = 'a I.process
 
+    let _ = Runtime_options.parse_cli (); I.R.init ()
+
     let rml_make p =
       if I.R.is_master () then (
         let start_t = Unix.gettimeofday () in
         let result = ref None in
-        let cd = I.R.mk_top_clock_domain () in
+        let cd = I.R.get_top_clock_domain () in
         let step = I.rml_make cd result p in
         I.R.on_current_instant cd step;
         let react () =
@@ -56,7 +59,7 @@ struct
     let rml_make_test test_list =
       if I.R.is_master () then (
         let result = ref None in
-        let cd = I.R.mk_top_clock_domain () in
+        let cd = I.R.get_top_clock_domain () in
         let mk_test (p, name, expected) =
           let act = T.new_test name expected in
           p act

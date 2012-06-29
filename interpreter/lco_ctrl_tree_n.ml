@@ -88,15 +88,22 @@ module Rml_interpreter =
     let default_default = []
     let memory_combine f old = f old
 
-    let rml_global_signal ce re =
-      let ck = ensure_clock_expr ce in
-      let r = R.Event.region_of_clock (ensure_clock_expr re) in
-      R.Event.new_evt_expr ck r false default_default default_combine
+    let rml_global_signal_combine default combine =
+      R.Event.new_evt_global false default combine
 
-    let rml_global_signal_combine ce re default combine =
+    let rml_global_signal _ =
+      rml_global_signal_combine default_default default_combine
+
+    let rml_global_memory default =
+      R.Event.new_evt_global true default memory_combine
+
+    let rml_expr_signal_combine ce re default combine =
       let ck = ensure_clock_expr ce in
       let r = R.Event.region_of_clock (ensure_clock_expr re) in
       R.Event.new_evt_expr ck r false default combine
+
+    let rml_expr_signal ce re =
+      rml_expr_signal_combine ce re default_default default_combine
 
 (* ------------------------------------------------------------------------ *)
 
