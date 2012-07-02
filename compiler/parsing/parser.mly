@@ -1093,6 +1093,7 @@ annot_var:
 ;
 clock_type:
   | clock_var { mkce (Pcar_var $1) }
+  | LIDENT { mkce (Pcar_ident $1) }
   | TOPCK { mkce (Pcar_topck) }
 ;
 effect:

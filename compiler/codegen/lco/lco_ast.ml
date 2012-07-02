@@ -167,6 +167,7 @@ and carrier_expression =
      coce_loc : Location.t }
 and carrier_expression_desc =
     | Cocar_var of string
+    | Cocar_ident of ident
     | Cocar_topck
 
 and effect_expression =

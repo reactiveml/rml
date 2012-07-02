@@ -147,6 +147,7 @@ and carrier_expression =
      pce_loc : Location.t }
 and carrier_expression_desc =
     | Pcar_var of string
+    | Pcar_ident of string
     | Pcar_fresh
     | Pcar_topck
 

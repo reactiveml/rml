@@ -75,6 +75,15 @@ let rec iter f l = match l with
 let p l =
   iter (fun s -> emit s) l
 
+$
+
+let process f ck (s: (int,int)event{ck|}) =
+  pause; emit s 0
+
+let process g =
+  signal s at topck default 0 gather (+) in
+  f topck s
+
 $$$bad
 ${
 (*
@@ -91,3 +100,17 @@ type noeff = { f: int -> int }
 let process p =
   signal s default 0 gather (+) in
   { f = (fun i -> emit s i; 0) }
+
+
+$$$ident_unbound
+${
+(*
+  run_test:
+   [
+     Bad 2 "unbound": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+$}
+
+let process p (s:(int, int)event{ck}) =
+  pause; emit s 0

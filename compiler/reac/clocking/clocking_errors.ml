@@ -159,10 +159,10 @@ let non_memory_err exp =
     Location.print_oc exp.e_loc;
   raise Error
 
-let non_clock_err exp =
+let non_clock_err loc =
   Printf.eprintf
     "%aThis expression is not a clock.\n"
-    Location.print_oc exp.e_loc;
+    Location.print_oc loc;
   raise Error
 
 (* typing errors *)

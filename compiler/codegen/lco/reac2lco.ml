@@ -101,6 +101,7 @@ and translate_ce ce =
   let coce =
     match ce.ce_desc with
       | Cvar s -> Cocar_var s
+      | Cident id -> Cocar_ident id
       | Ctopck -> Cocar_topck
   in
   make_ce coce ce.ce_loc

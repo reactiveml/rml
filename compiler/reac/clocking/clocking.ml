@@ -87,7 +87,6 @@ let filter_memory ?(force_activation_ck=false) ck =
   add_effect_ck sck;
   ck1, sck
 
-
 let unify_expr expr expected_ty actual_ty =
   try
     unify expected_ty actual_ty
@@ -220,7 +219,7 @@ let new_var_param pe = match pe with
   | _ -> assert false (* TODO: donner une erreur ?*)
 
 (* Typing of type expressions *)
-let clock_of_type_expression ty_vars typexp =
+let clock_of_type_expression ty_vars env typexp =
   let rec clock_of_te ty_vars typexp =
     match typexp.te_desc with
     | Tvar s ->
@@ -262,6 +261,13 @@ let clock_of_type_expression ty_vars typexp =
             expect_carrier (List.assoc s ty_vars)
           with
               Not_found | Invalid_argument _  -> unbound_carrier_err s ce.ce_loc)
+    | Cident n ->
+        let ck_sch = Env.find n env in
+        let ck = ensure_monotype (clock_of_sch ck_sch) in
+        (try
+            filter_depend ck
+          with
+            | Unify -> non_clock_err ce.ce_loc)
     | Ctopck -> topck_carrier
 
   and effect_of_ee ty_vars ee = match ee.ee_desc with
@@ -301,7 +307,7 @@ let free_of_typeexp ty =
       | Tsome (_, _) -> (* TODO *) ty_vars
   and vars_carrier ty_vars ce = match ce.ce_desc with
     | Cvar s -> add_to_list (s, Tcarrier_var) ty_vars
-    | Ctopck -> ty_vars
+    | Cident _ | Ctopck -> ty_vars
   and vars_effect ty_vars ee = match ee.ee_desc with
     | Effempty -> ty_vars
     | Effvar s -> add_to_list (s, Teffect_var) ty_vars
@@ -315,10 +321,10 @@ let free_of_typeexp ty =
   vars [] ty
 
 (* translating a declared type expression into an internal type *)
-let full_clock_of_type_expression typ =
+let full_clock_of_type_expression env typ =
   let ty_vars = free_of_typeexp typ in
   let ty_vars = List.map (fun (v, k) -> v, new_generic_var (v, k)) ty_vars in
-  let typ = clock_of_type_expression ty_vars typ in
+  let typ = clock_of_type_expression ty_vars env typ in
   let ck_vars, car_vars, eff_vars = params_split (snd (List.split ty_vars)) in
   { cs_clock_vars = ck_vars;
     cs_carrier_vars = car_vars;
@@ -326,7 +332,7 @@ let full_clock_of_type_expression typ =
     cs_desc = typ }
 
 (* Typing of patterns *)
-let rec clock_of_pattern global_env local_env patt ty =
+let rec clock_of_pattern global_env local_env env patt ty =
   patt.patt_clock <- ty;
   Stypes.record (Ti_patt patt);
   match patt.patt_desc with
@@ -347,11 +353,11 @@ let rec clock_of_pattern global_env local_env patt ty =
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
       then non_linear_pattern_err patt (Ident.name gl.gi.id);
       gl.ck_info <- Some { value_ck = forall [] [] [] ty };
-      clock_of_pattern (gl::global_env) local_env p ty
+      clock_of_pattern (gl::global_env) local_env env p ty
   | Palias (p,Vlocal x) ->
       if List.mem_assoc x local_env
       then non_linear_pattern_err patt (Ident.name x);
-      clock_of_pattern global_env ((x,ty)::local_env) p ty
+      clock_of_pattern global_env ((x,ty)::local_env) env p ty
 
   | Pconstant (i) ->
       unify_patt patt ty Clocks_utils.static;
@@ -360,7 +366,7 @@ let rec clock_of_pattern global_env local_env patt ty =
   | Ptuple (l) ->
       let ty_list = List.map (fun _ -> new_clock_var ()) l in
       unify_patt patt ty (product ty_list);
-      clock_of_pattern_list global_env local_env l ty_list
+      clock_of_pattern_list global_env local_env env l ty_list
 
   | Pconstruct (c, None) ->
       begin
@@ -381,15 +387,15 @@ let rec clock_of_pattern global_env local_env patt ty =
         match ty_arg_opt with
         | None -> constr_arity_err_2 c.gi patt.patt_loc
         | Some ty_arg ->
-            clock_of_pattern global_env local_env arg_patt ty_arg
+            clock_of_pattern global_env local_env env arg_patt ty_arg
       end
 
   | Por (p1,p2) ->
       let global_env1, local_env1 =
-        clock_of_pattern global_env local_env p1 ty
+        clock_of_pattern global_env local_env env p1 ty
       in
       let global_env2, local_env2 =
-        clock_of_pattern global_env local_env p2 ty
+        clock_of_pattern global_env local_env env p2 ty
       in
       List.iter
         (fun gl1 ->
@@ -429,7 +435,7 @@ let rec clock_of_pattern global_env local_env patt ty =
             then non_linear_record_err label.gi patt.patt_loc;
             unify_patt patt ty ty_arg;
             let global_env, local_env =
-              clock_of_pattern global_env local_env label_pat ty_res
+              clock_of_pattern global_env local_env env label_pat ty_res
             in
             clock_of_record
               global_env local_env (label :: label_list) label_pat_list
@@ -440,20 +446,20 @@ let rec clock_of_pattern global_env local_env patt ty =
       let ty_var = new_clock_var () in
       unify_patt patt ty (constr_notabbrev array_ident [Var_clock ty_var]);
       List.fold_left
-        (fun (gl_env,lc_env) p -> clock_of_pattern gl_env lc_env p ty_var)
+        (fun (gl_env,lc_env) p -> clock_of_pattern gl_env lc_env env p ty_var)
         (global_env,local_env) l
 
   | Pconstraint (p,t) ->
-      let new_ty = instance (full_clock_of_type_expression t) in
+      let new_ty = instance (full_clock_of_type_expression env t) in
       unify_patt p ty new_ty;
-      clock_of_pattern global_env local_env p new_ty
+      clock_of_pattern global_env local_env env p new_ty
 
-and clock_of_pattern_list global_env local_env patt_list ty_list =
+and clock_of_pattern_list global_env local_env env patt_list ty_list =
   match patt_list, ty_list with
   | [], [] -> global_env, local_env
   | p::patt_list, t::ty_list ->
-      let global_env, local_env = clock_of_pattern global_env local_env p t in
-      clock_of_pattern_list global_env local_env patt_list ty_list
+      let global_env, local_env = clock_of_pattern global_env local_env env p t in
+      clock_of_pattern_list global_env local_env env patt_list ty_list
   | _ -> raise (Internal (Location.none, "clock_of_pattern_list"))
 
 (* Typing of expressions *)
@@ -482,7 +488,7 @@ let rec schema_of_expression env expr =
         current_effect := no_effect;
         List.iter
           (fun (p,e) ->
-            let gl_env, loc_env = clock_of_pattern [] [] p ty_arg in
+            let gl_env, loc_env = clock_of_pattern [] [] env p ty_arg in
             assert (gl_env = []);
             let new_env =
               List.fold_left
@@ -579,7 +585,7 @@ let rec schema_of_expression env expr =
         Clocks_utils.static
 
     | Econstraint(e,t) ->
-        let expected_ty = instance (full_clock_of_type_expression t) in
+        let expected_ty = instance (full_clock_of_type_expression env t) in
         type_expect env e expected_ty;
         expected_ty
 
@@ -587,7 +593,7 @@ let rec schema_of_expression env expr =
         let ty = clock_of_expression env body in
         List.iter
           (fun (p,e) ->
-            let gl_env, loc_env = clock_of_pattern [] [] p Clocks_utils.static in
+            let gl_env, loc_env = clock_of_pattern [] [] env p Clocks_utils.static in
             assert (gl_env = []);
             let new_env =
               List.fold_left
@@ -613,7 +619,7 @@ let rec schema_of_expression env expr =
         let ty_res = new_clock_var() in
         List.iter
           (fun (p,e) ->
-            let gl_env, loc_env = clock_of_pattern [] [] p ty_body in
+            let gl_env, loc_env = clock_of_pattern [] [] env p ty_body in
             assert (gl_env = []);
             let new_env =
               List.fold_left
@@ -731,7 +737,7 @@ let rec schema_of_expression env expr =
           [Var_clock ty_emit; Var_clock ty_get; Var_carrier ty_ck] in
         opt_iter
           (fun te ->
-            unify_event s (instance (full_clock_of_type_expression te)) ty_s)
+            unify_event s (instance (full_clock_of_type_expression env te)) ty_s)
           te_opt;
         begin
           match combine_opt with
@@ -757,7 +763,7 @@ let rec schema_of_expression env expr =
               (try
                   ignore (filter_depend ck_ce)
                 with
-                  | Unify -> non_clock_err ce)
+                  | Unify -> non_clock_err ce.e_loc)
           | _ -> ());
         Clocks_utils.static
 
@@ -814,7 +820,7 @@ let rec schema_of_expression env expr =
                 let ty_body = clock_of_expression env p in
                 opt_iter
                   (fun (patt,proc) ->
-                    let gl_env, loc_env = clock_of_pattern [] [] patt ty_get in
+                    let gl_env, loc_env = clock_of_pattern [] [] env patt ty_get in
                     assert (gl_env = []);
                     let new_env =
                       List.fold_left
@@ -849,7 +855,7 @@ let rec schema_of_expression env expr =
                 non_event_err s
             in
             let ty_body = clock_of_expression env p in
-            let gl_env, loc_env = clock_of_pattern [] [] patt ty_get in
+            let gl_env, loc_env = clock_of_pattern [] [] env patt ty_get in
             assert (gl_env = []);
             let new_env =
               List.fold_left
@@ -870,7 +876,7 @@ let rec schema_of_expression env expr =
           with Unify ->
             non_event_err s
         in
-        let gl_env, loc_env = clock_of_pattern [] [] patt ty_get in
+        let gl_env, loc_env = clock_of_pattern [] [] env patt ty_get in
         assert (gl_env = []);
         let new_env =
           List.fold_left
@@ -897,7 +903,7 @@ let rec schema_of_expression env expr =
           with Unify ->
             non_event_err s
         in
-        let gl_env, loc_env = clock_of_pattern [] [] patt ty_get in
+        let gl_env, loc_env = clock_of_pattern [] [] env patt ty_get in
         assert (gl_env = []);
         let new_env =
           List.fold_left
@@ -919,7 +925,7 @@ let rec schema_of_expression env expr =
               Var_clock (constr_notabbrev list_ident [Var_clock ty_emit]);
               Var_carrier ty_ck])
           ty_s;
-        let gl_env, loc_env = clock_of_pattern [] [] patt ty_emit in
+        let gl_env, loc_env = clock_of_pattern [] [] env patt ty_emit in
         assert (gl_env = []);
         let new_env =
           List.fold_left
@@ -954,7 +960,7 @@ let rec schema_of_expression env expr =
           try
             filter_depend ty_ce
           with
-            | Unify -> non_clock_err ce
+            | Unify -> non_clock_err ce.e_loc
         in
         Clocks_utils.static
 
@@ -1010,7 +1016,7 @@ let rec schema_of_expression env expr =
           with Unify ->
             non_memory_err s
         in
-        let gl_env, loc_env = clock_of_pattern [] [] patt ty in
+        let gl_env, loc_env = clock_of_pattern [] [] env patt ty in
         assert (gl_env = []);
         let new_env =
           List.fold_left
@@ -1056,7 +1062,7 @@ and type_clock_expr env ce =
         (try
             filter_depend ty_ce
           with
-            | Unify -> non_clock_err e)
+            | Unify -> non_clock_err e.e_loc)
     | CkTop -> topck_carrier
     | CkLocal -> !activation_carrier
 
@@ -1066,7 +1072,7 @@ and type_let is_rec env patt_expr_list =
   push_type_level();
   let ty_list = List.map (fun _ -> new_clock_var()) patt_expr_list in
   let global_env, local_env =
-    clock_of_pattern_list [] [] (List.map fst patt_expr_list) ty_list
+    clock_of_pattern_list [] [] env (List.map fst patt_expr_list) ty_list
   in
   let add_env =
     List.fold_left
@@ -1162,7 +1168,7 @@ let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
           List.rev_map
             (fun (gl_cstr,te_opt) ->
               let ty_arg_opt =
-                opt_map (clock_of_type_expression typ_vars) te_opt
+                opt_map (clock_of_type_expression typ_vars Env.empty) te_opt
               in
               gl_cstr.ck_info <- Some { cstr_arg = ty_arg_opt;
                                         cstr_res = final_typ; };
@@ -1176,7 +1182,7 @@ let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
         let lbl_list =
           List.rev_map
             (fun (gl_lbl, mut, te) ->
-              let ty_res = clock_of_type_expression typ_vars te in
+              let ty_res = clock_of_type_expression typ_vars Env.empty te in
               gl_lbl.ck_info <- Some { lbl_res = ty_res;
                                     lbl_arg = final_typ;
                                     lbl_mut = mut; };
@@ -1186,7 +1192,7 @@ let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
         Clock_record lbl_list, Constr_notabbrev
 
     | Trebind (te) ->
-        let ty_te = clock_of_type_expression typ_vars te in
+        let ty_te = clock_of_type_expression typ_vars Env.empty te in
         Clock_rebind (ty_te),
         Constr_abbrev (List.map snd typ_vars, ty_te)
 
@@ -1243,7 +1249,7 @@ let impl info_chan item =
           opt_iter
             (fun te ->
               unify_event s.gi.id
-                (instance (full_clock_of_type_expression te)) ty_s)
+                (instance (full_clock_of_type_expression Env.empty te)) ty_s)
             te_opt;
           begin
             match combine_opt with
@@ -1278,7 +1284,7 @@ let impl info_chan item =
 
   | Iexn (gl_cstr, te_opt) ->
       gl_cstr.ck_info <-
-        Some {cstr_arg = opt_map (clock_of_type_expression []) te_opt;
+        Some {cstr_arg = opt_map (clock_of_type_expression [] Env.empty) te_opt;
               cstr_res = Clocks_utils.static; };
       (* verbose mode *)
       if !print_type
@@ -1299,7 +1305,7 @@ let intf info_chan item =
   (match item.intf_desc with
   | Dval (gl, te) ->
       gl.ck_info <-
-        Some { value_ck = gen (full_clock_of_type_expression te).cs_desc };
+        Some { value_ck = gen (full_clock_of_type_expression Env.empty te).cs_desc };
       (* verbose mode *)
       if !print_type
       then Clocks_printer.output_value_declaration info_chan [gl]
@@ -1314,7 +1320,7 @@ let intf info_chan item =
 
   | Dexn (gl_cstr, te_opt) ->
       gl_cstr.ck_info <-
-        Some {cstr_arg = opt_map (clock_of_type_expression []) te_opt;
+        Some {cstr_arg = opt_map (clock_of_type_expression [] Env.empty) te_opt;
               cstr_res = Clocks_utils.static; };
       (* verbose mode *)
       if !print_type

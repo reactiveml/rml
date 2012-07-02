@@ -161,6 +161,7 @@ and carrier_expression =
      ce_loc : Location.t }
 and carrier_expression_desc =
     | Cvar of string
+    | Cident of ident
     | Ctopck
 
 and effect_expression =
