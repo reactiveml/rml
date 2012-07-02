@@ -115,7 +115,8 @@ let usage_wrong_type_err loc1 loc2 =
     Location.print_oc loc1
   else
   Printf.eprintf
-    "%aAn affine signal is being used more than once.\n%aThis is the second usage of the affine signal.\n"
+    "%aAn affine signal is being used more than once.\n\
+    %aThis is the second usage of the affine signal.\n"
     Location.print_oc loc1
     Location.print_oc loc2;
   raise Error
