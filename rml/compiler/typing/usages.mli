@@ -38,3 +38,5 @@ val update_loc : Location.t -> signal_usage -> signal_usage
 
 val send_u : Location.t -> bool -> signal_usage
 val await_u : Location.t -> bool -> signal_usage
+
+val compatible_usage : signal_usage -> signal_usage -> bool

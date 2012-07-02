@@ -117,11 +117,15 @@ let unify_usage loc ty_emit ty_get u_new =
   unify_get_usage loc ty_get new_ty_get
 
 let accumulate_usage ty loc u_new =
-  try
-    let u_result = Usages.add_s ty.type_usage u_new in
-    ty.type_usage <- u_result
-  with Usages.Forbidden_usage (loc1, loc2) ->
-    usage_wrong_type_err loc1 loc2
+  let ty_u = ty.type_usage in
+  if Usages.compatible_usage ty_u u_new then
+    try
+      let u_result = Usages.add_s ty.type_usage u_new in
+      ty.type_usage <- u_result
+    with Usages.Forbidden_usage (loc1, loc2) ->
+      usage_wrong_type_err loc1 loc2
+  else
+    value_wrong_usage_err loc ty_u u_new
 
 let is_unit_process desc =
   let sch = desc.value_typ in
@@ -190,6 +194,15 @@ let get_gleff id loc =
     Hashtbl.find gleff id
   with _ ->
     Effects.singleton id loc (new_var ()) (new_var ())
+
+let apply_affiniy_constraint usage ty ty_loc =
+  let usage = Usages.mk_su ty_loc usage usage in
+  let ty_u = ty.type_usage in
+  try
+    let ty_new_u = Usages.add_s ty_u usage in
+    ty.type_usage <- ty_new_u
+  with _ ->
+    value_wrong_usage_err ty_loc ty_u usage
 
 (* checks that every type is defined *)
 (* and used with the correct arity *)
@@ -903,7 +916,11 @@ let rec type_of_expression env expr =
 	assert (gl_env = []);
 	let new_env =
 	  List.fold_left
-	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
+	    (fun env (x, ty) ->
+                if not affine then
+                  apply_affiniy_constraint Usages.Neutral ty patt.patt_loc;
+                Env.add x (forall [] ty) env
+            )
 	    env loc_env
 	in
         let new_usage = Usages.await_u expr.expr_loc affine in
@@ -914,6 +931,7 @@ let rec type_of_expression env expr =
         ty, Effects.flatten [u_s; u_p; Effects.singleton r_s s.expr_loc u_emit u_get]
 
     | Rexpr_await_val (_,_,One,s,patt,p) ->
+        let affine = true (* Always the case here since it is an "await one" *) in
 	let ty_s, u_s = type_of_expression env s in
 	let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
         unify_expr s
@@ -923,10 +941,13 @@ let rec type_of_expression env expr =
 	assert (gl_env = []);
 	let new_env =
 	  List.fold_left
-	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
+	    (fun env (x, ty) ->
+                if not affine then
+                  apply_affiniy_constraint Usages.Neutral ty patt.patt_loc;
+                Env.add x (forall [] ty) env
+            )
 	    env loc_env
 	in
-        let affine = true (* Always the case here since it is an "await one" *) in
         let new_usage = Usages.await_u expr.expr_loc affine in
         accumulate_usage ty_s expr.expr_loc new_usage;
         unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;

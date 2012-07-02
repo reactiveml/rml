@@ -90,3 +90,14 @@ let add_s u v =
 
 let mk_zero =
   mk_loc Location.none (Zero, Zero)
+
+let compatible_usage su1 su2 =
+  let compatible_usage u1 u2 = match u1, u2 with
+    | Zero, _
+    | _, Zero
+    | Neutral, Neutral
+    | Affine, Affine -> true
+    | _ -> false in
+  let su1_emit, su1_get = su1.node
+  and su2_emit, su2_get = su2.node in
+  compatible_usage su1_emit su2_emit && compatible_usage su1_get su2_get
