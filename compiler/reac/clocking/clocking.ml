@@ -1261,6 +1261,13 @@ let impl info_chan item =
           if !print_type
           then Clocks_printer.output_value_declaration info_chan [s])
         l
+  | Imemory(s, e) ->
+      let ty_mem = new_clock_var() in
+      let ty_s = constr_notabbrev memory_ident [Var_clock ty_mem; Var_carrier topck_carrier] in
+      type_expect Env.empty e ty_mem;
+      s.ck_info <- Some { value_ck = forall [] [] [] ty_s };
+      if !print_type
+      then Types_printer.output_value_type_declaration info_chan [s]
   | Itype (l) ->
       let global_env =
         List.map (clock_of_type_declaration item.impl_loc) l

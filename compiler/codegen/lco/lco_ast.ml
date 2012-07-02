@@ -202,6 +202,7 @@ and impl_desc =
   | Coimpl_signal of
       ((value_description * type_expression option)
 	 * (expression * expression) option) list
+  | Coimpl_memory of value_description * expression
   | Coimpl_type of
       (type_description * (string * type_var_kind) list * type_declaration) list
   | Coimpl_exn of

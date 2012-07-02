@@ -456,6 +456,8 @@ structure_item:
       { mkimpl(Pimpl_signal(List.rev $2, None)) }
   | SIGNAL signal_comma_list opt_at_expr DEFAULT par_expr GATHER par_expr
       { mkimpl(Pimpl_signal(List.rev $2, Some($5, $7))) }
+  | MEMORY LIDENT LAST par_expr
+      { mkimpl(Pimpl_memory(mksimple $2 2, $4)) }
   | TYPE type_declarations
       { mkimpl(Pimpl_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments

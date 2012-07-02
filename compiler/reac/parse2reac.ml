@@ -721,6 +721,12 @@ let translate_impl_item info_chan item =
                (gl,rty_opt), rcomb_opt)
              sig_typ_list)
 
+    | Pimpl_memory(s, v) ->
+        let id = Ident.create Ident.gen_var s.psimple_id Ident.Sig in
+        let gl = Modules.defined_global id (no_info()) (no_info()) in
+        let _ = Modules.add_value gl in
+        Imemory (gl, translate Env.empty v)
+
     | Pimpl_type l ->
         let l_translate = translate_type_declaration l in
         Itype l_translate

@@ -195,6 +195,7 @@ and impl_desc =
   | Isignal of
       ((value_description * type_expression option)
          * (expression * expression) option) list
+  | Imemory of value_description * expression
   | Itype of
       (type_description * (string * type_var_kind) list * type_declaration) list
   | Iexn of

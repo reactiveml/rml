@@ -794,6 +794,8 @@ let translate_impl_item info_chan item =
                  (fun (e1,e2) ->(translate_ml e1, translate_ml e2))
                  comb_opt)
              l)
+    | Imemory(s, e) ->
+        Coimpl_memory(s, translate_ml e)
     | Itype l ->
         let l =
           List.map

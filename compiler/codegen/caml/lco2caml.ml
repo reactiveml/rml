@@ -273,7 +273,7 @@ let rec translate_ml e =
                    [pattern_of_signal s,
                     make_expr
                       (Cexpr_apply
-                         (make_instruction "rml_global_signal",
+                         (make_instruction "rml_expr_signal",
                           [translate_clock_expr ck; translate_clock_expr r]))
                       Location.none],
                    translate_ml e)
@@ -283,7 +283,7 @@ let rec translate_ml e =
                    [pattern_of_signal s,
                     make_expr
                       (Cexpr_apply
-                         (make_instruction "rml_global_signal_combine",
+                         (make_instruction "rml_expr_signal_combine",
                           [translate_clock_expr ck;
                            translate_clock_expr r;
                            translate_ml e1;
@@ -1105,6 +1105,13 @@ let translate_impl_item info_chan item =
                                   translate_ml e2;]))
                              Location.none)
                      l)
+    | Coimpl_memory (s, e) ->
+        let e =
+          make_expr
+            (Cexpr_apply (make_instruction "rml_global_memory", [translate_ml e]))
+            Location.none
+        in
+        Cimpl_let(Nonrecursive, [pattern_of_signal_global (s, None), e])
     | Coimpl_type l ->
         let l =
           List.map

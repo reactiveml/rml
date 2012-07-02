@@ -1146,6 +1146,13 @@ let impl info_chan item =
           if !print_type
           then Types_printer.output_value_type_declaration info_chan [s])
         l
+  | Imemory(s, e) ->
+      let ty_mem = new_var() in
+      let ty_s = constr_notabbrev memory_ident [ty_mem] in
+      type_expect Env.empty e ty_mem;
+      s.ty_info <- Some { value_typ = forall [] ty_s };
+      if !print_type
+      then Types_printer.output_value_type_declaration info_chan [s]
   | Itype (l) ->
       let global_env =
         List.map (type_of_type_declaration item.impl_loc) l

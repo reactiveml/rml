@@ -695,6 +695,10 @@ let impl info_chan impl =
             | None -> ())
           s_list;
         Static
+    | Imemory(_, e) ->
+        if (static_expr ML e) <> Static
+         then expr_wrong_static_err e;
+        Static
     | _ -> Static
   in
   if typ <> Static then impl_wrong_static_err impl;

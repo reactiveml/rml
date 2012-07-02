@@ -183,6 +183,7 @@ and impl_desc =
   | Pimpl_signal of
       (simple_ident * type_expression option) list *
 	(expression * expression) option
+  | Pimpl_memory of simple_ident * expression
   | Pimpl_type of (simple_ident * (string * type_var_kind) list * type_declaration) list
   | Pimpl_exn of simple_ident * type_expression option
   | Pimpl_exn_rebind of simple_ident * ident
