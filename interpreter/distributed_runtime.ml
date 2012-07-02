@@ -169,6 +169,7 @@ struct
         }
 
     type site = {
+      mutable s_top_clock_domain : clock_domain option;
       mutable s_clock_domains : clock_domain C.GidMap.t;
       s_msg_queue : Callbacks.msg_queue;
       s_callbacks : Callbacks.dispatcher;
@@ -1272,6 +1273,7 @@ struct
     let init_site () =
       IFDEF RML_DEBUG THEN print_debug "Init site@." ELSE () END;
       let s = {
+        s_top_clock_domain = None;
         s_clock_domains = C.GidMap.empty;
         (*  s_top_clock_domains = clock_domain list; *)
         s_msg_queue = Callbacks.mk_queue ();
@@ -1313,29 +1315,29 @@ struct
         Thread.delay 0.050;
       terminate_site site
 
-    let top_clock_domain_ref = ref None
     let init_done = ref false
     let init () =
       if not !init_done then (
         init_done := true;
         init_site ();
+        let site = get_site () in
         if C.is_master () then (
           (* create top clock domain *)
           let ck = mk_clock None in
           let balancer = L.mk_top_balancer () in
           let cd = mk_clock_domain (get_site ()) ck balancer L.Lany None None in
-          top_clock_domain_ref := Some cd
+          site.s_top_clock_domain <- Some cd
         ) else (
           (* just create a fresh id to keep the counters of
              all sites synchronized with the master, so that
              they can receive global signals *)
-          let site = get_site () in
           let _ = C.fresh site.s_seed in ()
         )
       )
 
     let get_top_clock_domain () =
-      match !top_clock_domain_ref with
+      let site = get_site () in
+      match site.s_top_clock_domain with
         | None ->
             IFDEF RML_DEBUG THEN print_debug "No top clock domain@." ELSE () END;
             raise Types.RML
