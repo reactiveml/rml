@@ -363,7 +363,7 @@ The precedences must be listed from low to high.
 %nonassoc BARBAR BARGRATER              /* below SEMI e; e || e*/
 %nonassoc below_SEMI
 %nonassoc SEMI                          /* below EQUAL ({lbl=...; lbl=...}) */
-%nonassoc LET SIGNAL DO DOPAR NEWCLOCK  /* above SEMI ( ...; let ... in ...) */
+%nonassoc LET SIGNAL MEMORY DO DOPAR NEWCLOCK  /* above SEMI ( ...; let ... in ...) */
 %nonassoc below_WITH
 %nonassoc FUNCTION WITH                 /* below BAR  (match ... with ...) */
 %nonassoc AND             /* above WITH (module rec A: SIG with ... and ...) */
@@ -456,8 +456,8 @@ structure_item:
       { mkimpl(Pimpl_signal(List.rev $2, None)) }
   | SIGNAL signal_comma_list opt_at_expr DEFAULT par_expr GATHER par_expr
       { mkimpl(Pimpl_signal(List.rev $2, Some($5, $7))) }
-  | MEMORY LIDENT LAST par_expr
-      { mkimpl(Pimpl_memory(mksimple $2 2, $4)) }
+  | MEMORY LIDENT opt_at_expr LAST par_expr
+      { mkimpl(Pimpl_memory(mksimple $2 2, $5)) }
   | TYPE type_declarations
       { mkimpl(Pimpl_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
