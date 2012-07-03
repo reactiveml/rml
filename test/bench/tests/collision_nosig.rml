@@ -206,7 +206,7 @@ let rec process area area_ck global_area_ck agent_ck global_add add env parent l
   let rec process behave level =
     match level with
     | 0 ->
-        signal local_env at agent_ck in
+        signal local_env at agent_ck restrict area_ck in
         run (forwarder from_children local_env)
         ||
         run (forwarder env local_env)
