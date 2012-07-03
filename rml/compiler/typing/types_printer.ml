@@ -69,12 +69,12 @@ let rec print priority ty =
       if priority >= 1 then print_string ")"
   | Type_product(ty_list) ->
       if priority >= 2 then print_string "(";
-      print_list 2 "*" ty_list;
+      print_list 2 " * " ty_list;
       if priority >= 2 then print_string ")"
   | Type_constr(name,ty_list) ->
       let n = List.length ty_list in
       if n > 1 then print_string "(";
-      print_list 2 "," ty_list;
+      print_list 2 ", " ty_list;
       if n > 1 then print_string ")";
       if ty_list <> [] then print_space ();
       print_qualified_ident name.gi
@@ -102,9 +102,7 @@ and print_list priority sep l =
 	print priority ty
     | ty::rest ->
 	print priority ty;
-	print_space ();
 	print_string sep;
-	print_space ();
 	printrec rest in
   printrec l
 
@@ -233,8 +231,7 @@ let print_list_of_type_declarations global_list =
     | [global] -> print_type_declaration global
     | global :: global_list ->
 	print_type_declaration global;
-	print_space ();
-	print_string "and ";
+	print_string " and ";
 	printrec global_list in
   match global_list with
     [] -> ()
