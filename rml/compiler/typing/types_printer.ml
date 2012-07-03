@@ -231,7 +231,8 @@ let print_list_of_type_declarations global_list =
     | [global] -> print_type_declaration global
     | global :: global_list ->
 	print_type_declaration global;
-	print_string " and ";
+	print_space ();
+	print_string "and ";
 	printrec global_list in
   match global_list with
     [] -> ()
