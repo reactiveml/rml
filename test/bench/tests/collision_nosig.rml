@@ -4,7 +4,7 @@ open Utils
 
 let rec process process_iter p l = match l with
 | [] -> ()
-| x::l -> run (p x) || run (process_iter p l)
+| x::l -> run p x || run process_iter p l
 
 let rec process foreach_p s p =
   await s(l) in
@@ -33,6 +33,11 @@ let process sustain n s v =
     pause
   done
 
+let rec process fold_left_p f acc l = match l with
+| [] -> acc
+| x:: l ->
+    let acc = run f acc x in
+    run fold_left_p f acc l
 
 let dt = 0.5
 
@@ -51,7 +56,7 @@ type ('a, 'state) state =
 let mk_pos agent_ck init =
   init
 
-let mk_state pos st global_area_ck =
+let process mk_state pos st global_area_ck =
   signal kill at global_area_ck in
   signal relocate at global_area_ck in
   { a_pos = pos;
@@ -127,7 +132,7 @@ type boundary_kind = Boundary | BrickWall
 
 (*** Agents *)
 let process agent pos st move global_add global_area_ck area env =
-  let me = mk_state pos st global_area_ck in
+  let me = run (mk_state pos st global_area_ck) in
   do
     do
       run (move me area env)
@@ -229,7 +234,7 @@ let rec process area area_ck global_area_ck agent_ck global_add add env parent l
         run (click_divider global_area_ck r from_children divide local_divide)
       | _ ->
           let add_map, env_map, p =
-            init_child_areas area_ck global_area_ck agent_ck global_add
+            run init_child_areas area_ck global_area_ck agent_ck global_add
               level from_children r walls
           in
           run p
@@ -247,19 +252,19 @@ let rec process area area_ck global_area_ck agent_ck global_add add env parent l
   | Some (parent_area, pos) -> run (parent_forwarder r global_add from_children parent_area)
 
 
-and init_child_areas area_ck global_area_ck agent_ck global_add level from_children r walls =
-  let add_area (add_map, env_map, p) q =
+and process init_child_areas area_ck global_area_ck agent_ck global_add level from_children r walls =
+  let process add_area (add_map, env_map, p) q =
     let idx = int_of_quad q in
-    let add, env, newp = mk_area idx area_ck global_area_ck agent_ck global_add
+    let add, env, newp = run mk_area idx area_ck global_area_ck agent_ck global_add
         (Some (from_children, q)) (level - 1) (sub_rect r q) (sub_walls walls q) in
     let add_map = Geomap.add q add add_map in
     let env_map = Geomap.add q env env_map in
     let p = process (run p || run newp) in
     (add_map, env_map, p)
   in
-  List.fold_left add_area (Geomap.empty r, Geomap.empty r, process ()) [NW; SW;NE;SE]
+  run fold_left_p add_area (Geomap.empty r, Geomap.empty r, process ()) [NW; SW;NE;SE]
 
-and mk_area idx ck global_area_ck agent_ck global_add parent level r walls =
+and process mk_area idx ck global_area_ck agent_ck global_add parent level r walls =
   signal add at ck in
   signal env at ck in
   let process area_p =
@@ -268,7 +273,7 @@ and mk_area idx ck global_area_ck agent_ck global_add parent level r walls =
   in
   add, env, area_p
 
-let mk_global_area agent_ck level r =
+let process mk_global_area agent_ck level r =
   signal external_add at topck in
   let process area_p =
    newclock global_ck schedule (fun nb -> 0, nb) in
@@ -336,7 +341,7 @@ let process ball me area env =
   end
 
 (* test case *)
-let nb_balls = 4000
+let nb_balls = 3000
 let max_speed = 0.2
 
 let w = 8000.
@@ -358,7 +363,7 @@ let process ball top_adder =
   emit top_adder (pos, st, ball)
 
 let process main =
-  let top_adder, top_area_p = mk_global_area topck 2 (mk_rect 0. 0. w h) in
+  let top_adder, top_area_p = run mk_global_area topck 2 (mk_rect 0. 0. w h) in
   run top_area_p
   ||
   for i = 1 to nb_balls dopar
