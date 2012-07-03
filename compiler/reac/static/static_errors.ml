@@ -35,6 +35,13 @@ let expr_wrong_static_err expr =
     Location.print expr.e_loc;
   raise Error
 
+let expr_signal_static_err expr =
+  Format.eprintf
+(*  "%aThis expression is not static but it is used in a static context.\n" *)
+    "%aA signal can only be declared within a process.\n"
+    Location.print expr.e_loc;
+  raise Error
+
 let impl_wrong_static_err impl =
   Format.eprintf
 (*  "%aThis expression is not static but it is used in a static context.\n" *)
