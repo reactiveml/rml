@@ -44,9 +44,25 @@ char* mpi_receive(int tag)
   MPI_Status status;
   int count;
   char * buffer;
+#ifdef SEMI_ACTIVE_WAITING
+  int msg_received, nsec_start=1000, nsec_max=50000;
+  struct timespec ts;
+#endif
 
   /* first probe to know the size of the value sent */
+#ifdef SEMI_ACTIVE_WAITING
+  ts.tv_sec = 0;
+  ts.tv_nsec = nsec_start;
+  MPI_Iprobe(MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &msg_received, &status);
+  while (!msg_received) {
+    nanosleep(&ts, NULL);
+    ts.tv_nsec *= 2;
+    ts.tv_nsec = (ts.tv_nsec > nsec_max) ? nsec_max : ts.tv_nsec;
+    MPI_Iprobe(MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &msg_received, &status);
+  };
+#else
   MPI_Probe(MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+#endif
   /* allocate a buffer big enough */
   MPI_Get_count(&status, MPI_BYTE, &count);
   buffer = malloc(count);

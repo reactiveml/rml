@@ -1,12 +1,12 @@
 #include <mpi.h>
 #include <unistd.h>
+#include <time.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/threads.h>
 #include <caml/intext.h>
 
 //#define SEMI_ACTIVE_WAITING
-#define SEMI_ACTIVE_WAITING_DELAY 25     /* delay in ms */
 
 /* Various functions to initialize global variables */
 value caml_mpi_get_comm_world_size(value unit)
@@ -45,6 +45,26 @@ value caml_mpi_send(value data, value flags, value dest, value tag)
 
   output_value_to_malloc(data, flags, &buffer, &len);
   caml_release_runtime_system();
+
+  /** Passive send (does not improve performance)
+  int flag, nsec_start=1000, nsec_max=100000;
+  struct timespec ts;
+  MPI_Request req;
+  MPI_Status status;
+
+
+  ts.tv_sec = 0;
+  ts.tv_nsec = nsec_start;
+
+  PMPI_Isend(buffer, len, MPI_BYTE, Int_val(dest), Int_val(tag), MPI_COMM_WORLD, &req);
+  do {
+    nanosleep(&ts, NULL);
+    ts.tv_nsec *= 2;
+    ts.tv_nsec = (ts.tv_nsec > nsec_max) ? nsec_max : ts.tv_nsec;
+    PMPI_Request_get_status(req, &flag, &status);
+  } while (!flag);
+  **/
+
   MPI_Send(buffer, len, MPI_BYTE, Int_val(dest), Int_val(tag), MPI_COMM_WORLD);
   caml_acquire_runtime_system();
   caml_stat_free(buffer);
@@ -73,7 +93,8 @@ value caml_mpi_receive(value src, value tag)
   value res;
   char * buffer;
 #ifdef SEMI_ACTIVE_WAITING
-  int msg_received = 0;
+  int msg_received, nsec_start=1000, nsec_max=100000;
+  struct timespec ts;
 #endif
 
   CAMLparam2(src, tag);
@@ -85,10 +106,15 @@ value caml_mpi_receive(value src, value tag)
 
   /* first probe to know the size of the value sent */
 #ifdef SEMI_ACTIVE_WAITING
+  ts.tv_sec = 0;
+  ts.tv_nsec = nsec_start;
+  MPI_Iprobe(msrc, mtag, MPI_COMM_WORLD, &msg_received, &status);
   while (!msg_received) {
-    MPI_Iprobe(Int_val(src), Int_val(tag), MPI_COMM_WORLD, &msg_received, &status);
-    if (!msg_received) { usleep(SEMI_ACTIVE_WAITING_DELAY); };
-  }
+    nanosleep(&ts, NULL);
+    ts.tv_nsec *= 2;
+    ts.tv_nsec = (ts.tv_nsec > nsec_max) ? nsec_max : ts.tv_nsec;
+    MPI_Iprobe(msrc, mtag, MPI_COMM_WORLD, &msg_received, &status);
+  };
 #else
   MPI_Probe(msrc, mtag, MPI_COMM_WORLD, &status);
 #endif
