@@ -7,6 +7,7 @@ let verbose = ref false
 let no_run = ref false
 let nb_mpi_procs = ref 4
 let tests = ref []
+let backends = ref []
 let use_native_code = ref false
 
 let seq_launcher p = p
@@ -17,11 +18,11 @@ let mpi_one_launcher balancer p =
 
 let rml_backends =
   [
-    ("lco", seq_launcher, "Sequential (Lco)");
-    ("lco_mpi", mpi_one_launcher "local", "MPI with local load balancer");
+    ("lco_seq", ("lco", seq_launcher, "Sequential (Lco)"));
+    (*("lco_mpi", mpi_one_launcher "local", "MPI with local load balancer");*)
  (*   ("lco_mpi", mpi_launcher "user_local" "", "MPI with user annotations and local load balancer");
     ("lco_mpi", mpi_launcher "robin" "", "MPI with round robin load balancer"); *)
-    ("lco_mpi", mpi_launcher "user_robin" "", "MPI with user annotations and round robin balancer");
+   (* ("lco_mpi", mpi_launcher "user_robin" "", "MPI with user annotations and round robin balancer"); *)
   (* ("lco_mpi_c", mpi_launcher "user_robin" "", "MPI C with user annotations and round robin balancer"); *)
  (*   ("lco_mpi", mpi_launcher "user_robin" " -no-signals-remote ",
       "MPI with user annotations and round robin balancer and no signals remotes");
@@ -30,13 +31,22 @@ let rml_backends =
     ("lco_mpi", mpi_launcher "user_robin" " -no-local-slow-signals -no-signals-remote ",
       "MPI with user annotations and round robin balancer and no local slow signals and no signals remotes"); *)
 
-    ("lco_mpi_new", mpi_one_launcher "local", "MPI New with local load balancer");
-    ("lco_mpi_new", mpi_launcher "user_robin" "", "MPI New with user annotations and round robin balancer");
+    (*("lco_mpi_new", mpi_one_launcher "local", "MPI New with local load balancer");*)
+   ("lco_mpi_new_user_robin", ("lco_mpi_new", mpi_launcher "user_robin" "", "MPI New with user annotations and round robin balancer"));
+   ("lco_mpi_new_robin", ("lco_mpi_new", mpi_launcher "robin" "", "MPI New with round robin load balancer"));
 
   (*  ("lco_mpi_buffer", mpi_launcher "user_local" "", "MPI+buffering with user annotations and local load balancer");
     ("lco_mpi_buffer", mpi_launcher "robin" "", "MPI+buffering with round robin load balancer");
     ("lco_mpi_buffer", mpi_launcher "user_robin" "", "MPI+buffering with user annotations and round robin balancer") *)
   ]
+
+let add_backend b =
+  backends := b::!backends
+let find_backend b =
+  try
+    List.assoc b rml_backends
+  with
+    | Not_found -> Format.eprintf "Unknown backend '%s'@." b; exit 2
 
 let all_tests =
   [
@@ -45,7 +55,7 @@ let all_tests =
     ("cds.rml", "");
     ("cds_pause.rml", "");
     ("collision.rml", " -n 100 ");
-    ("collision_nosig.rml", " -n 100 ");
+    ("collision_nosig.rml", " -n 10 ");
     ("manual.rml", "");
     ("mapreduce.rml", "");
     ("parallel.rml", "");
@@ -124,9 +134,15 @@ let do_all_tests () =
     else
       List.filter (fun (f, _) -> List.mem f !tests) all_tests
   in
+  let selected_backends =
+    if !backends = [] then
+      snd (List.split rml_backends)
+    else
+      List.map find_backend !backends
+  in
   print_status "Doing tests: %a@.@." (fun ff l -> List.iter (fun (s, _) -> fprintf ff "%s " s) l) rml_files;
   Sys.chdir "tests/";
-  List.iter (do_tests rml_files) rml_backends
+  List.iter (do_tests rml_files) selected_backends
 
 let list_tests () =
   Format.printf "Available tests: %a@." (fun ff l -> List.iter (fun (s, _) -> fprintf ff "%s " s) l) all_tests;
@@ -136,6 +152,7 @@ let options =
   ["-v", Arg.Set verbose, " Verbose mode";
    "-no-run", Arg.Set no_run, "Don't run tests for real. Just show commands.";
    "-list", Arg.Unit list_tests, " List available tests";
+   "-b", Arg.String add_backend, "Use only this backend (can be used several times)";
    "-native", Arg.Set use_native_code, "Use native code";
    "-mpi-n", Arg.Set_int nb_mpi_procs, " Number of MPI processes to run"]
 let usage_msg =
