@@ -143,7 +143,7 @@ let process sun center dt env =
   run (body st dt env)
 
 let nb_tiles = 8
-let nb_planets = 10
+let nb_planets = 150
 
 let _ = Random.self_init ()
 

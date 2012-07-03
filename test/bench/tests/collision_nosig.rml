@@ -201,37 +201,19 @@ let process local_walls r walls area env =
   in
   run (process_iter wall walls)
 
-let process click_divider global_area_ck r from_children divide local_divide =
-  let relocate_one b = match b with
-  | Agent a -> emit a.a_relocate
-  | _ -> ()
-  in
-  await local_divide;
-  List.iter relocate_one (pre? from_children);
-  pause global_area_ck;
-  emit divide
-
 let rec process area area_ck global_area_ck agent_ck global_add add env parent level r walls =
   signal from_children at area_ck in
   let rec process behave level =
     match level with
     | 0 ->
-        signal divide at global_area_ck in
-        signal local_divide at area_ck in
         signal local_env at agent_ck in
-        do
-          run (forwarder from_children local_env)
-          ||
-          run (forwarder env local_env)
-          ||
-          run (local_walls r walls from_children local_env)
-        until local_divide done
+        run (forwarder from_children local_env)
         ||
-        do
-          run (adder add global_add global_area_ck from_children local_env)
-        until divide -> run (behave 1) done
+        run (forwarder env local_env)
         ||
-        run (click_divider global_area_ck r from_children divide local_divide)
+        run (local_walls r walls from_children local_env)
+        ||
+        run (adder add global_add global_area_ck from_children local_env)
       | _ ->
           let add_map, env_map, p =
             run init_child_areas area_ck global_area_ck agent_ck global_add
@@ -341,7 +323,7 @@ let process ball me area env =
   end
 
 (* test case *)
-let nb_balls = 3000
+let nb_balls = 10000
 let max_speed = 0.2
 
 let w = 8000.
