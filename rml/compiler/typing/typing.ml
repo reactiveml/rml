@@ -64,13 +64,13 @@ let unify_emit loc expected_ty actual_ty =
 
 let unify_emit_usage loc expected_ty actual_ty =
   try
-    unify ~regions:true expected_ty actual_ty
-  with Unify -> emit_wrong_usage_err loc actual_ty expected_ty
+    Usages_misc.unify expected_ty actual_ty
+  with Usages_misc.Unify -> emit_wrong_usage_err loc actual_ty expected_ty
 
 let unify_get_usage loc expected_ty actual_ty =
   try
-    unify ~regions:true expected_ty actual_ty
-  with Unify -> get_wrong_usage_err loc actual_ty expected_ty
+    Usages_misc.unify expected_ty actual_ty
+  with Usages_misc.Unify -> get_wrong_usage_err loc actual_ty expected_ty
 
 let unify_run loc expected_ty actual_ty =
   try

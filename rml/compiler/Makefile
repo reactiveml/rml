@@ -104,12 +104,12 @@ OBJ =	global/version.cmo \
 	reac/reac_ast.cmo \
 	reac/binding_errors.cmo \
 	typing/types_printer.cmo \
-	typing/types.cmo \
-	reac/reac_misc.cmo \
-	reac/parse2reac.cmo \
 	static/static_errors.cmo \
 	static/static.cmo \
 	typing/usages_misc.cmo \
+	typing/types.cmo \
+	reac/reac_misc.cmo \
+	reac/parse2reac.cmo \
 	reac/reac2reac.cmo \
 	static/static_printer.cmo \
 	other_analysis/wf_rec.cmo \

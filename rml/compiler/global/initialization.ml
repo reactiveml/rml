@@ -136,6 +136,19 @@ let is_neutral ty = match ty.type_desc with
       c.gi.id.name = neutral_ident.id.name
   | _ -> false
 
+let zero_ident = pervasives_type "zero"
+let type_desc_zero = type_desc zero_ident
+let type_zero = Def_types.constr_notabbrev zero_ident []
+
+let is_zero ty = match ty.type_desc with
+  | Type_constr (c, []) ->
+      c.gi.qual = zero_ident.qual &&
+      c.gi.id.name = zero_ident.id.name
+  | _ -> false
+
+let is_usage ty =
+  is_zero ty || is_affine ty || is_neutral ty
+
 (* list *)
 let list_ident = pervasives_type "list"
 
@@ -216,6 +229,7 @@ let list_of_type_desc =
     type_desc_event;
     type_desc_affine;
     type_desc_neutral;
+    type_desc_zero;
 ]
 
 let list_of_constr_desc =

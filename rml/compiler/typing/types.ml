@@ -284,6 +284,11 @@ let rec unify ?(regions = false) expected_ty actual_ty =
     let actual_ty = type_repr actual_ty in
     if expected_ty == actual_ty then
       unify_regions regions expected_ty actual_ty
+    else if Initialization.is_usage expected_ty && Initialization.is_usage actual_ty then
+      try
+        Usages_misc.unify expected_ty actual_ty
+      with Usages_misc.Unify ->
+        raise Unify
     else
       match expected_ty.type_desc, actual_ty.type_desc with
 	Type_var, _ ->

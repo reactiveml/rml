@@ -27,7 +27,7 @@ let string_of_usage = function
 let type_of_usage = function
   | Affine -> Initialization.type_affine
   | Neutral -> Initialization.type_neutral
-  | Zero -> Def_types.new_var ()
+  | Zero -> Initialization.type_zero
 
 let string_of_signal_usage su =
   let _, u1, u2 = Usages.km_su su in
@@ -49,6 +49,22 @@ let mk_t loc u_emit u_get =
     loc
     (usage_of_type u_emit)
     (usage_of_type u_get)
+
+exception Unify
+
+let unify ty1 ty2 =
+  let u1 = usage_of_type ty1
+  and u2 = usage_of_type ty2 in
+  let ur =
+    (* NOTE: This is *not* Usages.add_u *)
+    match u1, u2 with
+      | Zero, u1 | u1, Zero -> u1
+      | Neutral, Neutral    -> u1
+      | Affine, Affine      -> u1
+      | _                   -> raise Unify in
+  let ty = type_of_usage ur in
+  ty1.Def_types.type_desc <- ty.Def_types.type_desc;
+  ty2.Def_types.type_desc <- ty.Def_types.type_desc
 
 module Table = struct
 

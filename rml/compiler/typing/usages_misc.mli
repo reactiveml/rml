@@ -29,6 +29,13 @@ val mk_t :
   Def_types.type_expression ->
   signal_usage
 
+exception Unify
+
+val unify :
+  Def_types.type_expression ->
+  Def_types.type_expression ->
+  unit
+
 module Table :
   sig
     type key = Ident.t
