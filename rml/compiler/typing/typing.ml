@@ -550,8 +550,8 @@ let rec type_of_expression env expr =
 		  application_of_non_function_err fct ty_fct
                 | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 	      in
-              let ty_arg, u2 = type_expect ~regions:true env arg t1 in
-              let effects = Effects.merge (apply_eff u2 ty_arg arg.expr_loc) u in
+              let ty_arg, ef = type_expect ~regions:true env arg t1 in
+              let effects = Effects.merge (apply_eff ef t1 arg.expr_loc) u in
 	      type_args effects t2 args
 	in
 	type_args effects_f ty_fct args

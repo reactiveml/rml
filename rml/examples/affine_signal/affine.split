@@ -29,7 +29,7 @@ let process p s =
   (!await s(x) in x) ; pause ; (!await s(x) in x)
 
 $
-let process p f s =
+let process p (f : (int, 'a, zero, 'b) event -> 'd) s =
   !emit s 1 ; f s
 
 $
@@ -42,7 +42,7 @@ let process p s =
   !emit !x 1
 
 $
-let id x = x
+let id (x : (int, 'a, zero, 'b) event) = x
 let process p s =
   !emit s 1; id s
 
