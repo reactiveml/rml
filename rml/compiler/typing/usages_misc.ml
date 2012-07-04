@@ -37,9 +37,9 @@ let string_of_signal_usage su =
 
 let usage_of_type ty =
   let ty = Static.get_type ty in
-  if ty = Initialization.type_affine then
+  if Initialization.is_affine ty then
     Affine
-  else if ty = Initialization.type_neutral then
+  else if Initialization.is_neutral ty then
     Neutral
   else
     Zero

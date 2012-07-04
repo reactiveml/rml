@@ -120,9 +120,21 @@ let affine_ident = pervasives_type "affine"
 let type_desc_affine = type_desc affine_ident
 let type_affine = Def_types.constr_notabbrev affine_ident []
 
+let is_affine ty = match ty.type_desc with
+  | Type_constr (c, []) ->
+      c.gi.qual = affine_ident.qual &&
+      c.gi.id.name = affine_ident.id.name
+  | _ -> false
+
 let neutral_ident = pervasives_type "neutral"
 let type_desc_neutral = type_desc neutral_ident
 let type_neutral = Def_types.constr_notabbrev neutral_ident []
+
+let is_neutral ty = match ty.type_desc with
+  | Type_constr (c, []) ->
+      c.gi.qual = neutral_ident.qual &&
+      c.gi.id.name = neutral_ident.id.name
+  | _ -> false
 
 (* list *)
 let list_ident = pervasives_type "list"
