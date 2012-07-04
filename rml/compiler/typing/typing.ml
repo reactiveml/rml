@@ -189,7 +189,7 @@ let get_gleff id loc =
   try
     Hashtbl.find gleff id
   with _ ->
-    Effects.singleton id loc (new_var ()) (new_var ())
+    Effects.singleton id loc type_zero type_zero
 
 let apply_affiniy_constraint usage ty ty_loc =
   let usage = Usages.mk_su ty_loc usage usage in
@@ -501,7 +501,7 @@ let rec type_of_expression env expr =
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
         let ty = instance typ_sch in
-	ty, Effects.singleton n expr.expr_loc (new_var ()) (new_var ())
+	ty, Effects.singleton n expr.expr_loc type_zero type_zero
 
     | Rexpr_global (n) ->
         let g_ty = (Global.info n).value_typ in
