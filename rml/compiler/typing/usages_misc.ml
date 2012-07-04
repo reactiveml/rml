@@ -50,14 +50,9 @@ let mk_t loc u_emit u_get =
     (usage_of_type u_emit)
     (usage_of_type u_get)
 
-module Int = struct
-  type t = int
-  let compare = Pervasives.compare
-end
-
 module Table = struct
 
-  module M = Map.Make(Int)
+  module M = Map.Make(Ident)
 
   type key = M.key
   type 'a t = 'a M.t
@@ -112,9 +107,11 @@ module Table = struct
     if not (M.is_empty t) then begin
       Printf.printf "  ";
       M.iter (fun k v ->
-        Printf.printf "%d:%s;" k (string_of_signal_usage v)
+        Printf.printf "%s:%s;"
+          (Ident.unique_name k)
+          (string_of_signal_usage v)
       )
-        t;
+      t;
       Printf.printf "\n%!"
     end
 

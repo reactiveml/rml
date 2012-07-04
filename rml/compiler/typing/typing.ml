@@ -177,13 +177,9 @@ let register_effects patt_vars effects =
   List.iter (fun (patterns, effects) ->
     List.iter (function
       | Varpatt_local x ->
-          let id = x.Ident.id in
-          (* let name = x.Ident.name in *)
-          Hashtbl.add gleff id effects
+          Hashtbl.add gleff x effects
       | Varpatt_global x ->
-          let id = x.gi.Global_ident.id.Ident.id in
-          (* let name = x.gi.Global_ident.id.Ident.name in *)
-          Hashtbl.add gleff id effects
+          Hashtbl.add gleff x.gi.Global_ident.id effects
       )
       patterns
     )
@@ -490,8 +486,8 @@ let rec vars_of_patt = function
 let ids_of_patt patts =
   List.fold_left
     (fun acc -> function
-    | Varpatt_local x -> x.Ident.id :: acc
-    | Varpatt_global x -> x.gi.Global_ident.id.Ident.id :: acc
+    | Varpatt_local x -> x :: acc
+    | Varpatt_global x -> x.gi.Global_ident.id :: acc
     )
     []
     patts
@@ -505,13 +501,12 @@ let rec type_of_expression env expr =
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
         let ty = instance typ_sch in
-	ty, Effects.singleton n.Ident.id expr.expr_loc (new_var ()) (new_var ())
+	ty, Effects.singleton n expr.expr_loc (new_var ()) (new_var ())
 
     | Rexpr_global (n) ->
         let g_ty = (Global.info n).value_typ in
         let ty = instance g_ty in
-        let idx = n.gi.Global_ident.id.Ident.id in
-        let effects = get_gleff idx expr.expr_loc in
+        let effects = get_gleff n.gi.Global_ident.id expr.expr_loc in
 	ty, effects
 
     | Rexpr_let (flag, patt_expr_list, e) ->
@@ -758,8 +753,7 @@ let rec type_of_expression env expr =
         accumulate_usage ty_s expr.expr_loc new_usage;
         unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;
 	unify_emit e.expr_loc ty ty_e;
-        let r_s = ty_s.type_index in
-        let effects = Effects.flatten [u_s; u_e; Effects.singleton r_s s.expr_loc u_emit u_get] in
+        let effects = Effects.flatten [u_s; u_e; Effects.apply new_usage u_s] in
 	type_unit, effects
 
     | Rexpr_signal ((s,te_opt), combine_opt, e) ->
@@ -927,8 +921,7 @@ let rec type_of_expression env expr =
         accumulate_usage ty_s expr.expr_loc new_usage;
         unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;
         let ty, u_p = type_of_expression new_env p in
-        let r_s = ty_s.type_index in
-        ty, Effects.flatten [u_s; u_p; Effects.singleton r_s s.expr_loc u_emit u_get]
+        ty, Effects.flatten [u_s; u_p; Effects.apply new_usage u_s]
 
     | Rexpr_await_val (_,_,One,s,patt,p) ->
         let affine = true (* Always the case here since it is an "await one" *) in
@@ -952,8 +945,7 @@ let rec type_of_expression env expr =
         accumulate_usage ty_s expr.expr_loc new_usage;
         unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;
         let ty, u_p = type_of_expression new_env p in
-        let r_s = ty_s.type_index in
-        ty, Effects.flatten [u_s; u_p; Effects.singleton r_s s.expr_loc u_emit u_get]
+        ty, Effects.flatten [u_s; u_p; Effects.apply new_usage u_s]
 
   in
   expr.expr_type <- fst t;

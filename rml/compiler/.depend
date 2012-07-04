@@ -80,7 +80,7 @@ static/static_printer.cmx: reac/reac_ast.cmx static/def_static.cmx \
     global/asttypes.cmi
 typing/usages.cmi: parsing/location.cmo
 typing/usages_misc.cmi: typing/usages.cmi parsing/location.cmo \
-    typing/def_types.cmo
+    global/ident.cmo typing/def_types.cmo
 typing/def_types.cmo: typing/usages.cmi global/ident.cmo global/global.cmo \
     static/def_static.cmo global/asttypes.cmi
 typing/def_types.cmx: typing/usages.cmx global/ident.cmx global/global.cmx \
@@ -118,9 +118,11 @@ typing/typing_errors.cmx: typing/usages_misc.cmx typing/types_printer.cmx \
 typing/usages.cmo: parsing/location.cmo typing/usages.cmi
 typing/usages.cmx: parsing/location.cmx typing/usages.cmi
 typing/usages_misc.cmo: typing/usages.cmi static/static.cmo \
-    global/initialization.cmo typing/def_types.cmo typing/usages_misc.cmi
+    global/initialization.cmo global/ident.cmo typing/def_types.cmo \
+    typing/usages_misc.cmi
 typing/usages_misc.cmx: typing/usages.cmx static/static.cmx \
-    global/initialization.cmx typing/def_types.cmx typing/usages_misc.cmi
+    global/initialization.cmx global/ident.cmx typing/def_types.cmx \
+    typing/usages_misc.cmi
 other_analysis/instantaneous_loop.cmo: static/static.cmo reac/reac_misc.cmo \
     reac/reac_ast.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo static/def_static.cmo \

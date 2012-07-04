@@ -31,7 +31,7 @@ val mk_t :
 
 module Table :
   sig
-    type key = int
+    type key = Ident.t
     type 'a t
 
     val empty : signal_usage t
