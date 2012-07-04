@@ -26,6 +26,7 @@ type usage =
   | Affine
   | Neutral
   | Zero
+  | Var
 
 type signal_usage = (usage * usage) loc
 
@@ -67,6 +68,7 @@ let await_u loc affine =
 exception Forbidden_usage of Location.t * Location.t
 
 let add_u u1 u2 = match u1.node, u2.node with
+  | Var, u | u, Var -> u
   | Zero, u | u, Zero -> u
   | Neutral, Neutral -> Neutral
   | _ -> raise (Forbidden_usage (u1.loc, u2.loc))
@@ -93,6 +95,8 @@ let mk_zero =
 
 let compatible_usage su1 su2 =
   let compatible_usage u1 u2 = match u1, u2 with
+    | Var, _
+    | _, Var
     | Zero, _
     | _, Zero
     | Neutral, Neutral

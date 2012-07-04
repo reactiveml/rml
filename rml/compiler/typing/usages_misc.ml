@@ -23,11 +23,13 @@ let string_of_usage = function
   | Affine -> "1"
   | Neutral -> "∞"
   | Zero -> "0"
+  | Var -> "_"
 
 let type_of_usage = function
   | Affine -> Initialization.type_affine
   | Neutral -> Initialization.type_neutral
   | Zero -> Initialization.type_zero
+  | Var -> Def_types.new_var ()
 
 let string_of_signal_usage su =
   let _, u1, u2 = Usages.km_su su in
@@ -41,8 +43,10 @@ let usage_of_type ty =
     Affine
   else if Initialization.is_neutral ty then
     Neutral
-  else
+  else if Initialization.is_zero ty then
     Zero
+  else
+    Var
 
 let mk_t loc u_emit u_get =
   mk_su

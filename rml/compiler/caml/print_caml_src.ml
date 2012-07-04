@@ -121,6 +121,7 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
   || gl.gi = Initialization.affine_ident
   || gl.gi = Initialization.neutral_ident
   || gl.gi = Initialization.zero_ident
+  || gl.gi = Initialization.uvar_ident
   then
     (* special case for event/usage type *)
     begin

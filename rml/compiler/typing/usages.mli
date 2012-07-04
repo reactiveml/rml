@@ -21,7 +21,7 @@ type 'a loc = { mutable loc : Location.t; node : 'a }
 val mk_loc : Location.t -> 'a -> 'a loc
 
 (* Usages *)
-type usage = Affine | Neutral | Zero
+type usage = Affine | Neutral | Zero | Var
 type signal_usage
 
 exception Forbidden_usage of Location.t * Location.t
