@@ -130,7 +130,7 @@ let make_type ty =
   { type_desc = ty;
     type_level = generic;
     type_index = names#name;
-    type_usage = Usages.mk_zero;
+    type_usage = Usages.mk_null;
   }
 
 let product ty_list =
@@ -154,7 +154,7 @@ let no_type_expression =
   { type_desc = Type_product[];
     type_level = generic;
     type_index = -1;
-    type_usage = Usages.mk_zero;
+    type_usage = Usages.mk_null;
   }
 
 (* To get fresh type variables *)
@@ -163,12 +163,12 @@ let new_var () =
   { type_desc = Type_var;
     type_level = !current_level;
     type_index = names#name;
-    type_usage = Usages.mk_zero;
+    type_usage = Usages.mk_null;
   }
 
 let new_generic_var () =
   { type_desc = Type_var;
     type_level = generic;
     type_index = names#name;
-    type_usage = Usages.mk_zero;
+    type_usage = Usages.mk_null;
   }

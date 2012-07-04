@@ -49,7 +49,7 @@ let make_type ty =
   { type_desc = ty;
     type_level = generic;
     type_index = names#name;
-    type_usage = Usages.mk_zero;
+    type_usage = Usages.mk_null;
   }
 
 let product ty_list =

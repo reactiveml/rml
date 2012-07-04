@@ -90,8 +90,8 @@ let add_s u v =
     (add_u u1 v1)
     (add_u u2 v2)
 
-let mk_zero =
-  mk_loc Location.none (Zero, Zero)
+let mk_null =
+  mk_loc Location.none (Var, Var)
 
 let compatible_usage su1 su2 =
   let compatible_usage u1 u2 = match u1, u2 with
