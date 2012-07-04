@@ -57,18 +57,17 @@ let mk_t loc u_emit u_get =
 exception Unify
 
 let unify ty1 ty2 =
+  let unify_ty ty1 ty2 =
+    ty1.Def_types.type_desc <- ty2.Def_types.type_desc
+  in
   let u1 = usage_of_type ty1
   and u2 = usage_of_type ty2 in
-  let ur =
-    (* NOTE: This is *not* Usages.add_u *)
+  if u1 != u2 then
     match u1, u2 with
-      | Zero, u1 | u1, Zero -> u1
-      | Neutral, Neutral    -> u1
-      | Affine, Affine      -> u1
-      | _                   -> raise Unify in
-  let ty = type_of_usage ur in
-  ty1.Def_types.type_desc <- ty.Def_types.type_desc;
-  ty2.Def_types.type_desc <- ty.Def_types.type_desc
+    | Var, _ -> unify_ty ty1 ty2
+    | _, Var -> unify_ty ty2 ty1
+    | Zero, u1 | u1, Zero -> ()
+    | _                   -> raise Unify
 
 module Table = struct
 
