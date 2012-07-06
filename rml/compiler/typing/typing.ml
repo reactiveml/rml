@@ -145,7 +145,7 @@ let print_env table =
       (fun id ty_sch -> Printf.printf "%s(id=%d){eff=%s}:"
         (Ident.name id)
         id.Ident.id
-        (Usages_misc.string_of_signal_usage ty_sch.ts_desc.type_usage);
+        (Usages.string_of_signal_usage ty_sch.ts_desc.type_usage);
         Types_printer.print_scheme ty_sch
       )
       table;
@@ -153,10 +153,7 @@ let print_env table =
   end
 
 let pu ty =
-  Usages_misc.string_of_signal_usage ty.type_usage
-
-(* Usages environment *)
-module Effects = Usages_misc.Table
+  Usages.string_of_signal_usage ty.type_usage
 
 let gleff = Hashtbl.create 1023
 
@@ -189,7 +186,8 @@ let get_gleff id loc =
   try
     Hashtbl.find gleff id
   with _ ->
-    Effects.singleton id loc type_uvar type_uvar
+    let uvar = Usages_misc.usage_of_type type_uvar in
+    Effects.singleton id loc uvar uvar
 
 let apply_affiniy_constraint usage ty ty_loc =
   let usage = Usages.mk_su ty_loc usage usage in
@@ -501,7 +499,8 @@ let rec type_of_expression env expr =
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
         let ty = instance typ_sch in
-	ty, Effects.singleton n expr.expr_loc type_uvar type_uvar
+        let uvar = Usages_misc.usage_of_type type_uvar in
+	ty, Effects.singleton n expr.expr_loc uvar uvar
 
     | Rexpr_global (n) ->
         let g_ty = (Global.info n).value_typ in

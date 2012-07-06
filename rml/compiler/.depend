@@ -78,13 +78,16 @@ static/static_printer.cmo: reac/reac_ast.cmo static/def_static.cmo \
     global/asttypes.cmi
 static/static_printer.cmx: reac/reac_ast.cmx static/def_static.cmx \
     global/asttypes.cmi
+typing/effects.cmi: typing/usages.cmi parsing/location.cmo global/ident.cmo
 typing/usages.cmi: parsing/location.cmo
 typing/usages_misc.cmi: typing/usages.cmi parsing/location.cmo \
-    global/ident.cmo typing/def_types.cmo
+    typing/def_types.cmo
 typing/def_types.cmo: typing/usages.cmi global/ident.cmo global/global.cmo \
     static/def_static.cmo global/asttypes.cmi
 typing/def_types.cmx: typing/usages.cmx global/ident.cmx global/global.cmx \
     static/def_static.cmx global/asttypes.cmi
+typing/effects.cmo: typing/usages.cmi global/ident.cmo typing/effects.cmi
+typing/effects.cmx: typing/usages.cmx global/ident.cmx typing/effects.cmi
 typing/types.cmo: typing/usages_misc.cmi typing/usages.cmi global/misc.cmo \
     global/initialization.cmo global/global_ident.cmo global/global.cmo \
     typing/def_types.cmo
@@ -102,29 +105,27 @@ typing/typing.cmo: typing/usages_misc.cmi typing/usages.cmi \
     global/symbol_table.cmo reac/reac_misc.cmo reac/reac_ast.cmo \
     global/misc.cmo parsing/location.cmo global/initialization.cmo \
     global/ident.cmo global/global_ident.cmo global/global.cmo \
-    typing/def_types.cmo static/def_static.cmo global/asttypes.cmi \
-    reac/annot.cmo
+    typing/effects.cmi typing/def_types.cmo static/def_static.cmo \
+    global/asttypes.cmi reac/annot.cmo
 typing/typing.cmx: typing/usages_misc.cmx typing/usages.cmx \
     typing/typing_errors.cmx typing/types_printer.cmx typing/types.cmx \
     global/symbol_table.cmx reac/reac_misc.cmx reac/reac_ast.cmx \
     global/misc.cmx parsing/location.cmx global/initialization.cmx \
     global/ident.cmx global/global_ident.cmx global/global.cmx \
-    typing/def_types.cmx static/def_static.cmx global/asttypes.cmi \
-    reac/annot.cmx
-typing/typing_errors.cmo: typing/usages_misc.cmi typing/types_printer.cmo \
+    typing/effects.cmx typing/def_types.cmx static/def_static.cmx \
+    global/asttypes.cmi reac/annot.cmx
+typing/typing_errors.cmo: typing/usages.cmi typing/types_printer.cmo \
     typing/types.cmo reac/reac_ast.cmo global/misc.cmo parsing/location.cmo \
     global/ident.cmo global/global_ident.cmo typing/def_types.cmo
-typing/typing_errors.cmx: typing/usages_misc.cmx typing/types_printer.cmx \
+typing/typing_errors.cmx: typing/usages.cmx typing/types_printer.cmx \
     typing/types.cmx reac/reac_ast.cmx global/misc.cmx parsing/location.cmx \
     global/ident.cmx global/global_ident.cmx typing/def_types.cmx
 typing/usages.cmo: parsing/location.cmo typing/usages.cmi
 typing/usages.cmx: parsing/location.cmx typing/usages.cmi
 typing/usages_misc.cmo: typing/usages.cmi static/static.cmo \
-    parsing/location.cmo global/initialization.cmo global/ident.cmo \
-    typing/def_types.cmo typing/usages_misc.cmi
+    global/initialization.cmo typing/def_types.cmo typing/usages_misc.cmi
 typing/usages_misc.cmx: typing/usages.cmx static/static.cmx \
-    parsing/location.cmx global/initialization.cmx global/ident.cmx \
-    typing/def_types.cmx typing/usages_misc.cmi
+    global/initialization.cmx typing/def_types.cmx typing/usages_misc.cmi
 other_analysis/instantaneous_loop.cmo: static/static.cmo reac/reac_misc.cmo \
     reac/reac_ast.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo static/def_static.cmo \

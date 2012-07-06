@@ -24,6 +24,9 @@ val mk_loc : Location.t -> 'a -> 'a loc
 type usage = Affine | Neutral | Zero | Var
 type signal_usage
 
+val string_of_usage : usage -> string
+val string_of_signal_usage : signal_usage -> string
+
 exception Forbidden_usage of Location.t * Location.t
 
 (* Operations on usages *)

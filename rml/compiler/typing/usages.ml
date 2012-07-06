@@ -28,7 +28,19 @@ type usage =
   | Zero
   | Var
 
+let string_of_usage = function
+  | Affine -> "1"
+  | Neutral -> "∞"
+  | Zero -> "0"
+  | Var -> "_"
+
 type signal_usage = (usage * usage) loc
+
+let string_of_signal_usage su =
+  let u1, u2 = su.node in
+  Printf.sprintf "(%s,%s)"
+    (string_of_usage u1)
+    (string_of_usage u2)
 
 let mk_loc loc node = {
   loc = loc;

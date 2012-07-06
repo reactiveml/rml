@@ -44,6 +44,7 @@ TYPING = typing/def_types.ml \
 	typing/usages_misc.mli \
 	typing/usages_misc.ml \
 	typing/types_printer.ml \
+	typing/effects.ml \
 	typing/typing.ml \
 	typing/typing_errors.ml \
 
@@ -85,6 +86,7 @@ OBJ =	global/version.cmo \
 	global/global.cmo \
 	static/def_static.cmo \
 	typing/usages.cmo \
+	typing/effects.cmo \
 	typing/def_types.cmo \
 	global/modules.cmo \
 	global/initialization.cmo \

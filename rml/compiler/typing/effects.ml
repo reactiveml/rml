@@ -19,17 +19,66 @@
 
 open Usages
 
-val usage_of_type : Def_types.type_expression -> usage
-val type_of_usage : usage -> Def_types.type_expression
-val mk_t :
-  Location.t ->
-  Def_types.type_expression ->
-  Def_types.type_expression ->
-  signal_usage
+module M = Map.Make(Ident)
 
-exception Unify
+type key = M.key
+type effects = signal_usage M.t
 
-val unify :
-  Def_types.type_expression ->
-  Def_types.type_expression ->
-  unit
+let empty = M.empty
+let is_empty = M.is_empty
+let mem = M.mem
+let find = M.find
+
+let add k loc u_emit u_get m =
+  let su = Usages.mk_su loc u_emit u_get in
+  M.add k su m
+
+let singleton k loc ty_emit ty_get =
+  add k loc ty_emit ty_get empty
+
+let merge t1 t2 =
+  M.fold (fun k u1 t ->
+    try
+      let u2 = M.find k t in
+      M.add k (add_s u1 u2) t
+    with Not_found ->
+      M.add k u1 t
+  )
+  t1
+  t2
+
+let filter m l =
+  M.fold
+    (fun k u t ->
+      if List.mem k l then
+        t
+      else
+        M.add k u t
+    )
+    m
+    empty
+
+let rec flatten = function
+| [] -> empty
+| a::l -> merge a (flatten l)
+
+let apply u m =
+  M.map (Usages.add_s u) m
+
+let update_loc m loc =
+  M.map (Usages.update_loc loc) m
+
+let print t =
+  if not (M.is_empty t) then begin
+    Printf.printf "  ";
+    M.iter (fun k v ->
+      Printf.printf "%s:%s;"
+        (Ident.unique_name k)
+        (string_of_signal_usage v)
+    )
+      t;
+    Printf.printf "\n%!"
+  end
+
+let print_l l =
+  List.iter print l

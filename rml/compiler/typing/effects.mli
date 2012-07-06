@@ -19,17 +19,40 @@
 
 open Usages
 
-val usage_of_type : Def_types.type_expression -> usage
-val type_of_usage : usage -> Def_types.type_expression
-val mk_t :
+type key = Ident.t
+type effects
+
+val empty : effects
+val is_empty : effects -> bool
+
+val mem : key -> effects -> bool
+val find : key -> effects -> signal_usage
+
+val add :
+  key ->
   Location.t ->
-  Def_types.type_expression ->
-  Def_types.type_expression ->
-  signal_usage
+  usage ->
+  usage ->
+  effects ->
+  effects
 
-exception Unify
+val singleton :
+  key ->
+  Location.t ->
+  usage ->
+  usage ->
+  effects
 
-val unify :
-  Def_types.type_expression ->
-  Def_types.type_expression ->
-  unit
+val merge : effects -> effects -> effects
+val flatten : effects list -> effects
+val filter : effects -> key list -> effects
+
+val apply :
+  signal_usage ->
+  effects ->
+  effects
+
+val update_loc : effects -> Location.t -> effects
+
+val print : effects -> unit
+val print_l : effects list -> unit
