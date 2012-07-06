@@ -130,10 +130,12 @@ should not be typable. *)
 
 let process envoyer s = !emit s ;;
 
-let process main =
+let process main s =
   run (envoyer s)
 
-let process test = run main || run main;;
+signal s;
+
+let process test = run (main s) || run (main s);;
 
 $
 
