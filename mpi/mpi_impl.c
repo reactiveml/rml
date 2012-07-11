@@ -43,7 +43,7 @@ value caml_mpi_send(value data, value flags, value dest, value tag)
 
   CAMLparam4(data, flags, dest, tag);
 
-  output_value_to_malloc(data, flags, &buffer, &len);
+  caml_output_value_to_malloc(data, flags, &buffer, &len);
   caml_release_runtime_system();
 
   /** Passive send (does not improve performance)

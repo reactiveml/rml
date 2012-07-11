@@ -5,7 +5,7 @@ open Runtime_options
 let msg_tag = 0
 
 module Make (P : Communication.TAG_TYPE) = struct
-  type msg = string
+  type msg = Obj.t
 
   type lid = int (* local unique id *)
   type gid =
@@ -74,10 +74,12 @@ module Make (P : Communication.TAG_TYPE) = struct
     gid.g_rank = local_site ()
 
   let to_msg d =
-    Marshal.to_string d [Marshal.Closures]
+   (* Marshal.to_string d [Marshal.Closures] *)
+    Obj.repr d
 
   let from_msg s =
-    Marshal.from_string s 0
+    (*Marshal.from_string s 0*)
+    Obj.obj s
 
   let send_owner gid tag d =
     IFDEF RML_DEBUG THEN
