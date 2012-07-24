@@ -214,12 +214,6 @@ let instance { ts_desc = ty } =
   ty_i
 
 
-let instance_and_vars { ts_binders = typ_vars; ts_desc = ty } =
-  let ty_i = copy ty in
-  let typ_vars = List.map type_repr typ_vars in
-  cleanup ();
-  typ_vars, ty_i
-
 let constr_instance
     { cstr_arg = ty_opt; cstr_res = ty_res; } =
   let ty_opt = opt_map copy ty_opt in
