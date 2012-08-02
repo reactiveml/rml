@@ -95,3 +95,14 @@ function caml_gr_point_color(x_coor, y_coor) {
     var b = imageData.data[2];
     return (r << 16) + (g << 8) + b;
 }
+
+//Provides: caml_gr_fill_poly
+function caml_gr_fill_poly(points) {
+    context.beginPath();
+    for (var i = 1; i < points.length; i++) {
+        if (i == 1) caml_gr_moveto(points[i][1], points[i][2]);
+        caml_gr_lineto(points[i][1], points[i][2]);
+    }
+    context.closePath();
+    context.fill();
+}
