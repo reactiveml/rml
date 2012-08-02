@@ -4,7 +4,7 @@
   <head>
     <title>Try ReactiveML</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <link type="text/css" href="style.css" rel="stylesheet" />
+    <link type="text/css" href="scripts/style.css" rel="stylesheet" />
   </head>
   <body>
     <div id="maincontent">
@@ -78,6 +78,19 @@
         <a href="http://rml.lri.fr">ReactiveML</a>
       </div>
     </div>
-    <script type="text/javascript" src="toplevel.js"></script>
+
+    <div id="graphics">
+      <div id="graphicstitle">Graphics window</div>
+      <canvas id="canvas" width="300" height="300"></canvas>
+    </div>
+
+    <script type="text/javascript"
+            src="scripts/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript"
+            src="scripts/jquery-ui-1.8.22.custom.min.js"></script>
+    <script type="text/javascript"
+            src="scripts/graphics_init.js"></script>
+    <script type="text/javascript"
+            src="toplevel.js"></script>
   </body>
 </html>

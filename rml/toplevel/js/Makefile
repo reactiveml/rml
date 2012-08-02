@@ -13,7 +13,8 @@ RUNDIR=js-of-ocaml/runtime
 JSFILES=\
  $(RUNDIR)/runtime.js \
  $(RUNDIR)/weak.js \
- toplevel_runtime.js
+ scripts/toplevel_runtime.js \
+ scripts/graphics.js
 
 OCAMLC=ocamlfind ocamlc -annot \
  -package lwt,str \
@@ -22,6 +23,7 @@ OCAMLC=ocamlfind ocamlc -annot \
  -I $(LIBDIR)/syntax \
  -pp "camlp4o $(LIBDIR)/syntax/pa_js.cmo" \
  -I +threads \
+ -I +graphics \
  -I ../ \
  -I ../../interpreter/ \
  -I ../../compiler/
@@ -46,6 +48,7 @@ OPTIONS+=\
 STDLIB=\
  unix.cma \
  threads.cma \
+ graphics.cma \
  js_of_ocaml.cma \
  compiler.cma \
  rmlcompiler.cmo \
@@ -66,6 +69,8 @@ STDLIB=\
 EXPUNGE=$(shell ocamlc -where)/expunge
 # Removed gc and sys
 STDLIB_MODULES=\
+  sys\
+  graphics\
   arg \
   array \
   arrayLabels \
