@@ -119,8 +119,7 @@ function caml_gr_fill_arc(x, y, rx, ry, a1, a2) {
 function caml_gr_lineto(x_coor, y_coor) {
     context.lineTo(x_coor, caml_gr_y_size - y_coor);
     context.stroke();
-    caml_gr_current_x_pos = x_coor;
-    caml_gr_current_y_pos = y_coor
+    caml_gr_moveto(x_coor, y_coor);
     return 0;
 }
 
