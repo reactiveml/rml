@@ -2,7 +2,7 @@ var caml_gr_x_size = 500;
 var caml_gr_y_size = 400;
 
 var caml_gr_x_loc = 10;
-var caml_gr_y_loc = 25;
+var caml_gr_y_loc = 100;
 
 var caml_gr_current_x_pos = 0;
 var caml_gr_current_y_pos = 0;
