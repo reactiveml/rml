@@ -9,8 +9,8 @@ function caml_gr_open_graph(geometry) {
     }
     $("#graphics").show();
     $("#graphics").draggable();
-    $("#graphics").height(caml_gr_y_size+23);
-    $("#graphics").width(caml_gr_x_size+3);
+    $("#graphics").height(parseInt(caml_gr_y_size,10)+23);
+    $("#graphics").width(parseInt(caml_gr_x_size,10)+3);
     $("#graphics").css({ "top": caml_gr_y_loc+"px",
                          "left": caml_gr_x_loc+"px"
                        });
@@ -155,8 +155,8 @@ function caml_gr_remember_mode(mode) {
 function caml_gr_resize_window(new_x, new_y) {
     caml_gr_x_size = new_x;
     caml_gr_y_size = new_y;
-    $("#graphics").width(new_x+3);
-    $("#graphics").height(new_y+23);
+    $("#graphics").width(parseInt(new_x,10)+3);
+    $("#graphics").height(parseInt(new_y,10)+23);
     canvas_elt.setAttribute("width", new_x);
     canvas_elt.setAttribute("height", new_y);
     return 0;
