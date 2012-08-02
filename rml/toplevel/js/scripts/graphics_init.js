@@ -69,7 +69,7 @@ function caml_gr_text_size(text) {
 function caml_gr_draw_string(text) {
     context.fillText(text,
                     caml_gr_current_x_pos,
-                    caml_gr_y_size - caml_gr_current_y_pos);
+                    caml_gr_y_size - caml_gr_current_y_pos - 1);
     return 0;
 }
 
@@ -92,7 +92,7 @@ function caml_gr_set_color(color) {
 
 //Provides: caml_gr_point_color
 function caml_gr_point_color(x_coor, y_coor) {
-    var y_real_coor = caml_gr_y_size - y_coor;
+    var y_real_coor = caml_gr_y_size - y_coor - 1;
     index = (x_coor + y_real_coor * caml_gr_x_size) * 4;
     var imageData =
         context.getImageData(x_coor, y_real_coor, 1, 1);
@@ -116,7 +116,7 @@ function caml_gr_fill_poly(points) {
 
 //Provides: caml_gr_draw_image
 function caml_gr_draw_image(image, x, y) {
-    context.putImageData(image, x, caml_gr_y_size - y);
+    context.putImageData(image, x, caml_gr_y_size - y - 1);
     return 0;
 }
 
