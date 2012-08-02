@@ -93,6 +93,5 @@ function caml_gr_point_color(x_coor, y_coor) {
     var r = imageData.data[0];
     var g = imageData.data[1];
     var b = imageData.data[2];
-    var color = (r << 16) + (g << 8) + b;
     return (r << 16) + (g << 8) + b;
 }
