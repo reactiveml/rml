@@ -15,12 +15,18 @@ function caml_gr_open_graph(geometry) {
                          "left": caml_gr_x_loc+"px"
                        });
     canvas_elt = document.getElementById("canvas");
-    canvas_elt.setAttribute("width", caml_gr_x_size);
-    canvas_elt.setAttribute("height", caml_gr_y_size);
-    canvas_elt.setAttribute("style", "position: absolute; x:0; y:0;");
-    context = canvas_elt.getContext("2d");
-    caml_gr_set_line_width(1);
-    local_gr_init_font();
+    var support = !!(canvas_elt.getContext && canvas_elt.getContext('2d'));
+    if (support) {
+        canvas_elt.setAttribute("width", caml_gr_x_size);
+        canvas_elt.setAttribute("height", caml_gr_y_size);
+        canvas_elt.setAttribute("style", "position: absolute; x:0; y:0;");
+        context = canvas_elt.getContext("2d");
+        caml_gr_set_line_width(1);
+        local_gr_init_font();
+    } else {
+        console.log ("Your browser doesn't support HTML5 Canvas element");
+        alert("Your browser doesn't support HTML5 Canvas element");
+    }
     return 0;
 }
 
