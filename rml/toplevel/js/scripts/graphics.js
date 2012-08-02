@@ -51,17 +51,24 @@ function caml_install_signal_handler(sig_num, sig_beh) {
     return 0; // return unit
 }
 
-//Provides: caml_gr_blit_image
-function caml_gr_blit_image(image, x_size, y_size) {
-    console.log("caml_gr_blit_image not implemented");
-    caml_failwith("caml_gr_blit_image not implemented");
-    return 0;
-}
-
 //Provides: caml_gr_create_image
 function caml_gr_create_image(x_size, y_size) {
     var im = context.createImageData(x_size, y_size);
     return im;
+}
+
+//Provides: caml_gr_blit_image
+function caml_gr_blit_image(im1, x, y) {
+    var y_real = caml_gr_y_size - y - im1.height;
+    var im2 = context.getImageData(x, y_real, im1.width, im1.height);
+    var tmp;
+    for (var i = 0; i < im2.data.length; i += 4) {
+        tmp= im2.data[i] | im2.data[i+1] | im2.data[i+2] | im2.data[i+3];
+        if (tmp != 0)
+            for (var j = 0; j < 4; j++)
+                im1.data[i+j] = im2.data[i+j];
+    }
+    return 0;
 }
 
 //Provides: caml_gr_current_x

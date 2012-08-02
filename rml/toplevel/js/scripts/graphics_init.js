@@ -59,6 +59,12 @@ function caml_gr_set_font(font_name) {
     return 0;
 }
 
+//Provides: caml_gr_text_size
+function caml_gr_text_size(text) {
+    var msr = context.measureText(text);
+    return [0, msr.width, gr_font_size]; // FIXME height is incorrect
+}
+
 //Provides: caml_gr_draw_string
 function caml_gr_draw_string(text) {
     context.fillText(text,
@@ -105,4 +111,49 @@ function caml_gr_fill_poly(points) {
     }
     context.closePath();
     context.fill();
+    return 0;
+}
+
+//Provides: caml_gr_draw_image
+function caml_gr_draw_image(image, x, y) {
+    context.putImageData(image, x, caml_gr_y_size - y);
+    return 0;
+}
+
+//Provides: caml_gr_make_image
+function caml_gr_make_image(colors) {
+    var w = colors.length;
+    var h = 0;
+    if (w > 1) h = colors[1].length;
+    var im = context.createImageData(w, h);
+    var idx;
+    var color;
+    for (var x = 1; x <= w; x++)
+        for (var y = 1; y <= h; y++) {
+            idx = (x + (h - y) * w) * 4;
+            color = colors[x][y];
+            im.data[idx+0] = (color & 0xFF0000) >> 16; // r
+            im.data[idx+1] = (color & 0x00FF00) >> 8;  // g
+            im.data[idx+2] = (color & 0x0000FF);       // b
+            im.data[idx+3] = 255;                      // a
+        }
+    return im;
+}
+
+//Provides: caml_gr_dump_image
+function caml_gr_dump_image(im) {
+    var colors = [];
+    colors.length = im.width;
+    colors[0] = 0;
+    for (var i = 0, j = 0; i < im.data.length; i += 4, j++) {
+        var x = 1 + (j % im.width);
+        var y = im.height - Math.floor(j / im.height);
+        if (typeof colors[x] == "undefined") {
+            colors[x] = [];
+            colors[x].length = im.height;
+            colors[x][0] = 0;
+        }
+        colors[x][y] = (im.data[i] << 16) + (im.data[i+1] << 8) + im.data[i+2];
+    }
+    return colors;
 }
