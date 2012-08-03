@@ -157,3 +157,26 @@ function caml_gr_dump_image(im) {
     }
     return colors;
 }
+
+// Events — really, not a sane implementation for caml_gr_wait_event
+
+var gr_mouse_x = 0;
+var gr_mouse_y = 0;
+var gr_button = 0;
+var gr_key_pressed = 0;
+var gr_keys = $("#canvas").queue();
+
+$("#canvas").mousemove(function(ev) {
+    var offset = $("#canvas").offset();
+    gr_mouse_x = Math.round(ev.pageX - offset.left);
+    gr_mouse_y = Math.round(ev.pageY - offset.top);
+});
+
+$("#canvas").on("mousedown, mouseup", function (ev) {
+    gr_button = 1;
+});
+
+$(document).keypress(function (ev) {
+    gr_key_pressed = 1;
+    gr_keys.push(ev.keyCode ? ev.keyCode : ev.which);
+});

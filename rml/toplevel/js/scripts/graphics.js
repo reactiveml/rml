@@ -196,8 +196,18 @@ function caml_gr_synchronize() {
 }
 
 //Provides: caml_gr_wait_event
-function caml_gr_wait_event() {
-    console.log("caml_gr_wait_event not implemented");
-    caml_failwith("caml_gr_wait_event not implemented");
-    return 0;
+function caml_gr_wait_event(events) {
+    // We cannot block. We pick some default character.
+    var key = 35; // key = '#'
+    if (gr_keys.length > 0) key = gr_keys.pop();
+    var result = [0,
+                  gr_mouse_x,
+                  gr_mouse_y,
+                  gr_button,
+                  gr_key_pressed,
+                  key
+                 ];
+    gr_button = 0;
+    gr_key_pressed = 0;
+    return result;
 }
