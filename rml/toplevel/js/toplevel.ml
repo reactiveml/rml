@@ -334,6 +334,50 @@ let run _ =
     container##scrollTop <- container##scrollHeight;
   in
 
+  (* Start drag and drop part *)
+  let ev = DragnDrop.init () in
+  (* Customize dropable part *)
+  ev.DragnDrop.ondrop <- (fun e  ->
+     container##className <- Js.string "";
+    let file =
+      match Js.Opt.to_option (e##dataTransfer##files##item(0)) with
+        | None -> assert false
+        | Some file -> file in
+    let reader = jsnew File.fileReader () in
+    reader##onload <- Dom.handler
+      (fun _ ->
+        Firebug.console##log (Js.string "starting eval phase.");
+        let s =
+          match Js.Opt.to_option (File.CoerceTo.string (reader##result)) with
+            | None -> assert false
+            | Some str -> str
+        in
+        let ss = Rmltop_core.split (Js.to_string s) in
+        List.iter begin fun s ->
+            let s = Rmltop_core.add_terminator s in
+            rmlconsole##value <- Js.string s;
+            execute ();
+            rmlconsole##value <- Js.string "";
+          end
+          ss;
+
+        Js._false);
+    reader##onerror <- Dom.handler
+      (fun _ ->
+        let error_code = reader##error##code in
+        let error_msg =
+          Printf.sprintf "Drang and drop failed [error code %d]."
+            error_code
+        in
+        Firebug.console##log (Js.string error_msg);
+        (* Firebug.console##log e; *)
+        window##alert (Js.string error_msg);
+        Js._true);
+    reader##readAsText ((file :> (File.blob Js.t)));
+    Js._false);
+  DragnDrop.make ~events:ev container;
+  (* End of Drag and drop part *)
+
   let tbox_init_size = rmlconsole##style##height in
   Html.document##onkeydown <-
     (Html.handler

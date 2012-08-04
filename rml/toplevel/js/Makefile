@@ -1,6 +1,6 @@
 
 NAME=toplevel
-OBJS=$(NAME).cmo
+OBJS=dragnDrop.cmo $(NAME).cmo
 
 all: $(NAME).js
 
@@ -135,7 +135,7 @@ $(NAME).js: $(NAME).byte $(JSFILES)
 	js-of-ocaml/compiler/js_of_ocaml -toplevel -noinline -noruntime $(JSFILES) $(NAME).byte $(OPTIONS)
 
 .PHONY: toplevel.byte toplevel.js
-$(NAME).byte: js-of-ocaml-stamp $(OBJS)
+$(NAME).byte: js-of-ocaml-stamp dragnDrop.cmi $(OBJS)
 	$(OCAMLC) -linkall -linkpkg -o $@.tmp $(STDLIB) $(OBJS)
 	$(EXPUNGE) $@.tmp $@ $(PERVASIVES)
 	rm -f $@.tmp
