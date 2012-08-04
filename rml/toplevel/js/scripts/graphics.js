@@ -84,7 +84,6 @@ function caml_gr_current_y() {
 //Provides: caml_gr_display_mode
 function caml_gr_display_mode(mode) {
     console.log("caml_gr_display_mode not implemented");
-    caml_failwith("caml_gr_display_mode not implemented");
     return 0;
 }
 
@@ -154,7 +153,6 @@ function caml_gr_plot(x_coor, y_coor) {
 //Provides: caml_gr_remember_mode
 function caml_gr_remember_mode(mode) {
     console.log("caml_gr_remember_mode not implemented");
-    caml_failwith("caml_gr_remember_mode not implemented");
     return 0;
 }
 
@@ -191,7 +189,6 @@ function caml_gr_set_window_title(title) {
 //Provides: caml_gr_synchronize
 function caml_gr_synchronize() {
     console.log("caml_gr_synchronize not implemented");
-    caml_failwith("caml_gr_synchronize not implemented");
     return 0;
 }
 
