@@ -194,15 +194,49 @@ function caml_gr_synchronize() {
 
 //Provides: caml_gr_wait_event
 function caml_gr_wait_event(events) {
-    // We cannot block. We pick some default character.
-    var key = 35; // key = '#'
-    if (gr_keys.length > 0) key = gr_keys.pop();
+    var local_mouse_x = 0;
+    var local_mouse_y = 0;
+    var local_button = 0;
+    var local_key_pressed = 0;
+    var local_key = 35; // key = '#'
+    var array = events;
+    while (array.length > 2) {
+        switch(array[1]) {
+        case 0: // Button_down
+            local_button = gr_button;
+            break;
+        case 1: // Button_up
+            local_button = gr_button;
+            break;
+        case 2: // Key_pressed
+            local_key_pressed = gr_key_pressed;
+            if (gr_keys.length > 0) local_key = gr_keys.pop();
+            break;
+        case 3: // Mouse_motion
+            local_mouse_x = gr_mouse_x;
+            local_mouse_y = gr_mouse_y;
+            break;
+        case 4: // Poll
+            local_button = gr_button;
+            local_key_pressed = gr_key_pressed;
+            local_mouse_x = gr_mouse_x;
+            local_mouse_y = gr_mouse_y;
+            local_key_pressed = gr_key_pressed;
+            break;
+        }
+        // reached end of list (i.e. tl l == nil)
+        if (array[2] instanceof Array) {
+            array = array[2];
+        } else {
+            break;
+        }
+    }
     var result = [0,
-                  gr_mouse_x,
-                  gr_mouse_y,
-                  gr_button,
-                  gr_key_pressed,
-                  key
+                  local_mouse_x,
+                  local_mouse_y,
+                  local_button,
+                  local_key_pressed,
+                  local_key
                  ];
     gr_button = 0;
     gr_key_pressed = 0;
