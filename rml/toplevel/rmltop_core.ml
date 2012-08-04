@@ -41,6 +41,7 @@ let print_help () =
   print_endline "Toplevel directives:";
   let list =
     ["#run e;;",      "spawn the execution of a process e.";
+     "#use \"file\";;", "load a source file.";
      "#exec e;;",     "execute a reactive expression e.";
      "#suspend;;",    "suspend the simulation.";
      "#debug;;",      "toggle on/off debug mode.";
@@ -130,6 +131,17 @@ let split s =
   done;
   List.rev !phrases
 
+let file_content file =
+  let lines = ref "" in
+  let inchan = open_in file in
+  try
+    while true; do
+      lines := Printf.sprintf "%s%s\n" !lines (input_line inchan)
+    done; ""
+  with End_of_file ->
+    close_in inchan;
+    !lines
+
 let eval_ocaml_phrase fmt verbose command =
   try
     let lb =
@@ -214,6 +226,20 @@ let eval fmt rml_phrase =
       | Rmltop_lexer.Resume -> Rmltop_global.set_resume ()
 
       | Rmltop_lexer.Sampling f -> Rmltop_global.set_sampling f
+
+      | Rmltop_lexer.Use f ->
+          begin
+            try
+              if Sys.file_exists f then
+                let phrases = file_content f in
+                let phrases = List.map begin fun s ->
+                    Rmltop_lexer.Rml_phrase (s^";;")
+                  end
+                  (split phrases) in
+                List.iter (aux fmt) phrases
+            with e ->
+              Printf.eprintf "Error: %s\n%!" (Printexc.to_string e)
+          end
 
       | Rmltop_lexer.Quit -> exit 0
 

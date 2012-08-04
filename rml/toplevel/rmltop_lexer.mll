@@ -37,6 +37,7 @@
    | Sampling of float
    | Run of string
    | Exec of string
+   | Use of string
    | Quit
    | Help
 
@@ -81,6 +82,7 @@ and directive = parse
   | "step" sep*      { Step (Some (int_expr lexbuf)) }
   | "sampling" sep*  { Sampling (float_expr lexbuf) }
   | "run"            { Run (expr lexbuf) }
+  | "use" sep* '"'   { Use (string lexbuf) }
   | "exec"           { Exec (expr lexbuf) }
   | "quit"           { end_of_phrase lexbuf; Quit }
   | "help"           { end_of_phrase lexbuf; Help }
@@ -95,6 +97,13 @@ and expr = parse
   | eof              { raise EOF }
   | _                { Buffer.add_string expr_buffer (lexeme lexbuf);
 	               expr lexbuf }
+and string = parse
+  | '"' sep* ";;"    { let s = Buffer.contents expr_buffer in
+                       Buffer.reset expr_buffer;
+                       s }
+  | eof              { raise EOF }
+  | _                { Buffer.add_string expr_buffer (lexeme lexbuf);
+	               string lexbuf }
 
 and float_expr = parse
   | float_literal    { let x = Lexing.lexeme lexbuf in
