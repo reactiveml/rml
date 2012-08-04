@@ -230,15 +230,14 @@ let eval fmt rml_phrase =
       | Rmltop_lexer.Use f ->
           begin
             try
-              if Sys.file_exists f then
-                let phrases = file_content f in
-                let phrases = List.map begin fun s ->
-                    Rmltop_lexer.Rml_phrase (s^";;")
-                  end
-                  (split phrases) in
-                List.iter (aux fmt) phrases
+              let phrases = file_content f in
+              let phrases = List.map begin fun s ->
+                Rmltop_lexer.Rml_phrase (s^";;")
+              end
+                (split phrases) in
+              List.iter (aux fmt) phrases
             with e ->
-              Printf.eprintf "Error: %s\n%!" (Printexc.to_string e)
+              Format.fprintf fmt "Error: %s\n@." (Printexc.to_string e)
           end
 
       | Rmltop_lexer.Quit -> exit 0
