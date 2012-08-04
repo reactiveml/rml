@@ -4,7 +4,7 @@ all: check_lwt compiler library runtime
 include Makefile.conf
 -include Makefile.local
 
-.PHONY: compiler library runtime check_lwt
+.PHONY: compiler library runtime examples check_lwt doc
 
 compiler:
 	$(MAKE) -C compiler

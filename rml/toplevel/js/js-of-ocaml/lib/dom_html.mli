@@ -217,6 +217,24 @@ and touch = object
   method pageY : int readonly_prop
 end
 
+and dragEvent = object
+  inherit event
+  method dataTransfer : dataTransfer t readonly_prop
+end
+
+and dataTransfer = object
+  method dropEffect : js_string t prop
+  method effectAllowed : js_string t prop
+  method files : File.fileList t readonly_prop
+  method types : Dom.stringList t readonly_prop
+  method addElement : element t -> unit meth
+  method clearData : js_string t -> unit meth
+  method clearData_all : unit meth
+  method getData : js_string t -> js_string t meth
+  method setData : js_string t -> js_string t -> unit meth
+  method setDragImage : element t -> int -> int -> unit meth
+end
+
 (** Common properties of event target objects: [onclick],
     [onkeypress], ... *)
 and eventTarget = object ('self)
@@ -230,6 +248,13 @@ and eventTarget = object ('self)
   method onkeypress : ('self t, keyboardEvent t) event_listener writeonly_prop
   method onkeydown : ('self t, keyboardEvent t) event_listener writeonly_prop
   method onkeyup : ('self t, keyboardEvent t) event_listener writeonly_prop
+  method ondragstart : ('self t, dragEvent t) event_listener writeonly_prop
+  method ondragend : ('self t, dragEvent t) event_listener writeonly_prop
+  method ondragenter : ('self t, dragEvent t) event_listener writeonly_prop
+  method ondragover : ('self t, dragEvent t) event_listener writeonly_prop
+  method ondragleave : ('self t, dragEvent t) event_listener writeonly_prop
+  method ondrag : ('self t, dragEvent t) event_listener writeonly_prop
+  method ondrop : ('self t, dragEvent t) event_listener writeonly_prop
 end
 
 and popStateEvent = object
@@ -455,6 +480,7 @@ class type inputElement = object ('self)
   method focus : unit meth
   method select : unit meth
   method click : unit meth
+  method files : File.fileList t optdef readonly_prop
 
   method onselect : ('self t, event t) event_listener prop
   method onchange : ('self t, event t) event_listener prop
@@ -951,7 +977,7 @@ class type window = object
   method parent : window t readonly_prop
   method frameElement : element t opt readonly_prop
 
-  method open_ : js_string t -> js_string t -> js_string t opt -> window meth
+  method open_ : js_string t -> js_string t -> js_string t opt -> window t meth
   method alert : js_string t -> unit meth
   method confirm : js_string t -> bool t meth
   method prompt : js_string t -> js_string t -> js_string t meth
@@ -968,6 +994,7 @@ class type window = object
   method onblur : (window t, event t) event_listener prop
   method onfocus : (window t, event t) event_listener prop
   method onresize : (window t, event t) event_listener prop
+  method onscroll : (window t, event t) event_listener prop
   method onpopstate : (window t, popStateEvent t) event_listener prop
 end
 
@@ -1055,6 +1082,13 @@ module Event : sig
   val touchmove : touchEvent t typ
   val touchend : touchEvent t typ
   val touchcancel : touchEvent t typ
+  val dragstart : dragEvent t typ
+  val dragend : dragEvent t typ
+  val dragenter : dragEvent t typ
+  val dragover : dragEvent t typ
+  val dragleave : dragEvent t typ
+  val drag : dragEvent t typ
+  val drop : dragEvent t typ
 
   val make : string -> 'a typ
 end

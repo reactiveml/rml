@@ -35,6 +35,7 @@ Patterns:
 
 let compact = ref true
 let debug = Util.debug "gen"
+let times = Util.debug "times"
 let disable_compact_expr = Util.disabled "compactexpr"
 
 let set_pretty () = compact := false
@@ -111,7 +112,7 @@ let float_const f = val_float (J.ENum f)
 let rec constant x =
   match x with
     String s ->
-      Primitive2.mark_used "MlString";
+      Primitive.mark_used "MlString";
       J.ENew (J.EVar ("MlString"), Some [J.EStr (s, `Bytes)])
   | Float f ->
       float_const f
@@ -375,7 +376,7 @@ let get_apply_fun n =
   try
     Util.IntMap.find n !apply_funs
   with Not_found ->
-    Primitive2.mark_used "caml_call_gen";
+    Primitive.mark_used "caml_call_gen";
     let x = Var.fresh () in
     apply_funs := Util.IntMap.add n x !apply_funs;
     x
@@ -409,7 +410,7 @@ let generate_apply_funs cont =
 let to_int cx = J.EBin(J.Bor, cx, J.ENum 0.) (* 32 bit ints *)
 
 let _ =
-  List.iter (fun (nm, nm') -> Primitive2.alias nm nm')
+  List.iter (fun (nm, nm') -> Primitive.alias nm nm')
     ["%int_mul", "caml_mul";
      "%int_div", "caml_div";
      "%int_mod", "caml_mod";
@@ -476,7 +477,7 @@ let internal_prim name =
   try Hashtbl.find internal_primitives name with Not_found -> None
 
 let register_prim name k f =
-  Primitive2.register name k;
+  Primitive.register name k;
   Hashtbl.add internal_primitives name (Some f)
 
 let register_un_prim name k f =
@@ -606,7 +607,7 @@ let _ =
     (fun cx -> J.ECall (J.EDot (cx, "toString"), []));
   register_un_prim "caml_js_to_string" `Mutable
     (fun cx ->
-       Primitive2.mark_used "MlString";
+       Primitive.mark_used "MlString";
        J.ENew (J.EVar "MlWrappedString", Some [cx]));
   register_tern_prim "caml_js_set"
     (fun cx cy cz -> J.EBin (J.Eq, J.EAccess (cx, cy), cz));
@@ -811,15 +812,15 @@ and translate_expr ctx queue x e =
           in
           (J.EObj (build_fields fields), const_p, queue)
       | Extern name, l ->
-          let name = Primitive2.resolve name in
+          let name = Primitive.resolve name in
           begin match internal_prim name with
             Some f ->
               f l queue
           | None ->
-              Primitive2.mark_used name;
+              Primitive.mark_used name;
               Code.add_reserved_name name;  (*XXX HACK *)
                                (* FIX: this is done at the wrong time... *)
-              let prim_kind = kind (Primitive2.kind name) in
+              let prim_kind = kind (Primitive.kind name) in
               let (args, prop, queue) =
                 List.fold_right
                   (fun x (args, prop, queue) ->
@@ -859,8 +860,8 @@ and translate_expr ctx queue x e =
       | Ult, [Pv x; Pv y] ->
           let ((px, cx), queue) = access_queue queue x in
           let ((py, cy), queue) = access_queue queue y in
-          (bool (J.EBin (J.Or, J.EBin (J.Lt, cx, int 0),
-                         J.EBin (J.Lt, cy, cx))),
+          (bool (J.EBin (J.Or, J.EBin (J.Lt, cy, int 0),
+                         J.EBin (J.Lt, cx, cy))),
            or_p px py, queue)
       | WrapInt, [Pv x] ->
           let ((px, cx), queue) = access_queue queue x in
@@ -1447,7 +1448,7 @@ let compile_program standalone ctx pc =
   let res = compile_closure ctx (pc, []) in
   if debug () then Format.eprintf "@.@.";
 (*
-  Primitive2.list_used ();
+  Primitive.list_used ();
 *)
   if standalone then
     let f = J.EFun (None, [], generate_apply_funs res) in
@@ -1467,6 +1468,7 @@ let list_missing l =
 
 let f ch ?(standalone=true) ((pc, blocks, _) as p) live_vars =
   let mutated_vars = Freevars.f p in
+  let t' = Util.Timer.make () in
   let ctx = Ctx.initial blocks live_vars mutated_vars in
   let p = compile_program standalone ctx pc in
   if !compact then Pretty_print.set_compact ch true;
@@ -1474,8 +1476,11 @@ let f ch ?(standalone=true) ((pc, blocks, _) as p) live_vars =
     Pretty_print.string ch
       "// This program was compiled from OCaml by js_of_ocaml 1.0";
     Pretty_print.newline ch;
-    let missing = Linker.resolve_deps !compact ch (Primitive2.get_used ()) in
+    let missing = Linker.resolve_deps !compact ch (Primitive.get_used ()) in
     list_missing missing
   end;
   Hashtbl.clear add_names;
-  Js_output.program ch p
+  let res = Js_output.program ch p in
+  if times () then Format.eprintf "  code gen.: %a@." Util.Timer.print t';
+  res
+
