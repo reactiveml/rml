@@ -132,12 +132,14 @@ let process click_of_button_down click =
     if Graphics.button_down() then emit click (Graphics.mouse_pos());
     pause
   end
+;;
 
 let process key_of_key_pressed key =
   loop
     if Graphics.key_pressed() then emit key (Graphics.read_key());
     pause
   end
+;;
 
 let process fenetre new_planet p kill_sun kill suspend =
   let process read_click =
@@ -203,9 +205,11 @@ let rec process add_aux id new_planet kill kill_new p =
   (await new_planet || await immediate kill_new);
   await kill;
   emit new_kill_new
+;;
 
 let process add id new_planet kill p =
   run (add_aux id new_planet kill kill p)
+;;
 
 let process systeme =
   signal p in
