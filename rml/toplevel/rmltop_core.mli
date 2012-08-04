@@ -26,6 +26,7 @@ val print_DEBUG : ('a, out_channel, unit) format -> 'a
 
 val print_help : unit -> unit
 val add_terminator : string -> string
+val split : string -> string list
 
 val eval_ocaml_phrase  : Format.formatter -> bool -> string -> bool
 val eval_ocaml_phrases : Format.formatter -> bool -> string list -> unit

@@ -119,6 +119,17 @@ let add_terminator s =
   output := [];
   if !need_terminator then s ^ ";;" else s
 
+let split s =
+  let phrases = ref [] and j = ref 0 in
+  for i = 0 to String.length s - 2 do
+    if !j < i && s.[i] = ';' && s.[i+1] = ';' then begin
+      let phrase = String.sub s !j (i - !j) in
+      j := i + 2;
+      phrases := phrase :: !phrases;
+    end
+  done;
+  List.rev !phrases
+
 let eval_ocaml_phrase fmt verbose command =
   try
     let lb =
