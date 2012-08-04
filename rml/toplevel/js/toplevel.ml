@@ -366,7 +366,7 @@ let run _ =
       (fun _ ->
         let error_code = reader##error##code in
         let error_msg =
-          Printf.sprintf "Drang and drop failed [error code %d]."
+          Printf.sprintf "Drag and drop failed [error code %d]."
             error_code
         in
         Firebug.console##log (Js.string error_msg);
