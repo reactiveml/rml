@@ -16,21 +16,6 @@ var gr_color_b = 0;
 var gr_font_name = "Arial";
 var gr_font_size = 20;
 
-function local_gr_draw_arc(centerX, centerY, width, height) {
-    context.beginPath();
-    context.moveTo(centerX, centerY - height/2); // A1
-    context.bezierCurveTo(
-        centerX + width/2, centerY - height/2, // C1
-        centerX + width/2, centerY + height/2, // C2
-        centerX, centerY + height/2); // A2
-    context.bezierCurveTo(
-        centerX - width/2, centerY + height/2, // C3
-        centerX - width/2, centerY - height/2, // C4
-        centerX, centerY - height/2); // A1
-    context.closePath();
-    context.stroke();
-}
-
 function local_gr_init_font() {
     // Choosing "px" is easier to compute caml_gr_text_size
     context.font = gr_font_size + "px " + gr_font_name;
