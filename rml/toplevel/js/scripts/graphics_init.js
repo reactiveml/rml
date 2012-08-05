@@ -154,7 +154,7 @@ var gr_keys = $("#canvas").queue();
 $("#canvas").mousemove(function(ev) {
     var offset = $("#canvas").offset();
     gr_mouse_x = Math.round(ev.pageX - offset.left);
-    gr_mouse_y = Math.round(ev.pageY - offset.top);
+    gr_mouse_y = Math.round(caml_gr_y_size - ev.pageY + offset.top);
 });
 
 $("#canvas").on("mousedown, mouseup", function (ev) {
