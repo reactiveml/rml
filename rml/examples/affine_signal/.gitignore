@@ -3,3 +3,4 @@ tools/split
 *.rml
 *.ml
 split-stamp
+tools-stamp

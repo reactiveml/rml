@@ -94,6 +94,15 @@ let process p l =
   List.map (fun x -> !emit x 1) l
 
 $
+signal s;;
+let process p l =
+  List.map (fun x -> !emit s x) l
+
+$
+let process p l =
+  signal s in List.map (fun x -> !emit s x) l
+
+$
 let my_emit s v = !emit s v
 let process p s =
   my_emit s 1 || my_emit s 1
@@ -117,10 +126,6 @@ $
 let id x = x
 let process p s =
   !emit (id s) 1 ; !emit (id s) 1
-
-$
-let process p s =
-  await s(x) in !emit x 1
 
 $
 
@@ -198,6 +203,11 @@ $
 signal like 's'. *)
 
 let process test s r = !emit r || emit s r
+
+$
+
+let process p s =
+  await s(x) in !emit x 1
 
 $
 

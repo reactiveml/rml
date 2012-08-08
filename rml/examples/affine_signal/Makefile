@@ -20,11 +20,15 @@ RUN_TEST=./tools/run_test -keep-clean -ext ".rml" -verbose $(VERBOSE) #-good $(C
 FILES= *.rml
 SPLIT_FILES= *.split
 
-all: realclean split-stamp test
+all: tools-stamp realclean split-stamp test
+
+tools-stamp:
+	$(MAKE) -C tools
+	touch $@
 
 split-stamp:
 	$(SPLIT) $(SPLIT_FILES)
-	touch split-stamp
+	touch $@
 
 test: split-stamp
 	$(RUN_TEST) $(FILES)
