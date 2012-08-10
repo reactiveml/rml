@@ -9,6 +9,13 @@ ${
 
 $}
 
+type r = { x : float; y : float }
+
+let f x y =
+  { x = x; y = y }
+
+$
+
 type 'a siglist{'ck|} = ('a, 'a) event{'ck|} list
 
 $
@@ -36,7 +43,7 @@ $
 type 'a siglist{'ck|} = { s_list : ('a, 'a) event{'ck|} list }
 
 
-let f ck =
+let process f ck =
   signal s at ck default 0 gather (+) in
   { s_list = [s] }
 

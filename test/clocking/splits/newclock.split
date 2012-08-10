@@ -44,14 +44,14 @@ let process f =
 
 $
 
-let create_sig ck =
+let process create_sig ck =
   signal s at ck default 0 gather (+) in
   s
 
 let process f =
-  let s = create_sig topck in
+  let s = run create_sig topck in
   newclock ck in
-    let s2 = create_sig ck in
+    let s2 = run create_sig ck in
     emit s2 3; emit s 4; ()
 
 $

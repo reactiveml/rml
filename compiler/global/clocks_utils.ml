@@ -875,10 +875,16 @@ let rec unify expected_ck actual_ck =
             unify ck1 ck2;
             carrier_unify c1 c2;
             effect_unify eff1 eff2
+        | Clock_forall { cs_clock_vars = []; cs_carrier_vars = [];
+                         cs_effect_vars = []; cs_desc = expected_ck }, _ ->
+            unify expected_ck actual_ck
+        | _, Clock_forall { cs_clock_vars = []; cs_carrier_vars = [];
+                            cs_effect_vars = []; cs_desc = actual_ck } ->
+            unify expected_ck actual_ck
         | Clock_forall sch1, Clock_forall sch2 ->
             unify_schema sch1 sch2
         | _ ->
-            (* Printf.eprintf "Failed to unify '%a' and '%a'\n"  Clocks_printer.output expected_ck  Clocks_printer.output actual_ck; *)
+             Printf.eprintf "Failed to unify '%a' and '%a'\n"  Clocks_printer.output expected_ck  Clocks_printer.output actual_ck;
             raise Unify
 
 (* TODO: on doit mettre les quantifieurs dans leur ordre d'apparition. Ensuite, on instancie les parametres des deux schemas par les memes skolems frais, on les unifie puis on verifie que les skolems n'ont pas echappe dans l'environnement en verifiant sils apparaissent dans le type des schemas de depart. *)
