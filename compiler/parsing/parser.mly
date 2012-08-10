@@ -217,6 +217,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token CONTROL             /* "control" */
 %token DEFAULT             /* "default" */
 %token DO                  /* "do" */
+%token DOMAIN              /* "domain" */
 %token DONE                /* "done" */
 %token DOPAR               /* "dopar" */
 %token DOT                 /* "." */
@@ -592,8 +593,8 @@ expr:
       { mkassert $2 }
   | PRE pre_expr
       { let k,s = $2 in mkexpr(Pexpr_pre (k,s)) }
-  | LAST QUESTION simple_expr
-      { mkexpr(Pexpr_last $3) }
+  | LAST simple_expr
+      { mkexpr(Pexpr_last $2) }
   | DEFAULT QUESTION simple_expr
       { mkexpr(Pexpr_default $3) }
   | EMIT simple_expr
@@ -647,6 +648,8 @@ expr:
       { mkexpr(Pexpr_run($2)) }
   | NEWCLOCK LIDENT opt_schedule IN par_expr
       { mkexpr (Pexpr_newclock (mksimple $2 2, $3, $5)) }
+  | DOMAIN LPAREN LIDENT RPAREN DO par_expr opt_schedule DONE
+      { mkexpr (Pexpr_newclock (mksimple $3 2, $7, $6)) }
   | PAUSE clock_expr
       { mkexpr (Pexpr_pause $2) }
   | PAUSECLOCK simple_expr

@@ -74,6 +74,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "control", CONTROL;
     "default", DEFAULT;
     "do", DO;
+    "domain", DOMAIN;
     "done", DONE;
     "dopar", DOPAR;
     "downto", DOWNTO;
