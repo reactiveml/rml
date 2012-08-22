@@ -73,6 +73,7 @@ let rec add_type bv ty =
   | Ptype_tuple tl -> List.iter (add_type bv) tl
   | Ptype_constr (id, tl) -> add bv id; List.iter (add_type_param bv) tl
   | Ptype_process (t, _, _, _) ->  add_type bv t
+  | Ptype_forall (_, t) -> add_type bv t
 
 and add_type_param bv p =
   match p with
