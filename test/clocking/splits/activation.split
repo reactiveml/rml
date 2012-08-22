@@ -46,6 +46,29 @@ let process f =
   signal s at topck in
     await immediate s
 
+$
+
+let process f =
+  signal s at topck in
+    await s
+
+$
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    await s
+
+$
+
+let process f s =
+  await s(v) in ignore v
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    f s
+
 $$$bad
 ${
 (*
@@ -77,3 +100,12 @@ let process f =
   signal s at topck in
   newclock ck in
     await immediate s
+
+$
+
+let process h s = await immediate s; pause
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    h s
