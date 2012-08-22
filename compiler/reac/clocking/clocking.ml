@@ -83,7 +83,7 @@ let filter_memory ?(force_activation_ck=false) ck =
     else
       make_carrier generic_prefix_name
   in
-  unify ck (constr_notabbrev event_ident [Var_clock ck1; Var_carrier sck]);
+  unify ck (constr_notabbrev memory_ident [Var_clock ck1; Var_carrier sck]);
   add_effect_ck sck;
   ck1, sck
 
