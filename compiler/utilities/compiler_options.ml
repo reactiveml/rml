@@ -21,7 +21,7 @@ include Version
 
 (* standard module *)
 let pervasives_module = "Pervasives"
-let interpreter_module = ref "Lco_ctrl_tree_n"
+let interpreter_module = ref "Rml_machine"
 let interpreter_impl = ref "Lco_ctrl_tree_seq_interpreter"
 let machine_module = ref "Rml_machine.Machine"
 
