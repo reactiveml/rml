@@ -73,7 +73,7 @@ let arity_of_pe_list pe_list =
   List.fold_left arity_of_pe (0, 0, 0) pe_list
 
 let new_vars (_, found_car, found_eff) (_, nb_car, nb_eff) =
-  let new_car_vars = do_n mkfresh_effect (nb_car - found_car) in
+  let new_car_vars = do_n mkfresh_car (nb_car - found_car) in
   let new_eff_vars = do_n mkfresh_effect (nb_eff - found_eff) in
   new_car_vars @ new_eff_vars
 
@@ -90,7 +90,16 @@ let find_new_vars decl_ids td =
           in
           if List.mem gcstr.gi decl_ids then
             te, (vars_list, add_to_list gcstr.gi id_list)
-          else (
+          else if gcstr.gi = Initialization.event_ident
+                  || gcstr.gi = Initialization.memory_ident then (
+            let (_, ck_arity, _) = arity_of_pe_list pe_list in
+            if ck_arity = 0 then (
+              let var = mkfresh_car () in
+              let te = { te with pte_desc = Ptype_constr(cstr, pe_list @ [param_of_var var]) } in
+              te, (var::vars_list, id_list)
+            ) else
+              te, (vars_list, id_list)
+          ) else (
             (* check if the identifier is defined*)
             (* check the arity of parameters in the source *)
             let ck_info = match gcstr.ck_info with None -> assert false | Some i -> i in
@@ -99,8 +108,10 @@ let find_new_vars decl_ids td =
               constr_wrong_arity_err cstr.pident_id
                 found_arity ck_info.clock_def_arity te.pte_loc;
             (* find added parameters *)
-            let vars_list = new_vars found_arity ck_info.clock_arity in
-            te, (vars_list, id_list)
+            let new_vars_list = new_vars found_arity ck_info.clock_arity in
+            let new_pe = List.map param_of_var new_vars_list in
+            let te = { te with pte_desc = Ptype_constr (cstr, pe_list@new_pe) } in
+            te, (new_vars_list@vars_list, id_list)
           )
 
       | _ -> te, (vars_list, id_list)
