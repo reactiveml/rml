@@ -122,7 +122,9 @@ let unify_update loc expected_ty actual_ty =
 let unify_run loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
-  with _ -> run_wrong_clock_err loc actual_ty expected_ty
+  with
+    | Unify -> run_wrong_clock_err loc actual_ty expected_ty
+    | Escape (s, _) -> run_wrong_clock_escape_err loc s actual_ty
 
 let unify_var loc expected_ty actual_ty =
   try

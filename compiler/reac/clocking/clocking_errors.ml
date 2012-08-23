@@ -127,6 +127,16 @@ let expr_wrong_clock_escape_err exp s actual_ck =
     s;
   raise Error
 
+let run_wrong_clock_escape_err loc s actual_ck =
+  Printf.eprintf
+           "%aThe clock of this expression, that is,\n\
+            %a\n\
+            depends on %s which escape its scope.\n"
+    Location.print_oc loc
+    Clocks_printer.output actual_ck
+    s;
+  raise Error
+
 let application_of_non_function_err exp ty =
   begin try
     let _ = filter_arrow ty in
