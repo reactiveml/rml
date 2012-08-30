@@ -103,7 +103,7 @@ function caml_gr_fill_rect(x, y, w, h) {
 function caml_gr_draw_arc(x, y, rx, ry, a1, a2) {
     context.beginPath();
     context.scale(1, ry/rx);
-    context.arc(x, y - 1, rx, a1, a2);
+    context.arc(x, caml_gr_y_size - y - 1, rx, a1, a2);
     context.scale(1, rx/ry);
     context.closePath();
     context.stroke();
@@ -114,7 +114,7 @@ function caml_gr_draw_arc(x, y, rx, ry, a1, a2) {
 function caml_gr_fill_arc(x, y, rx, ry, a1, a2) {
     context.beginPath();
     context.scale(1, ry/rx);
-    context.arc(x, y - 1, rx, a1, a2);
+    context.arc(x, caml_gr_y_size - y - 1, rx, a1, a2);
     context.scale(1, rx/ry);
     context.closePath();
     context.fill();
