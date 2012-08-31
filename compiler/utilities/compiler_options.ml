@@ -36,7 +36,7 @@ let set_interpreter_module s = interpreter_module := s
 let set_machine_module s = machine_module := s
 
 (* different translations *)
-type translations = Lco
+type translations = Lco | Rml_print | Rpml2Rml
 
 let translation = ref Lco
 
@@ -190,6 +190,9 @@ let set_runtime s =
       set_interpreter_module "Rml_machine_mpi";
       set_machine_module "Rml_machine_mpi.Machine";
       set_translation Lco
+
+    | "Rml_print" -> set_translation Rml_print
+    | "Rpml2rml" -> set_translation Rpml2Rml
 
     | _ -> raise (Arg.Bad ("Invalid runtime:" ^ s))
 

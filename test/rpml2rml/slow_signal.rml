@@ -1,0 +1,7 @@
+let process main =
+  signal s default 0 gather (+) in
+  domain(ck) do
+    await s(v) in print_int v
+  done
+  ||
+  emit s 4

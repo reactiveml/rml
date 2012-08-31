@@ -22,6 +22,17 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
   (* emit the caml code *)
   List.iter (Print_caml_src.output_impl_decl out_chan module_name) caml_table
 
+let compile_implementation_rml_back_end info_chan out_chan module_name rml_table =
+  let compile_one_phrase impl = match !Compiler_options.translation with
+    | Rml_print -> impl
+    | Rpml2Rml-> Rpml2rml.impl_item impl
+    | _ -> assert false
+  in
+  (* compilation of the whole table *)
+  let caml_table = List.map compile_one_phrase rml_table in
+  (* emit the caml code *)
+  List.iter (Print_reac.output_impl_decl out_chan module_name) caml_table
+
 
 let gen_main_fun out_chan =
   let main =
@@ -42,25 +53,38 @@ let gen_test_fun out_chan =
     ("let _ = Machine.rml_test "^ !Compiler_options.test_name)
 
 let compile_impl info_chan filename module_name intermediate_code =
-  let obj_name = filename ^ ".ml" in
-  let out_chan = open_out obj_name in
-  output_string out_chan
-    ("(* THIS FILE IS GENERATED. *)\n"^
-        "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
-        "*)\n\n");
+  match !translation with
+    | Lco ->
+        let obj_name = filename ^ ".ml" in
+        let out_chan = open_out obj_name in
+        output_string out_chan
+          ("(* THIS FILE IS GENERATED. *)\n"^
+              "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
+              "*)\n\n");
         (* selection of the interpreter *)
-  output_string out_chan ("module Interpreter = "^ !interpreter_module ^"."^ !interpreter_impl^"\n");
-  output_string out_chan ("module Machine = "^ !machine_module ^"(Interpreter)\n");
+        output_string out_chan ("module Interpreter = "^ !interpreter_module ^"."^ !interpreter_impl^"\n");
+        output_string out_chan ("module Machine = "^ !machine_module ^"(Interpreter)\n");
 
-  (* the implementation *)
-  compile_implementation_back_end info_chan out_chan module_name intermediate_code;
+        (* the implementation *)
+        compile_implementation_back_end info_chan out_chan module_name intermediate_code;
 
-  (* main process *)
-  if !Compiler_options.test_name <> "" then
-    gen_test_fun out_chan
-  else if !simulation_process <> "" then
-    gen_main_fun out_chan;
-  close_out out_chan
+        (* main process *)
+        if !Compiler_options.test_name <> "" then
+          gen_test_fun out_chan
+        else if !simulation_process <> "" then
+          gen_main_fun out_chan;
+        close_out out_chan
+
+    | Rml_print | Rpml2Rml ->
+        let obj_name = filename ^ "_gen.rml" in
+        let out_chan = open_out obj_name in
+        output_string out_chan
+          ("(* THIS FILE IS GENERATED. *)\n"^
+              "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
+              "*)\n\n");
+
+        compile_implementation_rml_back_end info_chan out_chan module_name intermediate_code;
+        close_out out_chan
 
 (* back-end for interface *)
 let compile_interface_back_end info_chan out_chan module_name rml_table =

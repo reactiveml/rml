@@ -1,0 +1,4 @@
+let process main =
+  domain(ck) do
+    print_string "Hello "; pause ck; print_string "world"
+  done

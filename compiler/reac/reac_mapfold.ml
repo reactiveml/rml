@@ -1,10 +1,14 @@
 open Misc
 open Reac
+open Asttypes
 open Global_mapfold
 
 type 'a reac_it_funs = {
   expression: 'a reac_it_funs -> 'a -> Reac.expression -> Reac.expression * 'a;
   expression_desc: 'a reac_it_funs -> 'a -> Reac.expression_desc -> Reac.expression_desc * 'a;
+  clock_expr :
+    'a reac_it_funs -> 'a -> Reac.expression Asttypes.clock_expr ->
+                             Reac.expression Asttypes.clock_expr * 'a;
   event_config: 'a reac_it_funs -> 'a -> Reac.event_config -> Reac.event_config * 'a;
   event_config_desc:
     'a reac_it_funs -> 'a -> Reac.event_config_desc -> Reac.event_config_desc * 'a;
@@ -15,6 +19,8 @@ type 'a reac_it_funs = {
     'a reac_it_funs -> 'a -> Reac.type_expression -> Reac.type_expression * 'a;
   type_expression_desc:
     'a reac_it_funs -> 'a -> Reac.type_expression_desc -> Reac.type_expression_desc * 'a;
+  param_expression:
+    'a reac_it_funs -> 'a -> Reac.param_expression -> Reac.param_expression * 'a;
   type_declaration:
     'a reac_it_funs -> 'a -> Reac.type_declaration -> Reac.type_declaration * 'a;
   impl_item: 'a reac_it_funs -> 'a -> Reac.impl_item -> Reac.impl_item * 'a;
@@ -120,7 +126,9 @@ and expression_desc funs acc ed = match ed with
     let e, acc = expression_it funs acc e in
     Edefault e, acc
   | Enothing -> Enothing, acc
-  | Epause boi -> Epause boi, acc
+  | Epause (boi, ck) ->
+      let ck, acc = clock_expr_it funs acc ck in
+      Epause (boi, ck), acc
   | Ehalt boi -> Ehalt boi, acc
   | Eemit (e, e_opt) ->
     let e, acc = expression_it funs acc e in
@@ -142,16 +150,18 @@ and expression_desc funs acc ed = match ed with
     let e1, acc = expression_it funs acc e1 in
     let e2, acc = expression_it funs acc e2 in
     Emerge (e1, e2), acc
-  | Esignal ((x, te_opt), e_e_opt, e) ->
+  | Esignal ((x, te_opt), ck, r, e_e_opt, e) ->
     let aux acc (e1, e2) =
       let e1, acc = expression_it funs acc e1 in
       let e2, acc = expression_it funs acc e2 in
       (e1, e2), acc
     in
     let te_opt, acc = optional_wacc (type_expression_it funs) acc te_opt in
+    let ck, acc = clock_expr_it funs acc ck in
+    let r, acc = clock_expr_it funs acc r in
     let e_e_opt, acc = optional_wacc aux acc e_e_opt in
     let e, acc = expression_it funs acc e in
-    Esignal ((x, te_opt), e_e_opt, e), acc
+    Esignal ((x, te_opt), ck, r, e_e_opt, e), acc
   | Erun e ->
     let e, acc = expression_it funs acc e in
     Erun e, acc
@@ -187,7 +197,46 @@ and expression_desc funs acc ed = match ed with
     let p, acc = pattern_it funs acc p in
     let e2, acc = expression_it funs acc e2 in
     Eawait_val (imf, ak, e1, p, e2), acc
+  | Enewclock (id, sch, e) ->
+      let sch, acc = optional_wacc (expression_it funs) acc sch in
+      let e, acc = expression_it funs acc e in
+      Enewclock (id, sch, e), acc
+  | Epauseclock e ->
+      let e, acc = expression_it funs acc e in
+      Epauseclock e, acc
+  | Etopck -> Etopck, acc
+(*memory*)
+  | Ememory (id, ck, e1, e) ->
+      let ck, acc = clock_expr_it funs acc ck in
+      let e1, acc = expression_it funs acc e1 in
+      let e, acc = expression_it funs acc e in
+      Ememory (id, ck, e1, e), acc
+  | Elast_mem e ->
+      let e, acc = expression_it funs acc e in
+      Elast_mem e, acc
+  | Eupdate (e1, e2) ->
+      let e1, acc = expression_it funs acc e1 in
+      let e2, acc = expression_it funs acc e2 in
+      Eupdate (e1, e2), acc
+  | Eset_mem (e1, e2) ->
+      let e1, acc = expression_it funs acc e1 in
+      let e2, acc = expression_it funs acc e2 in
+      Eset_mem (e1, e2), acc
+  | Eawait_new (e1, p, e2) ->
+    let e1, acc = expression_it funs acc e1 in
+    let p, acc = pattern_it funs acc p in
+    let e2, acc = expression_it funs acc e2 in
+    Eawait_new (e1, p, e2), acc
 
+and clock_expr_it funs acc ck =
+  try funs.clock_expr funs acc ck
+  with Fallback -> clock_expr funs acc ck
+and clock_expr funs acc ck = match ck with
+  | CkLocal -> CkLocal, acc
+  | CkTop -> CkTop, acc
+  | CkExpr e1 ->
+      let e1, acc = expression_it funs acc e1 in
+      CkExpr e1, acc
 
 and pattern_expression_it funs acc (p,e) =
   let p, acc = pattern_it funs acc p in
@@ -280,20 +329,29 @@ and type_expression_desc_it funs acc ted =
   with Fallback -> type_expression_desc funs acc ted
 and type_expression_desc funs acc ted = match ted with
   | Tvar s -> Tvar s, acc
-  | Tarrow (te1, te2) ->
+  | Tarrow (te1, te2, ee) ->
     let te1, acc = type_expression_it funs acc te1 in
     let te2, acc = type_expression_it funs acc te2 in
-    Tarrow (te1, te2), acc
+    Tarrow (te1, te2, ee), acc
   | Tproduct te_list ->
     let te_list, acc = mapfold (type_expression_it funs) acc te_list in
     Tproduct te_list, acc
-  | Tconstr (id, te_list) ->
-    let te_list, acc = mapfold (type_expression_it funs) acc te_list in
+  | Tconstr (id, pe_list) ->
+    let te_list, acc = mapfold (param_expression_it funs) acc pe_list in
     Tconstr (id,te_list), acc
-  | Tprocess (te, i) ->
+  | Tprocess (te, i, ce, ee) ->
     let te, acc = type_expression_it funs acc te in
-    Tprocess (te, i), acc
+    Tprocess (te, i, ce, ee), acc
+  | _ -> (*TODO*) ted, acc
 
+and param_expression_it funs acc ped =
+  try funs.param_expression funs acc ped
+  with Fallback -> param_expression funs acc ped
+and param_expression funs acc ped = match ped with
+  | Ptype te ->
+      let te, acc = type_expression_it funs acc te in
+      Ptype te, acc
+  | _ -> (*TODO*) ped, acc
 
 and type_declaration_it funs acc ted =
   try funs.type_declaration funs acc ted
@@ -349,6 +407,9 @@ and impl_item_desc funs acc id = match id with
     in
     let v_list, acc = mapfold aux acc v_list in
     Isignal v_list, acc
+  | Imemory (n, e) ->
+      let e, acc = expression_it funs acc e in
+      Imemory (n, e), acc
   | Itype i_list ->
     let aux acc (id, sl, td) =
       let td, acc = type_declaration_it funs acc td in
@@ -393,6 +454,7 @@ and intf_item_desc funs acc id = match id with
 let defaults = {
   expression = expression;
   expression_desc = expression_desc;
+  clock_expr = clock_expr;
   event_config = event_config;
   event_config_desc = event_config_desc;
   pattern = pattern;
@@ -400,6 +462,7 @@ let defaults = {
   varpatt = varpatt;
   type_expression = type_expression;
   type_expression_desc = type_expression_desc;
+  param_expression = param_expression;
   type_declaration = type_declaration;
   impl_item = impl_item;
   impl_item_desc = impl_item_desc;

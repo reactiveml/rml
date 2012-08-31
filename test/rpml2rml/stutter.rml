@@ -1,0 +1,7 @@
+let process stutter s =
+  domain(ck) do
+    loop print_string s; pause ck end
+  done
+
+let process main =
+  run (stutter "a") || run (stutter "b")

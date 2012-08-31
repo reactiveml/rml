@@ -1,0 +1,131 @@
+let debug_enabled = true
+let debug s =
+  if debug_enabled then
+    print_endline s
+
+let map_option f v = match v with
+| None -> ()
+| Some v -> f v
+
+let process map_option_p p v = match v with
+| None -> ()
+| Some v -> run (p v)
+
+let equal_option x y = match y with
+| None -> false
+| Some y -> x = y
+
+let process sustain s =
+  loop
+    pause; emit s(pre? s)
+  end
+
+let process sustain_list s =
+  loop
+    List.iter (fun x -> emit s x) (pre? s); pause
+  end
+
+type clock =
+    { step : (unit, unit list) event; (* debut de l'instant *)
+      eoi : (unit, unit list) event; (*  debut de l'eoi *)
+      has_next : (unit, unit list) event; (* present a la fin de l'eoi si on doit faire
+                                             un autre instant local dans ce macro-instant*)
+      alive : (int, int) event; (* nombre de domaines reactifs enfants en cours d'execution*)
+      finished : (unit, unit list) event; (* pour terminer le domaine *)
+      name : string;
+    }
+
+type ('a, 'b) clocked_signal =
+    { s_await : ('a, 'b) event; (* signal pour obtenir la valeur *)
+      s_emit : ('a, 'a list) event; (* signal pour emission et when *)
+      s_clock : clock (* horloge du signal *)}
+
+let mk_clock name =
+  signal step, finished, eoi, has_next in
+  signal alive default 0 gather (+) in
+  { step = step; alive = alive; finished = finished;
+    eoi = eoi; has_next = has_next; name = name }
+
+let process pause_ck d =
+  await d.eoi;
+  emit d.has_next;
+  await d.step
+
+let process await_step d =
+  await d.step
+
+(* fonctionnement:
+   1. attendre le debut de l'instant du domaine parent
+   2. envoyer ck.step
+   3. a l'instant suivant, on execute les processus sur cette horloge
+   4. on attend que ck.alive atteigne 0
+   5. on emet ck.eoi
+   6. on attend deux instants pour que l'eoi se fasse et on regarde si fin du macro-instant:
+                - si oui, on va a 1.
+                - sinon, on va a 2.
+*)
+let mk_domain name parent period =
+  let ck = mk_clock name in
+  let cpt = ref 0 in (* compteur du nombre d'instants *)
+  let process domainp =
+    do
+      map_option (fun pck -> emit pck.alive 1) parent;
+      loop
+        emit ck.step; debug ("\n** Step of "^ck.name^"**"); incr cpt; pause;
+        await ck.alive(0) in
+        emit ck.eoi; debug ("\n** Eoi of "^ck.name); pause;
+        pause; (* on attend un autre instant pour avoir la valeur de pre ck.has_next *)
+        if parent <> None && (equal_option !cpt period or not (pre ck.has_next)) then (
+          debug ("End of macro step for "^ck.name);
+          cpt := 0;
+          match parent with
+          | None -> ()
+          | Some pck ->
+              emit pck.alive(-1);
+              run (await_step pck);
+              map_option (fun pck -> emit pck.alive 1) parent
+         )
+      end
+      ||
+      run (sustain ck.alive)
+    until ck.finished done;
+    debug ("End of "^ck.name);
+    map_option (fun pck -> emit pck.alive (-1)) parent
+  in
+  domainp, ck
+
+let mk_signal d g ck =
+  signal s default d gather g in
+  signal s_emit in
+  let process hold =
+    loop
+      await s_emit;
+      begin
+        do
+          run (sustain_list s_emit)
+        until ck.step done
+        ||
+        await immediate ck.eoi;
+        (* on emet toutes les valeurs avec le bon gther pour avoir la bonne valeur *)
+        List.iter (fun x -> emit s x) (pre? s_emit);
+        (*debug ("Emitting "^string_of_int (List.length (pre? s_emit))^" values") *)
+      end
+    end
+  in
+  let s = { s_await = s; s_emit = s_emit; s_clock = ck } in
+  hold, s
+
+let mk_signal_default ck =
+  mk_signal [] (fun x l -> x::l)
+
+let process await_all s act_ck =
+  await s.s_await(v) in
+  emit act_ck.has_next;
+  run (await_step act_ck);
+  v
+
+let emit_v s v =
+  emit s.s_emit v
+
+let topck_domain, top_ck = mk_domain "topck" None None
+
