@@ -346,13 +346,16 @@ let rec print pri e =
       print 0 e1;
       print_signal_patt_expr (fun () -> print_string " in ") p e2
   (*reparml related expressions*)
-  | Enewclock (s, _, e1) ->
+  | Enewclock (s, _, period, e1) ->
       print_string "domain(";
       print_name (Ident.unique_name s);
       print_string ") do";
       print_space ();
       print pri_e e1;
       print_space ();
+      (match period with
+        | None -> ()
+        | Some e3 -> print_string "by "; print 0 e; print_space ());
       print_string "done"
   | Epauseclock _ -> assert false
   | Etopck -> print_string "topck"

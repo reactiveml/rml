@@ -69,6 +69,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "at", AT;
     "await", AWAIT;
     "begin", BEGIN;
+    "by", BY;
     "class", CLASS;
     "constraint", CONSTRAINT;
     "control", CONTROL;

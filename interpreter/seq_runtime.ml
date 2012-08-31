@@ -33,6 +33,7 @@ struct
           cd_clock : E.clock;
           mutable cd_top : control_tree;
           mutable cd_parent : clock_domain option;
+          mutable cd_counter : int;
         }
 
     and clock = clock_domain
@@ -276,6 +277,7 @@ struct
         cd_clock = E.init_clock ();
         cd_top = new_ctrl Susp;
         cd_parent = parent;
+        cd_counter = 0;
       } in
       cd.cd_top <- new_ctrl (Clock_domain cd);
       cd.cd_top.last_activation <- save_clock_state cd;
@@ -607,12 +609,18 @@ struct
     let macro_step_done cd =
       !(cd.cd_pause_clock) || not (has_next cd.cd_top)
 
-    let step_clock_domain ctrl new_ctrl cd new_cd =
+    let step_clock_domain ctrl new_ctrl cd new_cd period =
       let next_instant_clock_domain _ = next_instant new_cd in
       let rec f_cd () =
+        cd.cd_counter <- cd.cd_counter + 1;
         schedule new_cd;
         eoi new_cd;
-        if macro_step_done new_cd then (
+        let period_finished = match period with
+          | None -> false
+          | Some p -> cd.cd_counter >= p
+        in
+        if period_finished || macro_step_done new_cd then (
+          cd.cd_counter <- 0;
           D.add_waiting next_instant_clock_domain cd.cd_next_instant;
           D.add_next f_cd ctrl.next_control;
         ) else (
@@ -626,14 +634,14 @@ struct
     let end_clock_domain new_ctrl f_k x =
       end_ctrl new_ctrl f_k x
 
-    let new_clock_domain cd ctrl p _ f_k =
+    let new_clock_domain cd ctrl p _ period f_k =
       let new_cd = mk_clock_domain (Some cd) in
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain new_ctrl f_k) in
       fun _ ->
         on_current_instant new_cd f;
         start_ctrl new_cd ctrl new_ctrl;
-        step_clock_domain ctrl new_ctrl cd new_cd unit_value
+        step_clock_domain ctrl new_ctrl cd new_cd period unit_value
 
     (* the react function *)
     let react cd =

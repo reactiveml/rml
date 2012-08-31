@@ -857,10 +857,11 @@ let rec type_of_expression env expr =
         in
         type_of_expression new_env p
 
-    | Enewclock (id, sch, e) ->
+    | Enewclock (id, sch, period, e) ->
       let env = Env.add id (forall [] type_clock) env in
       let sch_type = arrow type_int (product [type_int; type_int]) in
       Misc.opt_iter (fun sch -> type_expect env sch sch_type) sch;
+      Misc.opt_iter (fun sch -> type_expect env sch type_int) period;
       type_of_expression env e
 
     | Epauseclock ck ->

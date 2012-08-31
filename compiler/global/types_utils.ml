@@ -351,10 +351,10 @@ let rec _unify expected_ty actual_ty =
 (* If Unify is raised, add the faulty types to the exception.
    Otherwise just let the exception (already containing the faulty types) go. *)
 and unify expected_ty actual_ty =
-  try
+(*  try *)
     _unify expected_ty actual_ty
-  with
-    | Unify -> raise (Unify_detailed (expected_ty, actual_ty))
+(*  with
+    | Unify -> raise (Unify_detailed (expected_ty, actual_ty)) *)
 
 (* special cases of unification *)
 let rec filter_arrow ty =

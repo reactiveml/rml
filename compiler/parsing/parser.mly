@@ -205,6 +205,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token BARRBRACKET         /* "|]" */
 %token BARGRATER           /* "|>" */
 %token BEGIN               /* "begin" */
+%token BY                  /* "by" */
 %token <char> CHAR
 %token CLASS               /* "class" */
 %token COLON               /* ":" */
@@ -647,9 +648,9 @@ expr:
   | RUN simple_expr
       { mkexpr(Pexpr_run($2)) }
   | NEWCLOCK LIDENT opt_schedule IN par_expr
-      { mkexpr (Pexpr_newclock (mksimple $2 2, $3, $5)) }
-  | DOMAIN LPAREN LIDENT RPAREN DO par_expr opt_schedule DONE
-      { mkexpr (Pexpr_newclock (mksimple $3 2, $7, $6)) }
+      { mkexpr (Pexpr_newclock (mksimple $2 2, $3, None, $5)) }
+  | DOMAIN LPAREN LIDENT RPAREN DO par_expr opt_schedule opt_by DONE
+      { mkexpr (Pexpr_newclock (mksimple $3 2, $7, $8, $6)) }
   | PAUSE clock_expr
       { mkexpr (Pexpr_pause $2) }
   | PAUSECLOCK simple_expr
@@ -771,6 +772,9 @@ clock_expr:
 opt_schedule:
    /* empty */ { None}
   | SCHEDULE par_expr { Some $2 }
+opt_by:
+  /* empty */ { None }
+  | BY par_expr { Some $2 }
 
 let_bindings:
     let_binding                                 { [$1] }

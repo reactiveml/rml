@@ -913,7 +913,7 @@ and translate_proc e =
                 Location.none])
 *)
 
-    | Coproc_newclock (id, sch, p) ->
+    | Coproc_newclock (id, sch, period, p) ->
         let e =
           make_expr
             (Cexpr_function [(make_patt_var_local id, translate_proc p)])
@@ -925,7 +925,13 @@ and translate_proc e =
               let e = translate_ml e in
               make_constr "Pervasives" "Some" (Some e)
         in
-          Cexpr_apply (make_instruction "rml_newclock", [sch; e])
+        let period = match period with
+          | None -> make_constr "Pervasives" "None" None
+          | Some e ->
+              let e = translate_ml e in
+              make_constr "Pervasives" "Some" (Some e)
+        in
+          Cexpr_apply (make_instruction "rml_newclock", [sch; period; e])
 
     | Coproc_pauseclock e ->
       if Lco_misc.is_value e then

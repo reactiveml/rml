@@ -51,7 +51,7 @@ let expression_desc funs act_ck ed = match ed with
     let domain_ck, ck = mk_domain parent period in
     run domain_ck || run (await_step ck); p; emit ck.finished
   *)
-  | Enewclock (id, _, e) ->
+  | Enewclock (id, _, period, e) ->
       let ck = make_expr (Elocal id) in
       let domain_ck_id = Ident.create Ident.gen_var ("domain_"^id.Ident.name) Ident.Val_RML in
       let domain_ck = make_expr (Elocal domain_ck_id) in
@@ -67,11 +67,15 @@ let expression_desc funs act_ck ed = match ed with
       let new_body =
         make_expr (Epar [run_ck; make_expr (Eseq [await_ck; e; emit_finished])]) in
 
+      let period = match period with
+        | None -> make_expr (Econstruct (Initialization.none_constr_desc, None))
+        | Some e -> make_expr (Econstruct (Initialization.some_constr_desc, Some e))
+      in
       let mk_domain =
         make_expr (Eapply (make_instruction "mk_domain",
                           [make_expr (Econstant (Const_string (id.Ident.name)));
                            make_expr (Econstruct (Initialization.some_constr_desc, Some act_ck));
-                           make_expr (Econstruct (Initialization.none_constr_desc, None))]))
+                           period]))
       in
       let pat =
         make_patt (Ptuple [make_patt (Pvar (Vlocal domain_ck_id));

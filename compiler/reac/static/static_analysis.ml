@@ -577,7 +577,7 @@ let rec static_expr ctx e =
         else
           expr_wrong_static_err p
 
-    | Enewclock (id, sch, p) ->
+    | Enewclock (id, sch, period, p) ->
         if ctx = Process
         then (
           (match sch with
@@ -585,6 +585,11 @@ let rec static_expr ctx e =
             | Some sch ->
                 if static_expr ctx sch <> Static then
                   expr_wrong_static_err sch);
+          (match period with
+            | None -> ()
+            | Some period ->
+                if static_expr ctx period <> Static then
+                  expr_wrong_static_err period);
           let _typ = static_expr ctx p in
           Dynamic Dontknow
         ) else expr_wrong_static_err e

@@ -183,6 +183,14 @@ let process ck_sch_annot act =
     newclock ck2 in
       act 2
 
+(* [S (O 0, S(O 0, O 0)); S (O 0, S(O 0, O 0))]*)
+let process ck_by act =
+  domain(ck) do
+    loop
+      act 0; pause ck
+    end
+  by 3 done
+
 open Rmltest
 
 let test =
@@ -204,4 +212,5 @@ let test =
      (macro_instant_loop, "macro_instant_loop", [S(O 22, O 2); S(O 33, O 3); P[S(O 22, O 2); O 11]; P[S(O 33, O 3); O 1]; P[S(O 22, O 2); O 11]; P[S(O 33, O 3); O 1]]);
      (await_slow_loop, "await_slow_loop", [N; v; v; N; v; v]);
      (ck_sch_annot, "ck_sch_annot", [P [O 0; O 2]]);
+     (ck_by, "ck_by", [S (O 0, S(O 0, O 0)); S (O 0, S(O 0, O 0))]);
     ]

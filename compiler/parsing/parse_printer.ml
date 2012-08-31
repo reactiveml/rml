@@ -348,7 +348,7 @@ let rec expression i ppf x =
   | Pexpr_default s ->
       line i ppf "Pexpr_default\n";
       expression i ppf s;
-  | Pexpr_newclock (id, _, e) ->
+  | Pexpr_newclock (id, _, _, e) ->
       line i ppf "Pexpr_newclock %a\n" fmt_simple id;
       expression i ppf e
   | Pconf_present (e) ->

@@ -936,9 +936,10 @@ let rec schema_of_expression env expr =
         in
         clock_of_expression new_env p
 
-    | Enewclock (id, sch, e) ->
+    | Enewclock (id, sch, period, e) ->
       let sch_type = arrow Clocks_utils.static (product [Clocks_utils.static; Clocks_utils.static]) no_effect in
       Misc.opt_iter (fun sch -> type_expect env sch sch_type) sch;
+      Misc.opt_iter (fun sch -> type_expect env sch Clocks_utils.static) period;
       push_type_level ();
       (* create a fresh skolem *)
       let c = carrier_skolem id.Ident.name Clocks_utils.names#name in

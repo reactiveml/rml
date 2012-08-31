@@ -166,6 +166,9 @@ struct
           cd_remaining_async : int ref;
           mutable cd_direct_remotes : C.SiteSet.t; (* remotes with direct child clock domains*)
           mutable cd_other_remotes : C.SiteSet.t; (* remotes with grand-child clock domains*)
+
+          mutable cd_counter : int;
+          cd_period : int option;
         }
 
     type site = {
@@ -481,7 +484,7 @@ struct
       ctrl.alive && not ctrl.susp
 
     (** clock domains operations *)
-    let mk_clock_domain site clock balancer location parent_ctrl parent_self_id =
+    let mk_clock_domain site clock balancer period location parent_ctrl parent_self_id =
       let cd = {
         cd_current = D.mk_current ();
         cd_pause_clock = false;
@@ -499,6 +502,8 @@ struct
         cd_remaining_async = ref 0;
         cd_other_remotes = C.SiteSet.empty;
         cd_direct_remotes = C.SiteSet.empty;
+        cd_counter = 0;
+        cd_period = period;
       } in
       site.s_clock_domains <- C.GidMap.add clock.ck_gid cd site.s_clock_domains;
       cd.cd_top.last_activation <- Clock.save_clock_state site cd.cd_clock;
@@ -685,6 +690,7 @@ struct
         print_debug "Executing clock domain %a@." print_cd cd
       ELSE () END;
       schedule cd;
+      cd.cd_counter <- cd.cd_counter + 1;
       if cd.cd_top.alive then (
         if !(cd.cd_remaining_async) = 0 then (
           eoi site cd;
@@ -693,7 +699,13 @@ struct
                 next_instant site cd
                   (*Format.eprintf "Top clock domain next_instnt done : %d@." !(cd.cd_remaining_async)*)
             | Some ck ->
-                if macro_step_done site cd then (
+                let is_done = macro_step_done site cd in
+                let period_finished = match cd.cd_period with
+                  | None -> false
+                  | Some p -> cd.cd_counter >= p
+                in
+                if is_done || period_finished then (
+                  cd.cd_counter <- 0;
                   IFDEF RML_DEBUG THEN
                     print_debug "Macro step of clock domain %a is done@." print_cd cd
                   ELSE () END;
@@ -891,12 +903,12 @@ struct
             end_ctrl new_ctrl f_k ()
         | None -> assert false
 
-    let new_local_clock_domain site cd new_balancer location ctrl p f_k =
+    let new_local_clock_domain site cd new_balancer period location ctrl p f_k =
       let new_ck = mk_clock (Some cd.cd_clock) in
       IFDEF RML_DEBUG THEN
         print_debug "Creating local clock domain %a@." C.print_gid new_ck.ck_gid
       ELSE () END;
-      let new_cd = mk_clock_domain site new_ck new_balancer location (Some ctrl) None in
+      let new_cd = mk_clock_domain site new_ck new_balancer period location (Some ctrl) None in
       let new_ctrl = control_tree new_cd in
       let f = p new_cd new_ctrl (end_clock_domain site new_cd new_ctrl f_k) in
       fun _ ->
@@ -906,9 +918,9 @@ struct
 
     (* After receving Mnew_cd *)
     let create_cd site msg =
-      let tmp_id, parent_ck, new_balancer, location, p = Msgs.recv_new_cd msg in
+      let tmp_id, parent_ck, new_balancer, period, location, p = Msgs.recv_new_cd msg in
       let new_ck = mk_clock (Some parent_ck) in
-      let new_cd = mk_clock_domain site new_ck new_balancer location None (Some tmp_id) in
+      let new_cd = mk_clock_domain site new_ck new_balancer period location None (Some tmp_id) in
       IFDEF RML_DEBUG THEN
         print_debug "Created local clock domain %a after request by %a@."
           print_cd new_cd   print_clock parent_ck
@@ -923,7 +935,7 @@ struct
       Clock.update_clock site parent_ck;
       exec_cd site new_cd ()
 
-    let new_remote_clock_domain site remote_site new_balancer location cd ctrl p f_k =
+    let new_remote_clock_domain site remote_site new_balancer period location cd ctrl p f_k =
       let tmp_id = C.fresh site.s_seed in
       update_remote_set site cd true remote_site;
       let new_ctrl = new_ctrl (Clock_domain None) in
@@ -935,21 +947,21 @@ struct
       IFDEF RML_DEBUG THEN print_debug "Starting remote clock domain@." ELSE () END;
       IFDEF RML_DEBUG THEN print_debug "++%a@." print_cd cd ELSE () END;
       incr cd.cd_remaining_async;
-      Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, location, p)
+      Msgs.send_new_cd remote_site (tmp_id, cd.cd_clock, new_balancer, period, location, p)
 
-    let new_clock_domain cd ctrl p user_balancer f_k _ =
+    let new_clock_domain cd ctrl p user_balancer period f_k _ =
       let site = get_site () in
       if cd.cd_location = L.Lleaf then
-        new_local_clock_domain site cd cd.cd_load_balancer L.Lleaf ctrl p f_k ()
+        new_local_clock_domain site cd cd.cd_load_balancer period L.Lleaf ctrl p f_k ()
       else (
         let remote_site, location, new_balancer = cd.cd_load_balancer#new_child user_balancer  in
         if remote_site <> C.local_site () then (
           IFDEF RML_DEBUG THEN
             print_debug "Distributing new cd to site %a@." C.print_site remote_site
           ELSE () END;
-          new_remote_clock_domain site remote_site new_balancer location cd ctrl p f_k
+          new_remote_clock_domain site remote_site new_balancer period location cd ctrl p f_k
         ) else
-          new_local_clock_domain site cd new_balancer location ctrl p f_k ()
+          new_local_clock_domain site cd new_balancer period location ctrl p f_k ()
      )
 
 
@@ -1325,7 +1337,7 @@ struct
           (* create top clock domain *)
           let ck = mk_clock None in
           let balancer = L.mk_top_balancer () in
-          let cd = mk_clock_domain (get_site ()) ck balancer L.Lany None None in
+          let cd = mk_clock_domain (get_site ()) ck balancer None L.Lany None None in
           site.s_top_clock_domain <- Some cd
         ) else (
           (* just create a fresh id to keep the counters of

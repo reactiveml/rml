@@ -197,10 +197,11 @@ and expression_desc funs acc ed = match ed with
     let p, acc = pattern_it funs acc p in
     let e2, acc = expression_it funs acc e2 in
     Eawait_val (imf, ak, e1, p, e2), acc
-  | Enewclock (id, sch, e) ->
+  | Enewclock (id, sch, period, e) ->
       let sch, acc = optional_wacc (expression_it funs) acc sch in
+      let period, acc = optional_wacc (expression_it funs) acc period in
       let e, acc = expression_it funs acc e in
-      Enewclock (id, sch, e), acc
+      Enewclock (id, sch, period, e), acc
   | Epauseclock e ->
       let e, acc = expression_it funs acc e in
       Epauseclock e, acc
