@@ -4,4 +4,4 @@ let process main =
     await s(v) in print_int v
   done
   ||
-  emit s 4
+  pause; pause; emit s 4

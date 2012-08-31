@@ -1,0 +1,13 @@
+let process stutter2 s stop =
+  domain(ck) do
+    do
+      loop print_string s; pause ck end
+    until stop done;
+    print_endline "Done"
+  by 5 done
+
+let process main =
+  signal stop default 0 gather (+) in
+  run (stutter2 "a" stop)
+  ||
+  emit stop 2
