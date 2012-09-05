@@ -55,6 +55,25 @@ $
 let process p s =
   !await s(x) in !emit x 1
 
+$
+signal x;;
+let process g (x : (int, 'a, zero, 'b) event) = ignore x in
+ process (!emit x 1 || run (g x) || run (g x))
+
+$
+
+signal x;;
+signal y;;
+let process f x = !emit x 1 in
+ process (run (f x) || run (f y))
+
+$
+
+signal x;;
+signal y;;
+let f = fun x -> process (!emit x 1) in
+ process (run (f x) || run (f y))
+
 $$$bad
 ${
 (*
@@ -123,6 +142,12 @@ let process p l =
   List.map (fun x -> my_emit x 1) l
 
 $
+signal s;;
+let my_emit s v = !emit s v
+let process p l =
+  List.map (fun x -> my_emit s x) l
+
+$
 let id x = x
 let process p s =
   !emit (id s) 1 ; !emit (id s) 1
@@ -138,7 +163,7 @@ let process envoyer s = !emit s ;;
 let process main s =
   run (envoyer s)
 
-signal s;
+signal s;;
 
 let process test = run (main s) || run (main s);;
 
@@ -214,3 +239,20 @@ $
 (* A neutral (on reception) signal cannot carry over affine values. *)
 
 let process test s = await s(x) in !emit x
+
+$
+
+let process boom = signal s in
+  List.iter (fun x -> !emit x 1) [s;s]
+
+$
+
+signal x;;
+let process f x = !emit x 1 in
+ process (run (f x) || run (f x))
+
+$
+
+signal x;;
+let f = fun x -> process (!emit x 1) in
+ process (run (f x) || run (f x))
