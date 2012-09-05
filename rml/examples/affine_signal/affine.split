@@ -95,7 +95,7 @@ let process p l =
 
 $
 signal s;;
-let process p l =
+let process p (l : int list) =
   List.map (fun x -> !emit s x) l
 
 $
