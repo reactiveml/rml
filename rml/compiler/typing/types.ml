@@ -263,21 +263,21 @@ let expand_abbrev params body args =
   List.iter2 bind_variable params' args;
   body'
 
-let unify_regions enabled expected_ty actual_ty =
-  if enabled then begin
+let unify_regions expected_ty actual_ty =
+  if false then begin
     let new_su = Usages.add_s expected_ty.type_usage actual_ty.type_usage in
     expected_ty.type_usage <- new_su;
     actual_ty.type_usage <- new_su;
   end
 
 (* unification *)
-let rec unify ?(regions = false) expected_ty actual_ty =
+let rec unify expected_ty actual_ty =
   if expected_ty == actual_ty then ()
   else
     let expected_ty = type_repr expected_ty in
     let actual_ty = type_repr actual_ty in
     if expected_ty == actual_ty then
-      unify_regions regions expected_ty actual_ty
+      unify_regions expected_ty actual_ty
     else if Initialization.is_usage expected_ty && Initialization.is_usage actual_ty then
       try
         Usages_misc.unify expected_ty actual_ty
@@ -287,41 +287,41 @@ let rec unify ?(regions = false) expected_ty actual_ty =
       match expected_ty.type_desc, actual_ty.type_desc with
 	Type_var, _ ->
 	  occur_check expected_ty.type_level expected_ty actual_ty;
-          unify_regions regions expected_ty actual_ty;
+          unify_regions expected_ty actual_ty;
 	  expected_ty.type_desc <- Type_link(actual_ty)
       | _, Type_var ->
 	  occur_check actual_ty.type_level actual_ty expected_ty;
-          unify_regions regions expected_ty actual_ty;
+          unify_regions expected_ty actual_ty;
 	  actual_ty.type_desc <- Type_link(expected_ty)
       | Type_product(l1), Type_product(l2) ->
-          unify_regions regions expected_ty actual_ty;
+          unify_regions expected_ty actual_ty;
 	  begin try
-	    List.iter2 (unify ~regions) l1 l2
+	    List.iter2 unify l1 l2
 	  with
 	  | Invalid_argument _ -> raise Unify
 	  end
       | Type_arrow(ty1, ty2), Type_arrow(ty3, ty4) ->
-          unify_regions regions expected_ty actual_ty;
-	  unify ~regions ty1 ty3;
-	  unify ~regions ty2 ty4
+          unify_regions expected_ty actual_ty;
+	  unify ty1 ty3;
+	  unify ty2 ty4
       |	Type_constr(c1, ty_l1),
 	  Type_constr(c2, ty_l2) when same_type_constr c1 c2 ->
-          unify_regions regions expected_ty actual_ty;
+          unify_regions expected_ty actual_ty;
 	  begin try
-	    List.iter2 (unify ~regions) ty_l1 ty_l2
+	    List.iter2 unify ty_l1 ty_l2
 	  with
 	  | Invalid_argument _ -> raise Unify
 	  end;
       | Type_constr
 	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } }, args),
 	_ ->
-          unify_regions regions expected_ty actual_ty;
-	  unify ~regions (expand_abbrev params body args) actual_ty
+          unify_regions expected_ty actual_ty;
+	  unify (expand_abbrev params body args) actual_ty
       | _,
 	Type_constr
 	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
-            unify_regions regions expected_ty actual_ty;
-	    unify ~regions expected_ty (expand_abbrev params body args)
+            unify_regions expected_ty actual_ty;
+	    unify expected_ty (expand_abbrev params body args)
       | Type_process(ty1, pi1), Type_process(ty2, pi2) ->
 	  begin match pi1.proc_static, pi2.proc_static with
 	  | None, None -> ()
@@ -330,22 +330,22 @@ let rec unify ?(regions = false) expected_ty actual_ty =
 	  | Some ps1, Some ps2 ->
 	      pi1.proc_static <- Some (Proc_unify (ps1, ps2))
 	  end;
-          unify_regions regions expected_ty actual_ty;
-	  unify ~regions ty1 ty2
+          unify_regions expected_ty actual_ty;
+	  unify ty1 ty2
       | _ -> raise Unify
 
 
 (* special cases of unification *)
-let rec filter_arrow ?(regions = false) ty =
+let rec filter_arrow ty =
   let ty = type_repr ty in
   match ty.type_desc with
     Type_arrow(ty1, ty2) -> ty1, ty2
   | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
-      filter_arrow ~regions (expand_abbrev params body args)
+      filter_arrow (expand_abbrev params body args)
   | _ ->
       let ty1 = new_var () in
       let ty2 = new_var () in
-      unify ~regions ty (arrow ty1 ty2);
+      unify ty (arrow ty1 ty2);
       ty1, ty2
 
 let rec filter_product arity ty =

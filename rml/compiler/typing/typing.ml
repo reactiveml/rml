@@ -41,9 +41,9 @@ open Reac_ast
 open Misc
 open Annot
 
-let unify_expr ?(regions = false) expr expected_ty actual_ty =
+let unify_expr expr expected_ty actual_ty =
   try
-    unify ~regions expected_ty actual_ty
+    unify expected_ty actual_ty
   with
     Unify -> expr_wrong_type_err expr actual_ty expected_ty
 
@@ -59,7 +59,7 @@ let unify_event evt expected_ty actual_ty =
 
 let unify_emit loc expected_ty actual_ty =
   try
-    unify ~regions:true expected_ty actual_ty
+    unify expected_ty actual_ty
   with Unify -> emit_wrong_type_err loc actual_ty expected_ty
 
 let unify_emit_usage loc expected_ty actual_ty =
@@ -530,7 +530,7 @@ let rec type_of_expression env expr =
 		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
 		  env loc_env
 	      in
-              snd (type_expect ~regions:true new_env e ty_res)
+              snd (type_expect new_env e ty_res)
             )
 	    matching
         in
@@ -544,12 +544,12 @@ let rec type_of_expression env expr =
 	  | arg :: args ->
 	      let t1, t2 =
 		try
-		  filter_arrow ~regions:true ty_res
+		  filter_arrow ty_res
 		with Unify ->
 		  application_of_non_function_err fct ty_fct
                 | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 	      in
-              let ty_arg, ef = type_expect ~regions:true env arg t1 in
+              let ty_arg, ef = type_expect env arg t1 in
               let effects = Effects.merge (apply_eff ef t1 arg.expr_loc) u in
 	      type_args effects t2 args
 	in
@@ -1019,9 +1019,9 @@ and type_let is_rec env patt_expr_list =
 
 
 (* Typing of an expression with an expected type *)
-and type_expect ?(regions = false) env expr expected_ty =
+and type_expect env expr expected_ty =
   let actual_ty, effects = type_of_expression env expr in
-  let () = unify_expr ~regions expr expected_ty actual_ty in
+  let () = unify_expr expr expected_ty actual_ty in
   actual_ty, effects
 
 (* Typing of statements (expressions whose values are ignored) *)
