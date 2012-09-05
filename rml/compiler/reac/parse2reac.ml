@@ -52,8 +52,8 @@ let rec translate_te typ =
     match typ.pte_desc with
     | Ptype_var x -> Rtype_var x
 
-    | Ptype_arrow (t1, t2) ->
-	Rtype_arrow (translate_te t1, translate_te t2)
+    | Ptype_arrow (t1, n, t2) ->
+	Rtype_arrow (translate_te t1, n, translate_te t2)
 
     | Ptype_tuple typ_list ->
 	Rtype_product (List.map translate_te typ_list)

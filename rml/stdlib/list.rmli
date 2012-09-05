@@ -71,12 +71,12 @@ val flatten : 'a list list -> 'a list
 (** {6 Iterators} *)
 
 
-val iter : ('a -> unit) -> 'a list -> unit
+val iter : ('a => unit) -> 'a list -> unit
 (** [List.iter f [a1; ...; an]] applies function [f] in turn to
    [a1; ...; an]. It is equivalent to
    [begin f a1; f a2; ...; f an; () end]. *)
 
-val map : ('a -> 'b) -> 'a list -> 'b list
+val map : ('a => 'b) -> 'a list -> 'b list
 (** [List.map f [a1; ...; an]] applies function [f] to [a1, ..., an],
    and builds the list [[f a1; ...; f an]]
    with the results returned by [f].  Not tail-recursive. *)

@@ -308,8 +308,8 @@ let type_of_type_expression typ_vars typexp =
 	  Not_found -> unbound_typ_err s typexp.te_loc
 	end
 
-    | Rtype_arrow (t1, t2) ->
-	arrow (type_of t1) (type_of t2)
+    | Rtype_arrow (t1, n, t2) ->
+        arrow ~n (type_of t1) (type_of t2)
 
     | Rtype_product (l) ->
 	product (List.map type_of l)
@@ -330,7 +330,7 @@ let free_of_type ty =
   let rec vars v ty =
     match ty.te_desc with
       Rtype_var(x) -> if List.mem x v then v else x::v
-    | Rtype_arrow(t1,t2) -> vars (vars v t1) t2
+    | Rtype_arrow(t1,_n,t2) -> vars (vars v t1) t2
     | Rtype_product(t) ->
 	List.fold_left vars v t
     | Rtype_constr(_,t) ->
@@ -490,6 +490,23 @@ let ids_of_patt patts =
     []
     patts
 
+let unify_effects effects loc u =
+  let ty = Usages_misc.type_of_usage u in
+  Effects.iter
+    (fun k v ->
+      let _loc, u_emit, u_get = Usages.km_su v in
+      try
+        Usages_misc.unify
+          ty
+          (Usages_misc.type_of_usage u_emit);
+        Usages_misc.unify
+          ty
+          (Usages_misc.type_of_usage u_get)
+      with Usages_misc.Unify ->
+        fun_wrong_usage_err loc
+    )
+    effects
+
 (* Typing of expressions *)
 let rec type_of_expression env expr =
   let t =
@@ -550,8 +567,10 @@ let rec type_of_expression env expr =
                 | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 	      in
               let ty_arg, ef = type_expect env arg t1 in
-              let effects = Effects.merge (apply_eff ef t1 arg.expr_loc) u in
-	      type_args effects t2 args
+              let ty_arg_ef = apply_eff ef t1 arg.expr_loc in
+              if ty_arg.type_neutral then
+                unify_effects ty_arg_ef arg.expr_loc Usages.Neutral;
+	      type_args (Effects.merge ty_arg_ef u) t2 args
 	in
 	type_args effects_f ty_fct args
 

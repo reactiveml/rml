@@ -43,6 +43,7 @@ and type_expression =
     { mutable type_desc: type_expression_desc;
       mutable type_level: int;
       type_index: int;
+      mutable type_neutral: bool;
       mutable type_usage: Usages.signal_usage;
     }
 
@@ -130,6 +131,7 @@ let make_type ty =
   { type_desc = ty;
     type_level = generic;
     type_index = names#name;
+    type_neutral = false;
     type_usage = Usages.mk_null;
   }
 
@@ -144,8 +146,10 @@ let constr_notabbrev name ty_list =
 			   info = Some {constr_abbr = Constr_notabbrev}; },
 			 ty_list))
 
-let arrow ty1 ty2 =
-  make_type (Type_arrow(ty1, ty2))
+let arrow ?(n = false) ty1 ty2 =
+  let ty = make_type (Type_arrow(ty1, ty2)) in
+  ty.type_neutral <- n;
+  ty
 
 let process ty k =
   make_type (Type_process (ty, k))
@@ -154,6 +158,7 @@ let no_type_expression =
   { type_desc = Type_product[];
     type_level = generic;
     type_index = -1;
+    type_neutral = false;
     type_usage = Usages.mk_null;
   }
 
@@ -163,6 +168,7 @@ let new_var () =
   { type_desc = Type_var;
     type_level = !current_level;
     type_index = names#name;
+    type_neutral = false;
     type_usage = Usages.mk_null;
   }
 
@@ -170,5 +176,6 @@ let new_generic_var () =
   { type_desc = Type_var;
     type_level = generic;
     type_index = names#name;
+    type_neutral = false;
     type_usage = Usages.mk_null;
   }

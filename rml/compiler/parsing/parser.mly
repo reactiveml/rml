@@ -269,6 +269,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token METHOD              /* "method" */
 %token MINUS               /* "-" */
 %token MINUSDOT            /* "-." */
+%token EQUALGREATER        /* "=>" */
 %token MINUSGREATER        /* "->" */
 %token MODULE              /* "module" */
 %token MUTABLE             /* "mutable" */
@@ -975,7 +976,9 @@ core_type:
     simple_core_type_or_tuple
       { $1 }
   | core_type MINUSGREATER core_type
-      { mkte(Ptype_arrow($1, $3)) }
+      { mkte(Ptype_arrow($1, false, $3)) }
+  | core_type EQUALGREATER core_type
+      { mkte(Ptype_arrow($1, true, $3)) }
 ;
 
 simple_core_type:

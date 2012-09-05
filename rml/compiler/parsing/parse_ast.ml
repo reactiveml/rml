@@ -123,7 +123,7 @@ and type_expression =
      pte_loc: Location.t;}
 and type_expression_desc =
   | Ptype_var of string
-  | Ptype_arrow of type_expression * type_expression
+  | Ptype_arrow of type_expression * bool * type_expression
   | Ptype_tuple of type_expression list
   | Ptype_constr of ident * type_expression list
   | Ptype_process of type_expression * Def_static.instantaneous

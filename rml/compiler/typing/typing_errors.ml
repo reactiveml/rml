@@ -129,6 +129,12 @@ let usage_wrong_type_err loc1 loc2 =
     Location.print_oc loc2;
   raise Error
 
+let fun_wrong_usage_err loc =
+  Printf.eprintf
+    "%aThis function cannot use affine resources.\n"
+    Location.print_oc loc;
+  raise Error
+
 let gather_wrong_effects_err has_effects loc =
   if has_effects then
   Printf.eprintf "%aGather functions has effects while it should not.\n"

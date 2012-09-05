@@ -49,6 +49,7 @@ let make_type ty =
   { type_desc = ty;
     type_level = generic;
     type_index = names#name;
+    type_neutral = false;
     type_usage = Usages.mk_null;
   }
 
@@ -63,8 +64,10 @@ let constr_notabbrev name ty_list =
 			   info = Some {constr_abbr = Constr_notabbrev}; },
 			 ty_list))
 
-let arrow ty1 ty2 =
-  make_type (Type_arrow(ty1, ty2))
+let arrow ?(n=false) ty1 ty2 =
+  let ty = make_type (Type_arrow(ty1, ty2)) in
+  ty.type_neutral <- n;
+  ty
 
 let rec arrow_list ty_l ty_res =
   match ty_l with
@@ -188,7 +191,7 @@ let rec copy ty =
   | Type_arrow(ty1, ty2) ->
       if level = generic
       then
-	arrow (copy ty1) (copy ty2)
+	arrow ~n:ty.type_neutral (copy ty1) (copy ty2)
       else ty
   | Type_product(ty_list) ->
       if level = generic
@@ -301,6 +304,9 @@ let rec unify expected_ty actual_ty =
 	  | Invalid_argument _ -> raise Unify
 	  end
       | Type_arrow(ty1, ty2), Type_arrow(ty3, ty4) ->
+          let n = expected_ty.type_neutral || actual_ty.type_neutral in
+          expected_ty.type_neutral <- n;
+          actual_ty.type_neutral <- n;
           unify_regions expected_ty actual_ty;
 	  unify ty1 ty3;
 	  unify ty2 ty4

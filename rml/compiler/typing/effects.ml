@@ -28,6 +28,7 @@ let empty = M.empty
 let is_empty = M.is_empty
 let mem = M.mem
 let find = M.find
+let iter = M.iter
 
 let add k loc u_emit u_get m =
   let su = Usages.mk_su loc u_emit u_get in

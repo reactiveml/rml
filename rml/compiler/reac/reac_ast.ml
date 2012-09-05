@@ -134,7 +134,7 @@ and type_expression =
       te_loc: Location.t}
 and type_expression_desc =
     Rtype_var of string
-  | Rtype_arrow of type_expression * type_expression
+  | Rtype_arrow of type_expression * bool * type_expression
   | Rtype_product of type_expression list
   | Rtype_constr of type_description global * type_expression list
   | Rtype_process of type_expression * Def_static.instantaneous

@@ -27,6 +27,7 @@ val is_empty : effects -> bool
 
 val mem : key -> effects -> bool
 val find : key -> effects -> signal_usage
+val iter : (key -> signal_usage -> unit) -> effects -> unit
 
 val add :
   key ->

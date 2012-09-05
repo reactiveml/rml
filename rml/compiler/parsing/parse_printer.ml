@@ -140,8 +140,9 @@ let rec type_expression i ppf x =
   let i = i+1 in
   match x.pte_desc with
   | Ptype_var (s) -> line i ppf "Ptype_var \'%s\n" s;
-  | Ptype_arrow (ct1, ct2) ->
+  | Ptype_arrow (ct1, n, ct2) ->
       line i ppf "Ptype_arrow\n";
+      bool i ppf n;
       type_expression i ppf ct1;
       type_expression i ppf ct2;
   | Ptype_tuple l ->

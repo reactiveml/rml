@@ -66,7 +66,7 @@ let rec translate_te typ =
   let ktyp =
     match typ.te_desc with
     | Rtype_var x -> Ktype_var x
-    | Rtype_arrow (t1, t2) ->
+    | Rtype_arrow (t1, _n, t2) ->
 	Ktype_arrow (translate_te t1, translate_te t2)
     | Rtype_product typ_list ->
 	Ktype_product (List.map translate_te typ_list)

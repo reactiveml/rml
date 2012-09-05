@@ -383,6 +383,7 @@ rule token = parse
   | ")"  { RPAREN }
   | "*"  { STAR }
   | ","  { COMMA }
+  | "=>" { EQUALGREATER }
   | "->" { MINUSGREATER }
   | "."  { DOT }
   | ".." { DOTDOT }

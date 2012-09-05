@@ -73,7 +73,7 @@ let rec translate_te typ =
   let cotyp =
     match typ.te_desc with
     | Rtype_var x -> Cotype_var x
-    | Rtype_arrow (t1, t2) ->
+    | Rtype_arrow (t1, _n, t2) ->
 	Cotype_arrow (translate_te t1, translate_te t2)
     | Rtype_product typ_list ->
 	Cotype_product (List.map translate_te typ_list)
