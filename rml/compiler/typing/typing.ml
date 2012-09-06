@@ -764,7 +764,8 @@ let rec type_of_expression env expr =
 
     | Rexpr_process(e) ->
 	let ty, u = type_of_expression env e in
-        (process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow)); }), u
+        let mem_env x = Env.mem x env in
+        (process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow)); }), (Effects.gen mem_env u)
 
     | Rexpr_pre (Status, s) ->
 	let ty_s, u_s = type_of_expression env s in
@@ -1058,9 +1059,12 @@ and type_let is_rec env patt_expr_list =
     then Env.append add_env env
     else env
   in
+  let mem_env x = Env.mem x let_env in
   let effects =
     List.map2
-      (fun (patt,expr) ty -> snd (type_expect let_env expr ty))
+      (fun (patt,expr) ty ->
+        Effects.gen mem_env (snd (type_expect let_env expr ty))
+      )
       patt_expr_list
       ty_list
   in

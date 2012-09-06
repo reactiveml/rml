@@ -19,7 +19,12 @@
 
 open Usages
 
-module M = Map.Make(Ident)
+module Key = struct
+    type t = Id of Ident.t | Var of Ident.t
+    let compare = Pervasives.compare
+end
+
+module M = Map.Make(Key)
 
 type key = M.key
 type effects = signal_usage M.t
@@ -35,13 +40,15 @@ let add k loc u_emit u_get m =
   M.add k su m
 
 let singleton k loc ty_emit ty_get =
-  add k loc ty_emit ty_get empty
+  add (Key.Id k) loc ty_emit ty_get empty
 
 let merge t1 t2 =
   M.fold (fun k u1 t ->
     try
       let u2 = M.find k t in
-      M.add k (add_s u1 u2) t
+      match k with
+        | Key.Id i -> M.add k (add_s u1 u2) t
+        | Key.Var i -> M.add k (max_s u1 u2) t
     with Not_found ->
       M.add k u1 t
   )
@@ -53,22 +60,42 @@ let rec flatten = function
 | a::l -> merge a (flatten l)
 
 let apply u m =
-  M.map (Usages.add_s u) m
+  M.fold
+    (fun k v t ->
+      match k with
+        | Key.Id _ -> M.add k (add_s u v) t
+        | Key.Var _ -> M.add k (max_s u v) t
+    )
+    m
+    empty
 
 let update_loc m loc =
   M.map (Usages.update_loc loc) m
+
+let gen mem_env m =
+  M.fold
+    (fun k u t ->
+      match k with
+        | Key.Id i ->
+            if not (mem_env i)
+            then (Printf.printf "to var %s\n" (Ident.unique_name i); M.add (Key.Var i) u t)
+            else M.add k u t
+        | Key.Var _ ->
+            M.add k u t
+    )
+    m
+    empty
 
 let print t =
   if not (M.is_empty t) then begin
     Printf.printf "  ";
     M.iter (fun k v ->
-      Printf.printf "%s:%s;"
-        (Ident.unique_name k)
-        (string_of_signal_usage v)
+      let v = string_of_signal_usage v in
+      match k with
+        | Key.Id i -> Printf.printf "Id(%s):%s; " (Ident.unique_name i) v
+        | Key.Var i -> Printf.printf "Var(%s):%s; " (Ident.unique_name i) v
+      ;
     )
-      t;
+    t;
     Printf.printf "\n%!"
   end
-
-let print_l l =
-  List.iter print l

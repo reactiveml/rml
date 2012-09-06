@@ -19,14 +19,12 @@
 
 open Usages
 
-type key = Ident.t
+type key
 type effects
 
 val empty : effects
 val is_empty : effects -> bool
 
-val mem : key -> effects -> bool
-val find : key -> effects -> signal_usage
 val iter : (key -> signal_usage -> unit) -> effects -> unit
 
 val add :
@@ -38,7 +36,7 @@ val add :
   effects
 
 val singleton :
-  key ->
+  Ident.t ->
   Location.t ->
   usage ->
   usage ->
@@ -52,7 +50,11 @@ val apply :
   effects ->
   effects
 
+val gen :
+  (Ident.t -> bool) ->
+  effects ->
+  effects
+
 val update_loc : effects -> Location.t -> effects
 
 val print : effects -> unit
-val print_l : effects list -> unit

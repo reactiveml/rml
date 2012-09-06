@@ -91,6 +91,12 @@ let add_u u1 u2 = match u1.node, u2.node with
   | Neutral, Neutral -> Neutral
   | _ -> raise (Forbidden_usage (u1.loc, u2.loc))
 
+let max_u u1 u2 = match u1.node, u2.node with
+  | Affine, _ | _, Affine -> Affine
+  | Neutral, _ | _, Neutral -> Neutral
+  | Zero, _ | _, Zero -> Zero
+  | _ -> u1.node
+
 let best_loc l1 l2 =
   if l1 = Location.none
   then l2
@@ -107,6 +113,15 @@ let add_s u v =
     loc
     (add_u u1 v1)
     (add_u u2 v2)
+
+let max_s u v =
+  let u1, u2 = km_su_loc u in
+  let v1, v2 = km_su_loc v in
+  let loc = best_loc u.loc v.loc in
+  mk_su
+    loc
+    (max_u u1 v1)
+    (max_u u2 v2)
 
 let mk_null =
   mk_loc Location.none (Var, Var)
