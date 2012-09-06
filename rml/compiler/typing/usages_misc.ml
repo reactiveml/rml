@@ -42,7 +42,7 @@ let mk_t loc u_emit u_get =
     (usage_of_type u_emit)
     (usage_of_type u_get)
 
-exception Unify
+exception Unify of Usages.usage * Usages.usage
 
 let unify ty1 ty2 =
   let unify_ty ty1 ty2 =
@@ -55,4 +55,4 @@ let unify ty1 ty2 =
     | Var, _ -> unify_ty ty1 ty2
     | _, Var -> unify_ty ty2 ty1
     | Zero, u1 | u1, Zero -> ()
-    | _                   -> raise Unify
+    | _                   -> raise (Unify (u1, u2))

@@ -27,7 +27,7 @@ val mk_t :
   Def_types.type_expression ->
   signal_usage
 
-exception Unify
+exception Unify of Usages.usage * Usages.usage
 
 val unify :
   Def_types.type_expression ->

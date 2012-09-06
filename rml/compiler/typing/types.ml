@@ -284,7 +284,7 @@ let rec unify expected_ty actual_ty =
     else if Initialization.is_usage expected_ty && Initialization.is_usage actual_ty then
       try
         Usages_misc.unify expected_ty actual_ty
-      with Usages_misc.Unify ->
+      with Usages_misc.Unify _ ->
         raise Unify
     else
       match expected_ty.type_desc, actual_ty.type_desc with
