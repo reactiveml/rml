@@ -46,7 +46,6 @@ val singleton :
 
 val merge : effects -> effects -> effects
 val flatten : effects list -> effects
-val filter : effects -> key list -> effects
 
 val apply :
   signal_usage ->

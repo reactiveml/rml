@@ -570,7 +570,6 @@ let rec type_of_expression env expr =
 	let ty_arg = new_var() in
 	let ty_res = new_var() in
 	let ty = arrow ty_arg ty_res in
-        let local_vars = ids_of_patt (List.flatten (vars_of_patt matching)) in
         let effects =
 	  List.map
 	    (fun (p,e) ->
@@ -585,7 +584,7 @@ let rec type_of_expression env expr =
             )
 	    matching
         in
-        ty, Effects.filter (Effects.flatten effects) local_vars
+        ty, Effects.flatten effects
 
     | Rexpr_apply (fct, args) ->
 	let ty_fct, effects_f = type_of_expression env fct in

@@ -48,17 +48,6 @@ let merge t1 t2 =
   t1
   t2
 
-let filter m l =
-  M.fold
-    (fun k u t ->
-      if List.mem k l then
-        t
-      else
-        M.add k u t
-    )
-    m
-    empty
-
 let rec flatten = function
 | [] -> empty
 | a::l -> merge a (flatten l)
