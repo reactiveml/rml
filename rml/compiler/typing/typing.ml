@@ -189,7 +189,7 @@ let get_gleff id loc =
     let uvar = Usages_misc.usage_of_type type_uvar in
     Effects.singleton id loc uvar uvar
 
-let apply_affiniy_constraint usage ty ty_loc =
+let apply_usage_constraint usage ty ty_loc =
   let usage = Usages.mk_su ty_loc usage usage in
   let ty_u = ty.type_usage in
   try
@@ -930,7 +930,7 @@ let rec type_of_expression env expr =
 	  List.fold_left
 	    (fun env (x, ty) ->
                 if not affine then
-                  apply_affiniy_constraint Usages.Neutral ty patt.patt_loc;
+                  apply_usage_constraint Usages.Neutral ty patt.patt_loc;
                 Env.add x (forall [] ty) env
             )
 	    env loc_env
@@ -954,7 +954,7 @@ let rec type_of_expression env expr =
 	  List.fold_left
 	    (fun env (x, ty) ->
                 if not affine then
-                  apply_affiniy_constraint Usages.Neutral ty patt.patt_loc;
+                  apply_usage_constraint Usages.Neutral ty patt.patt_loc;
                 Env.add x (forall [] ty) env
             )
 	    env loc_env
