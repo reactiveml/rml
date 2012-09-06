@@ -507,6 +507,40 @@ let unify_effects effects loc u =
     )
     effects
 
+let deep_unify u ty loc =
+  let ty_u = Usages_misc.type_of_usage u in
+  let rec loop ty =
+    apply_usage_constraint u ty loc;
+    ty.type_neutral <- true;
+    match ty.type_desc with
+      | Type_var ->
+          ()
+      | Type_arrow (ty1, ty2) ->
+          loop ty1;
+          loop ty2
+      | Type_product ty_l ->
+          List.iter (loop) ty_l
+      | Type_constr (ty_constr, ty_l) ->
+          if ty_constr.gi.qual = event_ident.qual
+          && ty_constr.gi.id.Ident.name = event_ident.id.Ident.name
+          then begin
+            let ty_emit, ty_get, u_emit, u_get = filter_event ty in
+            Usages_misc.unify ty_u u_emit;
+            Usages_misc.unify ty_u u_get;
+            loop ty_emit;
+            loop ty_get;
+          end
+          else List.iter loop ty_l
+      | Type_link ty ->
+          loop ty
+      | Type_process (ty_p, _) ->
+          loop ty_p
+  in
+  try
+    loop ty
+  with Usages_misc.Unify (new_u, old_u) ->
+    data_wrong_usage_err loc old_u new_u
+
 (* Typing of expressions *)
 let rec type_of_expression env expr =
   let t =
@@ -768,6 +802,9 @@ let rec type_of_expression env expr =
 	let ty, _, u_emit, u_get = filter_event_or_err ty_s s in
 	let ty_e, u_e = type_of_expression env e in
         let new_usage = Usages.send_u s.expr_loc affine in
+        if not affine then begin
+          deep_unify Usages.Neutral ty_e e.expr_loc
+        end;
         accumulate_usage ty_s expr.expr_loc new_usage;
         unify_usage expr.expr_loc u_emit u_get ty_s.type_usage;
 	unify_emit e.expr_loc ty ty_e;
@@ -924,6 +961,9 @@ let rec type_of_expression env expr =
     | Rexpr_await_val (affine,_,All,s,patt,p) ->
 	let ty_s, u_s = type_of_expression env s in
 	let _, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
+        if not affine then begin
+          deep_unify Usages.Neutral ty_get patt.patt_loc;
+        end;
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
 	assert (gl_env = []);
 	let new_env =
@@ -945,6 +985,9 @@ let rec type_of_expression env expr =
         let affine = true (* Always the case here since it is an "await one" *) in
 	let ty_s, u_s = type_of_expression env s in
 	let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
+        if not affine then begin
+          deep_unify Usages.Neutral ty_get patt.patt_loc;
+        end;
         unify_expr s
           (constr_notabbrev list_ident [ty_emit])
           ty_get;

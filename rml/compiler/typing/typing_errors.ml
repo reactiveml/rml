@@ -98,6 +98,14 @@ let value_wrong_usage_err loc actual_u expected_u =
     (Usages.string_of_signal_usage expected_u);
   raise Error
 
+let data_wrong_usage_err loc actual_u expected_u =
+  Printf.eprintf
+    "%aThis value is %s while it should be %s.\n"
+    Location.print_oc loc
+    (Usages.desc_of_usage actual_u)
+    (Usages.desc_of_usage expected_u);
+  raise Error
+
 let run_wrong_type_err loc actual_ty expected_ty =
   Printf.eprintf
     "%aThis expression has type %a,\n\

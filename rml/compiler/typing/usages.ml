@@ -34,6 +34,12 @@ let string_of_usage = function
   | Zero -> "0"
   | Var -> "_"
 
+let desc_of_usage = function
+  | Affine -> "affine"
+  | Neutral -> "neutral"
+  | Zero -> "zero"
+  | Var -> "var"
+
 type signal_usage = (usage * usage) loc
 
 let string_of_signal_usage su =
