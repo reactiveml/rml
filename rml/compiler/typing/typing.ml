@@ -683,7 +683,7 @@ let rec type_of_expression env expr =
 	let ty_e = type_of_expression env e in
 	let ty = new_var() in
 	unify_run e.expr_loc
-	  ty_e (process ty { proc_static = None; });
+	  (process ty { proc_static = None; }) ty_e;
 	ty
 
     | Rexpr_until (s,p,patt_proc_opt) ->
