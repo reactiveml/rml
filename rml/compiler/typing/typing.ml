@@ -139,22 +139,6 @@ let is_unit_process desc =
 (* Typing environment *)
 module Env = Symbol_table.Make (Ident)
 
-let print_env table =
-  if not (Env.is_empty table) then begin
-    Env.iter
-      (fun id ty_sch -> Printf.printf "%s(id=%d){eff=%s}:"
-        (Ident.name id)
-        id.Ident.id
-        (Usages.string_of_signal_usage ty_sch.ts_desc.type_usage);
-        Types_printer.print_scheme ty_sch
-      )
-      table;
-    Printf.printf "\n%!"
-  end
-
-let pu ty =
-  Usages.string_of_signal_usage ty.type_usage
-
 let gleff = Hashtbl.create 1023
 
 let apply_eff effs ty loc =
@@ -164,11 +148,6 @@ let apply_eff effs ty loc =
     Effects.apply eff effs
   with _ ->
     effs
-
-(* let dprint msg f x = *)
-  (* Printf.printf "BEGIN %s:\n%!" msg; *)
-  (* f x; *)
-  (* Printf.printf "END;\n%!" *)
 
 let register_effects patt_vars effects =
   List.iter (fun (patterns, effects) ->

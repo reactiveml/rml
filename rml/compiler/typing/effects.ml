@@ -78,7 +78,7 @@ let gen mem_env m =
       match k with
         | Key.Id i ->
             if not (mem_env i)
-            then (Printf.printf "to var %s\n" (Ident.unique_name i); M.add (Key.Var i) u t)
+            then M.add (Key.Var i) u t
             else M.add k u t
         | Key.Var _ ->
             M.add k u t
