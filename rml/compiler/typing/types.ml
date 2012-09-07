@@ -44,46 +44,6 @@ and pop_type_level () =
   decr Def_types.current_level; ()
 ;;
 
-(* making types *)
-let make_type ty =
-  { type_desc = ty;
-    type_level = generic;
-    type_index = names#name;
-    type_neutral = false;
-    type_usage = Usages.mk_null;
-  }
-
-let product ty_list =
-  make_type (Type_product(ty_list))
-
-let constr ty_constr ty_list =
-  make_type (Type_constr(ty_constr, ty_list))
-
-let constr_notabbrev name ty_list =
-  make_type (Type_constr({ gi = name;
-			   info = Some {constr_abbr = Constr_notabbrev}; },
-			 ty_list))
-
-let arrow ?(n=false) ty1 ty2 =
-  let ty = make_type (Type_arrow(ty1, ty2)) in
-  ty.type_neutral <- n;
-  ty
-
-let rec arrow_list ty_l ty_res =
-  match ty_l with
-    [] -> ty_res
-  | [ty] -> arrow ty ty_res
-  | ty :: ty_l -> arrow ty (arrow_list ty_l ty_res)
-
-let rec new_var_list n =
-  match n with
-    0 -> []
-  | n -> (new_var ()) :: new_var_list (n - 1)
-
-let forall l typ =
-  { ts_binders = l;
-    ts_desc = typ; }
-
 
 (* To take the canonical representative of a type.
    We do path compression there. *)
@@ -175,6 +135,7 @@ let cleanup () =
 (* makes a copy of a type *)
 let rec copy ty =
   let level = ty.type_level in
+  let effects = ty.type_effects in
   match ty.type_desc with
   | Type_var ->
       if level = generic
@@ -186,27 +147,27 @@ let rec copy ty =
       else ty
   | Type_link(link) ->
       if level = generic
-      then link
+      then { link with type_effects = Effects.merge link.type_effects effects }
       else copy link
   | Type_arrow(ty1, ty2) ->
       if level = generic
       then
-	arrow ~n:ty.type_neutral (copy ty1) (copy ty2)
+	arrow ~n:ty.type_neutral ~effects (copy ty1) (copy ty2)
       else ty
   | Type_product(ty_list) ->
       if level = generic
       then
-	product (List.map copy ty_list)
+	product ~effects (List.map copy ty_list)
       else ty
   | Type_constr(name, ty_list) ->
       if level = generic
       then
-	constr name (List.map copy ty_list)
+	constr ~effects name (List.map copy ty_list)
       else ty
   | Type_process(ty, k) ->
       if level = generic
       then
-	process (copy ty) k
+	process ~effects (copy ty) k
       else
 	ty
 
@@ -266,38 +227,34 @@ let expand_abbrev params body args =
   List.iter2 bind_variable params' args;
   body'
 
-let unify_regions expected_ty actual_ty =
-  if false then begin
-    let new_su = Usages.add_s expected_ty.type_usage actual_ty.type_usage in
-    expected_ty.type_usage <- new_su;
-    actual_ty.type_usage <- new_su;
-  end
-
 (* unification *)
 let rec unify expected_ty actual_ty =
   if expected_ty == actual_ty then ()
   else
     let expected_ty = type_repr expected_ty in
     let actual_ty = type_repr actual_ty in
-    if expected_ty == actual_ty then
-      unify_regions expected_ty actual_ty
+    if expected_ty == actual_ty then ()
     else if Initialization.is_usage expected_ty && Initialization.is_usage actual_ty then
       try
         Usages_misc.unify expected_ty actual_ty
       with Usages_misc.Unify _ ->
         raise Unify
     else
+      let new_effects = Effects.merge expected_ty.type_effects actual_ty.type_effects in
       match expected_ty.type_desc, actual_ty.type_desc with
 	Type_var, _ ->
 	  occur_check expected_ty.type_level expected_ty actual_ty;
-          unify_regions expected_ty actual_ty;
+          actual_ty.type_effects <- new_effects;
+          expected_ty.type_effects <- new_effects;
 	  expected_ty.type_desc <- Type_link(actual_ty)
       | _, Type_var ->
 	  occur_check actual_ty.type_level actual_ty expected_ty;
-          unify_regions expected_ty actual_ty;
+          actual_ty.type_effects <- new_effects;
+          expected_ty.type_effects <- new_effects;
 	  actual_ty.type_desc <- Type_link(expected_ty)
       | Type_product(l1), Type_product(l2) ->
-          unify_regions expected_ty actual_ty;
+          actual_ty.type_effects <- new_effects;
+          expected_ty.type_effects <- new_effects;
 	  begin try
 	    List.iter2 unify l1 l2
 	  with
@@ -307,12 +264,14 @@ let rec unify expected_ty actual_ty =
           let n = expected_ty.type_neutral || actual_ty.type_neutral in
           expected_ty.type_neutral <- n;
           actual_ty.type_neutral <- n;
-          unify_regions expected_ty actual_ty;
+          actual_ty.type_effects <- new_effects;
+          expected_ty.type_effects <- new_effects;
 	  unify ty1 ty3;
 	  unify ty2 ty4
       |	Type_constr(c1, ty_l1),
 	  Type_constr(c2, ty_l2) when same_type_constr c1 c2 ->
-          unify_regions expected_ty actual_ty;
+          actual_ty.type_effects <- new_effects;
+          expected_ty.type_effects <- new_effects;
 	  begin try
 	    List.iter2 unify ty_l1 ty_l2
 	  with
@@ -321,12 +280,14 @@ let rec unify expected_ty actual_ty =
       | Type_constr
 	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } }, args),
 	_ ->
-          unify_regions expected_ty actual_ty;
+          actual_ty.type_effects <- new_effects;
+          expected_ty.type_effects <- new_effects;
 	  unify (expand_abbrev params body args) actual_ty
       | _,
 	Type_constr
 	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
-            unify_regions expected_ty actual_ty;
+	    actual_ty.type_effects <- new_effects;
+	    expected_ty.type_effects <- new_effects;
 	    unify expected_ty (expand_abbrev params body args)
       | Type_process(ty1, pi1), Type_process(ty2, pi2) ->
 	  begin match pi1.proc_static, pi2.proc_static with
@@ -336,7 +297,8 @@ let rec unify expected_ty actual_ty =
 	  | Some ps1, Some ps2 ->
 	      pi1.proc_static <- Some (Proc_unify (ps1, ps2))
 	  end;
-          unify_regions expected_ty actual_ty;
+          actual_ty.type_effects <- new_effects;
+          expected_ty.type_effects <- new_effects;
 	  unify ty1 ty2
       | _ -> raise Unify
 

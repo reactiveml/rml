@@ -82,18 +82,18 @@ typing/effects.cmi: typing/usages.cmi parsing/location.cmo global/ident.cmo
 typing/usages.cmi: parsing/location.cmo
 typing/usages_misc.cmi: typing/usages.cmi parsing/location.cmo \
     typing/def_types.cmo
-typing/def_types.cmo: typing/usages.cmi global/ident.cmo global/global.cmo \
+typing/def_types.cmo: global/ident.cmo global/global.cmo typing/effects.cmi \
     static/def_static.cmo global/asttypes.cmi
-typing/def_types.cmx: typing/usages.cmx global/ident.cmx global/global.cmx \
+typing/def_types.cmx: global/ident.cmx global/global.cmx typing/effects.cmx \
     static/def_static.cmx global/asttypes.cmi
 typing/effects.cmo: typing/usages.cmi global/ident.cmo typing/effects.cmi
 typing/effects.cmx: typing/usages.cmx global/ident.cmx typing/effects.cmi
-typing/types.cmo: typing/usages_misc.cmi typing/usages.cmi global/misc.cmo \
+typing/types.cmo: typing/usages_misc.cmi global/misc.cmo \
     global/initialization.cmo global/global_ident.cmo global/global.cmo \
-    typing/def_types.cmo
-typing/types.cmx: typing/usages_misc.cmx typing/usages.cmx global/misc.cmx \
+    typing/effects.cmi typing/def_types.cmo
+typing/types.cmx: typing/usages_misc.cmx global/misc.cmx \
     global/initialization.cmx global/global_ident.cmx global/global.cmx \
-    typing/def_types.cmx
+    typing/effects.cmx typing/def_types.cmx
 typing/types_printer.cmo: global/modules.cmo global/misc.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo typing/def_types.cmo \
     global/asttypes.cmi

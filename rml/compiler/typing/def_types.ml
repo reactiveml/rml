@@ -44,7 +44,7 @@ and type_expression =
       mutable type_level: int;
       type_index: int;
       mutable type_neutral: bool;
-      mutable type_usage: Usages.signal_usage;
+      mutable type_effects: Effects.t;
     }
 
 and type_expression_desc =
@@ -127,39 +127,50 @@ let current_level = ref 0;;
 let names = new Ident.name_generator
 
 (* making types *)
-let make_type ty =
+let make_type ?(effects = Effects.empty) ty =
   { type_desc = ty;
     type_level = generic;
     type_index = names#name;
     type_neutral = false;
-    type_usage = Usages.mk_null;
+    type_effects = effects;
   }
 
-let product ty_list =
-  make_type (Type_product(ty_list))
+let product ?(effects = Effects.empty) ty_list =
+  make_type ~effects (Type_product(ty_list))
 
-let constr ty_constr ty_list =
-  make_type (Type_constr(ty_constr, ty_list))
+let constr ?(effects = Effects.empty) ty_constr ty_list =
+  make_type ~effects (Type_constr(ty_constr, ty_list))
 
 let constr_notabbrev name ty_list =
   make_type (Type_constr({ gi = name;
 			   info = Some {constr_abbr = Constr_notabbrev}; },
 			 ty_list))
 
-let arrow ?(n = false) ty1 ty2 =
+let arrow ?(n=false) ?(effects = Effects.empty) ty1 ty2 =
   let ty = make_type (Type_arrow(ty1, ty2)) in
   ty.type_neutral <- n;
+  ty.type_effects <- effects;
   ty
 
-let process ty k =
-  make_type (Type_process (ty, k))
+let process ?(effects = Effects.empty) ty k =
+  make_type ~effects (Type_process (ty, k))
+
+let rec arrow_list ty_l ty_res =
+  match ty_l with
+    [] -> ty_res
+  | [ty] -> arrow ty ty_res
+  | ty :: ty_l -> arrow ty (arrow_list ty_l ty_res)
+
+let forall l typ =
+  { ts_binders = l;
+    ts_desc = typ; }
 
 let no_type_expression =
   { type_desc = Type_product[];
     type_level = generic;
     type_index = -1;
     type_neutral = false;
-    type_usage = Usages.mk_null;
+    type_effects = Effects.empty;
   }
 
 (* To get fresh type variables *)
@@ -169,7 +180,7 @@ let new_var () =
     type_level = !current_level;
     type_index = names#name;
     type_neutral = false;
-    type_usage = Usages.mk_null;
+    type_effects = Effects.empty;
   }
 
 let new_generic_var () =
@@ -177,5 +188,10 @@ let new_generic_var () =
     type_level = generic;
     type_index = names#name;
     type_neutral = false;
-    type_usage = Usages.mk_null;
+    type_effects = Effects.empty;
   }
+
+let rec new_var_list n =
+  match n with
+    0 -> []
+  | n -> (new_var ()) :: new_var_list (n - 1)

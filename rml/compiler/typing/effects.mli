@@ -20,41 +20,45 @@
 open Usages
 
 type key
-type effects
+type t
 
-val empty : effects
-val is_empty : effects -> bool
+val id : Ident.t -> key
+val var : Ident.t -> key
+val new_id : string -> Ident.t
 
-val iter : (key -> signal_usage -> unit) -> effects -> unit
+val empty : t
+val is_empty : t -> bool
+
+val iter : (key -> signal_usage -> unit) -> t -> unit
 
 val add :
   key ->
   Location.t ->
   usage ->
   usage ->
-  effects ->
-  effects
+  t ->
+  t
 
 val singleton :
   Ident.t ->
   Location.t ->
   usage ->
   usage ->
-  effects
+  t
 
-val merge : effects -> effects -> effects
-val flatten : effects list -> effects
+val merge : t -> t -> t
+val flatten : t list -> t
 
 val apply :
   signal_usage ->
-  effects ->
-  effects
+  t ->
+  t
 
 val gen :
   (Ident.t -> bool) ->
-  effects ->
-  effects
+  t ->
+  t
 
-val update_loc : effects -> Location.t -> effects
+val update_loc : t -> Location.t -> t
 
-val print : effects -> unit
+val print : t -> unit
