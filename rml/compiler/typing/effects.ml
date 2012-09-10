@@ -93,6 +93,22 @@ let gen mem_env m =
     m
     empty
 
+let instance m =
+  M.fold
+    (fun k u t ->
+      match k with
+      | Key.Id i ->
+          M.add k u t
+      | Key.Var i ->
+          let new_i = new_id i.Ident.name in
+          M.add
+            (Key.Id new_i)
+            u
+            (M.add (Key.Var i) u t)
+    )
+    m
+    empty
+
 let print t =
   if not (M.is_empty t) then begin
     Printf.printf "  ";

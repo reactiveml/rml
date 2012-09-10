@@ -59,6 +59,8 @@ val gen :
   t ->
   t
 
+val instance : t -> t
+
 val update_loc : t -> Location.t -> t
 
 val print : t -> unit
