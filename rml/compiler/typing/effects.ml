@@ -33,9 +33,8 @@ let id x = Key.Id x
 let var x = Key.Var x
 
 (* generating fresh names *)
-let names = new Ident.name_generator
 let new_id s =
-  Ident.create names s Ident.Val_RML
+  Ident.create Ident.gen_var s Ident.Val_RML
 
 let empty = M.empty
 let is_empty = M.is_empty
