@@ -574,7 +574,7 @@ let rec type_of_expression env expr =
 	let ty_fct, effects_f = type_of_expression env fct in
         let effects_f = Effects.update_loc effects_f fct.expr_loc in
 	let rec type_args u ty_res = function
-	  | [] -> ty_res, u
+	  | [] -> return ty_res u
 	  | arg :: args ->
 	      let t1, t2 =
 		try
@@ -608,8 +608,8 @@ let rec type_of_expression env expr =
 		cstr_res = ty } = get_type_of_constructor c expr.expr_loc
 	  in
 	  match ty_arg_opt with
-	  | None -> ty, Effects.empty
-	  | Some ty_arg -> constr_arity_err c.gi expr.expr_loc, Effects.empty
+	  | None -> return ty Effects.empty
+	  | Some ty_arg -> return (constr_arity_err c.gi expr.expr_loc) Effects.empty
 	end
 
     | Rexpr_construct (c, Some arg) ->
@@ -618,7 +618,7 @@ let rec type_of_expression env expr =
 		cstr_res = ty_res; } = get_type_of_constructor c expr.expr_loc
 	  in
 	  match ty_arg_opt with
-	  | None -> constr_arity_err_2 c.gi expr.expr_loc, Effects.empty
+	  | None -> return (constr_arity_err_2 c.gi expr.expr_loc) Effects.empty
 	  | Some ty_arg ->
               let _, effects = type_expect env arg ty_arg in
               return ty_res effects
@@ -749,7 +749,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_process(e) ->
 	let ty, u = type_of_expression env e in
-        (process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow)); }), u
+        return (process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow)); }) u
 
     | Rexpr_pre (Status, s) ->
 	let ty_s, u_s = type_of_expression env s in
@@ -833,41 +833,41 @@ let rec type_of_expression env expr =
 
     | Rexpr_loop (None, p) ->
         let effects = type_statement env p in
-        type_unit, effects
+        return type_unit effects
 
     | Rexpr_loop (Some n, p) ->
         let _, u1 = type_expect env n type_int in
         let u2 = type_statement env p in
-	type_unit, Effects.merge u1 u2
+	return type_unit (Effects.merge u1 u2)
 
     | Rexpr_fordopar(i,e1,e2,flag,p) ->
         let _, u1 = type_expect env e1 type_int in
         let _, u2 = type_expect env e2 type_int in
 	let u3 = type_statement (Env.add i (forall [] type_int) env) p in
-	type_unit, Effects.flatten [u1; u2; u3]
+	return type_unit (Effects.flatten [u1; u2; u3])
 
     | Rexpr_par p_list ->
         let effects_l = List.map (fun p -> type_statement env p) p_list in
-	type_unit, Effects.flatten effects_l
+	return type_unit (Effects.flatten effects_l)
 
     | Rexpr_merge (p1,p2) ->
         let u1 = type_statement env p1 in
         let u2 = type_statement env p2 in
-	type_unit, Effects.merge u1 u2
+	return type_unit (Effects.merge u1 u2)
 
     | Rexpr_run (e) ->
 	let ty_e, u_e = type_of_expression env e in
 	let ty = new_var() in
 	unify_run e.expr_loc
 	  ty_e (process ty { proc_static = None; });
-	ty, u_e
+	return ty u_e
 
     | Rexpr_until (s,p,patt_proc_opt) ->
 	begin match patt_proc_opt with
 	| None ->
             let u1 = type_of_event_config env s in
             let _, u2 = type_expect env p type_unit in
-	    type_unit, Effects.merge u1 u2
+	    return type_unit (Effects.merge u1 u2)
 	| Some _ ->
 	    begin match s.conf_desc with
 	    | Rconf_present s ->
@@ -885,7 +885,7 @@ let rec type_of_expression env expr =
 		    in
 		    snd (type_expect new_env proc ty_body))
 		  patt_proc_opt in
-		ty_body, effects
+		return ty_body effects
 	    | _ ->
 		non_event_err2 s
 	    end
@@ -895,12 +895,12 @@ let rec type_of_expression env expr =
     | Rexpr_when (s,p) ->
         let u1 = type_of_event_config env s in
 	let ty, u2 = type_of_expression env p in
-        ty, Effects.merge u1 u2
+        return ty (Effects.merge u1 u2)
 
     | Rexpr_control (s, None, p) ->
 	let u1 = type_of_event_config env s in
 	let ty, u2 = type_of_expression env p in
-        ty, Effects.merge u1 u2
+        return ty (Effects.merge u1 u2)
 
     | Rexpr_control (s, (Some (patt, e)), p) ->
 	begin match s.conf_desc with
@@ -916,7 +916,7 @@ let rec type_of_expression env expr =
 		env loc_env
 	    in
 	    let _, u_e = type_expect new_env e type_bool in
-	    ty_body, Effects.flatten [u_s; u_b; u_e]
+	    return ty_body (Effects.flatten [u_s; u_b; u_e])
 	| _ ->
 	    non_event_err2 s
 	end
@@ -932,17 +932,17 @@ let rec type_of_expression env expr =
 	    env loc_env
 	in
         let ty, u_p = type_of_expression new_env p in
-        ty, Effects.merge u_s u_p
+        return ty (Effects.merge u_s u_p)
 
     | Rexpr_present (s,p1,p2) ->
         let u1 = type_of_event_config env s in
 	let ty, u2 = type_of_expression env p1 in
 	let _, u3 = type_expect env p2 ty in
-	ty, Effects.flatten [u1; u2; u3]
+	return ty (Effects.flatten [u1; u2; u3])
 
     | Rexpr_await (affine,_,s) ->
         let effects = type_of_event_config env s in
-        type_unit, effects
+        return type_unit effects
 
     | Rexpr_await_val (affine,_,All,s,patt,p) ->
 	let ty_s, u_s = type_of_expression env s in
@@ -964,7 +964,7 @@ let rec type_of_expression env expr =
         let new_usage = Usages.await_u expr.expr_loc affine in
         unify_usage expr.expr_loc u_emit u_get new_usage;
         let ty, u_p = type_of_expression new_env p in
-        ty, Effects.flatten [u_s; u_p; Effects.apply new_usage u_s]
+        return ty (Effects.flatten [u_s; u_p; Effects.apply new_usage u_s])
 
     | Rexpr_await_val (_,_,One,s,patt,p) ->
         let affine = true (* Always the case here since it is an "await one" *) in
@@ -990,7 +990,7 @@ let rec type_of_expression env expr =
         let new_usage = Usages.await_u expr.expr_loc affine in
         unify_usage expr.expr_loc u_emit u_get new_usage;
         let ty, u_p = type_of_expression new_env p in
-        ty, Effects.flatten [u_s; u_p; Effects.apply new_usage u_s]
+        return ty (Effects.flatten [u_s; u_p; Effects.apply new_usage u_s])
 
   in
   expr.expr_type <- fst t;
@@ -1071,7 +1071,7 @@ and type_let is_rec env patt_expr_list =
 and type_expect env expr expected_ty =
   let actual_ty, effects = type_of_expression env expr in
   let () = unify_expr expr expected_ty actual_ty in
-  actual_ty, effects
+  return actual_ty effects
 
 (* Typing of statements (expressions whose values are ignored) *)
 and type_statement env expr =
