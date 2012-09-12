@@ -73,13 +73,13 @@ let send_u loc affine =
   mk_loc
     loc
     ((if affine then Affine else Neutral),
-     Zero
+     Var
     )
 
 let await_u loc affine =
   mk_loc
     loc
-    (Zero,
+    (Var,
      if affine then Affine else Neutral
     )
 
