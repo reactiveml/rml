@@ -124,11 +124,12 @@ module Env = Symbol_table.Make (Ident)
 let gleff = Hashtbl.create 1023
 
 let apply_eff effs ty loc =
-  try
+  let ty = type_repr ty in
+  if Initialization.is_event ty then
     let _, _, u_emit, u_get = filter_event ty in
     let eff = Usages_misc.mk_t loc u_emit u_get in
     Effects.apply eff effs
-  with _ ->
+  else
     effs
 
 let register_effects patt_vars effects =
@@ -488,8 +489,7 @@ let deep_unify u ty loc =
       | Type_product ty_l ->
           List.iter (loop) ty_l
       | Type_constr (ty_constr, ty_l) ->
-          if ty_constr.gi.qual = event_ident.qual
-          && ty_constr.gi.id.Ident.name = event_ident.id.Ident.name
+          if Initialization.is_event ty
           then begin
             let ty_emit, ty_get, u_emit, u_get = filter_event ty in
             Usages_misc.unify ty_u u_emit;

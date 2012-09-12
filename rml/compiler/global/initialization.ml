@@ -115,6 +115,12 @@ let type_desc_event =
 		  type_kind = Type_abstract;
 		  type_arity = 4; } }
 
+let is_event ty = match ty.type_desc with
+  | Type_constr (c, _) ->
+      c.gi.qual = event_ident.qual &&
+      c.gi.id.name = event_ident.id.name
+  | _ -> false
+
 (* usages *)
 let affine_ident = pervasives_type "affine"
 let type_desc_affine = type_desc affine_ident
