@@ -102,13 +102,6 @@ let filter_event_or_err ty s =
     non_event_err s
     | Usages.Forbidden_usage (loc1, loc2) -> usage_wrong_type_err loc1 loc2
 
-let filter_usage ty s =
-  let _, _, u_emit, u_get = filter_event_or_err ty s in
-  Usages.mk_su
-    s.expr_loc
-    (Usages_misc.usage_of_type u_emit)
-    (Usages_misc.usage_of_type u_get)
-
 let unify_usage loc ty_emit ty_get u_new =
   let new_u_emit, new_u_get = Usages.km_s u_new in
   let new_ty_emit = Usages_misc.type_of_usage new_u_emit
