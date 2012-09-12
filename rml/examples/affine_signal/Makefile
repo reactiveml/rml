@@ -33,8 +33,8 @@ split-stamp:
 test: split-stamp
 	$(RUN_TEST) $(FILES)
 
-test/%.rml:
-	$(COMPILER) $(subst test/,,$@)
+test/%:
+	$(COMPILER) *-$(subst test/,,$@)-*.rml
 
 clean:
 	-rm -f *.*annot *.rzi *.ml
