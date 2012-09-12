@@ -742,9 +742,12 @@ let rec type_of_expression env expr =
 	let rec f u l =
 	  match l with
 	  | [] -> assert false
-	  | [e] -> let ty, u2 = type_of_expression env e in
-                   return ty (Effects.merge u2 u)
-	  | e::l -> f (type_statement env e) l
+	  | [e] ->
+              let ty, u2 = type_of_expression env e in
+              return ty (Effects.merge u2 u)
+	  | e::l ->
+              let ty, u2 = f (type_statement env e) l in
+              return ty (Effects.merge u2 u)
 	in f Effects.empty e_list
 
     | Rexpr_process(e) ->

@@ -21,14 +21,6 @@ let process p s =
   emit s 1 || !await s(x) in x
 
 $
-let process p s =
-  !emit s 1 ; pause ; !emit s 1
-
-$
-let process p s =
-  (!await s(x) in x) ; pause ; (!await s(x) in x)
-
-$
 let process p (f : (int, 'a, zero, 'b) event -> 'd) s =
   !emit s 1 ; f s
 
@@ -85,6 +77,14 @@ ${
 
 $}
 
+let process p s =
+  !emit s 1 ; pause ; !emit s 1
+
+$
+let process p s =
+  (!await s(x) in x) ; pause ; (!await s(x) in x)
+
+$
 let process p s =
   (!await s(x) in x) || (!await s(x) in x)
 
