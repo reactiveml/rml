@@ -278,6 +278,11 @@ let _ = signal s in
 
 $
 
+let my_emit s = emit s
+let f (x : ('a, 'b, zero, 'c) event) = my_emit x
+
+$
+
 signal s in let r = ref s in (
   !emit s;
   let s1 = !r in let s2 = !r in (!emit s1; !emit s2))

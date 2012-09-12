@@ -34,7 +34,7 @@ exception Forbidden_usage of Location.t * Location.t
 val add_u : usage loc -> usage loc -> usage
 val add_s : signal_usage -> signal_usage -> signal_usage
 
-val max_u : usage loc -> usage loc -> usage
+val max_u : usage -> usage -> usage
 val max_s : signal_usage -> signal_usage -> signal_usage
 
 val mk_null : signal_usage

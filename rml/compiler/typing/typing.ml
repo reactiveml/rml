@@ -109,6 +109,24 @@ let unify_usage loc ty_emit ty_get u_new =
   unify_emit_usage loc ty_emit new_ty_emit;
   unify_get_usage loc ty_get new_ty_get
 
+let check_emit_usage loc env_u_emit u_emit =
+  match env_u_emit with
+    | Usages.Var -> ()
+    | _ ->
+        if (Usages.max_u env_u_emit u_emit = u_emit) then
+        let env_ty_emit = Usages_misc.type_of_usage env_u_emit in
+        let ty_emit = Usages_misc.type_of_usage u_emit in
+        emit_wrong_usage_err loc ty_emit env_ty_emit
+
+let check_get_usage loc env_u_get u_get =
+  match env_u_get with
+    | Usages.Var -> ()
+    | _ ->
+        if (Usages.max_u env_u_get u_get = u_get) then
+        let env_ty_get = Usages_misc.type_of_usage env_u_get in
+        let ty_get = Usages_misc.type_of_usage u_get in
+        get_wrong_usage_err loc ty_get env_ty_get
+
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
@@ -771,6 +789,8 @@ let rec type_of_expression env expr =
 	let ty_s, u_s = type_of_expression env s in
 	let ty, _, u_emit, u_get = filter_event_or_err ty_s s in
         let new_usage = Usages.send_u s.expr_loc affine in
+        let new_u_emit, _ = Usages.km_s new_usage in
+        check_emit_usage expr.expr_loc (Usages_misc.usage_of_type u_emit) new_u_emit;
         unify_usage expr.expr_loc u_emit u_get new_usage;
 	unify_emit expr.expr_loc type_unit ty;
         let effects = Effects.apply new_usage u_s in
@@ -781,6 +801,8 @@ let rec type_of_expression env expr =
 	let ty, _, u_emit, u_get = filter_event_or_err ty_s s in
 	let ty_e, _ = type_of_expression env e in
         let new_usage = Usages.send_u s.expr_loc affine in
+        let new_u_emit, _ = Usages.km_s new_usage in
+        check_emit_usage expr.expr_loc (Usages_misc.usage_of_type u_emit) new_u_emit;
         if not affine then begin
           deep_unify Usages.Neutral ty_e e.expr_loc
         end;
@@ -958,6 +980,8 @@ let rec type_of_expression env expr =
 	    env loc_env
 	in
         let new_usage = Usages.await_u expr.expr_loc affine in
+        let _, new_u_get = Usages.km_s new_usage in
+        check_get_usage expr.expr_loc (Usages_misc.usage_of_type u_get) new_u_get;
         unify_usage expr.expr_loc u_emit u_get new_usage;
         let ty, u_p = type_of_expression new_env p in
         return ty (Effects.flatten [u_s; u_p; Effects.apply new_usage u_s])
@@ -984,6 +1008,8 @@ let rec type_of_expression env expr =
 	    env loc_env
 	in
         let new_usage = Usages.await_u expr.expr_loc affine in
+        let _, new_u_get = Usages.km_s new_usage in
+        check_get_usage expr.expr_loc (Usages_misc.usage_of_type u_get) new_u_get;
         unify_usage expr.expr_loc u_emit u_get new_usage;
         let ty, u_p = type_of_expression new_env p in
         return ty (Effects.flatten [u_s; u_p; Effects.apply new_usage u_s])

@@ -54,5 +54,5 @@ let unify ty1 ty2 =
     match u1, u2 with
     | Var, _ -> unify_ty ty1 ty2
     | _, Var -> unify_ty ty2 ty1
-    | Zero, u1 | u1, Zero -> ()
+    | Zero, u2 -> ()
     | _                   -> raise (Unify (u1, u2))

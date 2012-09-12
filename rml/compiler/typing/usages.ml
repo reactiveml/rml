@@ -70,18 +70,12 @@ let km_su_loc su =
 let km_s { node = (a,b) ; _ } = a,b
 
 let send_u loc affine =
-  mk_loc
-    loc
-    ((if affine then Affine else Neutral),
-     Var
-    )
+  let u_emit = if affine then Affine else Neutral in
+  mk_loc loc (u_emit, Var)
 
 let await_u loc affine =
-  mk_loc
-    loc
-    (Var,
-     if affine then Affine else Neutral
-    )
+  let u_get = if affine then Affine else Neutral in
+  mk_loc loc (Var, u_get)
 
 exception Forbidden_usage of Location.t * Location.t
 
@@ -91,11 +85,11 @@ let add_u u1 u2 = match u1.node, u2.node with
   | Neutral, Neutral -> Neutral
   | _ -> raise (Forbidden_usage (u1.loc, u2.loc))
 
-let max_u u1 u2 = match u1.node, u2.node with
+let max_u u1 u2 = match u1, u2 with
   | Affine, _ | _, Affine -> Affine
   | Neutral, _ | _, Neutral -> Neutral
   | Zero, _ | _, Zero -> Zero
-  | _ -> u1.node
+  | _ -> u1
 
 let best_loc l1 l2 =
   if l1 = Location.none
@@ -120,8 +114,8 @@ let max_s u v =
   let loc = best_loc u.loc v.loc in
   mk_su
     loc
-    (max_u u1 v1)
-    (max_u u2 v2)
+    (max_u u1.node v1.node)
+    (max_u u2.node v2.node)
 
 let mk_null =
   mk_loc Location.none (Var, Var)
