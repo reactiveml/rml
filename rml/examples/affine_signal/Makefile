@@ -12,7 +12,7 @@
 
 VERBOSE=0
 
-#COMPILER="../../compiler/rpmlc.byte -I ../../lib/ -c"
+COMPILER=../../compiler/rmlc -I ../../stdlib/ -i
 
 SPLIT=./tools/split -ext ".rml"
 RUN_TEST=./tools/run_test -keep-clean -ext ".rml" -verbose $(VERBOSE) #-good $(COMPILER)
@@ -32,6 +32,9 @@ split-stamp:
 
 test: split-stamp
 	$(RUN_TEST) $(FILES)
+
+test/%.rml:
+	$(COMPILER) $(subst test/,,$@)
 
 clean:
 	-rm -f *.*annot *.rzi *.ml
