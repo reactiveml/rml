@@ -3,7 +3,7 @@ ${
 (*
   run_test:
    [
-     Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+     Good: "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
    ]
 *)
 let process g =
@@ -61,20 +61,20 @@ let process f =
 
 $
 
-let process f s =
+let process h s =
   await s(v) in ignore v
 
 let process f =
   signal s at topck in
   newclock ck in
-    f s
+    run h s
 
 $$$bad
 ${
 (*
   run_test:
    [
-     Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+     Bad 2 "": "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
    ]
 *)
 let process g =
@@ -108,4 +108,4 @@ let process h s = await immediate s; pause
 let process f =
   signal s at topck in
   newclock ck in
-    h s
+    run h s

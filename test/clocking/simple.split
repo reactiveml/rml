@@ -3,7 +3,7 @@ ${
 (*
   run_test:
    [
-    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+    Good: "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
    ]
 *)
 
@@ -35,7 +35,7 @@ ${
 (*
   run_test:
    [
-     Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+     Bad 2 "": "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
    ]
 *)
 

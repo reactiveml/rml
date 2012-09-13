@@ -3,7 +3,7 @@ ${
 (*
   run_test:
    [
-     Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+     Good: "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
    ]
 *)
 
@@ -81,7 +81,7 @@ ${
 (*
   run_test:
    [
-     Bad 2 "escape its scope": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+     Bad 2 "escape its scope": "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
    ]
 *)
 
@@ -119,7 +119,7 @@ ${
 (*
   run_test:
    [
-     Bad 2 "is used with clock": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+     Bad 2 "is used with clock": "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
    ]
 *)
 
