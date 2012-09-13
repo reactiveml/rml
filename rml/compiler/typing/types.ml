@@ -136,6 +136,7 @@ let cleanup () =
 let rec copy ty =
   let level = ty.type_level in
   let effects = ty.type_effects in
+  let n = ty.type_neutral in
   match ty.type_desc with
   | Type_var ->
       if level = generic
@@ -152,22 +153,22 @@ let rec copy ty =
   | Type_arrow(ty1, ty2) ->
       if level = generic
       then
-	arrow ~n:ty.type_neutral ~effects (copy ty1) (copy ty2)
+	arrow ~n ~effects (copy ty1) (copy ty2)
       else ty
   | Type_product(ty_list) ->
       if level = generic
       then
-	product ~effects (List.map copy ty_list)
+	product ~n ~effects (List.map copy ty_list)
       else ty
   | Type_constr(name, ty_list) ->
       if level = generic
       then
-	constr ~effects name (List.map copy ty_list)
+	constr ~n ~effects name (List.map copy ty_list)
       else ty
   | Type_process(ty, k) ->
       if level = generic
       then
-	process ~effects (copy ty) k
+	process ~n ~effects (copy ty) k
       else
 	ty
 
