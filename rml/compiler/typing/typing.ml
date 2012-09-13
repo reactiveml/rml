@@ -492,6 +492,19 @@ let unify_effects effects loc u =
     )
     effects
 
+let rec deep_neutral ty =
+  ty.type_neutral <- true;
+  match ty.type_desc with
+    | Type_var -> ()
+    | Type_arrow (ty1, ty2) ->
+        deep_neutral ty1; deep_neutral ty2
+    | Type_product ty_l ->
+        List.iter (deep_neutral) ty_l
+    | Type_constr (ty_constr, ty_l) ->
+        List.iter deep_neutral ty_l
+    | Type_link ty | Type_process (ty, _) ->
+        deep_neutral ty
+
 let deep_unify u ty loc =
   let ty_u = Usages_misc.type_of_usage u in
   let rec loop ty =
@@ -1069,7 +1082,12 @@ and type_let is_rec env patt_expr_list =
   let effects =
     List.map2
       (fun (patt,expr) ty ->
-        Effects.gen mem_env (snd (type_expect let_env expr ty))
+        let effects = Effects.gen mem_env (snd (type_expect let_env expr ty)) in
+        if is_rec then begin
+          deep_neutral ty;
+          unify_effects effects patt.patt_loc Usages.Neutral;
+        end;
+        effects
       )
       patt_expr_list
       ty_list
