@@ -557,7 +557,7 @@ let rec type_of_expression env expr =
 	return ty effects
 
     | Rexpr_let (flag, patt_expr_list, e) ->
-	let gl_env, new_env, effects_1 = type_let (flag = Recursive) env patt_expr_list in
+	let _, new_env, effects_1 = type_let (flag = Recursive) env patt_expr_list in
         let ty, effects_2 = type_of_expression new_env e in
         return ty (Effects.merge (Effects.flatten effects_1) effects_2)
 
