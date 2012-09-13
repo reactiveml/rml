@@ -89,6 +89,7 @@ let for_optimization = ref true
 let const_optimization = ref true
 
 let no_clocking = ref false
+let no_reactivity = ref false
 
 (* add a file in the list of file to compile. *)
 let add_to_compile file =
@@ -237,6 +238,7 @@ and doc_save_types = "Save type information in <filename>.?annot"
 and doc_no_loop_warning = "Remove instantaneous loop and recursion warnings"
 and doc_interactive = "Read programs on stdin and output on stdout"
 and doc_no_clocking = "Don't check clocks"
+and doc_no_reactivity = "Do not check for reactivity"
 and doc_runtime =
 (*"<interpreter> select the runtime according to <interpreter>:\n"*)
    "(undocumented)\n" ^
@@ -281,6 +283,7 @@ let parse_cli () =
         "-no_for_opt", Arg.Unit set_no_for, doc_no_for;
         "-no_const_opt", Arg.Clear const_optimization, doc_no_const_opt;
         "-no-clocking", Arg.Set no_clocking, doc_no_clocking;
+        "-no-reactivity", Arg.Set no_reactivity, doc_no_reactivity;
         "-dparse", Arg.Unit set_dparse, doc_dparse;
         "-dtime", Arg.Unit set_dtime, doc_dtime;
       ]

@@ -44,14 +44,16 @@ let param_of_var (v, k) = match k with
   | Ttype_var -> Pptype (mkte (Ptype_var v))
   | Tcarrier_var -> Ppcarrier (mkce (Pcar_var v))
   | Teffect_var -> Ppeffect (mkee (Peff_var v))
+  | Treact_var -> assert false (*TODO*)
 
 let arity_of_type_vars typ_vars =
-  let aux (nb_ck, nb_car, nb_eff) (_, k) = match k with
-    | Ttype_var -> nb_ck + 1, nb_car, nb_eff
-    | Tcarrier_var -> nb_ck, nb_car + 1, nb_eff
-    | Teffect_var -> nb_ck, nb_car, nb_eff + 1
+  let aux (nb_ck, nb_car, nb_eff, nb_r) (_, k) = match k with
+    | Ttype_var -> nb_ck + 1, nb_car, nb_eff, nb_r
+    | Tcarrier_var -> nb_ck, nb_car + 1, nb_eff, nb_r
+    | Teffect_var -> nb_ck, nb_car, nb_eff + 1, nb_r
+    | Treact_var -> nb_ck, nb_car, nb_eff, nb_r + 1
   in
-  List.fold_left aux (0, 0, 0) typ_vars
+  List.fold_left aux (0, 0, 0, 0) typ_vars
 
 let all_vars env current_id =
   let rec expand_id force id =
@@ -65,14 +67,14 @@ let all_vars env current_id =
   expand_id true current_id
 
 let arity_of_pe_list pe_list =
-  let arity_of_pe (nb_ck, nb_car, nb_eff) pe = match pe with
-    | Pptype _ -> nb_ck + 1, nb_car, nb_eff
-    | Ppcarrier _ -> nb_ck, nb_car + 1, nb_eff
-    | Ppeffect _ -> nb_ck, nb_car, nb_eff + 1
+  let arity_of_pe (nb_ck, nb_car, nb_eff, nb_r) pe = match pe with
+    | Pptype _ -> nb_ck + 1, nb_car, nb_eff, nb_r
+    | Ppcarrier _ -> nb_ck, nb_car + 1, nb_eff, nb_r
+    | Ppeffect _ -> nb_ck, nb_car, nb_eff + 1, nb_r
   in
-  List.fold_left arity_of_pe (0, 0, 0) pe_list
+  List.fold_left arity_of_pe (0, 0, 0, 0) pe_list
 
-let new_vars (_, found_car, found_eff) (_, nb_car, nb_eff) =
+let new_vars (_, found_car, found_eff, _) (_, nb_car, nb_eff, _) =
   let new_car_vars = do_n mkfresh_car (nb_car - found_car) in
   let new_eff_vars = do_n mkfresh_effect (nb_eff - found_eff) in
   new_car_vars @ new_eff_vars
@@ -92,7 +94,7 @@ let find_new_vars decl_ids td =
             te, (vars_list, add_to_list gcstr.gi id_list)
           else if gcstr.gi = Initialization.event_ident
                   || gcstr.gi = Initialization.memory_ident then (
-            let (_, ck_arity, _) = arity_of_pe_list pe_list in
+            let (_, ck_arity, _, _) = arity_of_pe_list pe_list in
             if ck_arity = 0 then (
               let var = mkfresh_car () in
               let te = { te with pte_desc = Ptype_constr(cstr, pe_list @ [param_of_var var]) } in

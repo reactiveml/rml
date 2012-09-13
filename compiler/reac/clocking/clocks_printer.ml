@@ -41,18 +41,20 @@ open Global_ident
 open Global
 
 
-let clock_param_iter f_ck f_car f_eff v = match v with
+let clock_param_iter f_ck f_car f_eff f_react v = match v with
   | Var_clock c -> f_ck c
   | Var_carrier c -> f_car c
   | Var_effect eff -> f_eff eff
+  | Var_react r -> f_react r
 
 let params_split l =
-  let aux (ck_l, c_l, eff_l) x = match x with
-    | Var_clock ck -> ck::ck_l, c_l, eff_l
-    | Var_carrier c -> ck_l, c::c_l, eff_l
-    | Var_effect eff -> ck_l, c_l, eff::eff_l
+  let aux (ck_l, c_l, eff_l, r_l) x = match x with
+    | Var_clock ck -> ck::ck_l, c_l, eff_l, r_l
+    | Var_carrier c -> ck_l, c::c_l, eff_l, r_l
+    | Var_effect eff -> ck_l, c_l, eff::eff_l, r_l
+    | Var_react r -> ck_l, c_l, eff_l, r::r_l
   in
-  List.fold_left aux ([], [], []) l
+  List.fold_left aux ([], [], [], []) l
 
 (* the long name of an ident is printed *)
 (* if it is different from the current module *)
@@ -69,6 +71,7 @@ let type_name = new name_assoc_table int_to_alpha
 let carrier_name = new name_assoc_table (fun i -> "c"^string_of_int i)
 let skolem_name = new name_assoc_table (fun i -> "c"^string_of_int i)
 let effect_name = new name_assoc_table (fun i -> "e"^string_of_int i)
+let react_name = new name_assoc_table (fun i -> "r"^string_of_int i)
 
 let print_skolem_name (n, i) =
   print_string "?";
@@ -102,7 +105,7 @@ let rec print priority ty =
         print_list 2 "*" ty_list;
         (*if priority >= 2 then*) print_string ")"
     | Clock_constr(name, p_list) ->
-        let ty_list, car_list, eff_list = params_split p_list in
+        let ty_list, car_list, eff_list, r_list = params_split p_list in
         let n = List.length ty_list in
         if n > 1 then print_string "(";
         print_list 2 "," ty_list;
@@ -114,20 +117,23 @@ let rec print priority ty =
           print_carrier_list 2 "," car_list;
           print_string "|";
           print_effect_list 2 "," eff_list;
-          print_string "}"
+          print_string "}[";
+          print_react_list 2 ", " r_list
         )
        (* (match name.ck_info with
           | Some { constr_abbr = Constr_abbrev(_, ck) } -> print_string " ----> "; print priority ck
           | _ -> ()) *)
     | Clock_link(link) ->
         (*print_string "~>";*) print priority link
-    | Clock_process (ty, c, eff) ->
+    | Clock_process (ty, c, eff, r) ->
         print 2 ty;
         print_string " process {";
         print_carrier priority c;
         print_string "|";
         print_effect priority eff;
-        print_string "}"
+        print_string "}[";
+        print_react priority r;
+        print_string "]"
     | Clock_forall sch ->
         print_scheme_full priority sch
   end;
@@ -168,8 +174,36 @@ and print_effect priority eff =
   end;
   close_box ()
 
+and print_react priority r =
+  open_box 0;
+  begin match r.desc with
+    | React_var ->
+        print_string "'";
+        if r.level <> generic then print_string "_";
+        print_string (react_name#name r.index)
+    | React_empty -> print_string "0"
+    | React_carrier c ->
+        print_string "{";
+        print_carrier priority c;
+        print_string "}"
+    | React_seq rl -> print_react_list 2 "; " rl
+    | React_par rl -> print_react_list 2 " || " rl
+    | React_or rl -> print_react_list 2 " + " rl
+    | React_rec (r1, r2) ->
+        print_string "rec ";
+        print_react priority r1;
+        print_string ". ";
+        print_react priority r2
+    | React_run r1 ->
+        print_string "run ";
+        print_react priority r1
+    | React_link link -> print_react priority link
+  end;
+  close_box ()
+
 and print_scheme_full priority { cs_clock_vars = ck_vars; cs_carrier_vars = car_vars;
                                  cs_effect_vars = eff_vars; cs_desc = ty } =
+  print_string "s";
   if ck_vars <> [] then (
     print_string "forall"; print_space ();
     print_list priority "," ck_vars;
@@ -210,6 +244,21 @@ and print_effect_list priority sep l =
 	      print_effect priority ty
     | ty::rest ->
 	      print_effect priority ty;
+	      print_space ();
+	      print_string sep;
+	      print_space ();
+	      printrec rest
+  in
+  printrec l
+
+and print_react_list priority sep l =
+  let rec printrec l =
+    match l with
+      [] -> ()
+    | [ty] ->
+	      print_react priority ty
+    | ty::rest ->
+	      print_react priority ty;
 	      print_space ();
 	      print_string sep;
 	      print_space ();
@@ -262,7 +311,7 @@ let print_value_clock_declaration global =
   print_flush ()
 
 (* printing type declarations *)
-let print_clock_name tc (nb_ck, nb_car, nb_eff) =
+let print_clock_name tc (nb_ck, nb_car, nb_eff, nb_r) =
   let print_one_variable assoc i =
     print_string "'";
     print_string (assoc#name i)
@@ -292,7 +341,8 @@ let print_clock_name tc (nb_ck, nb_car, nb_eff) =
     print_n_variables carrier_name nb_car;
     print_string "|";
     print_n_variables effect_name nb_eff;
-    print_string "}"
+    print_string "}[";
+    print_n_variables react_name nb_r
   )
 
 (* prints one variant *)
@@ -401,6 +451,12 @@ let output_effect oc eff =
   set_formatter_out_channel oc;
 (*   print_string "  "; *)
   print_effect 0 eff;
+  print_flush ()
+
+let output_react oc r =
+  set_formatter_out_channel oc;
+(*   print_string "  "; *)
+  print_react 0 r;
   print_flush ()
 
 let output_value_declaration oc global_list =

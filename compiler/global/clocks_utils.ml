@@ -56,26 +56,30 @@ and pop_type_level () =
 
 (* functins on clock params *)
 
-let clock_param_map f_ck f_car f_eff v = match v with
+let clock_param_map f_ck f_car f_eff f_react v = match v with
   | Var_clock c -> Var_clock (f_ck c)
   | Var_carrier c -> Var_carrier (f_car c)
   | Var_effect eff -> Var_effect (f_eff eff)
+  | Var_react r -> Var_react (f_react r)
 
-let clock_param_iter f_ck f_car f_eff v = match v with
+let clock_param_iter f_ck f_car f_eff f_react v = match v with
   | Var_clock c -> f_ck c
   | Var_carrier c -> f_car c
   | Var_effect eff -> f_eff eff
+  | Var_react r -> f_react r
 
-let clock_param_iter2 f_ck f_car f_eff v1 v2 = match v1, v2 with
+let clock_param_iter2 f_ck f_car f_eff f_react v1 v2 = match v1, v2 with
   | Var_clock c1, Var_clock c2 -> f_ck c1 c2
   | Var_carrier c1, Var_carrier c2 -> f_car c1 c2
   | Var_effect eff1, Var_effect eff2 -> f_eff eff1 eff2
+  | Var_react r1, Var_react r2 -> f_react r1 r2
   | _, _ -> invalid_arg "clock_param_iter"
 
-let clock_param_fold f_ck f_car f_eff acc v = match v with
+let clock_param_fold f_ck f_car f_eff f_react acc v = match v with
   | Var_clock c -> f_ck acc c
   | Var_carrier c -> f_car acc c
   | Var_effect eff -> f_eff acc eff
+  | Var_react r -> f_react acc r
 
 let expect_clock p = match p with
   | Var_clock ck -> ck
@@ -89,13 +93,18 @@ let expect_effect p = match p with
   | Var_effect eff -> eff
   | _ -> invalid_arg "expect_effect"
 
+let expect_react p = match p with
+  | Var_react r -> r
+  | _ -> invalid_arg "expect_react"
+
 let params_split l =
-  let aux (ck_l, c_l, eff_l) x = match x with
-    | Var_clock ck -> ck::ck_l, c_l, eff_l
-    | Var_carrier c -> ck_l, c::c_l, eff_l
-    | Var_effect eff -> ck_l, c_l, eff::eff_l
+  let aux (ck_l, c_l, eff_l, r_l) x = match x with
+    | Var_clock ck -> ck::ck_l, c_l, eff_l, r_l
+    | Var_carrier c -> ck_l, c::c_l, eff_l, r_l
+    | Var_effect eff -> ck_l, c_l, eff::eff_l, r_l
+    | Var_react r -> ck_l, c_l, eff_l, r::r_l
   in
-  List.fold_left aux ([], [], []) l
+  List.fold_left aux ([], [], [], []) l
 
 (* making types *)
 let make_clock ck =
@@ -130,8 +139,8 @@ let rec arrow_list ck_l eff_l ck_res =
   | ck :: ck_l, eff::eff_l -> arrow ck (arrow_list ck_l eff_l ck_res) eff
   | _, _ -> invalid_arg "arrow_list"
 
-let process ck activation_car eff =
-  make_clock (Clock_process (ck, activation_car, eff))
+let process ck activation_car eff r =
+  make_clock (Clock_process (ck, activation_car, eff, r))
 
 let make_carrier s =
   { desc = Carrier_var s;
@@ -180,6 +189,48 @@ let topck_carrier =
 let clock_topck =
   make_clock (Clock_depend topck_carrier)
 
+
+(* reactivity effects *)
+
+let make_react r =
+  { desc = r;
+    level = generic;
+    index = names#name; }
+
+let no_react =
+  { desc = React_empty;
+    level = generic;
+    index = -1; }
+
+let react_carrier c = make_react (React_carrier c)
+
+let react_seq r1 r2 =
+  let desc = match r1.desc, r2.desc with
+    | React_seq rl1, React_seq rl2 -> React_seq (rl1@rl2)
+    | React_seq rl1, _ -> React_seq (rl1 @ [r2])
+    | _, React_seq rl2 -> React_seq (r1::rl2)
+    | _, _ -> React_seq [r1; r2]
+  in
+  make_react desc
+
+let react_par r1 r2 =
+  let desc = match r1.desc, r2.desc with
+    | React_par rl1, React_par rl2 -> React_par (rl1@rl2)
+    | React_par rl1, _ -> React_par (r2::rl1)
+    | _, React_par rl2 -> React_par (r1::rl2)
+    | _, _ -> React_par [r1; r2]
+  in
+  make_react desc
+
+let react_or r1 r2 =
+  let desc = match r1.desc, r2.desc with
+    | React_or rl1, React_or rl2 -> React_or (rl1@rl2)
+    | React_or rl1, _ -> React_or (r2::rl1)
+    | _, React_or rl2 -> React_or (r1::rl2)
+    | _, _ -> React_or [r1; r2]
+  in
+  make_react desc
+
 (* To get fresh type variables *)
 
 let new_clock_var () =
@@ -215,10 +266,21 @@ let new_generic_effect_var () =
     level = generic;
     index = names#name }
 
+let new_react_var () =
+  { desc = React_var;
+    level = !current_level;
+    index = names#name }
+
+let new_generic_react_var () =
+  { desc = React_var;
+    level = generic;
+    index = names#name }
+
 let new_generic_var (v, k) = match k with
     | Ttype_var -> Var_clock (new_generic_clock_var ())
     | Tcarrier_var -> Var_carrier (make_generic_carrier v)
     | Teffect_var -> Var_effect (new_generic_effect_var ())
+    | Treact_var -> Var_react (new_generic_react_var ())
 
 let rec new_clock_var_list n =
   match n with
@@ -227,16 +289,23 @@ let rec new_clock_var_list n =
 
 
 
-let forall ck_vars car_vars eff_vars typ =
+let react_loop r =
+  let var = new_react_var () in
+  let body = react_seq r var in
+  make_react (React_rec (var, body))
+
+
+let forall ck_vars car_vars eff_vars react_vars typ =
   { cs_clock_vars = ck_vars;
     cs_carrier_vars = car_vars;
     cs_effect_vars = eff_vars;
+    cs_react_vars = react_vars;
     cs_desc = typ; }
 
 let ty_forall params ck =
-  let ty_l, c_l, eff_l = params_split params in
+  let ty_l, c_l, eff_l, r_l = params_split params in
   Misc.assert_empty ty_l;
-  make_clock (Clock_forall (forall [] c_l eff_l ck))
+  make_clock (Clock_forall (forall [] c_l eff_l r_l ck))
 
 let clock_of_sch sch =
   make_clock (Clock_forall sch)
@@ -244,6 +313,7 @@ let clock_of_sch sch =
 (* activation clock*)
 let activation_carrier = ref topck_carrier
 let current_effect = ref no_effect
+let current_react = ref no_react
 
 (* To take the canonical representative of a type.
    We do path compression there. *)
@@ -270,6 +340,14 @@ let rec effect_repr eff = match eff.desc with
       t
   | _ ->
       eff
+
+let rec react_repr r = match r.desc with
+  | React_link r ->
+      let r = react_repr r in
+      r.desc <- React_link r;
+      r
+  | _ ->
+      r
 
 (* simplification of effects *)
 
@@ -371,6 +449,25 @@ let rec remove_var_from_effect index eff = match eff.desc with
 let remove_var_from_effect index eff =
   simplify_effect (remove_var_from_effect index eff)
 
+(* Operations on reactivity effects *)
+let rec remove_ck_from_react ck r = match r.desc with
+  | React_empty | React_var -> r
+  | React_carrier c ->
+      if (carrier_repr c).desc = ck.desc then
+        no_react
+      else
+        r
+  | React_seq rl ->
+      { r with desc = React_seq (List.map (remove_ck_from_react ck) rl) }
+  | React_par rl ->
+      { r with desc = React_par (List.map (remove_ck_from_react ck) rl) }
+  | React_or rl ->
+      { r with desc = React_or (List.map (remove_ck_from_react ck) rl) }
+  | React_run r1 ->
+      { r with desc = React_run (remove_ck_from_react ck r1) }
+  | React_rec (r1, r2) ->
+      { r with desc = React_rec (r1, remove_ck_from_react ck r2) }
+  | React_link link -> remove_ck_from_react ck link
 
 (* To generalize a type *)
 
@@ -383,6 +480,7 @@ let remove_var_from_effect index eff =
 let list_of_clock_vars = ref []
 let list_of_carrier_vars = ref []
 let list_of_effect_vars = ref []
+let list_of_react_vars = ref []
 
 let rec gen_clock is_gen ck =
   let ck = clock_repr ck in
@@ -408,11 +506,12 @@ let rec gen_clock is_gen ck =
         ck.level <- gen_param_list is_gen param_list
     | Clock_link(link) ->
         ck.level <- gen_clock is_gen link
-    | Clock_process (body_ck, act_car, eff) ->
+    | Clock_process (body_ck, act_car, eff, r) ->
         let level_eff = gen_effect is_gen eff in
+        let level_r = gen_react is_gen r in
         let level_body = gen_clock is_gen body_ck in
         let level_act = gen_carrier is_gen act_car in
-        ck.level <- min (min level_eff level_body) level_act
+        ck.level <- min (min (min level_r level_eff) level_body) level_act
     | Clock_forall sch -> (* TODO *) ()
   );
   ck.level
@@ -456,7 +555,33 @@ and gen_effect is_gen eff =
   );
   eff.level
 
-and gen_param is_gen x = clock_param_iter (gen_clock is_gen) (gen_carrier is_gen) (gen_effect is_gen) x
+and gen_react is_gen r =
+  let r = react_repr r in
+  (match r.desc with
+    | React_empty -> ()
+    | React_carrier c -> r.level <- gen_carrier is_gen c
+    | React_seq rl | React_par rl | React_or rl ->
+        r.level <- gen_react_list is_gen rl
+    | React_rec (r1, r2) -> (*TODO: generaliser var?*)
+        r.level <- min (gen_react is_gen r1) (gen_react is_gen r2)
+    | React_run r2 -> r.level <- gen_react is_gen r2
+    | React_var ->
+        if r.level > !current_level then
+          if is_gen then (
+            r.level <- generic;
+            list_of_react_vars := r :: !list_of_react_vars
+          ) else
+            r.level <- !current_level
+    | React_link link -> r.level <- gen_react is_gen link
+  );
+  r.level
+
+and gen_react_list is_gen rl =
+  List.fold_left (fun level r -> min level (gen_react is_gen r)) notgeneric rl
+
+and gen_param is_gen x =
+  clock_param_iter (gen_clock is_gen) (gen_carrier is_gen)
+    (gen_effect is_gen) (gen_react is_gen) x
 
 and gen_param_list is_gen param_list =
   List.fold_left (fun level p -> min level (gen_param is_gen p)) notgeneric param_list
@@ -466,10 +591,12 @@ let gen ck =
   list_of_clock_vars := [];
   list_of_carrier_vars := [];
   list_of_effect_vars := [];
+  list_of_react_vars := [];
   let _ = gen_clock true ck in
   { cs_clock_vars = !list_of_clock_vars;
     cs_carrier_vars = !list_of_carrier_vars;
     cs_effect_vars = !list_of_effect_vars;
+    cs_react_vars = !list_of_react_vars;
     cs_desc = ck }
 
 let non_gen ck = ignore (gen_clock false ck)
@@ -491,10 +618,11 @@ let free_clock_vars level ck =
           List.iter free_vars_param param_list
       | Clock_link link ->
           free_vars link
-      | Clock_process (ck, act, eff) ->
+      | Clock_process (ck, act, eff, r) ->
           free_vars ck;
           free_vars_carrier act;
-          free_vars_effect eff
+          free_vars_effect eff;
+          free_vars_react r
       | Clock_depend c -> free_vars_carrier c
       | Clock_forall sch -> (*TODO*) ()
   and free_vars_carrier car =
@@ -515,7 +643,19 @@ let free_clock_vars level ck =
       | Effect_depend c ->
           free_vars_carrier c
       | Effect_link link -> free_vars_effect link
-  and free_vars_param p = clock_param_iter free_vars free_vars_carrier free_vars_effect p
+  and free_vars_react r =
+    let r = react_repr r in
+    match r.desc with
+      | React_var ->
+          if r.level >= level then fv := (Var_react r) :: !fv
+      | React_empty -> ()
+      | React_carrier c -> free_vars_carrier c
+      | React_seq rl | React_par rl | React_or rl ->
+          List.iter free_vars_react rl
+      | React_rec (r1, r2) -> free_vars_react r1; free_vars_react r2
+      | React_run r  | React_link r -> free_vars_react r
+  and free_vars_param p =
+    clock_param_iter free_vars free_vars_carrier free_vars_effect free_vars_react p
   in
   free_vars ck;
   !fv
@@ -535,10 +675,12 @@ class ['a,'b] save =
 let clocks = new save
 let carriers = new save
 let effects = new save
+let reacts = new save
 let cleanup () =
   clocks#cleanup;
   carriers#cleanup;
-  effects#cleanup
+  effects#cleanup;
+  reacts#cleanup
 
 (* makes a copy of a type *)
 let rec copy_subst_clock m ck =
@@ -578,9 +720,10 @@ let rec copy_subst_clock m ck =
           constr name (List.map (copy_subst_param m) param_list)
         else
           ck
-    | Clock_process (ck, act_car, eff) ->
+    | Clock_process (ck, act_car, eff, r) ->
         if level = generic then
-          process (copy_subst_clock m ck) (copy_subst_carrier m act_car) (copy_subst_effect m eff)
+          process (copy_subst_clock m ck) (copy_subst_carrier m act_car)
+            (copy_subst_effect m eff) (copy_subst_react m r)
         else
           ck
     | Clock_forall _ -> (*TODO*)
@@ -641,8 +784,56 @@ and copy_subst_effect m eff =
         else
           eff
 
+and copy_subst_react m r =
+  let level = r.level in
+  match r.desc with
+    | React_empty -> r
+    | React_var ->
+        if level = generic then
+          let v = new_react_var () in
+          r.desc <- React_link v;
+          reacts#save r React_var;
+          v
+        else
+          r
+    | React_carrier c ->
+        if level = generic then
+          make_react (React_carrier (copy_subst_carrier m c))
+        else
+          r
+    | React_seq rl ->
+        if level = generic then
+          make_react (React_seq (List.map (copy_subst_react m) rl))
+        else
+          r
+    | React_par rl ->
+        if level = generic then
+          make_react (React_par (List.map (copy_subst_react m) rl))
+        else
+          r
+    | React_or rl ->
+        if level = generic then
+          make_react (React_or (List.map (copy_subst_react m) rl))
+        else
+          r
+    | React_rec (r1, r2) ->
+        if level = generic then
+          make_react (React_rec (copy_subst_react m r1, copy_subst_react m r2))
+        else
+          r
+    | React_run r2 ->
+        if level = generic then
+          make_react (React_run (copy_subst_react m r2))
+        else
+          r
+    | React_link link ->
+        if level = generic then
+          link
+        else
+          copy_subst_react m link
+
 and copy_subst_param m p = clock_param_map (copy_subst_clock m)
-  (copy_subst_carrier m) (copy_subst_effect m) p
+  (copy_subst_carrier m) (copy_subst_effect m) (copy_subst_react m) p
 
 let copy_clock ck = copy_subst_clock [] ck
 let copy_param p = copy_subst_param [] p
@@ -655,13 +846,15 @@ let instance { cs_desc = ck } =
 
 
 let instance_and_vars { cs_clock_vars = ck_vars; cs_carrier_vars = car_vars;
-                        cs_effect_vars = eff_vars; cs_desc = ck } =
+                        cs_effect_vars = eff_vars; cs_react_vars = r_vars;
+                        cs_desc = ck } =
   let ck_i = copy_clock ck in
   let ck_vars = List.map clock_repr ck_vars in
   let car_vars = List.map carrier_repr car_vars in
   let eff_vars = List.map effect_repr eff_vars in
+  let r_vars = List.map react_repr r_vars in
   cleanup ();
-  ck_vars, car_vars, eff_vars, ck_i
+  ck_vars, car_vars, eff_vars, r_vars, ck_i
 
 let constr_instance { cstr_arg = ck_opt; cstr_res = ck_res; } =
   let ck_opt = opt_map copy_clock ck_opt in
@@ -700,10 +893,11 @@ let rec occur_check level index ck =
       | Clock_product ck_list -> List.iter check ck_list
       | Clock_constr(_, param_list) -> List.iter (param_occur_check level index) param_list
       | Clock_link link -> check link
-      | Clock_process (ck, act_car, eff) ->
+      | Clock_process (ck, act_car, eff, r) ->
           check ck;
           carrier_occur_check level no_carrier act_car;
-          effect_occur_check level no_effect eff
+          effect_occur_check level no_effect eff;
+          react_occur_check level no_react r
       | Clock_forall sch -> (*TODO*) ()
   in
   (*Printf.eprintf "Occur_check : level:%d   index:%a   ck:%a\n"  level  Clocks_printer.output index  Clocks_printer.output ck;*)
@@ -743,9 +937,36 @@ and effect_occur_check level index eff =
   in
   check eff
 
+and react_occur_check_is_rec level index r =
+  let is_rec = ref false in
+  let rec check r =
+    let r = react_repr r in
+    match r.desc with
+      | React_empty -> ()
+      | React_var ->
+          if r == index then (* go on to fix levels *)
+            is_rec := true
+          else if r.level > level then
+            r.level <- level
+      | React_carrier c -> carrier_occur_check level no_carrier c
+      | React_seq rl | React_par rl | React_or rl ->
+          List.iter check rl
+      | React_run r1 -> check r1
+      | React_rec (_, r2) -> (* TODO: parcourir r1 ?*)
+          check r2
+      | React_link link -> check link
+  in
+  check r;
+  !is_rec
+
+and react_occur_check level index r =
+  ignore (react_occur_check_is_rec level index r)
+
 and param_occur_check level index =
   clock_param_iter (occur_check level index)
-    (carrier_occur_check level no_carrier) (effect_occur_check level no_effect)
+    (carrier_occur_check level no_carrier)
+    (effect_occur_check level no_effect)
+    (react_occur_check level no_react)
 
 (* the occur check *)
 let rec skolem_check skolems ck =
@@ -760,10 +981,11 @@ let rec skolem_check skolems ck =
       | Clock_product ck_list -> List.iter check ck_list
       | Clock_constr(_, param_list) -> List.iter (param_skolem_check skolems) param_list
       | Clock_link link -> check link
-      | Clock_process (ck, act_car, eff) ->
+      | Clock_process (ck, act_car, eff, r) ->
           check ck;
           carrier_skolem_check skolems act_car;
-          effect_skolem_check skolems eff
+          effect_skolem_check skolems eff;
+          react_skolem_check skolems r
       | Clock_forall sch -> (*TODO*) ()
   in
   check ck
@@ -791,9 +1013,25 @@ and effect_skolem_check skolems eff =
   in
   check eff
 
+and react_skolem_check skolems r =
+  let rec check r =
+    let r = react_repr r in
+    match r.desc with
+      | React_var | React_empty -> ()
+      | React_carrier c -> carrier_skolem_check skolems c
+      | React_seq rl | React_par rl | React_or rl ->
+          List.iter check rl
+      | React_run r1 -> check r1
+      | React_rec (_, r2) -> check r2
+      | React_link link -> check link
+  in
+  check r
+
 and param_skolem_check skolems =
   clock_param_iter (skolem_check skolems)
-    (carrier_skolem_check skolems) (effect_skolem_check skolems)
+    (carrier_skolem_check skolems)
+    (effect_skolem_check skolems)
+    (react_skolem_check skolems)
 
 let make_fresh_skolem_subst vars =
   let fresh_skolem (m, skolems) car = match car.desc with
@@ -830,6 +1068,12 @@ let bind_effect eff1 eff2 =
   match eff1, eff2 with
     | { desc  = Effect_var _ }, eff2 ->
         eff1.desc <- Effect_link eff2
+    | _ -> raise Unify
+
+let bind_react r1 r2 =
+  match r1, r2 with
+    | { desc  = React_var _ }, r2 ->
+        r1.desc <- React_link r2
     | _ -> raise Unify
 
 let expand_abbrev params body args =
@@ -871,10 +1115,11 @@ let rec unify expected_ck actual_ck =
         | _, Clock_constr ({ ck_info = Some { constr_abbr = Constr_abbrev(params,body) } }, args) ->
            (* Printf.eprintf "Replacing '%a' with '%a'\n"   Clocks_printer.output actual_ck   Clocks_printer.output (expand_abbrev params body args); *)
             unify expected_ck (expand_abbrev params body args)
-        | Clock_process (ck1, c1, eff1), Clock_process (ck2, c2, eff2) ->
+        | Clock_process (ck1, c1, eff1, r1), Clock_process (ck2, c2, eff2, r2) ->
             unify ck1 ck2;
             carrier_unify c1 c2;
-            effect_unify eff1 eff2
+            effect_unify eff1 eff2;
+            react_unify r1 r2
         | Clock_forall { cs_clock_vars = []; cs_carrier_vars = [];
                          cs_effect_vars = []; cs_desc = expected_ck }, _ ->
             unify expected_ck actual_ck
@@ -918,7 +1163,9 @@ and carrier_unify expected_car actual_car =
             carrier_occur_check actual_car.level actual_car expected_car;
             actual_car.desc <- Carrier_link expected_car
         | Carrier_skolem(_,i), Carrier_skolem(_, j) when i = j -> ()
-        | _ -> raise Unify
+        | _ ->
+            Printf.eprintf "Failed to unify carriers '%a' and '%a'\n"  Clocks_printer.output_carrier expected_car  Clocks_printer.output_carrier actual_car;
+            raise Unify
 
 and effect_unify expected_eff actual_eff =
   (* Printf.eprintf "Unify effects '%a' and %a\n" Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff; *)
@@ -949,7 +1196,40 @@ and effect_unify expected_eff actual_eff =
              Printf.eprintf "Failed to unify effects '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff;
             raise Unify
 
-and unify_param p1 p2 = clock_param_iter2 unify carrier_unify effect_unify p1 p2
+
+and react_unify expected_r actual_r =
+  if expected_r == actual_r then ()
+  else
+    let expected_r = react_repr expected_r in
+    let actual_r = react_repr actual_r in
+    if expected_r == actual_r then ()
+    else
+      match expected_r.desc, actual_r.desc with
+        | React_empty, React_empty -> ()
+            (* phi == uphi. r *)
+        | React_var, React_rec (r2, _) when expected_r.index = r2.index -> ()
+        | React_rec(r2, _), React_var when actual_r.index = r2.index -> ()
+        | React_var, _ ->
+            let is_rec = react_occur_check_is_rec expected_r.level expected_r actual_r in
+            if is_rec then (
+              let new_r = make_react (React_rec (expected_r, actual_r)) in
+              expected_r.desc <- React_link new_r
+            ) else
+              expected_r.desc <- React_link actual_r
+        | _, React_var ->
+            let is_rec = react_occur_check_is_rec actual_r.level actual_r expected_r in
+            if is_rec then (
+              let new_r = make_react (React_rec (actual_r, expected_r)) in
+              actual_r.desc <- React_link new_r
+            ) else
+              actual_r.desc <- React_link expected_r
+        | React_rec (_, expected_r), _ -> react_unify expected_r actual_r
+        | _, React_rec (_, actual_r) -> react_unify expected_r actual_r
+        | _ ->
+            Printf.eprintf "Failed to unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r;
+            raise Unify
+
+and unify_param p1 p2 = clock_param_iter2 unify carrier_unify effect_unify react_unify p1 p2
 
 and unify_param_list l1 l2 =
   try

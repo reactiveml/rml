@@ -75,13 +75,14 @@ let event_config_err loc =
   raise Error
 
 let constr_wrong_arity_err cstr
-    (found_ck, found_car, found_eff) (exp_ck, exp_car, exp_eff) loc =
+    (found_ck, found_car, found_eff, found_r) (exp_ck, exp_car, exp_eff, exp_r) loc =
   Format.eprintf
     "%aThe constructor %s expects %d type variables, %d clock variables \
-     and %d effect variables but was given  %d type variables, %d clock variables \
-     and %d effect variables.\n"
+     and %d effect variables  and %d reactivity variables \
+     but was given  %d type variables, %d clock variables \
+     and %d effect variables and %d reactivity variables.\n"
     Location.print loc
     (string_of_parseident cstr)
-    exp_ck exp_car exp_eff
-    found_ck found_car found_eff;
+    exp_ck exp_car exp_eff exp_r
+    found_ck found_car found_eff found_r;
   raise Error

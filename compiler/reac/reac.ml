@@ -47,6 +47,7 @@ type expression =
     e_loc: Location.t;
     mutable e_type: Types.type_expression;
     mutable e_clock: Clocks.clock;
+    mutable e_react : Clocks.react_effect;
     mutable e_static: Static.static;
     mutable e_reactivity: (varpatt * int) list; }
 
