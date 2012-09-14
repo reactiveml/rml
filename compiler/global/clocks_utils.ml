@@ -1198,7 +1198,7 @@ and effect_unify expected_eff actual_eff =
 
 
 and react_unify expected_r actual_r =
-  if expected_r == actual_r then ()
+  if !Compiler_options.no_reactivity || expected_r == actual_r then ()
   else
     let expected_r = react_repr expected_r in
     let actual_r = react_repr actual_r in

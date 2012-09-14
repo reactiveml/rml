@@ -42,12 +42,14 @@ open Reac
 open Misc
 open Annot
 
-
 let add_effect eff =
   current_effect := simplify_effect (eff_sum !current_effect eff)
 let add_effect_ck ck =
   add_effect (make_effect (Effect_depend ck))
 
+let set_current_react r =
+  if not !Compiler_options.no_reactivity then
+    current_react := r
 
 let add_to_list x l =
   if List.mem x l then l else x::l
@@ -72,6 +74,7 @@ let filter_multi_event ck =
   let sck = make_carrier generic_prefix_name in
   unify ck (constr_notabbrev event_ident
                [Var_clock ck1; Var_clock (constr_notabbrev list_ident [Var_clock ck1]); Var_carrier sck]);
+  add_effect_ck sck;
   ck1, sck
 
 let filter_memory ?(force_activation_ck=false) ck =
@@ -614,13 +617,15 @@ let rec schema_of_expression env expr =
 
     | Eifthenelse (cond,e1,e2) ->
         type_expect env cond Clocks_utils.static;
-        let ty = clock_of_expression env e1 in
-        type_expect env e2 ty;
+        let ty, r1 = clock_react_of_expression env e1 in
+        let r2 = type_react_expect env e2 ty in
+        set_current_react (react_or r1 r2);
         ty
 
     | Ematch (body,matching) ->
         let ty_body = clock_of_expression env body in
         let ty_res = new_clock_var() in
+        let local_react = ref no_react in
         List.iter
           (fun (p,e) ->
             let gl_env, loc_env = clock_of_pattern [] [] env p ty_body in
@@ -630,8 +635,10 @@ let rec schema_of_expression env expr =
                 (fun env (x, ty) -> Env.add x (forall [] [] [] [] ty) env)
                 env loc_env
             in
-            type_expect new_env e ty_res)
+            let r = type_react_expect new_env e ty_res in
+            local_react := react_or r !local_react)
           matching;
+        set_current_react !local_react;
         ty_res
 
     | Ewhen_match (e1,e2) ->
@@ -650,14 +657,21 @@ let rec schema_of_expression env expr =
         Clocks_utils.static
 
     | Eseq e_list ->
+        let local_react = ref no_react in
         let rec f l =
           match l with
           | [] -> assert false
-          | [e] -> clock_of_expression env e
+          | [e] ->
+              let ck, r = clock_react_of_expression env e in
+              local_react := react_seq !local_react r;
+              ck
           | e::l ->
-              type_statement env e;
+              let r = type_statement_react env e in
+              local_react := react_seq !local_react r;
               f l
-        in f e_list
+        in
+        set_current_react !local_react;
+        f e_list
 
     | Eprocess(e) ->
         let old_activation_carrier = !activation_carrier in
@@ -665,10 +679,12 @@ let rec schema_of_expression env expr =
         activation_carrier := make_carrier generic_activation_name;
         current_effect := no_effect;
         add_effect_ck !activation_carrier;
-        let ck = clock_of_expression env e in
-        let res_ck = process ck !activation_carrier !current_effect no_react in
+        set_current_react no_react;
+        let ck, r = clock_react_of_expression env e in
+        let res_ck = process ck !activation_carrier no_effect r in
         activation_carrier := old_activation_carrier;
         current_effect := old_current_effect;
+        set_current_react no_react;
         res_ck
 
     | Epre (Status, s) ->
@@ -765,21 +781,28 @@ let rec schema_of_expression env expr =
           | CkExpr ce ->
               let ck_ce = clock_of_expression env ce in
               (try
-                  ignore (filter_depend ck_ce)
+                  let c = filter_depend ck_ce in
+                  set_current_react (react_carrier c)
                 with
                   | Unify -> non_clock_err ce.e_loc)
           | _ -> ());
         Clocks_utils.static
 
-    | Ehalt _ -> new_clock_var()
+    | Ehalt _ ->
+        set_current_react (react_loop (react_carrier !activation_carrier));
+        new_clock_var()
 
     | Eloop (None, p) ->
-        type_statement env p;
+        let r = type_statement_react env p in
+        set_current_react (react_loop r);
+        expr.e_react <- !current_react;
         Clocks_utils.static
 
     | Eloop (Some n, p) ->
         type_expect env n Clocks_utils.static;
-        type_statement env p;
+        let r = type_statement_react env p in
+        set_current_react (react_loop r);
+        expr.e_react <- !current_react;
         Clocks_utils.static
 
     | Efordopar(i,e1,e2,flag,p) ->
@@ -789,7 +812,8 @@ let rec schema_of_expression env expr =
         Clocks_utils.static
 
     | Epar p_list ->
-        List.iter (fun p -> ignore (type_statement env p)) p_list;
+        let rl = List.map (fun p -> type_statement_react env p) p_list in
+        set_current_react (make_react (React_par rl));
         Clocks_utils.static
 
     | Emerge (p1,p2) ->
@@ -797,18 +821,21 @@ let rec schema_of_expression env expr =
         type_statement env p2;
         Clocks_utils.static
 
-    | Erun (e) ->
-        let ty_e = clock_of_expression env e in
+    | Erun (e1) ->
+        let ty_e = clock_of_expression env e1 in
         let ty = new_clock_var() in
         let eff = new_effect_var () in
-        unify_run e.e_loc ty_e (process ty !activation_carrier eff no_react);
+        let r = new_react_var () in
+        unify_run e1.e_loc ty_e (process ty !activation_carrier no_effect r);
         add_effect eff;
+        set_current_react (make_react (React_run r));
+        expr.e_react <- !current_react;
         ty
 
     | Euntil (s,p,patt_proc_opt) ->
         begin match patt_proc_opt with
         | None ->
-            type_of_event_config env s;
+            ignore (type_of_event_config env s);
             type_expect env p Clocks_utils.static;
             Clocks_utils.static
         | Some _ ->
@@ -841,11 +868,11 @@ let rec schema_of_expression env expr =
 
 
     | Ewhen (s,p) ->
-        type_of_event_config ~force_activation_ck:true env s;
+        ignore (type_of_event_config ~force_activation_ck:true env s);
         clock_of_expression env p
 
     | Econtrol (s, None, p) ->
-        type_of_event_config env s;
+        ignore (type_of_event_config env s);
         clock_of_expression env p
 
     | Econtrol (s, (Some (patt, e)), p) ->
@@ -890,23 +917,25 @@ let rec schema_of_expression env expr =
         clock_of_expression new_env p
 
     | Epresent (s,p1,p2) ->
-        type_of_event_config ~force_activation_ck:true env s;
+        ignore (type_of_event_config ~force_activation_ck:true env s);
         let ty = clock_of_expression env p1 in
         type_expect env p2 ty;
         ty
 
     | Eawait (imm,s) ->
-        type_of_event_config ~force_activation_ck:(imm = Immediate) env s;
+        let sck = type_of_event_config ~force_activation_ck:(imm = Immediate) env s in
+        if imm <> Immediate then set_current_react (react_carrier sck);
         Clocks_utils.static
 
     | Eawait_val (_,All,s,patt,p) ->
         let ty_s = clock_of_expression env s in
-        let _, ty_get, _ =
+        let _, ty_get, sck =
           try
             filter_event ty_s
           with Unify ->
             non_event_err s
         in
+        set_current_react (react_carrier sck);
         let gl_env, loc_env = clock_of_pattern [] [] env patt ty_get in
         assert (gl_env = []);
         let new_env =
@@ -915,7 +944,7 @@ let rec schema_of_expression env expr =
             env loc_env
         in
         clock_of_expression new_env p
-    | Eawait_val (_,One,s,patt,p) ->
+    | Eawait_val (imm,One,s,patt,p) ->
         let ty_s = clock_of_expression env s in
         let ty_emit, ty_get, ty_ck =
           try
@@ -929,6 +958,7 @@ let rec schema_of_expression env expr =
               Var_clock (constr_notabbrev list_ident [Var_clock ty_emit]);
               Var_carrier ty_ck])
           ty_s;
+        if imm <> Immediate then set_current_react (react_carrier ty_ck);
         let gl_env, loc_env = clock_of_pattern [] [] env patt ty_emit in
         assert (gl_env = []);
         let new_env =
@@ -952,12 +982,14 @@ let rec schema_of_expression env expr =
       let old_activation_carrier = !activation_carrier in
       activation_carrier := c;
       (*type the body*)
-      let ck = clock_of_expression env e in
+      let ck, r = clock_react_of_expression env e in
       (* reset activation clock *)
       activation_carrier := old_activation_carrier;
       pop_type_level ();
       (* remove clock from current effect *)
       current_effect := remove_ck_from_effect c !current_effect;
+      (* r = r[c <- 0] *)
+      set_current_react (remove_ck_from_react c r);
       ck
 
     | Epauseclock ce ->
@@ -1016,12 +1048,13 @@ let rec schema_of_expression env expr =
 
     | Eawait_new(s, patt, e) ->
         let ty_s = clock_of_expression env s in
-        let ty, _ =
+        let ty, mck =
           try
             filter_memory ty_s
           with Unify ->
             non_memory_err s
         in
+        set_current_react (react_carrier mck);
         let gl_env, loc_env = clock_of_pattern [] [] env patt ty in
         assert (gl_env = []);
         let new_env =
@@ -1045,21 +1078,23 @@ and type_of_event_config ?(force_activation_ck=false) env conf =
   match conf.conf_desc with
   | Cpresent s ->
       let ty = clock_of_expression env s in
-      let _ =
+      let _, _, sck =
         try
           filter_event ~force_activation_ck:force_activation_ck ty
         with Unify ->
           non_event_err s
       in
-      ()
+      sck
 
-  | Cand (c1,c2) ->
-      type_of_event_config env c1;
-      type_of_event_config env c2
+  (* TODO: renvoyer la liste des horloges *)
+  | Cand (c1,c2) -> assert false
+      (*type_of_event_config env c1;
+      type_of_event_config env c2*)
 
-  | Cor (c1,c2) ->
+  | Cor (c1,c2) -> assert false
+      (*
       type_of_event_config env c1;
-      type_of_event_config env c2
+      type_of_event_config env c2*)
 
 and type_clock_expr env ce =
   match ce with
@@ -1108,11 +1143,20 @@ and type_let is_rec env patt_expr_list =
   let gen_env = Env.map (fun ty -> gen ty.cs_desc) add_env in
   global_env, Env.append gen_env env
 
+and clock_react_of_expression env expr =
+  set_current_react no_react;
+  let ck = clock_of_expression env expr in
+  ck, !current_react
 
 (* Typing of an expression with an expected type *)
 and type_expect env expr expected_ty =
   let actual_ty = clock_of_expression env expr in
   unify_expr expr expected_ty actual_ty
+
+and type_react_expect env expr expected_ty =
+  let actual_ty, r = clock_react_of_expression env expr in
+  unify_expr expr expected_ty actual_ty;
+  r
 
 and schema_expect env expr expected_ty =
   let actual_ty = schema_of_expression env expr in
@@ -1134,6 +1178,9 @@ and type_statement env expr =
   | _ ->
       not_dot_clock_warning expr*)
 
+and type_statement_react env expr =
+  let _, r = clock_react_of_expression env expr in
+  r
 
 (* Checks multiple occurrences *)
 let check_no_repeated_constructor loc l =
