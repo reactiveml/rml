@@ -48,8 +48,10 @@ let add_effect_ck ck =
   add_effect (make_effect (Effect_depend ck))
 
 let set_current_react r =
-  if not !Compiler_options.no_reactivity then
+  if not !Compiler_options.no_reactivity then (
+   (* Printf.eprintf "Set react: %a\n" Clocks_printer.output_react r;*)
     current_react := r
+  )
 
 let add_to_list x l =
   if List.mem x l then l else x::l
@@ -670,8 +672,9 @@ let rec schema_of_expression env expr =
               local_react := react_seq !local_react r;
               f l
         in
+        let ck = f e_list in
         set_current_react !local_react;
-        f e_list
+        ck
 
     | Eprocess(e) ->
         let old_activation_carrier = !activation_carrier in
@@ -679,7 +682,6 @@ let rec schema_of_expression env expr =
         activation_carrier := make_carrier generic_activation_name;
         current_effect := no_effect;
         add_effect_ck !activation_carrier;
-        set_current_react no_react;
         let ck, r = clock_react_of_expression env e in
         let res_ck = process ck !activation_carrier no_effect r in
         activation_carrier := old_activation_carrier;
@@ -785,7 +787,8 @@ let rec schema_of_expression env expr =
                   set_current_react (react_carrier c)
                 with
                   | Unify -> non_clock_err ce.e_loc)
-          | _ -> ());
+          | CkLocal -> set_current_react (react_carrier !activation_carrier)
+          | CkTop -> set_current_react (react_carrier topck_carrier));
         Clocks_utils.static
 
     | Ehalt _ ->

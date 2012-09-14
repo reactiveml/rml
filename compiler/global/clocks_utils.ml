@@ -209,6 +209,8 @@ let react_seq r1 r2 =
     | React_seq rl1, React_seq rl2 -> React_seq (rl1@rl2)
     | React_seq rl1, _ -> React_seq (rl1 @ [r2])
     | _, React_seq rl2 -> React_seq (r1::rl2)
+    | React_empty, r | r, React_empty -> r
+    | React_carrier c1, React_carrier c2 when c1 == c2 -> r1.desc
     | _, _ -> React_seq [r1; r2]
   in
   make_react desc
@@ -342,10 +344,10 @@ let rec effect_repr eff = match eff.desc with
       eff
 
 let rec react_repr r = match r.desc with
-  | React_link r ->
-      let r = react_repr r in
-      r.desc <- React_link r;
-      r
+  | React_link t ->
+      let t = react_repr t in
+      r.desc <- React_link t;
+      t
   | _ ->
       r
 
@@ -469,6 +471,21 @@ let rec remove_ck_from_react ck r = match r.desc with
       { r with desc = React_rec (r1, remove_ck_from_react ck r2) }
   | React_link link -> remove_ck_from_react ck link
 
+let rec subst_var_react index subst r = match r.desc with
+  | React_var when r.index = index -> subst
+  | React_empty | React_var | React_carrier _ -> r
+  | React_seq rl ->
+      { r with desc = React_seq (List.map (subst_var_react index subst) rl) }
+  | React_par rl ->
+      { r with desc = React_par (List.map (subst_var_react index subst) rl) }
+  | React_or rl ->
+      { r with desc = React_or (List.map (subst_var_react index subst) rl) }
+  | React_run r1 ->
+      { r with desc = React_run (subst_var_react index subst r1) }
+  | React_rec (r1, r2) ->
+      { r with desc = React_rec (r1, subst_var_react index subst r2) }
+  | React_link link -> subst_var_react index subst link
+
 (* To generalize a type *)
 
 (* generalisation and non generalisation of a type. *)
@@ -564,7 +581,9 @@ and gen_react is_gen r =
         r.level <- gen_react_list is_gen rl
     | React_rec (r1, r2) -> (*TODO: generaliser var?*)
         r.level <- min (gen_react is_gen r1) (gen_react is_gen r2)
-    | React_run r2 -> r.level <- gen_react is_gen r2
+    | React_run r2 ->
+        let _ = react_repr r2 in
+        r.level <- gen_react is_gen r2
     | React_var ->
         if r.level > !current_level then
           if is_gen then (
@@ -1207,24 +1226,28 @@ and react_unify expected_r actual_r =
       match expected_r.desc, actual_r.desc with
         | React_empty, React_empty -> ()
             (* phi == uphi. r *)
-        | React_var, React_rec (r2, _) when expected_r.index = r2.index -> ()
-        | React_rec(r2, _), React_var when actual_r.index = r2.index -> ()
+        (*| React_var, React_rec (r2, _) when expected_r.index = r2.index -> ()
+        | React_rec(r2, _), React_var when actual_r.index = r2.index -> ()*)
         | React_var, _ ->
             let is_rec = react_occur_check_is_rec expected_r.level expected_r actual_r in
             if is_rec then (
-              let new_r = make_react (React_rec (expected_r, actual_r)) in
+              let new_var = new_react_var () in
+              let body = subst_var_react expected_r.index new_var actual_r in
+              let new_r = make_react (React_rec (new_var, body)) in
               expected_r.desc <- React_link new_r
             ) else
               expected_r.desc <- React_link actual_r
         | _, React_var ->
             let is_rec = react_occur_check_is_rec actual_r.level actual_r expected_r in
             if is_rec then (
-              let new_r = make_react (React_rec (actual_r, expected_r)) in
+              let new_var = new_react_var () in
+              let body = subst_var_react actual_r.index new_var expected_r in
+              let new_r = make_react (React_rec (new_var, body)) in
               actual_r.desc <- React_link new_r
             ) else
               actual_r.desc <- React_link expected_r
-        | React_rec (_, expected_r), _ -> react_unify expected_r actual_r
-        | _, React_rec (_, actual_r) -> react_unify expected_r actual_r
+       (* | React_rec (_, expected_r), _ -> react_unify expected_r actual_r
+        | _, React_rec (_, actual_r) -> react_unify expected_r actual_r *)
         | _ ->
             Printf.eprintf "Failed to unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r;
             raise Unify

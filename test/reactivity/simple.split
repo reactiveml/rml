@@ -1,0 +1,44 @@
+$$$good
+${
+(*
+  run_test:
+   [
+    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+
+
+let process p = pause; pause; print_endline "Done"
+
+$
+
+let process p = loop pause end
+
+$
+
+let process p q = loop run q end
+
+$
+
+let rec process p = pause; run p
+
+$$$good
+${
+(*
+  run_test:
+   [
+    Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+   ]
+*)
+
+$}
+
+let rec process p =
+    loop
+        pause;
+        run p
+    end
+
+let rec process p = run p
