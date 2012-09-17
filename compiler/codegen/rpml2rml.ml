@@ -88,6 +88,9 @@ let expression_desc funs act_ck ed = match ed with
     let hold, s = mk_signal d g act_ck in
     signal body_done in
     do run hold until body_done || e; emit done
+
+    TODO: ce n'est pas correct si le signal est declare dans une structure de controle
+    car le processus hold doit etre actif a tous les instants
   *)
   | Esignal ((id, _), ck, _, comb, e) ->
       let hold_id = Ident.create Ident.gen_var ("hold_"^id.Ident.name) Ident.Val_RML in
