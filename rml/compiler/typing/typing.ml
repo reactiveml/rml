@@ -557,7 +557,9 @@ let rec type_of_expression env expr =
           then Usages_misc.usage_of_type type_neutral
           else Usages_misc.usage_of_type type_uvar
         in
-	return ty (Effects.singleton n expr.expr_loc uvar uvar)
+	let effects = Effects.singleton n expr.expr_loc uvar uvar in
+	let effects = Effects.merge effects ty.type_effects in
+	return ty effects
 
     | Rexpr_global (n) ->
         let g_ty = (Global.info n).value_typ in
