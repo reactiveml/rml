@@ -191,131 +191,21 @@ let instantaneous_loop_expr =
 	  let id = Varpatt_local x in
 	  begin match Env.get vars id with
 	  | Some n ->
-(* 	      if n <= 0 then rec_warning expr; *)
 	      Env.create id n
 	  | None ->
 	      Env.empty
 	  end
 
-
       | Rexpr_global x ->
 	  let id = Varpatt_global x in
 	  begin match Env.get vars id with
 	  | Some n ->
-(* 	      if n <= 0 then rec_warning expr; *)
 	      Env.create id n
 	  | None -> Env.empty
 	  end
 
       | Rexpr_constant _ -> Env.empty
 
-(*
-      | Rexpr_let (Nonrecursive, patt_expr_list, expr) ->
-	  let patt_ty_list =
-	    List.map
-	      (fun (p, e) ->
-		let patt =  vars_of_patt p in
-		let ty = analyse vars e in
-		(patt, ty))
-	      patt_expr_list
-	  in
-	  begin match
-	    static_of_list (fun (_, e) -> e.expr_static) patt_expr_list
-	  with
-	  | Dynamic Noninstantaneous ->
-	      let _ = analyse Env.empty expr in
-	      List.fold_left
-		(fun ty_res (_, ty) -> Env.append ty ty_res)
-		Env.empty
-		patt_ty_list
-	  | _ ->
-	      let (vars', ty_prod, patt_list) =
-		List.fold_left
-		  (fun (vars, ty_res, var_list) (p_list, ty) ->
-		    begin match Env.min ty with
-		    | None ->
-			(vars,
-			 Env.append ty ty_res,
-			 List.rev_append p_list var_list)
-		    | Some n ->
-			let vars' =
-			  List.fold_left
-			    (fun vars x -> Env.add vars x n)
-			    vars p_list
-			in
-			(vars',
-			 Env.append ty ty_res,
-			 List.rev_append p_list var_list)
-		    end)
-		  (vars, Env.empty, [])
-		  patt_ty_list
-	      in
-	      let ty_expr = analyse vars' expr in
-	      let ty_expr' = List.fold_left Env.remove ty_expr patt_list in
-	      Env.append ty_expr' ty_prod
-	  end
-      | Rexpr_let (Recursive, patt_expr_list, expr) ->
-	  let rec_patt, vars' =
-	    List.fold_left
-	      (fun (rec_patt', vars') (p, _) ->
-		let rec_patt = vars_of_patt p in
-		let vars'' =
-		  List.fold_left
-		    (fun vars'' x -> Env.add vars'' x 0)
-		    vars'
-		    rec_patt
-		in
-		(List.rev_append rec_patt rec_patt', vars''))
-	      ([], vars)
-	      patt_expr_list
-	  in
-
-	  let patt_ty_list =
-	    List.map
-	      (fun (p, e) ->
-		let patt =  vars_of_patt p in
-		let ty = analyse vars' e in
-		(patt, ty))
-	      patt_expr_list
-	  in
-	  begin match
-	    static_of_list (fun (_, e) -> e.expr_static) patt_expr_list
-	  with
-	  | Dynamic Noninstantaneous ->
-	      let _ = analyse Env.empty expr in
-	      List.fold_left
-		(fun ty_res (_, ty) -> Env.append ty ty_res)
-		Env.empty
-		patt_ty_list
-	  | _ ->
-	      let (vars'', ty_prod) =
-		List.fold_left
-		  (fun (vars, ty_res) (p_list, ty) ->
-		    let ty' =
-		      List.fold_left
-			Env.remove
-			ty
-			p_list
-		    in
-		    begin match Env.min ty' with
-		    | None ->
-			(vars, Env.append ty' ty_res)
-		    | Some n ->
-			let vars' =
-			  List.fold_left
-			    (fun vars x -> Env.add vars x n)
-			    vars p_list
-			in
-			(vars', Env.append ty' ty_res)
-		    end)
-		  (vars, Env.empty)
-		  patt_ty_list
-	      in
-	      let ty_expr = analyse vars'' expr in
-	      let ty_let = Env.append ty_expr ty_prod in
-	      List.fold_left Env.remove ty_let rec_patt
-	  end
-*)
       | Rexpr_let (is_rec, patt_expr_list, expr) ->
 	  let let_patt, vars_rec =
 	    List.fold_left
@@ -605,9 +495,6 @@ let instantaneous_loop_expr =
 	  ty
       end
     in
-(*     Printf.printf "%a : %s\n" *)
-(*       Location.print_oc expr.expr_loc *)
-(*       (Env.string_of_t env); *)
     expr.expr_reactivity <- env;
     env
 
