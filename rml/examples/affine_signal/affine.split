@@ -299,6 +299,20 @@ signal s in let r = ref s in
 
 $
 
+signal s in let r = ref s in (
+  !emit s;
+  let s1 = !r in
+  !emit s1
+)
+
+$
+
+signal s;;
+let r = ref (s : (int, int list, affine, zero) event);;
+let process main = !emit s || !emit !r
+
+$
+
 let rec iter f l =
   match l with
   | []   -> ()
