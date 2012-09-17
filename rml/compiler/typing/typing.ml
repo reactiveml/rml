@@ -592,7 +592,9 @@ let rec type_of_expression env expr =
             )
 	    matching
         in
-        return ty (Effects.flatten effects)
+        let mem_env x = Env.mem x env in
+        let effects = Effects.gen mem_env (Effects.flatten effects) in
+        return ty effects
 
     | Rexpr_apply (fct, args) ->
 	let ty_fct, effects_f = type_of_expression env fct in
