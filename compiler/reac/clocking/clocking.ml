@@ -993,6 +993,7 @@ let rec schema_of_expression env expr =
       current_effect := remove_ck_from_effect c !current_effect;
       (* r = r[c <- 0] *)
       set_current_react (remove_ck_from_react c r);
+      e.e_react <- !current_react;
       ck
 
     | Epauseclock ce ->

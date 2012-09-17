@@ -91,6 +91,8 @@ let const_optimization = ref true
 let no_clocking = ref false
 let no_reactivity = ref false
 
+let warning_are_errors = ref false
+
 (* add a file in the list of file to compile. *)
 let add_to_compile file =
   to_compile := file :: !to_compile
@@ -250,6 +252,7 @@ and doc_runtime =
 
 and doc_dparse = "(undocumented)"
 and doc_dtime = "(undocumented)"
+and doc_warning_are_errors = "(undocumented)"
 and errmsg =
 "\nrmlc - The Reactive ML Compiler
 Usage: rmlc [options] -s <process> <file>.rml
@@ -286,6 +289,7 @@ let parse_cli () =
         "-no-reactivity", Arg.Set no_reactivity, doc_no_reactivity;
         "-dparse", Arg.Unit set_dparse, doc_dparse;
         "-dtime", Arg.Unit set_dtime, doc_dtime;
+        "-dwarn_error", Arg.Set warning_are_errors, doc_warning_are_errors;
       ]
       add_to_compile
       errmsg;

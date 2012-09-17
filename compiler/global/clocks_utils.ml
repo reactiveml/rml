@@ -204,16 +204,14 @@ let no_react =
 
 let react_carrier c = make_react (React_carrier c)
 
-let react_seq r1 r2 =
-  let desc = match r1.desc, r2.desc with
-    | React_seq rl1, React_seq rl2 -> React_seq (rl1@rl2)
-    | React_seq rl1, _ -> React_seq (rl1 @ [r2])
-    | _, React_seq rl2 -> React_seq (r1::rl2)
-    | React_empty, r | r, React_empty -> r
-    | React_carrier c1, React_carrier c2 when c1 == c2 -> r1.desc
-    | _, _ -> React_seq [r1; r2]
-  in
-  make_react desc
+let react_seq r1 r2 = match r1.desc, r2.desc with
+  | React_seq rl1, React_seq rl2 -> make_react (React_seq (rl1@rl2))
+    | React_seq rl1, _ -> make_react (React_seq (rl1 @ [r2]))
+    | _, React_seq rl2 -> make_react (React_seq (r1::rl2))
+    | React_empty, _ -> r2
+    | _, React_empty -> r1
+    | React_carrier c1, React_carrier c2 when c1 == c2 -> r1
+    | _, _ -> make_react (React_seq [r1; r2])
 
 let react_par r1 r2 =
   let desc = match r1.desc, r2.desc with

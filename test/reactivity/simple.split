@@ -3,7 +3,7 @@ ${
 (*
   run_test:
    [
-    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c"
+    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
    ]
 *)
 
@@ -24,21 +24,19 @@ $
 
 let rec process p = pause; run p
 
-$$$good
+$$$bad
 ${
 (*
   run_test:
    [
-    Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c"
+    Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
    ]
 *)
 
 $}
 
-let rec process p =
-    loop
-        pause;
-        run p
-    end
+let process p =
+  loop
+    print_endline "Coucou"
+  end
 
-let rec process p = run p

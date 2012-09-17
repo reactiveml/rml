@@ -64,6 +64,9 @@ let compile_implementation_front_end info_chan itf impl_list =
     let rml_code = silent_pass "Clocking" (not !Compiler_options.no_clocking)
       (Clocking.impl info_chan) rml_code in
 
+    let rml_code = silent_pass "Reactivity analysis" (not !Compiler_options.no_reactivity)
+      (Reactivity.impl info_chan) rml_code in
+
     (* static analysis *)
     let rml_code = silent_pass "Static analysis" true (Static_analysis.impl info_chan) rml_code in
 

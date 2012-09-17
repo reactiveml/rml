@@ -1,0 +1,37 @@
+$$$bad
+${
+(*
+  run_test:
+   [
+    Bad 2 "loop": "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+   ]
+*)
+
+$}
+
+let process p =
+  loop
+    print_endline "Coucou"
+  end
+
+$
+let process q = print_endline "Coucou"
+
+let process p =
+  loop
+    run q
+  end
+
+$
+
+let process p =
+  loop
+    print_endline "hello" || print_endline "world"
+  end
+
+$
+
+let process p =
+  loop
+    print_endline "Hello "; print_endline "world"
+  end
