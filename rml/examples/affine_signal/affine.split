@@ -63,7 +63,7 @@ $
 
 signal x;;
 signal y;;
-let f = fun x -> process (!emit x 1) in
+let f x = process (!emit x 1) in
  process (run (f x) || run (f y))
 
 $$$bad
@@ -285,7 +285,17 @@ $
 
 signal s in let r = ref s in (
   !emit s;
-  let s1 = !r in let s2 = !r in (!emit s1; !emit s2))
+  let s1 = !r in
+  let s2 = !r in
+  (!emit s1; !emit s2)
+)
+
+$
+
+signal s in let r = ref s in
+  let s1 = !r in
+  let s2 = !r in
+  (!emit s1; !emit s2)
 
 $
 
