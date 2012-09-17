@@ -45,7 +45,8 @@ let rec is_not_instantaneous r = match r.desc with
   | React_run r | React_link r -> is_not_instantaneous r
 
 let rec is_not_instantaneous index r = match r.desc with
-  | React_empty | React_carrier _ -> false
+  | React_empty -> false
+  | React_carrier _ -> true
   | React_var ->
       if r.index = index then
         raise Bad_recursion
@@ -63,8 +64,6 @@ let rec is_not_instantaneous index r = match r.desc with
 
 and is_not_instantaneous_list index rl = match rl with
   | [] -> false
-  | ({ desc = React_var } as r):: _ when r.index = index -> raise Bad_recursion
-  | { desc = React_carrier _ }::_ -> true
   | r::rl ->
       is_not_instantaneous index r || is_not_instantaneous_list index rl
 
@@ -123,7 +122,7 @@ let expression funs acc e =
             if check_clock e.e_clock then instantaneous_rec_err e e.e_clock
           in
           List.iter check_exp p_e_list
-      | Enewclock _ -> if check_react e.e_react then nonreactive_domain_err e e.e_react
+      | Enewclock _ -> Printf.printf "Domain: %a\n" Clocks_printer.output_react e.e_react; if check_react e.e_react then nonreactive_domain_err e e.e_react
       | _ -> ()
   in
   e, acc

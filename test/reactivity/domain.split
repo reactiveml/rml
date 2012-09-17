@@ -1,0 +1,77 @@
+$$$good
+${
+(*
+  run_test:
+   [
+    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+   ]
+*)
+
+$}
+
+let process q =
+  domain(ck) do
+    loop
+      pause topck
+    end
+  done
+
+$
+
+let process p =
+  domain(ck) do
+    signal s at topck in
+    loop
+      emit s 0;
+      await s(v) in
+      ignore v
+    end
+  done
+
+
+$
+
+let process p =
+  domain(ck) do
+    signal s at topck in
+    loop
+      emit s 0;
+      await s(v) in
+      ignore v
+    end
+    ||
+    loop
+      pause topck
+    end
+  done
+
+
+$$$bad
+${
+(*
+  run_test:
+   [
+    Bad 2 "domain": "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+   ]
+*)
+
+$}
+
+let process q =
+  domain(ck) do
+    loop
+      pause ck
+    done
+  done
+
+$
+
+let process p =
+  domain(ck) do
+    signal s in
+    loop
+      emit s 0;
+      await s(v) in
+      ignore v
+    end
+  done

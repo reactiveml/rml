@@ -829,7 +829,7 @@ let rec schema_of_expression env expr =
         let ty = new_clock_var() in
         let eff = new_effect_var () in
         let r = new_react_var () in
-        unify_run e1.e_loc ty_e (process ty !activation_carrier no_effect r);
+        unify_run e1.e_loc ty_e (process ty !activation_carrier eff r);
         add_effect eff;
         set_current_react (make_react (React_run r));
         expr.e_react <- !current_react;
@@ -993,7 +993,7 @@ let rec schema_of_expression env expr =
       current_effect := remove_ck_from_effect c !current_effect;
       (* r = r[c <- 0] *)
       set_current_react (remove_ck_from_react c r);
-      e.e_react <- !current_react;
+      expr.e_react <- !current_react;
       ck
 
     | Epauseclock ce ->
@@ -1148,9 +1148,12 @@ and type_let is_rec env patt_expr_list =
   global_env, Env.append gen_env env
 
 and clock_react_of_expression env expr =
+  let old_current_react = !current_react in
   set_current_react no_react;
   let ck = clock_of_expression env expr in
-  ck, !current_react
+  let r = !current_react in
+  set_current_react old_current_react;
+  ck, r
 
 (* Typing of an expression with an expected type *)
 and type_expect env expr expected_ty =

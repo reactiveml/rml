@@ -1,3 +1,50 @@
+$$$good
+${
+(*
+  run_test:
+   [
+    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+   ]
+*)
+
+$}
+
+
+let process p =
+  loop
+    print_endline "Bli";
+    pause
+  end
+
+$
+
+let process q = print_endline "Bli"; pause
+
+let process p =
+  loop
+    run q
+  end
+
+$
+
+let process p =
+  loop
+    loop
+      pause;
+    end
+  end
+
+$
+
+let process p q =
+  loop
+    run q
+  end
+
+let process pp = pause; print_endline "Coucou"
+
+let m = p pp
+
 $$$bad
 ${
 (*
@@ -34,4 +81,13 @@ $
 let process p =
   loop
     print_endline "Hello "; print_endline "world"
+  end
+
+$
+
+let process p =
+  loop
+    loop
+      print_endline "Coucou"
+    end
   end
