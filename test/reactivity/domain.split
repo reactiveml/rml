@@ -18,6 +18,18 @@ let process q =
 
 $
 
+
+let process q =
+  domain(ck) do
+    domain(ck2) do
+      loop
+        pause topck
+      end
+    done
+  done
+
+$
+
 let process p =
   domain(ck) do
     signal s at topck in
@@ -43,6 +55,13 @@ let process p =
     loop
       pause topck
     end
+    ||
+    domain(ck2) do
+      loop
+        pause ck;
+        pause topck
+      end
+    done
   done
 
 
@@ -74,4 +93,20 @@ let process p =
       await s(v) in
       ignore v
     end
+  done
+
+$
+
+let process hold s =
+  await s;
+  loop
+    emit s; pause
+  end
+
+let process p =
+  domain(ck) do
+    signal s in
+    run hold s
+    ||
+    pause ck; emit s
   done

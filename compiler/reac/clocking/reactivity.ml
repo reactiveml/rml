@@ -13,6 +13,7 @@ let instantaneous_loop_err e r =
     Clocks_printer.output_react r;
   if !Compiler_options.warning_are_errors then raise Error
 
+(*
 let instantaneous_rec_err e ck =
   Printf.eprintf
     "%aWarning: This recursive process might be instantaneous\n\
@@ -20,6 +21,7 @@ let instantaneous_rec_err e ck =
     Location.print_oc e.e_loc
     Clocks_printer.output ck;
   if !Compiler_options.warning_are_errors then raise Error
+*)
 
 let instantaneous_run_err e r =
   Printf.eprintf
@@ -117,11 +119,11 @@ let expression funs acc e =
     match e.e_desc with
       | Erun _ -> if check_react e.e_react then instantaneous_run_err e e.e_react
       | Eloop _ -> if check_react e.e_react then instantaneous_loop_err e e.e_react
-      | Elet (Recursive, p_e_list, _) ->
+     (* | Elet (Recursive, p_e_list, _) ->
           let check_exp (p, e) =
             if check_clock e.e_clock then instantaneous_rec_err e e.e_clock
           in
-          List.iter check_exp p_e_list
+          List.iter check_exp p_e_list *)
       | Enewclock _ -> Printf.printf "Domain: %a\n" Clocks_printer.output_react e.e_react; if check_react e.e_react then nonreactive_domain_err e e.e_react
       | _ -> ()
   in

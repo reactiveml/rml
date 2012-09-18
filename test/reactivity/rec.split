@@ -1,0 +1,37 @@
+$$$good
+${
+(*
+  run_test:
+   [
+    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+   ]
+*)
+
+$}
+
+let rec process p =
+   print_endline "Coucou"; pause; run p
+
+$$$bad
+${
+(*
+  run_test:
+   [
+    Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+   ]
+*)
+
+$}
+
+let rec process p = run p
+
+$
+
+let rec process p = print_endline "Coucou"; run p
+
+$
+
+let process one = pause; pause; print_endline "Coucou"
+
+let rec process p n =
+  run one || run p (n-1)

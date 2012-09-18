@@ -43,7 +43,7 @@ let process p q =
 
 let process pp = pause; print_endline "Coucou"
 
-let m = p pp
+let process m = run p pp
 
 $$$bad
 ${
@@ -91,3 +91,14 @@ let process p =
       print_endline "Coucou"
     end
   end
+
+$
+
+let process p q =
+  loop
+    run q
+  end
+
+let process pp = print_endline "Coucou"
+
+let process m = run p pp
