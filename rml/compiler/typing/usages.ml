@@ -91,6 +91,14 @@ let max_u u1 u2 = match u1, u2 with
   | Zero, _ | _, Zero -> Zero
   | _ -> u1
 
+let compare u1 u2 =
+  if u1 = u2
+  then 0
+  else let u_max = max_u u1 u2 in
+       if u_max = u1
+       then 1
+       else -1
+
 let best_loc l1 l2 =
   if l1 = Location.none
   then l2
