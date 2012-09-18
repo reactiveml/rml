@@ -90,6 +90,7 @@ let const_optimization = ref true
 
 let no_clocking = ref false
 let no_reactivity = ref false
+let no_clock_effects = ref false
 
 let warning_are_errors = ref false
 
@@ -253,6 +254,7 @@ and doc_runtime =
 and doc_dparse = "(undocumented)"
 and doc_dtime = "(undocumented)"
 and doc_warning_are_errors = "(undocumented)"
+and doc_no_clock_effects = "(undocumented)"
 and errmsg =
 "\nrmlc - The Reactive ML Compiler
 Usage: rmlc [options] -s <process> <file>.rml
@@ -290,6 +292,7 @@ let parse_cli () =
         "-dparse", Arg.Unit set_dparse, doc_dparse;
         "-dtime", Arg.Unit set_dtime, doc_dtime;
         "-dwarn_error", Arg.Set warning_are_errors, doc_warning_are_errors;
+        "-dno_clock_effects", Arg.Set no_clock_effects, doc_no_clock_effects;
       ]
       add_to_compile
       errmsg;

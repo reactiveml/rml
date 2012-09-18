@@ -79,6 +79,7 @@ and react_effect = react_effect_desc repr
 and react_effect_desc =
     | React_var
     | React_empty
+    | React_top
     | React_carrier of carrier
     | React_seq of react_effect list
     | React_par of react_effect list

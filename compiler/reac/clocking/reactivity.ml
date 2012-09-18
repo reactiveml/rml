@@ -39,14 +39,8 @@ let nonreactive_domain_err e r =
     Clocks_printer.output_react r;
   if !Compiler_options.warning_are_errors then raise Error
 
-let rec is_not_instantaneous r = match r.desc with
-  | React_empty -> false
-  | React_var | React_carrier _  | React_rec _ -> true
-  | React_seq rl | React_par rl -> List.exists is_not_instantaneous rl
-  | React_or rl -> List.for_all is_not_instantaneous rl
-  | React_run r | React_link r -> is_not_instantaneous r
-
 let rec is_not_instantaneous index r = match r.desc with
+  | React_top -> raise Bad_recursion
   | React_empty -> false
   | React_carrier _ -> true
   | React_var ->
@@ -91,7 +85,7 @@ and check_param p = match p with
   | _ -> ()
 
 and check_react r = match r.desc with
-  | React_var | React_empty | React_carrier _ -> ()
+  | React_var | React_top | React_empty | React_carrier _ -> ()
   | React_seq rl | React_or  rl | React_par rl ->
       List.iter check_react rl
   | React_rec (var, r1) ->

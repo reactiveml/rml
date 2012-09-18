@@ -43,9 +43,11 @@ open Misc
 open Annot
 
 let add_effect eff =
-  current_effect := simplify_effect (eff_sum !current_effect eff)
+  if not !Compiler_options.no_clock_effects then
+    current_effect := simplify_effect (eff_sum !current_effect eff)
 let add_effect_ck ck =
-  add_effect (make_effect (Effect_depend ck))
+  if not !Compiler_options.no_clock_effects then
+    add_effect (make_effect (Effect_depend ck))
 
 let set_current_react r =
   if not !Compiler_options.no_reactivity then (
