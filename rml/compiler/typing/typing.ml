@@ -113,7 +113,7 @@ let check_emit_usage loc env_u_emit u_emit =
   match env_u_emit with
     | Usages.Var -> ()
     | _ ->
-        if (Usages.max_u env_u_emit u_emit = u_emit) then
+        if (env_u_emit <> u_emit && Usages.max_u env_u_emit u_emit = u_emit) then
         let env_ty_emit = Usages_misc.type_of_usage env_u_emit in
         let ty_emit = Usages_misc.type_of_usage u_emit in
         emit_wrong_usage_err loc ty_emit env_ty_emit
@@ -122,7 +122,7 @@ let check_get_usage loc env_u_get u_get =
   match env_u_get with
     | Usages.Var -> ()
     | _ ->
-        if (Usages.max_u env_u_get u_get = u_get) then
+        if (env_u_get <> u_get && Usages.max_u env_u_get u_get = u_get) then
         let env_ty_get = Usages_misc.type_of_usage env_u_get in
         let ty_get = Usages_misc.type_of_usage u_get in
         get_wrong_usage_err loc ty_get env_ty_get
