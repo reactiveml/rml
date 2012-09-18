@@ -148,7 +148,7 @@ let rec copy ty =
       else ty
   | Type_link(link) ->
       if level = generic
-      then { link with type_effects = Effects.merge link.type_effects effects }
+      then link
       else copy link
   | Type_arrow(ty1, ty2) ->
       if level = generic
