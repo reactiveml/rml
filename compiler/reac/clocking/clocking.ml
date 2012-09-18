@@ -683,7 +683,7 @@ let rec schema_of_expression env expr =
         current_effect := no_effect;
         add_effect_ck !activation_carrier;
         let ck, r = clock_react_of_expression env e in
-        let res_ck = process ck !activation_carrier no_effect r in
+        let res_ck = process ck !activation_carrier !current_effect r in
         activation_carrier := old_activation_carrier;
         current_effect := old_current_effect;
         set_current_react no_react;
