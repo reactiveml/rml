@@ -308,7 +308,7 @@ signal s in let r = ref s in (
 $
 
 signal s;;
-let r = ref (s : (int, int list, affine, zero) event);;
+let r = ref (s : (unit, unit list, affine, zero) event);;
 let process main = !emit s || !emit !r
 
 $
