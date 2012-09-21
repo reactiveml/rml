@@ -144,9 +144,11 @@ let fun_wrong_usage_err loc =
   raise Error
 
 let gather_wrong_effects_err has_effects loc =
-  if has_effects then
-  Printf.eprintf "%aGather functions has effects while it should not.\n"
-    Location.print_oc loc
+  if has_effects then begin
+    Printf.eprintf "%aGather functions has effects while it should not.\n"
+      Location.print_oc loc;
+    raise Error
+  end
 
 let application_of_non_function_err exp ty =
   begin try
