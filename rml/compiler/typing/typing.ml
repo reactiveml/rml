@@ -1082,11 +1082,10 @@ and type_let is_rec env patt_expr_list =
     then Env.append add_env env
     else env
   in
-  let mem_env x = Env.mem x let_env in
   let effects =
     List.map2
       (fun (patt,expr) ty ->
-        let effects = Effects.gen mem_env (snd (type_expect let_env expr ty)) in
+        let effects = snd (type_expect let_env expr ty) in
         if is_rec then begin
           deep_neutral ty;
           unify_effects effects patt.patt_loc Usages.Neutral;
