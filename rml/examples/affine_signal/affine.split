@@ -313,6 +313,12 @@ let process main = !emit s || !emit !r
 
 $
 
+signal s;;
+let process main = let r = ref s in
+  !emit s || !emit !r
+
+$
+
 let rec iter f l =
   match l with
   | []   -> ()
