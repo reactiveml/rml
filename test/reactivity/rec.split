@@ -34,4 +34,5 @@ $
 let process one = pause; pause; print_endline "Coucou"
 
 let rec process p n =
-  run one || run p (n-1)
+  if n > 0 then
+    (run one || run p (n-1))

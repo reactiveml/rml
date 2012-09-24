@@ -940,7 +940,6 @@ let rec schema_of_expression env expr =
           with Unify ->
             non_event_err s
         in
-        set_current_react (react_carrier sck);
         let gl_env, loc_env = clock_of_pattern [] [] env patt ty_get in
         assert (gl_env = []);
         let new_env =
@@ -948,7 +947,9 @@ let rec schema_of_expression env expr =
             (fun env (x, ty) -> Env.add x (forall [] [] [] [] ty) env)
             env loc_env
         in
-        clock_of_expression new_env p
+        let ck, r = clock_react_of_expression new_env p in
+        set_current_react (react_seq (react_carrier sck) r);
+        ck
     | Eawait_val (imm,One,s,patt,p) ->
         let ty_s = clock_of_expression env s in
         let ty_emit, ty_get, ty_ck =
@@ -963,7 +964,6 @@ let rec schema_of_expression env expr =
               Var_clock (constr_notabbrev list_ident [Var_clock ty_emit]);
               Var_carrier ty_ck])
           ty_s;
-        if imm <> Immediate then set_current_react (react_carrier ty_ck);
         let gl_env, loc_env = clock_of_pattern [] [] env patt ty_emit in
         assert (gl_env = []);
         let new_env =
@@ -971,7 +971,12 @@ let rec schema_of_expression env expr =
             (fun env (x, ty) -> Env.add x (forall [] [] [] [] ty) env)
             env loc_env
         in
-        clock_of_expression new_env p
+        let ck, r = clock_react_of_expression new_env p in
+        if imm <> Immediate then
+          set_current_react (react_seq (react_carrier ty_ck) r)
+        else
+          set_current_react r;
+        ck
 
     | Enewclock (id, sch, period, e) ->
       let sch_type = arrow Clocks_utils.static

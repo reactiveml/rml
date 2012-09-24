@@ -28,6 +28,34 @@ let process p =
 $
 
 let process p =
+  signal s in
+  loop
+    await s(v) in
+    ignore v
+  end
+
+$
+
+let process p =
+  signal s in
+  loop
+    await s(v) in
+    ignore v; ignore v
+  end
+
+$
+
+
+let process p =
+  signal s in
+  loop
+    await one s(v) in
+    ignore v; ignore v
+  end
+
+$
+
+let process p =
   loop
     loop
       pause;
