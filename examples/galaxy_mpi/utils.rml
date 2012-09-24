@@ -72,13 +72,13 @@ let gen_id =
     incr counter;
     !counter
 
-type body =
+type body{'ck|} =
     { b_id : int;
-      mutable b_pos : (vector, vector) event;
+      mutable b_pos : (vector, vector) event{'ck|};
       mutable b_vel : vector;
       b_weight : float; }
 
-let mk_body ck pos v weight =
+let process mk_body ck pos v weight =
   signal pos at ck default pos gather (fun v _ -> v) in
   { b_id = gen_id ();
     b_pos = pos;

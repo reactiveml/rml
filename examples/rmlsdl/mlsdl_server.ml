@@ -148,8 +148,9 @@ let draw_screen_sprite k r = match k with
   | File filename ->
     let s = surface_from_filename filename in
     Sdlvideo.blit_surface ~src:s ~dst:!world_ref.w_buffer ~dst_rect:r ()
-  | Circle (r, color) -> ()
-(*
+  | Circle (rad, color) ->
+      let c = color_to_sdl_color color in
+      ignore (Sdlgfx.filledCircleRGBA !world_ref.w_buffer (Sdlvideo.rect (r.Sdlvideo.r_x + rad) (r.Sdlvideo.r_y + rad) 0 0) rad c 255);(*
  (* fill with transparent background *)
   let transpc = Sdlvideo.map_RGB s Sdlvideo.red in
   Sdlvideo.set_color_key s transpc;

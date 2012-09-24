@@ -14,6 +14,7 @@ val draw_sprite : 'a sprite -> unit
 val clear_sprite : 'a sprite -> unit
 val create_sprite_from_file : 'a viewport -> 'a pos -> int -> int -> string -> 'a sprite
 val create_sprite_box : 'a viewport -> 'a pos -> int -> int -> color -> 'a sprite
+val create_sprite_circle : 'a viewport -> 'a pos -> int -> color -> 'a sprite
 
 val draw_info_box : string -> unit
 

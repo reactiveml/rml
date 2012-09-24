@@ -1,3 +1,4 @@
-<*.rml>:lco_mpi, use_rmlsdl
+<*.rml>:no_clocking,lco_mpi, use_rmlsdl
 <*.ml>:use_rmlsdl
-<*.byte>:use_rmlsdl,thread
+<*.byte>:package(sdl),use_rmlsdl
+<*.native>:package(sdl),use_rmlsdl

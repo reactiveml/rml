@@ -5,10 +5,11 @@ let rmlsdl_dir = "../../rmlsdl/_build"
 
 let df = function
   | After_rules ->
-      Myocamlbuild_config.rmlbuild_after_rules ();
-
       (* Tell ocamlbuild about the rmlsdl library. *)
-      Myocamlbuild_config.rml_lib ~dir:rmlsdl_dir "rmlsdl"
+      rml_lib ~dir:rmlsdl_dir "rmlsdl"
+      (* there is a bug in ocamlbuild 3.12.0 with ocamlfind that doesn't pass the
+         -thread option to ocamlbuild *)
+     (* flag ["ocaml"; "program"] (A "-thread") *)
   | _ -> ()
 
 let _ = dispatch df

@@ -8,7 +8,7 @@ open Rmlsdl
 open Utils
 
 let enable_graphics = true
-let adaptive_fuel = 2
+let adaptive_fuel = 0
 
 let process no_compute env x_t v_t w =
   (x_t, v_t, 0.0)
@@ -78,7 +78,7 @@ let process body st compute env error adapt_ck =
   end
 
 let process container time_step error_threshold p pck =
-  newclock adapt_ck in
+  newclock adapt_ck schedule (fun nb -> 0, nb) in
     signal error default 0.0 gather max in
     signal compute default no_compute gather (fun x _ -> x) in
     let rec process try_step fuel s =
@@ -97,7 +97,7 @@ let process container time_step error_threshold p pck =
       pause pck
     end
     ||
-    newclock computation_ck in
+    newclock computation_ck schedule (fun nb -> 0, nb) in
       let env = run env_signal in
       run (p compute env error adapt_ck)
 
@@ -111,7 +111,7 @@ let process body_sprite st sp pck =
 
 let process planet center vp compute env error adapt_ck =
   let pos = random_pos_planet center.v_x center.v_y 200.0 350.0 in
-  let st = mk_body topck pos
+  let st = run mk_body topck pos
       (scalar_mult 10.0 (normal_unit_vector pos center))
       (random_float 0.01 0.01)
   in
@@ -122,7 +122,7 @@ let process planet center vp compute env error adapt_ck =
   run (body_sprite st sp topck)
 
 let process sun center vp compute env error adapt_ck =
-  let st = mk_body topck center zero_vector 8000.0 in
+  let st = run mk_body topck center zero_vector 8000.0 in
   let sp = Mlsdl_client.create_sprite_from_file vp null_float_pos 48 48 "sun.png" in
   run (body st compute env error adapt_ck)
   ||

@@ -5,7 +5,7 @@ let rec iter f l = match l with
 | [] -> ()
 | x::l -> f x; iter f l
 
-let keyboard ck =
+let process keyboard ck =
   signal keys at ck in
   let process key_listener =
     loop
@@ -15,7 +15,7 @@ let keyboard ck =
   in
   keys, key_listener
 
-let mouse ck =
+let process mouse ck =
   signal mouse at ck in
   let process mouse_listener =
     loop
@@ -25,7 +25,7 @@ let mouse ck =
   in
   mouse, mouse_listener
 
-let sprite sp ck =
+let process sprite sp ck =
   signal pos at ck default (sprite_pos sp) gather (fun x _ -> x) in
   let process p =
     draw_sprite sp;
