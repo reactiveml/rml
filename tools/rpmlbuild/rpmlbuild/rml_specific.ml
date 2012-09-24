@@ -169,27 +169,27 @@ let init () =
       rule "rml: rml -> byte"
         ~prod:"%.rml.byte"
         ~dep:"%.rml"
-        (link_rml "byte");;
+        (link_rml "byte");
 
       rule "rml: rml -> d.byte"
         ~prod:"%.rml.d.byte"
         ~dep:"%.rml"
-        (link_rml "d.byte");;
+        (link_rml "d.byte");
 
       rule "rml: rml -> native"
         ~prod:"%.rml.native"
         ~dep:"%.rml"
-        (link_rml "native");;
+        (link_rml "native");
 
       rule "rml: rml -> p.native"
         ~prod:"%.rml.p.native"
         ~dep:"%.rml"
-        (link_rml "p.native");;
+        (link_rml "p.native");
 
      rule "rml: rml -> t.byte"
         ~prod:"%.rml.t.byte"
         ~dep:"%.rml"
-        (link_rml_test "byte");;
+        (link_rml_test "byte");
 
       rule "rml: rmllib -> mllib"
         ~prod:"%.mllib"
@@ -208,7 +208,13 @@ let init () =
         cp file mllib_file
       end;
 
-      flag ["with_mpicc"] (S [A "-thread"; A"-cc"; A mpicc]);
+      let thread_option =
+        if !Options.use_ocamlfind then
+          [A "-thread"; A "-package"; A "threads"]
+        else
+          [A "-thread"]
+      in
+      flag ["with_mpicc"] (S (thread_option@[A"-cc"; A mpicc]));
       flag ["rml";"compile";"simulation_file"] (S [A "-s"; A "main"]);
       flag ["rml";"compile";"test_file"] (S [A "-t"; A "test"]);
 
