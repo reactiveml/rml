@@ -13,47 +13,37 @@ let adaptive_fuel = 0
 let process no_compute env x_t v_t w =
   (x_t, v_t, 0.0)
 
-let process compute_a env x w =
-  emit env (force (x, w));
-  await env(f) in
-  f x
-
-
 let process compute_bogacki_shampine dt env x_t v_t w =
   (* step 1 *)
   let k1_v = run (compute_a env x_t w) in
   let k1_p = v_t in
   (* step 2 *)
-  let k2_p = add_vector v_t (scalar_mult (dt /. 2.0) k1_v) in
-  let x_2 = add_vector x_t (scalar_mult (dt /. 2.0) k1_p) in
+  let k2_p = v_t ++. ((dt /. 2.0) **. k1_v) in
+  let x_2 = x_t ++. ((dt /. 2.0) **. k1_p) in
   let k2_v = run (compute_a env x_2 w) in
   (* step 3 *)
-  let k3_p = add_vector v_t (scalar_mult (0.75 *. dt) k2_v) in
-  let x_3 = add_vector x_t (scalar_mult (0.75 *. dt) k2_p) in
+  let k3_p = v_t ++. ((0.75 *. dt) **. k2_v) in
+  let x_3 = x_t ++. ((0.75 *. dt) **. k2_p) in
   let k3_v = run (compute_a env x_3 w) in
   (* final result *)
   let v_tp =
-    add_vector v_t (scalar_mult (dt /. 9.0)
-                      (add_vector (scalar_mult 2.0 k1_v)
-                         (add_vector (scalar_mult 3.0 k2_v)
-                            (scalar_mult 4.0 k3_v))) )
+    v_t ++. ((dt /. 9.0) **. ((2.0 **. k1_v) ++.
+                                ((3.0 **. k2_v) ++. (4.0 **. k3_v))))
   in
   let x_tp =
-    add_vector x_t (scalar_mult (dt /. 9.0)
-                      (add_vector (scalar_mult 2.0 k1_p)
-                         (add_vector (scalar_mult 3.0 k2_p)
-                            (scalar_mult 4.0 k3_p))) )
+    x_t ++. ((dt /. 9.0) **. ((2.0 **. k1_p) ++.
+                                ((3.0 **. k2_p) ++. (4.0 **. k3_p))))
   in
   (*error computation*)
   (* step 3 *)
   let k4_v = run (compute_a env x_tp w) in
   (* second final value *)
   let v_s =
-    add_vector v_t (scalar_mult (dt /. 24.0)
-                      (add_vector (scalar_mult 7.0 k1_v)
-                         (add_vector (scalar_mult 6.0 k2_v)
-                            (add_vector (scalar_mult 8.0 k3_v)
-                               (scalar_mult 3.0 k4_v)))))
+    v_t ++. ((dt /. 24.0) **.
+               ((7.0 **. k1_v) ++.
+                  ((6.0 **. k2_v) ++.
+                     ((8.0 **. k3_v) ++.
+                        (3.0 **. k4_v)))))
   in
   let e = vector_error v_tp v_s in
   (*print_float e; print_newline ();*)
@@ -62,7 +52,7 @@ let process compute_bogacki_shampine dt env x_t v_t w =
 let process body st compute env error adapt_ck =
   let rec process do_compute f =
     do
-      let x_tp, v_tp, e = run (f env (pre? st.b_pos) st.b_vel st.b_weight) in
+      let x_tp, v_tp, e = run (f env (last st.b_pos) st.b_vel st.b_weight) in
       emit error(e);
       pause adapt_ck;
       (*wait for possible preemption here*)
@@ -112,7 +102,7 @@ let process body_sprite st sp pck =
 let process planet center vp compute env error adapt_ck =
   let pos = random_pos_planet center.v_x center.v_y 200.0 350.0 in
   let st = run mk_body topck pos
-      (scalar_mult 10.0 (normal_unit_vector pos center))
+      (10.0 **. (normal_unit_vector pos center))
       (random_float 0.01 0.01)
   in
   (*let sp = Rmlsdl.create_sprite_circle 5 Rmlsdl.Blue in*)
@@ -131,7 +121,7 @@ let process sun center vp compute env error adapt_ck =
 let w = 1000
 let h = 800
 let nb_procs = 3
-let nb_planets_per_procs = 20
+let nb_planets_per_procs = 40
 
 let _ = Random.self_init ()
 

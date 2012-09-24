@@ -48,12 +48,12 @@ let normal_unit_vector v1 v2 =
     v_y = (v2.v_x -. v1.v_x) /. d;
     v_z = (v2.v_z -. v1.v_z) /. d }
 
-let add_vector v1 v2 =
+let (++.) v1 v2 =
   { v_x = v1.v_x +. v2.v_x;
     v_y = v1.v_y +. v2.v_y;
     v_z = v1.v_z +. v2.v_z }
 
-let scalar_mult a v =
+let ( **. ) a v =
   { v_x = a *. v.v_x; v_y = a *. v.v_y; v_z = a *. v.v_z;  }
 
 let center_float r =
@@ -94,14 +94,13 @@ let force (pos2, w2) pos1 =
   if (d2 <> 0.0) then
     let f12 = (g *. w2) /. d2 in
     (*print_float f12; print_newline (); *)
-    scalar_mult f12 (unit_vector pos1 pos2)
+    f12 **. (unit_vector pos1 pos2)
   else
     zero_vector
 
 let process env_signal =
-  let add_force f_new f =
-    fun (pos: vector) ->
-      add_vector (f_new pos) (f pos)
+  let add_force f_new f (pos: vector) =
+    (f_new pos) ++. (f pos)
   in
   signal env default (fun _ -> zero_vector) gather add_force in
   env
@@ -124,3 +123,9 @@ let random_pos_planet c_x c_y dmin dmax =
   let dy = sqrt ( (d *. d) -. ((x -. c_x) *. (x -. c_x)) ) in
   let y = rand_away c_y dy in
   mk_vector x y 0.0
+
+
+let process compute_a env x w =
+  emit env (force (x, w));
+  await env(f) in
+  f x
