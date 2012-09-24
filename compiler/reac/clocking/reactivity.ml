@@ -118,7 +118,8 @@ let expression funs acc e =
             if check_clock e.e_clock then instantaneous_rec_err e e.e_clock
           in
           List.iter check_exp p_e_list *)
-      | Enewclock _ -> Printf.printf "Domain: %a\n" Clocks_printer.output_react e.e_react; if check_react e.e_react then nonreactive_domain_err e e.e_react
+      | Enewclock (_, _, None, _) -> (* only check domains without by *)
+          if check_react e.e_react then nonreactive_domain_err e e.e_react
       | _ -> ()
   in
   e, acc
