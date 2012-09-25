@@ -29,6 +29,7 @@ val desc_of_usage : usage -> string
 val string_of_signal_usage : signal_usage -> string
 
 exception Forbidden_usage of Location.t * Location.t
+exception Forbidden_signal_usage of signal_usage * signal_usage
 
 (* Operations on usages *)
 val add_u : usage loc -> usage loc -> usage

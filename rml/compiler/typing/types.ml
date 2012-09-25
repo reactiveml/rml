@@ -228,6 +228,14 @@ let expand_abbrev params body args =
   List.iter2 bind_variable params' args;
   body'
 
+let merge_effects effs =
+  try
+    Effects.flatten effs
+  with Usages.Forbidden_signal_usage (u1, u2) ->
+    let loc1 ,_ ,_ = Usages.km_su u1 in
+    let loc2 ,_ ,_ = Usages.km_su u2 in
+    Typing_errors.usage_wrong_type_err loc1 loc2
+
 (* unification *)
 let rec unify expected_ty actual_ty =
   if expected_ty == actual_ty then ()
@@ -241,7 +249,7 @@ let rec unify expected_ty actual_ty =
       with Usages_misc.Unify _ ->
         raise Unify
     else
-      let new_effects = Effects.merge expected_ty.type_effects actual_ty.type_effects in
+      let new_effects = merge_effects [expected_ty.type_effects; actual_ty.type_effects] in
       match expected_ty.type_desc, actual_ty.type_desc with
 	Type_var, _ ->
 	  occur_check expected_ty.type_level expected_ty actual_ty;

@@ -78,6 +78,7 @@ let await_u loc affine =
   mk_loc loc (Var, u_get)
 
 exception Forbidden_usage of Location.t * Location.t
+exception Forbidden_signal_usage of signal_usage * signal_usage
 
 let add_u u1 u2 = match u1.node, u2.node with
   | Var, u | u, Var -> u
@@ -111,10 +112,12 @@ let add_s u v =
   let u1, u2 = km_su_loc u in
   let v1, v2 = km_su_loc v in
   let loc = best_loc u.loc v.loc in
-  mk_su
-    loc
-    (add_u u1 v1)
-    (add_u u2 v2)
+  try
+    let r1 = add_u u1 v1 in
+    let r2 = add_u u2 v2 in
+    mk_su loc r1 r2
+  with Forbidden_usage _ ->
+    raise (Forbidden_signal_usage (u, v))
 
 let max_s u v =
   let u1, u2 = km_su_loc u in
