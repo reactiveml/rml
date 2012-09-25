@@ -175,9 +175,9 @@ let register_effects patt_vars effects =
   List.iter (fun (patterns, effects) ->
     List.iter (function
       | Varpatt_local x ->
-          Hashtbl.add gleff x effects
+          Hashtbl.replace gleff x effects
       | Varpatt_global x ->
-          Hashtbl.add gleff x.gi.Global_ident.id effects
+          Hashtbl.replace gleff x.gi.Global_ident.id effects
       )
       patterns
     )
