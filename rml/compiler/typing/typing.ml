@@ -483,15 +483,6 @@ let rec vars_of_patt = function
   | (p,e)::patt_expr_list ->
       (Reac_misc.vars_of_patt p) :: vars_of_patt patt_expr_list
 
-let ids_of_patt patts =
-  List.fold_left
-    (fun acc -> function
-    | Varpatt_local x -> x :: acc
-    | Varpatt_global x -> x.gi.Global_ident.id :: acc
-    )
-    []
-    patts
-
 let unify_effects effects loc u =
   let ty = Usages_misc.type_of_usage u in
   Effects.iter
