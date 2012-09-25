@@ -119,13 +119,6 @@ let process container time_step p reconfigure pck =
     run (p pck reconfigure dt env)
   done
 
-let process body_sprite st sp pck =
-  loop
-    await st.b_pos(p) in
-    Mlsdl_client.set_sprite_pos sp p.v_x p.v_y;
-    Mlsdl_client.draw_sprite sp
-  end
-
 let process planet center vp pck reconfigure dt env =
   let pos = random_pos_planet center.v_x center.v_y 100.0 200.0 in
   let st = run mk_body topck pos
@@ -136,14 +129,14 @@ let process planet center vp pck reconfigure dt env =
   let sp = Mlsdl_client.create_sprite_from_file vp null_float_pos 12 12 "earth.png" in
   run (body st pck reconfigure dt env)
   ||
-  run (body_sprite st sp pck)
+  run (body_sprite st sp)
 
 let process sun center vp pck reconfigure dt env =
   let st = run mk_body topck center zero_vector 8000.0 in
   let sp = Mlsdl_client.create_sprite_from_file vp null_float_pos 48 48 "sun.png" in
   run (body st pck reconfigure dt env)
   ||
-  run (body_sprite st sp pck)
+  run (body_sprite st sp)
 
 let process method_selector current_method keys =
   loop
@@ -210,7 +203,7 @@ let process main =
     run (sun center vp pck reconfigure dt env)
     ||
     pause;
-    for i = 1 to 100 dopar
+    for i = 1 to 10 dopar
       run (planet center vp pck reconfigure dt env)
     done
   in

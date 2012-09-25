@@ -91,14 +91,6 @@ let process container time_step error_threshold p pck =
       let env = run env_signal in
       run (p compute env error adapt_ck)
 
-let process body_sprite st sp pck =
-  loop
-    await st.b_pos(p) in
-    Mlsdl_client.set_sprite_pos sp p.v_x p.v_y;
-    Mlsdl_client.draw_sprite sp
-  end
-
-
 let process planet center vp compute env error adapt_ck =
   let pos = random_pos_planet center.v_x center.v_y 200.0 350.0 in
   let st = run mk_body topck pos
@@ -109,14 +101,14 @@ let process planet center vp compute env error adapt_ck =
   let sp = Mlsdl_client.create_sprite_from_file vp null_float_pos 12 12 "earth.png" in
   run (body st compute env error adapt_ck)
   ||
-  run (body_sprite st sp topck)
+  run (body_sprite st sp)
 
 let process sun center vp compute env error adapt_ck =
   let st = run mk_body topck center zero_vector 8000.0 in
   let sp = Mlsdl_client.create_sprite_from_file vp null_float_pos 48 48 "sun.png" in
   run (body st compute env error adapt_ck)
   ||
-  run (body_sprite st sp topck)
+  run (body_sprite st sp)
 
 let w = 1000
 let h = 800

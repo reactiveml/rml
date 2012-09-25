@@ -129,3 +129,10 @@ let process compute_a env x w =
   emit env (force (x, w));
   await env(f) in
   f x
+
+let process body_sprite st sp =
+  loop
+    await st.b_pos(p) in
+    Mlsdl_client.set_sprite_pos sp p.v_x p.v_y;
+    Mlsdl_client.draw_sprite sp
+  end

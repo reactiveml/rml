@@ -1,0 +1,126 @@
+open Mlsdl_types
+open Utils
+
+let rec process wait n =
+  if n > 0 then
+    (pause; run wait (n-1))
+
+let compute_force st all =
+  let me = last st.b_pos in
+  List.fold_left (fun acc b -> force b me ++. acc) zero_vector all
+
+let compute_mass_center all =
+  let p = List.fold_left (fun acc (x_t, w) -> acc ++. (w **. x_t)) zero_vector all in
+  let w_sum = List.fold_left (fun acc (_, w) -> acc +. w) 0.0 all in
+  (1. /. w_sum) **. p, w_sum
+
+let compute_euler_semi_implicit dt x_t v_t w a_t =
+  let v_tp = v_t ++. (dt **. a_t) in
+  let x_tp = x_t ++. (dt **. v_tp) in
+  (x_tp, v_tp)
+
+let process body st dt env =
+  emit env (last st.b_pos, st.b_weight);
+  loop
+    await env(all) in
+    let f = compute_force st all in
+    let x_tp, v_tp = compute_euler_semi_implicit dt (last st.b_pos) st.b_vel st.b_weight f in
+    emit st.b_pos x_tp;
+    st.b_vel <- v_tp;
+    emit env (x_tp, st.b_weight);
+  end
+
+let process composed_body local_steps center dt env pck p =
+  domain(local_ck) do
+    signal local_env in
+    memory mass_center last center in
+    loop
+      await env(all) in
+      let all = List.filter ((fun (x_m, _) (x_j, _) -> x_j <> x_m) !!mass_center) all in
+      List.iter (fun p -> emit local_env p) all;
+      for i=1 to local_steps-1 do
+        pause local_ck; List.iter (fun p -> emit local_env p) all
+      done
+    end
+    ||
+    emit env center;
+    pause pck;
+    loop
+      run wait (local_steps - 1);
+      let local_planets =
+        List.filter
+          (fun (p, _) -> List.for_all (fun (p2, _) -> p <> p2) (last env))
+          (last local_env)
+      in
+      let new_center = compute_mass_center local_planets in
+      mass_center ::= new_center;
+      emit env new_center;
+      pause pck
+    end
+    ||
+    pause pck; run p local_ck (dt /. (float_of_int local_steps)) local_env
+  by local_steps done
+
+let nb_planets = 4
+let planet_mass = 0.00001
+let sun_mass = 0.1
+let black_hole_mass = 8000.0
+
+let process planet ck center v_0 (x_0, w) vp dt env =
+  let st = run mk_body ck x_0
+      (v_0 ++. (1.0 **. (normal_unit_vector x_0 center)))
+      w
+  in
+  let sp = Mlsdl_client.create_sprite_circle vp null_float_pos 2 Blue in
+  run (body st dt env)
+  ||
+  run (body_sprite st sp)
+
+let process sun ck center v_0 vp dt env =
+  let st = run mk_body ck center v_0 sun_mass in
+  let sp = Mlsdl_client.create_sprite_from_file vp null_float_pos 48 48 "sun.png" in
+  run (body st dt env)
+  ||
+  run (body_sprite st sp)
+
+let process solar_system center vp dt env =
+  let system_center = random_pos_planet center.v_x center.v_y 20000.0 40000.0 in
+  let planets = Array.init nb_planets
+      (fun _ -> random_pos_planet system_center.v_x system_center.v_y 1.0 3.0, planet_mass) in
+  let center_mass = compute_mass_center ((system_center, sun_mass)::(Array.to_list planets)) in
+  let v_0 = 10.0 **. (normal_unit_vector system_center center) in
+  let process p ck dt env =
+    for i = 0 to nb_planets-1 dopar
+      run planet ck system_center v_0 planets.(i) vp dt env
+    done
+    ||
+    run sun ck system_center v_0 vp dt env
+  in
+  run composed_body 10 center_mass dt env topck p
+
+let process black_hole pos vp dt env =
+  let st = run mk_body topck pos zero_vector black_hole_mass in
+  let sp = Mlsdl_client.create_sprite_from_file vp null_float_pos 64 64 "blackhole.png" in
+  run (body st dt env)
+  ||
+  run (body_sprite st sp)
+
+let w = 800
+let h = 800
+
+let _ = Random.self_init ()
+let nb_galaxies = 3
+
+let process main =
+  let vp_rect = mk_rect 0.0 0.0 100000.0 100000.0 in
+  let sc_rect = mk_rect 0 0 w h in
+  let center = center_float vp_rect in
+  Mlsdl_client.start_screen (Window (w, h)) w h Black 60;
+  let vp = Mlsdl_client.create_float_viewport vp_rect sc_rect in
+  let dt = 0.1 in
+  signal env in
+  for i=1 to nb_galaxies dopar
+    run solar_system center vp dt env
+  done
+  ||
+  run black_hole center vp dt env
