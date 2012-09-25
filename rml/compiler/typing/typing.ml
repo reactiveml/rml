@@ -41,6 +41,13 @@ open Reac_ast
 open Misc
 open Annot
 
+let application_of_non_function_err exp ty =
+  try
+    let _ = filter_arrow ty in
+    too_many_arguments_err exp
+  with Unify ->
+    cannot_be_applied_err exp
+
 let unify_expr expr expected_ty actual_ty =
   try
     unify expected_ty actual_ty

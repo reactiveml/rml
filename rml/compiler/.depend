@@ -88,12 +88,14 @@ typing/def_types.cmx: global/ident.cmx global/global.cmx typing/effects.cmx \
     static/def_static.cmx global/asttypes.cmi
 typing/effects.cmo: typing/usages.cmi global/ident.cmo typing/effects.cmi
 typing/effects.cmx: typing/usages.cmx global/ident.cmx typing/effects.cmi
-typing/types.cmo: typing/usages_misc.cmi global/misc.cmo \
-    global/initialization.cmo global/global_ident.cmo global/global.cmo \
-    typing/effects.cmi typing/def_types.cmo
-typing/types.cmx: typing/usages_misc.cmx global/misc.cmx \
-    global/initialization.cmx global/global_ident.cmx global/global.cmx \
-    typing/effects.cmx typing/def_types.cmx
+typing/types.cmo: typing/usages_misc.cmi typing/usages.cmi \
+    typing/typing_errors.cmo global/misc.cmo global/initialization.cmo \
+    global/global_ident.cmo global/global.cmo typing/effects.cmi \
+    typing/def_types.cmo
+typing/types.cmx: typing/usages_misc.cmx typing/usages.cmx \
+    typing/typing_errors.cmx global/misc.cmx global/initialization.cmx \
+    global/global_ident.cmx global/global.cmx typing/effects.cmx \
+    typing/def_types.cmx
 typing/types_printer.cmo: global/modules.cmo global/misc.cmo global/ident.cmo \
     global/global_ident.cmo global/global.cmo typing/def_types.cmo \
     global/asttypes.cmi
@@ -115,11 +117,11 @@ typing/typing.cmx: typing/usages_misc.cmx typing/usages.cmx \
     typing/effects.cmx typing/def_types.cmx static/def_static.cmx \
     global/asttypes.cmi reac/annot.cmx
 typing/typing_errors.cmo: typing/usages.cmi typing/types_printer.cmo \
-    typing/types.cmo reac/reac_ast.cmo global/misc.cmo parsing/location.cmo \
-    global/ident.cmo global/global_ident.cmo typing/def_types.cmo
+    reac/reac_ast.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
+    global/global_ident.cmo typing/def_types.cmo
 typing/typing_errors.cmx: typing/usages.cmx typing/types_printer.cmx \
-    typing/types.cmx reac/reac_ast.cmx global/misc.cmx parsing/location.cmx \
-    global/ident.cmx global/global_ident.cmx typing/def_types.cmx
+    reac/reac_ast.cmx global/misc.cmx parsing/location.cmx global/ident.cmx \
+    global/global_ident.cmx typing/def_types.cmx
 typing/usages.cmo: parsing/location.cmo typing/usages.cmi
 typing/usages.cmx: parsing/location.cmx typing/usages.cmi
 typing/usages_misc.cmo: typing/usages.cmi static/static.cmo \

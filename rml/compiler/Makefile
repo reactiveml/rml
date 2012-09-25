@@ -109,6 +109,7 @@ OBJ =	global/version.cmo \
 	static/static_errors.cmo \
 	static/static.cmo \
 	typing/usages_misc.cmo \
+	typing/typing_errors.cmo \
 	typing/types.cmo \
 	reac/reac_misc.cmo \
 	reac/parse2reac.cmo \
@@ -117,7 +118,6 @@ OBJ =	global/version.cmo \
 	other_analysis/wf_rec.cmo \
 	other_analysis/instantaneous_loop.cmo \
 	reac/annot.cmo \
-	typing/typing_errors.cmo \
 	typing/typing.cmo \
 	lco/lco_ast.cmo \
 	lco/lco_misc.cmo \

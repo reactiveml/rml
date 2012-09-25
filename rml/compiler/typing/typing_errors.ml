@@ -32,7 +32,6 @@
 
 open Misc
 open Def_types
-open Types
 open Reac_ast
 
 (* type clash *)
@@ -150,17 +149,16 @@ let gather_wrong_effects_err has_effects loc =
     raise Error
   end
 
-let application_of_non_function_err exp ty =
-  begin try
-    let _ = filter_arrow ty in
-    Printf.eprintf
-      "%aThis function is applied to too many arguments.\n"
-      Location.print_oc exp.expr_loc
-  with Unify ->
-    Printf.eprintf
-      "%aThis expression is not a function, it cannot be applied.\n"
-      Location.print_oc exp.expr_loc
-  end;
+let too_many_arguments_err exp =
+  Printf.eprintf
+    "%aThis function is applied to too many arguments.\n"
+    Location.print_oc exp.expr_loc;
+  raise Error
+
+let cannot_be_applied_err exp =
+  Printf.eprintf
+    "%aThis expression is not a function, it cannot be applied.\n"
+    Location.print_oc exp.expr_loc;
   raise Error
 
 let non_event_err exp =
