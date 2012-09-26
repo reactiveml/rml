@@ -5,13 +5,13 @@ let do_stuff () =
   done
 
 let do_lot_stuff () =
-  for i = 1 to 100 do
+  for i = 1 to 10 do
     do_stuff ()
   done
 
 let process main =
-  for i = 1 to 8 dopar
-    newclock ck in
+  for i = 1 to 48 dopar
+    newclock ck schedule (fun _ -> i, 0) in
       do_lot_stuff ()
   done
 

@@ -34,6 +34,8 @@ let rml_backends =
     (*("lco_mpi_new", mpi_one_launcher "local", "MPI New with local load balancer");*)
    ("lco_mpi_new_user_robin", ("lco_mpi_new", mpi_launcher "user_robin" "", "MPI New with user annotations and round robin balancer"));
    ("lco_mpi_new_robin", ("lco_mpi_new", mpi_launcher "robin" "", "MPI New with round robin load balancer"));
+   ("lco_mpi_new_remote", ("lco_mpi_new", mpi_launcher "remote" "", "MPI New with remote load balancer"));
+
 
   (*  ("lco_mpi_buffer", mpi_launcher "user_local" "", "MPI+buffering with user annotations and local load balancer");
     ("lco_mpi_buffer", mpi_launcher "robin" "", "MPI+buffering with round robin load balancer");
@@ -64,6 +66,7 @@ let all_tests =
     ("planets_fixed_step.rml", " -n 100 ");
     ("planets_pos.rml", " -n 100 ");
     ("planets_pos_sig.rml", " -n 100 ");
+    ("galaxies.rml", " -n 10");
   ]
 
 
@@ -101,7 +104,7 @@ let ocamlbuild args =
 let run_test args (f, test_arg) =
   print_status "** Test: %s@." f;
   let bin = if !use_native_code then f^".native" else f^".byte" in
-  let cmd = args ("./"^bin)^" -bench"^test_arg in
+  let cmd = args ("./"^bin)^" -bench "^test_arg in
   if !no_run then (
     print_status "* Running '%s'@." cmd
   ) else (
