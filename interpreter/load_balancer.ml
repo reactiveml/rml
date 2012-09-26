@@ -106,7 +106,7 @@ module Make (C : Communication.S) = struct
   object(self)
     inherit generic_balancer here sites
 
-    val mutable current_index = 0
+    val mutable current_index = start_index
 
     method new_child f =
       match f, ignore_annotations with
