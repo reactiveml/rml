@@ -1,0 +1,3 @@
+#!/bin/sh
+
+openmpiexec -n 1 ../rmlsdl/mlsdl_server.native : -n 1 ./galaxies.rml.native -min-rank 1 $*

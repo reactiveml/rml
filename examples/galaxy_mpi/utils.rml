@@ -136,3 +136,12 @@ let process body_sprite st sp =
     Mlsdl_client.set_sprite_pos sp p.v_x p.v_y;
     Mlsdl_client.draw_sprite sp
   end
+
+
+let process solar_system_sprite m sp =
+  loop
+    let p, _ = !!m in
+    Mlsdl_client.set_sprite_pos sp p.v_x p.v_y;
+    Mlsdl_client.draw_sprite sp;
+    pause
+  end
