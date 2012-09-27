@@ -65,12 +65,12 @@ let link_rml_core tag ml_extension rml_extension env _build =
   let byte_file = Pathname.update_extension ml_extension main_file in
   let rml_byte_file = env ("%.rml."^rml_extension) in
   tag_file byte_file ["use_rpmllib"];
-  if uses_mpi main_file then
+  if uses_mpi main_file then (
+    if not !Options.use_ocamlfind then
+      tag_file byte_file ["thread"];
     tag_file byte_file ["use_mlmpi"; "use_rpmllib_mpi"; "with_mpicc"];
-  if !Options.use_ocamlfind then
-    tag_file byte_file ["package(unix)"]
-  else
-    tag_file byte_file ["use_unix"];
+  );
+  tag_file byte_file ["use_unix"];
   tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
   tag_file main_file [tag];
   List.iter Outcome.ignore_good (_build [[byte_file]]);
@@ -207,14 +207,10 @@ let init () =
         tag_file cmxa_file ["use_rpmllib"; "use_unix"]; *)
         cp file mllib_file
       end;
-
-      let thread_option =
-        if !Options.use_ocamlfind then
-          [A "-thread"; A "-package"; A "threads"]
-        else
-          [A "-thread"]
-      in
-      flag ["with_mpicc"] (S (thread_option@[A"-cc"; A mpicc]));
+      if !Options.use_ocamlfind then
+        flag ["with_mpicc"] (S [A "-thread"; A "-package"; A "threads"; A"-cc"; A mpicc])
+      else
+        flag ["with_mpicc"] (S [A"-cc"; A mpicc]);
       flag ["rml";"compile";"simulation_file"] (S [A "-s"; A "main"]);
       flag ["rml";"compile";"test_file"] (S [A "-t"; A "test"]);
 
