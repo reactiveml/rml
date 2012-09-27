@@ -82,7 +82,10 @@ let unify_get_usage loc expected_ty actual_ty =
 let apply_effect loc u effs =
   try
     Effects.apply u effs
-  with Usages.Forbidden_signal_usage (u1, u2) -> value_wrong_usage_err loc u1 u2
+  with Usages.Forbidden_signal_usage (u1, u2) ->
+    let loc1 ,_ ,_ = Usages.km_su u1 in
+    let loc2 ,_ ,_ = Usages.km_su u2 in
+    usage_wrong_type_err loc1 loc2
 
 let unify_run loc expected_ty actual_ty =
   try
@@ -286,6 +289,55 @@ and is_nonexpansive_conf c =
       is_nonexpansive_conf c1 && is_nonexpansive_conf c2
   | Rconf_or (c1,c2) ->
       is_nonexpansive_conf c1 && is_nonexpansive_conf c2
+
+(* collect global vars used in some expression *)
+module Sid = Set.Make(Ident)
+let rec global_vars expr =
+  match expr.expr_desc with
+  | Rexpr_global g -> Sid.singleton g.gi.id
+  | Rexpr_match (e, pel) | Rexpr_let (_, pel, e) | Rexpr_trywith (e, pel) ->
+      List.fold_left
+        (fun a (_, e) -> Sid.union a (global_vars e))
+        (global_vars e)
+        pel
+  | Rexpr_control (_, Some pel, e) -> Sid.empty
+  | Rexpr_function pel ->
+      List.fold_left
+        (fun a (_, e) -> Sid.union a (global_vars e))
+        Sid.empty
+        pel
+  | Rexpr_apply (e, el) ->
+      List.fold_left
+        (fun a e -> Sid.union a (global_vars e))
+        (global_vars e)
+        el
+  | Rexpr_tuple el | Rexpr_array el | Rexpr_seq el | Rexpr_par el ->
+      List.fold_left
+        (fun a e -> Sid.union a (global_vars e))
+        Sid.empty
+        el
+  | Rexpr_record lel ->
+      List.fold_left
+        (fun a (_, e) -> Sid.union a (global_vars e))
+        Sid.empty
+        lel
+  | Rexpr_ifthenelse (e, e', e'') | Rexpr_fordopar (_, e, e', _, e'')
+  | Rexpr_for (_, e, e', _, e'') | Rexpr_signal (_, Some (e', e''), e) ->
+      Sid.union (global_vars e) (Sid.union (global_vars e') (global_vars e''))
+  | Rexpr_record_access (e, _) | Rexpr_process e | Rexpr_pre (_, e)
+  | Rexpr_constraint (e, _) | Rexpr_last e | Rexpr_default e | Rexpr_assert e
+  | Rexpr_signal (_, None, e) | Rexpr_emit (_, e, None) | Rexpr_loop (None, e)
+  | Rexpr_run e | Rexpr_when (_, e) | Rexpr_construct (_, Some e)
+  | Rexpr_until (_, e, None) | Rexpr_control (_, None, e) ->
+      global_vars e
+  | Rexpr_constant _ | Rexpr_local _ | Rexpr_nothing | Rexpr_pause _
+  | Rexpr_halt _ | Rexpr_await _ | Rexpr_construct (_, None) ->
+      Sid.empty
+  | Rexpr_record_update (e, _, e') | Rexpr_when_match (e, e') | Rexpr_merge (e, e')
+  | Rexpr_until (_, e, Some (_, e')) | Rexpr_while (e, e') | Rexpr_get (e, _, e')
+  | Rexpr_present (_, e, e') | Rexpr_await_val (_, _, _, e, _, e')
+  | Rexpr_emit (_, e, Some e') | Rexpr_loop (Some e', e) ->
+      Sid.union (global_vars e) (global_vars e')
 
 (* Typing functions *)
 
@@ -1090,10 +1142,19 @@ and type_let is_rec env patt_expr_list =
     then Env.append add_env env
     else env
   in
+  let globals =
+    List.fold_left
+      (fun a (_, e) -> Sid.union a (global_vars e))
+      Sid.empty
+      patt_expr_list in
+  let mem_add_env x = Env.mem x let_env in
+  let mem_glb_env x = Sid.mem x globals in
+  let mem_env x = mem_glb_env x || mem_add_env x  in
   let effects =
     List.map2
       (fun (patt,expr) ty ->
         let effects = snd (type_expect let_env expr ty) in
+        let effects = Effects.gen mem_env effects in
         if is_rec then begin
           deep_neutral ty;
           unify_effects effects patt.patt_loc Usages.Neutral;
