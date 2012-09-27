@@ -67,7 +67,7 @@ let process b f idx (la_in, la_out) (ra_in, ra_out) compute_ck =
       emit state (idx, b);
       pause topck
     end
-  done
+  schedule (fun _ -> idx+1, 0) done
 
 let process main =
   begin
@@ -88,16 +88,18 @@ let process main =
         ||
         run b transition i (b_l.(i), a_r.(mmod (i-1) slices)) (b_r.(i), a_l.(i)) compute_ck
       done
-    done
+    schedule (fun nb -> 0, nb) done
   end
   ||
-  let cpt = ref pyramid_steps in
-  print_string ("Init  : "); print_state_array (last state);
-  loop
-    pause topck;
-    print_string ("Step "^string_of_int !cpt^": "); print_state_array (last state);
-    if !debug then (
-      print_newline (); print_newline ()
-     );
-    cpt := !cpt + pyramid_steps;
-  end
+  if !print then (
+    let cpt = ref pyramid_steps in
+    print_string ("Init  : "); print_state_array (last state);
+    loop
+      pause topck;
+      print_string ("Step "^string_of_int !cpt^": "); print_state_array (last state);
+      if !debug then (
+        print_newline (); print_newline ()
+       );
+      cpt := !cpt + pyramid_steps;
+    end
+   )

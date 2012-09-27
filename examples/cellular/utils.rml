@@ -1,20 +1,38 @@
+open Rmlarg
+
 (* config *)
-let n = 8
-let slices = 2
-let slice_size = n / slices
+let n_ref = ref 16
+let slices_ref = ref 2
 let debug = ref false
+let print = ref false
+
+let _ =
+  let options =
+    ["-nb", Set_int n_ref, "number of elements";
+     "-slices", Set_int slices_ref, "number_of_slices";
+     "-debug", Set debug, "debug mode";
+     "-print", Set print, "print results"]
+  in
+  Rmlarg.parse options ignore "Usage: "
+
+let n = !n_ref
+let slices = !slices_ref
+let slice_size = n / slices
+
 
 (* boolean xor transition function *)
 let xor a b = (a && (not b)) or ((not a) && b)
 let transition x_l x x_r = xor x_l (xor x x_r)
 let default_state = false
-(*
+
 let initial_state =
   let a = Array.make n false in
-  for i=0 to (n-1)/3 do a.(3*i) <- true done;
+  for i=0 to (n-1)/4 do
+    a.(4*i) <- true;
+    a.(4*i+1) <- true;
+    a.(4*i+3) <- true
+  done;
   a
-*)
-let initial_state = [|true; true; false; false; true; false; false; true|]
 let print_state x =
   if x then print_string "1" else print_string "0"
 

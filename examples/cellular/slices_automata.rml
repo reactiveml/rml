@@ -25,7 +25,7 @@ let process a idx f (l_in, l_out) (r_in, r_out) a_init =
       emit state (idx, a);
       pause topck
     end
-  done
+  schedule (fun _ -> idx+1, 0) done
 
 let process main =
   let a_l = run init_memory_array slices default_state in
@@ -45,11 +45,13 @@ let process main =
     done
   end
   ||
-  let cpt = ref 1 in
-  print_string ("Init  : "); print_state_array (last state);
-  pause topck;
-  loop
+  if !print then (
+    let cpt = ref 1 in
+    print_string ("Init  : "); print_state_array (last state);
     pause topck;
-    print_string ("Step "^string_of_int !cpt^": "); print_state_array (last state);
-    incr cpt
-  end
+    loop
+      pause topck;
+      print_string ("Step "^string_of_int !cpt^": "); print_state_array (last state);
+      incr cpt
+    end
+  )

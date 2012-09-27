@@ -10,10 +10,13 @@ let compute a =
 let process main =
   let a = Array.copy initial_state in
   let cpt = ref 1 in
-  print_string "Init  : "; print_state_array a;
+  if !print then
+    (print_string "Init  : "; print_state_array a);
   loop
     compute a;
-    print_string ("Step "^string_of_int !cpt^": "); print_state_array a;
+    if !print then (
+      print_string ("Step "^string_of_int !cpt^": "); print_state_array a
+    );
     incr cpt;
     pause topck
   end
