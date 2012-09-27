@@ -1,0 +1,103 @@
+open Utils
+
+let pyramid_steps = slice_size/2 - 1
+
+let gather_state (i, rb) a =
+  let a = Array.copy a in
+  (* first slice is split in two *)
+  if i = 0 then (
+    Array.blit rb (slice_size/2) a 0 (slice_size/2);
+    Array.blit rb 0 a (n-slice_size/2) (slice_size/2)
+  ) else
+    Array.blit rb 0 a (i*slice_size - slice_size/2) slice_size;
+  a
+
+signal state default Array.copy initial_state gather gather_state
+
+let process a f idx (lb_in, lb_out) (rb_in, rb_out) compute_ck =
+  domain(local_ck) do
+    loop
+      let a = Array.append !!lb_in !!rb_in in
+      let a_prev = Array.make slice_size default_state in
+      for i=1 to pyramid_steps do
+      Array.blit a 0 a_prev 0 slice_size;
+        for j=i to slice_size-i-1 do
+          a.(j) <- f a_prev.(j-1) a_prev.(j) a_prev.(j+1)
+        done;
+        if !debug then (
+          print_string ("a"^string_of_int idx^" step "^string_of_int i^": ");
+          print_state_array a
+         )
+      done;
+      lb_out ::= Array.sub a_prev 0 (slice_size/2), Array.sub a 0 (slice_size/2);
+      rb_out ::= Array.sub a_prev (slice_size/2) (slice_size/2), Array.sub a (slice_size/2) (slice_size/2);
+      pause compute_ck;
+      pause topck
+    end
+  done
+
+let process b f idx (la_in, la_out) (ra_in, ra_out) compute_ck =
+  domain(local_ck) do
+    loop
+      pause compute_ck;
+      let la_prev, la = !!la_in in
+      let ra_prev, ra = !!ra_in in
+      let b = Array.append la_prev ra_prev in
+      let b_prev = Array.make slice_size default_state in
+      for i=1 to pyramid_steps do
+        let j_0 = slice_size/2-i in
+        let jmax = slice_size/2-1+i in
+        (* on calcule b_prev *)
+        Array.blit b j_0 b_prev j_0 (2*i);
+        b_prev.(j_0-1) <- la_prev.(j_0-1);
+        b_prev.(jmax+1) <- ra_prev.(jmax+1-slice_size/2);
+        (* puis b *)
+        for j=j_0 to jmax do
+          b.(j) <- f b_prev.(j-1) b_prev.(j) b_prev.(j+1)
+        done;
+        b.(j_0-1) <- la.(j_0-1);
+        b.(jmax+1) <- ra.(jmax+1-slice_size/2);
+        if !debug then (
+          print_string ("b"^string_of_int idx^" step "^string_of_int i^": ");
+          print_state_array b
+         )
+      done;
+      la_out ::= (Array.sub b 0 (slice_size/2));
+      ra_out ::= (Array.sub b (slice_size/2) (slice_size/2));
+      emit state (idx, b);
+      pause topck
+    end
+  done
+
+let process main =
+  begin
+    domain(compute_ck) do
+      let a_l = run init_memory_array slices default_slice in
+      let a_r = run init_memory_array slices default_slice in
+      let b_l = run init_memory_array slices (default_slice, default_slice) in
+      let b_r = run init_memory_array slices (default_slice, default_slice) in
+      (*initial setup*)
+      for i=0 to slices-1 do
+        a_l.(i) ::= Array.sub initial_state (i*slice_size) (slice_size/2);
+        a_r.(i) ::= Array.sub initial_state (i*slice_size + slice_size/2) (slice_size/2)
+      done;
+      pause compute_ck;
+      (*permanent loop *)
+      for i=0 to slices-1 dopar
+        run a transition i (a_l.(i), b_r.(i)) (a_r.(i), b_l.(mmod (i+1) slices)) compute_ck
+        ||
+        run b transition i (b_l.(i), a_r.(mmod (i-1) slices)) (b_r.(i), a_l.(i)) compute_ck
+      done
+    done
+  end
+  ||
+  let cpt = ref pyramid_steps in
+  print_string ("Init  : "); print_state_array (last state);
+  loop
+    pause topck;
+    print_string ("Step "^string_of_int !cpt^": "); print_state_array (last state);
+    if !debug then (
+      print_newline (); print_newline ()
+     );
+    cpt := !cpt + pyramid_steps;
+  end

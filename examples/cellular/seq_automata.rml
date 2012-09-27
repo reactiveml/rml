@@ -1,0 +1,19 @@
+open Utils
+
+let compute a =
+  let b = Array.copy a in
+  for i=0 to n-1 do
+    b.(i) <- transition a.(mmod (i-1) n) a.(i) a.(mmod (i+1) n)
+  done;
+  Array.blit b 0 a 0 n
+
+let process main =
+  let a = Array.copy initial_state in
+  let cpt = ref 1 in
+  print_string "Init  : "; print_state_array a;
+  loop
+    compute a;
+    print_string ("Step "^string_of_int !cpt^": "); print_state_array a;
+    incr cpt;
+    pause topck
+  end

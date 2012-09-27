@@ -1,0 +1,55 @@
+open Utils
+
+let gather_state (i, rb) a =
+  let a = Array.copy a in
+  Array.blit rb 0 a (i*slice_size) slice_size;
+  a
+
+signal state default Array.copy initial_state gather gather_state
+
+let process a idx f (l_in, l_out) (r_in, r_out) a_init =
+  domain(local_ck) do
+    let a = Array.copy a_init in
+    let a_prev = Array.copy a in
+    loop
+      Array.blit a 0 a_prev 0 slice_size;
+      (* calcul de a *)
+      a.(0) <- f !!l_in a_prev.(0) a_prev.(1);
+      for i=1 to slice_size-2 do
+        a.(i) <- f a_prev.(i-1) a_prev.(i) a_prev.(i+1)
+      done;
+      a.(slice_size-1) <- f a_prev.(slice_size-2) a_prev.(slice_size-1) !!r_in;
+      (* emission pour les voisins *)
+      l_out ::= a.(0);
+      r_out ::= a.(slice_size-1);
+      emit state (idx, a);
+      pause topck
+    end
+  done
+
+let process main =
+  let a_l = run init_memory_array slices default_state in
+  let a_r = run init_memory_array slices default_state in
+  (* init *)
+  begin
+    for i=0 to slices-1 do
+      a_l.(i) ::= initial_state.(mmod (i*slice_size - 1) n);
+      a_r.(i) ::= initial_state.(mmod ((i+1)*slice_size) n)
+    done;
+    pause topck;
+    for i=0 to slices-1 dopar
+      run a i transition
+        (a_l.(i), a_r.(mmod (i-1) slices))
+        (a_r.(i), a_l.(mmod (i+1) slices))
+        (Array.sub initial_state (i*slice_size) slice_size)
+    done
+  end
+  ||
+  let cpt = ref 1 in
+  print_string ("Init  : "); print_state_array (last state);
+  pause topck;
+  loop
+    pause topck;
+    print_string ("Step "^string_of_int !cpt^": "); print_state_array (last state);
+    incr cpt
+  end
