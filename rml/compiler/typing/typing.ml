@@ -1067,9 +1067,6 @@ let rec type_of_expression env expr =
         let affine = true (* Always the case here since it is an "await one" *) in
 	let ty_s, u_s = type_of_expression env s in
 	let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
-        if not affine then begin
-          deep_unify Usages.Neutral ty_get patt.patt_loc;
-        end;
         unify_expr s
           (constr_notabbrev list_ident [ty_emit])
           ty_get;
@@ -1078,8 +1075,6 @@ let rec type_of_expression env expr =
 	let new_env =
 	  List.fold_left
 	    (fun env (x, ty) ->
-                if not affine then
-                  apply_usage_constraint Usages.Neutral (Some x) ty patt.patt_loc;
                 Env.add x (forall [] ty) env
             )
 	    env loc_env
