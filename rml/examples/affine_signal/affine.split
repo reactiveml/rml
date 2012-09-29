@@ -66,6 +66,30 @@ signal y;;
 let f x = process (!emit x 1) in
  process (run (f x) || run (f y))
 
+$
+signal s;;
+let process main = !emit s || await immediate one s (x) in ()
+
+$
+signal s;;
+let process main = await immediate one s (x) in () || !emit s
+
+$
+let process main = signal s in (
+  await immediate one s(x) in () || !emit s)
+
+$
+let process main = signal s in (
+  !emit s || await immediate one s(x) in ())
+
+$
+let process main s =
+  await immediate one s(x) in () || !emit s
+
+$
+let process main s =
+  !emit s || await immediate one s(x) in ()
+
 $$$bad
 ${
 (*
@@ -325,3 +349,30 @@ let rec iter f l =
   | x::l -> f x; iter f l
 
 let emits l = iter (fun s -> !emit s) l
+
+$
+signal s;;
+let process main = emit s || await immediate one s (x) in ()
+
+$
+signal s;;
+let process main = await immediate one s (x) in () || emit s
+
+$
+let process main = signal s in (
+  await immediate one s(x) in () || emit s)
+
+$
+let process main = signal s in (
+  emit s || await immediate one s(x) in () || emit s)
+
+$
+let process main s =
+  await immediate one s(x) in () || emit s
+
+$
+let process main s =
+  emit s || await immediate one s(x) in ()
+
+$
+let f (s: ('a, 'b, zero1, 'c) event) = ()

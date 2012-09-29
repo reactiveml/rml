@@ -135,7 +135,7 @@ let unify_usage loc ty_emit ty_get u_new =
 
 let check_emit_usage loc env_u_emit u_emit =
   match env_u_emit with
-    | Usages.Var -> ()
+    | Usages.Var | Usages.Zero_1  -> ()
     | _ ->
         if (Usages.compare env_u_emit u_emit < 0) then
         let env_ty_emit = Usages_misc.type_of_usage env_u_emit in
@@ -144,7 +144,7 @@ let check_emit_usage loc env_u_emit u_emit =
 
 let check_get_usage loc env_u_get u_get =
   match env_u_get with
-    | Usages.Var -> ()
+    | Usages.Var | Usages.Zero_1 -> ()
     | _ ->
         if (Usages.compare env_u_get u_get < 0) then
         let env_ty_get = Usages_misc.type_of_usage env_u_get in
@@ -1064,7 +1064,7 @@ let rec type_of_expression env expr =
         return ty (merge_effects [u_s; u_p; apply_effect s.expr_loc new_usage u_s])
 
     | Rexpr_await_val (_,_,One,s,patt,p) ->
-        let affine = true (* Always the case here since it is an "await one" *) in
+        let _affine = true (* Always the case here since it is an "await one" *) in
 	let ty_s, u_s = type_of_expression env s in
 	let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
         unify_expr s
@@ -1079,7 +1079,11 @@ let rec type_of_expression env expr =
             )
 	    env loc_env
 	in
-        let new_usage = Usages.await_u expr.expr_loc affine in
+        let new_usage = Usages.mk_su
+          expr.expr_loc
+          Usages.Zero_1
+          Usages.Affine
+        in
         let _, new_u_get = Usages.km_s new_usage in
         check_get_usage expr.expr_loc (Usages_misc.usage_of_type u_get) new_u_get;
         unify_usage expr.expr_loc u_emit u_get new_usage;

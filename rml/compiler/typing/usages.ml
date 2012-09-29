@@ -26,18 +26,21 @@ type usage =
   | Affine
   | Neutral
   | Zero
+  | Zero_1
   | Var
 
 let string_of_usage = function
   | Affine -> "1"
   | Neutral -> "∞"
   | Zero -> "0"
+  | Zero_1 -> "0'"
   | Var -> "_"
 
 let desc_of_usage = function
   | Affine -> "affine"
   | Neutral -> "neutral"
   | Zero -> "zero"
+  | Zero_1 -> "zero1"
   | Var -> "var"
 
 type signal_usage = (usage * usage) loc
@@ -82,6 +85,8 @@ exception Forbidden_signal_usage of signal_usage * signal_usage
 
 let add_u u1 u2 = match u1.node, u2.node with
   | Var, u | u, Var -> u
+  | Zero_1, Zero | Zero, Zero_1 -> Zero_1
+  | Zero_1, Affine | Affine, Zero_1 -> Affine
   | Zero, u | u, Zero -> u
   | Neutral, Neutral -> Neutral
   | _ -> raise (Forbidden_usage (u1.loc, u2.loc))
@@ -89,6 +94,7 @@ let add_u u1 u2 = match u1.node, u2.node with
 let max_u u1 u2 = match u1, u2 with
   | Affine, _ | _, Affine -> Affine
   | Neutral, _ | _, Neutral -> Neutral
+  | Zero_1, _ | _, Zero_1 -> Zero_1
   | Zero, _ | _, Zero -> Zero
   | _ -> u1
 
@@ -137,6 +143,9 @@ let compatible_usage su1 su2 =
     | _, Var
     | Zero, _
     | _, Zero
+    | Zero_1, Zero_1
+    | Zero_1, Affine
+    | Affine, Zero_1
     | Neutral, Neutral
     | Affine, Affine -> true
     | _ -> false in
