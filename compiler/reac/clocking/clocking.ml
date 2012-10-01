@@ -1278,22 +1278,21 @@ let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
 
 
 (* Check that an implementation without interface does not export values
-   with non-generalizable types. *)
-let check_nongen_values impl_item_list =
-  List.iter
-    (fun impl_item ->
-      match impl_item.impl_desc with
-      | Ilet (_, patt_expr_list) ->
-          List.iter (fun (patt,expr) ->
-            if free_clock_vars notgeneric expr.e_clock != []
-            then
-              cannot_generalize_err expr)
-            patt_expr_list
-      | _ -> ())
-    impl_item_list
+   with non-generalizable types.*)
+let check_nongen_values patt_expr_list =
+  let check_expr expr =
+    let ty_vars, car_vars, eff_vars, r_vars =
+      params_split (free_clock_vars notgeneric expr.e_clock)
+    in
+    if ty_vars != [] or eff_vars != [] or r_vars != [] then
+      cannot_generalize_err expr;
+    (*  Non-generalizable carriers are set to topck  *)
+    List.iter (fun ck -> carrier_unify ck topck_carrier) car_vars
+  in
+  List.iter (fun (_,expr) -> check_expr expr) patt_expr_list
 
 (* Typing of implementation items *)
-let impl info_chan item =
+let impl info_chan has_intf item =
   (match item.impl_desc with
   | Iexpr (e) ->
       ignore (clock_of_expression Env.empty e)
@@ -1302,6 +1301,8 @@ let impl info_chan item =
       let global_env, local_env =
         type_let (flag = Recursive) Env.empty patt_expr_list
       in
+      if not has_intf then
+        check_nongen_values patt_expr_list;
       (* verbose mode *)
       if !print_type
       then Clocks_printer.output_value_declaration info_chan global_env

@@ -1093,18 +1093,15 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 
 (* Check that an implementation without interface does not export values
    with non-generalizable types. *)
-let check_nongen_values impl_item_list =
-  List.iter
-    (fun impl_item ->
-      match impl_item.impl_desc with
-      | Ilet (_, patt_expr_list) ->
-          List.iter (fun (patt,expr) ->
-            if free_type_vars notgeneric expr.e_type != []
-            then
-              cannot_generalize_err expr)
-            patt_expr_list
-      | _ -> ())
-    impl_item_list
+let check_nongen_values impl_item =
+  match impl_item.impl_desc with
+    | Ilet (_, patt_expr_list) ->
+        List.iter (fun (patt,expr) ->
+          if free_type_vars notgeneric expr.e_type != []
+          then
+            cannot_generalize_err expr)
+          patt_expr_list
+    | _ -> ()
 
 (* Typing of implementation items *)
 let impl info_chan item =
