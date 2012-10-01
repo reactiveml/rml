@@ -36,3 +36,42 @@ let process one = pause; pause; print_endline "Coucou"
 let rec process p n =
   if n > 0 then
     (run one || run p (n-1))
+
+$
+
+let rec process p =
+ let r = ref (process ()) in
+ r := p;
+ run !r
+
+$
+
+let rec process p =
+  let q = (fun x -> x) p in
+  run q
+
+$
+
+let test f =
+ let rec process p =
+   let q = f p in
+   run q
+ in
+ p
+
+let process pb = run (test (fun x -> x))
+
+
+$
+
+let landin q =
+ let f = ref q in
+ f := process (run q; run !f);
+ run !f
+
+$
+
+let landin () =
+ let f = ref (process ()) in
+ f := process (print_endline "landin"; run !f);
+ !f
