@@ -27,6 +27,8 @@ type usage =
   | Neutral
   | Zero_n
   | Zero_1
+  | Var_n
+  | Var_1
   | Var
 
 let string_of_usage = function
@@ -35,6 +37,8 @@ let string_of_usage = function
   | Zero_n -> "0_N"
   | Zero_1 -> "0_1"
   | Var -> "_"
+  | Var_n -> "_N"
+  | Var_1 -> "_1"
 
 let desc_of_usage = function
   | Affine -> "affine"
@@ -42,6 +46,8 @@ let desc_of_usage = function
   | Zero_n -> "zero"
   | Zero_1 -> "zero1"
   | Var -> "var"
+  | Var_n -> "varN"
+  | Var_1 -> "var1"
 
 type signal_usage = (usage * usage) loc
 
@@ -87,8 +93,12 @@ let add_u u1 u2 = match u1.node, u2.node with
   | Var, u | u, Var -> u
   | Zero_1, Zero_1 -> Zero_1
   | Zero_1, Affine | Affine, Zero_1 -> Affine
+  | Var_1, Zero_1 | Zero_1, Var_1 -> Zero_1
+  | Var_1, Affine | Affine, Var_1 -> Affine
   | Zero_n, Zero_n -> Zero_n
   | Zero_n, Neutral | Neutral, Zero_n -> Neutral
+  | Var_n, Zero_n | Zero_n, Var_n -> Zero_n
+  | Var_n, Neutral | Neutral, Var_n -> Neutral
   | Neutral, Neutral -> Neutral
   | _ -> raise (Forbidden_usage (u1.loc, u2.loc))
 
@@ -139,17 +149,13 @@ let mk_null =
   mk_loc Location.none (Var, Var)
 
 let compatible_usage su1 su2 =
-  let compatible_usage u1 u2 = match u1, u2 with
-    | _ when u1 = u2 -> true
-    | Var, _
-    | _, Var
-    | Zero_n, Neutral
-    | Neutral, Zero_n
-    | Zero_1, Affine
-    | Affine, Zero_1
-    | Neutral, Neutral
-    | Affine, Affine -> true
-    | _ -> false in
+  let k1 = [Var; Var_1; Zero_1; Affine] in
+  let kN = [Var; Var_n; Zero_n; Neutral] in
+  let compatible_usage u1 u2 =
+       (u1 = u2)
+    || (List.mem u1 k1 && List.mem u2 k1)
+    || (List.mem u1 kN && List.mem u2 kN)
+  in
   let su1_emit, su1_get = su1.node
   and su2_emit, su2_get = su2.node in
   compatible_usage su1_emit su2_emit && compatible_usage su1_get su2_get

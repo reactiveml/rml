@@ -21,7 +21,7 @@ let process p s =
   emit s 1 || !await s(x) in x
 
 $
-let process p (f : (int, 'a, zero, 'b) event -> 'd) s =
+let process p (f : (int, 'a, zero1, 'b) event -> 'd) s =
   !emit s 1 ; f s
 
 $
@@ -34,7 +34,7 @@ let process p s =
   !emit !x 1
 
 $
-let id (x : (int, 'a, zero, 'b) event) = x
+let id (x : (int, 'a, zero1, 'b) event) = x
 let process p s =
   !emit s 1; id s
 
@@ -49,7 +49,7 @@ let process p s =
 
 $
 signal x;;
-let process g (x : (int, 'a, zero, 'b) event) = ignore x in
+let process g (x : (int, 'a, zero1, 'b) event) = ignore x in
  process (!emit x 1 || run (g x) || run (g x))
 
 $
@@ -373,6 +373,3 @@ let process main s =
 $
 let process main s =
   emit s || await immediate one s(x) in ()
-
-$
-let f (s: ('a, 'b, zero1, 'c) event) = ()

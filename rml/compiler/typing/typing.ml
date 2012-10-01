@@ -135,7 +135,7 @@ let unify_usage loc ty_emit ty_get u_new =
 
 let check_emit_usage loc env_u_emit u_emit =
   match env_u_emit with
-    | Usages.Var | Usages.Zero_1  -> ()
+    | Usages.Var | Usages.Var_1 | Usages.Var_n -> ()
     | _ ->
         if (Usages.compare env_u_emit u_emit < 0) then
         let env_ty_emit = Usages_misc.type_of_usage env_u_emit in
@@ -144,7 +144,7 @@ let check_emit_usage loc env_u_emit u_emit =
 
 let check_get_usage loc env_u_get u_get =
   match env_u_get with
-    | Usages.Var | Usages.Zero_1 -> ()
+    | Usages.Var | Usages.Var_1 | Usages.Var_n -> ()
     | _ ->
         if (Usages.compare env_u_get u_get < 0) then
         let env_ty_get = Usages_misc.type_of_usage env_u_get in
@@ -1081,7 +1081,7 @@ let rec type_of_expression env expr =
 	in
         let new_usage = Usages.mk_su
           expr.expr_loc
-          Usages.Zero_1
+          Usages.Var_1
           Usages.Affine
         in
         let _, new_u_get = Usages.km_s new_usage in

@@ -24,6 +24,8 @@ let type_of_usage = function
   | Neutral -> Initialization.type_neutral
   | Zero_n -> Initialization.type_zero_n
   | Zero_1 -> Initialization.type_zero_1
+  | Var_n -> Initialization.type_uvar_n
+  | Var_1 -> Initialization.type_uvar_1
   | Var -> Def_types.new_var ()
 
 let usage_of_type ty =
@@ -36,6 +38,10 @@ let usage_of_type ty =
     Zero_1
   else if Initialization.is_zero_n ty then
     Zero_n
+  else if Initialization.is_uvar_n ty then
+    Var_n
+  else if Initialization.is_uvar_1 ty then
+    Var_1
   else
     Var
 
@@ -57,9 +63,13 @@ let unify ty1 ty2 =
     match u1, u2 with
     | Var, _ -> unify_ty ty1 ty2
     | _, Var -> unify_ty ty2 ty1
-    | Zero_1, Zero_n -> unify_ty ty2 ty1
-    | Zero_n, Zero_1 -> unify_ty ty1 ty2
+
+    | Var_1, (Zero_1 | Affine) -> unify_ty ty1 ty2
+    | (Zero_1 | Affine), Var_1-> unify_ty ty2 ty1
+
+    | Var_n, (Zero_n | Neutral) -> unify_ty ty1 ty2
+    | (Zero_n | Neutral), Var_n-> unify_ty ty2 ty1
+
     | Zero_1, Affine -> ()
-    | Affine, Zero_1 -> ()
-    | Zero_n, u2 -> ()
+    | Zero_n, Neutral -> ()
     | _                   -> raise (Unify (u1, u2))

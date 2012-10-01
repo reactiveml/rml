@@ -172,8 +172,34 @@ let is_uvar ty = match ty.type_desc with
       c.gi.id.name = uvar_ident.id.name
   | _ -> false
 
+let uvar_n_ident = pervasives_type "varN"
+let type_desc_uvar_n = type_desc uvar_n_ident
+let type_uvar_n = Def_types.constr_notabbrev uvar_n_ident []
+
+let is_uvar_n ty = match ty.type_desc with
+  | Type_constr (c, []) ->
+      c.gi.qual = uvar_n_ident.qual &&
+      c.gi.id.name = uvar_n_ident.id.name
+  | _ -> false
+
+let uvar_1_ident = pervasives_type "var1"
+let type_desc_uvar_1 = type_desc uvar_1_ident
+let type_uvar_1 = Def_types.constr_notabbrev uvar_1_ident []
+
+let is_uvar_1 ty = match ty.type_desc with
+  | Type_constr (c, []) ->
+      c.gi.qual = uvar_1_ident.qual &&
+      c.gi.id.name = uvar_1_ident.id.name
+  | _ -> false
+
 let is_usage ty =
-  is_zero_n ty || is_zero_1 ty || is_affine ty || is_neutral ty || is_uvar ty
+     is_zero_n ty
+  || is_zero_1 ty
+  || is_affine ty
+  || is_neutral ty
+  || is_uvar_n ty
+  || is_uvar_1 ty
+  || is_uvar ty
 
 (* list *)
 let list_ident = pervasives_type "list"
@@ -256,6 +282,7 @@ let list_of_type_desc =
     type_desc_affine;
     type_desc_neutral;
     type_desc_zero_n;
+    type_desc_zero_1;
     type_desc_uvar;
 ]
 

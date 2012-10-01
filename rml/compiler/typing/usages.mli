@@ -21,7 +21,7 @@ type 'a loc = { mutable loc : Location.t; node : 'a }
 val mk_loc : Location.t -> 'a -> 'a loc
 
 (* Usages *)
-type usage = Affine | Neutral | Zero_n | Zero_1 | Var
+type usage = Affine | Neutral | Zero_n | Zero_1 | Var_n | Var_1 | Var
 type signal_usage
 
 val string_of_usage : usage -> string
