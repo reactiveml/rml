@@ -5,6 +5,7 @@ type 'a viewport
 
 val identity_viewport : int viewport
 val create_float_viewport : float rect -> int rect -> float viewport
+val create_movable_float_viewport : float rect ref -> int rect -> float viewport
 val translate_pos : int pos -> 'a viewport -> 'a pos
 
 val sprite_pos : 'a sprite -> 'a pos

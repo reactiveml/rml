@@ -77,6 +77,27 @@ let create_float_viewport vp_rect screen_rect =
   in
   { vp_tr_coords = tr_coords; vp_tr_coords_reverse = tr_coords_reverse }
 
+let create_movable_float_viewport vp_rect_ref screen_rect =
+  let tr_coords pos =
+    let vp_rect = !vp_rect_ref in
+    let newdx = ((pos.p_x -. vp_rect.r_x) /. vp_rect.r_w) *. (float_of_int screen_rect.r_w) in
+    let newx = screen_rect.r_x + (int_of_float newdx) in
+    let newdy = ((pos.p_y -. vp_rect.r_y) /. vp_rect.r_h) *. (float_of_int screen_rect.r_h) in
+    let newy = screen_rect.r_y + (int_of_float newdy) in
+    mk_pos newx newy
+  in
+  let tr_coords_reverse pos =
+    let vp_rect = !vp_rect_ref in
+    let newdx = ((float_of_int (pos.p_x - screen_rect.r_x)) /.
+                    (float_of_int screen_rect.r_w)) *. vp_rect.r_w in
+    let newx = vp_rect.r_x +. newdx in
+    let newdy = ((float_of_int (pos.p_y - screen_rect.r_y)) /.
+                    (float_of_int screen_rect.r_h)) *. vp_rect.r_h in
+    let newy = vp_rect.r_y +. newdy in
+    mk_pos newx newy
+  in
+  { vp_tr_coords = tr_coords; vp_tr_coords_reverse = tr_coords_reverse }
+
 let identity_viewport =
   let id p = p in
   { vp_tr_coords = id; vp_tr_coords_reverse = id }
