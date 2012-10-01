@@ -741,14 +741,20 @@ let rec copy_subst_clock m ck =
           constr name (List.map (copy_subst_param m) param_list)
         else
           ck
-    | Clock_process (ck, act_car, eff, r) ->
+    | Clock_process (ck1, act_car, eff, r) ->
         if level = generic then
-          process (copy_subst_clock m ck) (copy_subst_carrier m act_car)
+          process (copy_subst_clock m ck1) (copy_subst_carrier m act_car)
             (copy_subst_effect m eff) (copy_subst_react m r)
         else
           ck
-    | Clock_forall _ -> (*TODO*)
-        ck
+    | Clock_forall sch ->
+        let cs_clock_vars = List.map (fun ck -> copy_subst_clock m ck) sch.cs_clock_vars in
+        let cs_carrier_vars = List.map (fun ck -> copy_subst_carrier m ck) sch.cs_carrier_vars in
+        let cs_effect_vars = List.map (fun ck -> copy_subst_effect m ck) sch.cs_effect_vars in
+        let cs_react_vars = List.map (fun ck -> copy_subst_react m ck) sch.cs_react_vars in
+        let cs_desc = copy_subst_clock m sch.cs_desc in
+        let sch = forall cs_clock_vars cs_carrier_vars cs_effect_vars cs_react_vars cs_desc in
+        make_clock (Clock_forall sch)
 
 and copy_subst_carrier m car =
   let level = car.level in
