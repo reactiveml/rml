@@ -25,21 +25,21 @@ type 'a loc = {
 type usage =
   | Affine
   | Neutral
-  | Zero
+  | Zero_n
   | Zero_1
   | Var
 
 let string_of_usage = function
   | Affine -> "1"
   | Neutral -> "∞"
-  | Zero -> "0"
-  | Zero_1 -> "0'"
+  | Zero_n -> "0_N"
+  | Zero_1 -> "0_1"
   | Var -> "_"
 
 let desc_of_usage = function
   | Affine -> "affine"
   | Neutral -> "neutral"
-  | Zero -> "zero"
+  | Zero_n -> "zero"
   | Zero_1 -> "zero1"
   | Var -> "var"
 
@@ -85,9 +85,10 @@ exception Forbidden_signal_usage of signal_usage * signal_usage
 
 let add_u u1 u2 = match u1.node, u2.node with
   | Var, u | u, Var -> u
-  | Zero_1, Zero | Zero, Zero_1 -> Zero_1
+  | Zero_1, Zero_1 -> Zero_1
   | Zero_1, Affine | Affine, Zero_1 -> Affine
-  | Zero, u | u, Zero -> u
+  | Zero_n, Zero_n -> Zero_n
+  | Zero_n, Neutral | Neutral, Zero_n -> Neutral
   | Neutral, Neutral -> Neutral
   | _ -> raise (Forbidden_usage (u1.loc, u2.loc))
 
@@ -95,7 +96,7 @@ let max_u u1 u2 = match u1, u2 with
   | Affine, _ | _, Affine -> Affine
   | Neutral, _ | _, Neutral -> Neutral
   | Zero_1, _ | _, Zero_1 -> Zero_1
-  | Zero, _ | _, Zero -> Zero
+  | Zero_n, _ | _, Zero_n -> Zero_n
   | _ -> u1
 
 let compare u1 u2 =
@@ -139,11 +140,11 @@ let mk_null =
 
 let compatible_usage su1 su2 =
   let compatible_usage u1 u2 = match u1, u2 with
+    | _ when u1 = u2 -> true
     | Var, _
     | _, Var
-    | Zero, _
-    | _, Zero
-    | Zero_1, Zero_1
+    | Zero_n, Neutral
+    | Neutral, Zero_n
     | Zero_1, Affine
     | Affine, Zero_1
     | Neutral, Neutral

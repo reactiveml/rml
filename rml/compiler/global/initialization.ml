@@ -142,24 +142,24 @@ let is_neutral ty = match ty.type_desc with
       c.gi.id.name = neutral_ident.id.name
   | _ -> false
 
-let zero_ident = pervasives_type "zero"
-let type_desc_zero = type_desc zero_ident
-let type_zero = Def_types.constr_notabbrev zero_ident []
+let zero_n_ident = pervasives_type "zero"
+let type_desc_zero_n = type_desc zero_n_ident
+let type_zero_n = Def_types.constr_notabbrev zero_n_ident []
 
-let is_zero ty = match ty.type_desc with
+let is_zero_n ty = match ty.type_desc with
   | Type_constr (c, []) ->
-      c.gi.qual = zero_ident.qual &&
-      c.gi.id.name = zero_ident.id.name
+      c.gi.qual = zero_n_ident.qual &&
+      c.gi.id.name = zero_n_ident.id.name
   | _ -> false
 
-let zero1_ident = pervasives_type "zero1"
-let type_desc_zero1 = type_desc zero1_ident
-let type_zero1 = Def_types.constr_notabbrev zero1_ident []
+let zero_1_ident = pervasives_type "zero1"
+let type_desc_zero_1 = type_desc zero_1_ident
+let type_zero_1 = Def_types.constr_notabbrev zero_1_ident []
 
-let is_zero1 ty = match ty.type_desc with
+let is_zero_1 ty = match ty.type_desc with
   | Type_constr (c, []) ->
-      c.gi.qual = zero1_ident.qual &&
-      c.gi.id.name = zero1_ident.id.name
+      c.gi.qual = zero_1_ident.qual &&
+      c.gi.id.name = zero_1_ident.id.name
   | _ -> false
 
 let uvar_ident = pervasives_type "var"
@@ -173,7 +173,7 @@ let is_uvar ty = match ty.type_desc with
   | _ -> false
 
 let is_usage ty =
-  is_zero ty || is_zero1 ty || is_affine ty || is_neutral ty || is_uvar ty
+  is_zero_n ty || is_zero_1 ty || is_affine ty || is_neutral ty || is_uvar ty
 
 (* list *)
 let list_ident = pervasives_type "list"
@@ -255,7 +255,7 @@ let list_of_type_desc =
     type_desc_event;
     type_desc_affine;
     type_desc_neutral;
-    type_desc_zero;
+    type_desc_zero_n;
     type_desc_uvar;
 ]
 

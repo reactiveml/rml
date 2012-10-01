@@ -260,7 +260,10 @@ let rec make_dummy t =
 	  else if type_desc = Initialization.type_desc_neutral then
 	    Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
 
-	  else if type_desc = Initialization.type_desc_zero then
+	  else if type_desc = Initialization.type_desc_zero_n then
+	    Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
+
+	  else if type_desc = Initialization.type_desc_zero_1 then
 	    Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
 
 	  else if type_desc = Initialization.type_desc_uvar then
