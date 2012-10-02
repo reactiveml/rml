@@ -8,7 +8,6 @@ ${
 *)
 
 $}
-
 let process p s =
   !emit s 1 || !await s(x) in x
 
@@ -53,14 +52,12 @@ let process g (x : (int, 'a, zero1, 'b) event) = ignore x in
  process (!emit x 1 || run (g x) || run (g x))
 
 $
-
 signal x;;
 signal y;;
 let process f x = !emit x 1 in
  process (run (f x) || run (f y))
 
 $
-
 signal x;;
 signal y;;
 let f x = process (!emit x 1) in
@@ -95,12 +92,11 @@ ${
 (*
   run_test:
    [
-     Bad 2 "File": "../../compiler/rmlc -I ../../stdlib/ -i"
+     Bad 2 "This is the second usage of the affine signal": "../../compiler/rmlc -I ../../stdlib/ -i"
    ]
 *)
 
 $}
-
 let process p s =
   !emit s 1 ; pause ; !emit s 1
 
@@ -113,26 +109,100 @@ let process p s =
   (!await s(x) in x) || (!await s(x) in x)
 
 $
-let process p s =
-  (!await s(x) in x) || (await s(x) in x)
+signal x;;
+let process main =
+ let g () = x in
+ (!emit x || !emit (g ()))
 
 $
+signal s in let r = ref s in (
+  !emit s;
+  let s1 = !r in
+  let s2 = !r in
+  (!emit s1; !emit s2)
+)
+
+$
+signal s in let r = ref s in
+  let s1 = !r in
+  let s2 = !r in
+  (!emit s1; !emit s2)
+
+$
+signal s in let r = ref s in (
+  !emit s;
+  let s1 = !r in
+  !emit s1
+)
+
+$
+signal s;;
+let r = ref (s : (unit, unit list, affine, zero) event);;
+let process main = !emit s || !emit !r
+
+$
+signal s;;
+let process main = let r = ref s in
+  !emit s || !emit !r
+
+$
+signal x;;
+let process f x = !emit x 1 in
+ process (run (f x) || run (f x))
+
+$
+signal x;;
+let f = fun x -> process (!emit x 1) in
+ process (run (f x) || run (f x))
+
+$
+let id x = x
 let process p s =
-  (await s(x) in x) || (!await s(x) in x)
+  !emit (id s) 1 ; !emit (id s) 1
 
 $
 let process p s =
   !emit s 1 || !emit s 1
 
 $
+let my_emit s v = !emit s v
 let process p s =
-  !emit s 1 || emit s 1
+  my_emit s 1 || my_emit s 1
+
+$
+(* The process main calls "envoyer s" which emits on "s"… in an affine
+way. Since process test calls main twice, the resulting composition
+should not be typable. *)
+let process envoyer s = !emit s ;;
+let process main s =
+  run (envoyer s)
+signal s;;
+let process test = run (main s) || run (main s);;
+
+$
+(* One cannot emit twice on an affine signal. *)
+let process test1 s = !emit s ;;
+let process test2 s = !emit s; print_endline "got it!" || run (test1 s)
+let process test = signal s in run (test2 s)
+
+$
+(* One cannot emit twice on an affine signal. *)
+let process test = signal s in !emit s || !emit s;;
 
 $
 let process p s =
-  emit s 1 || !emit s 1
+  (!await s(x) in x) || (await s(x) in x)
 
-$
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "This function cannot use affine resources": "../../compiler/rmlc -I ../../stdlib/ -i"
+   ]
+*)
+$}
+
 let process p l =
   List.map (fun x -> !emit x 1) l
 
@@ -147,21 +217,6 @@ let process p l =
 
 $
 let my_emit s v = !emit s v
-let process p s =
-  my_emit s 1 || my_emit s 1
-
-$
-let my_emit s v = !emit s v
-let process p s =
-  my_emit s 1 || emit s 1
-
-$
-let my_emit s v = !emit s v
-let process p s =
-  emit s 1 || my_emit s 1
-
-$
-let my_emit s v = !emit s v
 let process p l =
   List.map (fun x -> my_emit x 1) l
 
@@ -172,177 +227,10 @@ let process p l =
   List.map (fun x -> my_emit s x) l
 
 $
-let id x = x
-let process p s =
-  !emit (id s) 1 ; !emit (id s) 1
-
-$
-
-(* The process main calls "envoyer s" which emits on "s"… in an affine
-way. Since process test calls main twice, the resulting composition
-should not be typable. *)
-
-let process envoyer s = !emit s ;;
-
-let process main s =
-  run (envoyer s)
-
-signal s;;
-
-let process test = run (main s) || run (main s);;
-
-$
-
-(* We cannot mix affine and neutral uses. *)
-
-let process test1 s = !emit s ;;
-
-let process test2 s = await s(x) in print_endline "got it!"
-
-let process test3 s = run (test2 s)
-
-let process test4 s = !await s(x) in print_endline "gotcha"
-
-let process test = signal s in (
-   run (test4 s)
-|| run (test3 s)
-|| run (test2 s)
-|| run (test1 s))
-
-$
-
-(* One cannot emit twice on an affine signal. *)
-
-let process test1 s = !emit s ;;
-
-let process test2 s = !emit s; print_endline "got it!" || run (test1 s)
-
-let process test = signal s in run (test2 s)
-
-$
-
-(* One cannot emit twice on an affine signal. *)
-
-let process test = signal s in !emit s || !emit s;;
-
-$
-
-(* 's' is a neutral signal wrt. emissions and should not be used as an
-affine signal. *)
-
-let process test (s : ('a, 'a list, neutral, 'b) event) = !emit s
-
-$
-
-(* 's' is an affine signal wrt. emissions and should not be used as a
-neutral signal. *)
-
-let process test (s : ('a, 'a list, affine, neutral) event) = emit s
-
-$
-
-(* 'r' is an affine signal and should not be carried over a neutral
-signal like 's'. *)
-
-let process test s r = emit s r || !emit r
-
-$
-
-(* 'r' is an affine signal and should not be carried over a neutral
-signal like 's'. *)
-
-let process test s r = !emit r || emit s r
-
-$
-
-let process p s =
-  await s(x) in !emit x 1
-
-$
-
-(* A neutral (on reception) signal cannot carry over affine values. *)
-
-let process test s = await s(x) in !emit x
-
-$
-
 let process boom = signal s in
   List.iter (fun x -> !emit x 1) [s;s]
 
 $
-
-signal x;;
-let process f x = !emit x 1 in
- process (run (f x) || run (f x))
-
-$
-
-signal x;;
-let f = fun x -> process (!emit x 1) in
- process (run (f x) || run (f x))
-
-$
-
-let f (x: ('a, 'b, affine, 'c) event) = emit x
-
-$
-
-signal s;;
-let f x = emit s x; !emit x
-
-$
-
-let f (x : ('a, 'b, zero, 'c) event) = !emit x
-
-$
-
-let _ = signal s in
-  let s : ('a, 'b, zero, 'c) event = s in
-  emit s
-
-$
-
-let my_emit s = emit s
-let f (x : ('a, 'b, zero, 'c) event) = my_emit x
-
-$
-
-signal s in let r = ref s in (
-  !emit s;
-  let s1 = !r in
-  let s2 = !r in
-  (!emit s1; !emit s2)
-)
-
-$
-
-signal s in let r = ref s in
-  let s1 = !r in
-  let s2 = !r in
-  (!emit s1; !emit s2)
-
-$
-
-signal s in let r = ref s in (
-  !emit s;
-  let s1 = !r in
-  !emit s1
-)
-
-$
-
-signal s;;
-let r = ref (s : (unit, unit list, affine, zero) event);;
-let process main = !emit s || !emit !r
-
-$
-
-signal s;;
-let process main = let r = ref s in
-  !emit s || !emit !r
-
-$
-
 let rec iter f l =
   match l with
   | []   -> ()
@@ -350,7 +238,16 @@ let rec iter f l =
 
 let emits l = iter (fun s -> !emit s) l
 
-$
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "Emits on this signal should be used according": "../../compiler/rmlc -I ../../stdlib/ -i"
+   ]
+*)
+
+$}
 signal s;;
 let process main = emit s || await immediate one s (x) in ()
 
@@ -375,7 +272,121 @@ let process main s =
   emit s || await immediate one s(x) in ()
 
 $
-signal x;;
-let process main =
- let g () = x in
- (!emit x || !emit (g ()))
+let process p s =
+  !emit s 1 || emit s 1
+
+$
+let process p s =
+  emit s 1 || !emit s 1
+
+$
+let my_emit s v = !emit s v
+let process p s =
+  my_emit s 1 || emit s 1
+
+$
+
+(* 's' is a neutral signal wrt. emissions and should not be used as an
+affine signal. *)
+let process test (s : ('a, 'a list, neutral, 'b) event) = !emit s
+
+$
+(* 's' is an affine signal wrt. emissions and should not be used as a
+neutral signal. *)
+let process test (s : ('a, 'a list, affine, neutral) event) = emit s
+
+$
+let f (x: ('a, 'b, affine, 'c) event) = emit x
+
+$
+let f (x : ('a, 'b, zero, 'c) event) = !emit x
+
+$
+let _ = signal s in
+  let s : ('a, 'b, zero, 'c) event = s in
+  emit s
+
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "Reads on this signal should be used according": "../../compiler/rmlc -I ../../stdlib/ -i"
+   ]
+*)
+
+$}
+
+let process p s =
+  (await s(x) in x) || (!await s(x) in x)
+
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "This expression has type": "../../compiler/rmlc -I ../../stdlib/ -i"
+   ]
+*)
+
+$}
+(* We cannot mix affine and neutral uses. *)
+let process test1 s = !emit s ;;
+let process test2 s = await s(x) in print_endline "got it!"
+let process test3 s = run (test2 s)
+let process test4 s = !await s(x) in print_endline "gotcha"
+let process test = signal s in (
+   run (test4 s)
+|| run (test3 s)
+|| run (test2 s)
+|| run (test1 s))
+
+$
+let my_emit s v = !emit s v
+let process p s =
+  emit s 1 || my_emit s 1
+
+$
+let my_emit s = emit s
+let f (x : ('a, 'b, zero, 'c) event) = my_emit x
+
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "An affine signal is being used more than once": "../../compiler/rmlc -I ../../stdlib/ -i"
+   ]
+*)
+
+$}
+
+let process p s =
+  await s(x) in !emit x 1
+
+$
+(* A neutral (on reception) signal cannot carry over affine values. *)
+let process test s = await s(x) in !emit x
+
+$
+signal s;;
+let f x = emit s x; !emit x
+
+$
+(* 'r' is an affine signal and should not be carried over a neutral
+signal like 's'. *)
+let process test s r = emit s r || !emit r
+
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "This value is": "../../compiler/rmlc -I ../../stdlib/ -i"
+   ]
+*)
+
+$}
+(* 'r' is an affine signal and should not be carried over a neutral
+signal like 's'. *)
+let process test s r = !emit r || emit s r
