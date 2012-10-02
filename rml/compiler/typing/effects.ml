@@ -79,14 +79,14 @@ let apply u m =
 let update_loc m loc =
   M.map (Usages.update_loc loc) m
 
-let gen mem_env m =
+let gen non_gen m =
   M.fold
     (fun k u t ->
       match k with
         | Key.Id i ->
-            if not (mem_env i)
-            then M.add (Key.Var i) u t
-            else M.add k u t
+            if non_gen i
+            then M.add k u t
+            else M.add (var i) u t
         | Key.Var _ ->
             M.add k u t
     )

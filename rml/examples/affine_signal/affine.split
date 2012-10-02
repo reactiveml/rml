@@ -373,3 +373,9 @@ let process main s =
 $
 let process main s =
   emit s || await immediate one s(x) in ()
+
+$
+signal x;;
+let process main =
+ let g () = x in
+ (!emit x || !emit (g ()))

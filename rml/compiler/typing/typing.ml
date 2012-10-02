@@ -603,6 +603,16 @@ let return ty ef =
   ty.type_effects <- ef;
   ty, ef
 
+let mem_gen_env patt_expr_list env =
+  let globals =
+    List.fold_left
+      (fun a (_, e) -> Sid.union a (global_vars e))
+      Sid.empty
+      patt_expr_list in
+  let mem_let_env x = Env.mem x env in
+  let mem_glb_env x = Sid.mem x globals in
+  fun x -> (mem_glb_env) x && not (mem_let_env x)
+
 (* Typing of expressions *)
 let rec type_of_expression env expr =
   let t =
@@ -655,8 +665,7 @@ let rec type_of_expression env expr =
             )
 	    matching
         in
-        let mem_env x = Env.mem x env in
-        let effects = Effects.gen mem_env (merge_effects effects) in
+        let effects = Effects.gen (mem_gen_env matching env) (merge_effects effects) in
         return ty effects
 
     | Rexpr_apply (fct, args) ->
@@ -1141,19 +1150,12 @@ and type_let is_rec env patt_expr_list =
     then Env.append add_env env
     else env
   in
-  let globals =
-    List.fold_left
-      (fun a (_, e) -> Sid.union a (global_vars e))
-      Sid.empty
-      patt_expr_list in
-  let mem_add_env x = Env.mem x let_env in
-  let mem_glb_env x = Sid.mem x globals in
-  let mem_env x = mem_glb_env x || mem_add_env x  in
+  let mem_gen_env = mem_gen_env patt_expr_list add_env in
   let effects =
     List.map2
       (fun (patt,expr) ty ->
         let effects = snd (type_expect let_env expr ty) in
-        let effects = Effects.gen mem_env effects in
+        let effects = Effects.gen mem_gen_env effects in
         if is_rec then begin
           deep_neutral ty;
           unify_effects effects patt.patt_loc Usages.Neutral;
