@@ -70,7 +70,8 @@ let link_rml_core tag ml_extension rml_extension env _build =
       tag_file byte_file ["thread"];
     tag_file byte_file ["use_mlmpi"; "use_rpmllib_mpi"; "with_mpicc"];
   );
-  tag_file byte_file ["use_unix"];
+  if not !Options.use_ocamlfind then
+    tag_file byte_file ["use_unix"];
   tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
   tag_file main_file [tag];
   List.iter Outcome.ignore_good (_build [[byte_file]]);
