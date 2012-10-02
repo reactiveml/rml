@@ -683,7 +683,7 @@ let rec type_of_expression env expr =
               let ty_arg, ef = type_expect env arg t1 in
               let ty_arg_ef = apply_eff ef t1 arg.expr_loc in
               if ty_arg.type_neutral then
-                unify_effects ty_arg_ef arg.expr_loc Usages.Neutral;
+                unify_effects ty_arg_ef arg.expr_loc Usages.Var_n;
 	      type_args (merge_effects [ty_arg_ef; u]) t2 args
 	in
 	type_args effects_f ty_fct args
@@ -890,7 +890,7 @@ let rec type_of_expression env expr =
         let new_u_emit, _ = Usages.km_s new_usage in
         check_emit_usage expr.expr_loc (Usages_misc.usage_of_type u_emit) new_u_emit;
         if not affine then begin
-          deep_unify Usages.Neutral ty_e e.expr_loc
+          deep_unify Usages.Var_n ty_e e.expr_loc
         end;
         unify_usage expr.expr_loc u_emit u_get new_usage;
 	unify_emit e.expr_loc ty ty_e;
@@ -1052,7 +1052,7 @@ let rec type_of_expression env expr =
 	let ty_s, u_s = type_of_expression env s in
 	let _, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
         if not affine then begin
-          deep_unify Usages.Neutral ty_get patt.patt_loc;
+          deep_unify Usages.Var_n ty_get patt.patt_loc;
         end;
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
 	assert (gl_env = []);
@@ -1158,7 +1158,7 @@ and type_let is_rec env patt_expr_list =
         let effects = Effects.gen mem_gen_env effects in
         if is_rec then begin
           deep_neutral ty;
-          unify_effects effects patt.patt_loc Usages.Neutral;
+          unify_effects effects patt.patt_loc Usages.Var_n;
         end;
         effects
       )
