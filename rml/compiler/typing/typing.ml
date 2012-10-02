@@ -1072,13 +1072,15 @@ let rec type_of_expression env expr =
         let ty, u_p = type_of_expression new_env p in
         return ty (merge_effects [u_s; u_p; apply_effect s.expr_loc new_usage u_s])
 
-    | Rexpr_await_val (_,_,One,s,patt,p) ->
-        let _affine = true (* Always the case here since it is an "await one" *) in
+    | Rexpr_await_val (affine,_,One,s,patt,p) ->
 	let ty_s, u_s = type_of_expression env s in
 	let ty_emit, ty_get, u_emit, u_get = filter_event_or_err ty_s s in
         unify_expr s
           (constr_notabbrev list_ident [ty_emit])
           ty_get;
+        if not affine then begin
+          deep_unify Usages.Var_n ty_get patt.patt_loc;
+        end;
 	let gl_env, loc_env = type_of_pattern [] [] patt ty_emit in
 	assert (gl_env = []);
 	let new_env =
@@ -1091,7 +1093,7 @@ let rec type_of_expression env expr =
         let new_usage = Usages.mk_su
           expr.expr_loc
           Usages.Var_1
-          Usages.Affine
+          (if affine then Usages.Affine else Usages.Neutral)
         in
         let _, new_u_get = Usages.km_s new_usage in
         check_get_usage expr.expr_loc (Usages_misc.usage_of_type u_get) new_u_get;
