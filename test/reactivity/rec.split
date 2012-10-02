@@ -17,7 +17,7 @@ ${
 (*
   run_test:
    [
-    Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+    Bad 2 "instantaneous": "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
    ]
 *)
 
@@ -31,11 +31,17 @@ let rec process p = print_endline "Coucou"; run p
 
 $
 
-let process one = pause; pause; print_endline "Coucou"
+let process do_one = pause; pause; print_endline "Coucou"
 
 let rec process p n =
   if n > 0 then
-    (run one || run p (n-1))
+    (run do_one || run p (n-1))
+
+$
+
+let rec process p =
+  let q = p in
+  run q
 
 $
 
@@ -43,6 +49,14 @@ let rec process p =
  let r = ref (process ()) in
  r := p;
  run !r
+
+$
+
+let f x = x
+
+let rec process p =
+  let q = f p in
+  run q
 
 $
 
@@ -61,6 +75,16 @@ let test f =
 
 let process pb = run (test (fun x -> x))
 
+$
+
+let rec process y =
+  let p =
+    let x =
+      (process y)
+    in
+    run x
+  in
+  run p
 
 $
 
@@ -68,6 +92,35 @@ let landin q =
  let f = ref q in
  f := process (run q; run !f);
  run !f
+
+$
+
+let rec process p s =
+  present s then () else ();
+  run (p s)
+
+$
+
+let rec process p =
+  signal s in
+  emit s p;
+  await immediate one s(x) in
+  run x
+
+$
+
+let rec f _ =
+  (fun x -> process (run (f ()))) 0
+
+$
+
+let rec fix f x = f (fix f) x
+
+let process main =
+  let f =
+    (fun p -> fun v -> process (print_endline "xxx"; run (p v)))
+  in
+  run (fix f ())
 
 $
 

@@ -24,6 +24,12 @@ $
 
 let rec process p = pause; run p
 
+$
+
+let rec process p =
+  let process q = run p in
+  ()
+
 $$$bad
 ${
 (*
