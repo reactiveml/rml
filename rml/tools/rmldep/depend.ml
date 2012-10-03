@@ -68,7 +68,7 @@ let add_opt add_fn bv = function
 let rec add_type bv ty =
   match ty.pte_desc with
   | Ptype_var _ -> ()
-  | Ptype_arrow (t1, t2) -> add_type bv t1; add_type bv t2
+  | Ptype_arrow (t1, _, t2) -> add_type bv t1; add_type bv t2
   | Ptype_tuple tl -> List.iter (add_type bv) tl
   | Ptype_constr (id, tl) -> add bv id; List.iter (add_type bv) tl
   | Ptype_process (t, _) ->  add_type bv t
