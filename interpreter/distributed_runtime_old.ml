@@ -778,7 +778,19 @@ struct
       in
       List.iter (_eoi_control ctrl) ctrl.children
 
-    let rec has_next cd ctrl =
+    let rec has_next_cd cd =
+      print_debug "Before Waiting: %d@." !(cd.cd_remaining_async);
+      cd.cd_children_have_next <- false;
+      let has_next_ctrl = has_next_children cd cd.cd_top in
+      (* Awaits Mhas_next from all remote clock domains *)
+      C.flush ();
+      let site = get_site () in
+      while !(cd.cd_remaining_async) > 0 do
+        print_debug "Waiting for %d has_next msgs@." !(cd.cd_remaining_async);
+        Callbacks.dispatch_given_msg site.s_msg_queue site.s_callbacks (Mhas_next cd.cd_clock.ck_gid)
+      done;
+      has_next_ctrl || cd.cd_children_have_next
+    and has_next cd ctrl =
       if not ctrl.alive then
         false
       else
@@ -804,19 +816,6 @@ struct
     and has_next_children cd ctrl =
       not (D.is_empty_next ctrl.next) || List.exists (has_next cd) ctrl.children
     (* Computes has_next, waiting for child clock domains if necessary *)
-    and has_next_cd cd =
-      print_debug "Before Waiting: %d@." !(cd.cd_remaining_async);
-      cd.cd_children_have_next <- false;
-      let has_next_ctrl = has_next_children cd cd.cd_top in
-      (* Awaits Mhas_next from all remote clock domains *)
-      C.flush ();
-      let site = get_site () in
-      while !(cd.cd_remaining_async) > 0 do
-        print_debug "Waiting for %d has_next msgs@." !(cd.cd_remaining_async);
-        Callbacks.dispatch_given_msg site.s_msg_queue site.s_callbacks (Mhas_next cd.cd_clock.ck_gid)
-      done;
-      has_next_ctrl || cd.cd_children_have_next
-
 
     let macro_step_done cd =
       let has_next = has_next_cd cd in

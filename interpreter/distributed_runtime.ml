@@ -546,26 +546,8 @@ struct
       f_cd
         *)
 
-    let rec has_next site cd ctrl =
-      if not ctrl.alive then
-        false
-      else
-        match ctrl.kind with
-          | Clock_domain None -> false (* waiting for a Mhas_next message from this clock domain *)
-          | Clock_domain (Some ck) ->
-              let cd = get_clock_domain site ck in
-              has_next_cd site cd
-          | Kill _ | Kill_handler _ ->
-            ctrl.cond_v || has_next_children site cd ctrl
-          | Susp ->
-            let active = (ctrl.susp && ctrl.cond_v) || (not ctrl.susp && not (ctrl.cond_v)) in
-              active && has_next_children site cd ctrl
-          | When ->
-            not ctrl.susp && has_next_children site cd ctrl
-    and has_next_children site cd ctrl =
-      not (D.is_empty_next ctrl.next) || List.exists (has_next site cd) ctrl.children
     (* Computes has_next, waiting for child clock domains if necessary *)
-    and has_next_cd site cd =
+    let rec has_next_cd site cd =
       IFDEF RML_DEBUG THEN
         print_debug "Before Waiting: %d@." !(cd.cd_remaining_async)
       ELSE () END;
@@ -583,6 +565,24 @@ struct
           print_cd cd cd.cd_children_have_next has_next_ctrl
       ELSE () END;
       has_next_ctrl || cd.cd_children_have_next
+    and has_next site cd ctrl =
+      if not ctrl.alive then
+        false
+      else
+        match ctrl.kind with
+          | Clock_domain None -> false (* waiting for a Mhas_next message from this clock domain *)
+          | Clock_domain (Some ck) ->
+              let cd = get_clock_domain site ck in
+              has_next_cd site cd
+          | Kill _ | Kill_handler _ ->
+            ctrl.cond_v || has_next_children site cd ctrl
+          | Susp ->
+            let active = (ctrl.susp && ctrl.cond_v) || (not ctrl.susp && not (ctrl.cond_v)) in
+              active && has_next_children site cd ctrl
+          | When ->
+            not ctrl.susp && has_next_children site cd ctrl
+    and has_next_children site cd ctrl =
+      not (D.is_empty_next ctrl.next) || List.exists (has_next site cd) ctrl.children
 
     let prepare_has_next cd _ =
       (* the top clock domain does not receive Mhas_next msgs*)
