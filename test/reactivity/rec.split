@@ -46,6 +46,14 @@ let rec process p =
 $
 
 let rec process p =
+  let rec process q =
+    run p; pause; run q
+  in
+  run q
+
+$
+
+let rec process p =
  let r = ref (process ()) in
  r := p;
  run !r

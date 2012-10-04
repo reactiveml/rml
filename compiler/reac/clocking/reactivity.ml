@@ -53,7 +53,8 @@ let rec is_not_instantaneous index r = match r.desc with
         is_not_instantaneous index r || acc
       in
       List.fold_left aux false rl
-  | React_rec _ -> true (* otherwise there would be an error *)
+  | React_rec (_, r1) ->
+      let _ = is_not_instantaneous index r1 in true
   | React_run r | React_link r -> is_not_instantaneous index r
 
 and is_not_instantaneous_list index rl = match rl with
