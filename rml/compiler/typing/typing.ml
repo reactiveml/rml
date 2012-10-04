@@ -194,14 +194,13 @@ let get_gleff id loc =
     Effects.singleton id loc uvar uvar
 
 let apply_usage_constraint usage n ty ty_loc =
-  let su = Usages.mk_su ty_loc usage usage in
   if Effects.is_empty ty.type_effects
-  then begin
-    match n with
-      | Some n -> ty.type_effects <- Effects.singleton n ty_loc usage usage
-      | None -> ()
-  end
-  else ty.type_effects <- apply_effect ty_loc su ty.type_effects
+  then match n with
+    | Some n -> ty.type_effects <- Effects.singleton n ty_loc usage usage
+    | None -> ()
+  else
+    let su = Usages.mk_su ty_loc usage usage in
+    ty.type_effects <- apply_effect ty_loc su ty.type_effects
 
 (* checks that every type is defined *)
 (* and used with the correct arity *)
@@ -889,9 +888,7 @@ let rec type_of_expression env expr =
         let new_usage = Usages.send_u s.expr_loc affine in
         let new_u_emit, _ = Usages.km_s new_usage in
         check_emit_usage expr.expr_loc (Usages_misc.usage_of_type u_emit) new_u_emit;
-        if not affine then begin
-          deep_unify Usages.Var_n ty_e e.expr_loc
-        end;
+        if not affine then deep_unify Usages.Var_n ty_e e.expr_loc;
         unify_usage expr.expr_loc u_emit u_get new_usage;
 	unify_emit e.expr_loc ty ty_e;
         let effects = merge_effects [
