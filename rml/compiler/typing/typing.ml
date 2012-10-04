@@ -165,14 +165,13 @@ module Env = Symbol_table.Make (Ident)
 
 let gleff = Hashtbl.create 1023
 
-let apply_eff effs ty loc =
+let read_eff loc ty =
   let ty = type_repr ty in
   if Initialization.is_event ty then
     let _, _, u_emit, u_get = filter_event ty in
-    let eff = Usages_misc.mk_t loc u_emit u_get in
-    apply_effect loc eff effs
+    Usages_misc.mk_t loc u_emit u_get
   else
-    effs
+    Usages.mk_su loc Usages.Var Usages.Var
 
 let register_effects patt_vars effects =
   List.iter (fun (patterns, effects) ->
@@ -679,8 +678,9 @@ let rec type_of_expression env expr =
 		with Unify ->
 		  application_of_non_function_err fct ty_fct
 	      in
+              let t1_eff = read_eff arg.expr_loc t1 in
               let ty_arg, ef = type_expect env arg t1 in
-              let ty_arg_ef = apply_eff ef t1 arg.expr_loc in
+              let ty_arg_ef = apply_effect arg.expr_loc t1_eff ef in
               if ty_arg.type_neutral then
                 unify_effects ty_arg_ef arg.expr_loc Usages.Var_n;
 	      type_args (merge_effects [ty_arg_ef; u]) t2 args

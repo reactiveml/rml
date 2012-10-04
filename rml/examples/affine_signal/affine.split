@@ -87,6 +87,22 @@ $
 let process main s =
   !emit s || await immediate one s(x) in ()
 
+$
+let process client d s =
+  signal r in (
+    !emit s (d, r);
+    pause;
+    !await r(_) in (print_endline "Done")
+  )
+
+let process server f s =
+    !await s(requests) in
+    List.iter (fun (d,r) -> emit r (f d)) requests
+
+let process main f =
+  signal s in (
+    run (client 1 s) || run (server f s)
+  )
 $$$bad
 ${
 (*
