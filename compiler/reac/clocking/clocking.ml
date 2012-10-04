@@ -923,8 +923,11 @@ let rec schema_of_expression env expr =
 
     | Epresent (s,p1,p2) ->
         ignore (type_of_event_config ~force_activation_ck:true env s);
-        let ty = clock_of_expression env p1 in
-        type_expect env p2 ty;
+        let ty, r1 = clock_react_of_expression env p1 in
+        let r2 = type_react_expect env p2 ty in
+        (* r = r1 + (ck; r2) *)
+        let r2 = react_seq (react_carrier !activation_carrier) r2 in
+        set_current_react (react_or r1 r2);
         ty
 
     | Eawait (imm,s) ->

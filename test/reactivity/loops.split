@@ -73,6 +73,14 @@ let process pp = pause; print_endline "Coucou"
 
 let process m = run p pp
 
+$
+
+let process p =
+  signal s in
+  loop
+    present s then pause else ()
+  end
+
 $$$bad
 ${
 (*
@@ -130,3 +138,10 @@ let process p q =
 let process pp = print_endline "Coucou"
 
 let process m = run p pp
+
+$
+
+let process p =
+  loop
+    if true then () else pause
+  end
