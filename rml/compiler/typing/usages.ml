@@ -93,10 +93,12 @@ let add_u u1 u2 = match u1.node, u2.node with
   | Var, u | u, Var -> u
   | Zero_1, Zero_1 -> Zero_1
   | Zero_1, Affine | Affine, Zero_1 -> Affine
+  | Var_1, Var_1 -> Var_1
   | Var_1, Zero_1 | Zero_1, Var_1 -> Zero_1
   | Var_1, Affine | Affine, Var_1 -> Affine
   | Zero_n, Zero_n -> Zero_n
   | Zero_n, Neutral | Neutral, Zero_n -> Neutral
+  | Var_n, Var_n -> Var_n
   | Var_n, Zero_n | Zero_n, Var_n -> Zero_n
   | Var_n, Neutral | Neutral, Var_n -> Neutral
   | Neutral, Neutral -> Neutral
