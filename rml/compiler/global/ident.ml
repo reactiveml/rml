@@ -34,7 +34,7 @@ type kind =
 
 type t = { id: int; name: string; kind: kind; }
 
-let compare i1 i2 = compare i1.id i2.id
+let compare = Pervasives.compare
 
 let name i = i.name
 
