@@ -114,10 +114,6 @@ ${
 
 $}
 let process p s =
-  !emit s 1 ; pause ; !emit s 1
-
-$
-let process p s =
   (!await s(x) in x) ; pause ; (!await s(x) in x)
 
 $
@@ -162,38 +158,9 @@ let process main = let r = ref s in
   !emit s || !emit !r
 
 $
-signal x;;
-let process f x = !emit x 1 in
- process (run (f x) || run (f x))
-
-$
-signal x;;
-let f = fun x -> process (!emit x 1) in
- process (run (f x) || run (f x))
-
-$
 let id x = x
 let process p s =
   !emit (id s) 1 ; !emit (id s) 1
-
-$
-let process p s =
-  !emit s 1 || !emit s 1
-
-$
-let my_emit s v = !emit s v
-let process p s =
-  my_emit s 1 || my_emit s 1
-
-$
-(* The process main calls "envoyer s" which emits on "s"… in an affine
-way. Since process test calls main twice, the resulting composition
-should not be typable. *)
-let process envoyer s = !emit s ;;
-let process main s =
-  run (envoyer s)
-signal s;;
-let process test = run (main s) || run (main s);;
 
 $
 (* One cannot emit twice on an affine signal. *)
@@ -206,8 +173,8 @@ $
 let process test = signal s in !emit s || !emit s;;
 
 $
-let process p s =
-  (!await s(x) in x) || (await s(x) in x)
+let process f (s,_) = !emit s
+let process main = signal s in (!emit s || run (f (s,1)))
 
 $$$bad
 ${
@@ -336,6 +303,10 @@ $}
 let process p s =
   (await s(x) in x) || (!await s(x) in x)
 
+$
+let process p s =
+  (!await s(x) in x) || (await s(x) in x)
+
 $$$bad
 ${
 (*
@@ -393,16 +364,45 @@ $
 signal like 's'. *)
 let process test s r = emit s r || !emit r
 
-$$$bad
-${
-(*
-  run_test:
-   [
-     Bad 2 "This value is": "../../compiler/rmlc -I ../../stdlib/ -i"
-   ]
-*)
-
-$}
+$
 (* 'r' is an affine signal and should not be carried over a neutral
 signal like 's'. *)
 let process test s r = !emit r || emit s r
+
+$
+let process p s =
+  !emit s 1 ; pause ; !emit s 1
+
+$
+signal x;;
+let process f x = !emit x 1 in
+ process (run (f x) || run (f x))
+
+$
+signal s;;
+let process f x = !emit x in
+ process (run (f s) || run (f s))
+
+$
+signal x;;
+let f = fun x -> process (!emit x 1) in
+ process (run (f x) || run (f x))
+
+$
+let process p s =
+  !emit s 1 || !emit s 1
+
+$
+let my_emit s v = !emit s v
+let process p s =
+  my_emit s 1 || my_emit s 1
+
+$
+(* The process main calls "envoyer s" which emits on "s"… in an affine
+way. Since process test calls main twice, the resulting composition
+should not be typable. *)
+let process envoyer s = !emit s ;;
+let process main s =
+  run (envoyer s)
+signal s;;
+let process test = run (main s) || run (main s);;

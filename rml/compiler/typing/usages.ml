@@ -147,6 +147,14 @@ let max_s u v =
     (max_u u1.node v1.node)
     (max_u u2.node v2.node)
 
+let constraints su =
+  let loc, emit, get = km_su su in
+  let getc = function
+  | Affine  | Zero_1 | Var_1 -> Var_1
+  | Neutral | Zero_n | Var_n -> Var_n
+  | _ -> Var in
+  mk_su loc (getc emit) (getc get)
+
 let mk_null =
   mk_loc Location.none (Var, Var)
 

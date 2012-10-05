@@ -45,6 +45,8 @@ val mk_su : Location.t -> usage -> usage -> signal_usage
 val km_su : signal_usage -> Location.t * usage * usage
 val km_s : signal_usage -> usage * usage
 
+val constraints : signal_usage -> signal_usage
+
 val update_loc : Location.t -> signal_usage -> signal_usage
 
 val send_u : Location.t -> bool -> signal_usage

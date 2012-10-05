@@ -54,6 +54,11 @@ val apply :
   t ->
   t
 
+val apply_m :
+  t ->
+  t ->
+  t
+
 val gen :
   (Ident.t -> bool) ->
   t ->

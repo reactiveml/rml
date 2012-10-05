@@ -70,11 +70,32 @@ let apply u m =
   M.fold
     (fun k v t ->
       match k with
-        | Key.Id _ -> M.add k (add_s u v) t
+        | Key.Id _ -> M.add k (add_s u (Usages.constraints v)) t
         | Key.Var _ -> M.add k (max_s u v) t
     )
     m
     empty
+
+let apply_m m1 m2 =
+  let vars = M.fold
+    (fun k v t ->
+      match k with
+        | Key.Id _ -> t
+        | Key.Var k -> v::t
+    )
+    m2
+    [] in
+  match vars with
+    | [] -> m1
+    | u::_ ->
+        M.fold
+          (fun k v t ->
+            match k with
+              | Key.Id _ -> M.add k u t
+              | Key.Var _ -> M.add k (max_s u v) t
+          )
+          m1
+          empty
 
 let update_loc m loc =
   M.map (Usages.update_loc loc) m

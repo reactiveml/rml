@@ -247,55 +247,85 @@ let rec unify expected_ty actual_ty =
       with Usages_misc.Unify _ ->
         raise Unify
     else
-      let new_effects = merge_effects [expected_ty.type_effects; actual_ty.type_effects] in
       match expected_ty.type_desc, actual_ty.type_desc with
 	Type_var, _ ->
+          let new_effects = Effects.apply_m
+            expected_ty.type_effects
+            actual_ty.type_effects
+          in
 	  occur_check expected_ty.type_level expected_ty actual_ty;
-          actual_ty.type_effects <- new_effects;
-          expected_ty.type_effects <- new_effects;
+          if not (Effects.is_empty new_effects) then expected_ty.type_effects <- new_effects;
 	  expected_ty.type_desc <- Type_link(actual_ty)
       | _, Type_var ->
+          let new_effects = Effects.apply_m
+            actual_ty.type_effects
+            expected_ty.type_effects
+          in
 	  occur_check actual_ty.type_level actual_ty expected_ty;
-          actual_ty.type_effects <- new_effects;
-          expected_ty.type_effects <- new_effects;
+          if not (Effects.is_empty new_effects) then actual_ty.type_effects <- new_effects;
 	  actual_ty.type_desc <- Type_link(expected_ty)
       | Type_product(l1), Type_product(l2) ->
-          actual_ty.type_effects <- new_effects;
-          expected_ty.type_effects <- new_effects;
 	  begin try
 	    List.iter2 unify l1 l2
 	  with
 	  | Invalid_argument _ -> raise Unify
-	  end
+	  end;
+          let new_effects = Effects.apply_m
+            actual_ty.type_effects
+            expected_ty.type_effects
+          in
+          let l_effects = Effects.flatten (List.map (fun ty -> ty.type_effects) l2) in
+          let new_effects = Effects.merge new_effects l_effects in
+          if not (Effects.is_empty new_effects) then actual_ty.type_effects <- new_effects
       | Type_arrow(ty1, ty2), Type_arrow(ty3, ty4) ->
+	  unify ty1 ty3;
+	  unify ty2 ty4;
+          let l_effects = Effects.flatten [ ty3.type_effects ; ty4.type_effects ] in
+          let new_effects = Effects.apply_m
+            actual_ty.type_effects
+            expected_ty.type_effects
+          in
+          let new_effects = Effects.merge new_effects l_effects in
           let n = expected_ty.type_neutral || actual_ty.type_neutral in
           expected_ty.type_neutral <- n;
           actual_ty.type_neutral <- n;
-          actual_ty.type_effects <- new_effects;
-          expected_ty.type_effects <- new_effects;
-	  unify ty1 ty3;
-	  unify ty2 ty4
+          if not (Effects.is_empty new_effects) then actual_ty.type_effects <- new_effects
       |	Type_constr(c1, ty_l1),
 	  Type_constr(c2, ty_l2) when same_type_constr c1 c2 ->
-          actual_ty.type_effects <- new_effects;
-          expected_ty.type_effects <- new_effects;
 	  begin try
 	    List.iter2 unify ty_l1 ty_l2
 	  with
 	  | Invalid_argument _ -> raise Unify
 	  end;
+          let l_effects = Effects.flatten (List.map (fun ty -> ty.type_effects) ty_l2) in
+          let new_effects = Effects.apply_m
+            actual_ty.type_effects
+            expected_ty.type_effects
+          in
+          let new_effects = Effects.merge new_effects l_effects in
+          if not (Effects.is_empty new_effects) then actual_ty.type_effects <- new_effects;
       | Type_constr
 	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } }, args),
 	_ ->
-          actual_ty.type_effects <- new_effects;
-          expected_ty.type_effects <- new_effects;
+          let l_effects = Effects.flatten (List.map (fun ty -> ty.type_effects) args) in
+          let new_effects = Effects.apply_m
+            expected_ty.type_effects
+            actual_ty.type_effects
+          in
+          let new_effects = Effects.merge new_effects l_effects in
+          if not (Effects.is_empty new_effects) then expected_ty.type_effects <- new_effects;
 	  unify (expand_abbrev params body args) actual_ty
       | _,
 	Type_constr
 	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
-	    actual_ty.type_effects <- new_effects;
-	    expected_ty.type_effects <- new_effects;
-	    unify expected_ty (expand_abbrev params body args)
+          let l_effects = Effects.flatten (List.map (fun ty -> ty.type_effects) args) in
+          let new_effects = Effects.apply_m
+            actual_ty.type_effects
+            expected_ty.type_effects
+          in
+          let new_effects = Effects.merge new_effects l_effects in
+	  if not (Effects.is_empty new_effects) then actual_ty.type_effects <- new_effects;
+	  unify expected_ty (expand_abbrev params body args)
       | Type_process(ty1, pi1), Type_process(ty2, pi2) ->
 	  begin match pi1.proc_static, pi2.proc_static with
 	  | None, None -> ()
@@ -304,8 +334,15 @@ let rec unify expected_ty actual_ty =
 	  | Some ps1, Some ps2 ->
 	      pi1.proc_static <- Some (Proc_unify (ps1, ps2))
 	  end;
-          actual_ty.type_effects <- new_effects;
-          expected_ty.type_effects <- new_effects;
+          let new_effects = merge_effects
+            [ expected_ty.type_effects;
+              actual_ty.type_effects
+            ]
+          in
+          if not (Effects.is_empty new_effects) then (
+            actual_ty.type_effects <- new_effects;
+            expected_ty.type_effects <- new_effects;
+          );
 	  unify ty1 ty2
       | _ -> raise Unify
 

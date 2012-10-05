@@ -597,6 +597,26 @@ let mem_gen_env patt_expr_list env =
   let mem_glb_env x = Sid.mem x globals in
   fun x -> (mem_glb_env) x && not (mem_let_env x)
 
+let rec gen_ty_eff f ty = match ty.type_desc with
+  | Type_var ->
+      ty.type_effects <- Effects.gen f ty.type_effects
+  | Type_link (ty) ->
+      ty.type_effects <- Effects.gen f ty.type_effects;
+      gen_ty_eff f ty
+  | Type_product(l) ->
+      ty.type_effects <- Effects.gen f ty.type_effects;
+      List.iter (gen_ty_eff f) l
+  | Type_arrow(ty1,ty2) ->
+      ty.type_effects <- Effects.gen f ty.type_effects;
+      gen_ty_eff f ty1;
+      gen_ty_eff f ty2
+  | Type_constr(c,l) ->
+      ty.type_effects <- Effects.gen f ty.type_effects;
+      List.iter (gen_ty_eff f) l
+  | Type_process(ty,_) ->
+      ty.type_effects <- Effects.gen f ty.type_effects;
+      gen_ty_eff f ty
+
 (* Typing of expressions *)
 let rec type_of_expression env expr =
   let t =
@@ -664,12 +684,11 @@ let rec type_of_expression env expr =
 		with Unify ->
 		  application_of_non_function_err fct ty_fct
 	      in
-              let t1_eff = read_eff arg.expr_loc t1 in
+              gen_ty_eff (mem_gen_env [] env) t1;
               let ty_arg, ef = type_expect env arg t1 in
-              let ty_arg_ef = apply_effect arg.expr_loc t1_eff ef in
               if ty_arg.type_neutral then
-                unify_effects ty_arg_ef arg.expr_loc Usages.Var_n;
-	      type_args (merge_effects [ty_arg_ef; u]) t2 args
+                unify_effects ef arg.expr_loc Usages.Var_n;
+	      type_args (merge_effects [ef; u]) t2 args
 	in
 	type_args effects_f ty_fct args
 
@@ -750,7 +769,7 @@ let rec type_of_expression env expr =
 	if mut = Immutable then label_not_mutable_err expr label.gi;
 	let _, u1 = type_expect env e1 ty_arg in
 	let _, u2 = type_expect env e2 ty_res in
-	type_unit, (merge_effects [u1; u2])
+	return (Def_types.constr_notabbrev unit_ident []) (merge_effects [u1; u2])
 
     | Rexpr_constraint(e,t) ->
 	let expected_ty = instance (full_type_of_type_expression t) in
@@ -812,13 +831,13 @@ let rec type_of_expression env expr =
     | Rexpr_while (e1,e2) ->
         let _, u1 = type_expect env e1 type_bool in
 	let u2 = type_statement env e2 in
-	type_unit, (merge_effects [u1; u2])
+	return (Def_types.constr_notabbrev unit_ident []) (merge_effects [u1; u2])
 
     | Rexpr_for(i,e1,e2,flag,e3) ->
         let _, u1 = type_expect env e1 type_int in
         let _, u2 = type_expect env e2 type_int in
 	let u3 = type_statement (Env.add i (forall [] type_int) env) e3 in
-	type_unit, (merge_effects [u1; u2; u3])
+	return (Def_types.constr_notabbrev unit_ident []) (merge_effects [u1; u2; u3])
 
     | Rexpr_seq e_list ->
 	let rec f u l =
@@ -864,8 +883,10 @@ let rec type_of_expression env expr =
         check_emit_usage expr.expr_loc (Usages_misc.usage_of_type u_emit) new_u_emit;
         unify_usage expr.expr_loc u_emit u_get new_usage;
 	unify_emit expr.expr_loc type_unit ty;
-        let effects = apply_effect s.expr_loc new_usage u_s in
-	type_unit, effects
+        let u_s = apply_effect s.expr_loc new_usage u_s
+        and ty_s = type_repr ty_s in
+        ty_s.type_effects <- u_s;
+	return (Def_types.constr_notabbrev unit_ident []) u_s
 
     | Rexpr_emit (affine, s, Some e) ->
 	let ty_s, u_s = type_of_expression env s in
@@ -877,12 +898,14 @@ let rec type_of_expression env expr =
         if not affine then deep_unify Usages.Var_n ty_e e.expr_loc;
         unify_usage expr.expr_loc u_emit u_get new_usage;
 	unify_emit e.expr_loc ty ty_e;
+        let u_s = apply_effect s.expr_loc new_usage u_s
+        and ty_s = type_repr ty_s in
+        ty_s.type_effects <- u_s;
         let effects = merge_effects [
-          u_s;
           ty_e.type_effects;
-          apply_effect s.expr_loc new_usage u_s
+          u_s
         ] in
-	type_unit, effects
+	return (Def_types.constr_notabbrev unit_ident []) effects
 
     | Rexpr_signal ((s,te_opt), combine_opt, e) ->
 	let ty_emit = new_var() in
@@ -912,35 +935,35 @@ let rec type_of_expression env expr =
         let ty, effects_e = type_of_expression (Env.add s (forall [] ty_s) env) e in
         ty, effects_e
 
-    | Rexpr_nothing -> type_unit, Effects.empty
+    | Rexpr_nothing -> return (Def_types.constr_notabbrev unit_ident []) Effects.empty
 
-    | Rexpr_pause _ -> type_unit, Effects.empty
+    | Rexpr_pause _ -> return (Def_types.constr_notabbrev unit_ident []) Effects.empty
 
     | Rexpr_halt _ -> new_var(), Effects.empty
 
     | Rexpr_loop (None, p) ->
         let effects = type_statement env p in
-        type_unit, effects
+	return (Def_types.constr_notabbrev unit_ident []) effects
 
     | Rexpr_loop (Some n, p) ->
         let _, u1 = type_expect env n type_int in
         let u2 = type_statement env p in
-	type_unit, (merge_effects [u1; u2])
+	return (Def_types.constr_notabbrev unit_ident []) (merge_effects [u1; u2])
 
     | Rexpr_fordopar(i,e1,e2,flag,p) ->
         let _, u1 = type_expect env e1 type_int in
         let _, u2 = type_expect env e2 type_int in
 	let u3 = type_statement (Env.add i (forall [] type_int) env) p in
-	type_unit, (merge_effects [u1; u2; u3])
+	return (Def_types.constr_notabbrev unit_ident []) (merge_effects [u1; u2; u3])
 
     | Rexpr_par p_list ->
         let effects_l = List.map (fun p -> type_statement env p) p_list in
-	type_unit, (merge_effects effects_l)
+	return (Def_types.constr_notabbrev unit_ident []) (merge_effects effects_l)
 
     | Rexpr_merge (p1,p2) ->
         let u1 = type_statement env p1 in
         let u2 = type_statement env p2 in
-	type_unit, (merge_effects [u1; u2])
+	return (Def_types.constr_notabbrev unit_ident []) (merge_effects [u1; u2])
 
     | Rexpr_run (e) ->
 	let ty_e, u_e = type_of_expression env e in
@@ -1029,7 +1052,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_await (affine,_,s) ->
         let effects = type_of_event_config env s in
-        type_unit, effects
+        return (Def_types.constr_notabbrev unit_ident []) effects
 
     | Rexpr_await_val (affine,_,All,s,patt,p) ->
 	let ty_s, u_s = type_of_expression env s in
@@ -1053,7 +1076,10 @@ let rec type_of_expression env expr =
         check_get_usage expr.expr_loc (Usages_misc.usage_of_type u_get) new_u_get;
         unify_usage expr.expr_loc u_emit u_get new_usage;
         let ty, u_p = type_of_expression new_env p in
-        return ty (merge_effects [u_s; u_p; apply_effect s.expr_loc new_usage u_s])
+        let u_s = apply_effect s.expr_loc new_usage u_s
+        and ty_s = type_repr ty_s in
+        ty_s.type_effects <- u_s;
+        return ty (merge_effects [u_p; u_s])
 
     | Rexpr_await_val (affine,_,One,s,patt,p) ->
 	let ty_s, u_s = type_of_expression env s in
@@ -1082,7 +1108,10 @@ let rec type_of_expression env expr =
         check_get_usage expr.expr_loc (Usages_misc.usage_of_type u_get) new_u_get;
         unify_usage expr.expr_loc u_emit u_get new_usage;
         let ty, u_p = type_of_expression new_env p in
-        return ty (merge_effects [u_s; u_p; apply_effect s.expr_loc new_usage u_s])
+        let u_s = apply_effect s.expr_loc new_usage u_s
+        and ty_s = type_repr ty_s in
+        ty_s.type_effects <- u_s;
+        return ty (merge_effects [u_p; u_s])
 
   in
   expr.expr_type <- fst t;
@@ -1169,7 +1198,7 @@ and type_let is_rec env patt_expr_list =
 and type_expect env expr expected_ty =
   let actual_ty, effects = type_of_expression env expr in
   let () = unify_expr expr expected_ty actual_ty in
-  return actual_ty effects
+  return actual_ty actual_ty.type_effects
 
 (* Typing of statements (expressions whose values are ignored) *)
 and type_statement env expr =
