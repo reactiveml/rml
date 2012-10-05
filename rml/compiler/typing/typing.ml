@@ -82,9 +82,7 @@ let unify_get_usage loc expected_ty actual_ty =
 let apply_effect loc u effs =
   try
     Effects.apply u effs
-  with Usages.Forbidden_signal_usage (u1, u2) ->
-    let loc1 ,_ ,_ = Usages.km_su u1 in
-    let loc2 ,_ ,_ = Usages.km_su u2 in
+  with Usages.Forbidden_signal_usage (loc1, loc2) ->
     usage_wrong_type_err loc1 loc2
 
 let unify_run loc expected_ty actual_ty =
@@ -93,9 +91,7 @@ let unify_run loc expected_ty actual_ty =
   with
     | Unify ->
         run_wrong_type_err loc actual_ty expected_ty
-    | Usages.Forbidden_signal_usage (u1, u2) ->
-        let loc1 ,_ ,_ = Usages.km_su u1 in
-        let loc2 ,_ ,_ = Usages.km_su u2 in
+    | Usages.Forbidden_signal_usage (loc1, loc2) ->
         usage_wrong_type_err loc1 loc2
 
 let unify_var loc expected_ty actual_ty =
@@ -104,9 +100,7 @@ let unify_var loc expected_ty actual_ty =
   with
     | Unify ->
         var_wrong_type_err loc actual_ty expected_ty
-    | Usages.Forbidden_signal_usage (u1, u2) ->
-        let loc1 ,_ ,_ = Usages.km_su u1 in
-        let loc2 ,_ ,_ = Usages.km_su u2 in
+    | Usages.Forbidden_signal_usage (loc1, loc2) ->
         usage_wrong_type_err loc1 loc2
 
 (* special cases of unification *)

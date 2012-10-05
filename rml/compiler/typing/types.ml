@@ -231,9 +231,7 @@ let expand_abbrev params body args =
 let merge_effects effs =
   try
     Effects.flatten effs
-  with Usages.Forbidden_signal_usage (u1, u2) ->
-    let loc1 ,_ ,_ = Usages.km_su u1 in
-    let loc2 ,_ ,_ = Usages.km_su u2 in
+  with Usages.Forbidden_signal_usage (loc1, loc2) ->
     Typing_errors.usage_wrong_type_err loc1 loc2
 
 (* unification *)
