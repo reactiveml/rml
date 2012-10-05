@@ -159,14 +159,6 @@ module Env = Symbol_table.Make (Ident)
 
 let gleff = Hashtbl.create 1023
 
-let read_eff loc ty =
-  let ty = type_repr ty in
-  if Initialization.is_event ty then
-    let _, _, u_emit, u_get = filter_event ty in
-    Usages_misc.mk_t loc u_emit u_get
-  else
-    Usages.mk_su loc Usages.Var Usages.Var
-
 let register_effects patt_vars effects =
   List.iter (fun (patterns, effects) ->
     List.iter (function
