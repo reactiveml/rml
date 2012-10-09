@@ -844,6 +844,7 @@ let rec schema_of_expression env expr =
             type_expect env p Clocks_utils.static;
             Clocks_utils.static
         | Some _ ->
+            let cont_react = ref no_react in
             begin match s.conf_desc with
             | Cpresent s ->
                 let ty_s = clock_of_expression env s in
@@ -853,7 +854,7 @@ let rec schema_of_expression env expr =
                   with Unify ->
                     non_event_err s
                 in
-                let ty_body = clock_of_expression env p in
+                let ty_body, r_body = clock_react_of_expression env p in
                 opt_iter
                   (fun (patt,proc) ->
                     let gl_env, loc_env = clock_of_pattern [] [] env patt ty_get in
@@ -863,8 +864,10 @@ let rec schema_of_expression env expr =
                         (fun env (x, ty) -> Env.add x (forall [] [] [] [] ty) env)
                         env loc_env
                     in
-                    type_expect new_env proc ty_body)
+                    let r = type_react_expect new_env proc ty_body in
+                    cont_react := r)
                   patt_proc_opt;
+                set_current_react (react_or r_body (react_seq (react_carrier ty_ck) !cont_react));
                 ty_body
             | _ ->
                 non_event_err2 s

@@ -30,6 +30,13 @@ let rec process p =
   let process q = run p in
   ()
 
+$
+
+let rec process p s =
+ do
+   pause
+ until s -> run (p s) done
+
 $$$bad
 ${
 (*
