@@ -197,7 +197,7 @@ let make_react r =
     level = generic;
     index = names#name; }
 
-let no_react =
+let no_react () =
   { desc = React_empty;
     level = generic;
     index = -1; }
@@ -317,7 +317,7 @@ let clock_of_sch sch =
 (* activation clock*)
 let activation_carrier = ref topck_carrier
 let current_effect = ref no_effect
-let current_react = ref no_react
+let current_react = ref (no_react ())
 
 (* To take the canonical representative of a type.
    We do path compression there. *)
@@ -458,7 +458,7 @@ let rec remove_ck_from_react ck r = match r.desc with
   | React_empty | React_top | React_var -> r
   | React_carrier c ->
       if (carrier_repr c).desc = ck.desc then
-        no_react
+        no_react ()
       else
         r
   | React_seq rl ->
@@ -924,7 +924,7 @@ let rec occur_check level index ck =
           check ck;
           carrier_occur_check level no_carrier act_car;
           effect_occur_check level no_effect eff;
-          react_occur_check level no_react r
+          react_occur_check level (no_react ()) r
       | Clock_forall sch -> (*TODO*) ()
   in
   (*Printf.eprintf "Occur_check : level:%d   index:%a   ck:%a\n"  level  Clocks_printer.output index  Clocks_printer.output ck;*)
@@ -993,7 +993,7 @@ and param_occur_check level index =
   clock_param_iter (occur_check level index)
     (carrier_occur_check level no_carrier)
     (effect_occur_check level no_effect)
-    (react_occur_check level no_react)
+    (react_occur_check level (no_react ()))
 
 (* the occur check *)
 let rec skolem_check skolems ck =
