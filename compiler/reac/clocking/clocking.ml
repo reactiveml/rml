@@ -1084,6 +1084,7 @@ let rec schema_of_expression env expr =
   in
   expr.e_clock <- t;
   Stypes.record (Ti_expr expr);
+  Reactivity.check_exp expr;
   t
 
 and clock_of_expression env e =
@@ -1373,6 +1374,7 @@ let impl info_chan has_intf item =
 
   | Iopen _ -> ()
   );
+  Reactivity.check_impl item;
   item
 
 (* Typing of interface items *)

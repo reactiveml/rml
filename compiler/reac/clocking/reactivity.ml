@@ -53,8 +53,8 @@ let rec is_not_instantaneous index r = match r.desc with
         is_not_instantaneous index r || acc
       in
       List.fold_left aux false rl
-  | React_rec (_, r1) ->
-      let _ = is_not_instantaneous index r1 in true
+  | React_rec (_, _, r1) ->
+      is_not_instantaneous index r1
   | React_run r | React_link r -> is_not_instantaneous index r
 
 and is_not_instantaneous_list index rl = match rl with
@@ -87,11 +87,16 @@ and check_react r = match r.desc with
   | React_var | React_top | React_empty | React_carrier _ -> ()
   | React_seq rl | React_or  rl | React_par rl ->
       List.iter check_react rl
-  | React_rec (var, r1) ->
+  | React_rec (already_checked, var, r1) ->
       (* first check the body *)
       check_react r1;
       (* then check if this recursion is ok *)
-      ignore (is_not_instantaneous var.index r1)
+      if not already_checked then (
+        try
+          ignore (is_not_instantaneous var.index r1)
+        with
+          | Bad_recursion -> r.desc <- React_rec (true, var, r1); raise Bad_recursion
+      )
   | React_run r1 | React_link r1 -> check_react r1
 
 let rec check_nottop_clock ck = match ck.desc with
@@ -112,7 +117,9 @@ and check_nottop_react r = match r.desc with
   | React_var | React_empty | React_carrier _ -> ()
   | React_seq rl | React_or  rl | React_par rl ->
       List.iter check_nottop_react rl
-  | React_rec (_, r1) -> check_nottop_react r1
+  | React_rec (already_checked, _, r1) ->
+      if not already_checked then
+        check_nottop_react r1
   | React_run r1 | React_link r1 -> check_nottop_react r1
 
 let check_react r =
@@ -133,32 +140,33 @@ let check_nottop_clock ck =
   with
     | Bad_recursion -> true
 
+let check_exp e =  match e.e_desc with
+  | Erun _ -> if check_react e.e_react then instantaneous_run_err e e.e_react
+  | Eloop _ -> if check_react e.e_react then instantaneous_loop_err e e.e_react
+  | Elet (Recursive, p_e_list, _) ->
+      let check_exp (_, e) =
+        if check_nottop_clock e.e_clock then instantaneous_rec_err e e.e_clock
+      in
+      List.iter check_exp p_e_list
+  | Enewclock (_, _, None, _) -> (* only check domains without by *)
+      if check_react e.e_react then nonreactive_domain_err e e.e_react
+  | _ -> ()
+
+let check_impl impl = match impl.impl_desc with
+  | Ilet(Recursive, p_e_list) ->
+      let check_exp (_, e) =
+        if check_nottop_clock e.e_clock then instantaneous_rec_err e e.e_clock
+      in
+      List.iter check_exp p_e_list
+  | _ -> ()
+
 let expression funs acc e =
   let e, _ = Reac_mapfold.expression funs acc e in
-  let _ =
-    match e.e_desc with
-      | Erun _ -> if check_react e.e_react then instantaneous_run_err e e.e_react
-      | Eloop _ -> if check_react e.e_react then instantaneous_loop_err e e.e_react
-      | Elet (Recursive, p_e_list, _) ->
-          let check_exp (_, e) =
-            if check_nottop_clock e.e_clock then instantaneous_rec_err e e.e_clock
-          in
-          List.iter check_exp p_e_list
-      | Enewclock (_, _, None, _) -> (* only check domains without by *)
-          if check_react e.e_react then nonreactive_domain_err e e.e_react
-      | _ -> ()
-  in
+  check_exp e;
   e, acc
 
 let impl _ impl =
   let funs = { Reac_mapfold.defaults with Reac_mapfold.expression = expression } in
   let _ = Reac_mapfold.impl_item_it funs () impl in
-  begin match impl.impl_desc with
-    | Ilet(Recursive, p_e_list) ->
-        let check_exp (_, e) =
-          if check_nottop_clock e.e_clock then instantaneous_rec_err e e.e_clock
-        in
-        List.iter check_exp p_e_list
-    | _ -> ()
-  end;
+  check_impl impl;
   impl

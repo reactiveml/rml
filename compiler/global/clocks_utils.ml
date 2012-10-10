@@ -296,7 +296,7 @@ let rec new_clock_var_list n =
 let react_loop r =
   let var = new_react_var () in
   let body = react_seq r var in
-  make_react (React_rec (var, body))
+  make_react (React_rec (false, var, body))
 
 
 let forall ck_vars car_vars eff_vars react_vars typ =
@@ -469,8 +469,8 @@ let rec remove_ck_from_react ck r = match r.desc with
       { r with desc = React_or (List.map (remove_ck_from_react ck) rl) }
   | React_run r1 ->
       { r with desc = React_run (remove_ck_from_react ck r1) }
-  | React_rec (r1, r2) ->
-      { r with desc = React_rec (r1, remove_ck_from_react ck r2) }
+  | React_rec (b, r1, r2) ->
+      { r with desc = React_rec (b, r1, remove_ck_from_react ck r2) }
   | React_link link -> remove_ck_from_react ck link
 
 let rec subst_var_react index subst r = match r.desc with
@@ -484,8 +484,8 @@ let rec subst_var_react index subst r = match r.desc with
       { r with desc = React_or (List.map (subst_var_react index subst) rl) }
   | React_run r1 ->
       { r with desc = React_run (subst_var_react index subst r1) }
-  | React_rec (r1, r2) ->
-      { r with desc = React_rec (r1, subst_var_react index subst r2) }
+  | React_rec (b, r1, r2) ->
+      { r with desc = React_rec (b, r1, subst_var_react index subst r2) }
   | React_link link -> subst_var_react index subst link
 
 (* To generalize a type *)
@@ -587,7 +587,7 @@ and gen_react is_gen r =
     | React_carrier c -> r.level <- gen_carrier is_gen c
     | React_seq rl | React_par rl | React_or rl ->
         r.level <- gen_react_list is_gen rl
-    | React_rec (r1, r2) -> (*TODO: generaliser var?*)
+    | React_rec (_, r1, r2) -> (*TODO: generaliser var?*)
         r.level <- min (gen_react is_gen r1) (gen_react is_gen r2)
     | React_run r2 ->
         let _ = react_repr r2 in
@@ -675,7 +675,7 @@ let free_clock_vars level ck =
       | React_carrier c -> free_vars_carrier c
       | React_seq rl | React_par rl | React_or rl ->
           List.iter free_vars_react rl
-      | React_rec (r1, r2) -> free_vars_react r1; free_vars_react r2
+      | React_rec (_, r1, r2) -> free_vars_react r1; free_vars_react r2
       | React_run r  | React_link r -> free_vars_react r
   and free_vars_param p =
     clock_param_iter free_vars free_vars_carrier free_vars_effect free_vars_react p
@@ -846,9 +846,9 @@ and copy_subst_react m r =
           make_react (React_or (List.map (copy_subst_react m) rl))
         else
           r
-    | React_rec (r1, r2) ->
+    | React_rec (b, r1, r2) ->
         if level = generic then
-          make_react (React_rec (copy_subst_react m r1, copy_subst_react m r2))
+          make_react (React_rec (b, copy_subst_react m r1, copy_subst_react m r2))
         else
           r
     | React_run r2 ->
@@ -982,7 +982,7 @@ and react_occur_check_is_rec level index r =
       | React_seq rl | React_par rl | React_or rl ->
           List.iter check rl
       | React_run r1 -> check r1
-      | React_rec (_, r2) -> (* TODO: parcourir r1 ?*)
+      | React_rec (_, _, r2) -> (* TODO: parcourir r1 ?*)
           check r2
       | React_link link -> check link
   in
@@ -1052,7 +1052,7 @@ and react_skolem_check skolems r =
       | React_seq rl | React_par rl | React_or rl ->
           List.iter check rl
       | React_run r1 -> check r1
-      | React_rec (_, r2) -> check r2
+      | React_rec (_, _, r2) -> check r2
       | React_link link -> check link
   in
   check r
@@ -1247,7 +1247,7 @@ and react_unify expected_r actual_r =
             if is_rec then (
               let new_var = new_react_var () in
               let body = subst_var_react expected_r.index new_var actual_r in
-              let new_r = make_react (React_rec (new_var, body)) in
+              let new_r = make_react (React_rec (false, new_var, body)) in
               expected_r.desc <- React_link new_r
             ) else
               expected_r.desc <- React_link actual_r
@@ -1256,7 +1256,7 @@ and react_unify expected_r actual_r =
             if is_rec then (
               let new_var = new_react_var () in
               let body = subst_var_react actual_r.index new_var expected_r in
-              let new_r = make_react (React_rec (new_var, body)) in
+              let new_r = make_react (React_rec (false, new_var, body)) in
               actual_r.desc <- React_link new_r
             ) else
               actual_r.desc <- React_link expected_r

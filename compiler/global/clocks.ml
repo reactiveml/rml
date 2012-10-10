@@ -84,7 +84,7 @@ and react_effect_desc =
     | React_seq of react_effect list
     | React_par of react_effect list
     | React_or of react_effect list
-    | React_rec of react_effect * react_effect
+    | React_rec of bool * react_effect * react_effect
     | React_run of react_effect
     | React_link of react_effect
 
