@@ -194,7 +194,7 @@ let clock_topck =
 
 let make_react r =
   { desc = r;
-    level = generic;
+    level = !current_level;
     index = names#name; }
 
 let no_react () =
@@ -210,12 +210,12 @@ let react_carrier c = make_react (React_carrier c)
 
 let react_seq r1 r2 = match r1.desc, r2.desc with
   | React_seq rl1, React_seq rl2 -> make_react (React_seq (rl1@rl2))
-    | React_seq rl1, _ -> make_react (React_seq (rl1 @ [r2]))
-    | _, React_seq rl2 -> make_react (React_seq (r1::rl2))
-    | React_empty, _ -> r2
-    | _, React_empty -> r1
-    | React_carrier c1, React_carrier c2 when c1 == c2 -> r1
-    | _, _ -> make_react (React_seq [r1; r2])
+  | React_seq rl1, _ -> make_react (React_seq (rl1 @ [r2]))
+  | _, React_seq rl2 -> make_react (React_seq (r1::rl2))
+  | React_empty, _ -> r2
+  | _, React_empty -> r1
+  | React_carrier c1, React_carrier c2 when c1 == c2 -> r1
+  | _, _ -> make_react (React_seq [r1; r2])
 
 let react_par r1 r2 =
   let desc = match r1.desc, r2.desc with
@@ -576,6 +576,12 @@ and gen_effect is_gen eff =
 
 and gen_react is_gen r =
   let r = react_repr r in
+  if r.level > !current_level then (
+    if is_gen then
+      r.level <- generic
+    else
+      r.level <- !current_level
+  );
   (match r.desc with
     | React_empty | React_top -> ()
     | React_carrier c -> r.level <- gen_carrier is_gen c
@@ -587,12 +593,8 @@ and gen_react is_gen r =
         let _ = react_repr r2 in
         r.level <- gen_react is_gen r2
     | React_var ->
-        if r.level > !current_level then
-          if is_gen then (
-            r.level <- generic;
-            list_of_react_vars := r :: !list_of_react_vars
-          ) else
-            r.level <- !current_level
+        if r.level > !current_level && is_gen then
+          list_of_react_vars := r :: !list_of_react_vars
     | React_link link -> r.level <- gen_react is_gen link
   );
   r.level
@@ -814,7 +816,8 @@ and copy_subst_effect m eff =
 and copy_subst_react m r =
   let level = r.level in
   match r.desc with
-    | React_empty | React_top -> r
+    | React_empty -> no_react ()
+    | React_top -> r
     | React_var ->
         if level = generic then
           let v = new_react_var () in
@@ -968,13 +971,13 @@ and react_occur_check_is_rec level index r =
   let is_rec = ref false in
   let rec check r =
     let r = react_repr r in
+    if r.level > level then
+      r.level <- level;
     match r.desc with
       | React_empty | React_top -> ()
       | React_var ->
           if r == index then (* go on to fix levels *)
             is_rec := true
-          else if r.level > level then
-            r.level <- level
       | React_carrier c -> carrier_occur_check level no_carrier c
       | React_seq rl | React_par rl | React_or rl ->
           List.iter check rl
@@ -1261,8 +1264,8 @@ and react_unify expected_r actual_r =
         | _, React_rec (_, actual_r) -> react_unify expected_r actual_r *)
         | _ ->
             (*Printf.eprintf "Failed to unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r; *)
-            expected_r.desc <- React_top;
-            actual_r.desc <- React_top
+            expected_r.desc <- React_link top_react;
+            actual_r.desc <- React_link top_react
             (*raise Unify*)
 
 and unify_param p1 p2 = clock_param_iter2 unify carrier_unify effect_unify react_unify p1 p2

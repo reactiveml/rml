@@ -132,6 +132,20 @@ let process main =
 
 $
 
+let rec process p f =
+ run f;
+ if false then run (p (process (pause)))
+ else run (p (process ()))
+
+$
+
+let rec process p f =
+ run f;
+ if false then run (p (process ()))
+ else run (p (process (pause)))
+
+$
+
 let landin () =
  let f = ref (process ()) in
  f := process (print_endline "landin"; run !f);
