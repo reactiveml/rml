@@ -488,7 +488,10 @@ let rec schema_of_expression env expr =
 
     | Elet (flag, patt_expr_list, e) ->
         let gl_env, new_env = type_let (flag = Recursive) env patt_expr_list in
-        clock_of_expression new_env e
+        let old_react = !current_react in
+        let ck, r = clock_react_of_expression new_env e in
+        set_current_react (react_seq old_react r);
+        ck
 
     | Efunction (matching)  ->
         let ty_arg = new_clock_var() in
@@ -629,7 +632,7 @@ let rec schema_of_expression env expr =
     | Ematch (body,matching) ->
         let ty_body = clock_of_expression env body in
         let ty_res = new_clock_var() in
-        let local_react = ref (no_react ()) in
+        let local_react = ref None in
         List.iter
           (fun (p,e) ->
             let gl_env, loc_env = clock_of_pattern [] [] env p ty_body in
@@ -640,9 +643,13 @@ let rec schema_of_expression env expr =
                 env loc_env
             in
             let r = type_react_expect new_env e ty_res in
-            local_react := react_or r !local_react)
+            match !local_react with
+              | None -> local_react := Some r
+              | Some local -> local_react := Some (react_or r local))
           matching;
-        set_current_react !local_react;
+        (match !local_react with
+          | None -> ()
+          | Some local -> set_current_react local);
         ty_res
 
     | Ewhen_match (e1,e2) ->
@@ -1143,10 +1150,13 @@ and type_let is_rec env patt_expr_list =
     then Env.append add_env env
     else env
   in
+  let local_react = ref (no_react ()) in
   List.iter2
-    (fun (patt,expr) ty -> ignore (type_react_expect let_env expr ty))
+    (fun (patt,expr) ty -> let r = type_react_expect let_env expr ty in
+                           local_react := react_par r !local_react)
     patt_expr_list
     ty_list;
+  set_current_react !local_react;
   pop_type_level();
   List.iter2
     (fun (_,expr) ty -> if not (is_nonexpansive expr) then non_gen ty)

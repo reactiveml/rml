@@ -217,14 +217,13 @@ let react_seq r1 r2 = match r1.desc, r2.desc with
   | React_carrier c1, React_carrier c2 when c1 == c2 -> r1
   | _, _ -> make_react (React_seq [r1; r2])
 
-let react_par r1 r2 =
-  let desc = match r1.desc, r2.desc with
-    | React_par rl1, React_par rl2 -> React_par (rl1@rl2)
-    | React_par rl1, _ -> React_par (r2::rl1)
-    | _, React_par rl2 -> React_par (r1::rl2)
-    | _, _ -> React_par [r1; r2]
-  in
-  make_react desc
+let react_par r1 r2 = match r1.desc, r2.desc with
+  | React_par rl1, React_par rl2 -> make_react (React_par (rl1@rl2))
+  | React_par rl1, _ -> make_react (React_par (r2::rl1))
+  | _, React_par rl2 -> make_react (React_par (r1::rl2))
+  | React_empty, _ -> r2
+  | _, React_empty -> r1
+  | _, _ -> make_react (React_par [r1; r2])
 
 let react_or r1 r2 =
   let desc = match r1.desc, r2.desc with
