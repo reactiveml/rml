@@ -186,20 +186,26 @@ and print_react priority r =
         print_string "{";
         print_carrier priority c;
         print_string "}"
-    | React_seq rl -> print_react_list 2 "; " rl
-    | React_par rl -> print_react_list 2 " || " rl
-    | React_or rl -> print_react_list 2 " + " rl
+    | React_seq rl ->
+        print_string "("; print_react_list 2 "; " rl; print_string ")"
+    | React_par rl ->
+        print_string "("; print_react_list 2 " || " rl; print_string ")"
+    | React_or rl ->
+        print_string "("; print_react_list 2 " + " rl; print_string ")"
     | React_rec (b, r1, r2) ->
+        print_string "(";
         if b then
           print_string "rec* "
         else
           print_string "rec ";
         print_react priority r1;
         print_string ". ";
-        print_react priority r2
+        print_react priority r2;
+        print_string ")"
     | React_run r1 ->
-        print_string "run ";
-        print_react priority r1
+        print_string "(run ";
+        print_react priority r1;
+        print_string ")"
     | React_link link -> print_react priority link
   end;
   close_box ()

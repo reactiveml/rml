@@ -1109,11 +1109,18 @@ let expand_abbrev params body args =
 
 (* the row variable is the first variable in the + *)
 let rec find_row_var rl = match rl with
-  | ({ desc = React_var } as var)::rl -> rl, var
-  | { desc = React_or rl' }::rl ->
-      let rl', var = find_row_var rl' in
-      rl'@rl, var
-  | _ -> raise Unify
+  | [] -> raise Unify
+  | r::rl ->
+      let r = react_repr r in
+      (match r with
+        | ({ desc = React_var } as var) -> rl, var
+        | { desc = React_or rl' } ->
+            let rl', var = find_row_var rl' in
+            rl'@rl, var
+        | _ ->
+            let r = make_react (React_or rl) in
+            Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_react (r);
+            raise Unify)
 
 (* create the react effect 'rec rec_var. body'*)
 let mk_react_rec rec_var body =
@@ -1283,7 +1290,7 @@ and react_unify expected_r actual_r =
        (* | React_rec (_, expected_r), _ -> react_unify expected_r actual_r
         | _, React_rec (_, actual_r) -> react_unify expected_r actual_r *)
         | _ ->
-            (*Printf.eprintf "Failed to unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r; *)
+            Printf.eprintf "Failed to unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r;
             raise Unify
 
 and unify_param p1 p2 = clock_param_iter2 unify carrier_unify effect_unify react_unify p1 p2
