@@ -201,10 +201,6 @@ let no_react () =
   { desc = React_empty;
     level = generic;
     index = -1; }
-let top_react =
-  { desc = React_top;
-    level = generic;
-    index = -2; }
 
 let react_carrier c = make_react (React_carrier c)
 
@@ -454,7 +450,7 @@ let remove_var_from_effect index eff =
 
 (* Operations on reactivity effects *)
 let rec remove_ck_from_react ck r = match r.desc with
-  | React_empty | React_top | React_var -> r
+  | React_empty | React_var -> r
   | React_carrier c ->
       if (carrier_repr c).desc = ck.desc then
         no_react ()
@@ -474,7 +470,7 @@ let rec remove_ck_from_react ck r = match r.desc with
 
 let rec subst_var_react index subst r = match r.desc with
   | React_var when r.index = index -> subst
-  | React_empty | React_top | React_var | React_carrier _ -> r
+  | React_empty | React_var | React_carrier _ -> r
   | React_seq rl ->
       { r with desc = React_seq (List.map (subst_var_react index subst) rl) }
   | React_par rl ->
@@ -582,7 +578,7 @@ and gen_react is_gen r =
       r.level <- !current_level
   );
   (match r.desc with
-    | React_empty | React_top -> ()
+    | React_empty -> ()
     | React_carrier c -> r.level <- gen_carrier is_gen c
     | React_seq rl | React_par rl | React_or rl ->
         r.level <- gen_react_list is_gen rl
@@ -670,7 +666,7 @@ let free_clock_vars level ck =
     match r.desc with
       | React_var ->
           if r.level >= level then fv := (Var_react r) :: !fv
-      | React_empty | React_top -> ()
+      | React_empty -> ()
       | React_carrier c -> free_vars_carrier c
       | React_seq rl | React_par rl | React_or rl ->
           List.iter free_vars_react rl
@@ -816,7 +812,6 @@ and copy_subst_react m r =
   let level = r.level in
   match r.desc with
     | React_empty -> no_react ()
-    | React_top -> r
     | React_var ->
         if level = generic then
           let v = new_react_var () in
@@ -973,7 +968,7 @@ and react_occur_check_is_rec level index r =
     if r.level > level then
       r.level <- level;
     match r.desc with
-      | React_empty | React_top -> ()
+      | React_empty -> ()
       | React_var ->
           if r == index then (* go on to fix levels *)
             is_rec := true
@@ -1046,7 +1041,7 @@ and react_skolem_check skolems r =
   let rec check r =
     let r = react_repr r in
     match r.desc with
-      | React_var | React_empty | React_top -> ()
+      | React_var | React_empty -> ()
       | React_carrier c -> carrier_skolem_check skolems c
       | React_seq rl | React_par rl | React_or rl ->
           List.iter check rl
@@ -1111,6 +1106,29 @@ let expand_abbrev params body args =
   cleanup();
   List.iter2 bind_variable params' args;
   body'
+
+(* the row variable is the first variable in the + *)
+let rec find_row_var rl = match rl with
+  | ({ desc = React_var } as var)::rl -> rl, var
+  | { desc = React_or rl' }::rl ->
+      let rl', var = find_row_var rl' in
+      rl'@rl, var
+  | _ -> raise Unify
+
+(* create the react effect 'rec rec_var. body'*)
+let mk_react_rec rec_var body =
+  let new_var = new_react_var () in
+  match body with
+    | { desc = React_or (({ desc = React_var; index = i } as row_var)::rl) }
+        when i <> rec_var.index ->
+        (* the body is of the form 'phi + body': we generate 'phi + rec rec_var.body' *)
+        let body = make_react (React_or rl) in
+        let body = subst_var_react rec_var.index new_var body in
+        let new_r = make_react (React_rec (false, new_var, body)) in
+        react_or row_var new_r
+    | _ ->
+        let body = subst_var_react rec_var.index new_var body in
+        make_react (React_rec (false, new_var, body))
 
 (* unification *)
 let rec unify expected_ck actual_ck =
@@ -1236,36 +1254,37 @@ and react_unify expected_r actual_r =
       match expected_r.desc, actual_r.desc with
         | React_empty, React_empty -> ()
         | React_carrier c1, React_carrier c2 when c1 == c2 -> ()
-        | React_top, _ -> actual_r.desc <- React_top
-        | _, React_top -> expected_r.desc <- React_top
             (* phi == uphi. r *)
         (*| React_var, React_rec (r2, _) when expected_r.index = r2.index -> ()
         | React_rec(r2, _), React_var when actual_r.index = r2.index -> ()*)
         | React_var, _ ->
             let is_rec = react_occur_check_is_rec expected_r.level expected_r actual_r in
             if is_rec then (
-              let new_var = new_react_var () in
-              let body = subst_var_react expected_r.index new_var actual_r in
-              let new_r = make_react (React_rec (false, new_var, body)) in
+              let new_r = mk_react_rec expected_r actual_r in
               expected_r.desc <- React_link new_r
             ) else
               expected_r.desc <- React_link actual_r
         | _, React_var ->
             let is_rec = react_occur_check_is_rec actual_r.level actual_r expected_r in
             if is_rec then (
-              let new_var = new_react_var () in
-              let body = subst_var_react actual_r.index new_var expected_r in
-              let new_r = make_react (React_rec (false, new_var, body)) in
+              let new_r = mk_react_rec actual_r expected_r in
               actual_r.desc <- React_link new_r
             ) else
               actual_r.desc <- React_link expected_r
+        (* unification of row types *)
+        | React_or rl1, React_or rl2 ->
+            let rl1, var1 = find_row_var rl1 in
+            let rl2, var2 = find_row_var rl2 in
+            let var = new_react_var () in
+            let new_rl1 = make_react (React_or (var::rl1)) in
+            let new_rl2 = make_react (React_or (var::rl2)) in
+            react_unify var1 new_rl2;
+            react_unify var2 new_rl1
        (* | React_rec (_, expected_r), _ -> react_unify expected_r actual_r
         | _, React_rec (_, actual_r) -> react_unify expected_r actual_r *)
         | _ ->
             (*Printf.eprintf "Failed to unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r; *)
-            expected_r.desc <- React_link top_react;
-            actual_r.desc <- React_link top_react
-            (*raise Unify*)
+            raise Unify
 
 and unify_param p1 p2 = clock_param_iter2 unify carrier_unify effect_unify react_unify p1 p2
 

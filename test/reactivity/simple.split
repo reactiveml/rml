@@ -75,24 +75,3 @@ let process pp =
     run !r
   end
 
-
-$$$bad_unify
-${
-(*
-  run_test:
-   [
-    Bad 2 "": "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error -dno_clock_effects"
-   ]
-*)
-
-$}
-
-let process p = pause; print_endline "Coucou"
-let process q = pause; print_endline "Bli" || pause
-
-let process pp =
-  let r = ref p in
-  r := q;
-  loop
-    run !r
-  end

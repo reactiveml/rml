@@ -38,7 +38,6 @@ let nonreactive_domain_err e r =
   if !Compiler_options.warning_are_errors then raise Error
 
 let rec is_not_instantaneous index r = match r.desc with
-  | React_top -> raise Bad_recursion
   | React_empty -> false
   | React_carrier _ -> true
   | React_var ->
@@ -62,14 +61,6 @@ and is_not_instantaneous_list index rl = match rl with
   | r::rl ->
       is_not_instantaneous index r || is_not_instantaneous_list index rl
 
-(*
-let is_bad_rec loc index r =
-  try
-    let _ = is_bad_rec index r in false
-  with
-    | Bad_recursion -> true
-*)
-
 let rec check_clock ck = match ck.desc with
   | Clock_static | Clock_var | Clock_depend _ -> ()
   | Clock_arrow (ck1, ck2, _) -> check_clock ck1; check_clock ck2
@@ -84,7 +75,7 @@ and check_param p = match p with
   | _ -> ()
 
 and check_react r = match r.desc with
-  | React_var | React_top | React_empty | React_carrier _ -> ()
+  | React_var | React_empty | React_carrier _ -> ()
   | React_seq rl | React_or  rl | React_par rl ->
       List.iter check_react rl
   | React_rec (already_checked, var, r1) ->
@@ -99,29 +90,6 @@ and check_react r = match r.desc with
       )
   | React_run r1 | React_link r1 -> check_react r1
 
-let rec check_nottop_clock ck = match ck.desc with
-  | Clock_static | Clock_var | Clock_depend _ -> ()
-  | Clock_arrow (ck1, ck2, _) -> check_nottop_clock ck1; check_nottop_clock ck2
-  | Clock_product ck_list -> List.iter check_nottop_clock ck_list
-  | Clock_constr (_, p_list) -> List.iter check_nottop_param p_list
-  | Clock_process (ck1, _, _, r) -> check_nottop_clock ck1; check_nottop_react r
-  | Clock_link ck -> check_nottop_clock ck
-  | Clock_forall { cs_desc = ck } -> check_nottop_clock ck
-
-and check_nottop_param p = match p with
-  | Var_clock ck -> check_nottop_clock ck
-  | _ -> ()
-
-and check_nottop_react r = match r.desc with
-  | React_top -> raise Bad_recursion
-  | React_var | React_empty | React_carrier _ -> ()
-  | React_seq rl | React_or  rl | React_par rl ->
-      List.iter check_nottop_react rl
-  | React_rec (already_checked, _, r1) ->
-      if not already_checked then
-        check_nottop_react r1
-  | React_run r1 | React_link r1 -> check_nottop_react r1
-
 let check_react r =
   try
     check_react r; false
@@ -134,30 +102,11 @@ let check_clock ck =
   with
     | Bad_recursion -> true
 
-let check_nottop_clock ck =
-  try
-    check_nottop_clock ck; false
-  with
-    | Bad_recursion -> true
-
 let check_exp e =  match e.e_desc with
   | Erun _ -> if check_react e.e_react then instantaneous_run_err e e.e_react
   | Eloop _ -> if check_react e.e_react then instantaneous_loop_err e e.e_react
-  | Elet (Recursive, p_e_list, _) ->
-      let check_exp (_, e) =
-        if check_nottop_clock e.e_clock then instantaneous_rec_err e e.e_clock
-      in
-      List.iter check_exp p_e_list
   | Enewclock (_, _, None, _) -> (* only check domains without by *)
       if check_react e.e_react then nonreactive_domain_err e e.e_react
-  | _ -> ()
-
-let check_impl impl = match impl.impl_desc with
-  | Ilet(Recursive, p_e_list) ->
-      let check_exp (_, e) =
-        if check_nottop_clock e.e_clock then instantaneous_rec_err e e.e_clock
-      in
-      List.iter check_exp p_e_list
   | _ -> ()
 
 let expression funs acc e =
@@ -168,5 +117,4 @@ let expression funs acc e =
 let impl _ impl =
   let funs = { Reac_mapfold.defaults with Reac_mapfold.expression = expression } in
   let _ = Reac_mapfold.impl_item_it funs () impl in
-  check_impl impl;
   impl

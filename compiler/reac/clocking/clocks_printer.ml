@@ -182,7 +182,6 @@ and print_react priority r =
         if r.level <> generic then print_string "_";
         print_string (react_name#name r.index)
     | React_empty -> print_string "0"
-    | React_top -> print_string "T"
     | React_carrier c ->
         print_string "{";
         print_carrier priority c;

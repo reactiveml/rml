@@ -12,6 +12,13 @@ $}
 let rec process p =
    print_endline "Coucou"; pause; run p
 
+$
+
+let rec process p q =
+  let x = run q in
+  let z = run p q in
+  run q
+
 $$$bad
 ${
 (*
@@ -125,10 +132,22 @@ $
 let rec fix f x = f (fix f) x
 
 let process main =
-  let f =
-    (fun p -> fun v -> process (print_endline "xxx"; run (p v)))
+  let process f p v =
+    print_endline "xxx"; run (p v)
   in
   run (fix f ())
+
+$
+
+type 'a recc = In of ('a recc -> 'a)
+let out (In x) = x
+
+let y f = (fun x a -> f (out x x) a) (In (fun x a -> f (out x x) a))
+
+let f =
+ (fun p -> fun v -> process (print_endline "coucou"; run (p v)))
+
+let process main_y = run (y f ())
 
 $
 
@@ -143,6 +162,27 @@ let rec process p f =
  run f;
  if false then run (p (process ()))
  else run (p (process (pause)))
+
+$
+
+let rec process map p l = match l with
+| [] -> []
+| x::l ->
+    let y = run (p l)
+    and l = run (map p l) in
+    y::l
+
+let process main = run (fun _ -> process ())
+
+$
+
+let rec process p q =
+ ignore (q = process (pause));
+ run q;
+ run (p q)
+
+let process p_unit =
+ run (p (process ()))
 
 $
 

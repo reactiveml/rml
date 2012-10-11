@@ -81,6 +81,30 @@ let process p =
     present s then pause else ()
   end
 
+$
+
+let process main =
+  signal s default (process (pause)) gather (fun x _ -> x) in
+  loop
+    await s(p) in
+    loop run p end
+  end
+  ||
+  let rec process p = pause; run p in
+  emit s p
+
+$
+
+let process p = pause; print_endline "Coucou"
+let process q = pause; print_endline "Bli" || pause
+
+let process pp =
+  let r = ref p in
+  r := q;
+  loop
+    run !r
+  end
+
 $$$bad
 ${
 (*
@@ -145,3 +169,14 @@ let process p =
   loop
     if true then () else pause
   end
+
+$
+
+let process main =
+  signal s default (process (pause)) gather (fun x _ -> x) in
+  loop
+    await s(p) in
+    loop run p end
+  end
+  ||
+  emit s (process ())

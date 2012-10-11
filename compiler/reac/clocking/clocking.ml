@@ -692,6 +692,8 @@ let rec schema_of_expression env expr =
         current_effect := no_effect;
         add_effect_ck !activation_carrier;
         let ck, r = clock_react_of_expression env e in
+        let var = new_react_var () in
+        let r = react_or var r in
         let res_ck = process ck !activation_carrier !current_effect r in
         activation_carrier := old_activation_carrier;
         current_effect := old_current_effect;
@@ -1384,7 +1386,6 @@ let impl info_chan has_intf item =
 
   | Iopen _ -> ()
   );
-  Reactivity.check_impl item;
   item
 
 (* Typing of interface items *)
