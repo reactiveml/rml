@@ -1117,8 +1117,8 @@ let rec find_row_var rl = match rl with
             let rl', var = find_row_var rl' in
             rl'@rl, var
         | _ ->
-            let r = make_react (React_or rl) in
-            Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_react (r);
+            let r' = make_react (React_or (r::rl)) in
+            Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_react r';
             raise Unify)
 
 (* create the react effect 'rec rec_var. body'*)
@@ -1251,6 +1251,7 @@ and effect_unify expected_eff actual_eff =
 
 
 and react_unify expected_r actual_r =
+  (*Printf.eprintf "Unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r;*)
   if !Compiler_options.no_reactivity || expected_r == actual_r then ()
   else
     let expected_r = react_repr expected_r in
@@ -1259,7 +1260,7 @@ and react_unify expected_r actual_r =
     else
       match expected_r.desc, actual_r.desc with
         | React_empty, React_empty -> ()
-        | React_carrier c1, React_carrier c2 when c1 == c2 -> ()
+        | React_carrier c1, React_carrier c2 -> carrier_unify c1 c2
             (* phi == uphi. r *)
         (*| React_var, React_rec (r2, _) when expected_r.index = r2.index -> ()
         | React_rec(r2, _), React_var when actual_r.index = r2.index -> ()*)
@@ -1281,11 +1282,17 @@ and react_unify expected_r actual_r =
         | React_or rl1, React_or rl2 ->
             let rl1, var1 = find_row_var rl1 in
             let rl2, var2 = find_row_var rl2 in
-            let var = new_react_var () in
-            let new_rl1 = make_react (React_or (var::rl1)) in
-            let new_rl2 = make_react (React_or (var::rl2)) in
-            react_unify var1 new_rl2;
-            react_unify var2 new_rl1
+            if var1.index = var2.index then
+              (* this should only be the case if we are unifying two reacts
+               that are just copies *)
+              List.iter2 react_unify rl1 rl2
+            else (
+              let var = new_react_var () in
+              let new_rl1 = make_react (React_or (var::rl1)) in
+              let new_rl2 = make_react (React_or (var::rl2)) in
+              react_unify var1 new_rl2;
+              react_unify var2 new_rl1
+            )
        (* | React_rec (_, expected_r), _ -> react_unify expected_r actual_r
         | _, React_rec (_, actual_r) -> react_unify expected_r actual_r *)
         | _ ->
