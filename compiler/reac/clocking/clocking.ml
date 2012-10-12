@@ -260,7 +260,7 @@ let clock_of_type_expression ty_vars env typexp =
 
     | Tprocess (te,_, ce, ee) ->
         process (clock_of_te ty_vars te) (carrier_of_ce ty_vars ce)
-          (effect_of_ee ty_vars ee) (*TODO*) (no_react ())
+          (effect_of_ee ty_vars ee) (*TODO*) no_react
 
     | Tdepend ce ->
         depend (carrier_of_ce ty_vars ce)
@@ -668,7 +668,7 @@ let rec schema_of_expression env expr =
         Clocks_utils.static
 
     | Eseq e_list ->
-        let local_react = ref (no_react ()) in
+        let local_react = ref no_react in
         let rec f l =
           match l with
           | [] -> assert false
@@ -697,7 +697,7 @@ let rec schema_of_expression env expr =
         let res_ck = process ck !activation_carrier !current_effect r in
         activation_carrier := old_activation_carrier;
         current_effect := old_current_effect;
-        set_current_react (no_react ());
+        set_current_react no_react;
         res_ck
 
     | Epre (Status, s) ->
@@ -853,7 +853,7 @@ let rec schema_of_expression env expr =
             type_expect env p Clocks_utils.static;
             Clocks_utils.static
         | Some _ ->
-            let cont_react = ref (no_react ()) in
+            let cont_react = ref no_react in
             begin match s.conf_desc with
             | Cpresent s ->
                 let ty_s = clock_of_expression env s in
@@ -1152,7 +1152,7 @@ and type_let is_rec env patt_expr_list =
     then Env.append add_env env
     else env
   in
-  let local_react = ref (no_react ()) in
+  let local_react = ref no_react in
   List.iter2
     (fun (patt,expr) ty -> let r = type_react_expect let_env expr ty in
                            local_react := react_par r !local_react)
@@ -1175,7 +1175,7 @@ and type_let is_rec env patt_expr_list =
 
 and clock_react_of_expression env expr =
   let old_current_react = !current_react in
-  set_current_react (no_react ());
+  set_current_react no_react;
   let ck = clock_of_expression env expr in
   let r = !current_react in
   set_current_react old_current_react;

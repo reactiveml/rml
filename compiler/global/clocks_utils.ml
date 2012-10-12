@@ -194,10 +194,10 @@ let clock_topck =
 
 let make_react r =
   { desc = r;
-    level = !current_level;
+    level = generic;
     index = names#name; }
 
-let no_react () =
+let no_react =
   { desc = React_empty;
     level = generic;
     index = -1; }
@@ -312,7 +312,7 @@ let clock_of_sch sch =
 (* activation clock*)
 let activation_carrier = ref topck_carrier
 let current_effect = ref no_effect
-let current_react = ref (no_react ())
+let current_react = ref no_react
 
 (* To take the canonical representative of a type.
    We do path compression there. *)
@@ -453,7 +453,7 @@ let rec remove_ck_from_react ck r = match r.desc with
   | React_empty | React_var -> r
   | React_carrier c ->
       if (carrier_repr c).desc = ck.desc then
-        no_react ()
+        no_react
       else
         r
   | React_seq rl ->
@@ -571,12 +571,6 @@ and gen_effect is_gen eff =
 
 and gen_react is_gen r =
   let r = react_repr r in
-  if r.level > !current_level then (
-    if is_gen then
-      r.level <- generic
-    else
-      r.level <- !current_level
-  );
   (match r.desc with
     | React_empty -> ()
     | React_carrier c -> r.level <- gen_carrier is_gen c
@@ -588,8 +582,13 @@ and gen_react is_gen r =
         let _ = react_repr r2 in
         r.level <- gen_react is_gen r2
     | React_var ->
-        if r.level > !current_level && is_gen then
-          list_of_react_vars := r :: !list_of_react_vars
+        if r.level > !current_level then (
+          if is_gen then (
+            list_of_react_vars := r :: !list_of_react_vars;
+            r.level <- generic
+          ) else
+            r.level <- !current_level
+        )
     | React_link link -> r.level <- gen_react is_gen link
   );
   r.level
@@ -811,7 +810,7 @@ and copy_subst_effect m eff =
 and copy_subst_react m r =
   let level = r.level in
   match r.desc with
-    | React_empty -> no_react ()
+    | React_empty -> r
     | React_var ->
         if level = generic then
           let v = new_react_var () in
@@ -921,7 +920,7 @@ let rec occur_check level index ck =
           check ck;
           carrier_occur_check level no_carrier act_car;
           effect_occur_check level no_effect eff;
-          react_occur_check level (no_react ()) r
+          react_occur_check level no_react r
       | Clock_forall sch -> (*TODO*) ()
   in
   (*Printf.eprintf "Occur_check : level:%d   index:%a   ck:%a\n"  level  Clocks_printer.output index  Clocks_printer.output ck;*)
@@ -965,13 +964,13 @@ and react_occur_check_is_rec level index r =
   let is_rec = ref false in
   let rec check r =
     let r = react_repr r in
-    if r.level > level then
-      r.level <- level;
     match r.desc with
       | React_empty -> ()
       | React_var ->
           if r == index then (* go on to fix levels *)
             is_rec := true
+          else if r.level > level then
+            r.level <- level
       | React_carrier c -> carrier_occur_check level no_carrier c
       | React_seq rl | React_par rl | React_or rl ->
           List.iter check rl
@@ -990,7 +989,7 @@ and param_occur_check level index =
   clock_param_iter (occur_check level index)
     (carrier_occur_check level no_carrier)
     (effect_occur_check level no_effect)
-    (react_occur_check level (no_react ()))
+    (react_occur_check level no_react)
 
 (* the occur check *)
 let rec skolem_check skolems ck =

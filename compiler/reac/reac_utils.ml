@@ -46,7 +46,7 @@ let make_expr e loc =
     e_loc = loc;
     e_type = no_type_expression;
     e_clock = no_clock;
-    e_react = no_react ();
+    e_react = no_react;
     e_static = Static.Dynamic Static.Dontknow;
     e_reactivity = []; }
 
