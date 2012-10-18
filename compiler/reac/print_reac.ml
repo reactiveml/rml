@@ -730,6 +730,11 @@ let print_intf_item item =
 (* the main function *)
 set_max_boxes max_int ;;
 
+let output_exp oc e =
+  set_formatter_out_channel oc;
+  print 0 e;
+  print_flush ()
+
 let output_impl_decl oc module_name decl =
   current_module := module_name;
   set_formatter_out_channel oc;
