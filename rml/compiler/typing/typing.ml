@@ -32,6 +32,7 @@
 
 open Def_types
 open Types
+open Reactivity_effects
 open Typing_errors
 open Initialization
 open Asttypes
@@ -90,7 +91,8 @@ let filter_multi_event ty =
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
-  let unit_process = process type_unit { proc_static = None } in
+  let unit_process = process type_unit { proc_static = None ;
+                                         proc_react = new_react_var(); } in
   try
     unify unit_process ty;
     true
@@ -223,7 +225,8 @@ let type_of_type_expression typ_vars typexp =
 	constr name (List.map type_of ty_list)
 
     | Rtype_process (ty,k) ->
-	process (type_of ty) { proc_static = Some(Proc_def (ref k)); }
+	process (type_of ty) { proc_static = Some(Proc_def (ref k));
+                               proc_react = new_react_var (); }
   in
   type_of typexp
 
@@ -245,7 +248,9 @@ let full_type_of_type_expression typ =
   let lv = free_of_type typ in
   let typ_vars = List.map (fun v -> (v,new_generic_var ())) lv in
   let typ = type_of_type_expression typ_vars typ in
-  { ts_binders = List.map snd typ_vars; ts_desc = typ }
+  { ts_binders = List.map snd typ_vars;
+    (* ts_rbinders = []; *) (* XXX TODO XXX *)
+    ts_desc = typ }
 
 (* Typing of patterns *)
 let rec type_of_pattern global_env local_env patt ty =
@@ -380,20 +385,23 @@ and type_of_pattern_list global_env local_env patt_list ty_list =
 
 (* Typing of expressions *)
 let rec type_of_expression env expr =
-  let t =
+  let t, k =
     match expr.expr_desc with
-    | Rexpr_constant (i) -> type_of_immediate i
+    | Rexpr_constant (i) -> type_of_immediate i, react_epsilon()
 
     | Rexpr_local (n) ->
 	let typ_sch = Env.find n env in
-	instance typ_sch
+	instance typ_sch, react_epsilon()
 
     | Rexpr_global (n) ->
-	instance (Global.info n).value_typ
+	instance (Global.info n).value_typ, react_epsilon()
 
     | Rexpr_let (flag, patt_expr_list, e) ->
-	let gl_env, new_env = type_let (flag = Recursive) env patt_expr_list in
-	type_of_expression new_env e
+	let gl_env, new_env, k =
+          type_let (flag = Recursive) env patt_expr_list
+        in
+	let ty, k' = type_of_expression new_env e in
+        ty, react_seq [ k; k' ]
 
     | Rexpr_function (matching)  ->
 	let ty_arg = new_var() in
@@ -408,12 +416,13 @@ let rec type_of_expression env expr =
 		(fun env (x, ty) -> Env.add x (forall [] ty) env)
 		env loc_env
 	    in
-	    type_expect new_env e ty_res)
+	    type_expect_eps new_env e ty_res)
 	  matching;
-	ty
+	ty, react_epsilon()
 
     | Rexpr_apply (fct, args) ->
-	let ty_fct = type_of_expression env fct in
+	let ty_fct, k_fct = type_of_expression env fct in
+        check_epsilon k_fct;
 	let rec type_args ty_res = function
 	  | [] -> ty_res
 	  | arg :: args ->
@@ -423,12 +432,20 @@ let rec type_of_expression env expr =
 		with Unify ->
 		  application_of_non_function_err fct ty_fct
 	      in
-	      type_expect env arg t1;
+	      type_expect_eps env arg t1;
 	      type_args t2 args
 	in
-	type_args ty_fct args
+	type_args ty_fct args, react_epsilon()
     | Rexpr_tuple (l) ->
-	product (List.map (type_of_expression env) l)
+        let tyl =
+          List.map
+            (fun e ->
+              let ty, k = type_of_expression env e in
+              check_epsilon k;
+              ty)
+            l
+        in
+	product tyl, react_epsilon()
 
     | Rexpr_construct(c,None) ->
 	begin
@@ -436,7 +453,7 @@ let rec type_of_expression env expr =
 		cstr_res = ty } = get_type_of_constructor c expr.expr_loc
 	  in
 	  match ty_arg_opt with
-	  | None -> ty
+	  | None -> ty, react_epsilon()
 	  | Some ty_arg -> constr_arity_err c.gi expr.expr_loc
 	end
     | Rexpr_construct (c, Some arg) ->
@@ -447,14 +464,14 @@ let rec type_of_expression env expr =
 	  match ty_arg_opt with
 	  | None -> constr_arity_err_2 c.gi expr.expr_loc
 	  | Some ty_arg ->
-	      type_expect env arg ty_arg;
-	      ty_res
+	      type_expect_eps env arg ty_arg;
+	      ty_res, react_epsilon()
 	end
 
     | Rexpr_array (l) ->
 	let ty_var = new_var () in
-	List.iter (fun e -> type_expect env e ty_var) l;
-	constr_notabbrev array_ident [ty_var]
+	List.iter (fun e -> type_expect_eps env e ty_var) l;
+	constr_notabbrev array_ident [ty_var], react_epsilon()
 
     | Rexpr_record (l) ->
 	let ty = new_var() in
@@ -468,145 +485,159 @@ let rec type_of_expression env expr =
 	      (* check that the label appears only once *)
 	      if List.mem label label_list
 	      then non_linear_record_err label.gi expr.expr_loc;
-	      type_expect env label_expr ty_res;
+	      type_expect_eps env label_expr ty_res;
 	      unify_expr expr ty ty_arg;
 	      typing_record (label :: label_list) label_expr_list
 	in
 	typing_record [] l;
-	ty
+	ty, react_epsilon()
 
     | Rexpr_record_access (e, label) ->
 	let { lbl_arg = ty_arg; lbl_res = ty_res } =
 	  get_type_of_label label expr.expr_loc
 	in
-	type_expect env e ty_arg;
-	ty_res
+	type_expect_eps env e ty_arg;
+	ty_res, react_epsilon()
 
     | Rexpr_record_update (e1, label, e2) ->
 	let { lbl_arg = ty_arg; lbl_res = ty_res; lbl_mut = mut } =
 	  get_type_of_label label expr.expr_loc
 	in
 	if mut = Immutable then label_not_mutable_err expr label.gi;
-	type_expect env e1 ty_arg;
-	type_expect env e2 ty_res;
-	type_unit
+	type_expect_eps env e1 ty_arg;
+	type_expect_eps env e2 ty_res;
+	type_unit, react_epsilon()
 
     | Rexpr_constraint(e,t) ->
 	let expected_ty = instance (full_type_of_type_expression t) in
-	type_expect env e expected_ty;
-	expected_ty
+	type_expect_eps env e expected_ty;
+	expected_ty, react_epsilon()
 
     | Rexpr_trywith (body,matching) ->
-	let ty = type_of_expression env body in
-	List.iter
-	  (fun (p,e) ->
-	    let gl_env, loc_env = type_of_pattern [] [] p type_exn in
-	    assert (gl_env = []);
-	    let new_env =
-	      List.fold_left
-		(fun env (x, ty) -> Env.add x (forall [] ty) env)
-		env loc_env
-	    in
-	    type_expect new_env e ty)
-	  matching;
-	ty
+	let ty, k = type_of_expression env body in
+	let kl =
+          List.map
+	    (fun (p,e) ->
+	      let gl_env, loc_env = type_of_pattern [] [] p type_exn in
+	      assert (gl_env = []);
+	      let new_env =
+	        List.fold_left
+		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
+		  env loc_env
+	      in
+	      type_expect new_env e ty)
+	    matching
+        in
+	ty, react_or (k :: kl)
 
     | Rexpr_assert e ->
-	type_expect env e type_bool;
-	new_var()
+	type_expect_eps env e type_bool;
+	new_var(), react_epsilon()
 
     | Rexpr_ifthenelse (cond,e1,e2) ->
-	type_expect env cond type_bool;
-	let ty = type_of_expression env e1 in
-	type_expect env e2 ty;
-	ty
+	type_expect_eps env cond type_bool;
+	let ty, k1 = type_of_expression env e1 in
+	let k2 = type_expect env e2 ty in
+	ty, react_or [k1; k2]
 
     | Rexpr_match (body,matching) ->
-	let ty_body = type_of_expression env body in
+	let ty_body, k = type_of_expression env body in
+        check_epsilon k;
 	let ty_res = new_var() in
-	List.iter
-	  (fun (p,e) ->
-	    let gl_env, loc_env = type_of_pattern [] [] p ty_body in
-	    assert (gl_env = []);
-	    let new_env =
-	      List.fold_left
-		(fun env (x, ty) -> Env.add x (forall [] ty) env)
-		env loc_env
-	    in
-	    type_expect new_env e ty_res)
-	  matching;
-	ty_res
+        let kl =
+	  List.map
+	    (fun (p,e) ->
+	      let gl_env, loc_env = type_of_pattern [] [] p ty_body in
+	      assert (gl_env = []);
+	      let new_env =
+	        List.fold_left
+		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
+		  env loc_env
+	      in
+	      type_expect new_env e ty_res)
+	    matching
+        in
+	ty_res, react_or kl
 
     | Rexpr_when_match (e1,e2) ->
-	type_expect env e1 type_bool;
+	type_expect_eps env e1 type_bool;
 	type_of_expression env e2
 
     | Rexpr_while (e1,e2) ->
-	type_expect env e1 type_bool;
-	type_statement env e2;
-	type_unit
+	type_expect_eps env e1 type_bool;
+	let k = type_statement env e2 in
+	type_unit, k (* on ne met pas de warning sur les boucles while *)
 
     | Rexpr_for(i,e1,e2,flag,e3) ->
-	type_expect env e1 type_int;
-	type_expect env e2 type_int;
-	type_statement (Env.add i (forall [] type_int) env) e3;
-	type_unit
+	type_expect_eps env e1 type_int;
+	type_expect_eps env e2 type_int;
+	let k = type_statement (Env.add i (forall [] type_int) env) e3 in
+	type_unit, k
 
     | Rexpr_seq e_list ->
-	let rec f l =
+	let rec f l k_acc =
 	  match l with
 	  | [] -> assert false
-	  | [e] -> type_of_expression env e
+	  | [e] -> let ty, k = type_of_expression env e in ty, k :: k_acc
 	  | e::l ->
-	      type_statement env e;
-	      f l
-	in f e_list
+	      let k = type_statement env e in
+	      f l (k :: k_acc)
+	in
+        let ty, rev_kl = f e_list [] in
+        ty, react_seq (List.rev rev_kl)
 
     | Rexpr_process(e) ->
-	let ty = type_of_expression env e in
-        process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow)); }
+	let ty, k = type_of_expression env e in
+        process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow));
+                     proc_react = react_raw k (new_react_var()); },
+        react_epsilon()
 
     | Rexpr_pre (Status, s) ->
-	let ty_s = type_of_expression env s in
+	let ty_s, k = type_of_expression env s in
+        check_epsilon k;
 	let _, _ty =
 	  try
 	    filter_event ty_s
 	  with Unify ->
 	  non_event_err s
 	in
-	type_bool
+	type_bool, react_epsilon()
     | Rexpr_pre (Value, s) ->
-	let ty_s = type_of_expression env s in
+	let ty_s, k = type_of_expression env s in
+        check_epsilon k;
 	let _, ty =
 	  try
 	    filter_event ty_s
 	  with Unify ->
 	  non_event_err s
 	in
-	ty
+	ty, react_epsilon()
 
     | Rexpr_last s ->
-	let ty_s = type_of_expression env s in
+	let ty_s, k = type_of_expression env s in
+        check_epsilon k;
 	let _, ty =
 	  try
 	    filter_event ty_s
 	  with Unify ->
 	  non_event_err s
 	in
-	ty
+	ty, react_epsilon()
 
     | Rexpr_default s ->
-	let ty_s = type_of_expression env s in
+	let ty_s, k = type_of_expression env s in
+        check_epsilon k;
 	let _, ty =
 	  try
 	    filter_event ty_s
 	  with Unify ->
 	  non_event_err s
 	in
-	ty
+	ty, react_epsilon()
 
     | Rexpr_emit (s, None) ->
-	let ty_s = type_of_expression env s in
+	let ty_s, k_s = type_of_expression env s in
+        check_epsilon k_s;
 	let ty, _ =
 	  try
 	    filter_event ty_s
@@ -614,19 +645,21 @@ let rec type_of_expression env expr =
 	    non_event_err s
 	in
 	unify_emit expr.expr_loc type_unit ty;
-	type_unit
+	type_unit, react_epsilon()
 
     | Rexpr_emit (s, Some e) ->
-	let ty_s = type_of_expression env s in
+	let ty_s, k_s = type_of_expression env s in
+        check_epsilon k_s;
 	let ty, _ =
 	  try
 	    filter_event ty_s
 	  with Unify ->
 	    non_event_err s
 	in
-	let ty_e = type_of_expression env e in
+	let ty_e, k_e = type_of_expression env e in
+        check_epsilon k_e;
 	unify_emit e.expr_loc ty ty_e;
-	type_unit
+	type_unit, react_epsilon()
 
     | Rexpr_signal ((s,te_opt), combine_opt, e) ->
 	let ty_emit = new_var() in
@@ -644,189 +677,229 @@ let rec type_of_expression env expr =
 		   [ty_emit; (constr_notabbrev list_ident [ty_emit])])
 		ty_s
 	  | Some (default,comb) ->
-	      type_expect env default ty_get;
-	      type_expect env comb (arrow ty_emit (arrow ty_get ty_get))
+	      type_expect_eps env default ty_get;
+	      type_expect_eps env comb (arrow ty_emit (arrow ty_get ty_get))
 	end;
 	type_of_expression (Env.add s (forall [] ty_s) env) e
 
-    | Rexpr_nothing -> type_unit
+    | Rexpr_nothing -> type_unit, react_epsilon()
 
-    | Rexpr_pause _ -> type_unit
+    | Rexpr_pause _ -> type_unit, react_pause()
 
-    | Rexpr_halt _ -> new_var()
+    | Rexpr_halt _ -> new_var(), react_pause()
 
     | Rexpr_loop (None, p) ->
-	type_statement env p;
-	type_unit
+        let k = type_statement env p in
+        let phi = new_react_var () in
+        let k = react_seq [ k; phi ] in
+        if not (Reactivity_effects.well_formed k) then begin
+          Reactivity_effects.loop_warning expr
+        end;
+        type_unit, react_rec phi k
 
     | Rexpr_loop (Some n, p) ->
-	type_expect env n type_int;
-	type_statement env p;
-	type_unit
+        type_expect_eps env n type_int;
+        let k = type_statement env p in
+        type_unit, k
 
     | Rexpr_fordopar(i,e1,e2,flag,p) ->
-	type_expect env e1 type_int;
-	type_expect env e2 type_int;
-	type_statement (Env.add i (forall [] type_int) env) p;
-	type_unit
+        type_expect_eps env e1 type_int;
+        type_expect_eps env e2 type_int;
+        let k = type_statement (Env.add i (forall [] type_int) env) p in
+        type_unit, k
 
     | Rexpr_par p_list ->
-	List.iter (fun p -> ignore (type_statement env p)) p_list;
-	type_unit
+        let kl = List.map (fun p -> type_statement env p) p_list in
+        type_unit, react_par kl
 
     | Rexpr_merge (p1,p2) ->
-	type_statement env p1;
-	type_statement env p2;
-	type_unit
+        let k1 = type_statement env p1 in
+        let k2 = type_statement env p2 in
+        type_unit, react_par [ k1; k2 ]
 
     | Rexpr_run (e) ->
-	let ty_e = type_of_expression env e in
-	let ty = new_var() in
-	unify_run e.expr_loc
-	  (process ty { proc_static = None; }) ty_e;
-	ty
+        let ty_e, k_e = type_of_expression env e in
+        check_epsilon k_e;
+        let ty = new_var() in
+        let k = new_react_var () in
+        (* let raw = *)
+        (*   react_raw k (new_react_var ()) *)
+        (* in *)
+        unify_run e.expr_loc
+          (process ty { proc_static = None;
+                        proc_react = (* raw *) k })
+          ty_e;
+        if not (Reactivity_effects.well_formed k) then begin
+          Reactivity_effects.rec_warning expr k
+        end;
+        ty, react_run (* raw *) k
 
     | Rexpr_until (s,p,patt_proc_opt) ->
-	begin match patt_proc_opt with
-	| None ->
-	    type_of_event_config env s;
-	    type_expect env p type_unit;
-	    type_unit
-	| Some _ ->
-	    begin match s.conf_desc with
-	    | Rconf_present s ->
-		let ty_s = type_of_expression env s in
-		let ty_emit, ty_get =
-		  try
-		    filter_event ty_s
-		  with Unify ->
-		    non_event_err s
-		in
-		let ty_body = type_of_expression env p in
-		opt_iter
-		  (fun (patt,proc) ->
-		    let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
-		    assert (gl_env = []);
-		    let new_env =
-		      List.fold_left
-			(fun env (x, ty) -> Env.add x (forall [] ty) env)
-			env loc_env
-		    in
-		    type_expect new_env proc ty_body)
-		  patt_proc_opt;
-		ty_body
-	    | _ ->
-		non_event_err2 s
-	    end
-	end
+        begin match patt_proc_opt with
+        | None ->
+            type_of_event_config env s;
+            let k = type_expect env p type_unit in
+            type_unit, k
+        | Some _ ->
+            begin match s.conf_desc with
+            | Rconf_present s ->
+        	let ty_s, k_s = type_of_expression env s in
+                check_epsilon k_s;
+        	let ty_emit, ty_get =
+        	  try
+        	    filter_event ty_s
+        	  with Unify ->
+        	    non_event_err s
+        	in
+        	let ty_body, k_body = type_of_expression env p in
+                let opt_k =
+        	  opt_map
+        	    (fun (patt,proc) ->
+        	      let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+        	      assert (gl_env = []);
+        	      let new_env =
+        	        List.fold_left
+        		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
+        		  env loc_env
+        	      in
+        	      type_expect new_env proc ty_body)
+        	    patt_proc_opt;
+                in
+                begin match opt_k with
+                | None -> ty_body, k_body
+                | Some k -> ty_body, react_or [ k_body;
+                                                react_seq [ react_pause(); k ] ]
+                end
+            | _ ->
+        	non_event_err2 s
+            end
+        end
 
 
     | Rexpr_when (s,p) ->
-	type_of_event_config env s;
-	type_of_expression env p
+        type_of_event_config env s;
+        type_of_expression env p
 
     | Rexpr_control (s, None, p) ->
-	type_of_event_config env s;
-	type_of_expression env p
+        type_of_event_config env s;
+        type_of_expression env p
     | Rexpr_control (s, (Some (patt, e)), p) ->
-	begin match s.conf_desc with
-	| Rconf_present s ->
-	    let ty_s = type_of_expression env s in
-	    let ty_emit, ty_get =
-	      try
-		filter_event ty_s
-	      with Unify ->
-		non_event_err s
-	    in
-	    let ty_body = type_of_expression env p in
-	    let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
-	    assert (gl_env = []);
-	    let new_env =
-	      List.fold_left
-		(fun env (x, ty) -> Env.add x (forall [] ty) env)
-		env loc_env
-	    in
-	    type_expect new_env e type_bool;
-	    ty_body
-	| _ ->
-	    non_event_err2 s
-	end
+        begin match s.conf_desc with
+        | Rconf_present s ->
+            let ty_s, k_s = type_of_expression env s in
+            check_epsilon k_s;
+            let ty_emit, ty_get =
+              try
+        	filter_event ty_s
+              with Unify ->
+        	non_event_err s
+            in
+            let ty_body, k_body = type_of_expression env p in
+            let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+            assert (gl_env = []);
+            let new_env =
+              List.fold_left
+        	(fun env (x, ty) -> Env.add x (forall [] ty) env)
+        	env loc_env
+            in
+            type_expect_eps new_env e type_bool;
+            ty_body, k_body
+        | _ ->
+            non_event_err2 s
+        end
 
     | Rexpr_get (s,patt,p) ->
-	let ty_s = type_of_expression env s in
-	let _, ty_get =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	    non_event_err s
-	in
-	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
-	assert (gl_env = []);
-	let new_env =
-	  List.fold_left
-	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
-	    env loc_env
-	in
-	type_of_expression new_env p
+        let ty_s, k_s = type_of_expression env s in
+        check_epsilon k_s;
+        let _, ty_get =
+          try
+            filter_event ty_s
+          with Unify ->
+            non_event_err s
+        in
+        let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+        assert (gl_env = []);
+        let new_env =
+          List.fold_left
+            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            env loc_env
+        in
+        let ty, k = type_of_expression new_env p in
+        ty, react_seq [ react_pause(); k ]
 
     | Rexpr_present (s,p1,p2) ->
-	type_of_event_config env s;
-	let ty = type_of_expression env p1 in
-	type_expect env p2 ty;
-	ty
+        type_of_event_config env s;
+        let ty, k1 = type_of_expression env p1 in
+        let k2 = type_expect env p2 ty in
+        ty, react_or [ k1; react_seq [ react_pause(); k2 ] ]
 
-    | Rexpr_await (_,s) ->
-	type_of_event_config env s;
-	type_unit
+    | Rexpr_await (flag, s) ->
+        type_of_event_config env s;
+        type_unit, begin match flag with
+                   | Nonimmediate -> react_pause()
+                   | Immediate -> react_epsilon()
+                   end
 
-    | Rexpr_await_val (_,All,s,patt,p) ->
-	let ty_s = type_of_expression env s in
-	let _, ty_get =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	    non_event_err s
-	in
-	let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
-	assert (gl_env = []);
-	let new_env =
-	  List.fold_left
-	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
-	    env loc_env
-	in
-	type_of_expression new_env p
-    | Rexpr_await_val (_,One,s,patt,p) ->
-	let ty_s = type_of_expression env s in
-	let ty_emit, ty_get =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	    non_event_err s
-	in
-	unify_expr s
-	  (constr_notabbrev event_ident
-	     [ty_emit; (constr_notabbrev list_ident [ty_emit])])
-	  ty_s;
-	let gl_env, loc_env = type_of_pattern [] [] patt ty_emit in
-	assert (gl_env = []);
-	let new_env =
-	  List.fold_left
-	    (fun env (x, ty) -> Env.add x (forall [] ty) env)
-	    env loc_env
-	in
-	type_of_expression new_env p
+    | Rexpr_await_val (flag,All,s,patt,p) ->
+        let ty_s, k_s = type_of_expression env s in
+        check_epsilon k_s;
+        let _, ty_get =
+          try
+            filter_event ty_s
+          with Unify ->
+            non_event_err s
+        in
+        let gl_env, loc_env = type_of_pattern [] [] patt ty_get in
+        assert (gl_env = []);
+        let new_env =
+          List.fold_left
+            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            env loc_env
+        in
+        let ty_p, k_p = type_of_expression new_env p in
+        ty_p, begin match flag with
+              | Nonimmediate -> react_seq [ react_pause(); k_p ]
+              | Immediate -> k_p
+              end
+    | Rexpr_await_val (flag,One,s,patt,p) ->
+        let ty_s, k_s = type_of_expression env s in
+        check_epsilon k_s;
+        let ty_emit, ty_get =
+          try
+            filter_event ty_s
+          with Unify ->
+            non_event_err s
+        in
+        unify_expr s
+          (constr_notabbrev event_ident
+             [ty_emit; (constr_notabbrev list_ident [ty_emit])])
+          ty_s;
+        let gl_env, loc_env = type_of_pattern [] [] patt ty_emit in
+        assert (gl_env = []);
+        let new_env =
+          List.fold_left
+            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            env loc_env
+        in
+        let ty_p, k_p = type_of_expression new_env p in
+        ty_p, begin match flag with
+              | Nonimmediate -> react_seq [ react_pause(); k_p ]
+              | Immediate -> k_p
+              end
 
   in
   expr.expr_type <- t;
+  expr.expr_reactivity_effect <- k;
   Stypes.record (Ti_expr expr);
-  t
+  t, k
 
 
 (* Typing of event configurations *)
 and type_of_event_config env conf =
   match conf.conf_desc with
   | Rconf_present s ->
-      let ty = type_of_expression env s in
+      let ty, k = type_of_expression env s in
+      check_epsilon k;
       let _ =
 	try
 	  filter_event ty
@@ -861,10 +934,12 @@ and type_let is_rec env patt_expr_list =
     then Env.append add_env env
     else env
   in
-  List.iter2
-    (fun (patt,expr) ty -> type_expect let_env expr ty)
-    patt_expr_list
-    ty_list;
+  let kl =
+    List.map2
+      (fun (patt,expr) ty -> type_expect let_env expr ty)
+      patt_expr_list
+      ty_list
+  in
   pop_type_level();
   List.iter2
     (fun (_,expr) ty -> if not (is_nonexpansive expr) then non_gen ty)
@@ -876,19 +951,27 @@ and type_let is_rec env patt_expr_list =
 	gl.info <- Some { value_typ = gen (Global.info gl).value_typ.ts_desc })
       global_env
   in
+  (* XXX TODO XXX gen(kl) *)
   let gen_env = Env.map (fun ty -> gen ty.ts_desc) add_env in
-  global_env, Env.append gen_env env
+  global_env, Env.append gen_env env, react_par kl
 
 
 (* Typing of an expression with an expected type *)
 and type_expect env expr expected_ty =
-  let actual_ty = type_of_expression env expr in
-  unify_expr expr expected_ty actual_ty
+  let actual_ty, k = type_of_expression env expr in
+  unify_expr expr expected_ty actual_ty;
+  k
+
+(* Typing of an expression with an expected type with epsilon effect *)
+and type_expect_eps env expr expected_ty =
+  let actual_ty, k = type_of_expression env expr in
+  unify_expr expr expected_ty actual_ty;
+  check_epsilon k
 
 (* Typing of statements (expressions whose values are ignored) *)
 and type_statement env expr =
-  let ty = type_of_expression env expr in
-  match (type_repr ty).type_desc with
+  let ty, k = type_of_expression env expr in
+  begin match (type_repr ty).type_desc with
   | Type_arrow(_,_) -> partial_apply_warning expr.expr_loc
   | Type_var -> ()
   | Type_constr (c, _) ->
@@ -900,7 +983,8 @@ and type_statement env expr =
       end
   | _ ->
       not_unit_type_warning expr
-
+  end;
+  k
 
 (* Checks multiple occurrences *)
 let check_no_repeated_constructor loc l =
@@ -1000,9 +1084,10 @@ let type_impl_item info_chan item =
       ignore (type_of_expression Env.empty e)
 
   | Rimpl_let (flag, patt_expr_list) ->
-      let global_env, local_env =
+      let global_env, local_env, k =
 	type_let (flag = Recursive) Env.empty patt_expr_list
       in
+      check_epsilon k;
       (* verbose mode *)
       if !print_type
       then Types_printer.output_value_type_declaration info_chan global_env
@@ -1025,9 +1110,13 @@ let type_impl_item info_chan item =
 		  (constr_notabbrev list_ident [ty_emit])
 		  ty_get
 	    | Some (default,comb) ->
-		type_expect Env.empty default ty_get;
-		type_expect Env.empty comb
-		  (arrow ty_emit (arrow ty_get ty_get))
+		let k_default = type_expect Env.empty default ty_get in
+                check_epsilon k_default;
+		let k_gather =
+                  type_expect Env.empty comb
+		    (arrow ty_emit (arrow ty_get ty_get))
+                in
+                check_epsilon k_gather
 	  end;
 	  s.info <- Some { value_typ = forall [] ty_s };
 	  (* verbose mode *)

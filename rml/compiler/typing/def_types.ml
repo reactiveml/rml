@@ -36,6 +36,7 @@ open Global
 (* types *)
 type type_scheme =
     { ts_binders: type_expression list;        (* generalised variables *)
+      (*ts_rbinders: reactivity_effect list;*) (* generalised reactivity vars *)
       ts_desc: type_expression;                (* the type *)
     }
 
@@ -52,12 +53,30 @@ and type_expression_desc =
   | Type_process of type_expression * process_info
 
 and process_info =
-    { mutable proc_static: process_static option }
+    { mutable proc_static: process_static option;
+      mutable proc_react: reactivity_effect; }
 
 and process_static =
   | Proc_def of Def_static.instantaneous ref
   | Proc_link of process_static
   | Proc_unify of process_static * process_static
+
+and reactivity_effect =
+    { mutable react_desc: reactivity_effect_desc;
+      mutable react_level: int;
+      react_index: int; }
+
+and reactivity_effect_desc =
+  | React_var
+  | React_pause
+  | React_epsilon
+  | React_seq of reactivity_effect list
+  | React_par of reactivity_effect list
+  | React_or of reactivity_effect list
+  | React_raw of reactivity_effect * reactivity_effect (* k * var *)
+  | React_rec of reactivity_effect * reactivity_effect (* var * k *)
+  | React_run of reactivity_effect
+  | React_link of reactivity_effect
 
 (* Type constructors *)
 and type_constr =

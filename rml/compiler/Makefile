@@ -40,6 +40,7 @@ REAC =	reac/annot.ml \
 	reac/reac_misc.ml \
 
 TYPING = typing/def_types.ml \
+	typing/reactivity_effects.ml \
 	typing/types.ml \
 	typing/types_printer.ml \
 	typing/typing.ml \
@@ -100,6 +101,7 @@ OBJ =	global/version.cmo \
 	reac/reac_ast.cmo \
 	reac/binding_errors.cmo \
 	typing/types_printer.cmo \
+	typing/reactivity_effects.cmo \
 	typing/types.cmo \
 	reac/reac_misc.cmo \
 	reac/parse2reac.cmo \

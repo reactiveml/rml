@@ -46,7 +46,8 @@ type expression =
     expr_loc: Location.t;
     mutable expr_type: Def_types.type_expression;
     mutable expr_static: Def_static.static;
-    mutable expr_reactivity: (varpatt * int) list; }
+    mutable expr_reactivity: (varpatt * int) list;
+    mutable expr_reactivity_effect: Def_types.reactivity_effect; }
 
 and expression_desc =
   | Rexpr_local of ident

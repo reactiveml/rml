@@ -32,6 +32,7 @@
 
 open Misc
 open Def_types
+open Reactivity_effects
 open Global
 
 exception Unify
@@ -45,10 +46,13 @@ let names = new Ident.name_generator
 let current_level = ref 0;;
 
 let reset_type_var () =
+  reactivity_current_level := 0;
   current_level := 0; ()
 and push_type_level () =
+  incr reactivity_current_level;
   incr current_level; ()
 and pop_type_level () =
+  decr reactivity_current_level;
   decr current_level; ()
 ;;
 
@@ -106,6 +110,7 @@ let rec new_var_list n =
 
 let forall l typ =
   { ts_binders = l;
+    (* ts_rbinders = f; *)
     ts_desc = typ; }
 
 
@@ -156,16 +161,20 @@ let rec gen_ty is_gen ty =
 	  notgeneric ty_list
   | Type_link(link) ->
       ty.type_level <- gen_ty is_gen link
-  | Type_process(ty_body, _) ->
-      ty.type_level <- min generic (gen_ty is_gen ty_body)
+  | Type_process(ty_body, proc_info) ->
+      ty.type_level <- min generic (gen_ty is_gen ty_body);
+      if generic = gen_react is_gen proc_info.proc_react then
+        proc_info.proc_react <- react_simplify proc_info.proc_react
   end;
   ty.type_level
 
 (* main generalisation function *)
 let gen ty =
   list_of_typ_vars := [];
+  (* list_of_react_vars := []; *)
   let _ = gen_ty true ty in
   { ts_binders = !list_of_typ_vars;
+    (* ts_rbinders = !list_of_react_vars; *)
     ts_desc = ty }
 let non_gen ty = ignore (gen_ty false ty)
 
@@ -193,6 +202,7 @@ let free_type_vars level ty =
 let s = ref []
 let save v = s := v :: !s
 let cleanup () =
+  cleanup_react();
   List.iter (fun ty -> ty.type_desc <- Type_var) !s;
   s := []
 
@@ -227,12 +237,17 @@ let rec copy ty =
       then
 	constr name (List.map copy ty_list)
       else ty
-  | Type_process(ty, k) ->
+  | Type_process(ty, info) ->
       if level = generic
       then
-	process (copy ty) k
+	process (copy ty) (copy_proc_info info)
       else
 	ty
+
+and copy_proc_info info =
+  { proc_static = info.proc_static;
+    proc_react = copy_react info.proc_react; }
+
 
 (* instanciation *)
 let instance { ts_desc = ty } =
@@ -275,7 +290,9 @@ let rec occur_check level index ty =
     | Type_constr(name, ty_list) ->
  	List.iter check ty_list
     | Type_link(link) -> check link
-    | Type_process(ty, _) -> check ty
+    | Type_process(ty, info) ->
+        check ty;
+        ignore (occur_check_react level no_react info.proc_react)
   in check ty
 
 
@@ -343,6 +360,10 @@ let rec unify expected_ty actual_ty =
 	  | Some ps1, Some ps2 ->
 	      pi1.proc_static <- Some (Proc_unify (ps1, ps2))
 	  end;
+          begin try
+            unify_react_effect pi1.proc_react pi2.proc_react
+          with React_Unify -> raise Unify (* ne devrait pas arriver *)
+          end;
 	  unify ty1 ty2
       | _ -> raise Unify
 
