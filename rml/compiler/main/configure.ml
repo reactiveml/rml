@@ -91,6 +91,9 @@ let set_save_types () =
 
 let unset_instantaneous_loop_warning () =
   instantaneous_loop_warning := false
+let set_old_instantaneous_loop_warning () =
+  old_instantaneous_loop_warning := true
+
 
 (* Select the runtime *)
 let set_runtime s =
@@ -188,6 +191,7 @@ and doc_sampling = "<rate> Sets the sampling rate to <rate> seconds"
 and doc_verbose = "Print types"
 and doc_save_types = "Save type information in <filename>.?annot"
 and doc_no_loop_warning = "Remove instantaneous loop and recursion warnings"
+and doc_old_loop_warning = "Set the old instantaneous loop and recursion analysis"
 and doc_interactive = "Read programs on stdin and output on stdout"
 and doc_runtime =
 (*"<interpreter> select the runtime according to <interpreter>:\n"*)
@@ -229,6 +233,7 @@ let configure () =
 	"-i", Arg.Unit set_verbose, doc_verbose;
 	"-dtypes", Arg.Unit set_save_types, doc_save_types;
 	"-no_loop_warning", Arg.Unit unset_instantaneous_loop_warning, doc_no_loop_warning;
+	"-old_loop_warning", Arg.Unit set_old_instantaneous_loop_warning, doc_old_loop_warning;
 	"-runtime", Arg.String set_runtime, doc_runtime;
 	"-interactive", Arg.Unit set_interactive, doc_interactive;
 	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;
