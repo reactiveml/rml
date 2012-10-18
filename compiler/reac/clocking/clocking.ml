@@ -1303,10 +1303,13 @@ let check_nongen_values patt_expr_list =
     let ty_vars, car_vars, eff_vars, r_vars =
       params_split (free_clock_vars notgeneric expr.e_clock)
     in
-    if ty_vars != [] or eff_vars != [] or r_vars != [] then
+    if ty_vars != [] or r_vars != [] then
       cannot_generalize_err expr;
-    (*  Non-generalizable carriers are set to topck  *)
-    List.iter (fun ck -> carrier_unify ck topck_carrier) car_vars
+    (*  Non-generalizable carriers and effects are set to topck *)
+    List.iter (fun ck -> carrier_unify ck topck_carrier) car_vars;
+    List.iter (fun eff -> effect_unify eff (eff_depend topck_carrier)) eff_vars
+      (* TODO: remove row variables of reacts but only after typing the whole file
+         Il faut compiler toutes les impl d'un coup au lieu d'une par une *)
   in
   List.iter (fun (_,expr) -> check_expr expr) patt_expr_list
 
