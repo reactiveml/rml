@@ -26,16 +26,6 @@ open Def_types
 exception React_Unify
 
 
-(* Warnings *)
-let rec_warning expr k =
-  Printf.eprintf "%aWarning: This expression may produce an instantaneous recursion (%s).\n"
-    Location.print_oc expr.expr_loc
-    (Types_printer.print_to_string Types_printer.print_reactivity k)
-
-let loop_warning expr =
-  Printf.eprintf "%aWarning: This expression may be an instantaneous loop.\n"
-    Location.print_oc expr.expr_loc
-
 (* generating fresh names *)
 let names = new Ident.name_generator
 
@@ -76,8 +66,8 @@ let react_or kl =
 let react_raw k1 k2 =
   make_react (React_raw (k1, k2))
 
-let react_rec var k =
-  make_react (React_rec (var, k))
+let react_rec b var k =
+  make_react (React_rec (b, var, k))
 
 let react_run k =
   make_react (React_run k)
@@ -123,9 +113,10 @@ let rec subst_react_var old_var new_var k =
       let k1 = subst_react_var old_var new_var k1 in
       let k2 = subst_react_var old_var new_var k2 in
       { k with react_desc = React_raw (k1, k2)}
-  | React_rec (x, k') ->
+  | React_rec (b, x, k') ->
       assert (x.react_index <> old_var.react_index);
-      { k with react_desc = React_rec (x, subst_react_var old_var new_var k'); }
+      let desc= React_rec (b, x, subst_react_var old_var new_var k') in
+      { k with react_desc = desc; }
   | React_run k' ->
       { k with react_desc = React_run (subst_react_var old_var new_var k'); }
   | React_link k' ->
@@ -143,7 +134,7 @@ let rec split_raw k =
   | React_seq _ -> assert false
   | React_par _ -> assert false
   | React_or _  -> assert false
-  | React_rec (_, _) -> assert false
+  | React_rec (_, _, _) -> assert false
   | React_run _ -> assert false
 
 
@@ -208,12 +199,12 @@ let rec copy_react k =
         react_raw (copy_react k1) (copy_react k2)
       else
 	k
-  | React_rec (x, k) ->
+  | React_rec (b, x, k) ->
       if level = generic
       then
         let x = copy_react x in
         let k = copy_react k in
-        react_rec x k
+        react_rec b x k
       else
 	k
   | React_run k ->
@@ -266,7 +257,8 @@ let react_simplify =
           simplify { k with react_desc = React_or (k1 :: k2'); }
         in
         { k with react_desc = React_raw (k1', var) }
-    | React_rec (k1, k2) -> { k with react_desc = React_rec (k1, simplify k2) }
+    | React_rec (b, k1, k2) ->
+        { k with react_desc = React_rec (b, k1, simplify k2) }
     | React_run k_body ->
         let k_body = simplify k_body in
         begin match k_body.react_desc with
@@ -288,7 +280,7 @@ let react_simplify =
         | React_par _
         | React_or _
         | React_raw _
-        | React_rec (_, _)
+        | React_rec (_, _, _)
         | React_run _ -> simplify_seq kl (k' :: acc)
         | React_link k -> simplify_seq (k :: kl) acc
         end
@@ -304,7 +296,7 @@ let react_simplify =
         | React_seq _
         | React_or _
         | React_raw _
-        | React_rec (_, _)
+        | React_rec (_, _, _)
         | React_run _ -> simplify_par kl (k' :: acc)
         | React_link k -> simplify_par (k :: kl) acc
         end
@@ -329,7 +321,7 @@ let react_simplify =
         | React_epsilon
         | React_seq _
         | React_par _
-        | React_rec (_, _)
+        | React_rec (_, _, _)
         | React_run _ -> simplify_or kl (k' :: acc)
         | React_link k -> simplify_or (k :: kl) acc
         end
@@ -351,7 +343,7 @@ let react_equal =
     | React_or kl1, React_or kl2 -> react_equal_list kl1 kl2
     | React_raw (k1_1, k2_1), React_raw (k1_2, k2_2) ->
         react_equal k1_1 k1_2 && react_equal k2_1 k2_2
-    | React_rec (v1, k1), React_rec (v2, k2) ->
+    | React_rec (b1, v1, k1), React_rec (b2, v2, k2) ->
         let v = new_react_var () in
         v1.react_desc <- React_link v;
         v2.react_desc <- React_link v;
@@ -372,98 +364,6 @@ let react_equal =
       (react_simplify (copy_react k2))
 
 
-(* non instantaneity of behaviors *)
-let rec non_instantaneous k =
-  match k.react_desc with
-  | React_var -> true
-  | React_pause -> true
-  | React_epsilon -> false
-  | React_seq kl -> List.exists non_instantaneous kl
-  | React_par kl -> List.exists non_instantaneous kl
-  | React_or kl -> List.for_all non_instantaneous kl
-  | React_raw (k1, k2) -> non_instantaneous k1 && non_instantaneous k2
-  | React_rec (_, k) -> non_instantaneous k
-  | React_run k -> non_instantaneous k
-  | React_link l -> non_instantaneous k
-
-
-(* correct behaviors *)
-let well_formed =
-  let module Env =
-    Set.Make (struct
-      type t = int
-      let compare = Pervasives.compare
-    end)
-  in
-  let rec well_formed env k =
-  match k.react_desc with
-  | React_var -> not (Env.mem k.react_index env)
-  | React_pause -> true
-  | React_epsilon -> true
-  | React_seq kl ->
-      let b, _ =
-        List.fold_left
-          (fun (b, env) k ->
-            let b = b && well_formed env k in
-            let env = if non_instantaneous k then Env.empty else env in
-            (b, env))
-          (true, env)
-          kl
-      in
-      b
-  | React_par kl -> List.for_all (well_formed env) kl
-  | React_or kl -> List.for_all (well_formed env) kl
-  | React_raw (k1, k2) -> well_formed env k1 && well_formed env k2
-  | React_rec (x, k_body) ->
-      let env =
-        match x.react_desc with
-        | React_var -> Env.add x.react_index env
-        | _ -> assert false
-      in
-      well_formed env k_body
-  | React_run k_body -> well_formed env k_body
-  | React_link k_body -> well_formed env k_body
-  in
-  fun k ->
-    well_formed Env.empty k
-
-
-(* To generalize a type *)
-
-(* let list_of_react_vars = ref [] *)
-
-let rec gen_react is_gen k =
-  let k = react_effect_repr k in
-  begin match k.react_desc with
-  | React_var
-  | React_pause
-  | React_epsilon ->
-      if k.react_level > !reactivity_current_level
-      then if is_gen
-      then (k.react_level <- generic;
-	    (* list_of_react_vars := k :: !list_of_react_vars *))
-      else k.react_level <- !reactivity_current_level
-  | React_seq kl
-  | React_par kl
-  | React_or kl ->
-      k.react_level <-
-        List.fold_left (fun level k -> min level (gen_react is_gen k))
-          notgeneric kl
-  | React_raw (k1, k2) ->
-      k.react_level <-
-        min generic
-          (min (gen_react is_gen k1) (gen_react is_gen k2))
-  | React_run k_body ->
-      k.react_level <- min generic (gen_react is_gen k_body)
-  | React_rec (var, k_body) ->
-      k.react_level <-
-        min generic
-          (min (gen_react is_gen var) (gen_react is_gen k_body))
-  | React_link(link) ->
-      k.react_level <- gen_react is_gen link
-  end;
-  k.react_level
-
 
 (* the occur check *)
 let rec occur_check_react level index k =
@@ -479,7 +379,7 @@ let rec occur_check_react level index k =
     | React_par l -> List.fold_left (fun acc k -> check k or acc) false l
     | React_or l -> List.fold_left (fun acc k -> check k or acc) false l
     | React_raw (k1, k2) -> check k1 or check k2
-    | React_rec (_, k') -> check k'
+    | React_rec (_, _, k') -> check k'
     | React_run k' -> check k'
     | React_link link -> check link
   in
@@ -502,7 +402,7 @@ let rec unify_react_effect expected_k actual_k =
             (* let kl, var = [actual_k], new_react_var() in *)
             let k = react_or kl in
             let rec_phi =
-              React_rec (phi, subst_react_var expected_k phi k)
+              React_rec (false, phi, subst_react_var expected_k phi k)
             in
             let raw =
               React_raw ({ expected_k with react_desc = rec_phi; },
@@ -518,7 +418,7 @@ let rec unify_react_effect expected_k actual_k =
             (* let kl, var = [expected_k], new_react_var() in *)
             let k = react_or kl in
             let rec_phi =
-              React_rec (phi, subst_react_var expected_k phi k)
+              React_rec (false, phi, subst_react_var expected_k phi k)
             in
             let raw =
               React_raw ({ expected_k with react_desc = rec_phi; },

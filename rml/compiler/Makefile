@@ -1,6 +1,6 @@
 BIN = rmlc
 
-DIRECTORIES = global parsing external static typing other_analysis reac lco lk caml main
+DIRECTORIES = global parsing external static typing other_analysis reac lco lk caml optimization main
 
 
 GLOBAL = global/asttypes.mli \
@@ -41,6 +41,7 @@ REAC =	reac/annot.ml \
 
 TYPING = typing/def_types.ml \
 	typing/reactivity_effects.ml \
+	typing/reactivity_check.cmo \
 	typing/types.ml \
 	typing/types_printer.ml \
 	typing/typing.ml \
@@ -64,6 +65,8 @@ CAML = 	caml/caml2caml.ml \
 	caml/lco2caml.ml \
 	caml/lk2caml.ml \
 	caml/print_caml_src.ml \
+
+OPTIMIZATION = optimization/reac_optimization.ml \
 
 MAIN = 	main/compiler.ml \
 	main/configure.ml \
@@ -104,9 +107,10 @@ OBJ =	global/version.cmo \
 	typing/reactivity_effects.cmo \
 	typing/types.cmo \
 	reac/reac_misc.cmo \
+	reac/reac2reac.cmo \
+	typing/reactivity_check.cmo \
 	reac/parse2reac.cmo \
 	global/initialization.cmo \
-	reac/reac2reac.cmo \
 	static/static_printer.cmo \
 	static/static_errors.cmo \
 	static/static.cmo \
@@ -127,6 +131,7 @@ OBJ =	global/version.cmo \
 	caml/lk2caml.cmo \
 	caml/caml2caml.cmo \
 	caml/print_caml_src.cmo \
+	optimization/reac_optimization.cmo \
 	main/compiler.cmo \
 	main/interactive.cmo \
 	main/main.cmo \

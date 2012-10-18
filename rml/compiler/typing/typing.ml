@@ -98,6 +98,98 @@ let is_unit_process desc =
     true
   with Unify -> false
 
+
+(* To generalize a type *)
+
+(* generalisation and non generalisation of a type. *)
+(* the level of generalised type variables *)
+(* is set to [generic] when the flag [is_gen] is true *)
+(* and set to [!binding_level] when the flag is false *)
+(* returns [generic] when a sub-term can be generalised *)
+
+let list_of_typ_vars = ref []
+(* let list_of_react_vars = ref [] *)
+
+let rec gen_ty is_gen ty =
+  let ty = type_repr ty in
+  begin match ty.type_desc with
+    Type_var ->
+      if ty.type_level > !current_level
+      then if is_gen
+      then (ty.type_level <- generic;
+	    list_of_typ_vars := ty :: !list_of_typ_vars)
+      else ty.type_level <- !current_level
+  | Type_arrow(ty1, ty2) ->
+      let level1 = gen_ty is_gen ty1 in
+      let level2 = gen_ty is_gen ty2 in
+      ty.type_level <- min level1 level2
+  | Type_product(ty_list) ->
+      ty.type_level <-
+	List.fold_left (fun level ty -> min level (gen_ty is_gen ty))
+	  notgeneric ty_list
+  | Type_constr(name, ty_list) ->
+      ty.type_level <-
+	List.fold_left
+	  (fun level ty -> min level (gen_ty is_gen ty))
+	  notgeneric ty_list
+  | Type_link(link) ->
+      ty.type_level <- gen_ty is_gen link
+  | Type_process(ty_body, proc_info) ->
+      ty.type_level <- min generic (gen_ty is_gen ty_body);
+      if generic = gen_react is_gen proc_info.proc_react then
+        proc_info.proc_react <- react_simplify proc_info.proc_react
+  end;
+  ty.type_level
+
+
+and gen_react is_gen k =
+  let k = react_effect_repr k in
+  begin match k.react_desc with
+  | React_var
+  | React_pause
+  | React_epsilon ->
+      if k.react_level > !reactivity_current_level
+      then if is_gen
+      then (k.react_level <- generic;
+	    (* list_of_react_vars := k :: !list_of_react_vars *))
+      else k.react_level <- !reactivity_current_level
+  | React_seq kl
+  | React_par kl
+  | React_or kl ->
+      k.react_level <-
+        List.fold_left (fun level k -> min level (gen_react is_gen k))
+          notgeneric kl
+  | React_raw (k1, k2) ->
+      k.react_level <-
+        min generic
+          (min (gen_react is_gen k1) (gen_react is_gen k2))
+  | React_run k_body ->
+      k.react_level <- min generic (gen_react is_gen k_body)
+  | React_rec (checked, var, k_body) ->
+      if not (Reactivity_check.well_formed k) then begin
+        k.react_desc <- React_rec (true, var, k_body)
+      end;
+      k.react_level <-
+        min generic
+          (min (gen_react is_gen var) (gen_react is_gen k_body))
+  | React_link(link) ->
+      k.react_level <- gen_react is_gen link
+  end;
+  k.react_level
+
+
+(* main generalisation function *)
+let gen ty =
+  list_of_typ_vars := [];
+  (* list_of_react_vars := []; *)
+  let _ = gen_ty true ty in
+  { ts_binders = !list_of_typ_vars;
+    (* ts_rbinders = !list_of_react_vars; *)
+    ts_desc = ty }
+let non_gen ty = ignore (gen_ty false ty)
+
+
+
 (* Typing environment *)
 module Env = Symbol_table.Make (Ident)
 
@@ -692,10 +784,7 @@ let rec type_of_expression env expr =
         let k = type_statement env p in
         let phi = new_react_var () in
         let k = react_seq [ k; phi ] in
-        if not (Reactivity_effects.well_formed k) then begin
-          Reactivity_effects.loop_warning expr
-        end;
-        type_unit, react_rec phi k
+        type_unit, react_rec false phi k
 
     | Rexpr_loop (Some n, p) ->
         type_expect_eps env n type_int;
@@ -729,9 +818,6 @@ let rec type_of_expression env expr =
           (process ty { proc_static = None;
                         proc_react = (* raw *) k })
           ty_e;
-        if not (Reactivity_effects.well_formed k) then begin
-          Reactivity_effects.rec_warning expr k
-        end;
         ty, react_run (* raw *) k
 
     | Rexpr_until (s,p,patt_proc_opt) ->
@@ -940,6 +1026,7 @@ and type_let is_rec env patt_expr_list =
       patt_expr_list
       ty_list
   in
+  List.iter (fun (_, expr) -> Reactivity_check.check_expr expr) patt_expr_list;
   pop_type_level();
   List.iter2
     (fun (_,expr) ty -> if not (is_nonexpansive expr) then non_gen ty)
@@ -1081,7 +1168,8 @@ let check_nongen_values impl_item_list =
 let type_impl_item info_chan item =
   match item.impl_desc with
   | Rimpl_expr (e) ->
-      ignore (type_of_expression Env.empty e)
+      ignore (type_of_expression Env.empty e);
+      Reactivity_check.check_expr e
 
   | Rimpl_let (flag, patt_expr_list) ->
       let global_env, local_env, k =
@@ -1116,7 +1204,9 @@ let type_impl_item info_chan item =
                   type_expect Env.empty comb
 		    (arrow ty_emit (arrow ty_get ty_get))
                 in
-                check_epsilon k_gather
+                check_epsilon k_gather;
+                Reactivity_check.check_expr default;
+                Reactivity_check.check_expr comb
 	  end;
 	  s.info <- Some { value_typ = forall [] ty_s };
 	  (* verbose mode *)

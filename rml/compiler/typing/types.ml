@@ -127,56 +127,6 @@ let rec type_repr ty =
       ty
 
 
-(* To generalize a type *)
-
-(* generalisation and non generalisation of a type. *)
-(* the level of generalised type variables *)
-(* is set to [generic] when the flag [is_gen] is true *)
-(* and set to [!binding_level] when the flag is false *)
-(* returns [generic] when a sub-term can be generalised *)
-
-let list_of_typ_vars = ref []
-
-let rec gen_ty is_gen ty =
-  let ty = type_repr ty in
-  begin match ty.type_desc with
-    Type_var ->
-      if ty.type_level > !current_level
-      then if is_gen
-      then (ty.type_level <- generic;
-	    list_of_typ_vars := ty :: !list_of_typ_vars)
-      else ty.type_level <- !current_level
-  | Type_arrow(ty1, ty2) ->
-      let level1 = gen_ty is_gen ty1 in
-      let level2 = gen_ty is_gen ty2 in
-      ty.type_level <- min level1 level2
-  | Type_product(ty_list) ->
-      ty.type_level <-
-	List.fold_left (fun level ty -> min level (gen_ty is_gen ty))
-	  notgeneric ty_list
-  | Type_constr(name, ty_list) ->
-      ty.type_level <-
-	List.fold_left
-	  (fun level ty -> min level (gen_ty is_gen ty))
-	  notgeneric ty_list
-  | Type_link(link) ->
-      ty.type_level <- gen_ty is_gen link
-  | Type_process(ty_body, proc_info) ->
-      ty.type_level <- min generic (gen_ty is_gen ty_body);
-      if generic = gen_react is_gen proc_info.proc_react then
-        proc_info.proc_react <- react_simplify proc_info.proc_react
-  end;
-  ty.type_level
-
-(* main generalisation function *)
-let gen ty =
-  list_of_typ_vars := [];
-  (* list_of_react_vars := []; *)
-  let _ = gen_ty true ty in
-  { ts_binders = !list_of_typ_vars;
-    (* ts_rbinders = !list_of_react_vars; *)
-    ts_desc = ty }
-let non_gen ty = ignore (gen_ty false ty)
 
 (* To compute the free type variables in a type *)
 let free_type_vars level ty =
