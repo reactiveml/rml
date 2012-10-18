@@ -75,3 +75,14 @@ let process pp =
     run !r
   end
 
+$
+
+let rec process p4 q1 q2 q3 q4 =
+ (run q1 ; run q2 ; run q3 ; run q4);
+ run (p4 q2 q3 q4 q1)
+
+let process pause_par_eps =
+ pause || ()
+
+let process test_p4 =
+ run (p4 pause_par_eps pause_par_eps pause_par_eps pause_par_eps)
