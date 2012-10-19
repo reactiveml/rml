@@ -36,7 +36,7 @@ OBJ_OPT = $(OBJ:.cmo=.cmx)
 INTF = $(OBJ:.cmo=.cmi) \
 	lco_interpreter.cmi lk_interpreter.cmi
 
-LIB= rmllib.cma rmllib.cmxa
+LIB= rmllib.cma rmllib.cmxa rmllib.a
 
 INSTALLFILE= $(LIB) $(INTF)
 
