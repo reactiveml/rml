@@ -95,7 +95,8 @@ and print_proc_info pi =
 (*   | Some(Def_static.Instantaneous) -> print_string "-" *)
 (*   | Some(Def_static.Noninstantaneous) -> print_string "+" *)
 (*   end *)
-  printf "[%a]" print_reactivity pi.proc_react
+  if !Misc.dreactivity then
+    printf "[%a]" print_reactivity pi.proc_react
 
 and print_reactivity ff k =
   match k.react_desc with
