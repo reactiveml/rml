@@ -1,5 +1,13 @@
-ReactiveML 1.08.02 (XXXX-XX-XX):
+ReactiveML 1.08.02 (2012-10-19):
 --------------------------------
+ - rmlc: new reactivity analysis.
+ * rmlc: renaming of the option -no_loop_warning into -no_reactivity_warning.
+ - rmlc: new option -dreactivity to display reactivity effects.
+ - rmlc: new option -old_loop_warning to activate the previous
+         reactivity analysis.
+ - rmlc: adding of the reactivity effects into the *.sannot file.
+ - rmlc: bug fixes.
+ - rmltop: new option -dreactivity to display reactivity effects.
 
 
 ReactiveML 1.08.01 (2012-06-14):
