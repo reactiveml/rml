@@ -69,8 +69,10 @@ let print_qualified_ident q =
 (* type variables are printed 'a, 'b,... *)
 let type_name = new name_assoc_table int_to_alpha
 let carrier_name = new name_assoc_table (fun i -> "c"^string_of_int i)
+let carrier_row_name = new name_assoc_table (fun i -> "cr"^string_of_int i)
 let skolem_name = new name_assoc_table (fun i -> "c"^string_of_int i)
 let effect_name = new name_assoc_table (fun i -> "e"^string_of_int i)
+let effect_row_name = new name_assoc_table (fun i -> "er"^string_of_int i)
 let react_name = new name_assoc_table (fun i -> "r"^string_of_int i)
 
 let print_skolem_name (n, i) =
@@ -117,8 +119,12 @@ let rec print priority ty =
           print_carrier_list 2 "," car_list;
           print_string "|";
           print_effect_list 2 "," eff_list;
-          print_string "}[";
-          print_react_list 2 ", " r_list
+          print_string "}"
+        );
+        if r_list <> [] then (
+          print_string "[";
+          print_react_list 2 ", " r_list;
+          print_string "]"
         )
        (* (match name.ck_info with
           | Some { constr_abbr = Constr_abbrev(_, ck) } -> print_string " ----> "; print priority ck
@@ -146,9 +152,25 @@ and print_carrier priority car =
         print_string "'";
         if car.level <> generic then print_string "_";
         print_string (carrier_name#name car.index)
+    | Carrier_row_var ->
+        print_string "'";
+        if car.level <> generic then print_string "_";
+        print_string (carrier_row_name#name car.index)
     | Carrier_skolem(n, i) ->
         print_skolem_name (n, i)
-    | Carrier_link(link) -> print_carrier priority link
+    | Carrier_row( { desc = Carrier_row_var _ }, c) ->
+        print_carrier priority c;
+        print_string ";.."
+   | Carrier_row( { desc = Carrier_empty }, c) ->
+       print_string "<";
+       print_carrier priority c;
+       print_string ">"
+   | Carrier_row(c1, c2) ->
+       print_carrier priority c2;
+       print_string ";";
+       print_carrier priority c1
+   | Carrier_empty -> print_string "empty"
+   | Carrier_link(link) -> print_carrier priority link
   end;
   close_box ()
 
@@ -159,6 +181,7 @@ and print_effect priority eff =
         print_string "'";
         if eff.level <> generic then print_string "_";
         print_string (effect_name#name eff.index)
+    | Effect_row_var -> print_string ".."
     | Effect_link(link) -> print_effect priority link
     | Effect_empty -> print_string "0"
     | Effect_sum (eff1, eff2) ->
@@ -171,6 +194,12 @@ and print_effect priority eff =
         print_string "[";
         print_carrier priority c;
         print_string "]"
+    | Effect_row (eff1, eff2) ->
+        print_effect priority eff2;
+        print_space ();
+        print_string "U";
+        print_space ();
+        print_effect priority eff1
   end;
   close_box ()
 

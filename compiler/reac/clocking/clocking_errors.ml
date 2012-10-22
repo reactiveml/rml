@@ -157,6 +157,14 @@ let non_event_err exp =
     Location.print_oc exp.e_loc;
   raise Error
 
+let event_bad_clock_err exp ty sck =
+  Printf.eprintf
+    "%aThis expression is not an event of clock '%a' (found '%a').\n"
+    Location.print_oc exp.e_loc
+    Clocks_printer.output_carrier sck
+    Clocks_printer.output ty;
+  raise Error
+
 let non_event_err2 conf =
   Printf.eprintf
     "%aThis expression is not an event.\n"

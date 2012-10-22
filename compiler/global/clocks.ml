@@ -64,6 +64,10 @@ and carrier_desc =
     | Carrier_var of string           (* a. keep a source name when possible *)
     | Carrier_skolem of string * int  (* skolem name c *)
     | Carrier_link of carrier
+    (* carrier rows *)
+    | Carrier_row of carrier * carrier (* var, body *)
+    | Carrier_empty
+    | Carrier_row_var
 
 and effect = effect_desc repr
 
@@ -73,6 +77,9 @@ and effect_desc =
     | Effect_depend of carrier
     | Effect_sum of effect * effect
     | Effect_link of effect
+    (* effect rows*)
+    | Effect_row_var
+    | Effect_row of effect * effect (* var, body *)
 
 and react_effect = react_effect_desc repr
 

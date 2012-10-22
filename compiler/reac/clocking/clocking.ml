@@ -64,9 +64,9 @@ let filter_event ?(force_activation_ck=false) ck =
   let ck2 = new_clock_var() in
   let sck =
     if force_activation_ck then
-      !activation_carrier
+      carrier_row carrier_empty !activation_carrier
     else
-      make_carrier generic_prefix_name
+      new_carrier_row_var ()
   in
   unify ck (constr_notabbrev event_ident [Var_clock ck1; Var_clock ck2; Var_carrier sck]);
   add_effect_ck sck;
@@ -75,7 +75,7 @@ let filter_event ?(force_activation_ck=false) ck =
 let filter_multi_event ck =
   let ck = clock_repr ck in
   let ck1 = new_clock_var() in
-  let sck = make_carrier generic_prefix_name in
+  let sck = new_carrier_row_var () in
   unify ck (constr_notabbrev event_ident
                [Var_clock ck1; Var_clock (constr_notabbrev list_ident [Var_clock ck1]); Var_carrier sck]);
   add_effect_ck sck;
@@ -86,9 +86,9 @@ let filter_memory ?(force_activation_ck=false) ck =
   let ck1 = new_clock_var() in
   let sck =
     if force_activation_ck then
-      !activation_carrier
+      carrier_row carrier_empty !activation_carrier
     else
-      make_carrier generic_prefix_name
+      new_carrier_row_var ()
   in
   unify ck (constr_notabbrev memory_ident [Var_clock ck1; Var_carrier sck]);
   add_effect_ck sck;
@@ -690,11 +690,13 @@ let rec schema_of_expression env expr =
         let old_current_effect = !current_effect in
         activation_carrier := make_carrier generic_activation_name;
         current_effect := no_effect;
-        add_effect_ck !activation_carrier;
+        push_type_level ();
         let ck, r = clock_react_of_expression env e in
-        let var = new_react_var () in
-        let r = react_or var r in
-        let res_ck = process ck !activation_carrier !current_effect r in
+        pop_type_level ();
+        let r = remove_local_from_react !current_level r in
+        let r = react_or (new_react_var ()) r in
+        let eff = eff_row (new_effect_row_var ()) !current_effect in
+        let res_ck = process ck !activation_carrier eff r in
         activation_carrier := old_activation_carrier;
         current_effect := old_current_effect;
         set_current_react no_react;
@@ -766,6 +768,7 @@ let rec schema_of_expression env expr =
         let ty_emit = new_clock_var() in
         let ty_get = new_clock_var() in
         let ty_ck = type_clock_expr env ce in
+        let ty_ck = carrier_row (new_carrier_row_var ()) ty_ck in
         let ty_s = constr_notabbrev event_ident
           [Var_clock ty_emit; Var_clock ty_get; Var_carrier ty_ck] in
         opt_iter
@@ -790,16 +793,19 @@ let rec schema_of_expression env expr =
     | Enothing -> Clocks_utils.static
 
     | Epause (_, ce) ->
-        (match ce with
-          | CkExpr ce ->
-              let ck_ce = clock_of_expression env ce in
-              (try
-                  let c = filter_depend ck_ce in
-                  set_current_react (react_carrier c)
-                with
-                  | Unify -> non_clock_err ce.e_loc)
-          | CkLocal -> set_current_react (react_carrier !activation_carrier)
-          | CkTop -> set_current_react (react_carrier topck_carrier));
+        let c =
+          match ce with
+            | CkExpr ce ->
+                let ck_ce = clock_of_expression env ce in
+                (try
+                    filter_depend ck_ce
+                  with
+                    | Unify -> non_clock_err ce.e_loc)
+            | CkLocal -> !activation_carrier
+            | CkTop -> topck_carrier
+        in
+        add_effect (eff_depend c);
+        set_current_react (react_carrier c);
         Clocks_utils.static
 
     | Ehalt _ ->
@@ -807,7 +813,10 @@ let rec schema_of_expression env expr =
         new_clock_var()
 
     | Eloop (None, p) ->
+        push_type_level ();
         let r = type_statement_react env p in
+        pop_type_level ();
+        let r = remove_local_from_react !current_level r in
         set_current_react (react_loop r);
         expr.e_react <- !current_react;
         Clocks_utils.static
@@ -1109,7 +1118,10 @@ and type_of_event_config ?(force_activation_ck=false) env conf =
         try
           filter_event ~force_activation_ck:force_activation_ck ty
         with Unify ->
-          non_event_err s
+          if force_activation_ck then
+            event_bad_clock_err s ty !activation_carrier
+          else
+            non_event_err s
       in
       sck
 

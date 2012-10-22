@@ -151,13 +151,24 @@ let carrier_skolem s i =
     index = names#name;
     level = !current_level }
 
+let carrier_row var c =
+  { desc = (Carrier_row (var, c));
+    level = generic;
+    index = names#name; }
+let new_carrier_row_var () =
+  { desc = Carrier_row_var;
+    index = names#name;
+    level = !current_level }
+
 let make_effect eff =
   { desc = eff;
     level = generic;
     index = names#name; }
 
-let eff_sum eff1 eff2 =
-  make_effect (Effect_sum (eff1, eff2))
+let eff_sum eff1 eff2 = match eff1.desc, eff2.desc with
+  | Effect_empty, _ -> eff2
+  | _, Effect_empty -> eff1
+  | _, _ -> make_effect (Effect_sum (eff1, eff2))
 
 let rec eff_sum_list l = match l with
   | [] -> make_effect Effect_empty
@@ -167,6 +178,8 @@ let rec eff_sum_list l = match l with
 let eff_depend c =
   make_effect (Effect_depend c)
 
+let eff_row var eff =
+  make_effect (Effect_row (var, eff))
 
 
 let no_clock =
@@ -177,6 +190,10 @@ let no_carrier =
   { desc = Carrier_var "";
     index = -1;
     level = generic }
+let carrier_empty =
+  { desc = Carrier_empty;
+    level = generic;
+    index = -2 }
 let no_effect =
  { desc = Effect_empty;
    level = generic;
@@ -257,6 +274,11 @@ let new_carrier_clock_var () =
 
 let new_effect_var () =
   { desc = Effect_var;
+    level = !current_level;
+    index = names#name }
+
+let new_effect_row_var () =
+  { desc = Effect_row_var;
     level = !current_level;
     index = names#name }
 
@@ -368,17 +390,6 @@ let equal_effect eff1 eff2 =
     | _ -> false
 
 (*
-let rec simplify_effect eff =
-  let eff = effect_repr eff in
-  match eff.desc with
-    | Effect_empty | Effect_var | Effect_link _ | Effect_depend _ -> eff
-    | Effect_sum ({ desc = Effect_empty }, eff)
-    | Effect_sum (eff, { desc = Effect_empty }) -> simplify_effect eff
-    | Effect_sum (eff1, eff2) ->
-        { eff with desc = Effect_sum (simplify_effect eff1, simplify_effect eff2) }
-        *)
-
-
 let simplify_effect eff =
   let rec mem_effect eff l = match l with
     | [] -> false
@@ -393,32 +404,11 @@ let simplify_effect eff =
     | Effect_link link -> clocks_of acc link
     | Effect_sum (eff1, eff2) -> clocks_of (clocks_of acc eff2) eff1
   in
-  (*Printf.eprintf "Simplify before: %a with index %d\n" Clocks_printer.output_effect eff  eff.index;*)
   let eff = effect_repr eff in
   let new_eff = eff_sum_list (clocks_of [] eff) in
-  (*Printf.eprintf "Simplify after: %a with index %d\n" Clocks_printer.output_effect eff  eff.index;*)
   new_eff
-
-(*
-let remove_duplicates eff =
-  let used_vars = ref [] in
-  let used_cars = ref [] in
-  let rec aux eff = match eff.desc with
-    | Effect_empty -> ()vars, cars)
-    | Effect_var ->
-        if List.mem eff.index !used_vars then
-
-let remove_empty_effect eff = match eff.desc with
-  | Effect_sum( { desc = Effect_empty }, eff2) ->
-      eff.desc <- Effect_link eff2
-   | Effect_sum(eff1, { desc = Effect_empty }) ->
-       eff.desc <- Effect_link eff1
-   | _ -> ()
-
-let simplify_effect eff =
-  remove_empty_effect eff;
-  effect_repr eff
-  *)
+*)
+let simplify_effect eff = eff (* TODO : re-enable*)
 
 let rec remove_ck_from_effect ck eff = match eff.desc with
   | Effect_depend c ->
@@ -426,10 +416,13 @@ let rec remove_ck_from_effect ck eff = match eff.desc with
         no_effect
       else
         eff
-  | Effect_empty | Effect_var -> eff
+  | Effect_empty | Effect_var | Effect_row_var -> eff
   | Effect_link link -> remove_ck_from_effect ck link
   | Effect_sum (eff1, eff2) ->
       { eff with desc = Effect_sum (remove_ck_from_effect ck eff1,
+                                   remove_ck_from_effect ck eff2) }
+  | Effect_row (eff1, eff2) ->
+      { eff with desc = Effect_row (remove_ck_from_effect ck eff1,
                                    remove_ck_from_effect ck eff2) }
 let remove_ck_from_effect ck eff =
   simplify_effect (remove_ck_from_effect ck eff)
@@ -440,10 +433,13 @@ let rec remove_var_from_effect index eff = match eff.desc with
         no_effect
       else
         eff
-  | Effect_empty | Effect_depend _ -> eff
+  | Effect_empty | Effect_depend _ | Effect_row_var -> eff
   | Effect_link link -> remove_var_from_effect index link
   | Effect_sum (eff1, eff2) ->
       { eff with desc = Effect_sum (remove_var_from_effect index eff1,
+                                   remove_var_from_effect index eff2) }
+  | Effect_row (eff1, eff2) ->
+      { eff with desc = Effect_row (remove_var_from_effect index eff1,
                                    remove_var_from_effect index eff2) }
 let remove_var_from_effect index eff =
   simplify_effect (remove_var_from_effect index eff)
@@ -467,6 +463,28 @@ let rec remove_ck_from_react ck r = match r.desc with
   | React_rec (b, r1, r2) ->
       { r with desc = React_rec (b, r1, remove_ck_from_react ck r2) }
   | React_link link -> remove_ck_from_react ck link
+
+let is_not_local_var level r = match r.desc with
+  | React_var when r.level > level -> false
+  | _ -> true
+
+let rec remove_local_from_react level r = match r.desc with
+  | React_empty | React_var | React_carrier _ -> r
+  | React_seq rl ->
+      { r with desc = React_seq (List.map (remove_local_from_react level) rl) }
+  | React_par rl ->
+      { r with desc = React_par (List.map (remove_local_from_react level) rl) }
+  | React_or rl ->
+      let rl = List.filter (is_not_local_var level) rl in
+      (match rl with
+        | [] -> assert false
+        | [r] -> r
+        | _ -> { r with desc = React_or (List.map (remove_local_from_react level) rl) })
+  | React_run r1 ->
+      { r with desc = React_run (remove_local_from_react level r1) }
+  | React_rec (b, r1, r2) ->
+      { r with desc = React_rec (b, r1, remove_local_from_react level r2) }
+  | React_link link -> remove_local_from_react level link
 
 let rec subst_var_react index subst r = match r.desc with
   | React_var when r.index = index -> subst
@@ -536,14 +554,16 @@ and gen_clock_list is_gen ck_list =
 and gen_carrier is_gen car =
   let car = carrier_repr car in
   (match car.desc with
-    | Carrier_var s ->
+    | Carrier_var _ | Carrier_row_var ->
         if car.level > !current_level then
           if is_gen then (
             car.level <- generic;
             list_of_carrier_vars := car :: !list_of_carrier_vars
           ) else
             car.level <- !current_level
-    | Carrier_skolem _ -> ()
+    | Carrier_skolem _ | Carrier_empty -> ()
+    | Carrier_row (var, c) ->
+        car.level <- min (gen_carrier is_gen var) (gen_carrier is_gen c)
     | Carrier_link(link) ->
         car.level <- gen_carrier is_gen link
   );
@@ -553,11 +573,11 @@ and gen_effect is_gen eff =
   let eff = effect_repr eff in
   (match eff.desc with
     | Effect_empty -> ()
-    | Effect_sum (eff1, eff2) ->
+    | Effect_sum (eff1, eff2) | Effect_row (eff1, eff2) ->
         eff.level <- min (gen_effect is_gen eff1) (gen_effect is_gen eff2)
     | Effect_depend c ->
         eff.level <- gen_carrier is_gen c
-    | Effect_var ->
+    | Effect_var | Effect_row_var ->
         if eff.level > !current_level then
           if is_gen then (
             eff.level <- generic;
@@ -645,17 +665,19 @@ let free_clock_vars level ck =
   and free_vars_carrier car =
     let car = carrier_repr car in
     match car.desc with
-      | Carrier_skolem _ -> ()
-      | Carrier_var _ ->
+      | Carrier_skolem _ | Carrier_empty -> ()
+      | Carrier_var _ | Carrier_row_var ->
           if car.level >= level then fv := (Var_carrier car) :: !fv
+      | Carrier_row(var, c) ->
+          free_vars_carrier var; free_vars_carrier c
       | Carrier_link link -> free_vars_carrier link
   and free_vars_effect eff =
     let eff = effect_repr eff in
     match eff.desc with
       | Effect_empty -> ()
-      | Effect_var ->
+      | Effect_var | Effect_row_var ->
           if eff.level >= level then fv := (Var_effect eff) :: !fv
-      | Effect_sum (eff1, eff2) ->
+      | Effect_sum (eff1, eff2) | Effect_row (eff1, eff2) ->
           free_vars_effect eff1; free_vars_effect eff2
       | Effect_depend c ->
           free_vars_carrier c
@@ -768,6 +790,14 @@ and copy_subst_carrier m car =
           )
         else
           car
+    | Carrier_row_var ->
+        if level = generic then
+          let v = new_carrier_row_var () in
+          car.desc <- Carrier_link v;
+          carriers#save car Carrier_row_var;
+          v
+        else
+          car
   | Carrier_link(link) ->
       if level = generic then
         link
@@ -778,6 +808,12 @@ and copy_subst_carrier m car =
         carrier_skolem s i
       else
         car
+  | Carrier_row(var, c) ->
+      if level = generic then
+        carrier_row (copy_subst_carrier m var) (copy_subst_carrier m c)
+      else
+        car
+  | Carrier_empty -> car
 
 and copy_subst_effect m eff =
   let level = eff.level in
@@ -804,6 +840,19 @@ and copy_subst_effect m eff =
     | Effect_depend c ->
         if level = generic then
           eff_depend (copy_subst_carrier m c)
+        else
+          eff
+    | Effect_row_var ->
+        if level = generic then
+          let v = new_effect_row_var () in
+          eff.desc <- Effect_link v;
+          effects#save eff Effect_row_var;
+          v
+        else
+          eff
+    | Effect_row (eff1, eff2) ->
+        if level = generic then
+          eff_row (copy_subst_effect m eff1) (copy_subst_effect m eff2)
         else
           eff
 
@@ -930,7 +979,7 @@ and carrier_occur_check level index car =
   let rec check car =
     let car = carrier_repr car in
     match car.desc with
-      | Carrier_var s ->
+      | Carrier_var _ | Carrier_row_var ->
         (*  Format.eprintf "Var occur check: %s car.level %d, level: %d@." s car.level level; *)
           if car == index then
             raise Unify
@@ -940,6 +989,10 @@ and carrier_occur_check level index car =
           (*Format.eprintf "Skolem occur check: %s i:%d  car.level %d, level: %d\n" s i car.level level;*)
           if level  < car.level then
             raise (Escape (s, i))
+      | Carrier_row(var, c) ->
+          carrier_occur_check level index var;
+          carrier_occur_check level index c
+      | Carrier_empty -> ()
       | Carrier_link link -> check link
   in
   check car
@@ -952,10 +1005,15 @@ and effect_occur_check level index eff =
            if the same effect appears on both sides *)
       | Effect_var ->
           if eff.level > level then
-            eff.level <- level;
+            eff.level <- level
+      | Effect_row_var ->
+          if eff == index then
+            raise Unify
+          else if eff.level > level then
+            eff.level <- level
       | Effect_empty -> ()
       | Effect_depend c -> carrier_occur_check level no_carrier c
-      | Effect_sum (eff1, eff2) -> check eff1; check eff2
+      | Effect_sum (eff1, eff2) | Effect_row (eff1, eff2) -> check eff1; check eff2
       | Effect_link link -> check link
   in
   check eff
@@ -1017,10 +1075,14 @@ and carrier_skolem_check skolems car =
   let rec check car =
     let car = carrier_repr car in
     match car.desc with
-      | Carrier_var s -> ()
+      | Carrier_var _ | Carrier_row_var -> ()
       | Carrier_skolem(s, i) ->
           if List.mem i skolems then
             raise Unify
+      | Carrier_row(var, c) ->
+          carrier_skolem_check skolems var;
+          carrier_skolem_check skolems c
+      | Carrier_empty -> ()
       | Carrier_link link -> check link
   in
   check car
@@ -1029,9 +1091,9 @@ and effect_skolem_check skolems eff =
   let rec check eff =
     let eff = effect_repr eff in
     match eff.desc with
-      | Effect_var | Effect_empty -> ()
+      | Effect_var | Effect_empty | Effect_row_var -> ()
       | Effect_depend c -> carrier_skolem_check skolems c
-      | Effect_sum (eff1, eff2) -> check eff1; check eff2
+      | Effect_sum (eff1, eff2) | Effect_row (eff1, eff2) -> check eff1; check eff2
       | Effect_link link -> check link
   in
   check eff
@@ -1075,7 +1137,7 @@ let bind_variable param1 param2 =
   match param1, param2 with
     | Var_clock ({ desc  = Clock_var } as ck1), Var_clock ck2 ->
         ck1.desc <- Clock_link ck2
-    | Var_carrier ({ desc  = Carrier_var _ } as car1), Var_carrier car2 ->
+    | Var_carrier ({ desc  = Carrier_var _ | Carrier_row_var } as car1), Var_carrier car2 ->
         car1.desc <- Carrier_link car2
     | Var_effect ({ desc  = Effect_var } as eff1), Var_effect eff2 ->
         eff1.desc <- Effect_link eff2
@@ -1083,19 +1145,19 @@ let bind_variable param1 param2 =
 
 let bind_carrier car1 car2 =
   match car1, car2 with
-    | { desc  = Carrier_var _ }, car2 ->
+    | { desc  = Carrier_var _ | Carrier_row_var }, car2 ->
         car1.desc <- Carrier_link car2
     | _ -> raise Unify
 
 let bind_effect eff1 eff2 =
   match eff1, eff2 with
-    | { desc  = Effect_var _ }, eff2 ->
+    | { desc  = Effect_var }, eff2 ->
         eff1.desc <- Effect_link eff2
     | _ -> raise Unify
 
 let bind_react r1 r2 =
   match r1, r2 with
-    | { desc  = React_var _ }, r2 ->
+    | { desc  = React_var }, r2 ->
         r1.desc <- React_link r2
     | _ -> raise Unify
 
@@ -1106,15 +1168,39 @@ let expand_abbrev params body args =
   List.iter2 bind_variable params' args;
   body'
 
+let rec find_carrier_row_var c =
+  let c = carrier_repr c in
+  match c.desc with
+  | Carrier_row (var, k) ->
+      let var = carrier_repr var in
+      (match var.desc with
+        | Carrier_row_var -> var, k
+        | _ ->
+            let var, c1 = find_carrier_row_var var in
+            var, carrier_row c1 c)
+  | _ -> raise Unify
+
+let rec find_effect_row_var eff =
+  let eff = effect_repr eff in
+  match eff.desc with
+  | Effect_row (var, e) ->
+      let var = effect_repr var in
+      (match var.desc with
+        | Effect_row_var -> var, e
+        | _ ->
+            let var, e1 = find_effect_row_var var in
+            var, eff_row e1 e)
+  | _ -> raise Unify
+
 (* the row variable is the first variable in the + *)
-let rec find_row_var rl = match rl with
+let rec find_react_row_var rl = match rl with
   | [] -> raise Unify
   | r::rl ->
       let r = react_repr r in
       (match r with
         | ({ desc = React_var } as var) -> rl, var
         | { desc = React_or rl' } ->
-            let rl', var = find_row_var rl' in
+            let rl', var = find_react_row_var rl' in
             rl'@rl, var
         | _ ->
             let r' = make_react (React_or (r::rl)) in
@@ -1200,7 +1286,7 @@ and unify_list ck_l1 ck_l2 =
     | Invalid_argument _ -> raise Unify
 
 and carrier_unify expected_car actual_car =
-  (*Printf.eprintf "Unify carrier '%a' and %a\n" Clocks_printer.output_carrier expected_car  Clocks_printer.output_carrier actual_car;*)
+  (*Printf.eprintf "Unify carrier '%a' and %a\n" Clocks_printer.output_carrier expected_car  Clocks_printer.output_carrier actual_car; *)
   if expected_car == actual_car then ()
   else
     let expected_car = carrier_repr expected_car in
@@ -1208,14 +1294,48 @@ and carrier_unify expected_car actual_car =
     if expected_car == actual_car then ()
     else
       match expected_car.desc, actual_car.desc with
-        | Carrier_var(s), _ ->
-  (*Printf.eprintf "Unify carrier next '%a' of level %d and '%a' of level %d\n" Clocks_printer.output_carrier expected_car expected_car.level  Clocks_printer.output_carrier actual_car actual_car.level;*)
+        | Carrier_var(s), (Carrier_var _ | Carrier_skolem _) ->
             carrier_occur_check expected_car.level expected_car actual_car;
             expected_car.desc <- Carrier_link actual_car
-        | _, Carrier_var(s) ->
+        | Carrier_skolem _, Carrier_var(s) ->
             carrier_occur_check actual_car.level actual_car expected_car;
             actual_car.desc <- Carrier_link expected_car
         | Carrier_skolem(_,i), Carrier_skolem(_, j) when i = j -> ()
+        (* unification of row types *)
+        | Carrier_empty, Carrier_empty -> ()
+        | Carrier_row_var, (Carrier_row_var | Carrier_empty | Carrier_row _) ->
+            carrier_occur_check expected_car.level expected_car actual_car;
+            expected_car.desc <- Carrier_link actual_car
+        | (Carrier_empty | Carrier_row _), Carrier_row_var ->
+            carrier_occur_check actual_car.level actual_car expected_car;
+            actual_car.desc <- Carrier_link expected_car
+        | Carrier_row _, Carrier_row _ ->
+            let var1, c1 = find_carrier_row_var expected_car in
+            let var2, c2 = find_carrier_row_var actual_car in
+            (match var1.desc, var2.desc with
+              | _, _ when var1 == var2 -> carrier_unify c1 c2
+              | Carrier_empty, Carrier_empty -> carrier_unify c1 c2
+              | Carrier_empty, _ ->
+                  carrier_unify var2 carrier_empty;
+                  carrier_unify expected_car c2
+              | _, Carrier_empty ->
+                  carrier_unify var1 carrier_empty;
+                  carrier_unify c1 actual_car
+              | _ , _ ->
+                  let var = new_carrier_row_var () in
+                  let new_c1 = carrier_row var c1 in
+                  let new_c2 = carrier_row var c2 in
+                  carrier_unify var1 new_c2;
+                  carrier_unify var2 new_c1
+            )
+        | Carrier_row _, (Carrier_var _ | Carrier_skolem _) ->
+            let var1, c1 = find_carrier_row_var expected_car in
+            carrier_unify var1 carrier_empty;
+            carrier_unify c1 actual_car
+        | (Carrier_var _ | Carrier_skolem _), Carrier_row _ ->
+            let var1, c1 = find_carrier_row_var actual_car in
+            carrier_unify var1 carrier_empty;
+            carrier_unify c1 expected_car
         | _ ->
             Printf.eprintf "Failed to unify carriers '%a' and '%a'\n"  Clocks_printer.output_carrier expected_car  Clocks_printer.output_carrier actual_car;
             raise Unify
@@ -1239,12 +1359,30 @@ and effect_unify expected_eff actual_eff =
             actual_eff.desc <- Effect_link (remove_var_from_effect actual_eff.index expected_eff)
         | _, Effect_empty -> ()
         | Effect_depend c1, Effect_depend c2 -> carrier_unify c1 c2
-        | (Effect_depend _ | Effect_empty), Effect_sum (eff1, eff2) ->
-            effect_unify expected_eff eff1; effect_unify expected_eff eff2
-        | Effect_sum (eff1, eff2), (Effect_depend _ | Effect_empty) ->
-            effect_unify eff1 actual_eff; effect_unify eff2 actual_eff
         | Effect_sum (eff1, eff2), Effect_sum (eff3, eff4) ->
+            (* only called for identical effects *)
             effect_unify eff1 eff3; effect_unify eff2 eff4
+
+        (*unification of rows*)
+        | Effect_row_var, (Effect_row_var | Effect_row _) ->
+            effect_occur_check expected_eff.level expected_eff actual_eff;
+            expected_eff.desc <- Effect_link (remove_var_from_effect expected_eff.index actual_eff)
+        | Effect_row _, Effect_row_var ->
+            effect_occur_check actual_eff.level actual_eff expected_eff;
+            actual_eff.desc <- Effect_link (remove_var_from_effect actual_eff.index expected_eff)
+        | Effect_row _, Effect_row _ ->
+            let var1, e1 = find_effect_row_var expected_eff in
+            let var2, e2 = find_effect_row_var actual_eff in
+            if var1 == var2 then
+              effect_unify e1 e2
+            else (
+              let var = new_effect_row_var () in
+              let new_e1 = eff_row var e1 in
+              let new_e2 = eff_row var e2 in
+              effect_unify var1 new_e2;
+              effect_unify var2 new_e1
+            )
+
         | _ ->
              Printf.eprintf "Failed to unify effects '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff;
             raise Unify
@@ -1280,8 +1418,8 @@ and react_unify expected_r actual_r =
               actual_r.desc <- React_link expected_r
         (* unification of row types *)
         | React_or rl1, React_or rl2 ->
-            let rl1, var1 = find_row_var rl1 in
-            let rl2, var2 = find_row_var rl2 in
+            let rl1, var1 = find_react_row_var rl1 in
+            let rl2, var2 = find_react_row_var rl2 in
             if var1.index = var2.index then
               (* this should only be the case if we are unifying two reacts
                that are just copies *)
