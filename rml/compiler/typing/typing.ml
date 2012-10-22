@@ -694,7 +694,10 @@ let rec type_of_expression env expr =
         ty, react_seq (List.rev rev_kl)
 
     | Rexpr_process(e) ->
+        push_type_level ();
 	let ty, k = type_of_expression env e in
+        pop_type_level ();
+        let k = remove_local_react_var k in
         process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow));
                      proc_react = react_raw k (new_react_var()); },
         react_epsilon()
@@ -796,14 +799,20 @@ let rec type_of_expression env expr =
     | Rexpr_halt _ -> new_var(), react_pause()
 
     | Rexpr_loop (None, p) ->
+        push_type_level ();
         let k = type_statement env p in
+        pop_type_level ();
+        let k = remove_local_react_var k in
         let phi = new_react_var () in
         let k = react_seq [ k; phi ] in
         type_unit, react_rec false phi k
 
     | Rexpr_loop (Some n, p) ->
         type_expect_eps env n type_int;
+        push_type_level ();
         let k = type_statement env p in
+        pop_type_level ();
+        let k = remove_local_react_var k in
         type_unit, k
 
     | Rexpr_fordopar(i,e1,e2,flag,p) ->

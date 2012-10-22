@@ -127,6 +127,42 @@ let rec subst_react_var old_var new_var k =
   | React_link k' ->
       { k with react_desc = React_link (subst_react_var old_var new_var k'); }
 
+let rec remove_local_react_var level bound_vars k =
+  match k.react_desc with
+  | React_var ->
+      if k.react_level > level && not (List.memq k bound_vars)
+      then react_pause ()
+      else k
+  | React_pause -> k
+  | React_epsilon -> k
+  | React_seq l ->
+      let l = List.map (remove_local_react_var level bound_vars) l in
+      { k with react_desc = React_seq l; }
+  | React_par l ->
+      let l = List.map (remove_local_react_var level bound_vars) l in
+      { k with react_desc = React_par l; }
+  | React_or l ->
+      let l = List.map (remove_local_react_var level bound_vars) l in
+      { k with react_desc = React_or l; }
+  | React_raw (k1, k2) ->
+      let k1 = remove_local_react_var level bound_vars k1 in
+      let k2 = remove_local_react_var level bound_vars k2 in
+      { k with react_desc = React_raw (k1, k2)}
+  | React_rec (b, x, k') ->
+      let desc =
+        React_rec (b, x, remove_local_react_var level (x::bound_vars) k')
+      in
+      { k with react_desc = desc; }
+  | React_run k' ->
+      let desc = React_run (remove_local_react_var level bound_vars k') in
+      { k with react_desc = desc; }
+  | React_link k' ->
+      let desc = React_link (remove_local_react_var level bound_vars k') in
+      { k with react_desc = desc; }
+
+let remove_local_react_var r =
+  remove_local_react_var !reactivity_current_level [] r
+
 let rec split_raw k =
   match k.react_desc with
   | React_var -> [], k
@@ -279,6 +315,8 @@ let react_simplify =
         | [ k' ] -> k'
         | kl -> { k with react_desc = React_or kl; }
         end
+    | React_raw(k1, { react_desc = React_pause }) ->
+        simplify k1
     | React_raw (k1, k2) ->
         let k2', var = split_raw k2 in
         let k1' =
