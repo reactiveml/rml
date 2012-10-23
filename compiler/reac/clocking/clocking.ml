@@ -496,7 +496,7 @@ let rec schema_of_expression env expr =
     | Efunction (matching)  ->
         let ty_arg = new_clock_var() in
         let ty_res = new_clock_var() in
-        let eff = new_effect_var () in
+        let eff = new_effect_row_var () in
         let ty = arrow ty_arg ty_res eff in
         let old_current_effect = !current_effect in
         current_effect := no_effect;
@@ -512,7 +512,8 @@ let rec schema_of_expression env expr =
             type_expect new_env e ty_res)
           matching;
         (* take the current effect and put it in the arrow *)
-        effect_unify eff !current_effect;
+        let computed_eff = eff_row (new_effect_row_var ()) !current_effect in
+        effect_unify eff computed_eff;
         current_effect := old_current_effect;
         ty
 
