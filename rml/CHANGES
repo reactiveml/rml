@@ -1,5 +1,6 @@
-ReactiveML 1.08.03 (XXXX-XX-XX):
+ReactiveML 1.08.03 (2012-10-23):
 --------------------------------
+ - rmlc: bug fix in the reactivity analysis.
 
 
 ReactiveML 1.08.02 (2012-10-19):
