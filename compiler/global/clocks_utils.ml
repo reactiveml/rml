@@ -410,12 +410,18 @@ let simplify_effect eff =
 *)
 let simplify_effect eff = eff (* TODO : re-enable*)
 
+let rec remove_ck_from_carrier ck car = match car.desc with
+  | Carrier_row_var | Carrier_var _ | Carrier_empty -> car
+  | Carrier_skolem _ ->
+      if ck.index = car.index then carrier_empty else car
+  | Carrier_row (car1, car2) ->
+      { car with desc = Carrier_row (remove_ck_from_carrier ck car1,
+                                    remove_ck_from_carrier ck car2) }
+  | Carrier_link link -> remove_ck_from_carrier ck link
+
 let rec remove_ck_from_effect ck eff = match eff.desc with
   | Effect_depend c ->
-      if (carrier_repr c).desc = ck.desc then
-        no_effect
-      else
-        eff
+     { eff with desc = Effect_depend (remove_ck_from_carrier ck c) }
   | Effect_empty | Effect_var | Effect_row_var -> eff
   | Effect_link link -> remove_ck_from_effect ck link
   | Effect_sum (eff1, eff2) ->
@@ -1174,7 +1180,7 @@ let rec find_carrier_row_var c =
   | Carrier_row (var, k) ->
       let var = carrier_repr var in
       (match var.desc with
-        | Carrier_row_var -> var, k
+        | Carrier_row_var | Carrier_empty -> var, k
         | _ ->
             let var, c1 = find_carrier_row_var var in
             var, carrier_row c1 c)
