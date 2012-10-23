@@ -36,7 +36,7 @@ open Global
 (* types *)
 type type_scheme =
     { ts_binders: type_expression list;        (* generalised variables *)
-      (*ts_rbinders: reactivity_effect list;*) (* generalised reactivity vars *)
+      ts_rbinders: reactivity_effect list;     (* generalised reactivity vars *)
       ts_desc: type_expression;                (* the type *)
     }
 

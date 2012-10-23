@@ -108,9 +108,9 @@ let rec new_var_list n =
     0 -> []
   | n -> (new_var ()) :: new_var_list (n - 1)
 
-let forall l typ =
+let forall l lr typ =
   { ts_binders = l;
-    (* ts_rbinders = f; *)
+    ts_rbinders = lr;
     ts_desc = typ; }
 
 
@@ -131,6 +131,7 @@ let rec type_repr ty =
 (* To compute the free type variables in a type *)
 let free_type_vars level ty =
   let fv = ref [] in
+  let frv = ref [] in
   let rec free_vars ty =
     let ty = type_repr ty in
     match ty.type_desc with
@@ -144,10 +145,12 @@ let free_type_vars level ty =
 	List.iter free_vars ty_list
     | Type_link(link) ->
 	free_vars link
-    | Type_process(ty, _) -> free_vars ty
+    | Type_process(ty, proc_info) ->
+        free_vars ty;
+        frv := List.rev_append (free_react_vars level proc_info.proc_react) !frv
   in
   free_vars ty;
-  !fv
+  (!fv, List.rev !frv)
 
 let s = ref []
 let save v = s := v :: !s
@@ -206,11 +209,14 @@ let instance { ts_desc = ty } =
   ty_i
 
 
-let instance_and_vars { ts_binders = typ_vars; ts_desc = ty } =
+let instance_and_vars { ts_binders = typ_vars;
+                        ts_rbinders = react_vars;
+                        ts_desc = ty } =
   let ty_i = copy ty in
   let typ_vars = List.map type_repr typ_vars in
+  let react_vars = List.map react_effect_repr react_vars in
   cleanup ();
-  typ_vars, ty_i
+  typ_vars, react_vars, ty_i
 
 let constr_instance
     { cstr_arg = ty_opt; cstr_res = ty_res; } =

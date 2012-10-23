@@ -108,7 +108,7 @@ let is_unit_process desc =
 (* returns [generic] when a sub-term can be generalised *)
 
 let list_of_typ_vars = ref []
-(* let list_of_react_vars = ref [] *)
+let list_of_react_vars = ref []
 
 let rec gen_ty is_gen ty =
   let ty = type_repr ty in
@@ -151,7 +151,7 @@ and gen_react is_gen k =
       if k.react_level > !reactivity_current_level
       then if is_gen
       then (k.react_level <- generic;
-	    (* list_of_react_vars := k :: !list_of_react_vars *))
+	    list_of_react_vars := k :: !list_of_react_vars)
       else k.react_level <- !reactivity_current_level
   | React_seq kl
   | React_par kl
@@ -181,13 +181,13 @@ and gen_react is_gen k =
 (* main generalisation function *)
 let gen ty =
   list_of_typ_vars := [];
-  (* list_of_react_vars := []; *)
+  list_of_react_vars := [];
   let _ = gen_ty true ty in
   { ts_binders = !list_of_typ_vars;
-    (* ts_rbinders = !list_of_react_vars; *)
+    ts_rbinders = !list_of_react_vars;
     ts_desc = ty }
-let non_gen ty = ignore (gen_ty false ty)
 
+let non_gen ty = ignore (gen_ty false ty)
 
 
 (* Typing environment *)
@@ -294,7 +294,14 @@ let type_of_immediate i =
   | Const_string(c) -> type_string
 
 (* Typing of type expressions *)
-let type_of_type_expression typ_vars typexp =
+let type_of_type_expression typ_vars react_vars typexp =
+  let get_react_var =
+    let react_vars = ref react_vars in
+    fun () ->
+      match !react_vars with
+      | [] -> assert false
+      | v :: l -> react_vars := l; v
+  in
   let rec type_of typexp =
     match typexp.te_desc with
     | Rtype_var s ->
@@ -318,30 +325,38 @@ let type_of_type_expression typ_vars typexp =
 
     | Rtype_process (ty,k) ->
 	process (type_of ty) { proc_static = Some(Proc_def (ref k));
-                               proc_react = new_react_var (); }
+                               proc_react = react_raw (react_epsilon())
+                                                      (get_react_var ()); }
   in
   type_of typexp
 
 (* Free variables of a type *)
 let free_of_type ty =
-  let rec vars v ty =
+  let rec vars (v, rv) ty =
     match ty.te_desc with
-      Rtype_var(x) -> if List.mem x v then v else x::v
-    | Rtype_arrow(t1,t2) -> vars (vars v t1) t2
+      Rtype_var(x) -> if List.mem x v then (v, rv) else (x::v, rv)
+    | Rtype_arrow(t1,t2) ->
+        let v, rv = vars (v, rv) t1 in
+        vars (v, rv) t2
     | Rtype_product(t) ->
-	List.fold_left vars v t
+	List.fold_left vars (v, rv) t
     | Rtype_constr(_,t) ->
-	List.fold_left vars v t
-    | Rtype_process (t, _) -> vars v t
-  in vars [] ty
+	List.fold_left vars (v, rv) t
+    | Rtype_process (t, proc_info) ->
+        let v, rv = vars (v, rv) t in
+        let rv = react_vars rv proc_info in
+        (v, rv)
+  and react_vars rv k = (new_generic_react_var()) :: rv
+  in vars ([], []) ty
 
 (* translating a declared type expression into an internal type *)
 let full_type_of_type_expression typ =
-  let lv = free_of_type typ in
+  let lv, lrv = free_of_type typ in
   let typ_vars = List.map (fun v -> (v,new_generic_var ())) lv in
-  let typ = type_of_type_expression typ_vars typ in
+  let react_vars = lrv in
+  let typ = type_of_type_expression typ_vars react_vars typ in
   { ts_binders = List.map snd typ_vars;
-    (* ts_rbinders = []; *) (* XXX TODO XXX *)
+    ts_rbinders = react_vars;
     ts_desc = typ }
 
 (* Typing of patterns *)
@@ -355,7 +370,7 @@ let rec type_of_pattern global_env local_env patt ty =
   | Rpatt_var (Varpatt_global gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
       then non_linear_pattern_err patt (Ident.name gl.gi.id);
-      gl.info <- Some { value_typ = forall [] ty };
+      gl.info <- Some { value_typ = forall [] [] ty };
       (gl::global_env, local_env)
   | Rpatt_var (Varpatt_local x) ->
       if List.mem_assoc x local_env
@@ -365,7 +380,7 @@ let rec type_of_pattern global_env local_env patt ty =
   | Rpatt_alias (p,Varpatt_global gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
       then non_linear_pattern_err patt (Ident.name gl.gi.id);
-      gl.info <- Some { value_typ = forall [] ty };
+      gl.info <- Some { value_typ = forall [] [] ty };
       type_of_pattern (gl::global_env) local_env p ty
   | Rpatt_alias (p,Varpatt_local x) ->
       if List.mem_assoc x local_env
@@ -505,7 +520,7 @@ let rec type_of_expression env expr =
 	    assert (gl_env = []);
 	    let new_env =
 	      List.fold_left
-		(fun env (x, ty) -> Env.add x (forall [] ty) env)
+		(fun env (x, ty) -> Env.add x (forall [] [] ty) env)
 		env loc_env
 	    in
 	    type_expect_eps new_env e ty_res)
@@ -614,7 +629,7 @@ let rec type_of_expression env expr =
 	      assert (gl_env = []);
 	      let new_env =
 	        List.fold_left
-		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
+		  (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
 		  env loc_env
 	      in
 	      type_expect new_env e ty)
@@ -643,7 +658,7 @@ let rec type_of_expression env expr =
 	      assert (gl_env = []);
 	      let new_env =
 	        List.fold_left
-		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
+		  (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
 		  env loc_env
 	      in
 	      type_expect new_env e ty_res)
@@ -663,7 +678,7 @@ let rec type_of_expression env expr =
     | Rexpr_for(i,e1,e2,flag,e3) ->
 	type_expect_eps env e1 type_int;
 	type_expect_eps env e2 type_int;
-	let k = type_statement (Env.add i (forall [] type_int) env) e3 in
+	let k = type_statement (Env.add i (forall [] [] type_int) env) e3 in
 	type_unit, k
 
     | Rexpr_seq e_list ->
@@ -772,7 +787,7 @@ let rec type_of_expression env expr =
 	      type_expect_eps env default ty_get;
 	      type_expect_eps env comb (arrow ty_emit (arrow ty_get ty_get))
 	end;
-	type_of_expression (Env.add s (forall [] ty_s) env) e
+	type_of_expression (Env.add s (forall [] [] ty_s) env) e
 
     | Rexpr_nothing -> type_unit, react_epsilon()
 
@@ -794,7 +809,7 @@ let rec type_of_expression env expr =
     | Rexpr_fordopar(i,e1,e2,flag,p) ->
         type_expect_eps env e1 type_int;
         type_expect_eps env e2 type_int;
-        let k = type_statement (Env.add i (forall [] type_int) env) p in
+        let k = type_statement (Env.add i (forall [] [] type_int) env) p in
         type_unit, k
 
     | Rexpr_par p_list ->
@@ -845,7 +860,7 @@ let rec type_of_expression env expr =
         	      assert (gl_env = []);
         	      let new_env =
         	        List.fold_left
-        		  (fun env (x, ty) -> Env.add x (forall [] ty) env)
+        		  (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
         		  env loc_env
         	      in
         	      type_expect new_env proc ty_body)
@@ -885,7 +900,7 @@ let rec type_of_expression env expr =
             assert (gl_env = []);
             let new_env =
               List.fold_left
-        	(fun env (x, ty) -> Env.add x (forall [] ty) env)
+        	(fun env (x, ty) -> Env.add x (forall [] [] ty) env)
         	env loc_env
             in
             type_expect_eps new_env e type_bool;
@@ -907,7 +922,7 @@ let rec type_of_expression env expr =
         assert (gl_env = []);
         let new_env =
           List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
             env loc_env
         in
         let ty, k = type_of_expression new_env p in
@@ -939,7 +954,7 @@ let rec type_of_expression env expr =
         assert (gl_env = []);
         let new_env =
           List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
             env loc_env
         in
         let ty_p, k_p = type_of_expression new_env p in
@@ -964,7 +979,7 @@ let rec type_of_expression env expr =
         assert (gl_env = []);
         let new_env =
           List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] ty) env)
+            (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
             env loc_env
         in
         let ty_p, k_p = type_of_expression new_env p in
@@ -1012,7 +1027,7 @@ and type_let is_rec env patt_expr_list =
   in
   let add_env =
     List.fold_left
-      (fun env (x, ty) -> Env.add x (forall [] ty) env)
+      (fun env (x, ty) -> Env.add x (forall [] [] ty) env)
       Env.empty local_env
   in
   let let_env =
@@ -1112,7 +1127,11 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 	  List.rev_map
 	    (fun (gl_cstr,te_opt) ->
 	      let ty_arg_opt =
-		opt_map (type_of_type_expression typ_vars) te_opt
+		opt_map
+                  (fun te ->
+                    let _, react_vars = free_of_type te in
+                    type_of_type_expression typ_vars react_vars te)
+                  te_opt
 	      in
 	      gl_cstr.info <- Some { cstr_arg = ty_arg_opt;
 				     cstr_res = final_typ; };
@@ -1126,7 +1145,8 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 	let lbl_list =
 	  List.rev_map
 	    (fun (gl_lbl, mut, te) ->
-	      let ty_res = type_of_type_expression typ_vars te in
+              let _, react_vars = free_of_type te in
+	      let ty_res = type_of_type_expression typ_vars react_vars te in
 	      gl_lbl.info <- Some { lbl_res = ty_res;
 				    lbl_arg = final_typ;
 				    lbl_mut = mut; };
@@ -1136,7 +1156,8 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 	Type_record lbl_list, Constr_notabbrev
 
     | Rtype_rebind (te) ->
-	let ty_te = type_of_type_expression typ_vars te in
+        let _, react_vars = free_of_type te in
+	let ty_te = type_of_type_expression typ_vars react_vars te in
 	Type_rebind (ty_te),
 	Constr_abbrev (List.map snd typ_vars, ty_te)
 
@@ -1157,7 +1178,7 @@ let check_nongen_values impl_item_list =
       match impl_item.impl_desc with
       | Rimpl_let (_, patt_expr_list) ->
 	  List.iter (fun (patt,expr) ->
-	    if free_type_vars notgeneric expr.expr_type != []
+	    if fst (free_type_vars notgeneric expr.expr_type) <> []
 	    then
               cannot_generalize_err expr)
 	    patt_expr_list
@@ -1208,7 +1229,7 @@ let type_impl_item info_chan item =
                 Reactivity_check.check_expr default;
                 Reactivity_check.check_expr comb
 	  end;
-	  s.info <- Some { value_typ = forall [] ty_s };
+	  s.info <- Some { value_typ = forall [] [] ty_s };
 	  (* verbose mode *)
 	  if !print_type
 	  then Types_printer.output_value_type_declaration info_chan [s])
@@ -1222,8 +1243,15 @@ let type_impl_item info_chan item =
       then Types_printer.output_type_declaration info_chan global_env
 
   | Rimpl_exn (gl_cstr, te_opt) ->
+      let ty_opt =
+        opt_map
+          (fun te ->
+            let _, react_vars = free_of_type te in
+            type_of_type_expression [] react_vars te)
+          te_opt
+      in
       gl_cstr.info <-
-	Some {cstr_arg = opt_map (type_of_type_expression []) te_opt;
+	Some {cstr_arg = ty_opt;
 	      cstr_res = type_exn; };
       (* verbose mode *)
       if !print_type
@@ -1256,8 +1284,15 @@ let type_intf_item info_chan item =
       then Types_printer.output_type_declaration info_chan global_env
 
   | Rintf_exn (gl_cstr, te_opt) ->
+      let ty_opt =
+        opt_map
+          (fun te ->
+            let _, react_vars = free_of_type te in
+            type_of_type_expression [] react_vars te)
+          te_opt
+      in
       gl_cstr.info <-
-	Some {cstr_arg = opt_map (type_of_type_expression []) te_opt;
+	Some {cstr_arg = ty_opt;
 	      cstr_res = type_exn; };
       (* verbose mode *)
       if !print_type

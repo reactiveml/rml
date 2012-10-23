@@ -84,6 +84,11 @@ let new_react_var () =
     react_level = !reactivity_current_level;
     react_index = names#name }
 
+let new_generic_react_var () =
+  { react_desc = React_var;
+    react_level = generic;
+    react_index = names#name }
+
 let rec new_react_var_list n =
   match n with
     0 -> []
@@ -226,6 +231,29 @@ let rec react_effect_repr k =
       k'
   | _ ->
       k
+
+
+(* To compute the free type variables in a type *)
+let free_react_vars level k =
+  let fv = ref [] in
+  let rec free_vars k =
+    let k = react_effect_repr k in
+    match k.react_desc with
+    | React_var ->
+        if k.react_level >= level then fv := k :: !fv
+    | React_pause -> ()
+    | React_epsilon -> ()
+    | React_seq kl -> List.iter (fun k -> free_vars k) kl
+    | React_par kl -> List.iter (fun k -> free_vars k) kl
+    | React_or kl -> List.iter (fun k -> free_vars k) kl
+    | React_raw (k1, k2) -> free_vars k1; free_vars k2
+    | React_rec (_, k1, k2) -> free_vars k1; free_vars k2
+    | React_run k -> free_vars k
+    | React_link(link) -> free_vars link
+  in
+  free_vars k;
+  !fv
+
 
 let react_simplify =
   let rec simplify k =
