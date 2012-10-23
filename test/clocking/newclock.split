@@ -112,22 +112,10 @@ let process g =
     signal s2 at ck in
     r := Some s2
 
-
-
-$$$unify
-${
-(*
-  run_test:
-   [
-     Bad 2 "is used with clock": "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
-   ]
-*)
-
-$}
-
 let process f =
   signal s at topck in
   newclock ck in
     signal s2 at ck in
     let l = [s; s2] in
     l
+

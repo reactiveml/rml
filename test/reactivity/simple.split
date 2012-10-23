@@ -37,6 +37,7 @@ let rec process p s =
    pause
  until s -> run (p s) done
 
+
 $$$bad
 ${
 (*
@@ -86,3 +87,25 @@ let process pause_par_eps =
 
 let process test_p4 =
  run (p4 pause_par_eps pause_par_eps pause_par_eps pause_par_eps)
+
+
+$$$good_annot
+${
+(*
+  run_test:
+   [
+    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error -dno_clock_effects"
+   ]
+*)
+
+type 'a t = 'a process
+
+$}
+
+let rec (p : unit t) = process ( run p )
+
+$
+
+let (p : unit t) = process ()
+
+let rec process q = run p; run q
