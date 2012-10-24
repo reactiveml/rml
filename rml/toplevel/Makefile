@@ -32,7 +32,7 @@ GENSOURCES=	rmltop_controller.ml \
 
 all: rmltop lib
 
-CL_INC=-I +ocamlbuild
+CL_INC=-I +ocamlbuild -I +compiler-libs
 
 rmltop: ../compiler/rmlcompiler.cmo \
 	$(RMLRUNFILES) \
@@ -41,7 +41,9 @@ rmltop: ../compiler/rmlcompiler.cmo \
 	rmltop_core.cmo \
 	rmltop.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -o rmltop $(CL_INC) -I +threads -I ../compiler $(RMLLIB) \
-		toplevellib.cma \
+		ocamlcommon.cma \
+		ocamlbytecomp.cma \
+		ocamltoplevel.cma \
 		unix.cma \
 		str.cma \
 		threads.cma \

@@ -26,9 +26,11 @@ OCAMLC=ocamlfind ocamlc -annot \
  -I +graphics \
  -I ../ \
  -I ../../interpreter/ \
- -I ../../compiler/
+ -I ../../compiler/ \
+ -I +compiler-libs/
 
 OPTIONS+=\
+ -I $(shell ocamlc -where)/compiler-libs/ \
  -I ../../interpreter/ \
  -I ../../compiler/ \
  -I ../../compiler/global \
@@ -58,7 +60,9 @@ STDLIB=\
  lk_implem.cmo \
  implem.cmo \
  rmltop_lexer.cmo \
- toplevellib.cma \
+ ocamlcommon.cma \
+ ocamlbytecomp.cma \
+ ocamltoplevel.cma \
  rmltop_global.cmo \
  rmltop_implem.cmo \
  rmltop_machine_body.cmo \
