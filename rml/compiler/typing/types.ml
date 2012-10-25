@@ -234,6 +234,55 @@ let merge_effects effs =
   with Usages.Forbidden_signal_usage (loc1, loc2) ->
     Typing_errors.usage_wrong_type_err loc1 loc2
 
+let rec info ty = match ty.type_desc with
+  | Type_var ->
+      Printf.printf "Var[";
+      Effects.print ty.type_effects;
+      Printf.printf "]"
+  | Type_link (ty) ->
+      Printf.printf "Link";
+      Printf.printf "[";
+      Effects.print ty.type_effects;
+      Printf.printf "]";
+      Printf.printf "(";
+      info ty;
+      Printf.printf ")"
+  | Type_product(l) ->
+      Printf.printf "Product";
+      Printf.printf "[";
+      Effects.print ty.type_effects;
+      Printf.printf "]";
+      Printf.printf "(";
+      List.iter info l;
+      Printf.printf ")"
+  | Type_arrow(ty1,ty2) ->
+      Printf.printf "Arrow";
+      Printf.printf "[";
+      Effects.print ty.type_effects;
+      Printf.printf "]";
+      Printf.printf "(";
+      info ty1;
+      Printf.printf ", ";
+      info ty2;
+      Printf.printf ")"
+  | Type_constr(c,l) ->
+      Printf.printf "Constr{%s}" (Ident.name c.gi.Global_ident.id);
+      Printf.printf "[";
+      Effects.print ty.type_effects;
+      Printf.printf "]";
+      Printf.printf "(";
+      List.iter info l;
+      Printf.printf ")"
+  | Type_process(ty,_) ->
+      Printf.printf "Process";
+      Printf.printf "[";
+      Effects.print ty.type_effects;
+      Printf.printf "]";
+      Printf.printf "(";
+      info ty;
+      Printf.printf ")"
+
+
 (* unification *)
 let rec unify expected_ty actual_ty =
   if expected_ty == actual_ty then ()
