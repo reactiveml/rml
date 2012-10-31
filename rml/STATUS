@@ -1,0 +1,154 @@
+Description
+===========
+
+Dans cette branche, on a ré-implanté (preque) à partir de zéro le
+toplevel "rmltop" de ReactiveML. Il s'agit ici d'une implantation en
+OCaml pur, sans appels à des processus externes.
+
+La nouvelle version du toplevel a été utilisée pour faire une version
+du toplevel en JavaScript à l'aide de Js_of_OCaml. (voir dans le
+dossier toplevel/js).
+
+Évaluer une phrase RML se traduit maintenant par les actions suivantes :
+1) Utiliser la bibliothèque du compilateur RML (rmlcompiler.cma) pour
+  traduire la phrase RML en phrase OCaml.
+2) Utiliser la bibliothèque du toplevel OCaml pour évaluer effectivement
+  la phrase OCaml.
+
+Le toplevel "rmltop" dispose d'une petite bibliothèque nommée
+"rmltop_core.ml" qui contient les partie communes aux deux nouveaux
+toplevels (la version en bytecode OCaml et la version en
+JavaScript). Ils exécutent aussi la même machine réactive
+(voir toplevel/rmltop_controller.ml)
+
+Par rapport à l'anciennce version de "rmltop", la nouvelle version
+dispose de ces nouvelles fonctionnalités :
+- La possibilités d'ajouter "-I ..." pour inclure un dossier dans
+  le search path du toplevel.
+- La possibilité de charger un fichier externe en utilisant "#use".
+- Un mode "#debug" pour montrer le code OCaml généré à partir de la
+  phrase RML entrée.
+- Une primitive "#help" pour lister les directives disponibles.
+- L'option en ligne de commande "-n" pour ne pas charger au démarrage
+  les emplacements de la bibliothèque standard de RML. Cela est pratique
+  pour tester le toplevel "rmltop" sans installation. En effet, à l'aide
+  de cette option, il est désormais possible de faire :
+
+     rml/toplevel$ ./rmltop -n -I ../stdlib -I ../interpreter
+
+  pour lancer le toplevel. Cette méthode est à la fois plus simple, plus
+  naturelle et ne requiert pas de magie noire ou de connaissances obscures
+  comme dans l'ancienne version.
+- La possibilité de charger un fichier .rmlinit au démarrage.
+
+Par rapport au toplevel bytecode, la version en JavaScript dispose des
+fonctionnalités suivantes :
+- Des bindings pour le module Graphics. On utilise les primitives de dessin
+  offertes par l'objet Canvas.
+- Une gestion des leçons. On peut écrire des leçons pour OCaml ou RML.
+  L'utilisateur dispose de boutons pour naviguer entre plusieurs leçons et
+  le toplevel évalue les phrases sur lesquels l'utilisateur a cliqué.
+
+Implantation
+============
+
+Pour arriver à ce résultat, il a été nécessaire d'effectuer malgré tout
+quelques changements dans le compilateur.
+
+Il est à noter que quelques modules utilisés par le compilateur ReactiveML
+portent le même nom que d'autres modules (en fait, ce sont les même copiés
+depuis OCaml est adaptés aux besoin de RML) qui sont dans utilisés par
+toplevellib.cma (la bibliothèque du toplevel OCaml). Pour pouvoir utiliser
+toplevellib.cma et la bibliothèque du compilateur RML dans le même programme,
+il a été nécessaire de créer un pack Rml_compiler qui regrouppe les modules
+dont nous avons besoin dans un seul cmo nommé rmlcompiler.cmo.
+
+Les autres changements apportés au compilateur :
+- compiler/main/interactive.ml:38 la fonction compile écrivait l'interface
+  du fichier compilé dans un fichier .rzi. Cela a été rajouté par /dev/null
+  car les fonctions appellées dans la suite demandent un out_chan. Cela
+  permettait d'exécuter le compilateur en mode interactif, sans générér de
+  fichier .rzi pour chaque phrase évaluée...
+
+- rmlcompiler.cmo contient tous les modules sauf : compiler/main/options.cmo et
+  compiler/main/main.cmo. Le premier fait appel à Arg.parse et écrase donc les
+  options du toplevel définies ailleurs ; tandis que le second définit une
+  fonction main, essaye de compiler le fichier principal et finit par un joli
+  "exit 0". Il est évident que ces deux fichiers là ne sont d'aucune utilité
+  dans rmlcompiler.cmo.
+
+  /!\ Les options en ligne de commande étaient initialement définies dans le module
+  compiler/main/configure.ml. Nous avons préféré déplacer ces définitions dans
+  le module compiler/main/options.ml (nouvellement créé et inutile pour le toplevel)
+  plutôt que de faire des contortions dans compiler/main/configure.ml.
+
+- compiler/caml/print_caml_src.ml: ajouté la fonction output_impl_decl_string
+  pour imprimer une phrase OCaml dans une string, plutôt que l'afficher sur la
+  sortie standard.
+
+- compiler/main/compiler.ml: compile_implementation_back_end_buf qui est la
+  même chose que compile_implementation_back_end mais qui utilise la fonction
+  Print_caml_src.output_impl_decl_string plutôt que Print_caml_src.output_impl_decl.
+
+- compiler/main/interactive.ml: ajouté la fonction translate_phrase pour
+  transformer une phrase RML en une liste de phrases OCaml (chaînes de caractères).
+  Cette fonction ressemble fortement à Interactive.compile, qui compile une interface
+  .rzi du module compilé. Cette nouvelle fonction utilise "/dev/null" pour y stocker
+  le .rzi généré. Cela permet de ne pas casser l'interface et pouvoir utiliser la
+  fonction compile dans un monde où open_out_bin échoura toujours.
+
+  Plus tard, /dev/null a été remplacé (ici et dans Interactive.compile) par None. On
+  a adapté aussi le peu de code qui était concerné par ce changement.
+
+- Pour une raison étrange, $(OCAMLFLAGS) n'était pas utilisé lors de la compilation
+  du toplevel "rmltop". Cela est corrigé dans cette branche.
+
+- compiler/caml/print_caml_src.ml: Il a été nécessaire de paramétrer ce module
+  par un formatter. Pour effectuer un nombre minimal de changements, on a préféré
+  ajouter une référence "formatter" initialisée à "Format.std_formatter" pour garder
+  l'ancien comportement par défaut. Lors du démarrage du toplevel, cette référence
+  prend la valeur "Format.str_formatter".
+
+- Appeler Configure.configure dans Interactive.init.
+
+- Corriger un bug dans compiler/caml/print_caml_src.ml:
+
+  	   -  else if q = !current_module then
+	   +  else if q = !current_module || q = "" then
+
+  Si le nom du qualificateur est vide alors on ne l'utilise pas. Sinon, cela conduit
+  dans quelques situations à des variables dont le nom est ".a".
+
+- Incorporer une copie des fichiers .rzi générés dans stdlib/ dans Rml_compiler. Cela
+  est utile à la version JavaScript du toplevel qui ne peut pas (du moins sans des
+  contortions inutles) charger des modules externes. On a donc :
+  * Déplacer la définition du type d'un module depuis compiler/global/modules.ml dans
+    le fichier nouvellement créé compiler/global/def_modules.ml.
+  * Le script OCaml configure-tools/embedrzi.ml génère le fichier compiler/global/rzi.ml
+    qui contient une liste associative "known_modules" (nom de module -> value). Cette
+    "value" est de type Def_modules.module0.
+    À la première compilation, la liste Rzi.known_modules est vide. Il faut compiler le
+    compilateur, puis compiler les .rzi de stdlib et encore re-compiler le compilateur
+    pour que Rzi.known_modules soit remplie.
+  * Misc.find_in_path renvoit maintenant None au lieu de lever une exception quand le
+    module recherché n'est pas trouvé.
+  * Modules.load_module regarde dans la liste Rzi.known_modules quand le .rzi recherché
+    n'est pas trouvé.
+
+- On a décidé d'include le code source du projet JS_of_OCaml dans le dépôt de RML. Il
+  se trouve dans toplevel/js/js-of-ocaml.
+
+- Le commit 55a21d6081960af62337d8f78b61b2e93d388a6d change beaucoup de fonctions pour
+  qu'elles utilisent un formatter au lieu d'un out_channel. On a aussi définit des
+  nouveaux formatters Types_printer.default_formatter, Misc.std_fmt et Misc.err_fmt.
+  Tout cela pour rendre le code plus souple et avoir moins de surprises.
+
+- Corriger Configure.set_init_stdlib pour ne pas effacer load_path.
+
+- Ajouter au script configure la détection de "ocaml". "ocaml" est utilisé pour
+  appeller le script configure-tools/embedrzi.ml.
+
+- Exporter Graphics.resize_window dans stdlib/graphics.rmli.
+
+- Adapter examples/planets/planets.rml pour qu'on puisse le charger dans le toplevel.
+  (Il s'agissait seulement de rajouter quelques ";;").
