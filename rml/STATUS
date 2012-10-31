@@ -48,6 +48,10 @@ fonctionnalités suivantes :
 - Une gestion des leçons. On peut écrire des leçons pour OCaml ou RML.
   L'utilisateur dispose de boutons pour naviguer entre plusieurs leçons et
   le toplevel évalue les phrases sur lesquels l'utilisateur a cliqué.
+- Un mode Drag'n'Drop pour pouvoir interpréter des fichiers externes.
+  On peut ainsi prendre un fichier .rml et le jeter dans le toplevel JS (sur
+  le rectangle noir), et le fichier en question sera interprété par le
+  toplevel sur la page web. On peut tester avec examples/planets/planets.rml
 
 Implantation
 ============
