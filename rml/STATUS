@@ -1,0 +1,58 @@
+Cette branche introduit le nouveau mot clé "async" dont
+l'utilisation est décrite ci-dessous.
+
+Description :
+=============
+
+Dans toute expression, on peut vouloir exécuter de façon
+asynchrone une certaine tâche. On peut programmer cela... ou bien
+utiliser "async":
+
+    let toto = async (fonction arg1 arg2) in
+    suite
+
+Notez que l'expression qui est passée à "async" doit être de type
+"unit -> 'a".
+
+la partie "async (fonction arg1 arg2)" va se diviser en deux
+instructions. La première sera (grosso modo) l'appel de fonction
+qui va créer le thread "Thread.create ((fonction arg1 arg2)
+()". La seconde partie sera quelque chose comme "await s(y) in y"
+[1]. Le signal "s" est créé localement pour faire communiquer les
+deux parties.
+
+/!\ Attention :
+
+Bien que cette construction ait l'air bien sympathique, elle n'est pas
+pour autant "safe" car il est possible de mettre un "emit" dans la
+fonction passée comme argument à "async".
+
+Implémentation :
+================
+
+Pour partager le maximum entre les différentes runtimes, on a préféré
+faire le plus gros dans la partie "reac". Cela permet de faire
+dégouliner les changements jusqu'à "caml", presque, gratuitement.
+Avant d'arriver à "reac", certains traitements sont faits directement
+dans l'AST de "parsing" où on crée les "pattern" et "variables" qui
+seront utilisés dans le "await" (cf. "y" dans [1]). Cela est fait
+seulement pour avoir du code plus clair (pour ne pas mélanger du
+"parsing" et du "reac" dans la même fonction).
+
+Les threads lancés par "async" sont exécutés et enregistrent leur
+résultat dans une table de hashage dans le module Async. Plus
+précisément, chaque thread rajoute dans la table de hashage
+l'élément "tid" associé à une fonction "send". Le "tid" est
+l'identificateur (entier) du thread lancé et la fonction "send"
+('a -> unit -> unit) sert à délivrer le résultat calculé par le
+thread "tid".
+
+Au début de chaque instant, les résultats de threads "async" sont
+dévoilés. La fonction "Async.release" se charge d'exécuter les
+fonctions "send" enregistrées pour chaque thread. À la fin du
+traitement, elle efface le contenu de la table de hashage.
+
+Pour éviter les surprises, les accès à la table de hashage
+"Async.h" sont protégés par des Mutex (càd, l'enregistrement d'une
+fonction "send" et le déploiement des résultats au début de
+l'instant).
