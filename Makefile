@@ -20,3 +20,6 @@ clean:
 	(cd lib; $(MAKE) clean)
 	(cd mpi; $(MAKE) clean)
 	(cd interpreter; $(MAKE) clean)
+
+distclean:clean
+	rm -rf config.status config.log autom4te.cache/
