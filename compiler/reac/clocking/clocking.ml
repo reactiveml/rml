@@ -895,7 +895,10 @@ let rec schema_of_expression env expr =
 
 
     | Ewhen (s,p) ->
-        ignore (type_of_event_config ~force_activation_ck:true env s);
+        (try
+            ignore (type_of_event_config ~force_activation_ck:true env s)
+          with
+            | Escape (sk, _) -> immediate_dep_escape_err expr.e_loc sk);
         clock_of_expression env p
 
     | Econtrol (s, None, p) ->
@@ -953,7 +956,12 @@ let rec schema_of_expression env expr =
         ty
 
     | Eawait (imm,s) ->
-        let sck = type_of_event_config ~force_activation_ck:(imm = Immediate) env s in
+        let sck =
+          try
+            type_of_event_config ~force_activation_ck:(imm = Immediate) env s
+          with
+            | Escape (sk, _) when imm = Immediate -> immediate_dep_escape_err expr.e_loc sk
+        in
         if imm <> Immediate then set_current_react (react_carrier sck);
         Clocks_utils.static
 
@@ -962,8 +970,8 @@ let rec schema_of_expression env expr =
         let _, ty_get, sck =
           try
             filter_event ty_s
-          with Unify ->
-            non_event_err s
+          with
+            | Unify -> non_event_err s
         in
         let gl_env, loc_env = clock_of_pattern [] [] env patt ty_get in
         assert (gl_env = []);

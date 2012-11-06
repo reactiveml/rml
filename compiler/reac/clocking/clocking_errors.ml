@@ -137,6 +137,13 @@ let run_wrong_clock_escape_err loc s actual_ck =
     s;
   raise Error
 
+let immediate_dep_escape_err loc s =
+  Printf.eprintf
+           "%aThis immediate dependency would make '%s' escape its scope.\n"
+    Location.print_oc loc
+    s;
+  raise Error
+
 let application_of_non_function_err exp ty =
   begin try
     let _ = filter_arrow ty in
