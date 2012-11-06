@@ -695,8 +695,18 @@ let rec schema_of_expression env expr =
         let ck, r = clock_react_of_expression env e in
         pop_type_level ();
         let r = remove_local_from_react !current_level r in
-        let r = react_or (new_react_var ()) r in
-        let eff = eff_row (new_effect_row_var ()) !current_effect in
+        let r =
+          if !Compiler_options.no_reactivity then
+            no_react
+          else
+            react_or (new_react_var ()) r
+        in
+        let eff =
+          if !Compiler_options.no_clock_effects then
+            no_effect
+          else
+            eff_row (new_effect_row_var ()) !current_effect
+        in
         let res_ck = process ck !activation_carrier eff r in
         activation_carrier := old_activation_carrier;
         current_effect := old_current_effect;
