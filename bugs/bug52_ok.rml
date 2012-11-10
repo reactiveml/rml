@@ -1,0 +1,21 @@
+(* 09/11/2012 *)
+(* Problème avec la nouvelle analyse de réactivité *)
+(* Uncaught exception:
+   File "typing/reactivity_check.ml", line 86, characters 19-25:
+   Assertion failed
+*)
+
+type state = A | B
+
+let process p switch =
+  let process a = loop pause end in
+  let process b = loop pause end in
+  let rec process automaton state =
+    do run state
+    until switch(mode) ->
+      match mode with
+      | A -> run (automaton a)
+      | B -> run (automaton b)
+    done
+  in
+  run (automaton a)

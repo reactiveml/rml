@@ -81,7 +81,7 @@ and well_formed =
         if checked then well_formed env k_body
         else
           let env =
-            match x.react_desc with
+            match (Reactivity_effects.react_effect_repr x).react_desc with
             | React_var -> Env.add x.react_index env
             | _ -> assert false
           in
