@@ -76,7 +76,7 @@ let parse_cli () =
                 raise (Arg.Bad ("Expected a period after -sampling"));
               sampling_rate := float_of_string Sys.argv.(!current);
               incr current
-          | "-help" | "--help" -> raise (Arg.Help (Arg.usage_string rml_cli_options "Usage:"))
+          (*| "-help" | "--help" -> raise (Arg.Help (Arg.usage_string rml_cli_options "Usage:")) *)
           | _ -> ()
       done
   with
