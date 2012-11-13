@@ -71,6 +71,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "begin", BEGIN;
     "by", BY;
     "class", CLASS;
+    "clock", CLOCK;
     "constraint", CONSTRAINT;
     "control", CONTROL;
     "default", DEFAULT;

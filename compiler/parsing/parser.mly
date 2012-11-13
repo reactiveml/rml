@@ -208,6 +208,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token BY                  /* "by" */
 %token <char> CHAR
 %token CLASS               /* "class" */
+%token CLOCK               /* "clock" */
 %token COLON               /* ":" */
 %token COLONCOLON          /* "::" */
 %token COLONEQUAL          /* ":=" */
@@ -1261,10 +1262,13 @@ signal_comma_list:
     signal_decl                                 { [$1] }
   | signal_comma_list COMMA signal_decl         { $3 :: $1}
 ;
+at_or_clock:
+  | AT { () }
+  | CLOCK { () }
 opt_at_expr:
     /* empty */       { CkLocal, CkLocal }
-  | AT not_empty_clock_expr { $2, $2 }
-  | AT not_empty_clock_expr RESTRICT simple_expr { $2, CkExpr $4 }
+  | at_or_clock not_empty_clock_expr { $2, $2 }
+  | at_or_clock not_empty_clock_expr RESTRICT simple_expr { $2, CkExpr $4 }
 ;
 
 
