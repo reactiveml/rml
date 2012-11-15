@@ -1365,7 +1365,7 @@ let impl info_chan has_intf item =
         (fun ((s,te_opt), combine_opt) ->
           let ty_emit = new_clock_var() in
           let ty_get = new_clock_var() in
-          let ty_ck = topck_carrier in
+          let ty_ck = carrier_row carrier_empty topck_carrier in
           let ty_s = constr_notabbrev event_ident
             [Var_clock ty_emit; Var_clock ty_get; Var_carrier ty_ck] in
           opt_iter
