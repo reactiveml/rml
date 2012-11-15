@@ -652,6 +652,8 @@ expr:
       { mkexpr (Pexpr_newclock (mksimple $2 2, $3, None, $5)) }
   | DOMAIN LPAREN LIDENT RPAREN DO par_expr opt_schedule opt_by DONE
       { mkexpr (Pexpr_newclock (mksimple $3 2, $7, $8, $6)) }
+  | DOMAIN LIDENT DO par_expr opt_schedule opt_by DONE
+      { mkexpr (Pexpr_newclock (mksimple $2 2, $5, $6, $4)) }
   | PAUSE clock_expr
       { mkexpr (Pexpr_pause $2) }
   | PAUSECLOCK simple_expr
