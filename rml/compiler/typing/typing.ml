@@ -643,8 +643,8 @@ let rec type_of_expression env expr =
 
     | Rexpr_ifthenelse (cond,e1,e2) ->
 	type_expect_eps env cond type_bool;
-	let ty, k1 = type_of_expression env e1 in
-	let k2 = type_expect env e2 ty in
+	let ty, k2 = type_of_expression env e2 in
+	let k1 = type_expect env e1 ty in
 	ty, react_or [k1; k2]
 
     | Rexpr_match (body,matching) ->
