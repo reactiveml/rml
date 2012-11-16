@@ -554,8 +554,8 @@ let rec type_of_expression env expr =
 
     | Eifthenelse (cond,e1,e2) ->
         type_expect env cond type_bool;
-        let ty = type_of_expression env e1 in
-        type_expect env e2 ty;
+        let ty = type_of_expression env e2 in
+        type_expect env e1 ty;
         ty
 
     | Ematch (body,matching) ->

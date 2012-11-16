@@ -625,8 +625,8 @@ let rec schema_of_expression env expr =
 
     | Eifthenelse (cond,e1,e2) ->
         type_expect env cond Clocks_utils.static;
-        let ty, r1 = clock_react_of_expression env e1 in
-        let r2 = type_react_expect env e2 ty in
+        let ty, r2 = clock_react_of_expression env e2 in
+        let r1 = type_react_expect env e1 ty in
         set_current_react (react_or r1 r2);
         ty
 
