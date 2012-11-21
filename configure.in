@@ -45,21 +45,21 @@ AC_CHECK_OCAML_PKG([sdl])
  fi
 
 if test "$enable_local_stdlib" = "yes"; then
-    stdlib_dir=$PWD/lib
-    rpmllib_dir=$PWD/interpreter/_build
-    rmlc=$PWD/compiler/rpmlc.byte
-    rmldep=$PWD/tools/rpmldep/rpmldep.byte
-    rmlbuild=$PWD/tools/rpmlbuild/rpmlbuild/_build/ocamlbuild.byte
-    rmlbuild_libdir=$PWD/tools/rpmlbuild/rpmlbuild/_build
-    mlmpi_libdir=$PWD/mpi
+    stdlib_dir="$PWD/lib"
+    rpmllib_dir="$PWD/interpreter/_build"
+    rmlc="$PWD/compiler/rpmlc.byte"
+    rmldep="$PWD/tools/rpmldep/rpmldep.byte"
+    rmlbuild="$PWD/tools/rpmlbuild/rpmlbuild/_build/ocamlbuild.byte"
+    rmlbuild_libdir="$PWD/tools/rpmlbuild/rpmlbuild/_build"
+    mlmpi_libdir="$PWD/mpi"
 else
-    stdlib_dir=$prefix/lib/rpml
-    rpmllib_dir=$stdlib_dir
+    stdlib_dir="$prefix/lib/rpml"
+    rpmllib_dir="$stdlib_dir"
     rmlc=rpmlc
     rmldep=rpmldep
     rmlbuild=rpmlbuild
-    rmlbuild_libdir=$stdlib_dir/rpmlbuild
-    mlmpi_libdir=$stdlib_dir
+    rmlbuild_libdir="$stdlib_dir/rpmlbuild"
+    mlmpi_libdir="$stdlib_dir"
 fi
 
 AC_SUBST(INSTALL)

@@ -17,7 +17,7 @@
 sed -e "s@^PREFIX=.*@PREFIX=$1@" \
     -e "s@^LIBDIR=.*@LIBDIR=$2@" \
     -e "s@STUBLIBDIR=.*@STUBLIBDIR=$3/stublibs@" \
-    $3/Makefile.config \
+    "$3/Makefile.config" \
     > rmlbuild.config
 
 sed \
