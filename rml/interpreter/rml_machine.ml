@@ -52,25 +52,25 @@ let rec wait_next_instant debut fin min =
     begin try
       ignore (Unix.select [] [] [] diff); false
     with Unix.Unix_error (Unix.EINTR ,_, _) ->
-      wait_next_instant debut (Sys.time()) min
+      wait_next_instant debut (Unix.gettimeofday ()) min
     end
   else true
 *)
 
 let wait_next_instant =
   let retard = ref 0.0 in
-  let rec wait_next_instant debut fin min =
-    let diff = min -. (fin -. debut) in
-    if diff -. !retard > 0.0 then
+  let rec wait_next_instant debut fin min_ =
+    let diff = (min_ -. (fin -. debut)) -. !retard in
+    if diff > 0.0 then
       begin try
+        retard := 0.0;
         ignore (Unix.select [] [] [] diff); false
       with Unix.Unix_error (Unix.EINTR ,_, _) ->
-        wait_next_instant debut (Sys.time()) min
+        wait_next_instant debut (Unix.gettimeofday ()) min_
       end
     else
       begin
-        retard := max 0.0 (-. diff);
-        (* retard := -. (diff -. !retard); *)
+        retard := min (-. diff) min_;
         (* Format.eprintf "XXXXXX retard : %f@." !retard; *)
         true
       end
@@ -104,9 +104,9 @@ module M =
     let rml_exec_sampling p min =
       let react = Interpretor.rml_make p in
       let rec exec () =
-	let debut = Sys.time() in
+	let debut = Unix.gettimeofday () in
 	let v = react () in
-	let fin = Sys.time() in
+	let fin = Unix.gettimeofday () in
         ignore (wait_next_instant debut fin min);
 	match v with
 	| None -> exec ()
@@ -126,9 +126,9 @@ module M =
 	    print_newline();
 	    incr instant
 	  in
-	  let debut = Sys.time() in
+	  let debut = Unix.gettimeofday () in
 	  let v = react () in
-	  let fin = Sys.time() in
+	  let fin = Unix.gettimeofday () in
           if wait_next_instant debut fin min then begin
 	    print_string "Instant ";
 	    print_int !instant;
