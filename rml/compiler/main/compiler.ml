@@ -71,13 +71,15 @@ let compile_implementation_front_end info_fmt itf impl_list =
     (* producing rml code (and openning of modules) *)
     Parse2reac_timer.start();
     let rml_code = Parse2reac.translate_impl_item info_fmt impl in
-    let rml_code = Reac2reac.impl_map Reac2reac.translate_merge rml_code in
+    let rml_code =
+      Reac2reac.impl_map Reac2reac.translate_merge rml_code
+    in
     Parse2reac_timer.time();
 
     Optimization_timer.start();
     let rml_code =
       if !nary_optimization then
-	Reac2reac.impl_map Reac2reac.binary2nary rml_code
+	Reac2reac.impl_map Reac_optimization.binary2nary rml_code
       else
 	rml_code
     in
@@ -96,7 +98,7 @@ let compile_implementation_front_end info_fmt itf impl_list =
     Optimization_timer.start();
     let rml_code =
       if !static_optimization then
-	Reac2reac.impl_map Reac2reac.dynamic2static rml_code
+	Reac2reac.impl_map Reac_optimization.dynamic2static rml_code
       else
 	rml_code
     in
@@ -105,7 +107,7 @@ let compile_implementation_front_end info_fmt itf impl_list =
     (* Instantaneous loop *)
     Other_analysis_timer.start();
     Wf_rec.check rml_code;
-    if !instantaneous_loop_warning then
+    if !old_instantaneous_loop_warning then
       Instantaneous_loop.instantaneous_loop rml_code;
     Other_analysis_timer.time();
 
@@ -118,7 +120,7 @@ let compile_implementation_front_end info_fmt itf impl_list =
     Optimization_timer.start();
     let rml_code =
       if !for_optimization then
-	Reac2reac.impl_map Reac2reac.for2loop_n rml_code
+	Reac2reac.impl_map Reac_optimization.for2loop_n rml_code
       else
 	rml_code
     in

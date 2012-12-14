@@ -66,4 +66,41 @@ clean:
 realclean: clean
 	rm -f *~
 
+arg.rzi: pervasives.rzi
+array.rzi: pervasives.rzi
+buffer.rzi: pervasives.rzi
+callback.rzi: pervasives.rzi
+char.rzi: pervasives.rzi
+complex.rzi: pervasives.rzi
+digest.rzi: pervasives.rzi
+filename.rzi: pervasives.rzi
+format.rzi: pervasives.rzi buffer.rzi
+gc.rzi: pervasives.rzi
+genlex.rzi: pervasives.rzi stream.rzi
+graphics.rzi: pervasives.rzi
+hashtbl.rzi: pervasives.rzi
+int32.rzi: pervasives.rzi
+int64.rzi: pervasives.rzi nativeint.rzi int32.rzi
+lazy.rzi: pervasives.rzi
+lexing.rzi: pervasives.rzi
+list.rzi: pervasives.rzi
+luc4ocaml_nolbl.rzi: pervasives.rzi luc4ocaml.rzi
+luc4ocaml.rzi: pervasives.rzi
+marshal.rzi: pervasives.rzi
+nativeint.rzi: pervasives.rzi int32.rzi
+obj.rzi: pervasives.rzi
+parsing.rzi: pervasives.rzi obj.rzi lexing.rzi
+printexc.rzi: pervasives.rzi
+printf.rzi: pervasives.rzi buffer.rzi
+queue.rzi: pervasives.rzi
+random.rzi: pervasives.rzi
+sort.rzi: pervasives.rzi
+stack.rzi: pervasives.rzi
+stream.rzi: pervasives.rzi
+string.rzi: pervasives.rzi
+str.rzi: pervasives.rzi
+sys.rzi: pervasives.rzi
+unix.rzi: pervasives.rzi
+weak.rzi: pervasives.rzi
+
 .PHONY:opt byte all install uninstall clean realclean

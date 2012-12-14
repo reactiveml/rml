@@ -98,7 +98,7 @@ let exec_machine_controller () =
   done
 
 let start () =
-  Thread.create exec_machine_controller ()
+  ignore (Thread.create exec_machine_controller ())
 
 let main () =
   if not !hide_rml_dirs then begin
@@ -147,6 +147,7 @@ let _ =
       "-n", Arg.Set hide_rml_dirs, " Do not include RML paths at startup";
       "-debug", Arg.Set debug, " Enable debug output";
       "-I", Arg.String add_include_dir, "<dir>  Add <dir> to the list of include directories";
+      (* "-dreactivity", Arg.Unit set_dreactivity, " Display reactivity effects in process types"; *)
     ])
     add_include_obj
     "";

@@ -40,7 +40,9 @@ LIB= rmllib.cma rmllib.cmxa rmllib.a
 
 INSTALLFILE= $(LIB) $(INTF)
 
-all: lco_interpreter.cmi lk_interpreter.cmi $(LIB)
+all: lco_interpreter.cmi lk_interpreter.cmi
+	$(MAKE) rmllib.cma
+	$(MAKE) rmllib.cmxa
 
 install: $(INSTALLFILE)
 	$(INSTALL) -d $(LIBDIR)

@@ -78,7 +78,7 @@ test:
 	./rmltop -debug -n -I . -I ../interpreter
 
 wc:
-	wc -l *.*ml*
+	wc -l *.ml *.mli *.rml *.rmli *.mll
 
 clean:
 	rm -f *.cm* *.rzi
@@ -132,7 +132,7 @@ rmltop_controller.cmi rmltop_controller.cmo: rmltop_controller.ml \
 		rmltop_reactive_machine.cmi rmltop_implem.cmo rmltop_global.cmi
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_controller.ml
 
-rmltop_implem.cmo: rmltop_implem.ml
+rmltop_implem.cmo rmltop_implem.cmi: rmltop_implem.ml
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_implem.ml
 
 rmltop.cmo: rmltop.ml ../compiler/rmlcompiler.cmo rmltop_lexer.cmo rmltop_global.cmo

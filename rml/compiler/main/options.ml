@@ -38,7 +38,10 @@ let _ =
 	"-sampling", Arg.Float set_sampling, doc_sampling;
 	"-i", Arg.Unit set_verbose, doc_verbose;
 	"-dtypes", Arg.Unit set_save_types, doc_save_types;
-	"-no_loop_warning", Arg.Unit unset_instantaneous_loop_warning, doc_no_loop_warning;
+	"-no_reactivity_warning", Arg.Unit unset_reactivity_warning, doc_no_reactivity_warning;
+	"-dreactivity", Arg.Unit set_dreactivity, doc_dreactivity;
+
+	"-old_loop_warning", Arg.Unit set_old_instantaneous_loop_warning, doc_old_loop_warning;
 	"-runtime", Arg.String set_runtime, doc_runtime;
 	"-interactive", Arg.Unit set_interactive, doc_interactive;
 	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;

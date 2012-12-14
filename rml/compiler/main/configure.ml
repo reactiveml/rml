@@ -89,8 +89,11 @@ let set_verbose () =
 let set_save_types () =
   save_types := true
 
-let unset_instantaneous_loop_warning () =
-  instantaneous_loop_warning := false
+let unset_reactivity_warning () =
+  reactivity_warning := false
+let set_old_instantaneous_loop_warning () =
+  old_instantaneous_loop_warning := true
+
 
 (* Select the runtime *)
 let set_runtime s =
@@ -153,6 +156,9 @@ let set_dparse () = dparse := true
 (* sets the display of the timing information of the compiler *)
 let set_dtime () = dtime := true
 
+(* sets the display of the reactivity effects *)
+let set_dreactivity () = dreactivity := true
+
 (* sets the interactive mode *)
 let set_interactive () =
 (*
@@ -187,7 +193,9 @@ and doc_number_of_instant = "<n> Executes the main process <n> instants"
 and doc_sampling = "<rate> Sets the sampling rate to <rate> seconds"
 and doc_verbose = "Print types"
 and doc_save_types = "Save type information in <filename>.?annot"
-and doc_no_loop_warning = "Remove instantaneous loop and recursion warnings"
+and doc_no_reactivity_warning = "Remove reactivity analysis warnings"
+and doc_dreactivity = "Display reactivity effects in process types"
+and doc_old_loop_warning = "Set the old instantaneous loop and recursion analysis"
 and doc_interactive = "Read programs on stdin and output on stdout"
 and doc_runtime =
 (*"<interpreter> select the runtime according to <interpreter>:\n"*)

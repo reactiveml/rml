@@ -53,6 +53,7 @@ let print_qualified_ident q =
 
 (* type variables are printed 'a, 'b,... *)
 let type_name = new name_assoc_table int_to_alpha
+let react_name = new name_assoc_table (fun i -> Format.sprintf "r%i" (i+1))
 
 let rec print priority ty =
   pp_open_box !default_formatter 0;
@@ -71,12 +72,12 @@ let rec print priority ty =
       if priority >= 1 then pp_print_string !default_formatter ")"
   | Type_product(ty_list) ->
       if priority >= 2 then pp_print_string !default_formatter "(";
-      print_list 2 "*" ty_list;
+      print_list 2 " * " ty_list;
       if priority >= 2 then pp_print_string !default_formatter ")"
   | Type_constr(name,ty_list) ->
       let n = List.length ty_list in
       if n > 1 then pp_print_string !default_formatter "(";
-      print_list 2 "," ty_list;
+      print_list 2 ", " ty_list;
       if n > 1 then pp_print_string !default_formatter ")";
       if ty_list <> [] then pp_print_space !default_formatter ();
       print_qualified_ident name.gi
@@ -86,15 +87,56 @@ let rec print priority ty =
       print 2 ty;
       pp_print_space !default_formatter ();
       pp_print_string !default_formatter "process";
+      print_proc_info proc_info
   end;
   pp_close_box !default_formatter ()
 
-and print_proc_info pi = ()
+and print_proc_info pi =
 (*   begin match pi.proc_static with *)
 (*   | None | Some(Def_static.Dontknow) -> () *)
 (*   | Some(Def_static.Instantaneous) -> pp_print_string !default_formatter "-" *)
 (*   | Some(Def_static.Noninstantaneous) -> pp_print_string !default_formatter "+" *)
 (*   end *)
+  if !Misc.dreactivity then
+    printf "[%a]" print_reactivity pi.proc_react
+
+and print_reactivity ff k =
+  match k.react_desc with
+  | React_link k' -> print_reactivity ff k'
+  | React_var ->
+      fprintf ff "'%s%s"
+        (if k.react_level <> generic then "_" else "")
+        (react_name#name k.react_index)
+  | React_pause -> fprintf ff "*"
+  | React_epsilon -> fprintf ff "0"
+  | React_seq l -> fprintf ff "(%a)" (print_reactivity_list "; ") l
+  | React_par l -> fprintf ff "(%a)" (print_reactivity_list " || ") l
+  | React_or l -> fprintf ff "(%a)" (print_reactivity_list " + ") l
+  (* | React_raw (k1, { react_desc = React_var }) -> *)
+  (*     fprintf ff "(%a + ..)" *)
+  (*       print_reactivity k1 *)
+  | React_raw (k1, k2) ->
+      fprintf ff "(%a + %a)"
+        print_reactivity k1
+        print_reactivity k2
+  | React_rec (_, x, k') ->
+      fprintf ff "(rec %a. %a)"
+        print_reactivity x
+        print_reactivity k'
+  | React_run k' -> fprintf ff "run %a" print_reactivity k'
+
+and print_reactivity_list sep ff l =
+  let rec printrec ff l =
+    match l with
+      [] -> ()
+    | [k] ->
+	print_reactivity ff k
+    | k::rest ->
+        fprintf ff "%a%s%a"
+	  print_reactivity k
+          sep
+	  printrec rest in
+  printrec ff l
 
 and print_list priority sep l =
   let rec printrec l =
@@ -112,6 +154,7 @@ and print_list priority sep l =
 
 let print ty =
   type_name#reset;
+  react_name#reset;
   print 0 ty;
   pp_print_flush !default_formatter ()
 let print_scheme { ts_desc = ty } = print ty
@@ -288,4 +331,11 @@ let output_exception_declaration fmt gl =
   pp_close_box !default_formatter ();
   pp_print_string !default_formatter "\n";
   pp_print_flush !default_formatter ()
+
+(* Utils *)
+let print_to_string  f x =
+  ignore (Format.flush_str_formatter ());
+  f Format.str_formatter x;
+  Format.fprintf Format.str_formatter "@?";
+  Format.flush_str_formatter ()
 
