@@ -104,4 +104,6 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
 
 (** Prints a type variables *)
 let print_type_var s = print_string ("'"^s)
-let print_any_var (s,_) = print_type_var s
+let print_any_var k = match k with
+  | Kclock s -> print_type_var s
+  | _ -> assert false

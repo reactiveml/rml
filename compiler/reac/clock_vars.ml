@@ -30,30 +30,41 @@ let mkte d =
   { pte_desc = d; pte_loc = Location.none }
 let mkce d =
   { pce_desc = d; pce_loc = Location.none }
+let mkcer d =
+  { pcer_desc = d; pcer_loc = Location.none }
 let mkee d =
   { pee_desc = d; pee_loc = Location.none }
+let mkeer d =
+  { peer_desc = d; peer_loc = Location.none }
 
-let mkfresh_type s =
-  s, Ttype_var
-let mkfresh_car () =
-  Clocks_utils.generic_prefix_name^(string_of_int Clocks_utils.names#name), Tcarrier_var
-let mkfresh_effect () =
-  Clocks_utils.generic_effect_name^(string_of_int Clocks_utils.names#name), Teffect_var
+let mkfresh_clock_var () =
+  let v = "" in
+  Pcar_var v, Kcarrier v
+let mkfresh_clock () = snd (mkfresh_clock_var ())
+let mkfresh_car_var () =
+  let v = Clocks_utils.generic_prefix_name^(string_of_int Clocks_utils.names#name) in
+  Pcar_var v, Kcarrier v
+let mkfresh_car () = snd (mkfresh_car_var ())
+let mkfresh_car_row_var () =
+  let v = Clocks_utils.generic_carrier_row_name^(string_of_int Clocks_utils.names#name) in
+  Pcar_row_var v, Kcarrier_row v
+let mkfresh_car_row () = snd (mkfresh_car_row_var ())
+let mkfresh_effect_var () =
+  let v = Clocks_utils.generic_effect_name^(string_of_int Clocks_utils.names#name) in
+  Peff_var v, Keffect v
+let mkfresh_effect () = snd (mkfresh_effect_var ())
+let mkfresh_effect_row_var () =
+  let v = Clocks_utils.generic_effect_row_name^(string_of_int Clocks_utils.names#name) in
+  Peff_row_var v, Keffect_row v
+let mkfresh_effect_row () = snd (mkfresh_effect_row_var ())
 
-let param_of_var (v, k) = match k with
-  | Ttype_var -> Pptype (mkte (Ptype_var v))
-  | Tcarrier_var -> Ppcarrier (mkce (Pcar_var v))
-  | Teffect_var -> Ppeffect (mkee (Peff_var v))
-  | Treact_var -> assert false (*TODO*)
-
-let arity_of_type_vars typ_vars =
-  let aux (nb_ck, nb_car, nb_eff, nb_r) (_, k) = match k with
-    | Ttype_var -> nb_ck + 1, nb_car, nb_eff, nb_r
-    | Tcarrier_var -> nb_ck, nb_car + 1, nb_eff, nb_r
-    | Teffect_var -> nb_ck, nb_car, nb_eff + 1, nb_r
-    | Treact_var -> nb_ck, nb_car, nb_eff, nb_r + 1
-  in
-  List.fold_left aux (0, 0, 0, 0) typ_vars
+let param_of_var k = match k with
+  | Kclock v -> Kclock (mkte (Ptype_var v))
+  | Kcarrier v -> Kcarrier (mkce (Pcar_var v))
+  | Kcarrier_row v -> Kcarrier_row (mkcer (Pcar_row_var v))
+  | Keffect v -> Keffect (mkee (Peff_var v))
+  | Keffect_row v -> Keffect_row (mkeer (Peff_row_var v))
+  | Kreact v -> assert false (*TODO*)
 
 let all_vars env current_id =
   let rec expand_id force id =
@@ -66,18 +77,12 @@ let all_vars env current_id =
   in
   expand_id true current_id
 
-let arity_of_pe_list pe_list =
-  let arity_of_pe (nb_ck, nb_car, nb_eff, nb_r) pe = match pe with
-    | Pptype _ -> nb_ck + 1, nb_car, nb_eff, nb_r
-    | Ppcarrier _ -> nb_ck, nb_car + 1, nb_eff, nb_r
-    | Ppeffect _ -> nb_ck, nb_car, nb_eff + 1, nb_r
-  in
-  List.fold_left arity_of_pe (0, 0, 0, 0) pe_list
-
-let new_vars (_, found_car, found_eff, _) (_, nb_car, nb_eff, _) =
-  let new_car_vars = do_n mkfresh_car (nb_car - found_car) in
-  let new_eff_vars = do_n mkfresh_effect (nb_eff - found_eff) in
-  new_car_vars @ new_eff_vars
+let new_vars found_ar ar =
+  let new_car_vars = do_n mkfresh_car (ar.k_carrier - found_ar.k_carrier) in
+  let new_car_row_vars = do_n mkfresh_car_row (ar.k_carrier_row - found_ar.k_carrier_row) in
+  let new_eff_vars = do_n mkfresh_effect (ar.k_effect - found_ar.k_effect) in
+  let new_eff_row_vars = do_n mkfresh_effect_row (ar.k_effect_row - found_ar.k_effect_row) in
+  new_car_vars @ new_car_row_vars @ new_eff_vars @ new_eff_row_vars
 
 let find_new_vars decl_ids td =
   let type_expression funs (vars_list, id_list) te =
@@ -94,9 +99,9 @@ let find_new_vars decl_ids td =
             te, (vars_list, add_to_list gcstr.gi id_list)
           else if gcstr.gi = Initialization.event_ident
                   || gcstr.gi = Initialization.memory_ident then (
-            let (_, ck_arity, _, _) = arity_of_pe_list pe_list in
-            if ck_arity = 0 then (
-              let var = mkfresh_car () in
+            let arity = list_arity pe_list in
+            if arity.k_carrier_row = 0 then (
+              let var = mkfresh_car_row () in
               let te = { te with pte_desc = Ptype_constr(cstr, pe_list @ [param_of_var var]) } in
               te, (var::vars_list, id_list)
             ) else
@@ -105,7 +110,7 @@ let find_new_vars decl_ids td =
             (* check if the identifier is defined*)
             (* check the arity of parameters in the source *)
             let ck_info = match gcstr.ck_info with None -> assert false | Some i -> i in
-            let found_arity = arity_of_pe_list pe_list in
+            let found_arity = list_arity pe_list in
             if found_arity <> ck_info.clock_def_arity then
               constr_wrong_arity_err cstr.pident_id
                 found_arity ck_info.clock_def_arity te.pte_loc;
@@ -120,21 +125,35 @@ let find_new_vars decl_ids td =
   in
   let carrier_expression_desc funs (vars_list, id_list) ced = match ced with
     | Pcar_fresh ->
-        let v, k = mkfresh_car () in
-        Pcar_var v, ((v, k)::vars_list, id_list)
+        let v, k = mkfresh_car_var () in
+        v, (k::vars_list, id_list)
+    | _ -> raise Global_mapfold.Fallback
+  in
+  let carrier_row_expression_desc funs (vars_list, id_list) cerd = match cerd with
+    | Pcar_row_fresh ->
+        let v, k = mkfresh_car_row_var () in
+        v, (k::vars_list, id_list)
     | _ -> raise Global_mapfold.Fallback
   in
   let effect_expression_desc funs (vars_list, id_list) eed = match eed with
     | Peff_fresh ->
-        let v, k = mkfresh_effect () in
-        Peff_var v, ((v, k)::vars_list, id_list)
+        let v, k = mkfresh_effect_var () in
+        v, (k::vars_list, id_list)
+    | _ -> raise Global_mapfold.Fallback
+  in
+  let effect_row_expression_desc funs (vars_list, id_list) eerd = match eerd with
+    | Peff_row_fresh ->
+        let v, k = mkfresh_effect_row_var () in
+        v, (k::vars_list, id_list)
     | _ -> raise Global_mapfold.Fallback
   in
   let funs = { Parse_mapfold.defaults with
     type_expression = type_expression;
     carrier_expression_desc = carrier_expression_desc;
-    effect_expression_desc = effect_expression_desc }
-  in
+    carrier_row_expression_desc = carrier_row_expression_desc;
+    effect_expression_desc = effect_expression_desc;
+    effect_row_expression_desc = effect_row_expression_desc;
+  } in
   Parse_mapfold.type_declaration_it funs ([], []) td
 
 
@@ -174,7 +193,7 @@ let add_missing_vars l =
       let params = params @ (all_vars env gl.gi) in
       let info = match gl.ck_info with
         | None -> assert false
-        | Some info -> { info with clock_arity = arity_of_type_vars params }
+        | Some info -> { info with clock_arity = list_arity params }
       in
       gl.ck_info <- Some info;
       (gl, params, add_missing_args env td)
@@ -183,10 +202,12 @@ let add_missing_vars l =
   )
 
 let var_of_param vars pe = match pe with
-  | Pptype { pte_desc = Ptype_var s } -> (s, Ttype_var) :: vars
-  | Ppcarrier { pce_desc = Pcar_var s } -> (s, Tcarrier_var) :: vars
-  | Ppeffect { pee_desc = Peff_var s } -> (s, Teffect_var) :: vars
-  | _ -> vars
+  | Kclock { pte_desc = Ptype_var s } -> (Kclock s) :: vars
+  | Kcarrier { pce_desc = Pcar_var s } -> (Kcarrier s) :: vars
+  | Kcarrier_row { pcer_desc = Pcar_row_var s } -> (Kcarrier_row s) :: vars
+  | Keffect { pee_desc = Peff_var s } -> (Keffect s) :: vars
+  | Keffect_row { peer_desc = Peff_row_var s } -> (Keffect_row s) :: vars
+  | _ -> invalid_arg "var_of_param"
 
 (* Bound locally unbounded vars in the type expression. For instance,
    (x: 'a -> 'b) is transformed into (x: exists 'a, 'b. 'a -> 'b
@@ -196,8 +217,8 @@ let var_of_param vars pe = match pe with
 let bind_annot_vars te =
   let type_expression_desc funs (bound_vars, new_vars) ted = match ted with
     | Ptype_var s ->
-        if not (List.mem (s, Ttype_var) bound_vars) then
-          let v = mkfresh_type s in
+        if not (List.mem (Kclock s) bound_vars) then
+          let v = Kclock s in
           ted, (v::bound_vars, v::new_vars)
         else
           ted, (bound_vars, new_vars)
@@ -209,27 +230,47 @@ let bind_annot_vars te =
   in
   let carrier_expression_desc funs (bound_vars, new_vars) ced = match ced with
     | Pcar_var s ->
-        if not (List.mem (s, Tcarrier_var) bound_vars) then
-          let v = mkfresh_car () in
+        if not (List.mem (Kcarrier s) bound_vars) then
+          let v = Kcarrier s in
           ced, (v::bound_vars, v::new_vars)
         else
           ced, (bound_vars, new_vars)
     | _ -> raise Global_mapfold.Fallback
   in
+  let carrier_row_expression_desc funs (bound_vars, new_vars) cerd = match cerd with
+    | Pcar_row_var s ->
+        if not (List.mem (Kcarrier_row s) bound_vars) then
+          let v = Kcarrier_row s in
+          cerd, (v::bound_vars, v::new_vars)
+        else
+          cerd, (bound_vars, new_vars)
+    | _ -> raise Global_mapfold.Fallback
+  in
   let effect_expression_desc funs (bound_vars, new_vars) eed = match eed with
     | Peff_var s ->
-        if not (List.mem (s, Teffect_var) bound_vars) then
-          let v = mkfresh_effect () in
+        if not (List.mem (Keffect s) bound_vars) then
+          let v = Keffect s in
           eed, (v::bound_vars, v::new_vars)
         else
           eed, (bound_vars, new_vars)
     | _ -> raise Global_mapfold.Fallback
   in
+  let effect_row_expression_desc funs (bound_vars, new_vars) eerd = match eerd with
+    | Peff_row_var s ->
+        if not (List.mem (Keffect_row s) bound_vars) then
+          let v = Keffect_row s in
+          eerd, (v::bound_vars, v::new_vars)
+        else
+          eerd, (bound_vars, new_vars)
+    | _ -> raise Global_mapfold.Fallback
+  in
   let funs = { Parse_mapfold.defaults with
     type_expression_desc = type_expression_desc;
     carrier_expression_desc = carrier_expression_desc;
-    effect_expression_desc = effect_expression_desc }
-  in
+    carrier_row_expression_desc = carrier_row_expression_desc;
+    effect_expression_desc = effect_expression_desc;
+    effect_row_expression_desc = effect_row_expression_desc
+  } in
   let _, (_, params) = Parse_mapfold.type_expression_it funs ([], []) te in
   let params = List.map param_of_var params in
   mkte (Ptype_some (params, te))

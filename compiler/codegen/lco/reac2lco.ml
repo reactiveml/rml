@@ -52,9 +52,17 @@ let make_ce t loc =
   { coce_desc = t;
     coce_loc = loc; }
 
+let make_cer t loc =
+  { cocer_desc = t;
+    cocer_loc = loc; }
+
 let make_ee t loc =
   { coee_desc = t;
     coee_loc = loc; }
+
+let make_eer t loc =
+  { coeer_desc = t;
+    coeer_loc = loc; }
 
 let make_conf c loc =
   { coconf_desc = c;
@@ -83,13 +91,13 @@ let rec translate_te typ =
     | Tvar x -> Cotype_var x
     | Tdepend ce -> Cotype_depend (translate_ce ce)
     | Tarrow (t1, t2, ee) ->
-        Cotype_arrow (translate_te t1, translate_te t2, translate_ee ee)
+        Cotype_arrow (translate_te t1, translate_te t2, translate_eer ee)
     | Tproduct typ_list ->
         Cotype_product (List.map translate_te typ_list)
     | Tconstr (cstr, p_list) ->
         Cotype_constr (cstr, List.map translate_pe p_list)
     | Tprocess (t, _, act, ee) ->
-        Cotype_process (translate_te t, translate_ce act, translate_ee ee)
+        Cotype_process (translate_te t, translate_ce act, translate_eer ee)
     | Tforall (pe_list, te) ->
         Cotype_forall (List.map translate_pe pe_list, translate_te te)
     | Tsome (pe_list, te) ->
@@ -106,20 +114,44 @@ and translate_ce ce =
   in
   make_ce coce ce.ce_loc
 
+and translate_cer cer =
+  let cocer =
+    match cer.cer_desc with
+      | Crow_var s -> Cocar_row_var s
+      | Crow_empty -> Cocar_row_empty
+      | Crow_one ce -> Cocar_row_one (translate_ce ce)
+      | Crow (cer1, cer2) -> Cocar_row (translate_cer cer1, translate_cer cer2)
+  in
+  make_cer cocer cer.cer_loc
+
 and translate_ee ee =
   let coee =
     match ee.ee_desc with
       | Effempty -> Coeff_empty
       | Effvar s -> Coeff_var s
       | Effsum (ee1, ee2) -> Coeff_sum (translate_ee ee1, translate_ee ee2)
-      | Effdepend ce -> Coeff_depend (translate_ce ce)
+      | Effdepend cer -> Coeff_depend (translate_cer cer)
+      | Effone eer -> Coeff_one (translate_eer eer)
   in
   make_ee coee ee.ee_loc
 
+and translate_eer eer =
+  let coeer =
+    match eer.eer_desc with
+      | Effrow_var s -> Coeff_row_var s
+      | Effrow_empty -> Coeff_row_empty
+      | Effrow_one ee -> Coeff_row_one (translate_ee ee)
+      | Effrow (eer1, eer2) -> Coeff_row (translate_eer eer1, translate_eer eer2)
+  in
+  make_eer coeer eer.eer_loc
+
 and translate_pe pe = match pe with
-  | Ptype te -> Cop_type (translate_te te)
-  | Pcarrier ce -> Cop_carrier (translate_ce ce)
-  | Peffect ee -> Cop_effect (translate_ee ee)
+  | Kclock te -> Kclock (translate_te te)
+  | Kcarrier ce -> Kcarrier (translate_ce ce)
+  | Kcarrier_row ce -> Kcarrier_row (translate_cer ce)
+  | Keffect ee -> Keffect (translate_ee ee)
+  | Keffect_row eer -> Keffect_row (translate_eer eer)
+  | Kreact _ -> assert false
 
 (* Translation of type declatations *)
 let rec translate_type_decl typ =

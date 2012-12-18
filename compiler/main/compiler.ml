@@ -46,10 +46,6 @@ open Compiler_utils
 (* front-end *)
 let compile_implementation_front_end info_chan itf has_intf impl_list =
   let compile_one_phrase impl =
-    (* Display the parse code *)
-    if !dparse then
-      Parse_printer.impl_item 0 (Format.formatter_of_out_channel info_chan) impl;
-
     (* producing rml code (and openning of modules) *)
     let rml_code = Parse2reac.translate_impl_item info_chan impl in
     (*let rml_code = silent_pass "Merge translation" true Merge.impl rml_code in*)

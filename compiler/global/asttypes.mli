@@ -71,4 +71,12 @@ type 'a repr =
       mutable index: int;
       mutable level: int }
 
-type type_var_kind = Ttype_var | Tcarrier_var | Teffect_var | Treact_var
+type ('ty, 'ck, 'ckr, 'ef, 'efr, 'r) kind_sum =
+  | Kclock of 'ty | Kcarrier of 'ck | Kcarrier_row of 'ckr
+  | Keffect of 'ef | Keffect_row of 'efr | Kreact of 'r
+type ('ty, 'ck, 'ckr, 'ef, 'efr, 'r) kind_prod =
+    { k_clock : 'ty; k_carrier : 'ck; k_carrier_row : 'ckr;
+      k_effect : 'ef; k_effect_row : 'efr; k_react : 'r }
+
+type type_var_kind = (string, string, string, string, string, string) kind_sum
+type arity = (int, int, int, int, int, int) kind_prod

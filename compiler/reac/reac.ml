@@ -150,34 +150,52 @@ and type_expression_desc =
     Tvar of string
   | Tforall of param_expression list * type_expression
   | Tsome of param_expression list * type_expression
-  | Tarrow of type_expression * type_expression * effect_expression
+  | Tarrow of type_expression * type_expression * effect_row_expression
   | Tproduct of type_expression list
   | Tconstr of type_description * param_expression list
-  | Tprocess of type_expression * Static.instantaneous * carrier_expression * effect_expression
+  | Tprocess of type_expression * Static.instantaneous * carrier_expression * effect_row_expression
       (* result type, static, activation clock *)
   | Tdepend of carrier_expression
 
 and carrier_expression =
-   { ce_desc : carrier_expression_desc;
-     ce_loc : Location.t }
+    { ce_desc : carrier_expression_desc;
+      ce_loc : Location.t }
 and carrier_expression_desc =
-    | Cvar of string
-    | Cident of ident
-    | Ctopck
+  | Cvar of string
+  | Cident of ident
+  | Ctopck
+
+and carrier_row_expression =
+    { cer_desc : carrier_row_expression_desc;
+      cer_loc : Location.t }
+and carrier_row_expression_desc =
+  | Crow_var of string
+  | Crow_empty
+  | Crow_one of carrier_expression
+  | Crow of carrier_row_expression * carrier_row_expression
 
 and effect_expression =
     { ee_desc : effect_expression_desc;
       ee_loc : Location.t }
 and effect_expression_desc =
-    | Effempty
-    | Effvar of string
-    | Effsum of effect_expression * effect_expression
-    | Effdepend of carrier_expression
+  | Effempty
+  | Effvar of string
+  | Effsum of effect_expression * effect_expression
+  | Effdepend of carrier_row_expression
+  | Effone of effect_row_expression
 
-and param_expression =
-    | Ptype of type_expression
-    | Pcarrier of carrier_expression
-    | Peffect of effect_expression
+and effect_row_expression =
+    { eer_desc : effect_row_expression_desc;
+      eer_loc : Location.t }
+and effect_row_expression_desc =
+  | Effrow_var of string
+  | Effrow_empty
+  | Effrow_one of effect_expression
+  | Effrow of effect_row_expression * effect_row_expression
+
+
+and param_expression = (type_expression, carrier_expression, carrier_row_expression,
+                        effect_expression, effect_row_expression, unit) kind_sum
 
 and type_declaration =
   | Tabstract
@@ -199,7 +217,7 @@ and impl_desc =
          * (expression * expression) option) list
   | Imemory of value_description * expression
   | Itype of
-      (type_description * (string * type_var_kind) list * type_declaration) list
+      (type_description * type_var_kind list * type_declaration) list
   | Iexn of
       constructor_description * type_expression option
   | Iexn_rebind of
@@ -213,7 +231,7 @@ type intf_item =
 and intf_desc =
   | Dval of value_description  * type_expression
   | Dtype of
-      (type_description * (string * type_var_kind) list * type_declaration) list
+      (type_description * type_var_kind list * type_declaration) list
   | Dexn of
       constructor_description  * type_expression option
   | Dopen of string

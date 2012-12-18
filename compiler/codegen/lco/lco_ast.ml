@@ -155,10 +155,10 @@ and type_expression =
       cote_loc: Location.t}
 and type_expression_desc =
     Cotype_var of string
-  | Cotype_arrow of type_expression * type_expression * effect_expression
+  | Cotype_arrow of type_expression * type_expression * effect_row_expression
   | Cotype_product of type_expression list
   | Cotype_constr of type_description * param_expression list
-  | Cotype_process of type_expression * carrier_expression * effect_expression
+  | Cotype_process of type_expression * carrier_expression * effect_row_expression
   | Cotype_depend of carrier_expression
   | Cotype_forall of param_expression list * type_expression
   | Cotype_some of param_expression list * type_expression
@@ -171,6 +171,15 @@ and carrier_expression_desc =
     | Cocar_ident of ident
     | Cocar_topck
 
+and carrier_row_expression =
+    { cocer_desc : carrier_row_expression_desc;
+      cocer_loc : Location.t }
+and carrier_row_expression_desc =
+  | Cocar_row_var of string
+  | Cocar_row_empty
+  | Cocar_row_one of carrier_expression
+  | Cocar_row of carrier_row_expression * carrier_row_expression
+
 and effect_expression =
     { coee_desc : effect_expression_desc;
       coee_loc : Location.t }
@@ -178,12 +187,20 @@ and effect_expression_desc =
     | Coeff_empty
     | Coeff_var of string
     | Coeff_sum of effect_expression * effect_expression
-    | Coeff_depend of carrier_expression
+    | Coeff_depend of carrier_row_expression
+    | Coeff_one of effect_row_expression
 
-and param_expression =
-    | Cop_type of type_expression
-    | Cop_carrier of carrier_expression
-    | Cop_effect of effect_expression
+and effect_row_expression =
+    { coeer_desc : effect_row_expression_desc;
+      coeer_loc : Location.t }
+and effect_row_expression_desc =
+  | Coeff_row_var of string
+  | Coeff_row_empty
+  | Coeff_row_one of effect_expression
+  | Coeff_row of effect_row_expression * effect_row_expression
+
+and param_expression = (type_expression, carrier_expression, carrier_row_expression,
+                        effect_expression, effect_row_expression, unit) kind_sum
 
 
 and type_declaration =
@@ -206,7 +223,7 @@ and impl_desc =
 	 * (expression * expression) option) list
   | Coimpl_memory of value_description * expression
   | Coimpl_type of
-      (type_description * (string * type_var_kind) list * type_declaration) list
+      (type_description * type_var_kind list * type_declaration) list
   | Coimpl_exn of
       constructor_description * type_expression option
   | Coimpl_exn_rebind of
@@ -220,7 +237,7 @@ type intf_item =
 and intf_desc =
   | Cointf_val of value_description * type_expression
   | Cointf_type of
-      (type_description * (string * type_var_kind) list * type_declaration) list
+      (type_description * type_var_kind list * type_declaration) list
   | Cointf_exn of
       constructor_description * type_expression option
   | Cointf_open of string

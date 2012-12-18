@@ -62,8 +62,8 @@ let rec translate_te env typ =
     | Ptype_some (params, te) ->
         Tsome (List.map (translate_pe env) params, translate_te env te)
 
-    | Ptype_arrow (t1, t2, ee) ->
-        Tarrow (translate_te env t1, translate_te env t2, translate_ee env ee)
+    | Ptype_arrow (t1, t2, eer) ->
+        Tarrow (translate_te env t1, translate_te env t2, translate_eer env eer)
 
     | Ptype_tuple typ_list ->
         Tproduct (List.map (translate_te env) typ_list)
@@ -72,9 +72,9 @@ let rec translate_te env typ =
         let gcstr = Modules.pfind_type_desc cstr.pident_id in
         Tconstr (gcstr, List.map (translate_pe env) pe_list)
 
-    | Ptype_process (t,k,act,ee) ->
+    | Ptype_process (t,k,act,eer) ->
         Tprocess ((translate_te env t), k,
-                 translate_ce env act, translate_ee env ee)
+                 translate_ce env act, translate_eer env eer)
 
     | Ptype_depend ce -> Tdepend (translate_ce env ce)
   in
@@ -94,21 +94,46 @@ and translate_ce env pce =
   in
   make_ce ce pce.pce_loc
 
+and translate_cer env pcer =
+  let cer =
+    match pcer.pcer_desc with
+      | Pcar_row_var s -> Crow_var s
+      | Pcar_row_empty -> Crow_empty
+      | Pcar_row_one pce -> Crow_one (translate_ce env pce)
+      | Pcar_row (pcer1, pcer2) -> Crow (translate_cer env pcer1, translate_cer env pcer2)
+      | Pcar_row_fresh -> assert false
+  in
+  make_cer cer pcer.pcer_loc
+
 and translate_ee env pee =
   let ee =
     match pee.pee_desc with
       | Peff_empty -> Effempty
       | Peff_var s -> Effvar s
       | Peff_sum (ee1, ee2) -> Effsum (translate_ee env ee1, translate_ee env ee2)
-      | Peff_depend ce -> Effdepend (translate_ce env ce)
+      | Peff_depend cer -> Effdepend (translate_cer env cer)
+      | Peff_one eer -> Effone (translate_eer env eer)
       | Peff_fresh -> assert false
   in
   make_ee ee pee.pee_loc
 
-and translate_pe env ppe = match ppe with
-  | Pptype pte -> Ptype (translate_te env pte)
-  | Ppcarrier pce -> Pcarrier (translate_ce env pce)
-  | Ppeffect pee -> Peffect (translate_ee env pee)
+and translate_eer env peer =
+  let eer =
+    match peer.peer_desc with
+      | Peff_row_var s -> Effrow_var s
+      | Peff_row_empty -> Effrow_empty
+      | Peff_row_one pee -> Effrow_one (translate_ee env pee)
+      | Peff_row (peer1, peer2) -> Effrow (translate_eer env peer1, translate_eer env peer2)
+      | Peff_row_fresh -> assert false
+  in
+  make_eer eer peer.peer_loc
+
+and translate_pe env ppe =
+  let translate_param_rec =
+    mk_kind_prod ~clock:translate_te ~carrier:translate_ce ~carrier_row:translate_cer
+      ~effect:translate_ee ~effect_row:translate_eer ~react:(fun env p -> assert false)
+  in
+  kind_map_env translate_param_rec env ppe
 
 
 (* Translation of type declatations *)
@@ -690,8 +715,8 @@ let translate_type_declaration l =
                                          ty_info = None;
                                          ck_info = Some { Clocks.constr_abbr = Clocks.Constr_notabbrev} };
                         clock_kind = Clock_abstract;
-                        clock_arity = Clock_vars.arity_of_type_vars param;
-                        clock_def_arity = Clock_vars.arity_of_type_vars param }
+                        clock_arity = list_arity param;
+                        clock_def_arity = list_arity param }
         in
         let _ =
           gl.ty_info <- Some ty_info;

@@ -37,75 +37,74 @@ type 'a global = (unit, 'a) Global.global
 
 (* types *)
 type clock_scheme =
-    { cs_clock_vars: clock list;
-      cs_carrier_vars : carrier list;
-      cs_effect_vars : effect list;
-      cs_react_vars : react_effect list;
+    { cs_vars : clock_param list;
       cs_desc: clock;                (* the type *)
     }
 
 and clock = clock_desc repr
-
 and clock_desc =
-    | Clock_static
-    | Clock_var
-    | Clock_depend of carrier
-    | Clock_arrow of clock * clock * effect
-    | Clock_product of clock list
-    | Clock_constr of clock_constr global * clock_param list
-    | Clock_process of clock * carrier * effect * react_effect
-        (* result clock, activation carrier, reactivity effect *)
-    | Clock_link of clock
-    | Clock_forall of clock_scheme
+  | Clock_static
+  | Clock_var
+  | Clock_depend of carrier
+  | Clock_arrow of clock * clock * effect_row
+  | Clock_product of clock list
+  | Clock_constr of clock_constr global * clock_param list
+  | Clock_process of clock * carrier * effect_row * react_effect
+    (* result clock, activation carrier, reactivity effect *)
+  | Clock_link of clock
+  | Clock_forall of clock_scheme
 
 and carrier = carrier_desc repr
-
 and carrier_desc =
-    | Carrier_var of string           (* a. keep a source name when possible *)
-    | Carrier_skolem of string * int  (* skolem name c *)
-    | Carrier_link of carrier
-    (* carrier rows *)
-    | Carrier_row of carrier * carrier (* var, body *)
-    | Carrier_empty
-    | Carrier_row_var
+  | Carrier_var of string           (* a. keep a source name when possible *)
+  | Carrier_skolem of string * int  (* skolem name c *)
+  | Carrier_link of carrier
+
+and carrier_row = carrier_row_desc repr
+and carrier_row_desc =
+  | Carrier_row_empty
+  | Carrier_row_var
+  | Carrier_row_one of carrier
+  | Carrier_row of carrier_row * carrier_row (* row var last in prefix traversal *)
+  | Carrier_row_link of carrier_row
 
 and effect = effect_desc repr
-
 and effect_desc =
-    | Effect_empty
-    | Effect_var
-    | Effect_depend of carrier
-    | Effect_sum of effect * effect
-    | Effect_link of effect
-    (* effect rows*)
-    | Effect_row_var
-    | Effect_row of effect * effect (* var, body *)
+  | Effect_empty
+  | Effect_var
+  | Effect_depend of carrier_row
+  | Effect_one of effect_row
+  | Effect_sum of effect * effect
+  | Effect_link of effect
+
+and effect_row = effect_row_desc repr
+and effect_row_desc =
+  | Effect_row_var
+  | Effect_row_empty
+  | Effect_row_one of effect
+  | Effect_row of effect_row * effect_row (* row var last in prefix traversal *)
+  | Effect_row_link of effect_row
 
 and react_effect = react_effect_desc repr
 
 and react_effect_desc =
-    | React_var
-    | React_empty
-    | React_carrier of carrier
-    | React_seq of react_effect list
-    | React_par of react_effect list
-    | React_or of react_effect list
-    | React_rec of bool * react_effect * react_effect
-    | React_run of react_effect
-    | React_link of react_effect
+  | React_var
+  | React_empty
+  | React_carrier of carrier_row
+  | React_seq of react_effect list
+  | React_par of react_effect list
+  | React_or of react_effect list
+  | React_rec of bool * react_effect * react_effect
+  | React_run of react_effect
+  | React_link of react_effect
 
 
 (* Type constructors *)
 and clock_constr =
     { mutable constr_abbr: clock_abbrev }      (* Abbreviation or not *)
 
-and clock_param =
-    | Var_clock of clock
-    | Var_carrier of carrier
-    | Var_effect of effect
-    | Var_react of react_effect
+and clock_param = (clock, carrier, carrier_row, effect, effect_row, react_effect) kind_sum
 
-(* ajouter les parametres carrier *)
 and clock_abbrev =
   | Constr_notabbrev
   | Constr_abbrev of clock_param list * clock (* Parameters and body *)
@@ -136,8 +135,8 @@ and label_clock_description =
 and clock_description =
     { clock_constr: clock_constr global;
       clock_kind: clock_kind;
-      clock_def_arity : int * int * int * int;
-      clock_arity: int * int * int * int; }
+      clock_def_arity : arity;
+      clock_arity: arity; }
 
 and clock_kind =
     Clock_abstract

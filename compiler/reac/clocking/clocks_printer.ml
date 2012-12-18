@@ -40,21 +40,20 @@ open Modules
 open Global_ident
 open Global
 
-
-let clock_param_iter f_ck f_car f_eff f_react v = match v with
-  | Var_clock c -> f_ck c
-  | Var_carrier c -> f_car c
-  | Var_effect eff -> f_eff eff
-  | Var_react r -> f_react r
-
-let params_split l =
-  let aux (ck_l, c_l, eff_l, r_l) x = match x with
-    | Var_clock ck -> ck::ck_l, c_l, eff_l, r_l
-    | Var_carrier c -> ck_l, c::c_l, eff_l, r_l
-    | Var_effect eff -> ck_l, c_l, eff::eff_l, r_l
-    | Var_react r -> ck_l, c_l, eff_l, r::r_l
+let _print_list f priority sep l =
+  let rec printrec l =
+    match l with
+      [] -> ()
+    | [ty] ->
+	      f priority ty
+    | ty::rest ->
+	      f priority ty;
+	      print_space ();
+	      print_string sep;
+	      print_space ();
+	      printrec rest
   in
-  List.fold_left aux ([], [], [], []) l
+  printrec l
 
 (* the long name of an ident is printed *)
 (* if it is different from the current module *)
@@ -67,13 +66,16 @@ let print_qualified_ident q =
   print_string (Ident.name q.id)
 
 (* type variables are printed 'a, 'b,... *)
-let type_name = new name_assoc_table int_to_alpha
-let carrier_name = new name_assoc_table (fun i -> "c"^string_of_int i)
-let carrier_row_name = new name_assoc_table (fun i -> "cr"^string_of_int i)
+let names ={
+  k_clock = new name_assoc_table int_to_alpha;
+  k_carrier = new name_assoc_table (fun i -> "c"^string_of_int i);
+  k_carrier_row = new name_assoc_table (fun i -> "cr"^string_of_int i);
+  k_effect = new name_assoc_table (fun i -> "e"^string_of_int i);
+  k_effect_row = new name_assoc_table (fun i -> "er"^string_of_int i);
+  k_react = new name_assoc_table (fun i -> "r"^string_of_int i)
+}
 let skolem_name = new name_assoc_table (fun i -> "c"^string_of_int i)
-let effect_name = new name_assoc_table (fun i -> "e"^string_of_int i)
-let effect_row_name = new name_assoc_table (fun i -> "er"^string_of_int i)
-let react_name = new name_assoc_table (fun i -> "r"^string_of_int i)
+
 
 let print_skolem_name (n, i) =
   print_string "?";
@@ -87,7 +89,7 @@ let rec print priority ty =
     | Clock_var ->
         print_string "'";
         if ty.level <> generic then print_string "_";
-        print_string (type_name#name ty.index)
+        print_string (names.k_clock#name ty.index)
     | Clock_depend c ->
         print_string "{";
         print_carrier priority c;
@@ -97,33 +99,35 @@ let rec print priority ty =
         print 1 ty1;
         print_space ();
         print_string"=>{";
-        print_effect priority eff;
+        print_effect_row priority eff;
         print_string "}";
         print_space ();
         print 0 ty2;
         if priority >= 1 then print_string ")"
     | Clock_product(ty_list) ->
         (*if priority >= 2 then*) print_string "(";
-        print_list 2 "*" ty_list;
+        print_clock_list 2 "*" ty_list;
         (*if priority >= 2 then*) print_string ")"
     | Clock_constr(name, p_list) ->
-        let ty_list, car_list, eff_list, r_list = params_split p_list in
-        let n = List.length ty_list in
+        let p_list = kind_sum_split p_list in
+        let n = List.length p_list.k_clock in
         if n > 1 then print_string "(";
-        print_list 2 "," ty_list;
+        print_clock_list 2 "," p_list.k_clock;
         if n > 1 then print_string ")";
-        if ty_list <> [] then print_space ();
+        if p_list.k_clock <> [] then print_space ();
         print_qualified_ident name.gi;
-        if car_list <> [] || eff_list <> [] then (
+        if p_list.k_carrier <> [] || p_list.k_carrier_row <> [] || p_list.k_effect_row <> [] then (
           print_string "{";
-          print_carrier_list 2 "," car_list;
+          print_carrier_list 2 "," p_list.k_carrier;
           print_string "|";
-          print_effect_list 2 "," eff_list;
+          print_carrier_row_list 2 "," p_list.k_carrier_row;
+          print_string "|";
+          print_effect_list 2 "," p_list.k_effect;
           print_string "}"
         );
-        if r_list <> [] then (
+        if p_list.k_react <> [] then (
           print_string "[";
-          print_react_list 2 ", " r_list;
+          print_react_list 2 ", " p_list.k_react;
           print_string "]"
         )
        (* (match name.ck_info with
@@ -135,8 +139,8 @@ let rec print priority ty =
         print 2 ty;
         print_string " process {";
         print_carrier priority c;
-        print_string "|";
-        print_effect priority eff;
+        print_string "||";
+        print_effect_row priority eff;
         print_string "}[";
         print_react priority r;
         print_string "]"
@@ -148,29 +152,35 @@ let rec print priority ty =
 and print_carrier priority car =
   open_box 0;
   begin match car.desc with
-    Carrier_var(s) ->
-        print_string "'";
-        if car.level <> generic then print_string "_";
-        print_string (carrier_name#name car.index)
-    | Carrier_row_var ->
-        print_string "'";
-        if car.level <> generic then print_string "_";
-        print_string (carrier_row_name#name car.index)
+    | Carrier_var(s) ->
+      print_string "''";
+      if car.level <> generic then print_string "_";
+      print_string (names.k_carrier#name car.index)
     | Carrier_skolem(n, i) ->
-        print_skolem_name (n, i)
-    | Carrier_row( { desc = Carrier_row_var _ }, c) ->
-        print_carrier priority c;
-        print_string ";.."
-   | Carrier_row( { desc = Carrier_empty }, c) ->
-       print_string "<";
-       print_carrier priority c;
-       print_string ">"
-   | Carrier_row(c1, c2) ->
-       print_carrier priority c2;
-       print_string ";";
-       print_carrier priority c1
-   | Carrier_empty -> print_string "empty"
-   | Carrier_link(link) -> print_carrier priority link
+      print_skolem_name (n, i)
+    | Carrier_link(link) -> print_carrier priority link
+  end;
+  close_box ()
+
+and print_carrier_row priority cr =
+  open_box 0;
+  begin match cr.desc with
+    | Carrier_row_var ->
+      print_string "'";
+      if cr.level <> generic then print_string "_";
+      print_string (names.k_carrier_row#name cr.index)
+    | Carrier_row_one car -> print_carrier priority car
+    | Carrier_row(c, { desc = Carrier_row_var }) ->
+      print_carrier_row priority c;
+      print_string ";.."
+    | Carrier_row(c, { desc = Carrier_row_empty }) ->
+      print_carrier_row priority c
+    | Carrier_row(c1, c2) ->
+      print_carrier_row priority c2;
+      print_string ";";
+      print_carrier_row priority c1
+    | Carrier_row_empty -> print_string "empty"
+    | Carrier_row_link(link) -> print_carrier_row priority link
   end;
   close_box ()
 
@@ -178,28 +188,47 @@ and print_effect priority eff =
   open_box 0;
   begin match eff.desc with
     | Effect_var ->
-        print_string "'";
-        if eff.level <> generic then print_string "_";
-        print_string (effect_name#name eff.index)
-    | Effect_row_var -> print_string ".."
-    | Effect_link(link) -> print_effect priority link
+      print_string "''";
+      if eff.level <> generic then print_string "_";
+      print_string (names.k_effect#name eff.index)
     | Effect_empty -> print_string "0"
     | Effect_sum (eff1, eff2) ->
-        print_effect priority eff1;
-        print_space ();
-        print_string "+";
-        print_space ();
-        print_effect priority eff2
+      print_effect priority eff1;
+      print_space ();
+      print_string "+";
+      print_space ();
+      print_effect priority eff2
     | Effect_depend c ->
-        print_string "[";
-        print_carrier priority c;
-        print_string "]"
-    | Effect_row (eff1, eff2) ->
-        print_effect priority eff2;
-        print_space ();
-        print_string "U";
-        print_space ();
-        print_effect priority eff1
+      print_string "<";
+      print_carrier_row priority c;
+      print_string ">"
+    | Effect_one er ->
+      print_string "{";
+      print_effect_row priority er;
+      print_string "}"
+    | Effect_link(link) -> print_effect priority link
+  end;
+  close_box ()
+
+and print_effect_row priority eff =
+  open_box 0;
+  begin match eff.desc with
+    | Effect_row_var ->
+      print_string "'";
+      if eff.level <> generic then print_string "_";
+      print_string (names.k_effect_row#name eff.index)
+    | Effect_row_one car -> print_effect priority car
+    | Effect_row(c, { desc = Effect_row_var }) ->
+      print_effect_row priority c;
+      print_string ";.."
+    | Effect_row(c, { desc = Effect_row_empty }) ->
+      print_effect_row priority c
+    | Effect_row(c1, c2) ->
+      print_effect_row priority c2;
+      print_string ";";
+      print_effect_row priority c1
+    | Effect_row_empty -> print_string "empty"
+    | Effect_row_link(link) -> print_effect_row priority link
   end;
   close_box ()
 
@@ -209,11 +238,11 @@ and print_react priority r =
     | React_var ->
         print_string "'";
         if r.level <> generic then print_string "_";
-        print_string (react_name#name r.index)
+        print_string (names.k_react#name r.index)
     | React_empty -> print_string "0"
     | React_carrier c ->
         print_string "{";
-        print_carrier priority c;
+        print_carrier_row priority c;
         print_string "}"
     | React_seq rl ->
         print_string "("; print_react_list 2 "; " rl; print_string ")"
@@ -239,94 +268,54 @@ and print_react priority r =
   end;
   close_box ()
 
-and print_scheme_full priority { cs_clock_vars = ck_vars; cs_carrier_vars = car_vars;
-                                 cs_effect_vars = eff_vars; cs_desc = ty } =
+and print_scheme_full priority { cs_vars = vars; cs_desc = ty } =
+  let vars = kind_sum_split vars in
   print_string "s";
-  if ck_vars <> [] then (
+  if vars.k_clock <> [] then (
     print_string "forall"; print_space ();
-    print_list priority "," ck_vars;
+    print_clock_list priority "," vars.k_clock;
     print_string "."
   );
-  if car_vars <> [] then (
+  if vars.k_carrier <> [] then (
     print_string "forall"; print_space ();
-    print_carrier_list priority "," car_vars;
+    print_carrier_list priority "," vars.k_carrier;
     print_string "."
   );
-  if eff_vars <> [] then (
+  if vars.k_carrier_row <> [] then (
     print_string "forall"; print_space ();
-    print_effect_list priority "," eff_vars;
+    print_carrier_row_list priority "," vars.k_carrier_row;
+    print_string "."
+  );
+  if vars.k_effect <> [] then (
+    print_string "forall"; print_space ();
+    print_effect_list priority "," vars.k_effect;
+    print_string "."
+  );
+  if vars.k_effect_row <> [] then (
+    print_string "forall"; print_space ();
+    print_effect_row_list priority "," vars.k_effect_row;
     print_string "."
   );
   print priority ty
 
-and print_list priority sep l =
-  let rec printrec l =
-    match l with
-      [] -> ()
-    | [ty] ->
-	      print priority ty
-    | ty::rest ->
-	      print priority ty;
-	      print_space ();
-	      print_string sep;
-	      print_space ();
-	      printrec rest
-  in
-  printrec l
-
-and print_effect_list priority sep l =
-  let rec printrec l =
-    match l with
-      [] -> ()
-    | [ty] ->
-	      print_effect priority ty
-    | ty::rest ->
-	      print_effect priority ty;
-	      print_space ();
-	      print_string sep;
-	      print_space ();
-	      printrec rest
-  in
-  printrec l
-
-and print_react_list priority sep l =
-  let rec printrec l =
-    match l with
-      [] -> ()
-    | [ty] ->
-	      print_react priority ty
-    | ty::rest ->
-	      print_react priority ty;
-	      print_space ();
-	      print_string sep;
-	      print_space ();
-	      printrec rest
-  in
-  printrec l
-
-and print_carrier_list priority sep l =
-  let rec printrec l =
-    match l with
-      [] -> ()
-    | [ty] ->
-	      print_carrier priority ty
-    | ty::rest ->
-	      print_carrier priority ty;
-	      print_space ();
-	      print_string sep;
-	      print_space ();
-	      printrec rest
-  in
-  printrec l
-
+and print_clock_list priority sep l = _print_list print  priority sep l
+and print_carrier_list priority sep l = _print_list print_carrier priority sep l
+and print_carrier_row_list priority sep l = _print_list print_carrier_row priority sep l
+and print_effect_list priority sep l = _print_list print_effect priority sep l
+and print_effect_row_list priority sep l  = _print_list print_effect_row priority sep l
+and print_react_list priority sep l = _print_list print_react priority sep l
 
 and print_param priority =
-  clock_param_iter (print priority) (print_carrier priority) (print_effect priority)
+  kind_fold ~clock:print ~carrier:print_carrier ~carrier_row:print_carrier_row
+    ~effect:print_effect ~effect_row:print_effect_row ~react:print_react
 
 let print ty =
-  type_name#reset;
-  carrier_name#reset;
-  effect_name#reset;
+  names.k_clock#reset;
+  names.k_carrier#reset;
+  names.k_carrier_row#reset;
+  names.k_effect#reset;
+  names.k_effect_row#reset;
+  names.k_react#reset;
   print 0 ty
 let print_scheme { cs_desc = ty } =
   print ty
@@ -349,7 +338,7 @@ let print_value_clock_declaration global =
   print_flush ()
 
 (* printing type declarations *)
-let print_clock_name tc (nb_ck, nb_car, nb_eff, nb_r) =
+let print_clock_name tc arity =
   let print_one_variable assoc i =
     print_string "'";
     print_string (assoc#name i)
@@ -372,15 +361,21 @@ let print_clock_name tc (nb_ck, nb_car, nb_eff, nb_r) =
       print_space ()
     )
   in
-  print_n_variables type_name nb_ck;
+  print_n_variables names.k_clock arity.k_clock;
   print_string (Ident.name tc.id);
-  if nb_car > 0 || nb_eff > 0 then (
+  if arity.k_carrier > 0 || arity.k_carrier_row > 0 || arity.k_effect > 0 then (
     print_string "{";
-    print_n_variables carrier_name nb_car;
+    print_n_variables names.k_carrier arity.k_carrier;
     print_string "|";
-    print_n_variables effect_name nb_eff;
-    print_string "}[";
-    print_n_variables react_name nb_r
+    print_n_variables names.k_carrier_row arity.k_carrier_row;
+    print_string "|";
+    print_n_variables names.k_effect_row arity.k_effect_row;
+    print_string "}"
+  );
+  if arity.k_react > 0 then (
+    print_string "[";
+    print_n_variables names.k_react arity.k_react;
+    print_string "]"
   )
 
 (* prints one variant *)
@@ -485,10 +480,22 @@ let output_carrier oc c =
   print_carrier 0 c;
   print_flush ()
 
+let output_carrier_row oc cr =
+  set_formatter_out_channel oc;
+(*   print_string "  "; *)
+  print_carrier_row 0 cr;
+  print_flush ()
+
 let output_effect oc eff =
   set_formatter_out_channel oc;
 (*   print_string "  "; *)
   print_effect 0 eff;
+  print_flush ()
+
+let output_effect_row oc effr =
+  set_formatter_out_channel oc;
+(*   print_string "  "; *)
+  print_effect_row 0 effr;
   print_flush ()
 
 let output_react oc r =

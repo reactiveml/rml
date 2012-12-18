@@ -19,6 +19,22 @@ type 'a reac_it_funs = {
     'a reac_it_funs -> 'a -> Reac.type_expression -> Reac.type_expression * 'a;
   type_expression_desc:
     'a reac_it_funs -> 'a -> Reac.type_expression_desc -> Reac.type_expression_desc * 'a;
+  carrier_expression:
+    'a reac_it_funs -> 'a -> Reac.carrier_expression -> Reac.carrier_expression * 'a;
+  carrier_expression_desc:
+    'a reac_it_funs -> 'a -> Reac.carrier_expression_desc -> Reac.carrier_expression_desc * 'a;
+  carrier_row_expression:
+    'a reac_it_funs -> 'a -> Reac.carrier_row_expression -> Reac.carrier_row_expression * 'a;
+  carrier_row_expression_desc:
+    'a reac_it_funs -> 'a -> Reac.carrier_row_expression_desc -> Reac.carrier_row_expression_desc * 'a;
+  effect_expression:
+    'a reac_it_funs -> 'a -> Reac.effect_expression -> Reac.effect_expression * 'a;
+  effect_expression_desc:
+    'a reac_it_funs -> 'a -> Reac.effect_expression_desc -> Reac.effect_expression_desc * 'a;
+  effect_row_expression:
+    'a reac_it_funs -> 'a -> Reac.effect_row_expression -> Reac.effect_row_expression * 'a;
+  effect_row_expression_desc:
+    'a reac_it_funs -> 'a -> Reac.effect_row_expression_desc -> Reac.effect_row_expression_desc * 'a;
   param_expression:
     'a reac_it_funs -> 'a -> Reac.param_expression -> Reac.param_expression * 'a;
   type_declaration:
@@ -333,6 +349,7 @@ and type_expression_desc funs acc ted = match ted with
   | Tarrow (te1, te2, ee) ->
     let te1, acc = type_expression_it funs acc te1 in
     let te2, acc = type_expression_it funs acc te2 in
+    let ee, acc = effect_row_expression_it funs acc ee in
     Tarrow (te1, te2, ee), acc
   | Tproduct te_list ->
     let te_list, acc = mapfold (type_expression_it funs) acc te_list in
@@ -342,17 +359,113 @@ and type_expression_desc funs acc ted = match ted with
     Tconstr (id,te_list), acc
   | Tprocess (te, i, ce, ee) ->
     let te, acc = type_expression_it funs acc te in
+    let ce, acc = carrier_expression_it funs acc ce in
+    let ee, acc = effect_row_expression_it funs acc ee in
     Tprocess (te, i, ce, ee), acc
-  | _ -> (*TODO*) ted, acc
+  | Tsome (p_list, te) ->
+    let p_list, acc = mapfold (param_expression_it funs) acc p_list in
+    let te, acc = type_expression_it funs acc te in
+    Tsome (p_list, te), acc
+  | Tforall (p_list, te) ->
+    let p_list, acc = mapfold (param_expression_it funs) acc p_list in
+    let te, acc = type_expression_it funs acc te in
+    Tforall (p_list, te), acc
+  | Tdepend ce ->
+    let ce, acc = carrier_expression_it funs acc ce in
+    Tdepend ce, acc
+
+and carrier_expression_it funs acc e = funs.carrier_expression funs acc e
+and carrier_expression funs acc e =
+  let ed, acc = carrier_expression_desc_it funs acc e.ce_desc in
+  { e with ce_desc = ed }, acc
+
+and carrier_expression_desc_it funs acc ed =
+  try funs.carrier_expression_desc funs acc ed
+  with Fallback -> carrier_expression_desc funs acc ed
+and carrier_expression_desc funs acc ced = ced, acc
+
+
+and carrier_row_expression_it funs acc e = funs.carrier_row_expression funs acc e
+and carrier_row_expression funs acc e =
+  let ed, acc = carrier_row_expression_desc_it funs acc e.cer_desc in
+  { e with cer_desc = ed }, acc
+
+and carrier_row_expression_desc_it funs acc ed =
+  try funs.carrier_row_expression_desc funs acc ed
+  with Fallback -> carrier_row_expression_desc funs acc ed
+and carrier_row_expression_desc funs acc ced = match ced with
+  | Crow_var _ | Crow_empty -> ced, acc
+  | Crow_one ce1 ->
+    let ce1, acc = carrier_expression_it funs acc ce1 in
+    Crow_one ce1, acc
+  | Crow (ce1, ce2) ->
+    let ce1, acc = carrier_row_expression_it funs acc ce1 in
+    let ce2, acc = carrier_row_expression_it funs acc ce2 in
+    Crow (ce1, ce2), acc
+
+
+and effect_expression_it funs acc e = funs.effect_expression funs acc e
+and effect_expression funs acc e =
+  let ed, acc = effect_expression_desc_it funs acc e.ee_desc in
+  { e with ee_desc = ed }, acc
+
+and effect_expression_desc_it funs acc ed =
+  try funs.effect_expression_desc funs acc ed
+  with Fallback -> effect_expression_desc funs acc ed
+and effect_expression_desc funs acc eed = match eed with
+  | Effempty | Effvar _ -> eed, acc
+  | Effsum (ee1, ee2) ->
+    let ee1, acc = effect_expression_it funs acc ee1 in
+    let ee2, acc = effect_expression_it funs acc ee2 in
+    Effsum (ee1, ee2), acc
+  | Effdepend ce ->
+    let ce, acc = carrier_row_expression_it funs acc ce in
+    Effdepend ce, acc
+  | Effone er ->
+    let er, acc = effect_row_expression_it funs acc er in
+    Effone er, acc
+
+
+and effect_row_expression_it funs acc e = funs.effect_row_expression funs acc e
+and effect_row_expression funs acc e =
+  let ed, acc = effect_row_expression_desc_it funs acc e.eer_desc in
+  { e with eer_desc = ed }, acc
+
+and effect_row_expression_desc_it funs acc ed =
+  try funs.effect_row_expression_desc funs acc ed
+  with Fallback -> effect_row_expression_desc funs acc ed
+and effect_row_expression_desc funs acc eed = match eed with
+  | Effrow_var _ | Effrow_empty -> eed, acc
+  | Effrow_one ee1 ->
+    let ee1, acc = effect_expression_it funs acc ee1 in
+     Effrow_one ee1, acc
+  | Effrow (ee1, ee2) ->
+    let ee1, acc = effect_row_expression_it funs acc ee1 in
+    let ee2, acc = effect_row_expression_it funs acc ee2 in
+    Effrow (ee1, ee2), acc
+
 
 and param_expression_it funs acc ped =
   try funs.param_expression funs acc ped
   with Fallback -> param_expression funs acc ped
 and param_expression funs acc ped = match ped with
-  | Ptype te ->
-      let te, acc = type_expression_it funs acc te in
-      Ptype te, acc
-  | _ -> (*TODO*) ped, acc
+  | Kclock c ->
+    let c, acc = type_expression_it funs acc c in
+    Kclock c, acc
+  | Kcarrier c ->
+    let c, acc = carrier_expression_it funs acc c in
+    Kcarrier c, acc
+  | Kcarrier_row c ->
+    let c, acc = carrier_row_expression_it funs acc c in
+    Kcarrier_row c, acc
+  | Keffect eff ->
+    let eff, acc = effect_expression_it funs acc eff in
+    Keffect eff, acc
+  | Keffect_row eff ->
+    let eff, acc = effect_row_expression_it funs acc eff in
+    Keffect_row eff, acc
+  | Kreact r -> Kreact r, acc
+
 
 and type_declaration_it funs acc ted =
   try funs.type_declaration funs acc ted
@@ -463,6 +576,14 @@ let defaults = {
   varpatt = varpatt;
   type_expression = type_expression;
   type_expression_desc = type_expression_desc;
+  carrier_expression = carrier_expression;
+  carrier_expression_desc = carrier_expression_desc;
+  carrier_row_expression = carrier_row_expression;
+  carrier_row_expression_desc = carrier_row_expression_desc;
+  effect_expression = effect_expression;
+  effect_expression_desc = effect_expression_desc;
+  effect_row_expression = effect_row_expression;
+  effect_row_expression_desc = effect_row_expression_desc;
   param_expression = param_expression;
   type_declaration = type_declaration;
   impl_item = impl_item;

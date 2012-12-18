@@ -71,7 +71,7 @@ let rec check_clock ck = match ck.desc with
   | Clock_forall { cs_desc = ck } -> check_clock ck
 
 and check_param p = match p with
-  | Var_clock ck -> check_clock ck
+  | Kclock ck -> check_clock ck
   | _ -> ()
 
 and check_react r = match r.desc with

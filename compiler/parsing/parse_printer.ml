@@ -462,8 +462,6 @@ and string_x_string_list_x_type_expression_def i ppf (s,l,td) =
   list (i+1) type_var ppf l;
   type_declaration (i+1) ppf td
 
-and type_var i ppf (x, k) = match k with
-  | Ttype_var -> line i ppf "\'%s" x
-  | Tcarrier_var -> line i ppf "\''%s" x
+and type_var i ppf (x, k) = assert false
 ;;
 

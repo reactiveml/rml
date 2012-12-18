@@ -30,6 +30,7 @@
 
 (* the initial module *)
 
+open Asttypes
 open Misc
 open Compiler_options
 open Ident
@@ -38,7 +39,9 @@ open Clocks
 open Types
 open Global
 
-
+let zero_arity =
+  mk_kind_prod ~clock:0 ~carrier:0 ~carrier_row:0
+    ~effect:0 ~effect_row:0 ~react:0
 let pervasives_type id =
   { qual = pervasives_module;
     id = Ident.create Ident.gen_type id Ident.Type }
@@ -65,8 +68,8 @@ let abstract_type_clock id =
                      ck_info = Some { Clocks.constr_abbr =
                          Clocks.Constr_abbrev ([], Clocks_utils.static) } };
     clock_kind = Clock_rebind Clocks_utils.static;
-    clock_arity = 0, 0, 0, 0;
-    clock_def_arity = 0, 0, 0, 0; }
+    clock_arity = zero_arity;
+    clock_def_arity = zero_arity; }
 let type_desc id =
   { gi = id;
     ty_info = Some (abstract_type id);
@@ -109,6 +112,7 @@ let type_exn = Types_utils.constr_notabbrev exn_ident []
 
 (* array *)
 let array_ident = pervasives_type "array"
+let array_arity = { zero_arity with k_clock = 1 }
 let type_desc_array =
   { gi = array_ident;
     ty_info = Some { type_constr = { gi = array_ident;
@@ -120,15 +124,16 @@ let type_desc_array =
                                      ty_info = None;
 				                             ck_info = Some { Clocks.constr_abbr= Clocks.Constr_notabbrev } };
 		                 clock_kind = Clock_abstract;
-		                 clock_arity = 1, 0, 0, 0;
-                     clock_def_arity = 1, 0, 0, 0; } }
+		                 clock_arity = array_arity;
+                     clock_def_arity = array_arity; } }
 
 let type_array = Types_utils.constr_notabbrev array_ident [Types_utils.new_generic_var()]
-let clock_array = Clocks_utils.constr_notabbrev array_ident [Var_clock (Clocks_utils.new_generic_clock_var())]
+let clock_array = Clocks_utils.constr_notabbrev array_ident [Kclock (Clocks_utils.new_generic_clock_var())]
 
 (* event *)
 (* let event_ident = interpreter_type "event" *)
 let event_ident = pervasives_type "event"
+let event_arity = { zero_arity with k_clock = 2; k_carrier_row = 1 }
 
 let type_desc_event =
   { gi = event_ident;
@@ -141,20 +146,21 @@ let type_desc_event =
                                      ty_info = None;
 				                             ck_info = Some{ Clocks.constr_abbr = Clocks.Constr_notabbrev} };
 		                 clock_kind = Clock_abstract;
-                     clock_def_arity = 2, 1, 0, 0;
-		                 clock_arity = 2, 1, 0, 0; } }
+                     clock_def_arity = event_arity;
+		                 clock_arity = event_arity; } }
 
 let type_event = Types_utils.constr_notabbrev event_ident [Types_utils.new_generic_var();
 						     Types_utils.new_generic_var(); ]
 let clock_event = Clocks_utils.constr_notabbrev event_ident
-  [Var_clock (Clocks_utils.new_generic_clock_var());
-   Var_clock (Clocks_utils.new_generic_clock_var());
-   Var_carrier (Clocks_utils.make_generic_carrier Clocks_utils.generic_prefix_name) ]
+  [Kclock (Clocks_utils.new_generic_clock_var());
+   Kclock (Clocks_utils.new_generic_clock_var());
+   Kcarrier_row (Clocks_utils.new_generic_carrier_row_var ()) ]
 
 
 (* memory *)
 let memory_ident = pervasives_type "memory"
 let memory_gather = pervasives_val "memory_gather"
+let memory_arity = { zero_arity with k_clock = 1; k_carrier_row = 1 }
 
 let type_desc_memory =
   { gi = memory_ident;
@@ -167,14 +173,14 @@ let type_desc_memory =
                                      ty_info = None;
 				                             ck_info = Some{ Clocks.constr_abbr = Clocks.Constr_notabbrev} };
 		                 clock_kind = Clock_abstract;
-                     clock_def_arity = 1, 1, 0, 0;
-		                 clock_arity = 1, 1, 0, 0; } }
+                     clock_def_arity = memory_arity;
+		                 clock_arity = memory_arity; } }
 
 let type_memory = Types_utils.constr_notabbrev memory_ident [Types_utils.new_generic_var();
 						     Types_utils.new_generic_var(); ]
 let clock_memory = Clocks_utils.constr_notabbrev memory_ident
-  [Var_clock (Clocks_utils.new_generic_clock_var());
-   Var_carrier (Clocks_utils.make_generic_carrier Clocks_utils.generic_prefix_name) ]
+  [Kclock (Clocks_utils.new_generic_clock_var());
+   Kcarrier_row (Clocks_utils.new_generic_carrier_row_var ()) ]
 
 
 
@@ -208,7 +214,7 @@ let nil_constr_ck_desc =
   let ck_var = Clocks_utils.new_generic_clock_var() in
   let nil_constr_ck =
     { Clocks.cstr_arg = None;
-      Clocks.cstr_res = Clocks_utils.constr_notabbrev list_ident [Var_clock ck_var] }
+      Clocks.cstr_res = Clocks_utils.constr_notabbrev list_ident [Kclock ck_var] }
   in
   { gi = nil_ident;
     ty_info = None;
@@ -231,7 +237,7 @@ let cons_constr_ty_desc =
     ck_info = None }
 let cons_constr_ck_desc =
   let ck_var = Clocks_utils.new_generic_clock_var() in
-  let ck_var_list = Clocks_utils.constr_notabbrev list_ident [Var_clock ck_var] in
+  let ck_var_list = Clocks_utils.constr_notabbrev list_ident [Kclock ck_var] in
   let cons_constr_ck =
     { Clocks.cstr_arg = Some (Clocks_utils.product [ck_var; ck_var_list]);
       Clocks.cstr_res = ck_var_list; }
@@ -244,6 +250,7 @@ let cons_constr_desc =
     ty_info = cons_constr_ty_desc.ty_info;
     ck_info = cons_constr_ck_desc.ck_info }
 
+let list_arity = { zero_arity with k_clock = 1 }
 let type_desc_list =
   { gi = list_ident;
     ty_info = Some { type_constr = { gi = list_ident;
@@ -255,11 +262,11 @@ let type_desc_list =
                                       ty_info = None;
 				                              ck_info = Some { Clocks.constr_abbr=Clocks.Constr_notabbrev} };
 		                  clock_kind = Clock_variant [nil_constr_ck_desc; cons_constr_ck_desc];
-                      clock_def_arity = 1, 0, 0, 0;
-		                  clock_arity = 1, 0, 0, 0; } }
+                      clock_def_arity = list_arity;
+		                  clock_arity = list_arity; } }
 
 let type_list = Types_utils.constr_notabbrev list_ident [Types_utils.new_generic_var()]
-let clock_list = Clocks_utils.constr_notabbrev list_ident [Var_clock (Clocks_utils.new_generic_clock_var())]
+let clock_list = Clocks_utils.constr_notabbrev list_ident [Kclock (Clocks_utils.new_generic_clock_var())]
 
 (* option *)
 let option_ident = pervasives_type "option"
@@ -278,7 +285,7 @@ let none_constr_ck_desc =
   let var = Clocks_utils.new_generic_clock_var() in
   let none_constr =
     { Clocks.cstr_arg = None;
-      Clocks.cstr_res = Clocks_utils.constr_notabbrev option_ident [Var_clock var] }
+      Clocks.cstr_res = Clocks_utils.constr_notabbrev option_ident [Kclock var] }
   in
   { gi = none_ident;
     ty_info = None;
@@ -303,7 +310,7 @@ let some_constr_ck_desc =
   let var = Clocks_utils.new_generic_clock_var() in
   let some_constr =
     { Clocks.cstr_arg = Some var;
-      Clocks.cstr_res = Clocks_utils.constr_notabbrev option_ident [Var_clock var]; }
+      Clocks.cstr_res = Clocks_utils.constr_notabbrev option_ident [Kclock var]; }
   in
   { gi = some_ident;
     ty_info = None;
@@ -313,6 +320,7 @@ let some_constr_desc =
     ty_info = some_constr_ty_desc.ty_info;
     ck_info = some_constr_ck_desc.ck_info; }
 
+let option_arity = { zero_arity with k_clock = 1 }
 let type_desc_option =
   { gi = option_ident;
     ty_info = Some { type_constr = { gi = option_ident;
@@ -324,11 +332,11 @@ let type_desc_option =
                                       ty_info = None;
 				                              ck_info = Some { Clocks.constr_abbr = Clocks.Constr_notabbrev} };
 		                 clock_kind = Clock_variant [none_constr_ck_desc; some_constr_ck_desc];
-                     clock_def_arity = 1, 0, 0, 0;
-		                 clock_arity = 1, 0, 0, 0; } }
+                     clock_def_arity = option_arity;
+		                 clock_arity = option_arity; } }
 
 let type_option = Types_utils.constr_notabbrev option_ident [Types_utils.new_generic_var()]
-let clock_option = Clocks_utils.constr_notabbrev option_ident [Var_clock (Clocks_utils.new_generic_clock_var())]
+let clock_option = Clocks_utils.constr_notabbrev option_ident [Kclock (Clocks_utils.new_generic_clock_var())]
 
 let list_of_type_desc =
   [ type_desc_int;

@@ -66,8 +66,12 @@ let mkte d =
   { pte_desc = d; pte_loc = symbol_rloc() }
 let mkce d =
   { pce_desc = d; pce_loc = symbol_rloc() }
+let mkcer d =
+  { pcer_desc = d; pcer_loc = symbol_rloc() }
 let mkee d =
   { pee_desc = d; pee_loc = symbol_rloc() }
+let mkeer d =
+  { peer_desc = d; peer_loc = symbol_rloc() }
 let mkpatt d =
   { ppatt_desc = d; ppatt_loc = symbol_rloc() }
 let mkexpr d =
@@ -80,7 +84,7 @@ let mkintf d =
 
 let rec mkexpr_until body sig_patt_expr_opt_list =
   match sig_patt_expr_opt_list with
-  | [] -> raise Parse_error
+  | [] -> raise Parsing.Parse_error
   | [(s, patt_expr_opt)] ->
       mkexpr (Pexpr_until (s,
 			   body,
@@ -415,6 +419,9 @@ The precedences must be listed from low to high.
 %type <Parse_ast.implementation> interactive
 
 %%
+
+%inline slist(S, x)        : l=separated_list(S, x)                    {l}
+%inline snlist(S, x)       : l=separated_nonempty_list(S, x)           {l}
 
 /* Entry points */
 
@@ -969,8 +976,8 @@ type_declarations:
 ;
 
 type_declaration:
-    type_parameters LIDENT opt_clock_effect_parameters type_kind
-      { let type_params = List.map (fun x -> x, Ttype_var) $1 in
+    type_parameters LIDENT clock_effect_parameters type_kind
+      { let type_params = List.map (fun x -> Kclock x) $1 in
         (mksimple $2 2, type_params @ $3, $4) }
 ;
 type_kind:
@@ -979,50 +986,35 @@ type_kind:
   | EQUAL core_type
       { Ptype_rebind $2 }
   | EQUAL constructor_declarations
-      { Ptype_variant(List.rev $2) }
+      { Ptype_variant($2) }
   | EQUAL BAR constructor_declarations
-      { Ptype_variant(List.rev $3) }
+      { Ptype_variant($3) }
   | EQUAL LBRACE label_declarations opt_semi RBRACE
-      { Ptype_record(List.rev $3) }
+      { Ptype_record($3) }
 ;
 type_parameters:
     /*empty*/                                   { [] }
-  | type_var                                    { [$1] }
-  | LPAREN type_parameter_list RPAREN           { List.rev $2 }
+  | type_var_ident                              { [$1] }
+  | LPAREN l=snlist(COMMA, type_var_ident) RPAREN { l }
 ;
-type_parameter_list:
-    type_var                                    { [$1] }
-  | type_parameter_list COMMA type_var      { $3 :: $1 }
-;
-opt_clock_effect_parameters:
+clock_effect_parameters:
   | /* empty */ { [] }
-  | LBRACE clock_parameters BAR effect_parameters RBRACE
-      { let clock_params = List.map (fun x -> x, Tcarrier_var) $2 in
-        let effect_params = List.map (fun x -> x, Teffect_var) $4 in
-         clock_params @ effect_params }
+  | LBRACE clock_parameters BAR clock_row_parameters BAR effect_row_parameters RBRACE
+      { let clock_params = List.map (fun x -> Kcarrier x) $2 in
+        let clock_row_params = List.map (fun x -> Kcarrier_row x) $4 in
+        let effect_row_params = List.map (fun x -> Keffect_row x) $6 in
+         clock_params @ clock_row_params @ effect_row_params }
+  | LBRACE clock_parameters BARBAR effect_row_parameters RBRACE
+      { let clock_params = List.map (fun x -> Kcarrier x) $2 in
+        let effect_row_params = List.map (fun x -> Keffect_row x) $4 in
+         clock_params @ effect_row_params }
 ;
-clock_parameters:
-    /*empty*/                                   { [] }
-  | clock_var                                    { [$1] }
-  | LPAREN clock_parameter_list RPAREN           { List.rev $2 }
-;
-clock_parameter_list:
-    clock_var                                    { [$1] }
-  | clock_parameter_list COMMA clock_var    { $3 :: $1 }
-;
-effect_parameters:
-    /*empty*/                                   { [] }
-  | effect_var                                    { [$1] }
-  | LPAREN effect_parameter_list RPAREN           { List.rev $2 }
-;
-effect_parameter_list:
-    effect_var                                    { [$1] }
-  | effect_parameter_list COMMA effect_var    { $3 :: $1 }
-;
-constructor_declarations:
-    constructor_declaration                     { [$1] }
-  | constructor_declarations BAR constructor_declaration { $3 :: $1 }
-;
+clock_parameters: l=slist(COMMA, clock_var_ident) { l }
+clock_row_parameters: l=slist(COMMA, clock_row_var_ident) { l }
+/* effect_parameters: l=slist(COMMA, effect_var_ident) { l } */
+effect_row_parameters: l=slist(COMMA, effect_row_var_ident) { l }
+
+constructor_declarations: l=snlist(BAR, constructor_declaration) { l }
 constructor_declaration:
     constr_ident constructor_arguments          { ($1, $2) }
 ;
@@ -1030,10 +1022,7 @@ constructor_arguments:
     /*empty*/                                   { None }
     | OF core_type                              { Some $2 }
 ;
-label_declarations:
-    label_declaration                           { [$1] }
-  | label_declarations SEMI label_declaration   { $3 :: $1 }
-;
+label_declarations: l=snlist(SEMI, label_declaration) { l }
 label_declaration:
     mutable_flag label COLON poly_type          { ($2, $1, $4) }
 ;
@@ -1047,10 +1036,10 @@ poly_type:
 core_type:
   | core_type_na { $1 }
   | core_type_na MINUSGREATER core_type
-      { mkte(Ptype_arrow($1, $3, mkee Peff_empty)) }
+      { mkte(Ptype_arrow($1, $3, mkeer Peff_row_empty)) }
   | core_type_na EQUALGREATER core_type
-      { mkte(Ptype_arrow($1, $3, mkee Peff_fresh)) }
-  | core_type_na EQUALGREATERLBRACE effect RBRACE core_type
+      { mkte(Ptype_arrow($1, $3, mkeer Peff_row_fresh)) }
+  | core_type_na EQUALGREATERLBRACE effect_row RBRACE core_type
       { mkte(Ptype_arrow($1, $5, $3)) }
 ;
 
@@ -1060,10 +1049,10 @@ core_type_na:
   | type_star_list
       { mkte(Ptype_tuple(List.rev $1)) }
 ;
-
+two_bars: BAR BAR { () } | BARBAR { () }
 simple_type:
   | type_var
-      { mkte(Ptype_var $1) }
+      { $1 }
   | LBRACKET clock_type RBRACKET
       { mkte (Ptype_depend $2) }
   | type_longident
@@ -1073,64 +1062,87 @@ simple_type:
   | LPAREN core_type RPAREN
       { $2 }
   | simple_type PROCESS
-      { mkte(Ptype_process ($1, Static.Dontknow, mkce Pcar_fresh, mkee Peff_fresh)) }
-  | simple_type PROCESS LBRACE clock_type_or_empty BAR effect_or_empty RBRACE
+      { mkte(Ptype_process ($1, Static.Dontknow, mkce Pcar_fresh, mkeer Peff_row_fresh)) }
+  | simple_type PROCESS LBRACE clock_type_or_empty two_bars effect_row_or_empty RBRACE
       { mkte(Ptype_process ($1, Static.Dontknow, $4, $6)) }
 ;
 
 type_params:
   | simple_type
-      { [Pptype $1] }
-  | LPAREN core_type COMMA core_type_comma_list RPAREN
-      { let l = $2::$4 in List.map (fun x -> Pptype x) l }
+      { [Kclock $1] }
+  | LPAREN t=core_type COMMA p=snlist(COMMA, core_type) RPAREN
+      { let l = t::p in List.map (fun x -> Kclock x) l }
+
 
 clock_effect_params:
   | /*empty*/  { [] }
-  | LBRACE clock_type_list BAR effect_list RBRACE { $2 @ $4 }
+  | LBRACE clock_type_list BAR clock_row_list BAR effect_row_list RBRACE { $2 @ $4 @ $6 }
 ;
-type_var:
-  | QUOTE ident { $2 }
-;
-clock_var:
-  | QUOTE ident { $2 }
-;
-effect_var:
-  | QUOTE QUOTE ident { $3 }
-;
+
+type_var: QUOTE ident { mkte (Ptype_var $2) }
+type_var_ident: QUOTE ident { $2 }
+clock_var: clock_var_ident { mkce (Pcar_var $1) }
+clock_var_ident: QUOTE QUOTE ident { $3 }
+clock_row_var: clock_row_var_ident { mkcer (Pcar_row_var $1) }
+clock_row_var_ident: QUOTE ident { $2 }
+/*effect_var: effect_var_ident { mkee (Peff_var $1) }
+effect_var_ident: QUOTE QUOTE ident { $3 } */
+effect_row_var: effect_row_var_ident { mkeer (Peff_row_var $1) }
+effect_row_var_ident: QUOTE ident { $2 }
+
 annot_vars:
   | /* empty*/ { [] }
   | annot_var annot_vars { $1::$2 }
 ;
 annot_var:
-  | clock_var { Ppcarrier (mkce (Pcar_var $1)) }
-  | effect_var { Ppeffect (mkee (Peff_var $1)) }
+  | clock_var { Kcarrier $1 }
+  | clock_row_var { Kcarrier_row $1 }
+  | effect_row_var { Keffect_row $1 }
 ;
 clock_type:
-  | clock_var { mkce (Pcar_var $1) }
+  | clock_var { $1 }
   | LIDENT { mkce (Pcar_ident $1) }
   | TOPCK { mkce (Pcar_topck) }
+;
+clock_row:
+  | clock_row_var { $1 }
+  | clock_type { mkcer (Pcar_row(mkcer (Pcar_row_one $1), mkcer Pcar_row_empty)) }
+  | clock_type SEMI ne_clock_row { mkcer (Pcar_row (mkcer (Pcar_row_one $1), $3)) }
+;
+ne_clock_row:
+ | DOTDOT { mkcer Pcar_row_fresh }
+ | clock_type SEMI ne_clock_row { mkcer (Pcar_row (mkcer (Pcar_row_one $1), $3)) }
 ;
 effect:
   | simple_effect { $1 }
   | effect PLUS effect { mkee (Peff_sum ($1, $3)) }
 ;
 simple_effect:
- | effect_var { mkee (Peff_var $1) }
- | clock_type  { mkee (Peff_depend $1) }
+ /*| effect_var { $1 } */
+ | LESS clock_row GREATER { mkee (Peff_depend $2) }
+ | LBRACE effect_row RBRACE { mkee (Peff_one $2) }
  | LPAREN effect RPAREN  { $2 }
 ;
-
+effect_row:
+ | effect_row_var { $1 }
+ | effect { mkeer (Peff_row (mkeer (Peff_row_one $1), mkeer Peff_row_empty)) }
+ | effect SEMI ne_effect_row { mkeer (Peff_row (mkeer (Peff_row_one $1), $3))  }
+;
+ne_effect_row:
+ | DOTDOT { mkeer Peff_row_fresh }
+ | effect SEMI ne_effect_row { mkeer (Peff_row (mkeer (Peff_row_one $1), $3)) }
+;
 label:
-    LIDENT                                      { mksimple $1 1 }
+    LIDENT { mksimple $1 1 }
 ;
 
 clock_type_or_empty:
   | /* empty */ { mkce Pcar_fresh }
   | clock_type  { $1 }
 ;
-effect_or_empty:
-  | /* empty */ { mkee Peff_fresh }
-  | effect  { $1 }
+effect_row_or_empty:
+  | /* empty */ { mkeer Peff_row_fresh }
+  | effect_row  { $1 }
 ;
 
 
@@ -1141,33 +1153,12 @@ type_star_list :
       { [$3;$1] }
 ;
 
-core_type_comma_list :
-  | core_type COMMA core_type_comma_list
-      { $1 :: $3 }
-  | core_type
-      { [$1] }
-;
-clock_type_comma_list :
-  | clock_type COMMA clock_type_comma_list
-      { $1 :: $3 }
-  | clock_type
-      { [$1] }
-;
-effect_comma_list :
-  | effect COMMA effect_comma_list
-      { $1 :: $3 }
-  | effect
-      { [$1] }
-;
-
 clock_type_list:
-  | /* empty */ { [] }
-  | clock_type_comma_list { List.map (fun x -> Ppcarrier x) $1 }
-;
-effect_list:
-  | /* empty */ { [] }
-  | effect_comma_list { List.map (fun x -> Ppeffect x) $1 }
-;
+  | l=slist(COMMA, clock_type) { List.map (fun x -> Kcarrier x) l }
+clock_row_list:
+  | l=slist(COMMA, clock_row) { List.map (fun x -> Kcarrier_row x) l }
+effect_row_list:
+  | l=slist(COMMA, effect_row) { List.map (fun x -> Keffect_row x) l }
 
 
 /* Constants */

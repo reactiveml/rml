@@ -408,9 +408,8 @@ and print_te pri typ =
   if pri > pri_e then print_string ")";
   close_box()
 
-
 and print_pe pri pe = match pe with
-  | Ptype te -> print_te pri te
+  | Kclock te -> print_te pri te
   | _ -> assert false
 
 and print_type_decl typ =
@@ -606,7 +605,7 @@ let print_impl_item item =
           begin
             match param_list with
             | [] -> ()
-            | [(s, _)] -> print_type_var s;
+            | [Kclock s] -> print_type_var s;
             | l ->
                 print_string "(";
                 print_list print_any_var
@@ -688,7 +687,7 @@ let print_intf_item item =
           begin
             match param_list with
             | [] -> ()
-            | [(s, _)] -> print_type_var s;
+            | [Kclock s] -> print_type_var s;
             | l ->
                 print_string "(";
                 print_list print_any_var

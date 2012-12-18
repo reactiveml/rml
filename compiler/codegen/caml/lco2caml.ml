@@ -35,13 +35,6 @@ open Misc
 
 let unit_value = make_expr (Cexpr_constant Const_unit) Location.none
 
-let only_types l =
-  let aux acc x = match x with
-    | Cop_type te -> te::acc
-    | _ -> acc
-  in
-  List.rev (List.fold_left aux [] l)
-
 (* Translation of type expressions *)
 let rec translate_te typ =
   let ctyp =
@@ -52,7 +45,7 @@ let rec translate_te typ =
     | Cotype_product te_list ->
         Ctype_product (List.map translate_te te_list)
     | Cotype_constr (cstr, p_list) ->
-        Ctype_constr (cstr, List.map translate_te (only_types p_list))
+        Ctype_constr (cstr, List.map translate_te (filter_types p_list))
     | Cotype_process (t, _, _) ->
         let proc_type = make_rml_type "process" [translate_te t] in
         proc_type.cte_desc
@@ -1122,8 +1115,7 @@ let translate_impl_item info_chan item =
         let l =
           List.map
             (fun (name, param, typ) ->
-              let param = List.filter (fun (v, k) -> k = Ttype_var) param in
-              let param = fst (List.split param) in
+              let param = filter_types param in
               (name, param, translate_type_decl typ))
             l
         in
@@ -1146,8 +1138,7 @@ let translate_intf_item info_chan item =
         let l =
           List.map
             (fun (name, param, typ) ->
-              let param = List.filter (fun (v, k) -> k = Ttype_var) param in
-              let param = fst (List.split param) in
+              let param = filter_types param in
               (name, param, translate_type_decl typ))
             l
         in

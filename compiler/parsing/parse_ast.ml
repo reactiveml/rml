@@ -137,10 +137,11 @@ and type_expression_desc =
   | Ptype_var of string
   | Ptype_forall of param_expression list * type_expression
   | Ptype_some of param_expression list * type_expression
-  | Ptype_arrow of type_expression * type_expression * effect_expression
+  | Ptype_arrow of type_expression * type_expression * effect_row_expression
   | Ptype_tuple of type_expression list
   | Ptype_constr of ident * param_expression list
-  | Ptype_process of type_expression * Static.instantaneous * carrier_expression * effect_expression
+  | Ptype_process of type_expression * Static.instantaneous
+                       * carrier_expression * effect_row_expression
   | Ptype_depend of carrier_expression
 
 and carrier_expression =
@@ -152,6 +153,16 @@ and carrier_expression_desc =
     | Pcar_fresh
     | Pcar_topck
 
+and carrier_row_expression =
+   { pcer_desc : carrier_row_expression_desc;
+     pcer_loc : Location.t }
+and carrier_row_expression_desc =
+    | Pcar_row_var of string
+    | Pcar_row_fresh
+    | Pcar_row_empty
+    | Pcar_row_one of carrier_expression
+    | Pcar_row of carrier_row_expression * carrier_row_expression
+
 and effect_expression =
     { pee_desc : effect_expression_desc;
       pee_loc : Location.t }
@@ -160,12 +171,21 @@ and effect_expression_desc =
     | Peff_var of string
     | Peff_fresh
     | Peff_sum of effect_expression * effect_expression
-    | Peff_depend of carrier_expression
+    | Peff_depend of carrier_row_expression
+    | Peff_one of effect_row_expression
 
-and param_expression =
-    | Pptype of type_expression
-    | Ppcarrier of carrier_expression
-    | Ppeffect of effect_expression
+and effect_row_expression =
+    { peer_desc : effect_row_expression_desc;
+      peer_loc : Location.t }
+and effect_row_expression_desc =
+    | Peff_row_var of string
+    | Peff_row_fresh
+    | Peff_row_empty
+    | Peff_row_one of effect_expression
+    | Peff_row of effect_row_expression * effect_row_expression
+
+and param_expression = (type_expression, carrier_expression, carrier_row_expression,
+                        effect_expression, effect_row_expression, unit) kind_sum
 
 and type_declaration =
   | Ptype_abstract
@@ -186,7 +206,7 @@ and impl_desc =
       (simple_ident * type_expression option) list *
 	(expression * expression) option
   | Pimpl_memory of simple_ident * expression
-  | Pimpl_type of (simple_ident * (string * type_var_kind) list * type_declaration) list
+  | Pimpl_type of (simple_ident * type_var_kind list * type_declaration) list
   | Pimpl_exn of simple_ident * type_expression option
   | Pimpl_exn_rebind of simple_ident * ident
   | Pimpl_open of string
@@ -204,7 +224,7 @@ and intf_item =
      pintf_loc: Location.t;}
 and intf_desc =
   | Pintf_val of simple_ident * type_expression
-  | Pintf_type of (simple_ident * (string * type_var_kind) list * type_declaration) list
+  | Pintf_type of (simple_ident * type_var_kind list * type_declaration) list
   | Pintf_exn of simple_ident * type_expression option
   | Pintf_open of string
 

@@ -23,9 +23,15 @@
 
 (* $Id$ *)
 
+open Asttypes
 open Misc
 open Parse_ast
 open Parse_ident
+
+let print_arity ff ar =
+  Format.fprintf ff "(%d, %d, %d, %d, %d, %d)"
+    ar.k_clock ar.k_carrier ar.k_carrier_row
+    ar.k_effect ar.k_effect_row ar.k_react
 
 let unbound_variable_err x loc =
   Format.eprintf
@@ -75,14 +81,12 @@ let event_config_err loc =
   raise Error
 
 let constr_wrong_arity_err cstr
-    (found_ck, found_car, found_eff, found_r) (exp_ck, exp_car, exp_eff, exp_r) loc =
+    found_arity exp_arity loc =
   Format.eprintf
-    "%aThe constructor %s expects %d type variables, %d clock variables \
-     and %d effect variables  and %d reactivity variables \
-     but was given  %d type variables, %d clock variables \
-     and %d effect variables and %d reactivity variables.\n"
+    "%aThe constructor %s expects %a type variables, \
+     but was given %a type variables.\n"
     Location.print loc
     (string_of_parseident cstr)
-    exp_ck exp_car exp_eff exp_r
-    found_ck found_car found_eff found_r;
+    print_arity exp_arity
+    print_arity found_arity;
   raise Error

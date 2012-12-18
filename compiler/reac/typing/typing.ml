@@ -213,13 +213,6 @@ let type_of_immediate i =
   | Const_char(c) -> type_char
   | Const_string(c) -> type_string
 
-let only_types l =
-  let aux acc x = match x with
-    | Ptype te -> te::acc
-    | _ -> acc
-  in
-  List.rev (List.fold_left aux [] l)
-
 let new_param_var te = match te.te_desc with
   | Tvar s -> s, new_var ()
   | _ -> assert false
@@ -242,7 +235,7 @@ let type_of_type_expression typ_vars typexp =
         product (List.map (type_of typ_vars) l)
 
     | Tconstr (s, p_list) ->
-        let ty_list = only_types p_list in
+        let ty_list = filter_types p_list in
         let name =
           check_type_constr_defined typexp.te_loc s (List.length ty_list)
         in
@@ -255,7 +248,7 @@ let type_of_type_expression typ_vars typexp =
 
     | Tforall (_, te) -> type_of typ_vars te
     | Tsome (p_list, te) ->
-        let ty_list = only_types p_list in
+        let ty_list = filter_types p_list in
         let typ_vars = (List.map new_param_var ty_list)@typ_vars in
         type_of typ_vars te
   in
@@ -270,7 +263,7 @@ let free_of_type ty =
     | Tproduct(t) ->
         List.fold_left vars v t
     | Tconstr(_,t) ->
-        List.fold_left vars v (only_types t)
+        List.fold_left vars v (filter_types t)
     | Tprocess (t, _, _, _) -> vars v t
     | Tdepend _ -> v
     | Tforall (_, _) -> (*TODO*) v
@@ -1038,8 +1031,8 @@ let check_no_repeated_label loc l =
 
 (* Typing of type declatations *)
 let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
-  let typ_params = List.filter (fun (v, k) -> k = Ttype_var) typ_params in
-  let typ_vars = List.map (fun (v, _) -> (v,new_generic_var ())) typ_params in
+  let typ_params = filter_types typ_params in
+  let typ_vars = List.map (fun v -> (v,new_generic_var ())) typ_params in
   let final_typ =
     constr_notabbrev type_gl.gi (List.map snd typ_vars)
   in

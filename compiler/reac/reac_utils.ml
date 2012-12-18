@@ -68,9 +68,17 @@ let make_ce t loc =
   { ce_desc = t;
     ce_loc = loc; }
 
+let make_cer t loc =
+  { cer_desc = t;
+    cer_loc = loc; }
+
 let make_ee t loc =
   { ee_desc = t;
     ee_loc = loc; }
+
+let make_eer t loc =
+  { eer_desc = t;
+    eer_loc = loc; }
 
 let make_impl it loc =
   { impl_desc = it;
