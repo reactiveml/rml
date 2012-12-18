@@ -1,4 +1,3 @@
 <global> or <utilities> or <parsing> or <reac> or <main> or <codegen>:include
 <**/*.ml>: debug, dtypes,annot
 <**/*.{byte,native}>: use_unix, use_str, debug
-true:use_menhir
