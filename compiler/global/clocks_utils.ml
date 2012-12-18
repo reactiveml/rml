@@ -166,7 +166,7 @@ let no_carrier =
 let topck_carrier =
   { desc = Carrier_skolem ("topck", names#name);
     index = -2;
-    level = generic }
+    level = notgeneric }
 let clock_topck =
   make_generic (Clock_depend topck_carrier)
 
@@ -1448,7 +1448,7 @@ and carrier_unify expected_car actual_car =
           raise Unify
 
 and carrier_row_unify expected_cr actual_cr =
-  (*Printf.eprintf "Unify carrier rows '%a' and %a\n" Clocks_printer.output_carrier_row expected_cr  Clocks_printer.output_carrier_row actual_cr; *)
+  (*Printf.eprintf "Unify carrier rows '%a' and %a\n" Clocks_printer.output_carrier_row expected_cr  Clocks_printer.output_carrier_row actual_cr;*)
   if expected_cr == actual_cr then ()
   else
     let expected_cr = carrier_row_repr expected_cr in
@@ -1494,6 +1494,8 @@ and carrier_row_unify expected_cr actual_cr =
         | Carrier_row_one _, Carrier_row (cr1, cr2) ->
             carrier_row_unify expected_cr cr1;
             carrier_row_unify expected_cr cr2
+        | Carrier_row_empty, Carrier_row_one _ -> ()
+        | Carrier_row_one _, Carrier_row_empty -> ()
         | _, _ ->
           Printf.eprintf "Failed to unify carrier rows '%a' and '%a'\n"  Clocks_printer.output_carrier_row expected_cr  Clocks_printer.output_carrier_row actual_cr;
           raise Unify
@@ -1572,6 +1574,8 @@ and effect_row_unify expected_eff actual_eff =
         | Effect_row_one _, Effect_row (eff1, eff2) ->
             effect_row_unify expected_eff eff1;
             effect_row_unify expected_eff eff2
+        | Effect_row_empty, Effect_row_one _ -> ()
+        | Effect_row_one _, Effect_row_empty -> ()
         | _, _ ->
           Printf.eprintf "Failed to unify effect rows '%a' and '%a'\n"  Clocks_printer.output_effect_row expected_eff  Clocks_printer.output_effect_row actual_eff;
           raise Unify
