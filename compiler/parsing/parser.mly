@@ -1012,7 +1012,7 @@ opt_clock_effect_parameters:
 ;
 clock_parameters:
     /*empty*/                                    { [] }
-  | LPAREN clock_parameter_list RPAREN           { List.rev $2 }
+  | clock_parameter_list                         { List.rev $1 }
 ;
 clock_parameter_list:
     clock_var                                    { [$1] }
@@ -1127,8 +1127,6 @@ annot_vars:
 ;
 annot_var:
   | clock_var { Kcarrier (mkce (Pcar_var $1)) }
-  | clock_row_var { Kcarrier_row (mkcer (Pcar_row_var $1)) }
-  | effect_row_var { Keffect_row (mkeer (Peff_row_var $1)) }
 ;
 clock_type:
   | clock_var { mkce (Pcar_var $1) }
