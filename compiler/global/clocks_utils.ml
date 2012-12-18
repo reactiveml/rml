@@ -235,7 +235,7 @@ let eff_closed_row eff =
   eff_row (eff_row_one eff) effect_row_empty
 
 let comb_arrow ck1 ck2 =
-  arrow ck2 ck2 (eff_closed_row no_effect)
+  arrow ck1 ck2 (eff_closed_row no_effect)
 
 (* Constructors for reactivity effects *)
 
