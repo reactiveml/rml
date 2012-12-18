@@ -1027,7 +1027,10 @@ let rec schema_of_expression env expr =
         clock_of_expression new_env p
 
     | Epresent (s,p1,p2) ->
-        ignore (type_of_event_config ~force_activation_ck:true env s);
+        (try
+           ignore (type_of_event_config ~force_activation_ck:true env s)
+         with
+           | Escape (sk, _) ->immediate_dep_escape_err expr.e_loc sk);
         let ty, r1 = clock_react_of_expression env p1 in
         let r2 = type_react_expect env p2 ty in
         (* r = r1 + (ck; r2) *)
