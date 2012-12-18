@@ -397,9 +397,9 @@ let rec remove_ck_from_carrier ck car = match car.desc with
 
 let rec remove_ck_from_carrier_row ck cr = match cr.desc with
   | Carrier_row_empty | Carrier_row_var -> cr
-  | Carrier_row_one ({ desc = Carrier_skolem _ } as car) ->
+  | Carrier_row_one car ->
+    let car = carrier_repr car in
     if ck.index = car.index then carrier_row_empty else cr
-  | Carrier_row_one _ -> cr
   | Carrier_row (cr1, cr2) ->
     { cr with desc = Carrier_row (remove_ck_from_carrier_row ck cr1,
                                    remove_ck_from_carrier_row ck cr2) }
