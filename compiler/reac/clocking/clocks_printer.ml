@@ -227,6 +227,12 @@ and print_effect_row priority eff =
       print_effect_row priority c2;
       print_string ";";
       print_effect_row priority c1
+    | Effect_row_rec (c1, c2) ->
+      print_string "(rec ";
+      print_effect_row priority c1;
+      print_string ".";
+      print_effect_row priority c2;
+      print_string ")"
     | Effect_row_empty -> print_string "empty"
     | Effect_row_link(link) -> print_effect_row priority link
   end;
