@@ -1019,23 +1019,23 @@ let rec occur_check level index ck =
     match ck.desc with
       | Clock_var ->
           (*Printf.eprintf "Occur_check : level:%d  index:%a   ck.level:%d  ck:%a\n"  level  Clocks_printer.output index  ck.level Clocks_printer.output ck;*)
-        if ck == index then
+        if ck.index = index then
           raise Unify
         else if ck.level > level then
           ck.level <- level
       | Clock_static -> ()
-      | Clock_depend c -> carrier_occur_check level no_carrier c
+      | Clock_depend c -> carrier_occur_check level index c
       | Clock_arrow (ck1, ck2, eff) ->
           check ck1; check ck2;
-          effect_row_occur_check level effect_row_empty eff
+          effect_row_occur_check level index eff
       | Clock_product ck_list -> List.iter check ck_list
       | Clock_constr(_, param_list) -> List.iter (param_occur_check level index) param_list
       | Clock_link link -> check link
       | Clock_process (ck, act_car, eff, r) ->
           check ck;
-          carrier_occur_check level no_carrier act_car;
-          effect_row_occur_check level effect_row_empty eff;
-          react_occur_check level no_react r
+          carrier_occur_check level index act_car;
+          effect_row_occur_check level index eff;
+          react_occur_check level index r
       | Clock_forall sch -> (*TODO*) ()
   in
   (*Printf.eprintf "Occur_check : level:%d   index:%a   ck:%a\n"  level  Clocks_printer.output index  Clocks_printer.output ck;*)
@@ -1047,7 +1047,7 @@ and carrier_occur_check level index car =
     match car.desc with
       | Carrier_var _ ->
         (*  Format.eprintf "Var occur check: %s car.level %d, level: %d@." s car.level level; *)
-          if car == index then
+          if car.index = index then
             raise Unify
           else if car.level > level then
             car.level <- level
@@ -1066,12 +1066,12 @@ and carrier_row_occur_check level index cr =
       | Carrier_row_empty -> ()
       | Carrier_row_var ->
         (*  Format.eprintf "Var occur check: %s car.level %d, level: %d@." s car.level level; *)
-        if cr == index then
+        if cr.index = index then
           raise Unify
         else if cr.level > level then
           cr.level <- level
       | Carrier_row(cr1, cr2) -> check cr1; check cr2
-      | Carrier_row_one c -> carrier_occur_check level no_carrier c
+      | Carrier_row_one c -> carrier_occur_check level index c
       | Carrier_row_link link -> check link
   in
   check cr
@@ -1081,13 +1081,13 @@ and effect_occur_check level index eff =
     let eff = effect_repr eff in
     match eff.desc with
       | Effect_var ->
-          if eff == index then
+          if eff.index = index then
             raise Unify
           else if eff.level > level then
             eff.level <- level
       | Effect_empty -> ()
-      | Effect_depend c -> carrier_row_occur_check level carrier_row_empty c
-      | Effect_one er -> effect_row_occur_check level effect_row_empty er
+      | Effect_depend c -> carrier_row_occur_check level index c
+      | Effect_one er -> effect_row_occur_check level index er
       | Effect_sum (eff1, eff2) -> check eff1; check eff2
       | Effect_link link -> check link
   in
@@ -1098,12 +1098,12 @@ and effect_row_occur_check level index eff =
     let eff = effect_row_repr eff in
     match eff.desc with
       | Effect_row_var ->
-        if eff == index then
+        if eff.index = index then
           raise Unify
         else if eff.level > level then
           eff.level <- level
       | Effect_row_empty -> ()
-      | Effect_row_one eff1 -> effect_occur_check level no_effect eff1
+      | Effect_row_one eff1 -> effect_occur_check level index eff1
       | Effect_row (eff1, eff2) -> check eff1; check eff2
       | Effect_row_link link -> check link
   in
@@ -1116,11 +1116,11 @@ and react_occur_check_is_rec level index r =
     match r.desc with
       | React_empty -> ()
       | React_var ->
-          if r == index then (* go on to fix levels *)
+          if r.index = index then (* go on to fix levels *)
             is_rec := true
           else if r.level > level then
             r.level <- level
-      | React_carrier c -> carrier_row_occur_check level carrier_row_empty c
+      | React_carrier c -> carrier_row_occur_check level index c
       | React_seq rl | React_par rl | React_or rl ->
           List.iter check rl
       | React_run r1 -> check r1
@@ -1136,11 +1136,11 @@ and react_occur_check level index r =
 
 and param_occur_check level index p = match p with
   | Kclock c -> occur_check level index c
-  | Kcarrier c -> carrier_occur_check level no_carrier c
-  | Kcarrier_row c -> carrier_row_occur_check level carrier_row_empty c
-  | Keffect eff -> effect_occur_check level no_effect eff
-  | Keffect_row eff -> effect_row_occur_check level effect_row_empty eff
-  | Kreact r -> react_occur_check level no_react r
+  | Kcarrier c -> carrier_occur_check level index c
+  | Kcarrier_row c -> carrier_row_occur_check level index c
+  | Keffect eff -> effect_occur_check level index eff
+  | Keffect_row eff -> effect_row_occur_check level index eff
+  | Kreact r -> react_occur_check level index r
 
 
 (* the occur check *)
@@ -1379,10 +1379,10 @@ let rec unify expected_ck actual_ck =
       match expected_ck.desc, actual_ck.desc with
         | Clock_static, Clock_static -> ()
         | Clock_var, _ ->
-            occur_check expected_ck.level expected_ck actual_ck;
+            occur_check expected_ck.level expected_ck.index actual_ck;
             expected_ck.desc <- Clock_link actual_ck
         | _, Clock_var ->
-            occur_check actual_ck.level actual_ck expected_ck;
+            occur_check actual_ck.level actual_ck.index expected_ck;
             actual_ck.desc <- Clock_link expected_ck
         | Clock_depend c1, Clock_depend c2 -> carrier_unify c1 c2
         | Clock_product ck_l1, Clock_product ck_l2 -> unify_list ck_l1 ck_l2
@@ -1437,10 +1437,10 @@ and carrier_unify expected_car actual_car =
     else
       match expected_car.desc, actual_car.desc with
         | Carrier_var(s), _ ->
-            carrier_occur_check expected_car.level expected_car actual_car;
+            carrier_occur_check expected_car.level expected_car.index actual_car;
             expected_car.desc <- Carrier_link actual_car
         | _, Carrier_var(s) ->
-            carrier_occur_check actual_car.level actual_car expected_car;
+            carrier_occur_check actual_car.level actual_car.index expected_car;
             actual_car.desc <- Carrier_link expected_car
         | Carrier_skolem(_,i), Carrier_skolem(_, j) when i = j -> ()
         | _, _ ->
@@ -1461,10 +1461,10 @@ and carrier_row_unify expected_cr actual_cr =
         | Carrier_row_one expected_car, Carrier_row_one actual_car ->
             carrier_unify expected_car actual_car
         | Carrier_row_var, _ ->
-            carrier_row_occur_check expected_cr.level expected_cr actual_cr;
+            carrier_row_occur_check expected_cr.level expected_cr.index actual_cr;
             expected_cr.desc <- Carrier_row_link actual_cr
         | _, Carrier_row_var ->
-            carrier_row_occur_check actual_cr.level actual_cr expected_cr;
+            carrier_row_occur_check actual_cr.level actual_cr.index expected_cr;
             actual_cr.desc <- Carrier_row_link expected_cr
         | Carrier_row _, Carrier_row _ ->
             let var1, c1 = find_carrier_row_var expected_cr in
@@ -1512,10 +1512,10 @@ and effect_unify expected_eff actual_eff =
       match expected_eff.desc, actual_eff.desc with
         | Effect_empty, Effect_empty -> ()
         | Effect_var, _ ->
-            effect_occur_check expected_eff.level expected_eff actual_eff;
+            effect_occur_check expected_eff.level expected_eff.index actual_eff;
             expected_eff.desc <- Effect_link actual_eff
         | _, Effect_var ->
-            effect_occur_check actual_eff.level actual_eff expected_eff;
+            effect_occur_check actual_eff.level actual_eff.index expected_eff;
             actual_eff.desc <- Effect_link expected_eff
         | _, Effect_empty -> ()
         | Effect_depend c1, Effect_depend c2 -> carrier_row_unify c1 c2
@@ -1541,10 +1541,10 @@ and effect_row_unify expected_eff actual_eff =
         | Effect_row_one expected_eff, Effect_row_one actual_eff ->
             effect_unify expected_eff actual_eff
         | Effect_row_var, _ ->
-            effect_row_occur_check expected_eff.level expected_eff actual_eff;
+            effect_row_occur_check expected_eff.level expected_eff.index actual_eff;
             expected_eff.desc <- Effect_row_link actual_eff
         | _, Effect_row_var ->
-            effect_row_occur_check actual_eff.level actual_eff expected_eff;
+            effect_row_occur_check actual_eff.level actual_eff.index expected_eff;
             actual_eff.desc <- Effect_row_link expected_eff
         | Effect_row _, Effect_row _ ->
             let var1, e1 = find_effect_row_var expected_eff in
@@ -1596,14 +1596,14 @@ and react_unify expected_r actual_r =
         (*| React_var, React_rec (r2, _) when expected_r.index = r2.index -> ()
         | React_rec(r2, _), React_var when actual_r.index = r2.index -> ()*)
         | React_var, _ ->
-            let is_rec = react_occur_check_is_rec expected_r.level expected_r actual_r in
+            let is_rec = react_occur_check_is_rec expected_r.level expected_r.index actual_r in
             if is_rec then (
               let new_r = mk_react_rec expected_r actual_r in
               expected_r.desc <- React_link new_r
             ) else
               expected_r.desc <- React_link actual_r
         | _, React_var ->
-            let is_rec = react_occur_check_is_rec actual_r.level actual_r expected_r in
+            let is_rec = react_occur_check_is_rec actual_r.level actual_r.index expected_r in
             if is_rec then (
               let new_r = mk_react_rec actual_r expected_r in
               actual_r.desc <- React_link new_r
