@@ -406,6 +406,12 @@ let full_clock_of_type_expression env typ =
   { cs_vars = vars;
     cs_desc = typ }
 
+let simple_clock_of_type_expression env typ =
+  let ty_vars = free_of_typeexp typ in
+  let ty_vars = List.map new_generic_var ty_vars in
+  let typ = clock_of_type_expression ty_vars env typ in
+  typ
+
 (* Typing of patterns *)
 let rec clock_of_pattern global_env local_env env patt ty =
   patt.patt_clock <- ty;
@@ -525,7 +531,7 @@ let rec clock_of_pattern global_env local_env env patt ty =
         (global_env,local_env) l
 
   | Pconstraint (p,t) ->
-      let new_ty = instance (full_clock_of_type_expression env t) in
+      let new_ty = simple_clock_of_type_expression env t in
       unify_patt p ty new_ty;
       clock_of_pattern global_env local_env env p new_ty
 

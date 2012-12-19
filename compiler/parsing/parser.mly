@@ -1127,6 +1127,7 @@ annot_vars:
 ;
 annot_var:
   | clock_var { Kcarrier (mkce (Pcar_var $1)) }
+  | clock_row_var { Kcarrier_row (mkcer (Pcar_row_var $1)) }
 ;
 clock_type:
   | clock_var { mkce (Pcar_var $1) }

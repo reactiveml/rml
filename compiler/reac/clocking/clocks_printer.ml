@@ -79,8 +79,7 @@ let skolem_name = new name_assoc_table (fun i -> "c"^string_of_int i)
 
 let print_skolem_name (n, i) =
   print_string "?";
-  print_string n;
-  print_string (skolem_name#name i)
+  print_string n
 
 let rec print priority ty =
   open_box 0;
@@ -276,7 +275,7 @@ and print_react priority r =
 
 and print_scheme_full priority { cs_vars = vars; cs_desc = ty } =
   let vars = kind_sum_split vars in
-  print_string "s";
+  print_string "(";
   if vars.k_clock <> [] then (
     print_string "forall"; print_space ();
     print_clock_list priority "," vars.k_clock;
@@ -302,7 +301,8 @@ and print_scheme_full priority { cs_vars = vars; cs_desc = ty } =
     print_effect_row_list priority "," vars.k_effect_row;
     print_string "."
   );
-  print priority ty
+  print priority ty;
+  print_string ")"
 
 and print_clock_list priority sep l = _print_list print  priority sep l
 and print_carrier_list priority sep l = _print_list print_carrier priority sep l

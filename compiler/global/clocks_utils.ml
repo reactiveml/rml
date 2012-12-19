@@ -810,9 +810,11 @@ let rec copy_subst_clock m ck =
     | Clock_forall sch ->
       let cs_vars = List.map (copy_subst_param m) sch.cs_vars in
       let cs_desc = copy_subst_clock m sch.cs_desc in
+      cs_desc
+(*
       let sch = forall cs_vars cs_desc in
       make_generic (Clock_forall sch)
-
+*)
 and copy_subst_carrier m car =
   let level = car.level in
   match car.desc with
