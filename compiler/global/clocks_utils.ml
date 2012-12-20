@@ -808,13 +808,11 @@ let rec copy_subst_clock m ck =
         else
           ck
     | Clock_forall sch ->
-      let cs_vars = List.map (copy_subst_param m) sch.cs_vars in
+      let cs_vars = List.map no_copy_param sch.cs_vars in
       let cs_desc = copy_subst_clock m sch.cs_desc in
-      cs_desc
-(*
       let sch = forall cs_vars cs_desc in
       make_generic (Clock_forall sch)
-*)
+
 and copy_subst_carrier m car =
   let level = car.level in
   match car.desc with
@@ -991,6 +989,20 @@ and copy_subst_param m p =
       ~effect_row:copy_subst_effect_row ~react:copy_subst_react
   in
   kind_map_env copy_subst_record m p
+
+(* For variables in a Clock_forall, generate a generic variable *)
+and no_copy_param p = match p with
+  | Kcarrier ({ desc = Carrier_var s } as car) ->
+      let v = new_generic_carrier_var s in
+      car.desc <- Carrier_link v;
+      saves.k_carrier#save car (Carrier_var s);
+      Kcarrier v
+  | Kcarrier_row ({ desc = Carrier_row_var } as cr) ->
+      let v = new_generic_carrier_row_var () in
+      cr.desc <- Carrier_row_link v;
+      saves.k_carrier_row#save cr Carrier_row_var;
+      Kcarrier_row v
+  | _ -> p
 
 let copy_clock ck = copy_subst_clock [] ck
 let copy_param p = copy_subst_param [] p
