@@ -77,7 +77,7 @@ let rec add_type bv ty =
 
 and add_type_param bv p =
   match p with
-  | Pptype te -> add_type bv te
+  | Kclock te -> add_type bv te
   | _ -> ()
 
 let add_type_declaration bv td =
