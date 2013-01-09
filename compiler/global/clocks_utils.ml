@@ -1553,11 +1553,20 @@ and effect_unify expected_eff actual_eff =
         | _, Effect_var ->
             effect_occur_check actual_eff.level actual_eff.index expected_eff;
             actual_eff.desc <- Effect_link expected_eff
-        | _, Effect_empty -> ()
         | Effect_depend c1, Effect_depend c2 -> carrier_row_unify c1 c2
         | Effect_sum (eff1, eff2), Effect_sum (eff3, eff4) ->
             (* only called for identical effects *)
             effect_unify eff1 eff3; effect_unify eff2 eff4
+        (* unifications with the empty effect: all the effects should be the empty effect
+           and effect row vars empty *)
+        | Effect_empty, Effect_sum (eff1, eff2) ->
+            effect_unify expected_eff eff1; effect_unify expected_eff eff2
+        | Effect_sum (eff1, eff2), Effect_empty ->
+            effect_unify expected_eff eff1; effect_unify expected_eff eff2
+        | Effect_empty, Effect_one actual_effr ->
+            effect_row_unify (eff_closed_row expected_eff) actual_effr
+        | Effect_one expected_effr, Effect_empty ->
+            effect_row_unify expected_effr (eff_closed_row actual_eff)
         | _ ->
              Printf.eprintf "Failed to unify effects '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff;
             raise Unify
