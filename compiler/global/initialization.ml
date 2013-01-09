@@ -158,7 +158,7 @@ let clock_event = Clocks_utils.constr_notabbrev event_ident
 
 
 (* memory *)
-let memory_ident = pervasives_type "memory"
+let memory_ident = pervasives_type "mevent"
 let memory_gather = pervasives_val "memory_gather"
 let memory_arity = { zero_arity with k_clock = 1; k_carrier_row = 1 }
 
