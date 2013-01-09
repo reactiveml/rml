@@ -117,6 +117,9 @@ let rec add_expr bv exp =
   | Pexpr_record lblel ->
       List.iter (fun (lbl, e) -> add bv lbl; add_expr bv e) lblel
   | Pexpr_record_access(e, fld) -> add_expr bv e; add bv fld
+  | Pexpr_record_with (e, lblel) ->
+      add_expr bv e;
+      List.iter (fun (lbl, e) -> add bv lbl; add_expr bv e) lblel
   | Pexpr_record_update(e1, fld, e2) ->
       add_expr bv e1; add bv fld; add_expr bv e2
   | Pexpr_constraint(e1, ty) ->

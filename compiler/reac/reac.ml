@@ -63,6 +63,7 @@ and expression_desc =
   | Earray of expression list
   | Erecord of (label_description * expression) list
   | Erecord_access of expression * label_description
+  | Erecord_with of expression * (label_description * expression) list
   | Erecord_update of
       expression * label_description * expression
   | Econstraint of expression * type_expression

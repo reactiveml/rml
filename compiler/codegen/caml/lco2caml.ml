@@ -184,6 +184,10 @@ let rec translate_ml e =
     | Coexpr_record_access (expr, label) ->
         Cexpr_record_access (translate_ml expr, label)
 
+    | Coexpr_record_with (expr, l) ->
+        Cexpr_record_with (translate_ml expr,
+                           List.map (fun (lab,e) -> lab, translate_ml e) l)
+
     | Coexpr_record_update (e1, label, e2) ->
         Cexpr_record_update (translate_ml e1, label, translate_ml e2)
 

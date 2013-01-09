@@ -49,6 +49,8 @@ and expression_desc =
   | Coexpr_array of expression list
   | Coexpr_record of (label_description * expression) list
   | Coexpr_record_access of expression * label_description
+  | Coexpr_record_with of
+      expression * (label_description * expression) list
   | Coexpr_record_update of
       expression * label_description * expression
   | Coexpr_constraint of expression * type_expression

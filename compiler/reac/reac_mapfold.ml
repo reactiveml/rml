@@ -80,15 +80,23 @@ and expression_desc funs acc ed = match ed with
     let e_list, acc = mapfold (expression_it funs) acc e_list in
     Earray e_list, acc
   | Erecord f_e_list ->
-     let aux acc (f,e) =
-       let e, acc = expression_it funs acc e in
-       (f,e), acc
-     in
+    let aux acc (f,e) =
+      let e, acc = expression_it funs acc e in
+      (f,e), acc
+    in
     let f_e_list, acc = mapfold aux acc f_e_list in
     Erecord f_e_list, acc
   | Erecord_access (e, f) ->
     let e, acc = expression_it funs acc e in
     Erecord_access (e,f), acc
+  | Erecord_with (e, f_e_list) ->
+    let e, acc = expression_it funs acc e in
+    let aux acc (f,e) =
+      let e, acc = expression_it funs acc e in
+      (f,e), acc
+    in
+    let f_e_list, acc = mapfold aux acc f_e_list in
+    Erecord_with (e, f_e_list), acc
   | Erecord_update (e1, f, e2) ->
     let e1, acc = expression_it funs acc e1 in
     let e2, acc = expression_it funs acc e2 in

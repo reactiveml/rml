@@ -406,6 +406,9 @@ let rec translate env e =
         in
         Erecord_access (translate env expr, glab)
 
+    | Pexpr_record_with (expr, lab_expr_list) ->
+        Erecord_with (translate env expr, translate_record env lab_expr_list)
+
     | Pexpr_record_update (e1, lab, e2) ->
         let glab = try Modules.pfind_label_desc lab.pident_id with
         | Modules.Desc_not_found ->

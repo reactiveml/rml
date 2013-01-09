@@ -709,6 +709,8 @@ simple_expr:
       { mkexpr(Pexpr_record($2)) }
   | LBRACE record_expr error
       { unclosed "{" 1 "}" 5 }
+ | LBRACE simple_expr WITH record_expr RBRACE
+      { mkexpr(Pexpr_record_with ($2, $4)) }
   | LBRACKETBAR expr_semi_list opt_semi BARRBRACKET
       { mkexpr(Pexpr_array(List.rev $2)) }
   | LBRACKETBAR expr_semi_list opt_semi error
@@ -1084,8 +1086,8 @@ simple_type:
       { mkte (Ptype_var $1) }
   | LBRACKET clock_type RBRACKET
       { mkte (Ptype_depend $2) }
-  | type_longident
-      { mkte(Ptype_constr($1, [])) }
+  | type_longident clock_effect_params
+      { mkte(Ptype_constr($1, $2)) }
   | type_params type_longident clock_effect_params
       { mkte(Ptype_constr($2, $1 @ $3)) }
   | LPAREN core_type RPAREN
@@ -1104,6 +1106,7 @@ type_params:
 
 clock_effect_params:
   | /*empty*/  { [] }
+  | LBRACE clock_type_list BARBAR effect_row_list RBRACE { $2 }
   | LBRACE clock_type_list BAR clock_row_list BAR effect_row_list RBRACE { $2 @ $4 @ $6 }
 ;
 type_var:

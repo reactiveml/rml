@@ -154,6 +154,17 @@ let rec print pri e =
       print pri_e e;
       print_string ".";
       print_global gl
+  | Cexpr_record_with(e, l) ->
+      print_string "{";
+      print (pri_e - 1) e;
+      print_space ();
+      print_string "with";
+      print_space ();
+      print_list (fun (gl, e) -> print_global gl;
+                                 print_string "=";
+	                         print (pri_e + 1) e)
+                 (fun () -> print_string ";") l;
+      print_string "}"
   | Cexpr_record_update(e1, gl, e2) ->
       print (pri_e + 2) e1;
       print_string ".";

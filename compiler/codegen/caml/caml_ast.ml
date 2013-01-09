@@ -51,6 +51,8 @@ and expression_desc =
   | Cexpr_array of expression list
   | Cexpr_record of (label_description * expression) list
   | Cexpr_record_access of expression * label_description
+  | Cexpr_record_with of
+      expression * (label_description * expression) list
   | Cexpr_record_update of
       expression * label_description * expression
   | Cexpr_constraint of expression * type_expression

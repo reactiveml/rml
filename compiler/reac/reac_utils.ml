@@ -208,6 +208,10 @@ let expr_free_vars e =
     | Erecord_access (e, lbl) ->
         expr_free_vars vars e
 
+    | Erecord_with (e, lbl_expr_list) ->
+        expr_free_vars vars e;
+        List.iter (fun (_,e) -> expr_free_vars vars e) lbl_expr_list
+
     | Erecord_update (e1, lbl, e2) ->
         expr_free_vars vars e1;
         expr_free_vars vars e2
