@@ -61,6 +61,8 @@ and expression_desc =
   | Rexpr_array of expression list
   | Rexpr_record of (label_type_description global * expression) list
   | Rexpr_record_access of expression * label_type_description global
+  | Rexpr_record_with of
+      expression * (label_type_description global * expression) list
   | Rexpr_record_update of
       expression * label_type_description global * expression
   | Rexpr_constraint of expression * type_expression

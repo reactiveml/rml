@@ -50,6 +50,8 @@ and expression_desc =
   | Coexpr_array of expression list
   | Coexpr_record of (label_type_description global * expression) list
   | Coexpr_record_access of expression * label_type_description global
+  | Coexpr_record_with of
+      expression * (label_type_description global * expression) list
   | Coexpr_record_update of
       expression * label_type_description global * expression
   | Coexpr_constraint of expression * type_expression

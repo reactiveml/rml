@@ -124,6 +124,15 @@ let expr_map  =
 	       (Rexpr_record_access (e', lbl))
                typ static reactivity reactivity_effect loc)
 
+      | Rexpr_record_with (e, lbl_expr_list) ->
+          let e' = expr_map f e in
+          let lbl_expr_list' =
+	    List.map (fun (lbl,e) -> (lbl, expr_map f e)) lbl_expr_list
+	  in
+          f (make_expr_all
+               (Rexpr_record_with (e', lbl_expr_list'))
+               typ static reactivity reactivity_effect loc)
+
       | Rexpr_record_update (e1, lbl, e2) ->
 	  let e1' = expr_map f e1 in
 	  let e2' = expr_map f e2 in
@@ -403,6 +412,7 @@ let translate_merge =
     | Rexpr_array _
     | Rexpr_record _
     | Rexpr_record_access _
+    | Rexpr_record_with _
     | Rexpr_record_update _
     | Rexpr_constraint _
     | Rexpr_trywith _

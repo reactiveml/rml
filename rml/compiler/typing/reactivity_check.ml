@@ -122,6 +122,7 @@ let rec check_expr_one expr =
   | Rexpr_array _
   | Rexpr_record _
   | Rexpr_record_access (_, _)
+  | Rexpr_record_with (_, _)
   | Rexpr_record_update (_, _, _)
   | Rexpr_constraint (_, _)
   | Rexpr_trywith (_, _)

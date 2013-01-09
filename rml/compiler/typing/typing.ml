@@ -606,6 +606,26 @@ let rec type_of_expression env expr =
 	type_expect_eps env e ty_arg;
 	ty_res, react_epsilon()
 
+    | Rexpr_record_with (e, l) ->
+        let ty = new_var() in
+        let rec typing_record label_list label_expr_list =
+	match label_expr_list with
+	    [] -> ()
+	  | (label,label_expr) :: label_expr_list ->
+	      let { lbl_arg = ty_arg;
+		    lbl_res = ty_res } = get_type_of_label label expr.expr_loc
+	      in
+	      (* check that the label appears only once *)
+	      if List.mem label label_list
+	      then non_linear_record_err label.gi expr.expr_loc;
+	      type_expect_eps env label_expr ty_res;
+	      unify_expr expr ty ty_arg;
+	      typing_record (label :: label_list) label_expr_list
+	in
+	typing_record [] l;
+        type_expect_eps env e ty;
+	ty, react_epsilon()
+
     | Rexpr_record_update (e1, label, e2) ->
 	let { lbl_arg = ty_arg; lbl_res = ty_res; lbl_mut = mut } =
 	  get_type_of_label label expr.expr_loc

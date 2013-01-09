@@ -427,6 +427,11 @@ let instantaneous_loop_expr =
       | Rexpr_record_access (e, lbl) ->
 	  analyse vars e
 
+      | Rexpr_record_with (e, lbl_expr_list) ->
+          let ty = analyse vars e in
+	  let ty' = instantaneous_loop_expr_list analyse snd vars lbl_expr_list in
+          Env.append ty' ty
+
       | Rexpr_record_update (e1, lbl, e2) ->
 	  let ty1 = analyse vars e1 in
 	  let ty2 = analyse vars e2 in

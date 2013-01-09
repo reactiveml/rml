@@ -86,10 +86,12 @@ typing/def_types.cmo : global/global.cmo static/def_static.cmo \
     global/asttypes.cmi
 typing/def_types.cmx : global/global.cmx static/def_static.cmx \
     global/asttypes.cmi
-typing/reactivity_check.cmo : reac/reac_ast.cmo reac/reac2reac.cmo \
-    parsing/location.cmo typing/def_types.cmo global/asttypes.cmi
-typing/reactivity_check.cmx : reac/reac_ast.cmx reac/reac2reac.cmx \
-    parsing/location.cmx typing/def_types.cmx global/asttypes.cmi
+typing/reactivity_check.cmo : typing/reactivity_effects.cmo \
+    reac/reac_ast.cmo reac/reac2reac.cmo parsing/location.cmo \
+    typing/def_types.cmo global/asttypes.cmi
+typing/reactivity_check.cmx : typing/reactivity_effects.cmx \
+    reac/reac_ast.cmx reac/reac2reac.cmx parsing/location.cmx \
+    typing/def_types.cmx global/asttypes.cmi
 typing/reactivity_effects.cmo : typing/types_printer.cmo reac/reac_ast.cmo \
     global/ident.cmo typing/def_types.cmo global/asttypes.cmi
 typing/reactivity_effects.cmx : typing/types_printer.cmx reac/reac_ast.cmx \

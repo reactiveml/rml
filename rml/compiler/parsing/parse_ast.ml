@@ -55,6 +55,7 @@ and expression_desc =
   | Pexpr_array of expression list
   | Pexpr_record of (ident * expression) list
   | Pexpr_record_access of expression * ident
+  | Pexpr_record_with of expression * (ident * expression) list
   | Pexpr_record_update of expression * ident * expression
   | Pexpr_constraint of expression * type_expression
   | Pexpr_trywith of expression * (pattern * expression) list

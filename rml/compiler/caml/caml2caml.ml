@@ -116,6 +116,14 @@ let constant_propagation =
       | Cexpr_record_access (expr, lbl) ->
 	  Cexpr_record_access (constant_propagation env expr, lbl)
 
+      | Cexpr_record_with (expr, lbl_expr_list) ->
+          let lbl_expr_list =
+            List.map
+	      (fun (lbl,expr) -> (lbl, constant_propagation env expr))
+	      lbl_expr_list
+          in
+          Cexpr_record_with (constant_propagation env expr, lbl_expr_list)
+
       | Cexpr_record_update (e1, lbl, e2) ->
 	  Cexpr_record_update
 	    (constant_propagation env e1,
