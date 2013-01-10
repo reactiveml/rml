@@ -50,7 +50,7 @@ let rec translate_te typ =
         let proc_type = make_rml_type "process" [translate_te t] in
         proc_type.cte_desc
     | Cotype_depend _ ->
-        let clock_type = make_rml_type "clock" [] in
+        let clock_type = make_rml_type "clock_expr" [] in
         clock_type.cte_desc
     | Cotype_forall (_, te) ->
         let cte = translate_te te in

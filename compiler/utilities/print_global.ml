@@ -85,11 +85,11 @@ let current_module = ref ""
 (** Prints a global name *)
 let print_global ({ gi = {qual=q; id=n} } as gl) =
   if gl.gi = Initialization.event_ident then
-    (* special case for event type *)
-    begin
-      print_string "Interpreter.";
-      print_name (Ident.name n)
-    end
+    print_string "Interpreter.event"
+  else if gl.gi = Initialization.memory_ident then
+    print_string "Interpreter.memory"
+  else if gl.gi = Initialization.clock_ident then
+    print_string "Interpreter.clock_expr"
   else if q = pervasives_module then
     (* special case for values imported from the standard library *)
     print_pervasives (Ident.name n)
