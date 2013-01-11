@@ -378,10 +378,13 @@ module Rml_interpreter =
             | Some cpt ->
               let f_1 = p_1 (Obj.magic f_k: 'a step) ctrl (Some cpt) cd in
               let f_2 = p_2 (Obj.magic f_k: 'b step) ctrl (Some cpt) cd in
-              incr cpt;
               cpt, f_1, f_2
         in
         fun () ->
+          (* if we are reusing the counter, increase it by one but only when running *)
+          (match jp with
+            | None -> ()
+            | Some cpt -> incr cpt);
           R.on_current_instant cd f_2;
           f_1 unit_value
 
