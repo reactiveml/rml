@@ -227,6 +227,10 @@ let rec expression i ppf x =
       line i ppf "Pexpr_record_access\n";
       expression i ppf e;
       ident i ppf li;
+  | Pexpr_record_with (e, li) ->
+      line i ppf "Pexpr_record_with\n";
+      expression i ppf e;
+      list i ident_x_expression ppf li;
   | Pexpr_record_update (e1, li, e2) ->
       line i ppf "Pexpr_record_update\n";
       expression i ppf e1;
