@@ -1,0 +1,23 @@
+<p>
+In this lesson, we will program a ball which bounces on the limits of a
+box and which is duplicated each time we click into the box.
+</p>
+
+<p>
+We first define the data structure which represents the bounds of a box:
+</p>
+<p><pre class="code">
+type box =
+    { left: float;
+      right: float;
+      top: float;
+      bot: float; }
+</pre></p>
+<p>
+and we create a box:
+</p>
+<p><pre class="code">
+let box =
+  { left = 0.; right = 400.;
+    bot = 0.; top = 400.; }
+</pre></p>

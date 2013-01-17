@@ -1,0 +1,44 @@
+<p>
+Now we want to create a ball which is duplicated each time a
+signal <code>split</code> is emitted.
+</p>
+<p><pre class="code">
+signal split default () gather (fun () () -> ()) ;;
+</pre></p>
+
+<p>
+We first define a function which creates a new state from an other one.
+</p>
+<p><pre class="code">
+let new_state' k state =
+  signal pos default last ?state.pos gather fun x _ -> x in
+  signal speed default random_speed k gather fun x _ -> x in
+  let radius = max 1. (state.radius -. state.radius /. 5.) in
+  let color = color_of_int (Random.int 7) in
+  { pos = pos ; speed = speed; radius = radius; color = color; }
+</pre></p>
+
+<p>
+The dynamic creation comes from the recursion and the parallel composition.
+</p>
+<p><pre class="code">
+let rec process ball state =
+  do run (move state)
+  until split ->
+    run (ball (new_state' 2.0 state)) || run (ball (new_state' 2.0 state))
+  done
+</pre></p>
+
+<p><pre class="code">
+#run (ball (new_state 2.0)) ;;
+</pre></p>
+
+<p>
+Finally, each time we emit the <code>split</code> event, the ball is duplicated.
+</p>
+<p><pre class="code">
+emit split ;;
+</pre></p>
+<p><pre class="code">
+emit split ;;
+</pre></p>
