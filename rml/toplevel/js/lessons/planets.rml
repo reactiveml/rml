@@ -30,7 +30,6 @@ let new_pos x y =
    (Random.float 200.0) -. 100.0)
 
 
-
 let random_pos () =
   let x = ((Random.int 200) - 100) + (Graphics.size_x()) / 2 in
   let y = ((Random.int 200) - 100) + (Graphics.size_y()) / 2 in
@@ -58,6 +57,7 @@ let new_planet =
 
 let random_planet () =
   new_planet (random_pos())
+
 
 let color_of_int = function
   | 0 -> Graphics.yellow
@@ -182,5 +182,7 @@ let process main =
   for i = 1 to 30 dopar run planet done
 ;;
 
+#run main ;;
+
 (* You can type [#run planet] to add new planets to the system. *)
-#run main;;
+() ;;
