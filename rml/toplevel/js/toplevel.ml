@@ -147,11 +147,12 @@ let info_msg msg =
   let textbox = get_element_by_id "info" in
   textbox##innerHTML <- Js.string msg
 
-let update_info lesson lessons step steps =
+let update_info name lesson lessons step steps =
   let msg = Printf.sprintf
-    "<h3>Lesson #%d<small>/%d</small>, step #%d<small>/%d</small></h3>"
+    "<h3>Lesson %d/%d: %s <small>(step %d/%d)</small></h3>"
     lesson
     lessons
+    name
     step
     steps
   in
@@ -169,9 +170,9 @@ let safe_state_buttons lessons steps =
 
 let load_lesson_step lessons =
   let len = Array.length lessons in
-  let path, _, steps = Array.get lessons (!cur_lesson - 1) in
+  let path, name, steps = Array.get lessons (!cur_lesson - 1) in
   safe_state_buttons len steps;
-  update_info !cur_lesson len !cur_step steps;
+  update_info name !cur_lesson len !cur_step steps;
   let lesson_url =
     Printf.sprintf
       "lessons/%s/step%d.html"
@@ -495,6 +496,8 @@ let run _ =
     window##close ()
   )
   in
+
+  make_code_clickable ();
 
   append_children "buttons-left" [
     suspend_button;
