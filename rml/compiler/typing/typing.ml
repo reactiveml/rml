@@ -824,7 +824,7 @@ let rec type_of_expression env expr =
         pop_type_level ();
         let k = remove_local_react_var k in
         let phi = new_react_var () in
-        let k = react_seq [ k; phi ] in
+        let k = react_seq [ k; react_run phi ] in
         type_unit, react_rec false phi k
 
     | Rexpr_loop (Some n, p) ->
