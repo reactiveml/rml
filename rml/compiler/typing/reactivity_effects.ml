@@ -165,12 +165,12 @@ let remove_local_react_var r =
 
 let rec split_raw k =
   match k.react_desc with
-  | React_var -> [], k
+  | React_var -> [], Some k
   | React_raw (k1, k2) ->
       let k2', var = split_raw k2 in
       k1 :: k2', var
   | React_link k -> split_raw k
-  | React_pause -> assert false
+  | React_pause -> [k], None
   | React_epsilon -> assert false
   | React_seq _ -> assert false
   | React_par _ -> assert false
@@ -318,11 +318,14 @@ let react_simplify =
     | React_raw(k1, { react_desc = React_pause }) ->
         simplify k1
     | React_raw (k1, k2) ->
-        let k2', var = split_raw k2 in
-        let k1' =
-          simplify { k with react_desc = React_or (k1 :: k2'); }
+        let kl, var_opt = split_raw k in
+        let k' =
+          simplify { k with react_desc = React_or kl; }
         in
-        { k with react_desc = React_raw (k1', var) }
+        begin match var_opt with
+        | None -> k'
+        | Some var -> { k with react_desc = React_raw (k', var) }
+        end
     | React_rec (b, k1, k2) ->
         { k with react_desc = React_rec (b, k1, simplify k2) }
     | React_run k_body ->
@@ -374,7 +377,7 @@ let react_simplify =
         | React_pause -> simplify_or kl acc
         | React_or kl' -> simplify_or (kl' @ kl) acc
         | React_raw (k1, k2) ->
-            let k2', var = split_raw k2 in
+            let k2', var_opt = split_raw k2 in
             let k1k2' =
               begin match simplify_or (k1 :: k2' @ kl) acc with
               | [] -> { k1 with react_desc = React_pause; }
@@ -382,7 +385,10 @@ let react_simplify =
               | kl' -> { k1 with react_desc = React_or kl'; }
               end
             in
-            [ { k' with react_desc = React_raw (k1k2', var) } ]
+            begin match var_opt with
+            | None -> [ k1k2' ]
+            | Some var -> [ { k' with react_desc = React_raw (k1k2', var) } ]
+            end
         | React_var
         | React_epsilon
         | React_seq _
@@ -464,7 +470,11 @@ let rec unify_react_effect expected_k actual_k =
       | React_var, _ ->
           if occur_check_react expected_k.react_level expected_k actual_k then
             let phi = new_react_var() in
-            let kl, var = split_raw actual_k in
+            let kl, var =
+              match split_raw expected_k with
+              | _, None -> assert false
+              | kl, Some var -> kl, var
+            in
             (* let kl, var = [actual_k], new_react_var() in *)
             let k = react_or kl in
             let rec_phi =
@@ -480,7 +490,11 @@ let rec unify_react_effect expected_k actual_k =
       | _, React_var ->
 	  if occur_check_react actual_k.react_level actual_k expected_k then
             let phi = new_react_var() in
-            let kl, var = split_raw expected_k in
+            let kl, var =
+              match split_raw expected_k with
+              | _, None -> assert false
+              | kl, Some var -> kl, var
+            in
             (* let kl, var = [expected_k], new_react_var() in *)
             let k = react_or kl in
             let rec_phi =
@@ -494,8 +508,16 @@ let rec unify_react_effect expected_k actual_k =
           else
 	    actual_k.react_desc <- React_link(expected_k)
       | React_raw (k1_1, k2_1), React_raw (k1_2, k2_2) ->
-          let kl1, v1 = split_raw k2_1 in
-          let kl2, v2 = split_raw k2_2 in
+          let kl1, v1 =
+            match split_raw k2_1 with
+            | _, None -> assert false
+            | kl1, Some v1 -> kl1, v1
+          in
+          let kl2, v2 =
+            match split_raw k2_2 with
+            | _, None -> assert false
+            | kl2, Some v2 -> kl2, v2
+          in
           let k1_1' = react_or (k1_1 :: kl1) in
           let k1_2' = react_or (k1_2 :: kl2) in
           if react_equal k1_1' k1_2' then unify_react_effect v1 v2
