@@ -243,9 +243,12 @@ let rec copy_react k =
   | React_rec (b, x, k) ->
       if level = generic
       then
-        let x = copy_react x in
+        (* create a new generic var for the recursion var *)
+        let v = new_generic_react_var () in
+        x.react_desc <- React_link(v);
+        save_react x;
         let k = copy_react k in
-        react_rec b x k
+        react_rec b v k
       else
 	k
   | React_run k ->
@@ -272,22 +275,23 @@ let rec react_effect_repr k =
 (* To compute the free type variables in a type *)
 let free_react_vars level k =
   let fv = ref [] in
-  let rec free_vars k =
+  let rec free_vars bound k =
     let k = react_effect_repr k in
     match k.react_desc with
     | React_var ->
-        if k.react_level >= level then fv := k :: !fv
+      if k.react_level >= level && not (List.memq k bound)
+      then fv := k :: !fv
     | React_pause -> ()
     | React_epsilon -> ()
-    | React_seq kl -> List.iter (fun k -> free_vars k) kl
-    | React_par kl -> List.iter (fun k -> free_vars k) kl
-    | React_or kl -> List.iter (fun k -> free_vars k) kl
-    | React_raw (k1, k2) -> free_vars k1; free_vars k2
-    | React_rec (_, k1, k2) -> free_vars k1; free_vars k2
-    | React_run k -> free_vars k
-    | React_link(link) -> free_vars link
+    | React_seq kl -> List.iter (fun k -> free_vars bound k) kl
+    | React_par kl -> List.iter (fun k -> free_vars bound k) kl
+    | React_or kl -> List.iter (fun k -> free_vars bound k) kl
+    | React_raw (k1, k2) -> free_vars bound k1; free_vars bound k2
+    | React_rec (_, k1, k2) -> free_vars (k1::bound) k2
+    | React_run k -> free_vars bound k
+    | React_link(link) -> free_vars bound link
   in
-  free_vars k;
+  free_vars [] k;
   !fv
 
 
@@ -473,7 +477,7 @@ let rec unify_react_effect expected_k actual_k =
       match expected_k.react_desc, actual_k.react_desc with
       | React_var, _ ->
           if occur_check_react expected_k.react_level expected_k actual_k then
-            let phi = new_react_var() in
+            let phi = new_generic_react_var() in
             let kl, var =
               match split_raw actual_k with
               | _, None -> assert false
@@ -493,7 +497,7 @@ let rec unify_react_effect expected_k actual_k =
 	    expected_k.react_desc <- React_link(actual_k)
       | _, React_var ->
 	  if occur_check_react actual_k.react_level actual_k expected_k then
-            let phi = new_react_var() in
+            let phi = new_generic_react_var() in
             let kl, var =
               match split_raw expected_k with
               | _, None -> assert false

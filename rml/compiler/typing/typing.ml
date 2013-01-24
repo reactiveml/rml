@@ -169,9 +169,7 @@ and gen_react is_gen k =
       if not (Reactivity_check.well_formed k) then begin
         k.react_desc <- React_rec (true, var, k_body)
       end;
-      k.react_level <-
-        min generic
-          (min (gen_react is_gen var) (gen_react is_gen k_body))
+      k.react_level <- min generic (gen_react is_gen k_body)
   | React_link(link) ->
       k.react_level <- gen_react is_gen link
   end;
