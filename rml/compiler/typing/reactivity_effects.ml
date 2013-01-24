@@ -471,7 +471,7 @@ let rec unify_react_effect expected_k actual_k =
           if occur_check_react expected_k.react_level expected_k actual_k then
             let phi = new_react_var() in
             let kl, var =
-              match split_raw expected_k with
+              match split_raw actual_k with
               | _, None -> assert false
               | kl, Some var -> kl, var
             in
