@@ -335,8 +335,8 @@ let react_simplify =
     | React_run k_body ->
         let k_body = simplify k_body in
         begin match k_body.react_desc with
-        (* | React_pause -> { k with react_desc = React_pause } *)
-        (* | React_epsilon -> { k with react_desc = React_epsilon } *)
+        | React_pause -> { k with react_desc = React_pause }
+        | React_epsilon -> { k with react_desc = React_epsilon }
         | _ -> { k with react_desc = React_run k_body }
         end
     | React_link k -> simplify k
