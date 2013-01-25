@@ -1,0 +1,54 @@
+<p>
+We first define a function generating an unique identifier to each
+process.
+</p>
+<p><pre class="code">
+let gen_id =
+  let cpt = ref 0 in fun () -> incr cpt; !cpt
+</pre></p>
+
+<p>
+We define a global signal <code>to_kill</code> on which we will send to
+id of the processes to kill.
+</p>
+<p><pre class="code">
+signal to_kill;;
+</pre></p>
+
+<p>
+We define a process <code>killable</code> such that <code>killable
+p</code> associates an id to the process <code>p</code> given as
+argument and executes it. When the id associated to <code>p</code> is
+emitted on <code>to_kill</code>, the execution of <code>p</code> is
+stopped.
+</p>
+<p><pre class="code">
+let process killable p =
+  let id = gen_id() in print_endline("["^(string_of_int id)^"]");
+  do run p
+  until to_kill(ids) when List.mem id ids done
+</pre></p>
+<p>
+The identifier <code>id</code> is generated then the
+process <code>p</code> is executed. If during the execution, the
+signal <code>to_kill</code> is emitted, we get into the
+variable <code>ids</code> the list of processes to
+to_kill. If <code>id</code> belongs to this list (<code>List.mem id
+ids</code>) then the execution is stopped, otherwise the execution
+continues.
+</p>
+
+<p>
+We can test our new combinator with a moving point.
+</p>
+<p><pre class="code">
+#run killable (moving_point (new_state ()));;
+</pre></p>
+<p>
+Observe that the id <code>[1]</code> is printed into the
+terminal. Thefore, we can kill this process by send its id on the
+signal <code>to_kill</code>.
+</p>
+<p><pre class="code">
+emit to_kill 1;;
+</pre></p>
