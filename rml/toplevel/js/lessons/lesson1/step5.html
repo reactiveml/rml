@@ -10,9 +10,9 @@ during an instant.</p>
 
 <p><pre class="code">signal s default 0 gather (+);;</pre></p>
 
-<p>To get the value of a signal, we can use the constructs <code>await s(x)
-in e</code> which waits that <code>s</code> is emitted and then executes
-<code>e</code> where <code>x</code> get the value carried by the signal
+<p>To get the value of a signal, we can use the construct <code>await s(x)
+in e</code> which waits for the emission of <code>s</code> and then executes
+<code>e</code> where <code>x</code> gets the value carried by the signal
 <code>s</code>.</p>
 
 <p><pre class="code">let process print_s =
@@ -31,7 +31,7 @@ in e</code> which waits that <code>s</code> is emitted and then executes
 <p><pre class="code">emit s 3; emit s 4;;</pre></p>
 
 <p>
-It is possible to access to the last value of a signal using
+It is possible to access the last value of a signal using
 the <code>last</code> operator.
 </p>
 <p><pre class="code">last ?s;;</pre></p>

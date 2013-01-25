@@ -5,12 +5,12 @@ that are broadcasted instantaneously. Hence, an event is present
 during the instant where it is broadcasted, otherwise it is
 absent.</p>
 
-<p>An event is declare with the construct <code>signal</code>.</p>
+<p>An event is declared with the <code>signal</code> construct.</p>
 
 <p><pre class="code">signal s;;</pre></p>
 
 <p>The construct <code>await s</code> waits the next instant where s is
-broadcasted.</p>
+broadcast.</p>
 
 <p><pre class="code">let process p =
   await s;
@@ -18,6 +18,6 @@ broadcasted.</p>
 
 <p><pre class="code">#run p;;</pre></p>
 
-<p>An event is broadcasted using <code>emit</code>.</p>
+<p>An event is broadcast using <code>emit</code>.</p>
 
 <p><pre class="code">emit s;;</pre></p>
