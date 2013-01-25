@@ -28,16 +28,17 @@ Now, a function which creates a value of type <code>state</code> can be
 defined as follows.
 </p>
 <p><pre class="code">
-let new_state k =
+let new_state () =
   signal pos
     default ((box.right -. box.left) /. 2., (box.top -. box.bot) /. 2.)
     gather (fun x _ -> x)
   in
-  signal speed default random_speed k gather (fun x _ -> x) in
-  { pos = pos; speed = speed; radius = 25.; color = color_of_int 0; }
+  signal speed default random_speed 2. gather (fun x _ -> x) in
+  let color = color_of_int (Random.int 7) in
+  { pos = pos; speed = speed; radius = 25.; color = color; }
 </pre></p>
 <p>
 The default value of the signal <code>pos</code> is the center of the
-box. The gathering function keeps only one of the value emitted during
+box. The combination function keeps only one of the value emitted during
 the instant.
 </p>

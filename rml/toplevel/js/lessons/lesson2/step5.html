@@ -2,25 +2,17 @@
 Let us create a ball:
 </p>
 <p><pre class="code">
-#run (move (new_state 2.)) ;;
+#run (move (new_state ())) ;;
 </pre></p>
 
 <p>
 To observe the position of the ball, we program a process which
-display the value of the <code>env</code> signal.
+displays the value of the <code>draw</code> signal.
 </p>
 <p><pre class="code">
 let process window =
-  let g =
-    " " ^
-    (string_of_int (int_of_float (box.right -. box.left))) ^
-    "x" ^
-    (string_of_int (int_of_float (box.top -. box.bot)))
-  in
-  Graphics.open_graph g;
-  Graphics.auto_synchronize false;
   loop
-    await env (all) in
+    await draw (all) in
     Graphics.clear_graph();
     List.iter
       (fun state ->
@@ -29,8 +21,7 @@ let process window =
         Graphics.fill_circle
           (int_of_float x) (int_of_float y)
           (int_of_float state.radius))
-      all;
-    Graphics.synchronize()
+      all
   end
 </pre></p>
 <p><pre class="code">

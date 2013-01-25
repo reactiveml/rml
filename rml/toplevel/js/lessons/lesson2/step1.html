@@ -1,10 +1,10 @@
 <p>
 In this lesson, we will program a ball which bounces on the limits of a
-box and which is duplicated each time we click into the box.
+box and which is duplicated each time we emit a signal.
 </p>
 
 <p>
-We first define the data structure which represents the bounds of a box:
+We first define the data structure which represents the bounds of a box.
 </p>
 <p><pre class="code">
 type box =
@@ -14,10 +14,23 @@ type box =
       bot: float; }
 </pre></p>
 <p>
-and we create a box:
+We create a box.
 </p>
 <p><pre class="code">
 let box =
   { left = 0.; right = 400.;
     bot = 0.; top = 400.; }
+</pre></p>
+<p>
+We display the box.
+</p>
+<p><pre class="code">
+let () =
+  let g =
+    " " ^
+    (string_of_int (int_of_float (box.right -. box.left))) ^
+    "x" ^
+    (string_of_int (int_of_float (box.top -. box.bot)))
+  in
+  Graphics.open_graph g
 </pre></p>

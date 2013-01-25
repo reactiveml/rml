@@ -1,21 +1,21 @@
 <p>
-To observe the balls, we use a global signal named <code>env</code> on
+To observe the balls, we use a global signal named <code>draw</code> on
 which each ball will emit its state. All the emitted states are
 collected into a list.
 </p>
 <p><pre class="code">
-signal env default [] gather (fun x y -> x :: y) ;;
+signal draw default [] gather (fun x y -> x :: y) ;;
 </pre></p>
 
 <p>
 The behavior of a ball bouncing into the limit of the box can be
-program as follows.
+programmed as follows.
 </p>
 <p><pre class="code">
 let process move state =
   loop
-    (* emit the current position *)
-    emit env state;
+    (* emit the position *)
+    emit draw state;
 
     (* compute the new position *)
     let pre_vx, pre_vy = last ?state.speed in
@@ -38,5 +38,5 @@ let process move state =
 </pre></p>
 <p>
 It is an infinite loop that first emits the current state,
-then compute the new position and finally update its state.
+then computes the new position and finally updates its state.
 </p>
