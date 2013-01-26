@@ -1,18 +1,14 @@
 <p>
-Let see now how we can change that behavior of a process. We define a
-process <code>replace</code> which takes as argument an initial
-behavior <code>p_init</code>, a state <code>state</code> and a
-signal <code>new_behavior</code> on which a new behavior that must
-replace the current behavior can be sent.
+We can test our new combinator with a moving point.
 </p>
 <p><pre class="code">
-let rec process replace p_init state new_behavior =
-  do
-    run (p_init state)
-  until new_behavior(p) ->
-    run (replace p state new_behavior)
-  done
+#run killable (moving_point (new_state ()));;
 </pre></p>
 <p>
-XXX TODO : explications XXX
+Observe that the id <code>[1]</code> is printed into the
+terminal. Thefore, we can kill this process by send its id on the
+signal <code>to_kill</code>.
 </p>
+<p><pre class="code">
+emit to_kill 1;;
+</pre></p>

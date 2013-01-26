@@ -37,18 +37,3 @@ to_kill. If <code>id</code> belongs to this list (<code>List.mem id
 ids</code>) then the execution is stopped, otherwise the execution
 continues.
 </p>
-
-<p>
-We can test our new combinator with a moving point.
-</p>
-<p><pre class="code">
-#run killable (moving_point (new_state ()));;
-</pre></p>
-<p>
-Observe that the id <code>[1]</code> is printed into the
-terminal. Thefore, we can kill this process by send its id on the
-signal <code>to_kill</code>.
-</p>
-<p><pre class="code">
-emit to_kill 1;;
-</pre></p>

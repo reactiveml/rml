@@ -1,20 +1,18 @@
 <p>
-To use this process, we need a signal on which we can send and receive
-a process. In case of multiple emission during the same instant, we
-build the parallel composition of the sent processes.
+Let see now how we can change that behavior of a process. We define a
+process <code>replace</code> which takes as argument an initial
+behavior <code>p_init</code>, a state <code>state</code> and a
+signal <code>new_behavior</code> on which a new behavior that must
+replace the current behavior can be sent.
 </p>
 <p><pre class="code">
-signal new_behavior
-  default (fun state -> process ())
-  gather (fun p q state ->
-            process (run (p state) || run (q state)))
-;;
+let rec process replace p_init state new_behavior =
+  do
+    run (p_init state)
+  until new_behavior(p) ->
+    run (replace p state new_behavior)
+  done
 </pre></p>
 <p>
-Now we can executes a moving point whose behavior can be replaced
-dynamically.
+XXX TODO : explications XXX
 </p>
-<p><pre class="code">
-#run replace moving_point (new_state ()) new_behavior;;
-</pre></p>
-
