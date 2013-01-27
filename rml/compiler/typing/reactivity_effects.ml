@@ -304,13 +304,13 @@ let react_simplify =
         | kl -> { k with react_desc = React_seq kl; }
         end
     | React_par kl ->
-        begin match simplify_par (List.map simplify kl) [] with
+        begin match simplify_par (List.map simplify kl) [] false with
         | [] -> { k with react_desc = React_epsilon; }
         | [ k' ] -> k'
         | kl -> { k with react_desc = React_par kl; }
         end
     | React_or kl ->
-        begin match simplify_or (List.map simplify kl) [] with
+        begin match simplify_or (List.map simplify kl) [] false with
         | [] -> { k with react_desc = React_pause; }
         | [ k' ] -> k'
         | kl -> { k with react_desc = React_or kl; }
@@ -353,33 +353,35 @@ let react_simplify =
         | React_run _ -> simplify_seq kl (k' :: acc)
         | React_link k -> simplify_seq (k :: kl) acc
         end
-  and simplify_par kl acc =
+  and simplify_par kl acc pause =
     match kl with
     | [] -> List.rev acc
     | k' :: kl ->
         begin match k'.react_desc with
-        | React_epsilon -> simplify_par kl acc
-        | React_par kl' -> simplify_par (kl' @ kl) acc
+        | React_epsilon -> simplify_par kl acc pause
+        | React_par kl' -> simplify_par (kl' @ kl) acc pause
+        | React_pause ->
+            if pause then simplify_par kl acc true
+            else simplify_par kl (k' :: acc) true
         | React_var
-        | React_pause
         | React_seq _
         | React_or _
         | React_raw _
         | React_rec (_, _, _)
-        | React_run _ -> simplify_par kl (k' :: acc)
-        | React_link k -> simplify_par (k :: kl) acc
+        | React_run _ -> simplify_par kl (k' :: acc) pause
+        | React_link k -> simplify_par (k :: kl) acc pause
         end
-  and simplify_or kl acc =
+  and simplify_or kl acc epsilon =
     match kl with
     | [] -> List.rev acc
     | k' :: kl ->
         begin match k'.react_desc with
-        | React_pause -> simplify_or kl acc
-        | React_or kl' -> simplify_or (kl' @ kl) acc
+        | React_pause -> simplify_or kl acc epsilon
+        | React_or kl' -> simplify_or (kl' @ kl) acc epsilon
         | React_raw (k1, k2) ->
             let k2', var_opt = split_raw k2 in
             let k1k2' =
-              begin match simplify_or (k1 :: k2' @ kl) acc with
+              begin match simplify_or (k1 :: k2' @ kl) acc epsilon with
               | [] -> { k1 with react_desc = React_pause; }
               | [ k'' ] -> k''
               | kl' -> { k1 with react_desc = React_or kl'; }
@@ -389,13 +391,15 @@ let react_simplify =
             | None -> [ k1k2' ]
             | Some var -> [ { k' with react_desc = React_raw (k1k2', var) } ]
             end
+        | React_epsilon ->
+            if epsilon then simplify_or kl acc true
+            else simplify_or kl (k' :: acc) true
         | React_var
-        | React_epsilon
         | React_seq _
         | React_par _
         | React_rec (_, _, _)
-        | React_run _ -> simplify_or kl (k' :: acc)
-        | React_link k -> simplify_or (k :: kl) acc
+        | React_run _ -> simplify_or kl (k' :: acc) epsilon
+        | React_link k -> simplify_or (k :: kl) acc epsilon
         end
   in
   fun k ->
