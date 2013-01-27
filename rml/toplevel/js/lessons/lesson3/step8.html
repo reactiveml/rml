@@ -1,5 +1,5 @@
 <p>
-Let see now how we can change that behavior of a process. We define a
+Let see now how we can change the behavior of a process. We define a
 process <code>replace</code> which takes as argument an initial
 behavior <code>p_init</code>, a state <code>state</code> and a
 signal <code>new_behavior</code> on which a new behavior that must
@@ -14,5 +14,11 @@ let rec process replace p_init state new_behavior =
   done
 </pre></p>
 <p>
-XXX TODO : explications XXX
+The process <code>p_init</code> parametrized by <code>state</code> is
+executed under the control of the
+signal <code>new_behavior</code>. When <code>new_behavior</code> is
+emitted, <code>p_init</code> is stopped and a process <code>p</code>
+is on the signal. This new process is executed through the recursive
+call to <code>replace</code>. it allows to change again the behavior
+of the process.
 </p>

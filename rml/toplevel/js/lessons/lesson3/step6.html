@@ -24,7 +24,8 @@ stopped.
 </p>
 <p><pre class="code">
 let process killable p =
-  let id = gen_id() in print_endline("["^(string_of_int id)^"]");
+  let id = gen_id() in
+  print_endline("["^(string_of_int id)^"]");
   do run p
   until to_kill(ids) when List.mem id ids done
 </pre></p>
