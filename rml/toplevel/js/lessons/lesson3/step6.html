@@ -32,7 +32,8 @@ let process killable p =
 <p>
 The identifier <code>id</code> is generated then the
 process <code>p</code> is executed. If during the execution, the
-signal <code>to_kill</code> is emitted, we get into the
+signal <code>to_kill</code> is emitted, thanks to
+the <code>do/until/when</code> construct, we get into the
 variable <code>ids</code> the list of processes to
 kill. If <code>id</code> belongs to this list (<code>List.mem id
 ids</code>) then the execution is stopped, otherwise the execution

@@ -1,14 +1,34 @@
 <p>
-We can test our new combinator as follows.
-<p>
-<p><pre class="code">
-#run extensible moving_point (new_state ()) ;;
-</pre></p>
-<p><pre class="code">
-emit to_add (5, up_down) ;;
-</pre></p>
-
-<p>
-A small library of process management can be found here:
-<a href="lessons/lesson3/manager.rmli">manager.rmli</a>, <a href="lessons/lesson3/manager.rml">manager.rml</a>.
+To avoid that multiple processes share the same
+reconfiguration signal, we can associate an id to each extensible process and
+dispatch the requests.
 </p>
+<p>
+The adding requests will be sent on the signal <code>to_add</code>
+with the id of the process to extends.
+</p>
+<p><pre class="code">
+signal to_add ;;
+</pre></p>
+<p>
+Each extensible process have its own <code>add_behavior</code> signal
+and filters on the <code>to_add</code> signal the requests which are
+for it.
+</p>
+<p><pre class="code">
+let process extensible p_init state =
+  let id = gen_id () in
+  print_endline ("{"^(string_of_int id)^"}");
+  signal add_behavior default (fun state -> process ())
+    gather
+     (fun p q state -> process (run (p state) || run (q state)))
+  in
+  run (extend p_init state add_behavior)
+  ||
+  loop
+    await to_add(reqs) in
+    List.iter
+     (fun (x, p) -> if x = id then emit add_behavior p)
+     reqs
+  end
+</pre></p>
