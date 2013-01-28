@@ -1,3 +1,9 @@
+(** Simple process management library.
+
+   @author Louis Mandel (louis@reactiveML.org)
+   @author Florence Plateau (florence@reactiveML.org)
+*)
+
 type ident = int
 
 let gen_id =
