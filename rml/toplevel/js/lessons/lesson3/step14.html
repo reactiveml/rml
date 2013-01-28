@@ -11,11 +11,11 @@ signal to_add ;;
 let process extensible p_init state =
   let id = gen_id () in
   print_endline ("{"^(string_of_int id)^"}");
-  signal acdd_behavior default (fun state -> process ())
+  signal add_behavior default (fun state -> process ())
     gather
       (fun p q state -> process (run (p state) || run (q state)))
   in
-  run (extend p_init state new_behavior)
+  run (extend p_init state add_behavior)
   ||
   loop
     await to_add(reqs) in
