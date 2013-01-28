@@ -1,5 +1,5 @@
 <p>
-An other useful reconfiguration combinator is to add a new behavior to
+Another useful reconfiguration combinator is to add a new behavior to
 a running process. To do that, we define a process <code>extend</code>
 that executes a process <code>p_init</code> and awaits new processes
 to execute on a signal <code>add_behavior</code>. The initial
@@ -17,6 +17,6 @@ let rec process extend p_init state add_behavior =
 In this process, <code>p_init</code> is executed and in parallel a
 process <code>p</code> is awaited on the
 signal <code>add_behavior</code>. When <code>p</code> is received, it
-is executed through a recursive call to <code>extend</code> such that
+is executed through a recursive call to <code>extend</code> so that
 it is still possible to add new behaviors.
 </p>

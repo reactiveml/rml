@@ -1,5 +1,5 @@
 <p>
-We first define a function generating an unique identifier to each
+We first define a function generating an unique identifier for each
 process.
 </p>
 <p><pre class="code">
@@ -8,7 +8,7 @@ let gen_id =
 </pre></p>
 
 <p>
-We define a global signal <code>to_kill</code> on which we will send to
+We define a global signal <code>to_kill</code> on which we will send the
 id of the processes to kill.
 </p>
 <p><pre class="code">
@@ -34,7 +34,7 @@ The identifier <code>id</code> is generated then the
 process <code>p</code> is executed. If during the execution, the
 signal <code>to_kill</code> is emitted, we get into the
 variable <code>ids</code> the list of processes to
-to_kill. If <code>id</code> belongs to this list (<code>List.mem id
+kill. If <code>id</code> belongs to this list (<code>List.mem id
 ids</code>) then the execution is stopped, otherwise the execution
 continues.
 </p>

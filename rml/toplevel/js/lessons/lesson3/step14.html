@@ -1,5 +1,5 @@
 <p>
-You can see that since the two extensible processes shared the same
+You can see that since the two extensible processes share the same
 reconfiguration signal, when we emit a new behavior they both change.
 To avoid that, we can associate an id to each extensible process and
 dispatch the requests.
@@ -13,7 +13,7 @@ let process extensible p_init state =
   print_endline ("{"^(string_of_int id)^"}");
   signal add_behavior default (fun state -> process ())
     gather
-      (fun p q state -> process (run (p state) || run (q state)))
+     (fun p q state -> process (run (p state) || run (q state)))
   in
   run (extend p_init state add_behavior)
   ||
