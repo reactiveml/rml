@@ -6,7 +6,9 @@ composition.
 let rec process ball state =
   do run (move state)
   until split ->
-    run (ball (new_state' state)) || run (ball (new_state' state))
+    run (ball (new_state' state))
+    ||
+    run (ball (new_state' state))
   done
 </pre></p>
 
