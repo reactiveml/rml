@@ -17,8 +17,9 @@ let rec process replace p_init state new_behavior =
 The process <code>p_init</code> parametrized by <code>state</code> is
 executed under the control of the
 signal <code>new_behavior</code>. When <code>new_behavior</code> is
-emitted, <code>p_init</code> is stopped and a process <code>p</code>
-is on the signal. This new process is executed through the recursive
-call to <code>replace</code>. it allows to change again the behavior
-of the process.
+emitted, <code>p_init</code> is stopped and we get the
+process <code>p</code> carried on this signal. The new
+process <code>p</code> is executed through the recursive call
+to <code>replace</code>. It allows to change again the behavior of the
+process.
 </p>

@@ -1,0 +1,26 @@
+<p>
+You can see that since the two extensible processes shared the same
+reconfiguration signal, when we emit a new behavior they both change.
+To avoid that, we can associate an id to each extensible process and
+dispatch the requests.
+</p>
+<p><pre class="code">
+signal to_add ;;
+</pre></p>
+<p><pre class="code">
+let process extensible p_init state =
+  let id = gen_id () in
+  print_endline ("{"^(string_of_int id)^"}");
+  signal acdd_behavior default (fun state -> process ())
+    gather
+      (fun p q state -> process (run (p state) || run (q state)))
+  in
+  run (extend p_init state new_behavior)
+  ||
+  loop
+    await to_add(reqs) in
+    List.iter
+     (fun (x, p) -> if x = id then emit add_behavior p)
+     reqs
+  end
+</pre></p>

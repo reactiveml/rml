@@ -1,0 +1,31 @@
+type ident
+
+val ps: unit -> unit
+
+val to_kill: (int , ident list) event
+val killable: 'a process -> 'a option process
+
+val to_suspend_resume: (int , ident list) event
+val suspendable: 'a process -> 'a process
+
+val to_reset: (int , ident list) event
+val resettable: 'a process -> 'a process
+
+val to_replace: (int * unit process,  (ident * unit process) list) event
+val replaceable: unit process -> unit process
+
+val to_add: (int * unit process,  (ident * unit process) list) event
+val extensible: unit process -> unit process
+
+val replaceable_s:
+  (int * ('state -> unit process),
+   (int * ('state -> unit process)) list) event ->
+     ('state -> unit process) -> 'state -> unit process
+
+val extensible_s:
+  (int * ('state -> unit process),
+   (int * ('state -> unit process)) list) event ->
+     ('state -> unit process) -> 'state -> unit process
+
+val killable_suspendable: 'a process -> 'a option process
+val suspendable_killable: 'a process -> 'a option process
