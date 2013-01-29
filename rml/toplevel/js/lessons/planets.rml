@@ -168,21 +168,27 @@ let process sun =
     pause
   end
 
-
 (* #run sun *)
 
 (* #exec (for i = 1 to 50 dopar run planet done) *)
 
 
+signal quit default () gather (fun () () -> ())
+
 let process main =
-  run window
-  ||
-  run sun
-  ||
-  for i = 1 to 30 dopar run planet done
+  do
+    run window
+    ||
+    run sun
+    ||
+    for i = 1 to 30 dopar run planet done
+  until quit ->
+    Graphics.close_graph ()
+  done
 ;;
 
 #run main ;;
 
-(* You can type [#run planet] to add new planets to the system. *)
+(* You can type [#run planet] to add new planets to the system and
+   type [emit quit] to stop the simulation. *)
 () ;;
