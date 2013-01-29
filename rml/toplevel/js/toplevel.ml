@@ -379,6 +379,36 @@ let run _ =
   DragnDrop.make ~events:ev container;
   (* End of Drag and drop part *)
 
+  (* Load and execute a file *)
+  let execute_file path =
+    XmlHttpRequest.get path >|=
+    (fun frame ->
+      let content = frame.XmlHttpRequest.content in
+      let phrases = Rmltop_core.split content in
+      List.iter (fun s ->
+        let s = Rmltop_core.add_terminator s in
+        rmlconsole##value <- Js.string s;
+        execute ();
+        rmlconsole##value <- Js.string "")
+        phrases)
+  in
+  let make_execute_button () =
+    List.iter
+      (fun code_file ->
+        if Js.to_bool (code_file##classList##contains (Js.string "code-file"))
+        then begin
+          let html = code_file##innerHTML in
+          code_file##innerHTML <- (Js.string "");
+          let path = text_of_html (Js.to_string html) in
+          let button =
+            text_button "execute"
+              (fun b -> Lwt.ignore_result (execute_file path))
+          in
+          Dom.appendChild code_file button
+        end)
+      (Dom.list_of_nodeList (doc##getElementsByTagName (Js.string "a")))
+  in
+
   let tbox_init_size = rmlconsole##style##height in
   Html.document##onkeydown <-
     (Html.handler
@@ -428,6 +458,7 @@ let run _ =
     (fun content ->
       tutorial_div##innerHTML <- Js.string content;
         make_code_clickable ();
+        make_execute_button ();
         Lwt.return ()
     ) in
   let start_tutorial_button = text_button "Start tutorial" (fun b ->
@@ -498,6 +529,7 @@ let run _ =
   in
 
   make_code_clickable ();
+  make_execute_button ();
 
   append_children "buttons-left" [
     suspend_button;
