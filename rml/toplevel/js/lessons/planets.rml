@@ -181,7 +181,7 @@ let process main =
     ||
     run sun
     ||
-    for i = 1 to 30 dopar run planet done
+    for i = 1 to 15 dopar run planet done
   until quit ->
     Graphics.close_graph ()
   done

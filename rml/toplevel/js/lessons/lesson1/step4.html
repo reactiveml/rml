@@ -1,22 +1,30 @@
 <h3>Parallel composition</h3>
 
-<p>The notion of instant becomes really visible when parallel
+<p>
+The notion of instant becomes really visible when parallel
 computations occurs. The parallel execution of two expressions is
-denoted <code>e1 || e2</code>. It guarantees that the two expressions
-are executed at each instant.</p>
+denoted <code>e1 || e2</code> (the boolean disjuction is
+denoted <code>e1 or e2</code>). It guarantees that the two expressions
+are executed at each instant.
+</p>
 
-<p><pre class="code">let process ex1 =
-    run (non_instantaneous_loop 10)
- || run (non_instantaneous_loop 10) ;;</pre></p>
+<p><pre class="code">
+#exec (   run (non_instantaneous_loop 10)
+       || run (non_instantaneous_loop 10) );;
+</pre></p>
 
-<p><pre class="code">#run ex1;;</pre></p>
-
-<p>In the previous example (<code>ex1</code>), we can observe that each instance
-of the process <code>non_instantaneous_loop</code> prints one number per
-instant. In the following example, the function <code>instantaneous_loop</code>
-is executed in one instant.</p>
-
-<p><pre class="code">let process ex2 =
-  run (non_instantaneous_loop 10) || instantaneous_loop 10 ;;</pre></p>
-
-<p><pre class="code">#run ex2;;</pre></p>
+<p>
+In the previous example, we can observe that each instance of the
+process <code>non_instantaneous_loop</code> prints one number per
+instant. In the following example, the
+function <code>instantaneous_loop</code> is executed in one instant
+(since it is not a process, there is no <code>run</code> to apply it).
+</p>
+<p><pre class="code">
+#exec (   run (non_instantaneous_loop 10)
+       || instantaneous_loop 10 );;
+</pre></p>
+<p>
+We can observe now that when <code>instantaneous_loop</code> starts
+its execution it do not step before it terminates.
+</p>
