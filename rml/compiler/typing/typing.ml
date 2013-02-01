@@ -109,6 +109,42 @@ let is_unit_process desc =
 
 let list_of_typ_vars = ref []
 let list_of_react_vars = ref []
+let visited_list, visited = mk_visited ()
+
+let rec gen_react is_gen k =
+  let k = react_effect_repr k in
+  begin match k.react_desc with
+  | React_var
+  | React_pause
+  | React_epsilon ->
+      if k.react_level > !reactivity_current_level
+      then if is_gen
+      then (k.react_level <- generic;
+	    list_of_react_vars := k :: !list_of_react_vars)
+      else k.react_level <- !reactivity_current_level
+  | React_seq kl
+  | React_par kl
+  | React_or kl ->
+      k.react_level <-
+        List.fold_left (fun level k -> min level (gen_react is_gen k))
+          notgeneric kl
+  | React_raw (k1, k2) ->
+      k.react_level <-
+        min generic
+          (min (gen_react is_gen k1) (gen_react is_gen k2))
+  | React_run k_body ->
+      k.react_level <- min generic (gen_react is_gen k_body)
+  | React_rec (checked, k_body) ->
+      if not (visited k) then (
+        if not (Reactivity_check.well_formed k) then begin
+          k.react_desc <- React_rec (true, k_body)
+        end;
+        k.react_level <- min generic (gen_react is_gen k_body)
+      )
+  | React_link(link) ->
+      k.react_level <- gen_react is_gen link
+  end;
+  k.react_level
 
 let rec gen_ty is_gen ty =
   let ty = type_repr ty in
@@ -140,41 +176,6 @@ let rec gen_ty is_gen ty =
         proc_info.proc_react <- react_simplify proc_info.proc_react
   end;
   ty.type_level
-
-
-and gen_react is_gen k =
-  let k = react_effect_repr k in
-  begin match k.react_desc with
-  | React_var
-  | React_pause
-  | React_epsilon ->
-      if k.react_level > !reactivity_current_level
-      then if is_gen
-      then (k.react_level <- generic;
-	    list_of_react_vars := k :: !list_of_react_vars)
-      else k.react_level <- !reactivity_current_level
-  | React_seq kl
-  | React_par kl
-  | React_or kl ->
-      k.react_level <-
-        List.fold_left (fun level k -> min level (gen_react is_gen k))
-          notgeneric kl
-  | React_raw (k1, k2) ->
-      k.react_level <-
-        min generic
-          (min (gen_react is_gen k1) (gen_react is_gen k2))
-  | React_run k_body ->
-      k.react_level <- min generic (gen_react is_gen k_body)
-  | React_rec (checked, var, k_body) ->
-      if not (Reactivity_check.well_formed k) then begin
-        k.react_desc <- React_rec (true, var, k_body)
-      end;
-      k.react_level <- min generic (gen_react is_gen k_body)
-  | React_link(link) ->
-      k.react_level <- gen_react is_gen link
-  end;
-  k.react_level
-
 
 (* main generalisation function *)
 let gen ty =
@@ -821,9 +822,7 @@ let rec type_of_expression env expr =
         let k = type_statement env p in
         pop_type_level ();
         let k = remove_local_react_var k in
-        let phi = new_react_var () in
-        let k = react_seq [ k; react_run phi ] in
-        type_unit, react_rec false phi k
+        type_unit, react_loop k
 
     | Rexpr_loop (Some n, p) ->
         type_expect_eps env n type_int;

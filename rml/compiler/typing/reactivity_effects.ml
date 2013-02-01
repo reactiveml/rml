@@ -19,12 +19,12 @@
 
 (* file: reactivity_effects.ml *)
 
+open Misc
 open Asttypes
 open Reac_ast
 open Def_types
 
 exception React_Unify
-
 
 (* generating fresh names *)
 let names = new Ident.name_generator
@@ -66,9 +66,6 @@ let react_or kl =
 let react_raw k1 k2 =
   make_react (React_raw (k1, k2))
 
-let react_rec b var k =
-  make_react (React_rec (b, var, k))
-
 let react_run k =
   make_react (React_run k)
 
@@ -89,79 +86,62 @@ let new_generic_react_var () =
     react_level = generic;
     react_index = names#name }
 
+let react_rec b k =
+  { react_desc = React_rec (b, k);
+    react_level = generic;
+    react_index = names#name }
+
+let react_loop k =
+  let v = react_epsilon () in
+  let rk = react_rec false (react_seq [ k; v ]) in
+  v.react_desc <- React_link rk;
+  rk
+
 let rec new_react_var_list n =
   match n with
     0 -> []
   | n -> (new_react_var ()) :: new_react_var_list (n - 1)
 
 
-
 (* type manipulation *)
-
-let rec subst_react_var old_var new_var k =
+let visited_list, visited = mk_visited ()
+let rec remove_local_react_var level k =
   match k.react_desc with
   | React_var ->
-      if old_var.react_index = k.react_index then new_var
-      else k
-  | React_pause -> k
-  | React_epsilon -> k
-  | React_seq l ->
-      let l = List.map (subst_react_var old_var new_var) l in
-      { k with react_desc = React_seq l; }
-  | React_par l ->
-      let l = List.map (subst_react_var old_var new_var) l in
-      { k with react_desc = React_par l; }
-  | React_or l ->
-      let l = List.map (subst_react_var old_var new_var) l in
-      { k with react_desc = React_or l; }
-  | React_raw (k1, k2) ->
-      let k1 = subst_react_var old_var new_var k1 in
-      let k2 = subst_react_var old_var new_var k2 in
-      { k with react_desc = React_raw (k1, k2)}
-  | React_rec (b, x, k') ->
-      assert (x.react_index <> old_var.react_index);
-      let desc= React_rec (b, x, subst_react_var old_var new_var k') in
-      { k with react_desc = desc; }
-  | React_run k' ->
-      { k with react_desc = React_run (subst_react_var old_var new_var k'); }
-  | React_link k' ->
-      { k with react_desc = React_link (subst_react_var old_var new_var k'); }
-
-let rec remove_local_react_var level bound_vars k =
-  match k.react_desc with
-  | React_var ->
-      if k.react_level > level && not (List.memq k bound_vars)
+      if k.react_level > level
       then react_pause ()
       else k
   | React_pause -> k
   | React_epsilon -> k
   | React_seq l ->
-      let l = List.map (remove_local_react_var level bound_vars) l in
+      let l = List.map (remove_local_react_var level) l in
       { k with react_desc = React_seq l; }
   | React_par l ->
-      let l = List.map (remove_local_react_var level bound_vars) l in
+      let l = List.map (remove_local_react_var level) l in
       { k with react_desc = React_par l; }
   | React_or l ->
-      let l = List.map (remove_local_react_var level bound_vars) l in
+      let l = List.map (remove_local_react_var level) l in
       { k with react_desc = React_or l; }
   | React_raw (k1, k2) ->
-      let k1 = remove_local_react_var level bound_vars k1 in
-      let k2 = remove_local_react_var level bound_vars k2 in
+      let k1 = remove_local_react_var level k1 in
+      let k2 = remove_local_react_var level k2 in
       { k with react_desc = React_raw (k1, k2)}
-  | React_rec (b, x, k') ->
-      let desc =
-        React_rec (b, x, remove_local_react_var level (x::bound_vars) k')
-      in
-      { k with react_desc = desc; }
+  | React_rec (b, k1) ->
+      if not (visited k) then (
+        let desc = React_rec (b, remove_local_react_var level k1) in
+        k.react_desc <- desc
+      );
+      k
   | React_run k' ->
-      let desc = React_run (remove_local_react_var level bound_vars k') in
+      let desc = React_run (remove_local_react_var level k') in
       { k with react_desc = desc; }
   | React_link k' ->
-      let desc = React_link (remove_local_react_var level bound_vars k') in
+      let desc = React_link (remove_local_react_var level k') in
       { k with react_desc = desc; }
 
 let remove_local_react_var r =
-  remove_local_react_var !reactivity_current_level [] r
+  visited_list := [];
+  remove_local_react_var !reactivity_current_level r
 
 let rec split_raw k =
   match k.react_desc with
@@ -169,13 +149,13 @@ let rec split_raw k =
   | React_raw (k1, k2) ->
       let k2', var = split_raw k2 in
       k1 :: k2', var
+  | React_rec (_, k1) -> split_raw k1
   | React_link k -> split_raw k
   | React_pause -> [k], None
   | React_epsilon -> assert false
   | React_seq _ -> assert false
   | React_par _ -> assert false
   | React_or _  -> assert false
-  | React_rec (_, _, _) -> assert false
   | React_run _ -> assert false
 
 
@@ -183,11 +163,10 @@ let rec split_raw k =
 (* makes a copy of a type *)
 
 let sr = ref []
-let save_react v = sr := v :: !sr
+let save_react k = sr := (k, k.react_desc) :: !sr
 let cleanup_react () =
-  List.iter (fun k -> k.react_desc <- React_var) !sr;
+  List.iter (fun (v, d) -> v.react_desc <- d) !sr;
   sr := []
-
 
 let rec copy_react k =
   let level = k.react_level in
@@ -196,8 +175,8 @@ let rec copy_react k =
       if level = generic
       then
 	let v = new_react_var () in
-	k.react_desc <- React_link(v);
 	save_react k;
+	k.react_desc <- React_link(v);
 	v
       else k
   | React_link(link) ->
@@ -240,23 +219,22 @@ let rec copy_react k =
         react_raw (copy_react k1) (copy_react k2)
       else
 	k
-  | React_rec (b, x, k) ->
-      if level = generic
-      then
-        (* create a new generic var for the recursion var *)
-        let v = new_generic_react_var () in
-        x.react_desc <- React_link(v);
-        save_react x;
-        let k = copy_react k in
-        react_rec b v k
-      else
-	k
+  | React_rec (b, k1) ->
+      let v = react_epsilon () in
+      save_react k;
+      k.react_desc <- React_link v;
+      v.react_desc <- React_rec (b, copy_react k1);
+      v
   | React_run k ->
       if level = generic
       then
         react_run (copy_react k)
       else
 	k
+
+let copy_react k =
+  visited_list := [];
+  copy_react k
 
 
 (* To take the canonical representative of a type.
@@ -273,28 +251,32 @@ let rec react_effect_repr k =
 
 
 (* To compute the free type variables in a type *)
+let visited_list, visited = mk_visited ()
+
 let free_react_vars level k =
   let fv = ref [] in
-  let rec free_vars bound k =
+  let rec free_vars k =
     let k = react_effect_repr k in
     match k.react_desc with
     | React_var ->
-      if k.react_level >= level && not (List.memq k bound)
+      if k.react_level >= level
       then fv := k :: !fv
     | React_pause -> ()
     | React_epsilon -> ()
-    | React_seq kl -> List.iter (fun k -> free_vars bound k) kl
-    | React_par kl -> List.iter (fun k -> free_vars bound k) kl
-    | React_or kl -> List.iter (fun k -> free_vars bound k) kl
-    | React_raw (k1, k2) -> free_vars bound k1; free_vars bound k2
-    | React_rec (_, k1, k2) -> free_vars (k1::bound) k2
-    | React_run k -> free_vars bound k
-    | React_link(link) -> free_vars bound link
+    | React_seq kl -> List.iter (fun k -> free_vars k) kl
+    | React_par kl -> List.iter (fun k -> free_vars k) kl
+    | React_or kl -> List.iter (fun k -> free_vars k) kl
+    | React_raw (k1, k2) -> free_vars k1; free_vars k2
+    | React_rec (_, k1) ->
+       if not (visited k) then free_vars k1
+    | React_run k -> free_vars k
+    | React_link(link) -> free_vars link
   in
-  free_vars [] k;
+  visited_list := [];
+  free_vars k;
   !fv
 
-
+let visited_list, visited = mk_visited ()
 let react_simplify =
   let rec simplify k =
     match k.react_desc with
@@ -330,8 +312,10 @@ let react_simplify =
         | None -> k'
         | Some var -> { k with react_desc = React_raw (k', var) }
         end
-    | React_rec (b, k1, k2) ->
-        { k with react_desc = React_rec (b, k1, simplify k2) }
+    | React_rec (b, k1) ->
+        if not (visited k) then
+          k.react_desc <- React_rec (b, simplify k1);
+        k
     | React_run k_body ->
         let k_body = simplify k_body in
         begin match k_body.react_desc with
@@ -353,7 +337,7 @@ let react_simplify =
         | React_par _
         | React_or _
         | React_raw _
-        | React_rec (_, _, _)
+        | React_rec (_, _)
         | React_run _ -> simplify_seq kl (k' :: acc)
         | React_link k -> simplify_seq (k :: kl) acc
         end
@@ -371,7 +355,7 @@ let react_simplify =
         | React_seq _
         | React_or _
         | React_raw _
-        | React_rec (_, _, _)
+        | React_rec (_, _)
         | React_run _ -> simplify_par kl (k' :: acc) pause
         | React_link k -> simplify_par (k :: kl) acc pause
         end
@@ -401,12 +385,13 @@ let react_simplify =
         | React_var
         | React_seq _
         | React_par _
-        | React_rec (_, _, _)
+        | React_rec (_, _)
         | React_run _ -> simplify_or kl (k' :: acc) epsilon
         | React_link k -> simplify_or (k :: kl) acc epsilon
         end
   in
   fun k ->
+    visited_list := [];
     if !Misc.reactivity_simplify then simplify (react_effect_repr k)
     else react_effect_repr k
 
@@ -423,11 +408,12 @@ let react_equal =
     | React_or kl1, React_or kl2 -> react_equal_list kl1 kl2
     | React_raw (k1_1, k2_1), React_raw (k1_2, k2_2) ->
         react_equal k1_1 k1_2 && react_equal k2_1 k2_2
-    | React_rec (b1, v1, k1), React_rec (b2, v2, k2) ->
-        let v = new_react_var () in
+    | React_rec (_, _), React_rec (_, _) ->
+        k1 == k2 (* TODO? *)
+       (* let v = new_react_var () in
         v1.react_desc <- React_link v;
         v2.react_desc <- React_link v;
-        react_equal k1 k2
+        react_equal k1 k2 *)
     | React_run k1, React_run k2 -> react_equal k1 k2
     | _ -> false
 
@@ -446,6 +432,7 @@ let react_equal =
 
 
 (* the occur check *)
+let visited_list, visited = mk_visited ()
 let rec occur_check_react level index k =
   let rec check k =
     let k = react_effect_repr k in
@@ -459,10 +446,13 @@ let rec occur_check_react level index k =
     | React_par l -> List.fold_left (fun acc k -> check k or acc) false l
     | React_or l -> List.fold_left (fun acc k -> check k or acc) false l
     | React_raw (k1, k2) -> check k1 or check k2
-    | React_rec (_, _, k') -> check k'
+    | React_rec (_, k') ->
+        if not (visited k) then check k'
+        else false
     | React_run k' -> check k'
     | React_link link -> check link
   in
+  visited_list := [];
   check k
 
 
@@ -477,44 +467,18 @@ let rec unify_react_effect expected_k actual_k =
       match expected_k.react_desc, actual_k.react_desc with
       | React_var, _ ->
           if occur_check_react expected_k.react_level expected_k actual_k then
-            let phi = new_generic_react_var() in
-            let kl, var =
-              match split_raw actual_k with
-              | _, None -> assert false
-              | kl, Some var -> kl, var
-            in
-            (* let kl, var = [actual_k], new_react_var() in *)
-            let k = react_or kl in
-            let rec_phi =
-              React_rec (false, phi, subst_react_var expected_k phi k)
-            in
-            let raw =
-              React_raw ({ expected_k with react_desc = rec_phi; },
-                         var)
-            in
-            expected_k.react_desc <- raw
+            let v = react_rec false actual_k in
+            expected_k.react_desc <- React_link v
           else
-	    expected_k.react_desc <- React_link(actual_k)
+            expected_k.react_desc <- React_link actual_k
       | _, React_var ->
-	  if occur_check_react actual_k.react_level actual_k expected_k then
-            let phi = new_generic_react_var() in
-            let kl, var =
-              match split_raw expected_k with
-              | _, None -> assert false
-              | kl, Some var -> kl, var
-            in
-            (* let kl, var = [expected_k], new_react_var() in *)
-            let k = react_or kl in
-            let rec_phi =
-              React_rec (false, phi, subst_react_var expected_k phi k)
-            in
-            let raw =
-              React_raw ({ expected_k with react_desc = rec_phi; },
-                         var)
-            in
-            actual_k.react_desc <- (* rec_phi *) raw
+          if occur_check_react actual_k.react_level actual_k expected_k then
+            let v = react_rec false expected_k in
+            actual_k.react_desc <- React_link v
           else
-	    actual_k.react_desc <- React_link(expected_k)
+            actual_k.react_desc <- React_link expected_k
+      | React_rec(_, expected_k), _ -> unify_react_effect expected_k actual_k
+      | _, React_rec (_, actual_k) -> unify_react_effect expected_k actual_k
       | React_raw (k1_1, k2_1), React_raw (k1_2, k2_2) ->
           let kl1, v1 =
             match split_raw k2_1 with
@@ -565,3 +529,4 @@ let check_epsilon k =
   match k.react_desc with
   | React_epsilon -> ()
   | _ -> () (* XXX TODO XXX *)
+

@@ -53,6 +53,98 @@ let print_qualified_ident q =
 let type_name = new name_assoc_table int_to_alpha
 let react_name = new name_assoc_table (fun i -> Format.sprintf "r%i" (i+1))
 
+(** Print reactivity effects **)
+
+(* Find the root of a type, that is the folded version of the type *)
+let visited_list, visited = mk_visited ()
+
+type status = NoCycle | Cycle | Rec of reactivity_effect
+let max r1 r2 = match r1, r2 with
+| Rec _, _ -> r1
+| _, Rec _ -> r2
+| Cycle, _ | _, Cycle -> Cycle
+| NoCycle, NoCycle -> NoCycle
+
+let rec max_list rl =
+  List.fold_left max NoCycle rl
+
+let rec find_root check first k =
+  if check && k == first then Cycle
+  else
+    match k.react_desc with
+      | React_var | React_pause | React_epsilon -> NoCycle
+      | React_seq kl | React_par kl | React_or kl ->
+        let rl = List.map (find_root true first) kl in
+        max_list rl
+      | React_raw (k1, k2) ->
+        max (find_root true first k1) (find_root true first k2)
+      | React_rec (_, k1) ->
+        if visited k then
+          NoCycle
+        else
+          (match find_root true first k1 with
+            | NoCycle -> NoCycle
+            | Cycle | Rec _ -> Rec k)
+      | React_run k -> find_root true first k
+      | React_link(link) -> find_root true first link
+
+let find_root k =
+  visited_list := [];
+  match k.react_desc with
+    | React_rec _ -> k
+    | _ ->
+      match find_root false k k with
+        | Rec k1 -> k1
+        | Cycle -> assert false
+        | NoCycle -> k
+
+let visited_list, visited = mk_visited ()
+let rec print_reactivity ff k =
+  match k.react_desc with
+  | React_link k' -> print_reactivity ff k'
+  | React_var ->
+      fprintf ff "'%s%s"
+        (if k.react_level <> generic then "_" else "")
+        (react_name#name k.react_index)
+  | React_pause -> fprintf ff "*"
+  | React_epsilon -> fprintf ff "0"
+  | React_seq l -> fprintf ff "(%a)" (print_reactivity_list "; ") l
+  | React_par l -> fprintf ff "(%a)" (print_reactivity_list " || ") l
+  | React_or l -> fprintf ff "(%a)" (print_reactivity_list " + ") l
+  (* | React_raw (k1, { react_desc = React_var }) -> *)
+  (*     fprintf ff "(%a + ..)" *)
+  (*       print_reactivity k1 *)
+  | React_raw (k1, k2) ->
+      fprintf ff "(%a + %a)"
+        print_reactivity k1
+        print_reactivity k2
+  | React_rec (_, k') ->
+      if not (visited k) then (
+        fprintf ff "(rec '%s. %a)"
+          (react_name#name k.react_index)
+          print_reactivity k'
+      ) else
+        fprintf ff "'%s" (react_name#name k.react_index)
+  | React_run k' -> fprintf ff "run %a" print_reactivity k'
+
+and print_reactivity_list sep ff l =
+  let rec printrec ff l =
+    match l with
+      [] -> ()
+    | [k] ->
+	print_reactivity ff k
+    | k::rest ->
+        fprintf ff "%a%s%a"
+	  print_reactivity k
+          sep
+	  printrec rest in
+  printrec ff l
+
+let print_reactivity ff k =
+  visited_list := [];
+  print_reactivity ff (*(find_root k)*) k
+
+
 let rec print priority ty =
   open_box 0;
   begin match ty.type_desc with
@@ -97,44 +189,6 @@ and print_proc_info pi =
 (*   end *)
   if !Misc.dreactivity then
     printf "[%a]" print_reactivity pi.proc_react
-
-and print_reactivity ff k =
-  match k.react_desc with
-  | React_link k' -> print_reactivity ff k'
-  | React_var ->
-      fprintf ff "'%s%s"
-        (if k.react_level <> generic then "_" else "")
-        (react_name#name k.react_index)
-  | React_pause -> fprintf ff "*"
-  | React_epsilon -> fprintf ff "0"
-  | React_seq l -> fprintf ff "(%a)" (print_reactivity_list "; ") l
-  | React_par l -> fprintf ff "(%a)" (print_reactivity_list " || ") l
-  | React_or l -> fprintf ff "(%a)" (print_reactivity_list " + ") l
-  (* | React_raw (k1, { react_desc = React_var }) -> *)
-  (*     fprintf ff "(%a + ..)" *)
-  (*       print_reactivity k1 *)
-  | React_raw (k1, k2) ->
-      fprintf ff "(%a + %a)"
-        print_reactivity k1
-        print_reactivity k2
-  | React_rec (_, x, k') ->
-      fprintf ff "(rec %a. %a)"
-        print_reactivity x
-        print_reactivity k'
-  | React_run k' -> fprintf ff "run %a" print_reactivity k'
-
-and print_reactivity_list sep ff l =
-  let rec printrec ff l =
-    match l with
-      [] -> ()
-    | [k] ->
-	print_reactivity ff k
-    | k::rest ->
-        fprintf ff "%a%s%a"
-	  print_reactivity k
-          sep
-	  printrec rest in
-  printrec ff l
 
 and print_list priority sep l =
   let rec printrec l =
