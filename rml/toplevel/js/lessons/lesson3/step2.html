@@ -1,14 +1,14 @@
 <p>
 We program a way to observe the moving points. To do that we
-define a global signal <code>to_draw</code> on which the points will
-send their state.
+define a global signal <code>to_draw</code> on which points will
+send their states.
 </p>
 <p><pre class="code">
 signal to_draw;;
 </pre></p>
 <p>
-Then we define a process window which opens the graphical window and
-displays the points.
+Then we define a process called <code>window</code> which opens the
+graphical window and displays the points.
 </p>
 <p><pre class="code">
 let process window =

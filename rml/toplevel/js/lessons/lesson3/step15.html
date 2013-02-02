@@ -5,15 +5,15 @@ dispatch the requests.
 </p>
 <p>
 The adding requests will be sent on the signal <code>to_add</code>
-with the id of the process to extends.
+with the id of the process to extend.
 </p>
 <p><pre class="code">
 signal to_add ;;
 </pre></p>
 <p>
-Each extensible process have its own <code>add_behavior</code> signal
-and filters on the <code>to_add</code> signal the requests which are
-for it.
+Each extensible process has its own <code>add_behavior</code> signal
+and filters the <code>to_add</code> signal to extract only those
+requests addressed to it.
 </p>
 <p><pre class="code">
 let process extensible p_init state =

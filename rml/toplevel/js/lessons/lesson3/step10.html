@@ -1,6 +1,6 @@
 <p>
-Now to replace this point moving left to right, we define behavior of a
-point moving up and down.
+Now, to replace the point moving from left to right, we define the
+behavior of a point moving up and down.
 </p>
 <p><pre class="code">
 let process up_down state =
@@ -17,7 +17,7 @@ let process moving_point' state =
 </pre></p>
 
 <p>
-To reconfigure the previous point, we only have to send
+To reconfigure the previous point, we need only send
 this <code>moving_point'</code> process on the
 signal <code>new_behavior</code>.
 </p>

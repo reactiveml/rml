@@ -1,8 +1,9 @@
 <p>
-Another useful reconfiguration combinator is to add a new behavior to
-a running process. To do that, we define a process <code>extend</code>
-that executes a process <code>p_init</code> and awaits new processes
-to execute on a signal <code>add_behavior</code>. The initial
+Another useful reconfiguration combinator is one that adds a new
+behavior to a running process. To do that, we define a
+process <code>extend</code> that executes a
+process <code>p_init</code> and awaits new processes to execute on a
+signal <code>add_behavior</code>. The initial
 process <code>p_init</code> and the added processes will share a
 common state <code>state</code>.
 </p>

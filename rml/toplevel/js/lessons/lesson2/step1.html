@@ -1,11 +1,14 @@
 <p>
-In this lesson, we will program a ball which bounces on the limits of a
-box and which is duplicated each time we emit a signal <code>split</code>. Here is the expected result: <a class="code-file">lessons/lesson2/split.rml</a>
+In this lesson, we will program a ball which bounces against the edges
+of a box, and which is duplicated on every emission of a signal split
+<code>split</code>. Here is an example of what we aim to acheive:
+<a class="code-file">lessons/lesson2/split.rml</a>
 </p>
 
 <p>
-We first define the data structure which represents the bounds of a box.
+We first define the data structure to represent the bounds of a box.
 </p>
+
 <p><pre class="code">
 type box =
     { left: float;
