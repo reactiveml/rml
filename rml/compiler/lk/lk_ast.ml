@@ -50,6 +50,8 @@ and expression_desc =
   | Kexpr_array of expression list
   | Kexpr_record of (label_type_description global * expression) list
   | Kexpr_record_access of expression * label_type_description global
+  | Kexpr_record_with of
+      expression * (label_type_description global * expression) list
   | Kexpr_record_update of
       expression * label_type_description global * expression
   | Kexpr_constraint of expression * type_expression

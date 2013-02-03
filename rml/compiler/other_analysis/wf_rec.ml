@@ -64,6 +64,7 @@ let rec check_patt_expr (patt, expr) =
     | Rexpr_let _
     | Rexpr_apply _
     | Rexpr_record_access _
+    | Rexpr_record_with _
     | Rexpr_record_update _
     | Rexpr_assert _
     | Rexpr_trywith _

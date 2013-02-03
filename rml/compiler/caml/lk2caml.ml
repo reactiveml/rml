@@ -221,6 +221,10 @@ let rec translate_ml e =
     | Kexpr_record_access (expr, label) ->
 	Cexpr_record_access (translate_ml expr, label)
 
+    | Kexpr_record_with (expr, l) ->
+        Cexpr_record_with (translate_ml expr,
+                           List.map (fun (lab,e) -> lab, translate_ml e) l)
+
     | Kexpr_record_update (e1, label, e2) ->
 	Cexpr_record_update (translate_ml e1, label, translate_ml e2)
 

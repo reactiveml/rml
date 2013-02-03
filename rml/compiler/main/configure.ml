@@ -93,6 +93,8 @@ let unset_reactivity_warning () =
   reactivity_warning := false
 let set_old_instantaneous_loop_warning () =
   old_instantaneous_loop_warning := true
+let unset_no_reactivity_simpl () =
+  reactivity_simplify := false
 
 
 (* Select the runtime *)
@@ -195,6 +197,7 @@ and doc_verbose = "Print types"
 and doc_save_types = "Save type information in <filename>.?annot"
 and doc_no_reactivity_warning = "Remove reactivity analysis warnings"
 and doc_dreactivity = "Display reactivity effects in process types"
+and doc_no_reactivity_simpl = "Do not simplify reactivity effects"
 and doc_old_loop_warning = "Set the old instantaneous loop and recursion analysis"
 and doc_interactive = "Read programs on stdin and output on stdout"
 and doc_runtime =

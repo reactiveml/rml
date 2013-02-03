@@ -99,9 +99,9 @@ typing/reactivity_check.cmx : typing/reactivity_effects.cmx \
     reac/reac_ast.cmx reac/reac2reac.cmx parsing/location.cmx \
     typing/def_types.cmx global/asttypes.cmx
 typing/reactivity_effects.cmo : typing/types_printer.cmo reac/reac_ast.cmo \
-    global/ident.cmo typing/def_types.cmo global/asttypes.cmo
+    global/misc.cmo global/ident.cmo typing/def_types.cmo global/asttypes.cmo
 typing/reactivity_effects.cmx : typing/types_printer.cmx reac/reac_ast.cmx \
-    global/ident.cmx typing/def_types.cmx global/asttypes.cmx
+    global/misc.cmx global/ident.cmx typing/def_types.cmx global/asttypes.cmx
 typing/types.cmo : typing/reactivity_effects.cmo global/misc.cmo \
     global/ident.cmo global/global_ident.cmo global/global.cmo \
     typing/def_types.cmo

@@ -172,6 +172,13 @@ let rec static_expr ctx e =
 	then Static
 	else expr_wrong_static_err !Misc.err_fmt e
 
+    | Rexpr_record_with (e1, ide_expr_list) ->
+        let typ1 = static_expr ML e1 in
+        let typ2 = static_expr_list static_expr max snd ML ide_expr_list in
+	if max typ1 typ2 = Static
+	then Static
+	else expr_wrong_static_err !Misc.err_fmt e
+
     | Rexpr_record_update (e1, _, e2) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in

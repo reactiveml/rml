@@ -654,6 +654,8 @@ simple_expr:
       { mkexpr(Pexpr_record($2)) }
   | LBRACE record_expr error
       { unclosed "{" 1 "}" 5 }
+  | LBRACE simple_expr WITH record_expr RBRACE
+      { mkexpr(Pexpr_record_with ($2, $4)) }
   | LBRACKETBAR expr_semi_list opt_semi BARRBRACKET
       { mkexpr(Pexpr_array(List.rev $2)) }
   | LBRACKETBAR expr_semi_list opt_semi error

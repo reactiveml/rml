@@ -127,14 +127,50 @@ let rec subst_react_var old_var new_var k =
   | React_link k' ->
       { k with react_desc = React_link (subst_react_var old_var new_var k'); }
 
+let rec remove_local_react_var level bound_vars k =
+  match k.react_desc with
+  | React_var ->
+      if k.react_level > level && not (List.memq k bound_vars)
+      then react_pause ()
+      else k
+  | React_pause -> k
+  | React_epsilon -> k
+  | React_seq l ->
+      let l = List.map (remove_local_react_var level bound_vars) l in
+      { k with react_desc = React_seq l; }
+  | React_par l ->
+      let l = List.map (remove_local_react_var level bound_vars) l in
+      { k with react_desc = React_par l; }
+  | React_or l ->
+      let l = List.map (remove_local_react_var level bound_vars) l in
+      { k with react_desc = React_or l; }
+  | React_raw (k1, k2) ->
+      let k1 = remove_local_react_var level bound_vars k1 in
+      let k2 = remove_local_react_var level bound_vars k2 in
+      { k with react_desc = React_raw (k1, k2)}
+  | React_rec (b, x, k') ->
+      let desc =
+        React_rec (b, x, remove_local_react_var level (x::bound_vars) k')
+      in
+      { k with react_desc = desc; }
+  | React_run k' ->
+      let desc = React_run (remove_local_react_var level bound_vars k') in
+      { k with react_desc = desc; }
+  | React_link k' ->
+      let desc = React_link (remove_local_react_var level bound_vars k') in
+      { k with react_desc = desc; }
+
+let remove_local_react_var r =
+  remove_local_react_var !reactivity_current_level [] r
+
 let rec split_raw k =
   match k.react_desc with
-  | React_var -> [], k
+  | React_var -> [], Some k
   | React_raw (k1, k2) ->
       let k2', var = split_raw k2 in
       k1 :: k2', var
   | React_link k -> split_raw k
-  | React_pause -> assert false
+  | React_pause -> [k], None
   | React_epsilon -> assert false
   | React_seq _ -> assert false
   | React_par _ -> assert false
@@ -207,9 +243,12 @@ let rec copy_react k =
   | React_rec (b, x, k) ->
       if level = generic
       then
-        let x = copy_react x in
+        (* create a new generic var for the recursion var *)
+        let v = new_generic_react_var () in
+        x.react_desc <- React_link(v);
+        save_react x;
         let k = copy_react k in
-        react_rec b x k
+        react_rec b v k
       else
 	k
   | React_run k ->
@@ -236,22 +275,23 @@ let rec react_effect_repr k =
 (* To compute the free type variables in a type *)
 let free_react_vars level k =
   let fv = ref [] in
-  let rec free_vars k =
+  let rec free_vars bound k =
     let k = react_effect_repr k in
     match k.react_desc with
     | React_var ->
-        if k.react_level >= level then fv := k :: !fv
+      if k.react_level >= level && not (List.memq k bound)
+      then fv := k :: !fv
     | React_pause -> ()
     | React_epsilon -> ()
-    | React_seq kl -> List.iter (fun k -> free_vars k) kl
-    | React_par kl -> List.iter (fun k -> free_vars k) kl
-    | React_or kl -> List.iter (fun k -> free_vars k) kl
-    | React_raw (k1, k2) -> free_vars k1; free_vars k2
-    | React_rec (_, k1, k2) -> free_vars k1; free_vars k2
-    | React_run k -> free_vars k
-    | React_link(link) -> free_vars link
+    | React_seq kl -> List.iter (fun k -> free_vars bound k) kl
+    | React_par kl -> List.iter (fun k -> free_vars bound k) kl
+    | React_or kl -> List.iter (fun k -> free_vars bound k) kl
+    | React_raw (k1, k2) -> free_vars bound k1; free_vars bound k2
+    | React_rec (_, k1, k2) -> free_vars (k1::bound) k2
+    | React_run k -> free_vars bound k
+    | React_link(link) -> free_vars bound link
   in
-  free_vars k;
+  free_vars [] k;
   !fv
 
 
@@ -268,30 +308,35 @@ let react_simplify =
         | kl -> { k with react_desc = React_seq kl; }
         end
     | React_par kl ->
-        begin match simplify_par (List.map simplify kl) [] with
+        begin match simplify_par (List.map simplify kl) [] false with
         | [] -> { k with react_desc = React_epsilon; }
         | [ k' ] -> k'
         | kl -> { k with react_desc = React_par kl; }
         end
     | React_or kl ->
-        begin match simplify_or (List.map simplify kl) [] with
+        begin match simplify_or (List.map simplify kl) [] false with
         | [] -> { k with react_desc = React_pause; }
         | [ k' ] -> k'
         | kl -> { k with react_desc = React_or kl; }
         end
+    | React_raw(k1, { react_desc = React_pause }) ->
+        simplify k1
     | React_raw (k1, k2) ->
-        let k2', var = split_raw k2 in
-        let k1' =
-          simplify { k with react_desc = React_or (k1 :: k2'); }
+        let kl, var_opt = split_raw k in
+        let k' =
+          simplify { k with react_desc = React_or kl; }
         in
-        { k with react_desc = React_raw (k1', var) }
+        begin match var_opt with
+        | None -> k'
+        | Some var -> { k with react_desc = React_raw (k', var) }
+        end
     | React_rec (b, k1, k2) ->
         { k with react_desc = React_rec (b, k1, simplify k2) }
     | React_run k_body ->
         let k_body = simplify k_body in
         begin match k_body.react_desc with
-        (* | React_pause -> { k with react_desc = React_pause } *)
-        (* | React_epsilon -> { k with react_desc = React_epsilon } *)
+        | React_pause -> { k with react_desc = React_pause }
+        | React_epsilon -> { k with react_desc = React_epsilon }
         | _ -> { k with react_desc = React_run k_body }
         end
     | React_link k -> simplify k
@@ -312,51 +357,58 @@ let react_simplify =
         | React_run _ -> simplify_seq kl (k' :: acc)
         | React_link k -> simplify_seq (k :: kl) acc
         end
-  and simplify_par kl acc =
+  and simplify_par kl acc pause =
     match kl with
     | [] -> List.rev acc
     | k' :: kl ->
         begin match k'.react_desc with
-        | React_epsilon -> simplify_par kl acc
-        | React_par kl' -> simplify_par (kl' @ kl) acc
+        | React_epsilon -> simplify_par kl acc pause
+        | React_par kl' -> simplify_par (kl' @ kl) acc pause
+        | React_pause ->
+            if pause then simplify_par kl acc true
+            else simplify_par kl (k' :: acc) true
         | React_var
-        | React_pause
         | React_seq _
         | React_or _
         | React_raw _
         | React_rec (_, _, _)
-        | React_run _ -> simplify_par kl (k' :: acc)
-        | React_link k -> simplify_par (k :: kl) acc
+        | React_run _ -> simplify_par kl (k' :: acc) pause
+        | React_link k -> simplify_par (k :: kl) acc pause
         end
-  and simplify_or kl acc =
+  and simplify_or kl acc epsilon =
     match kl with
     | [] -> List.rev acc
     | k' :: kl ->
         begin match k'.react_desc with
-        | React_pause -> simplify_or kl acc
-        | React_or kl' -> simplify_or (kl' @ kl) acc
+        | React_pause -> simplify_or kl acc epsilon
+        | React_or kl' -> simplify_or (kl' @ kl) acc epsilon
         | React_raw (k1, k2) ->
-            let k2', var = split_raw k2 in
+            let k2', var_opt = split_raw k2 in
             let k1k2' =
-              begin match simplify_or (k1 :: k2' @ kl) acc with
+              begin match simplify_or (k1 :: k2' @ kl) acc epsilon with
               | [] -> { k1 with react_desc = React_pause; }
               | [ k'' ] -> k''
               | kl' -> { k1 with react_desc = React_or kl'; }
               end
             in
-            [ { k' with react_desc = React_raw (k1k2', var) } ]
+            begin match var_opt with
+            | None -> [ k1k2' ]
+            | Some var -> [ { k' with react_desc = React_raw (k1k2', var) } ]
+            end
+        | React_epsilon ->
+            if epsilon then simplify_or kl acc true
+            else simplify_or kl (k' :: acc) true
         | React_var
-        | React_epsilon
         | React_seq _
         | React_par _
         | React_rec (_, _, _)
-        | React_run _ -> simplify_or kl (k' :: acc)
-        | React_link k -> simplify_or (k :: kl) acc
+        | React_run _ -> simplify_or kl (k' :: acc) epsilon
+        | React_link k -> simplify_or (k :: kl) acc epsilon
         end
   in
   fun k ->
-    simplify (react_effect_repr k)
-
+    if !Misc.reactivity_simplify then simplify (react_effect_repr k)
+    else react_effect_repr k
 
 let react_equal =
   let rec react_equal k1 k2 =
@@ -425,8 +477,12 @@ let rec unify_react_effect expected_k actual_k =
       match expected_k.react_desc, actual_k.react_desc with
       | React_var, _ ->
           if occur_check_react expected_k.react_level expected_k actual_k then
-            let phi = new_react_var() in
-            let kl, var = split_raw actual_k in
+            let phi = new_generic_react_var() in
+            let kl, var =
+              match split_raw actual_k with
+              | _, None -> assert false
+              | kl, Some var -> kl, var
+            in
             (* let kl, var = [actual_k], new_react_var() in *)
             let k = react_or kl in
             let rec_phi =
@@ -441,8 +497,12 @@ let rec unify_react_effect expected_k actual_k =
 	    expected_k.react_desc <- React_link(actual_k)
       | _, React_var ->
 	  if occur_check_react actual_k.react_level actual_k expected_k then
-            let phi = new_react_var() in
-            let kl, var = split_raw expected_k in
+            let phi = new_generic_react_var() in
+            let kl, var =
+              match split_raw expected_k with
+              | _, None -> assert false
+              | kl, Some var -> kl, var
+            in
             (* let kl, var = [expected_k], new_react_var() in *)
             let k = react_or kl in
             let rec_phi =
@@ -456,8 +516,16 @@ let rec unify_react_effect expected_k actual_k =
           else
 	    actual_k.react_desc <- React_link(expected_k)
       | React_raw (k1_1, k2_1), React_raw (k1_2, k2_2) ->
-          let kl1, v1 = split_raw k2_1 in
-          let kl2, v2 = split_raw k2_2 in
+          let kl1, v1 =
+            match split_raw k2_1 with
+            | _, None -> assert false
+            | kl1, Some v1 -> kl1, v1
+          in
+          let kl2, v2 =
+            match split_raw k2_2 with
+            | _, None -> assert false
+            | kl2, Some v2 -> kl2, v2
+          in
           let k1_1' = react_or (k1_1 :: kl1) in
           let k1_2' = react_or (k1_2 :: kl2) in
           if react_equal k1_1' k1_2' then unify_react_effect v1 v2

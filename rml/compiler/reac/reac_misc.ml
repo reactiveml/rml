@@ -188,6 +188,10 @@ let expr_free_vars e =
     | Rexpr_record_access (e, lbl) ->
 	expr_free_vars vars e
 
+    | Rexpr_record_with (e, lbl_expr_list) ->
+        expr_free_vars vars e;
+        List.iter (fun (_,e) -> expr_free_vars vars e) lbl_expr_list
+
     | Rexpr_record_update (e1, lbl, e2) ->
 	expr_free_vars vars e1;
 	expr_free_vars vars e2

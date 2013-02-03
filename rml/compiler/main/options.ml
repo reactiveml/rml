@@ -40,7 +40,7 @@ let _ =
 	"-dtypes", Arg.Unit set_save_types, doc_save_types;
 	"-no_reactivity_warning", Arg.Unit unset_reactivity_warning, doc_no_reactivity_warning;
 	"-dreactivity", Arg.Unit set_dreactivity, doc_dreactivity;
-
+        "-no_reactivity_simpl", Arg.Unit unset_no_reactivity_simpl, doc_no_reactivity_simpl;
 	"-old_loop_warning", Arg.Unit set_old_instantaneous_loop_warning, doc_old_loop_warning;
 	"-runtime", Arg.String set_runtime, doc_runtime;
 	"-interactive", Arg.Unit set_interactive, doc_interactive;

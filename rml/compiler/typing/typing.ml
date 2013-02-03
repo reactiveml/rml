@@ -169,9 +169,7 @@ and gen_react is_gen k =
       if not (Reactivity_check.well_formed k) then begin
         k.react_desc <- React_rec (true, var, k_body)
       end;
-      k.react_level <-
-        min generic
-          (min (gen_react is_gen var) (gen_react is_gen k_body))
+      k.react_level <- min generic (gen_react is_gen k_body)
   | React_link(link) ->
       k.react_level <- gen_react is_gen link
   end;
@@ -606,6 +604,26 @@ let rec type_of_expression env expr =
 	type_expect_eps env e ty_arg;
 	ty_res, react_epsilon()
 
+    | Rexpr_record_with (e, l) ->
+        let ty = new_var() in
+        let rec typing_record label_list label_expr_list =
+	match label_expr_list with
+	    [] -> ()
+	  | (label,label_expr) :: label_expr_list ->
+	      let { lbl_arg = ty_arg;
+		    lbl_res = ty_res } = get_type_of_label label expr.expr_loc
+	      in
+	      (* check that the label appears only once *)
+	      if List.mem label label_list
+	      then non_linear_record_err label.gi expr.expr_loc;
+	      type_expect_eps env label_expr ty_res;
+	      unify_expr expr ty ty_arg;
+	      typing_record (label :: label_list) label_expr_list
+	in
+	typing_record [] l;
+        type_expect_eps env e ty;
+	ty, react_epsilon()
+
     | Rexpr_record_update (e1, label, e2) ->
 	let { lbl_arg = ty_arg; lbl_res = ty_res; lbl_mut = mut } =
 	  get_type_of_label label expr.expr_loc
@@ -643,8 +661,8 @@ let rec type_of_expression env expr =
 
     | Rexpr_ifthenelse (cond,e1,e2) ->
 	type_expect_eps env cond type_bool;
-	let ty, k1 = type_of_expression env e1 in
-	let k2 = type_expect env e2 ty in
+	let ty, k2 = type_of_expression env e2 in
+	let k1 = type_expect env e1 ty in
 	ty, react_or [k1; k2]
 
     | Rexpr_match (body,matching) ->
@@ -694,7 +712,10 @@ let rec type_of_expression env expr =
         ty, react_seq (List.rev rev_kl)
 
     | Rexpr_process(e) ->
+        push_type_level ();
 	let ty, k = type_of_expression env e in
+        pop_type_level ();
+        let k = remove_local_react_var k in
         process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow));
                      proc_react = react_raw k (new_react_var()); },
         react_epsilon()
@@ -796,14 +817,20 @@ let rec type_of_expression env expr =
     | Rexpr_halt _ -> new_var(), react_pause()
 
     | Rexpr_loop (None, p) ->
+        push_type_level ();
         let k = type_statement env p in
+        pop_type_level ();
+        let k = remove_local_react_var k in
         let phi = new_react_var () in
-        let k = react_seq [ k; phi ] in
+        let k = react_seq [ k; react_run phi ] in
         type_unit, react_rec false phi k
 
     | Rexpr_loop (Some n, p) ->
         type_expect_eps env n type_int;
+        push_type_level ();
         let k = type_statement env p in
+        pop_type_level ();
+        let k = remove_local_react_var k in
         type_unit, k
 
     | Rexpr_fordopar(i,e1,e2,flag,p) ->
