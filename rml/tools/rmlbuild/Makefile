@@ -9,6 +9,9 @@ byte: all
 install:
 	cd rmlbuild; $(MAKE) install
 
+uninstall:
+	cd rmlbuild; $(MAKE) uninstall
+
 clean:
 	cd rmlbuild; $(MAKE) clean
 

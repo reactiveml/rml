@@ -43,6 +43,16 @@ install:
 checkinstall: config
 	checkinstall -D --deldoc=yes --deldesc=yes --nodoc -y --install=no
 
+uninstall:
+	(cd compiler; $(MAKE) uninstall)
+	(cd stdlib; $(MAKE) uninstall)
+	(cd interpreter; $(MAKE) uninstall)
+	(cd man; $(MAKE) uninstall)
+	(cd emacs; $(MAKE) uninstall)
+	(cd toplevel; $(MAKE) uninstall)
+	(cd tools; $(MAKE) uninstall)
+
+
 ### BEGIN Patch from Serge Leblanc
 
 install.findlib:

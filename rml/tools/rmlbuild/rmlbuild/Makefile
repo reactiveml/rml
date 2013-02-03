@@ -68,6 +68,10 @@ else
 	cp $(BUILDDIR)/rmlbuild.byte   $(INSTALL_BIN)/rmlbuild
 endif
 
+uninstall:
+	rm -f $(INSTALL_BIN)/rmlbuild
+	rm -rf $(INSTALL_LIB)
+
 install-prepare:
 	mkdir -p $(INSTALL_BIN)
 	mkdir -p $(INSTALL_LIB)

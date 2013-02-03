@@ -23,6 +23,10 @@ install.byte: byte
 	$(INSTALL) -d $(BINDIR)
 	$(INSTALL) $(BIN).byte $(BINDIR)/$(BIN)
 
+uninstall.byte:
+	rm -f $(BINDIR)/$(BIN)
+uninstall.opt:
+	rm -f $(BINDIR)/$(BIN).opt
 
 debug: OCAMLFLAGS += -g
 debug: byte

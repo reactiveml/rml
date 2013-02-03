@@ -149,7 +149,10 @@ include ../configure-tools/Makefile.common
 
 all: $(TARGET)
 install: install.$(TARGET)
-	mv $(BINDIR)/$(BIN).$(TARGET) $(BINDIR)/$(BIN)
+	cp $(BINDIR)/$(BIN).$(TARGET) $(BINDIR)/$(BIN)
+uninstall: uninstall.$(TARGET)
+	rm -f $(BINDIR)/$(BIN)
+
 
 diff: FORCE
 	(cd diff; $(MAKE) diff)
