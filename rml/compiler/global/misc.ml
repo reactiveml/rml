@@ -88,6 +88,7 @@ let sampling = ref (-. 1.0)
 let print_type = ref false
 let save_types = ref false
 let reactivity_warning = ref true
+let reactivity_simplify = ref true
 let dreactivity = ref false
 let old_instantaneous_loop_warning = ref false
 

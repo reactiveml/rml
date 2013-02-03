@@ -407,8 +407,8 @@ let react_simplify =
         end
   in
   fun k ->
-    simplify (react_effect_repr k)
-
+    if !Misc.reactivity_simplify then simplify (react_effect_repr k)
+    else react_effect_repr k
 
 let react_equal =
   let rec react_equal k1 k2 =
