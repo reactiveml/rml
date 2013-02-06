@@ -240,7 +240,7 @@ let compile_implementation module_name filename =
   and obj_name = filename ^ ".ml"
   and tannot_name = filename ^ ".tannot"
   and sannot_name = filename ^ ".sannot"
-  and module_name = String.capitalize filename  in
+  and module_name = String.capitalize (Filename.basename filename)  in
 
   let ic = open_in source_name in
   let itf = open_out_bin obj_interf_name in
