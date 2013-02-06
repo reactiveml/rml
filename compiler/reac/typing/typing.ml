@@ -1095,13 +1095,16 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
         Constr_abbrev (List.map snd typ_vars, ty_te)
 
   in
+  (* Update the existing abbreviation *)
+  let type_constr = (Global.ty_info type_gl).type_constr in
+  type_constr.ty_info <- Some { constr_abbr = abbr };
+  (* Update the type description *)
   type_gl.ty_info <-
-    Some { type_constr = {gi = type_gl.gi;
-                          ty_info = Some {constr_abbr = abbr};
-                          ck_info = None };
+    Some { type_constr = type_constr;
            type_kind = type_desc;
            type_arity = List.length typ_vars };
   type_gl
+
 
 
 (* Check that an implementation without interface does not export values

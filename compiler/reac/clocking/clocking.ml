@@ -1413,14 +1413,16 @@ let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
 
   in
   let clock_arity = list_arity vars in
-  let def_arity = match type_gl.ck_info with None -> assert false | Some i -> i.clock_def_arity in
+  let info = Global.ck_info type_gl in
+  (* Update the existing abbreviation *)
+  let clock_constr = info.clock_constr in
+  clock_constr.ck_info <- Some { constr_abbr = abbr };
+  (* Update the type description *)
   type_gl.ck_info <-
-    Some { clock_constr = {gi = type_gl.gi;
-                           ty_info = None;
-                           ck_info = Some {constr_abbr = abbr}};
+    Some { clock_constr = clock_constr;
            clock_kind = type_desc;
            clock_arity = clock_arity;
-           clock_def_arity = def_arity; };
+           clock_def_arity = info.clock_def_arity; };
   type_gl
 
 
