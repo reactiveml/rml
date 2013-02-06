@@ -1188,9 +1188,12 @@ let type_of_type_declaration loc (type_gl, typ_params, type_decl) =
 	Constr_abbrev (List.map snd typ_vars, ty_te)
 
   in
+  (* Update the existing abbreviation *)
+  let type_constr = (Global.info type_gl).type_constr in
+  type_constr.info <- Some { constr_abbr = abbr };
+  (* Update the type description *)
   type_gl.info <-
-    Some { type_constr = {gi = type_gl.gi;
-			  info = Some {constr_abbr = abbr}};
+    Some { type_constr = type_constr;
 	   type_kind = type_desc;
 	   type_arity = List.length typ_vars };
   type_gl
