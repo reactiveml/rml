@@ -223,12 +223,13 @@ let rec copy_react k =
       let v = react_epsilon () in
       save_react k;
       k.react_desc <- React_link v;
-      v.react_desc <- React_rec (b, copy_react k1);
+      let v2 = react_rec b (copy_react k1) in
+      v.react_desc <- React_link v2;
       v
-  | React_run k ->
+  | React_run k1 ->
       if level = generic
       then
-        react_run (copy_react k)
+        react_run (copy_react k1)
       else
 	k
 
@@ -304,14 +305,17 @@ let react_simplify =
     | React_raw(k1, { react_desc = React_pause }) ->
         simplify k1
     | React_raw (k1, k2) ->
+        { k with react_desc = React_raw(simplify k1, simplify k2) }
+        (* Ne marche plus avec les comportements recursifs *)
+        (*
         let kl, var_opt = split_raw k in
         let k' =
-          simplify { k with react_desc = React_or kl; }
+          simplify (react_or kl)
         in
         begin match var_opt with
         | None -> k'
         | Some var -> { k with react_desc = React_raw (k', var) }
-        end
+        end*)
     | React_rec (b, k1) ->
         if not (visited k) then
           k.react_desc <- React_rec (b, simplify k1);
@@ -442,9 +446,9 @@ let rec occur_check_react level index k =
         k == index
     | React_pause -> false
     | React_epsilon -> false
-    | React_seq l -> List.fold_left (fun acc k -> check k or acc) false l
-    | React_par l -> List.fold_left (fun acc k -> check k or acc) false l
-    | React_or l -> List.fold_left (fun acc k -> check k or acc) false l
+    | React_seq l -> List.exists check l
+    | React_par l ->  List.exists check l
+    | React_or l ->  List.exists check l
     | React_raw (k1, k2) -> check k1 or check k2
     | React_rec (_, k') ->
         if not (visited k) then check k'
@@ -492,14 +496,14 @@ let rec unify_react_effect expected_k actual_k =
           in
           let k1_1' = react_or (k1_1 :: kl1) in
           let k1_2' = react_or (k1_2 :: kl2) in
-          if react_equal k1_1' k1_2' then unify_react_effect v1 v2
-          else begin
+          (*if react_equal k1_1' k1_2' then unify_react_effect v1 v2
+          else begin*)
             let var = new_react_var () in
             let new_k1_1 = react_raw k1_1' var in
             let new_k1_2 = react_raw k1_2' var in
             unify_react_effect v1 new_k1_2;
             unify_react_effect v2 new_k1_1
-          end
+         (*end*)
       (* | React_or kl1, React_or kl2 -> *)
       (*     let kl1, v1 =  try find_row_var kl1 with Not_found -> raise Unify in *)
       (*     let kl2, v2 =  try find_row_var kl2 with Not_found -> raise Unify in *)
