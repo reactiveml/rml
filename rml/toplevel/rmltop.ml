@@ -147,6 +147,10 @@ let ocaml =
 
 let sampling = ref None
 
+let set_dir path =
+  rmlc := !rmlc ^ " -I " ^ path;
+  ocaml := !ocaml ^ " -I " ^ path
+
 let main s =
   let _ = print_intro() in
   (* fork the ReactiveML compiler *)
@@ -163,7 +167,7 @@ let main s =
   init ocaml_in;
   main_loop stdin rmlc_in rmlc_out ocaml_in
 
-let usage = ""
+let usage = "Usage: rmltop <options> <object-files>"
 
 let set_dreactivity () =
   rmlc := !rmlc ^ " -dreactivity"
@@ -172,6 +176,8 @@ let _ =
   Arg.parse (Arg.align
     [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x),
       "<rate> Sets the sampling rate to <rate> seconds";
+      "-I", Arg.String set_dir,
+      "<dir> Add <dir> to the list of include directories";
       "-i", Arg.Set show_help, " List known rml directives at startup ";
       "-dreactivity", Arg.Unit set_dreactivity,
       " Display reactivity effects in process types";
