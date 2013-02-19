@@ -125,8 +125,15 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
 	flush ocaml_in
   done
 
-let init ocaml_in =
+let init ocaml_in sampling =
   output_string ocaml_in ("open Implem;;\n");
+  begin match sampling with
+  | None -> ()
+  | Some n ->
+      output_string ocaml_in ("let () = Rmltop_directives.set_sampling "^
+                              (string_of_float n)
+                              ^";;\n")
+  end;
   output_string ocaml_in ("let () = Rmltop_global.print_prompt ();;\n");
   flush ocaml_in
 
@@ -160,11 +167,7 @@ let main s =
   let ocaml_in = Unix.open_process_out (!ocaml ^ s) in
   at_exit (fun () -> ignore (Unix.close_process_out ocaml_in));
   (* start the machine *)
-  begin match !sampling with
-  | None -> ()
-  | Some n -> Rmltop_directives.set_sampling n
-  end;
-  init ocaml_in;
+  init ocaml_in !sampling;
   main_loop stdin rmlc_in rmlc_out ocaml_in
 
 let usage = "Usage: rmltop <options> <object-files>"
@@ -175,7 +178,8 @@ let set_dreactivity () =
 let _ =
   Arg.parse (Arg.align
     [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x),
-      "<rate> Sets the sampling rate to <rate> seconds";
+      "<rate> Sets the sampling rate to <rate> seconds (default "^
+      (string_of_float !Rmltop_global.sampling)^"s)";
       "-I", Arg.String set_dir,
       "<dir> Add <dir> to the list of include directories";
       "-i", Arg.Set show_help, " List known rml directives at startup ";
