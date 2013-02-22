@@ -37,6 +37,8 @@ let exec_machine_controller () =
       if !sleep > 0.001 then
 	begin try Thread.delay !sleep
 	with Unix.Unix_error _ -> () end
+      else
+        Thread.yield ()
     in ()
   done
 
