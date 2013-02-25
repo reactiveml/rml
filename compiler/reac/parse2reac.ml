@@ -90,7 +90,8 @@ and translate_ce env pce =
             with
               | Not_found -> unbound_ident_err s pce.pce_loc)
       | Pcar_topck -> Ctopck
-      | Pcar_fresh -> assert false
+      | Pcar_fresh ->
+          if !Compiler_options.no_clocking then Ctopck else assert false
   in
   make_ce ce pce.pce_loc
 
@@ -101,7 +102,8 @@ and translate_cer env pcer =
       | Pcar_row_empty -> Crow_empty
       | Pcar_row_one pce -> Crow_one (translate_ce env pce)
       | Pcar_row (pcer1, pcer2) -> Crow (translate_cer env pcer1, translate_cer env pcer2)
-      | Pcar_row_fresh -> assert false
+      | Pcar_row_fresh ->
+          if !Compiler_options.no_clocking then Crow_empty else assert false
   in
   make_cer cer pcer.pcer_loc
 
@@ -113,7 +115,8 @@ and translate_ee env pee =
       | Peff_sum (ee1, ee2) -> Effsum (translate_ee env ee1, translate_ee env ee2)
       | Peff_depend cer -> Effdepend (translate_cer env cer)
       | Peff_one eer -> Effone (translate_eer env eer)
-      | Peff_fresh -> assert false
+      | Peff_fresh ->
+          if !Compiler_options.no_clocking then Effempty else assert false
   in
   make_ee ee pee.pee_loc
 
@@ -124,7 +127,8 @@ and translate_eer env peer =
       | Peff_row_empty -> Effrow_empty
       | Peff_row_one pee -> Effrow_one (translate_ee env pee)
       | Peff_row (peer1, peer2) -> Effrow (translate_eer env peer1, translate_eer env peer2)
-      | Peff_row_fresh -> assert false
+      | Peff_row_fresh ->
+          if !Compiler_options.no_clocking then Effrow_empty else assert false
   in
   make_eer eer peer.peer_loc
 
