@@ -745,17 +745,16 @@ module Rml_interpreter : Lco_interpreter.S =
 
     let rml_par p_1 p_2 =
       fun f_k ctrl jp ->
-	let cpt =
+	let cpt, j =
 	  match jp with
-	  | None -> ref 0
-	  | Some cpt -> cpt
+	  | None -> let cpt = ref 1 in cpt, join_n cpt f_k ctrl
+	  | Some cpt -> cpt, f_k
 	in
-	let j = join_n cpt f_k ctrl in
 	let f_1 = p_1 (Obj.magic j: 'a step) ctrl (Some cpt) in
 	let f_2 = p_2 (Obj.magic j: 'b step) ctrl (Some cpt) in
 	let f_par =
 	  fun _ ->
-	    cpt := !cpt + 2;
+	    cpt := !cpt + 1;
 	    current := f_2 :: !current;
 	    f_1 unit_value
 	in f_par
