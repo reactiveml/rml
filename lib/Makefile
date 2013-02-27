@@ -1,7 +1,8 @@
 include ../config
 
 STDLIB_INTERFACE=pervasives.rmli random.rmli list.rmli rmltest.mli \
-		 rmlarg.rmli graphics.rmli unix.rmli array.rmli
+		 rmlarg.rmli graphics.rmli unix.rmli array.rmli \
+		 lexing.rmli string.rmli
 STDLIB_OBJ_TMP=$(STDLIB_INTERFACE:%.rmli=%.rzi)
 STDLIB_OBJ=$(STDLIB_OBJ_TMP:%.mli=%.rzi)
 
