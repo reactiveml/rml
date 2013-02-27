@@ -323,7 +323,7 @@ let rec static_expr ctx e =
         then Dynamic Instantaneous
         else expr_wrong_static_err e
 
-    | Epause (_, e1) ->
+    | Epause (_, _, e1) ->
         if ctx = Process
         then
            (match e1 with

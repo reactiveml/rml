@@ -226,11 +226,14 @@ let rec print pri e =
       print (pri_e - 1) e1
   | Enothing ->
       print_string "nothing"
-  | Epause (_, CkLocal) ->
+  | Epause (_, k, CkLocal) ->
+      if k = Weak then (print_string "weak"; print_space ());
       print_string "pause"
-  | Epause (_, CkTop) ->
+  | Epause (_, k, CkTop) ->
+      if k = Weak then (print_string "weak"; print_space ());
       print_string "pause topck"
-  | Epause (_, CkExpr e1) ->
+  | Epause (_, k, CkExpr e1) ->
+      if k = Weak then (print_string "weak"; print_space ());
       print_string "pause";
       print_space ();
       print (pri_e - 1) e1

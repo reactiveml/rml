@@ -1,0 +1,19 @@
+(* [S(O 1, O 2); S(O 3, O 4)] *)
+let process weak_pause act =
+  domain ck do
+    let cpt = ref 0 in
+    loop
+      incr cpt;
+      act !cpt;
+      weak pause ck
+    end
+    ||
+    loop
+      pause ck; pause topck;
+    end
+  done
+
+open Rmltest
+
+let test =
+  [  (weak_pause, "weak_pause",  [S(O 1, O 2); S(O 3, O 4)])]

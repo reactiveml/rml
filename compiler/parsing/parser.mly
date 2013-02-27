@@ -338,6 +338,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token UNTIL               /* "until" */
 %token VAL                 /* "val" */
 %token VIRTUAL             /* "virtual" */
+%token WEAK                /* "weak" */
 %token WHEN                /* "when" */
 %token WHILE               /* "while" */
 %token WITH                /* "with" */
@@ -406,7 +407,7 @@ The precedences must be listed from low to high.
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
-          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCk LOOP TOPCK BANGBANG
+          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCk LOOP TOPCK BANGBANG WEAK
 
 
 /* Entry points */
@@ -659,7 +660,9 @@ expr:
   | DOMAIN LIDENT DO par_expr opt_schedule opt_by DONE
       { mkexpr (Pexpr_newclock (mksimple $2 2, $5, $6, $4)) }
   | PAUSE clock_expr
-      { mkexpr (Pexpr_pause $2) }
+      { mkexpr (Pexpr_pause ($2, Strong)) }
+  | WEAK PAUSE clock_expr
+      { mkexpr (Pexpr_pause ($3, Weak)) }
   | PAUSECLOCK simple_expr
       { mkexpr (Pexpr_pauseclock $2) }
   | MEMORY LIDENT opt_at_expr LAST par_expr IN par_expr

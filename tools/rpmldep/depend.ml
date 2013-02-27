@@ -138,7 +138,7 @@ let rec add_expr bv exp =
       add_expr bv e1; add_expr bv e2; add_expr bv e3
   | Pexpr_seq(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_nothing -> ()
-  | Pexpr_pause ck -> add_clock_expr bv ck
+  | Pexpr_pause (ck, _) -> add_clock_expr bv ck
   | Pexpr_halt -> ()
   | Pexpr_emit(e1) -> add_expr bv e1
   | Pexpr_emit_val(e1, e2) -> add_expr bv e1; add_expr bv e2

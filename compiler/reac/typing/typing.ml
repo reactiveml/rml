@@ -166,7 +166,7 @@ let rec is_nonexpansive expr =
   | Elast e -> is_nonexpansive e
   | Edefault e -> is_nonexpansive e
   | Enothing -> true
-  | Epause (_, _) -> true
+  | Epause (_, _, _) -> true
   | Ehalt _ -> true
   | Eemit (e, None) -> is_nonexpansive e
   | Eemit (e1, Some e2) -> is_nonexpansive e1 && is_nonexpansive e2
@@ -701,7 +701,7 @@ let rec type_of_expression env expr =
 
     | Enothing -> type_unit
 
-    | Epause (_, ck) ->
+    | Epause (_, _, ck) ->
       (match ck with
         | CkExpr e -> type_expect env e type_clock
         | _ -> ());

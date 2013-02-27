@@ -518,12 +518,12 @@ let rec translate env e =
 
     | Pexpr_nothing -> Enothing
 
-    | Pexpr_pause ck ->
+    | Pexpr_pause (ck, k) ->
       let tr_ck = match ck with
         | CkTop -> CkTop
         | CkLocal -> CkLocal
         | CkExpr e -> CkExpr (translate env e) in
-      Epause (K_not_boi, tr_ck)
+      Epause (K_not_boi, k, tr_ck)
 
     | Pexpr_halt -> Ehalt K_not_boi
 

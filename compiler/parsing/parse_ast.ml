@@ -70,7 +70,7 @@ and expression_desc =
       simple_ident * expression * expression * direction_flag * expression
   | Pexpr_seq of expression * expression
   | Pexpr_nothing
-  | Pexpr_pause of expression Asttypes.clock_expr
+  | Pexpr_pause of expression Asttypes.clock_expr * pause_kind
   | Pexpr_halt
   | Pexpr_emit of expression
   | Pexpr_emit_val of expression * expression

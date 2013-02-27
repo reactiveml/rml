@@ -83,7 +83,7 @@ and process =
     coproc_loc: Location.t;}
 and process_desc =
   | Coproc_nothing
-  | Coproc_pause of continue_begin_of_instant * expression Asttypes.clock_expr
+  | Coproc_pause of continue_begin_of_instant * pause_kind * expression Asttypes.clock_expr
   | Coproc_halt of continue_begin_of_instant
   | Coproc_compute of expression
   | Coproc_emit of expression

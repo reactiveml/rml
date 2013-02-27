@@ -81,7 +81,7 @@ and expression_desc =
   | Elast of expression
   | Edefault of expression
   | Enothing
-  | Epause of continue_begin_of_instant * expression Asttypes.clock_expr
+  | Epause of continue_begin_of_instant * pause_kind * expression Asttypes.clock_expr
   | Ehalt of continue_begin_of_instant
   | Eemit of expression * expression option
   | Eloop of expression option * expression

@@ -313,19 +313,23 @@ and translate_proc e =
     match e.coproc_desc with
     | Coproc_nothing -> (make_instruction "rml_nothing").cexpr_desc
 
-    | Coproc_pause (K_not_boi, CkLocal) ->
-      (make_instruction "rml_pause").cexpr_desc
+    | Coproc_pause (K_not_boi, k, CkLocal) ->
+      let i = if k = Strong then "rml_pause" else "rml_weak_pause" in
+      (make_instruction i).cexpr_desc
 
-    | Coproc_pause (K_not_boi, CkTop) ->
-        Cexpr_apply (make_instruction "rml_pause_at'", [make_instruction "rml_top_clock"])
+    | Coproc_pause (K_not_boi, k, CkTop) ->
+      let i = if k = Strong then "rml_pause_at'" else "rml_weak_pause_at'" in
+        Cexpr_apply (make_instruction i, [make_instruction "rml_top_clock"])
 
-    | Coproc_pause (K_not_boi, CkExpr e) ->
+    | Coproc_pause (K_not_boi, k, CkExpr e) ->
       if Lco_misc.is_value e then
-        Cexpr_apply (make_instruction "rml_pause_at'", [translate_ml e])
+        let i = if k = Strong then "rml_pause_at'" else "rml_weak_pause_at'" in
+        Cexpr_apply (make_instruction i, [translate_ml e])
       else
-        Cexpr_apply (make_instruction "rml_pause_at", [embed_ml e])
+        let i = if k = Strong then "rml_pause_at" else "rml_weak_pause_at" in
+        Cexpr_apply (make_instruction i, [embed_ml e])
 
-    | Coproc_pause (K_boi, _) ->
+    | Coproc_pause (K_boi, _, _) ->
       (make_instruction "rml_pause_kboi").cexpr_desc
 
     | Coproc_halt K_not_boi ->

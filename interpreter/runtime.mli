@@ -44,6 +44,8 @@ type ('step, 'clock) control_type =
     | Susp
     | When
 
+
+
 module type CONTROL_TREE_R =
 sig
   type 'a step
@@ -118,7 +120,7 @@ sig
       during the current step of [cd]. *)
   val on_current_instant_list : clock_domain -> unit step list -> unit
   (** [on_next_instant ctrl f] executes 'f ()' during the next activation of [ctrl]. *)
-  val on_next_instant : control_tree -> unit step -> unit
+  val on_next_instant : ?kind:Types.pause_kind -> control_tree -> unit step -> unit
   (** [on_eoi cd f v] executes 'f v' during the eoi of cd. *)
   val on_eoi : clock -> unit step -> unit
 

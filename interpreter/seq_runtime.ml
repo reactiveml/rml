@@ -1,4 +1,5 @@
 open Runtime
+open Types
 
 module Make (D: Runtime.SEQ_DATA_STRUCT) (E: Sig_env.S) =
 struct
@@ -324,7 +325,10 @@ struct
 
     let on_current_instant cd f = D.add_current f cd.cd_current
     let on_current_instant_list cd fl = D.add_current_list fl cd.cd_current
-    let on_next_instant ctrl f = D.add_next f ctrl.next
+    let on_next_instant ?(kind=Strong) ctrl f =
+      match kind with
+        | Strong -> D.add_next f ctrl.next
+        | Weak -> D.add_next f ctrl.next_control
 
     (** [on_eoi cd f] executes 'f ()' during the eoi of cd. *)
     let on_eoi cd f =

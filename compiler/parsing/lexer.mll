@@ -140,6 +140,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "until", UNTIL;
     "val", VAL;
     "virtual", VIRTUAL;
+    "weak", WEAK;
     "when", WHEN;
     "while", WHILE;
     "with", WITH;

@@ -379,12 +379,12 @@ and translate_proc p =
         begin match p.e_desc with
         | Enothing -> Coproc_nothing
 
-        | Epause (kboi, ck) ->
+        | Epause (kboi, k, ck) ->
           let tr_ck = match ck with
             | CkTop -> CkTop
             | CkLocal -> CkLocal
             | CkExpr e -> CkExpr (translate_ml e) in
-          Coproc_pause (kboi, tr_ck)
+          Coproc_pause (kboi, k, tr_ck)
 
         | Ehalt kboi -> Coproc_halt kboi
 

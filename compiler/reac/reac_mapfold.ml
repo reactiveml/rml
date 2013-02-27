@@ -150,9 +150,9 @@ and expression_desc funs acc ed = match ed with
     let e, acc = expression_it funs acc e in
     Edefault e, acc
   | Enothing -> Enothing, acc
-  | Epause (boi, ck) ->
+  | Epause (boi, k, ck) ->
       let ck, acc = clock_expr_it funs acc ck in
-      Epause (boi, ck), acc
+      Epause (boi, k, ck), acc
   | Ehalt boi -> Ehalt boi, acc
   | Eemit (e, e_opt) ->
     let e, acc = expression_it funs acc e in

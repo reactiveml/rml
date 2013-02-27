@@ -56,6 +56,8 @@ type pre_kind = Status | Value
 
 type continue_begin_of_instant = K_boi | K_not_boi
 
+type pause_kind = Strong | Weak
+
 type immediate =
   | Const_unit
   | Const_bool of bool

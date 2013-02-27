@@ -40,7 +40,7 @@ let expression_desc funs act_ck ed = match ed with
         --->
         run (pause_ck ck)
     *)
-  | Epause (_, ck) ->
+  | Epause (_, Strong, ck) ->
       let ck_expr = expr_of_clock_expr act_ck ck in
       let e = make_expr (Eapply (make_instruction "pause_ck", [ck_expr])) in
       Erun e, act_ck

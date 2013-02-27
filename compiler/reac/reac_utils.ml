@@ -274,7 +274,7 @@ let expr_free_vars e =
 
     | Enothing -> ()
 
-    | Epause (_, ck_e) ->
+    | Epause (_, _, ck_e) ->
       (match ck_e with
         | CkExpr e1 -> expr_free_vars vars e1
         | _ -> ())

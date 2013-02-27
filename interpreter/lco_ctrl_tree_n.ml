@@ -150,6 +150,23 @@ module Rml_interpreter =
         R.on_next_instant ctrl f_k
 
 (**************************************)
+(* weak pause                              *)
+(**************************************)
+
+    let rml_weak_pause_at' pause_ce =
+      fun f_k ctrl jp cd _ ->
+        let pause_ck = eval_clock_expr cd pause_ce in
+        R.on_eoi pause_ck (fun () -> R.on_next_instant ~kind:Weak ctrl f_k)
+
+    let rml_weak_pause_at e =
+      fun f_k ctrl jp cd _ ->
+        rml_pause_at' (e ()) f_k ctrl jp cd unit_value
+
+    let rml_weak_pause =
+      fun f_k ctrl jp cd _ ->
+        R.on_next_instant ~kind:Weak ctrl f_k
+
+(**************************************)
 (* halt                               *)
 (**************************************)
     let rml_halt =
