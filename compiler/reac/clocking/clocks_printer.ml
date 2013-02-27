@@ -154,7 +154,7 @@ and print_carrier priority car =
     | Carrier_var(s) ->
       print_string "''";
       if car.level <> generic then print_string "_";
-      print_string (names.k_carrier#name car.index)
+      print_string ("c"^string_of_int car.index) (*(names.k_carrier#name car.index) *)
     | Carrier_skolem(n, i) ->
       print_skolem_name (n, i)
     | Carrier_link(link) -> print_carrier priority link
@@ -279,27 +279,27 @@ and print_scheme_full priority { cs_vars = vars; cs_desc = ty } =
   if vars.k_clock <> [] then (
     print_string "forall"; print_space ();
     print_clock_list priority "," vars.k_clock;
-    print_string "."
+    print_string ". "
   );
   if vars.k_carrier <> [] then (
     print_string "forall"; print_space ();
     print_carrier_list priority "," vars.k_carrier;
-    print_string "."
+    print_string ". "
   );
   if vars.k_carrier_row <> [] then (
     print_string "forall"; print_space ();
     print_carrier_row_list priority "," vars.k_carrier_row;
-    print_string "."
+    print_string ". "
   );
   if vars.k_effect <> [] then (
     print_string "forall"; print_space ();
     print_effect_list priority "," vars.k_effect;
-    print_string "."
+    print_string ". "
   );
   if vars.k_effect_row <> [] then (
     print_string "forall"; print_space ();
     print_effect_row_list priority "," vars.k_effect_row;
-    print_string "."
+    print_string ". "
   );
   print priority ty;
   print_string ")"

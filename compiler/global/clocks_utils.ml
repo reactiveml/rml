@@ -439,6 +439,46 @@ let subst_var_effect_row index subst er =
   let funs = { Clock_mapfold.defaults with effect_row = effect_row } in
   fst (Clock_mapfold.effect_row_it funs () er)
 
+let rec remove_local_from_carrier_row level cr = match cr.desc with
+  | Carrier_row_empty | Carrier_row_one _ -> cr
+  | Carrier_row_var ->
+      if cr.level > level then
+        carrier_row_empty
+      else
+        cr
+  | Carrier_row (cr1, cr2) ->
+    { cr with desc = Carrier_row (remove_local_from_carrier_row level cr1,
+                                  remove_local_from_carrier_row level cr2) }
+  | Carrier_row_link link -> remove_local_from_carrier_row level link
+
+let rec remove_local_from_effect level bound_vars eff = match eff.desc with
+  | Effect_empty | Effect_var -> eff
+  | Effect_depend cr ->
+    { eff with desc = Effect_depend (remove_local_from_carrier_row level cr) }
+  | Effect_one er ->
+    { eff with desc = Effect_one (remove_local_from_effect_row level bound_vars er) }
+  | Effect_sum (eff1, eff2) ->
+    { eff with desc = Effect_sum (remove_local_from_effect level bound_vars eff1,
+                                  remove_local_from_effect level bound_vars eff2) }
+  | Effect_link link -> remove_local_from_effect level bound_vars link
+
+and remove_local_from_effect_row level bound_vars eff = match eff.desc with
+  | Effect_row_empty -> eff
+  | Effect_row_var ->
+      if eff.level > level && not (List.memq eff bound_vars) then
+        effect_row_empty
+      else
+        eff
+  | Effect_row_one eff1 ->
+     { eff with desc = Effect_row_one (remove_local_from_effect level bound_vars eff1) }
+  | Effect_row (eff1, eff2) ->
+    { eff with desc = Effect_row (remove_local_from_effect_row level bound_vars eff1,
+                                  remove_local_from_effect_row level bound_vars eff2) }
+  | Effect_row_rec (var, body) ->
+    { eff with
+      desc = Effect_row_rec (var, remove_local_from_effect_row level (var::bound_vars) body) }
+  | Effect_row_link link -> remove_local_from_effect_row level bound_vars link
+
 (* Operations on reactivity effects *)
 let rec remove_ck_from_react ck r = match r.desc with
   | React_empty | React_var -> r
@@ -456,27 +496,27 @@ let rec remove_ck_from_react ck r = match r.desc with
       { r with desc = React_rec (b, r1, remove_ck_from_react ck r2) }
   | React_link link -> remove_ck_from_react ck link
 
-let is_not_local_var level r = match r.desc with
-  | React_var when r.level > level -> false
+let is_not_local_var level bound_vars r = match r.desc with
+  | React_var when r.level > level && not (List.memq r bound_vars) -> false
   | _ -> true
 
-let rec remove_local_from_react level r = match r.desc with
+let rec remove_local_from_react level bound_vars r = match r.desc with
   | React_empty | React_var | React_carrier _ -> r
   | React_seq rl ->
-      { r with desc = React_seq (List.map (remove_local_from_react level) rl) }
+      { r with desc = React_seq (List.map (remove_local_from_react level bound_vars) rl) }
   | React_par rl ->
-      { r with desc = React_par (List.map (remove_local_from_react level) rl) }
+      { r with desc = React_par (List.map (remove_local_from_react level bound_vars) rl) }
   | React_or rl ->
-      let rl = List.filter (is_not_local_var level) rl in
+      let rl = List.filter (is_not_local_var level bound_vars) rl in
       (match rl with
         | [] -> assert false
         | [r] -> r
-        | _ -> { r with desc = React_or (List.map (remove_local_from_react level) rl) })
+        | _ -> { r with desc = React_or (List.map (remove_local_from_react level bound_vars) rl) })
   | React_run r1 ->
-      { r with desc = React_run (remove_local_from_react level r1) }
+      { r with desc = React_run (remove_local_from_react level bound_vars r1) }
   | React_rec (b, r1, r2) ->
-      { r with desc = React_rec (b, r1, remove_local_from_react level r2) }
-  | React_link link -> remove_local_from_react level link
+      { r with desc = React_rec (b, r1, remove_local_from_react level (r1::bound_vars) r2) }
+  | React_link link -> remove_local_from_react level bound_vars link
 
 let subst_var_react index subst r =
   let react_effect funs () er = match r.desc with
@@ -647,6 +687,7 @@ and gen_param_list is_gen param_list =
 
 (* main generalisation function *)
 let gen ck =
+  (*Printf.eprintf "generalizing %a\n" Clocks_printer.output ck;*)
   list_of_vars:= [];
   let _ = gen_clock true ck in
   { cs_vars = !list_of_vars;
@@ -675,7 +716,7 @@ let free_clock_vars level ck =
           free_vars ck;
           free_vars_carrier act;
           free_vars_effect_row eff;
-          free_vars_react r
+          free_vars_react [] r
       | Clock_depend c -> free_vars_carrier c
       | Clock_forall sch -> (*TODO*) ()
   and free_vars_carrier car =
@@ -718,22 +759,23 @@ let free_clock_vars level ck =
       | Effect_row (eff1, eff2) | Effect_row_rec (eff1, eff2) ->
           free_vars_effect_row eff1; free_vars_effect_row eff2
       | Effect_row_link link -> free_vars_effect_row link
-  and free_vars_react r =
+  and free_vars_react bound r =
     let r = react_repr r in
     match r.desc with
       | React_var ->
-          if r.level >= level then fv := (Kreact r) :: !fv
+          if r.level >= level && (not (List.memq r bound))
+          then fv := (Kreact r) :: !fv
       | React_empty -> ()
       | React_carrier c -> free_vars_carrier_row c
       | React_seq rl | React_par rl | React_or rl ->
-          List.iter free_vars_react rl
-      | React_rec (_, r1, r2) -> free_vars_react r1; free_vars_react r2
-      | React_run r  | React_link r -> free_vars_react r
+          List.iter (free_vars_react bound) rl
+      | React_rec (_, r1, r2) -> free_vars_react (r1::bound) r2
+      | React_run r  | React_link r -> free_vars_react bound r
   and free_vars_param p =
     let f =
       mk_kind_prod ~clock:free_vars ~carrier:free_vars_carrier
         ~carrier_row:free_vars_carrier_row ~effect:free_vars_effect
-        ~effect_row:free_vars_effect_row ~react:free_vars_react
+        ~effect_row:free_vars_effect_row ~react:(free_vars_react [])
     in
     kind_iter f p
   in
@@ -1009,8 +1051,10 @@ let copy_param p = copy_subst_param [] p
 
 (* instanciation *)
 let instance { cs_desc = ck } =
+  (*Printf.printf "before: %a\n" Clocks_printer.output ck;*)
   let ck_i = copy_clock ck in
   cleanup ();
+  (*Printf.printf "After: %a\n" Clocks_printer.output ck_i;*)
   ck_i
 
 
@@ -1389,7 +1433,7 @@ let rec find_react_row_var rl = match rl with
 
 (* create the react effect 'rec rec_var. body'*)
 let mk_react_rec rec_var body =
-  let new_var = new_react_var () in
+  let new_var = new_generic_react_var () in
   match body with
     | { desc = React_or (({ desc = React_var; index = i } as row_var)::rl) }
         when i <> rec_var.index ->
@@ -1449,12 +1493,15 @@ let rec unify expected_ck actual_ck =
 
 (* TODO: on doit mettre les quantifieurs dans leur ordre d'apparition. Ensuite, on instancie les parametres des deux schemas par les memes skolems frais, on les unifie puis on verifie que les skolems n'ont pas echappe dans l'environnement en verifiant sils apparaissent dans le type des schemas de depart. *)
 and unify_schema expected_sch actual_sch =
+  Printf.eprintf "expected_sch: %a\nactual_sch: %a\n" Clocks_printer.output expected_sch.cs_desc  Clocks_printer.output actual_sch.cs_desc;
   (* il faut mettre des skolems pour les rows de carrier aussi *)
   let carrier_vars = (kind_sum_split expected_sch.cs_vars).k_carrier in
   let m, skolems = make_fresh_skolem_subst carrier_vars in
   let expected_ty = copy_subst_clock m expected_sch.cs_desc in
   let actual_ty = instance actual_sch in
+  Printf.eprintf "expected_ty: %a\nactual_ty: %a\n" Clocks_printer.output expected_ty  Clocks_printer.output actual_ty;
   unify expected_ty actual_ty;
+  Printf.eprintf "after expected_ty: %a\nafter actual_ty: %a\n" Clocks_printer.output expected_ty  Clocks_printer.output actual_ty;
   skolem_check skolems actual_sch.cs_desc
 
 and unify_list ck_l1 ck_l2 =
@@ -1691,6 +1738,8 @@ and react_unify expected_r actual_r =
               react_unify var1 new_rl2;
               react_unify var2 new_rl1
             )
+        | React_rec (_, var1, r1), React_rec (_, var2, r2) ->
+            react_unify var1 var2; react_unify r1 r2
        (* | React_rec (_, expected_r), _ -> react_unify expected_r actual_r
         | _, React_rec (_, actual_r) -> react_unify expected_r actual_r *)
         | _ ->

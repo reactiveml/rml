@@ -554,6 +554,7 @@ let rec schema_of_expression env expr =
         (*instance*) clock_of_sch typ_sch
 
     | Eglobal (n) ->
+      (*  Printf.eprintf "Found %a\n\n" Clocks_printer.output (clock_of_sch (Global.ck_info n).value_ck); *)
         (*instance*) clock_of_sch (Global.ck_info n).value_ck
 
     | Elet (flag, patt_expr_list, e) ->
@@ -582,11 +583,12 @@ let rec schema_of_expression env expr =
             type_expect new_env e ty_res)
           matching;
         (* take the current effect and put it in the arrow *)
+        let computed_eff = remove_local_from_effect !current_level [] !current_effect in
         let computed_eff =
           if !Compiler_options.no_clock_effects then
             effect_row_empty
           else
-            eff_open_row !current_effect
+            eff_open_row computed_eff
         in
         effect_row_unify eff computed_eff;
         current_effect := old_current_effect;
@@ -789,18 +791,19 @@ let rec schema_of_expression env expr =
         push_type_level ();
         let ck, r = clock_react_of_expression env e in
         pop_type_level ();
-        let r = remove_local_from_react !current_level r in
+        let r = remove_local_from_react !current_level [] r in
         let r =
           if !Compiler_options.no_reactivity then
             no_react
           else
             react_or (new_react_var ()) r
         in
+        let eff = remove_local_from_effect !current_level [] !current_effect in
         let eff =
           if !Compiler_options.no_clock_effects then
             effect_row_empty
           else
-            eff_open_row !current_effect
+            eff_open_row eff
         in
         let res_ck = process ck !activation_carrier eff r in
         activation_carrier := old_activation_carrier;
@@ -898,7 +901,7 @@ let rec schema_of_expression env expr =
 
     | Enothing -> Clocks_utils.static
 
-    | Epause (_, ce) ->
+    | Epause (_, k, ce) ->
         let c =
           match ce with
             | CkExpr ce ->
@@ -912,7 +915,9 @@ let rec schema_of_expression env expr =
         in
         let cr = carrier_closed_row c in
         add_effect (eff_depend cr);
-        set_current_react (react_carrier cr);
+        (match k with
+          | Strong -> set_current_react (react_carrier cr)
+          | Weak -> set_current_react (react_carrier (carrier_closed_row topck_carrier)));
         Clocks_utils.static
 
     | Ehalt _ ->
@@ -923,7 +928,7 @@ let rec schema_of_expression env expr =
         push_type_level ();
         let r = type_statement_react env p in
         pop_type_level ();
-        let r = remove_local_from_react !current_level r in
+        let r = remove_local_from_react !current_level [] r in
         set_current_react (react_loop r);
         expr.e_react <- !current_react;
         Clocks_utils.static
