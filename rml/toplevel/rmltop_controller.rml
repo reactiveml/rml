@@ -1,0 +1,85 @@
+(**********************************************************************)
+(*                                                                    *)
+(*                           ReactiveML                               *)
+(*                    http://reactiveML.org                           *)
+(*                    http://rml.inria.fr                             *)
+(*                                                                    *)
+(*                          Louis Mandel                              *)
+(*                                                                    *)
+(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
+(*  This file is distributed under the terms of the Q Public License  *)
+(*  version 1.0.                                                      *)
+(*                                                                    *)
+(*  ReactiveML has been done in the following labs:                   *)
+(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
+(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
+(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
+(*                                                                    *)
+(**********************************************************************)
+
+(* file: rmltop_controller.ml *)
+(* author: Louis Mandel *)
+(* created: 2005-09-23  *)
+
+
+signal suspend, resume default () gather (fun () () -> ());;
+signal step default 1 gather (fun x y -> x);;
+
+let ref_to_sig ref_s s =
+  match !ref_s with
+  | None -> ()
+  | Some v ->
+      ref_s := None;
+      emit s v
+
+let get_to_run () =
+  Rmltop_global.lock();
+  let proc_list = !Rmltop_global.to_run in
+  Rmltop_global.to_run := [];
+  Rmltop_global.unlock();
+  proc_list
+
+let process generate_signals =
+  loop
+    Rmltop_global.lock();
+    ref_to_sig Rmltop_global.suspend suspend;
+    ref_to_sig Rmltop_global.resume resume;
+    ref_to_sig Rmltop_global.step step;
+    Rmltop_global.unlock();
+    pause;
+  end
+
+let process sampled =
+  loop
+    Rmltop_reactive_machine.rml_react(get_to_run());
+    pause
+  end
+
+let process step_by_step =
+  loop
+    await step(n) in
+    do
+      for i = 1 to n do
+        Rmltop_reactive_machine.rml_react(get_to_run());
+	pause
+      done
+    until suspend done
+  end
+
+let process machine_controller =
+  loop
+    pause ||
+    do
+      run sampled
+    until suspend done;
+    do
+      run step_by_step
+    until resume done
+  end
+
+let set_suspend () = emit suspend
+
+let process controller =
+  run machine_controller
+  ||
+  run generate_signals
