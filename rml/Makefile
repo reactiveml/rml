@@ -9,7 +9,7 @@ all: config-stamp
 	(cd compiler; touch .depend; $(MAKE) depend; $(MAKE) $(TARGET))
 	(cd stdlib; $(MAKE) all)
 	(cd interpreter; touch .depend; $(MAKE) depend; $(MAKE) all)
-	(cd toplevel; $(MAKE) all)
+	(cd toplevel-alt; $(MAKE) all)
 	(cd tools; $(MAKE) $(TARGET))
 
 config-stamp:
@@ -17,10 +17,10 @@ config-stamp:
 	touch $@
 
 toplevel: FORCE
-	(cd toplevel; $(MAKE) all)
+	(cd toplevel-alt; $(MAKE) all)
 
 toplevel-install:
-	(cd toplevel; $(MAKE) install)
+	(cd toplevel-alt; $(MAKE) install)
 
 
 opt: TARGET := opt
@@ -37,7 +37,7 @@ install:
 	(cd interpreter; $(MAKE) install)
 	(cd man; $(MAKE) install)
 	(cd emacs; $(MAKE) install)
-	(cd toplevel; $(MAKE) install)
+	(cd toplevel-alt; $(MAKE) install)
 	(cd tools; $(MAKE) install)
 
 checkinstall: config
@@ -49,7 +49,7 @@ uninstall:
 	(cd interpreter; $(MAKE) uninstall)
 	(cd man; $(MAKE) uninstall)
 	(cd emacs; $(MAKE) uninstall)
-	(cd toplevel; $(MAKE) uninstall)
+	(cd toplevel-alt; $(MAKE) uninstall)
 	(cd tools; $(MAKE) uninstall)
 
 
@@ -84,14 +84,14 @@ html:
 wc:
 	(cd compiler;$(MAKE) wc)
 	(cd interpreter; $(MAKE) wc)
-	(cd toplevel; $(MAKE) wc)
+	(cd toplevel-alt; $(MAKE) wc)
 	(cd tools; $(MAKE) wc)
 
 clean:
 	(cd compiler;$(MAKE) clean)
 	(cd stdlib; $(MAKE) clean)
 	(cd interpreter; $(MAKE) clean)
-	(cd toplevel; $(MAKE) clean)
+	(cd toplevel-alt; $(MAKE) clean)
 	(cd tools; $(MAKE) clean)
 	(cd man; $(MAKE) clean)
 	(cd doc; $(MAKE) clean)
@@ -102,7 +102,7 @@ realclean: clean-distrib
 	(cd compiler;$(MAKE) realclean)
 	(cd stdlib; $(MAKE) realclean)
 	(cd interpreter; $(MAKE) realclean)
-	(cd toplevel; $(MAKE) realclean)
+	(cd toplevel-alt; $(MAKE) realclean)
 	(cd tools; $(MAKE) realclean)
 	(cd man; $(MAKE) realclean)
 	(cd doc; $(MAKE) realclean)
