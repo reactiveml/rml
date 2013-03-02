@@ -19,6 +19,11 @@ install:
 	 do (cd $$d ; $(MAKE) install) ; \
 	 done)
 
+uninstall:
+	(for d in $(DIRECTORIES); \
+	 do (cd $$d ; $(MAKE) uninstall) ; \
+	 done)
+
 
 # cleaning:
 clean:

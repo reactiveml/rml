@@ -4,6 +4,9 @@ all:
 
 install:
 	@echo No man page to install
+uninstall:
+	@echo No man page to uninstall
+
 
 clean:
 

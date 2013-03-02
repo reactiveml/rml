@@ -278,6 +278,21 @@ let rec print pri e =
 	                         print (pri_e + 1) e)
                  (fun () -> print_string ";") l;
       print_string "}"
+  | Cexpr_record_access(e, gl) ->
+      print pri_e e;
+      pp_print_string !formatter ".";
+      print_global gl
+  | Cexpr_record_with(e, l) ->
+      pp_print_string !formatter "{";
+      print (pri_e - 1) e;
+      pp_print_space !formatter ();
+      pp_print_string !formatter "with";
+      pp_print_space !formatter ();
+      print_list (fun (gl, e) -> print_global gl;
+                                 pp_print_string !formatter "=";
+	                         print (pri_e + 1) e)
+                 (fun () -> print_string ";") l;
+      pp_print_string !formatter "}"
   | Cexpr_record_update(e1, gl, e2) ->
       print (pri_e + 2) e1;
       pp_print_string !formatter ".";

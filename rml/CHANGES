@@ -1,8 +1,14 @@
+ReactiveML 1.08.05 (XXXX-XX-XX):
+--------------------------------
+
+
+
 ReactiveML 1.08.04 (2013-02-03):
 --------------------------------
  - rmlc: simplification of effects in the reactivity analysis.
  - rmlc: new option -no_reactivity_simpl to keep reactivity effects
          without simplifications.
+ - rmlc: adding of the "with" construct to define a record.
  - rmlc: bug fixes.
  - rmllib: new sampling mode.
 

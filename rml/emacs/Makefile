@@ -18,6 +18,11 @@ ifneq ($(EMACSDIR), "")
 	$(INSTALL) $(FILES) $(EMACSDIR)
 endif
 
+uninstall:
+ifneq ($(EMACSDIR), "")
+	(cd $(EMACSDIR); rm -f $(FILES))
+endif
+
 clean:
 
 realclean:

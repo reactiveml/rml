@@ -74,6 +74,10 @@ install.lib: lib
 	$(INSTALL) -d $(LIBDIR)/toplevel
 	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/toplevel
 
+uninstall:
+	rm -f $(BINDIR)/rmltop
+	rm -rf $(LIBDIR)/toplevel
+
 test:
 	./rmltop -debug -n -I . -I ../interpreter
 

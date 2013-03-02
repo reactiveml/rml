@@ -74,7 +74,7 @@ and reactivity_effect_desc =
   | React_par of reactivity_effect list
   | React_or of reactivity_effect list
   | React_raw of reactivity_effect * reactivity_effect (* k * var *)
-  | React_rec of checked * reactivity_effect * reactivity_effect (* var * k *)
+  | React_rec of checked * reactivity_effect (* k *)
   | React_run of reactivity_effect
   | React_link of reactivity_effect
 

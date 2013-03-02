@@ -269,3 +269,12 @@ module Timer =
       accumulated_time := !accumulated_time +. !exec_time;
       global_time := !global_time +. !exec_time
   end
+
+(* List of visited nodes in a graph *)
+let mk_visited () =
+  let visited_list = ref [] in
+  let visited k =
+    if List.memq k !visited_list then true
+    else (visited_list := k::!visited_list; false)
+  in
+  visited_list, visited

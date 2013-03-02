@@ -19,6 +19,7 @@
 
 (* file: reactivity_effects.ml *)
 
+open Misc
 open Asttypes
 open Reac_ast
 open Def_types
@@ -34,8 +35,9 @@ let loop_warning expr k =
     Location.print_oc expr.expr_loc
     (* (Types_printer.print_to_string Types_printer.print_reactivity k) *)
 
-
 (* non instantaneity of behaviors *)
+let visited_list, visited = mk_visited ()
+
 let rec non_instantaneous k =
   match k.react_desc with
   | React_var -> true
@@ -45,13 +47,22 @@ let rec non_instantaneous k =
   | React_par kl -> List.exists non_instantaneous kl
   | React_or kl -> List.for_all non_instantaneous kl
   | React_raw (k1, k2) -> non_instantaneous k1 && non_instantaneous k2
-  | React_rec (_, _, k_body) -> non_instantaneous k_body or not (well_formed k)
+  | React_rec (_, k_body) ->
+      if not (visited k) then
+        non_instantaneous k_body (*or not (well_formed k)*)
+      else
+        true
   | React_run k_body -> non_instantaneous k_body
   | React_link k_body -> non_instantaneous k_body
 
+let non_instantaneous k =
+  visited_list := [];
+  non_instantaneous k
 
 (* correct behaviors *)
-and well_formed =
+let visited_list, visited = mk_visited ()
+
+let rec well_formed =
   let module Env =
     Set.Make (struct
       type t = int
@@ -60,7 +71,7 @@ and well_formed =
   in
   let rec well_formed env k =
     match k.react_desc with
-    | React_var -> not (Env.mem k.react_index env)
+    | React_var -> true
     | React_pause -> true
     | React_epsilon -> true
     | React_seq kl ->
@@ -77,21 +88,21 @@ and well_formed =
     | React_par kl -> List.for_all (well_formed env) kl
     | React_or kl -> List.for_all (well_formed env) kl
     | React_raw (k1, k2) -> well_formed env k1 && well_formed env k2
-    | React_rec (checked, x, k_body) ->
-        if checked then well_formed env k_body
-        else
-          let env =
-            match (Reactivity_effects.react_effect_repr x).react_desc with
-            | React_var -> Env.add x.react_index env
-            | _ -> assert false
-          in
-          let b = well_formed env k_body in
-          (* if not b then checked := true; *)
-          b
+    | React_rec (checked, k_body) ->
+        if not (visited k) then (
+          if checked then well_formed env k_body
+          else
+            let env = Env.add k.react_index env in
+            let b = well_formed env k_body in
+            (* if not b then k.react_desc <- React_rec (true, x, k_body); *)
+            b
+        ) else
+          not (Env.mem k.react_index env)
     | React_run k_body -> well_formed env k_body
     | React_link k_body -> well_formed env k_body
   in
   fun k ->
+    visited_list := [];
     well_formed Env.empty k
 
 
@@ -102,12 +113,12 @@ let rec check_expr_one expr =
       (* if not (well_formed k) then *)
       (*   loop_warning expr k *)
       begin match k.react_desc with
-      | React_rec (false, x, k_body) ->
+      | React_rec (false, k_body) ->
           if not (well_formed k) then begin
             loop_warning expr k;
-            k.react_desc <- React_rec (true, x, k_body)
+            k.react_desc <- React_rec (true, k_body)
           end
-      | React_rec (true, x, k_body) -> ()
+      | React_rec (true, k_body) -> ()
       | _ -> assert false
       end
   | Rexpr_run _ ->

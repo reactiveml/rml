@@ -170,7 +170,10 @@ rzi:
 	$(MAKE) $(TARGET) rmlcompiler.cmo
 
 install: install.$(TARGET)
-	mv $(BINDIR)/$(BIN).$(TARGET) $(BINDIR)/$(BIN)
+	cp $(BINDIR)/$(BIN).$(TARGET) $(BINDIR)/$(BIN)
+uninstall: uninstall.$(TARGET)
+	rm -f $(BINDIR)/$(BIN)
+
 
 C_OBJ_BYTE = $(filter-out main/options.cmo main/main.cmo,$(OBJ))
 C_OBJ_OPT  = $(C_OBJ_BYTE:.cmo=.cmx)
