@@ -71,7 +71,7 @@ let compile () =
   let module_name = module_name () in
   let ic = stdin in
   let itf = open_out_bin "/dev/null" in
-  let info_fmt = !Misc.std_fmt in
+  let info_fmt = !Misc.err_fmt in
   let out_chan = stdout in
 
   (* Initialization *)
