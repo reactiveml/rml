@@ -17,23 +17,8 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: rmltop_reactive_machine.ml *)
+(* file: rmltop_reactive_machine.rmli *)
 (* created: 2007-12-03  *)
 (* author: Louis Mandel *)
 
-let rml_react_unsafe =
-  let react =
-    Implem.Lco_ctrl_tree_record.rml_make_exec_process
-      Rmltop_machine_body.main
-  in
-  fun l ->
-    match react l with
-    | None -> ()
-    | Some () -> assert false
-
-let rml_react x =
-  Rmltop_global.lock();
-  begin try rml_react_unsafe x
-  with e -> Rmltop_global.unlock(); raise e
-  end;
-  Rmltop_global.unlock()
+val rml_react: unit Rmltop_alt_global.rml_process list -> unit

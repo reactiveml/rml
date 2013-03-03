@@ -81,13 +81,13 @@ let set_action b action =
 
 let start ppf =
   Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
-  Rmltop_core.init ();
+  Rmltop_alt_core.init ();
   Rmlcompiler.Misc.err_fmt := ppf;
   Rmlcompiler.Misc.std_fmt := ppf;
   Rmlcompiler.Configure.configure ();
 
-  let _ = Rmltop_core.eval_ocaml_phrase ppf false "open Implem;;" in
-  let _ = Rmltop_core.eval ppf "open Pervasives;;" in
+  let _ = Rmltop_alt_core.eval_ocaml_phrase ppf false "open Implem;;" in
+  let _ = Rmltop_alt_core.eval ppf "open Pervasives;;" in
   ()
 
 let get_element_by_id id =
@@ -266,9 +266,9 @@ let string_of_char_list list =
 
 let loop s ppf =
   if String.length s <> 0 then begin
-    let s = Rmltop_core.add_terminator s in
+    let s = Rmltop_alt_core.add_terminator s in
     Format.fprintf ppf "@[#@ %s@]@." s;
-    Rmltop_core.eval ppf s
+    Rmltop_alt_core.eval ppf s
   end
 
 let append_children id list =
@@ -302,9 +302,9 @@ let run _ =
   let history = ref [] in
   let history_bckwrd = ref [] in
   let history_frwrd = ref [] in
-  let debug_button = text_button (Rmltop_core.debug_status ()) (fun b ->
-    Rmltop_core.toggle_debug ppf;
-    b##innerHTML <- Js.string (Rmltop_core.debug_status ())
+  let debug_button = text_button (Rmltop_alt_core.debug_status ()) (fun b ->
+    Rmltop_alt_core.toggle_debug ppf;
+    b##innerHTML <- Js.string (Rmltop_alt_core.debug_status ())
   ) in
   let rec make_code_clickable () =
     List.iter (fun code ->
@@ -330,7 +330,7 @@ let run _ =
     rmlconsole##value <- Js.string "";
     (try loop s ppf with _ -> ());
     make_code_clickable ();
-    debug_button##innerHTML <- Js.string (Rmltop_core.debug_status ());
+    debug_button##innerHTML <- Js.string (Rmltop_alt_core.debug_status ());
     rmlconsole##focus();
     container##scrollTop <- container##scrollHeight;
   in
@@ -353,9 +353,9 @@ let run _ =
             | None -> assert false
             | Some str -> str
         in
-        let ss = Rmltop_core.split (Js.to_string s) in
+        let ss = Rmltop_alt_core.split (Js.to_string s) in
         List.iter begin fun s ->
-            let s = Rmltop_core.add_terminator s in
+            let s = Rmltop_alt_core.add_terminator s in
             rmlconsole##value <- Js.string s;
             execute ();
             rmlconsole##value <- Js.string "";
@@ -384,9 +384,9 @@ let run _ =
     XmlHttpRequest.get path >|=
     (fun frame ->
       let content = frame.XmlHttpRequest.content in
-      let phrases = Rmltop_core.split content in
+      let phrases = Rmltop_alt_core.split content in
       List.iter (fun s ->
-        let s = Rmltop_core.add_terminator s in
+        let s = Rmltop_alt_core.add_terminator s in
         rmlconsole##value <- Js.string s;
         execute ();
         rmlconsole##value <- Js.string "")
@@ -501,13 +501,13 @@ let run _ =
     Js._true
   ) in
   let step_button = text_button "Step" (fun b ->
-    Rmltop_global.set_step 1
+    Rmltop_alt_global.set_step 1
   ) in
   let suspend_button = text_button "Suspend" (fun b ->
-    Rmltop_global.set_suspend ()
+    Rmltop_alt_global.set_suspend ()
   ) in
   let resume_button = text_button "Resume" (fun b ->
-    Rmltop_global.set_resume ()
+    Rmltop_alt_global.set_resume ()
   ) in
   let send_button = text_button "Send" (fun _ -> execute ()) in
   let save_button =  text_button "Save" (fun _ ->
@@ -550,23 +550,23 @@ let run _ =
   output_area##scrollTop <- output_area##scrollHeight;
   start ppf;
 
-  Rmltop_global.enter_step_by_step_mode :=
+  Rmltop_alt_global.enter_step_by_step_mode :=
     (fun () ->
       step_button##disabled <- Js._false;
       resume_button##disabled <- Js._false;
     );
 
-  Rmltop_global.exit_step_by_step_mode :=
+  Rmltop_alt_global.exit_step_by_step_mode :=
     (fun () ->
       step_button##disabled <- Js._true;
       resume_button##disabled <- Js._true;
     );
 
-  !Rmltop_global.exit_step_by_step_mode ();
+  !Rmltop_alt_global.exit_step_by_step_mode ();
 
   let rec exec_machine_controller () =
-    Lwt_js.sleep !Rmltop_global.sampling >>= fun () ->
-      let _ = Rmltop_core.controller_react () in
+    Lwt_js.sleep !Rmltop_alt_global.sampling >>= fun () ->
+      let _ = Rmltop_alt_core.controller_react () in
       exec_machine_controller () in
   let _ = exec_machine_controller () in
 

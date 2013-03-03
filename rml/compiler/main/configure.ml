@@ -149,6 +149,12 @@ let set_runtime s =
       set_interpreter_module "Machine_controler_machine";
       set_translation Lco
 
+  | "Rmltop_alt" ->
+      set_interpreter_intf "Lco_interpreter";
+      set_interpreter_impl "Rmltop_alt_implem";
+      set_interpreter_module "Machine_controler_machine";
+      set_translation Lco
+
 
   | _ -> raise (Arg.Bad ("don't know what to do with " ^ s))
 

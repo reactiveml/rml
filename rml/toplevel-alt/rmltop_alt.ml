@@ -21,7 +21,7 @@
 (* created: 2005-06-11  *)
 (* author: Louis Mandel *)
 
-open Rmltop_core
+open Rmltop_alt_core
 
 let (//) = Filename.concat
 let ocaml_stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir
@@ -88,9 +88,9 @@ let exec_machine_controller () =
   let sleep = ref 0.0 in
   while true do
     let _ = debut := Sys.time() in
-    let _ = Rmltop_core.controller_react () in
+    let _ = Rmltop_alt_core.controller_react () in
     let _ =
-      sleep := !Rmltop_global.sampling -. ((Sys.time()) -. !debut);
+      sleep := !Rmltop_alt_global.sampling -. ((Sys.time()) -. !debut);
       if !sleep > 0.001 then
 	begin try Thread.delay !sleep
 	with Unix.Unix_error _ -> () end
@@ -110,10 +110,10 @@ let main () =
   end;
   print_intro();
   Sys.catch_break true;
-  Rmltop_core.init ();
+  Rmltop_alt_core.init ();
   init_toplevel ();
   Rmlcompiler.Interactive.init ();
-  Rmlcompiler.Misc.opt_iter Rmltop_global.set_sampling !sampling;
+  Rmlcompiler.Misc.opt_iter Rmltop_alt_global.set_sampling !sampling;
   eval_ocaml_phrases Format.std_formatter !debug init_rml;
   start ();
   try

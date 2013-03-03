@@ -165,7 +165,7 @@ endif
 rzi:
 	$(MAKE) $(TARGET)
 	$(MAKE) -C ../stdlib all
-	$(MAKE) -C ../toplevel rmltop_global.rzi
+	$(MAKE) -C ../toplevel-alt rmltop_alt_global.rzi
 	-$(RM) -f global/rzi.ml
 	$(MAKE) $(TARGET) rmlcompiler.cmo
 

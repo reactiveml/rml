@@ -177,28 +177,28 @@ let rec eval_ocaml_phrases fmt verbose = function
 
 let parse rml =
   let lb = Lexing.from_string rml in
-  Rmltop_lexer.phrase lb
+  Rmltop_alt_lexer.phrase lb
 
 let eval fmt rml_phrase =
   let rec aux fmt directive =
       match directive with
-      | Rmltop_lexer.Rml_phrase s ->
+      | Rmltop_alt_lexer.Rml_phrase s ->
           let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
           begin match error with
             | Some error -> Format.fprintf fmt "@[%s@]@." error
             | None ->
-                Rmltop_global.lock ();
+                Rmltop_alt_global.lock ();
                 eval_ocaml_phrases fmt true ocaml_phrases;
-                Rmltop_global.unlock ()
+                Rmltop_alt_global.unlock ()
           end
 
-      | Rmltop_lexer.OCaml_phrase s ->
+      | Rmltop_alt_lexer.OCaml_phrase s ->
           eval_ocaml_phrases fmt true [ s ]
 
-      | Rmltop_lexer.Run s ->
+      | Rmltop_alt_lexer.Run s ->
           (* add "(process ( run (...); ()));;" *)
           let s = Printf.sprintf
-            "let () = Rmltop_global.add_to_run (process (run( %s );()));;"
+            "let () = Rmltop_alt_global.add_to_run (process (run( %s );()));;"
             s in
           let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
           begin match error with
@@ -206,10 +206,10 @@ let eval fmt rml_phrase =
             | None -> eval_ocaml_phrases fmt false ocaml_phrases
           end
 
-      | Rmltop_lexer.Exec s ->
+      | Rmltop_alt_lexer.Exec s ->
           (* add "(process ( ...; ()));;" *)
           let s = Printf.sprintf
-            "let () = Rmltop_global.add_to_run (process (%s; ()));;"
+            "let () = Rmltop_alt_global.add_to_run (process (%s; ()));;"
             s in
           let error, ocaml_phrases = Rmlcompiler.Interactive.translate_phrase s in
           begin match error with
@@ -217,22 +217,22 @@ let eval fmt rml_phrase =
             | None -> eval_ocaml_phrases fmt true ocaml_phrases
           end
 
-      | Rmltop_lexer.Step None -> Rmltop_global.set_step 1
+      | Rmltop_alt_lexer.Step None -> Rmltop_alt_global.set_step 1
 
-      | Rmltop_lexer.Step (Some n) -> Rmltop_global.set_step n
+      | Rmltop_alt_lexer.Step (Some n) -> Rmltop_alt_global.set_step n
 
-      | Rmltop_lexer.Suspend -> Rmltop_global.set_suspend ()
+      | Rmltop_alt_lexer.Suspend -> Rmltop_alt_global.set_suspend ()
 
-      | Rmltop_lexer.Resume -> Rmltop_global.set_resume ()
+      | Rmltop_alt_lexer.Resume -> Rmltop_alt_global.set_resume ()
 
-      | Rmltop_lexer.Sampling f -> Rmltop_global.set_sampling f
+      | Rmltop_alt_lexer.Sampling f -> Rmltop_alt_global.set_sampling f
 
-      | Rmltop_lexer.Use f ->
+      | Rmltop_alt_lexer.Use f ->
           begin
             try
               let phrases = file_content f in
               let phrases = List.map begin fun s ->
-                Rmltop_lexer.Rml_phrase (s^";;")
+                Rmltop_alt_lexer.Rml_phrase (s^";;")
               end
                 (split phrases) in
               List.iter (aux fmt) phrases
@@ -240,18 +240,18 @@ let eval fmt rml_phrase =
               Format.fprintf fmt "Error: %s\n@." (Printexc.to_string e)
           end
 
-      | Rmltop_lexer.Quit -> exit 0
+      | Rmltop_alt_lexer.Quit -> exit 0
 
-      | Rmltop_lexer.Help -> print_help ()
+      | Rmltop_alt_lexer.Help -> print_help ()
 
-      | Rmltop_lexer.Debug -> toggle_debug fmt
+      | Rmltop_alt_lexer.Debug -> toggle_debug fmt
   in
   try
     aux fmt (parse rml_phrase)
   with
-    | Rmltop_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...@."; exit 0
-    | Rmltop_lexer.Syntax_error -> Format.fprintf fmt "Syntax error.\n@."
+    | Rmltop_alt_lexer.EOF -> Format.fprintf fmt "Got an EOF! Exiting...@."; exit 0
+    | Rmltop_alt_lexer.Syntax_error -> Format.fprintf fmt "Syntax error.\n@."
 
 let controller_react =
-  Rmltop_implem.Machine_controler_machine.rml_make
-    Rmltop_controller.controller
+  Rmltop_alt_implem.Machine_controler_machine.rml_make
+    Rmltop_alt_controller.controller

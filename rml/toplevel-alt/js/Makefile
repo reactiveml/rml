@@ -59,16 +59,16 @@ STDLIB=\
  lco_ctrl_tree_n.cmo \
  lk_implem.cmo \
  implem.cmo \
- rmltop_lexer.cmo \
+ rmltop_alt_lexer.cmo \
  ocamlcommon.cma \
  ocamlbytecomp.cma \
  ocamltoplevel.cma \
- rmltop_global.cmo \
- rmltop_implem.cmo \
- rmltop_machine_body.cmo \
- rmltop_reactive_machine.cmo \
- rmltop_controller.cmo \
- rmltop_core.cmo \
+ rmltop_alt_global.cmo \
+ rmltop_alt_implem.cmo \
+ rmltop_alt_machine_body.cmo \
+ rmltop_alt_reactive_machine.cmo \
+ rmltop_alt_controller.cmo \
+ rmltop_alt_core.cmo \
 
 EXPUNGE=$(shell ocamlc -where)/expunge
 # Removed gc and sys
@@ -120,12 +120,12 @@ STDLIB_MODULES=\
   lco_ctrl_tree \
   implem \
   rmlcompiler \
-  rmltop_global \
-  rmltop_core \
-  rmltop_implem \
-  rmltop_machine_body \
-  rmltop_reactive_machine \
-  rmltop_controller \
+  rmltop_alt_global \
+  rmltop_alt_core \
+  rmltop_alt_implem \
+  rmltop_alt_machine_body \
+  rmltop_alt_reactive_machine \
+  rmltop_alt_controller \
   weak
 PERVASIVES=$(STDLIB_MODULES) outcometree topdirs toploop
 #STDLIB_MODULES=$(shell ocamlobjinfo toplevel.byte.tmp | sed -rn "s/^\t.*\t//p" | sort -u | tr '[:upper:]' '[:lower:]' | egrep -v "(sys|gc|bytegen|bytelibrarian|bytelink|bytepackager|bytesections|code|compile|conditioni|dgraph|dll|dom|driver|event|file|firebug|flow|form|freevars|generate|genprintval|inline|instr|javascript|js|lambda|linker|lwt|main_args|matching|meta|mutex|phisimpl|pparse|pretty_print|primitive2|pure_fun|regexp|runtimedef|simplif|switch|symtable|tailcall|thread|toplevel|trace|translclass|translcore|translmod|translobj|typed_array|typeopt|url|util|unix)")

@@ -8,9 +8,9 @@ let () = Buffer.add_string buf "let known_modules = [\n" in
 let stdlib_files = Array.to_list (Sys.readdir stdlib) in
 let stdlib_files = List.map (fun f -> stdlib // f) stdlib_files in
 let stdlib_files =
-  let rmltop_global = basedir // "toplevel" // "rmltop_global.rzi" in
-  if Sys.file_exists rmltop_global then
-    rmltop_global :: stdlib_files
+  let rmltop_alt_global = basedir // "toplevel-alt" // "rmltop_alt_global.rzi" in
+  if Sys.file_exists rmltop_alt_global then
+    rmltop_alt_global :: stdlib_files
   else
     stdlib_files
 in
