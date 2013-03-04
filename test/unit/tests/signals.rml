@@ -49,33 +49,33 @@ let process pre_multi2 act =
 (*[N; O 2]*)
 let process last_value_pre act =
   signal s default 0 gather (+) in
-  pause; act (last? s)
+  pause; act (last s)
   ||
   emit s 2
 
 (*[N; N; N; O 2]*)
 let process last_value act =
   signal s default 0 gather (+) in
-  pause; pause; pause; act (last? s)
+  pause; pause; pause; act (last s)
   ||
   emit s 2
 
 (*[O 0]*)
 let process last_init act =
   signal s default 0 gather (+) in
-  act (last? s)
+  act (last s)
 
 (*[N; N; N; O 3]*)
 let process last_multi act =
   signal s default 0 gather (+) in
-  pause; pause; pause; act (last? s)
+  pause; pause; pause; act (last s)
   ||
   emit s 2; pause; emit s 3
 
 (*[N; O 2; N; O 3]*)
 let process last_multi2 act =
   signal s default 0 gather (+) in
-  pause; act (last? s); pause; pause; act (last? s)
+  pause; act (last s); pause; pause; act (last s)
   ||
   emit s 2; pause; emit s 3
 

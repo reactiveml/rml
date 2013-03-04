@@ -138,7 +138,7 @@ let process pre_multi_at_restrict act =
 let process last_value_pre act =
   newclock ck in
   signal s default 0 gather (+) in
-  pause; act (last? s)
+  pause; act (last s)
   ||
   emit s 2
 
@@ -146,7 +146,7 @@ let process last_value_pre act =
 let process last_value act =
   newclock ck in
   signal s default 0 gather (+) in
-  pause; pause; pause; act (last? s)
+  pause; pause; pause; act (last s)
   ||
   emit s 2
 
@@ -154,14 +154,14 @@ let process last_value act =
 let process last_init act =
   newclock ck in
   signal s default 0 gather (+) in
-  act (last? s)
+  act (last s)
 
 
 (*[N; O 2]*)
 let process last_value_pre_slow act =
   signal s default 0 gather (+) in
   newclock ck in
-    pause topck; act (last? s)
+    pause topck; act (last s)
     ||
     emit s 2
 
@@ -169,7 +169,7 @@ let process last_value_pre_slow act =
 let process last_value_slow act =
   signal s default 0 gather (+) in
   newclock ck in
-    pause topck; pause topck; pause topck; act (last? s)
+    pause topck; pause topck; pause topck; act (last s)
     ||
     emit s 2
 
@@ -177,7 +177,7 @@ let process last_value_slow act =
 let process last_value_slow_at act =
   newclock ck in
     signal s at topck default 0 gather (+) in
-    pause topck; pause topck; pause topck; act (last? s)
+    pause topck; pause topck; pause topck; act (last s)
     ||
     emit s 2
 
@@ -185,7 +185,7 @@ let process last_value_slow_at act =
 let process last_value_slow_at_restrict act =
   newclock ck in
     signal s at topck restrict ck default 0 gather (+) in
-    pause topck; pause topck; pause topck; act (last? s)
+    pause topck; pause topck; pause topck; act (last s)
     ||
     emit s 2
 
@@ -193,13 +193,13 @@ let process last_value_slow_at_restrict act =
 let process last_init_slow act =
   signal s default 0 gather (+) in
   newclock ck in
-    act (last? s)
+    act (last s)
 
 (*[O 3]*)
 let process last_multi act =
   newclock ck in
   signal s default 0 gather (+) in
-  pause; pause; pause; act (last? s)
+  pause; pause; pause; act (last s)
   ||
   emit s 2; pause; emit s 3
 
@@ -207,7 +207,7 @@ let process last_multi act =
 let process last_multi2 act =
   newclock ck in
   signal s default 0 gather (+) in
-  pause; act (last? s); pause; pause; act (last? s)
+  pause; act (last s); pause; pause; act (last s)
   ||
   emit s 2; pause; emit s 3
 
@@ -215,7 +215,7 @@ let process last_multi2 act =
 (*[N; N; N; O 3]*)
 let process last_multi_slow act =
   signal s default 0 gather (+) in
-  pause topck; pause topck; pause topck; act (last? s)
+  pause topck; pause topck; pause topck; act (last s)
   ||
   emit s 2; pause topck; emit s 3
 
@@ -223,7 +223,7 @@ let process last_multi_slow act =
 let process last_multi2_slow act =
   signal s default 0 gather (+) in
   newclock ck in
-  pause topck; act (last? s); pause topck; pause topck; act (last? s)
+  pause topck; act (last s); pause topck; pause topck; act (last s)
   ||
   emit s 2; pause topck; emit s 3
 

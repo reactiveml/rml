@@ -23,5 +23,4 @@ open Rmltest
 let test =
   [ (present_else, "present_else", [N; O 2]);
     (present_then, "present_then", [O 1]);
-    (present_then_2, "present_then_2", [O 1]);
-    (present_else_par, "present_else_par", [O 1])]
+    (present_then_2, "present_then_2", [O 1]) ]
