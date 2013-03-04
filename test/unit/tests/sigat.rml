@@ -1,6 +1,7 @@
 let process f =
   newclock ck in
   signal ss in
+  signal s2 at base in
   signal sss default 0 gather (+) in
   signal s at ck in
   signal s3 at topck in

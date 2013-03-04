@@ -499,8 +499,8 @@ let rec translate env e =
                     Some (translate env expr))
 
     | Pexpr_signal (sig_typ_list, (ck, r), comb, expr) ->
-      let ck = Misc.clock_map (translate env) ck in
-      let r = Misc.clock_map (translate env) r in
+      let ck = translate env ck in
+      let r = translate env r in
       let comb = match comb with
         | None -> None
         | Some (e1, e2) -> Some (translate env e1, translate env e2)
@@ -519,11 +519,7 @@ let rec translate env e =
     | Pexpr_nothing -> Enothing
 
     | Pexpr_pause (ck, k) ->
-      let tr_ck = match ck with
-        | CkTop -> CkTop
-        | CkLocal -> CkLocal
-        | CkExpr e -> CkExpr (translate env e) in
-      Epause (K_not_boi, k, tr_ck)
+        Epause (K_not_boi, k, translate env ck)
 
     | Pexpr_halt -> Ehalt K_not_boi
 
@@ -588,11 +584,12 @@ let rec translate env e =
       Epauseclock (translate env e)
 
     | Pexpr_topck -> Etopck
+    | Pexpr_base -> Ebase
 
     | Pexpr_memory(x, ck,  v, e) ->
       let id = Ident.create Ident.gen_var x.psimple_id Ident.Mem in
       let v = translate env v in
-      let ck = Misc.clock_map (translate env) ck in
+      let ck = translate env ck in
       let env = Env.add x.psimple_id id env in
       Ememory(id, ck, v, translate env e)
 

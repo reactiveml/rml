@@ -6,9 +6,6 @@ open Global_mapfold
 type 'a reac_it_funs = {
   expression: 'a reac_it_funs -> 'a -> Reac.expression -> Reac.expression * 'a;
   expression_desc: 'a reac_it_funs -> 'a -> Reac.expression_desc -> Reac.expression_desc * 'a;
-  clock_expr :
-    'a reac_it_funs -> 'a -> Reac.expression Asttypes.clock_expr ->
-                             Reac.expression Asttypes.clock_expr * 'a;
   event_config: 'a reac_it_funs -> 'a -> Reac.event_config -> Reac.event_config * 'a;
   event_config_desc:
     'a reac_it_funs -> 'a -> Reac.event_config_desc -> Reac.event_config_desc * 'a;
@@ -151,7 +148,7 @@ and expression_desc funs acc ed = match ed with
     Edefault e, acc
   | Enothing -> Enothing, acc
   | Epause (boi, k, ck) ->
-      let ck, acc = clock_expr_it funs acc ck in
+      let ck, acc = expression_it funs acc ck in
       Epause (boi, k, ck), acc
   | Ehalt boi -> Ehalt boi, acc
   | Eemit (e, e_opt) ->
@@ -181,8 +178,8 @@ and expression_desc funs acc ed = match ed with
       (e1, e2), acc
     in
     let te_opt, acc = optional_wacc (type_expression_it funs) acc te_opt in
-    let ck, acc = clock_expr_it funs acc ck in
-    let r, acc = clock_expr_it funs acc r in
+    let ck, acc = expression_it funs acc ck in
+    let r, acc = expression_it funs acc r in
     let e_e_opt, acc = optional_wacc aux acc e_e_opt in
     let e, acc = expression_it funs acc e in
     Esignal ((x, te_opt), ck, r, e_e_opt, e), acc
@@ -230,9 +227,10 @@ and expression_desc funs acc ed = match ed with
       let e, acc = expression_it funs acc e in
       Epauseclock e, acc
   | Etopck -> Etopck, acc
+  | Ebase -> Ebase, acc
 (*memory*)
   | Ememory (id, ck, e1, e) ->
-      let ck, acc = clock_expr_it funs acc ck in
+      let ck, acc = expression_it funs acc ck in
       let e1, acc = expression_it funs acc e1 in
       let e, acc = expression_it funs acc e in
       Ememory (id, ck, e1, e), acc
@@ -253,15 +251,6 @@ and expression_desc funs acc ed = match ed with
     let e2, acc = expression_it funs acc e2 in
     Eawait_new (e1, p, e2), acc
 
-and clock_expr_it funs acc ck =
-  try funs.clock_expr funs acc ck
-  with Fallback -> clock_expr funs acc ck
-and clock_expr funs acc ck = match ck with
-  | CkLocal -> CkLocal, acc
-  | CkTop -> CkTop, acc
-  | CkExpr e1 ->
-      let e1, acc = expression_it funs acc e1 in
-      CkExpr e1, acc
 
 and pattern_expression_it funs acc (p,e) =
   let p, acc = pattern_it funs acc p in
@@ -576,7 +565,6 @@ and intf_item_desc funs acc id = match id with
 let defaults = {
   expression = expression;
   expression_desc = expression_desc;
-  clock_expr = clock_expr;
   event_config = event_config;
   event_config_desc = event_config_desc;
   pattern = pattern;

@@ -70,7 +70,7 @@ and expression_desc =
       simple_ident * expression * expression * direction_flag * expression
   | Pexpr_seq of expression * expression
   | Pexpr_nothing
-  | Pexpr_pause of expression Asttypes.clock_expr * pause_kind
+  | Pexpr_pause of expression * pause_kind
   | Pexpr_halt
   | Pexpr_emit of expression
   | Pexpr_emit_val of expression * expression
@@ -79,7 +79,7 @@ and expression_desc =
   | Pexpr_merge of expression * expression
   | Pexpr_signal of
       (simple_ident * type_expression option) list *
-        (expression Asttypes.clock_expr (*ck*) * expression Asttypes.clock_expr (*region*)) *
+        (expression (*ck*) * expression (*region*)) *
         (expression * expression) option * expression
   | Pexpr_process of expression
   | Pexpr_run of expression
@@ -101,8 +101,9 @@ and expression_desc =
       (* ck, scheduling annotation, period, body *)
   | Pexpr_pauseclock of expression
   | Pexpr_topck
+  | Pexpr_base
 (* memory *)
-  | Pexpr_memory of simple_ident * expression Asttypes.clock_expr * expression * expression
+  | Pexpr_memory of simple_ident * expression (*ck*) * expression * expression
   | Pexpr_last_mem of expression
   | Pexpr_update of expression * expression
   | Pexpr_set_mem of expression * expression

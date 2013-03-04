@@ -226,13 +226,10 @@ let rec print pri e =
       print (pri_e - 1) e1
   | Enothing ->
       print_string "nothing"
-  | Epause (_, k, CkLocal) ->
+  | Epause (_, k, { e_desc = Ebase }) ->
       if k = Weak then (print_string "weak"; print_space ());
       print_string "pause"
-  | Epause (_, k, CkTop) ->
-      if k = Weak then (print_string "weak"; print_space ());
-      print_string "pause topck"
-  | Epause (_, k, CkExpr e1) ->
+  | Epause (_, k, e1) ->
       if k = Weak then (print_string "weak"; print_space ());
       print_string "pause";
       print_space ();
@@ -282,10 +279,9 @@ let rec print pri e =
   | Esignal ((s, _), ck, _, comb, e1) ->
       print_string "signal ";
       print_name (Ident.unique_name s);
-      (match ck with
-        | CkLocal -> ()
-        | CkTop -> print_string " at topck"
-        | CkExpr e2 -> print_string " at "; print pri_e e2);
+      (match ck.e_desc with
+        | Ebase -> ()
+        | _ -> print_string " at "; print pri_e ck);
       (match comb with
         | None -> ()
         | Some (ed, eg) ->
@@ -373,6 +369,7 @@ let rec print pri e =
       print_string "done"
   | Epauseclock _ -> assert false
   | Etopck -> print_string "topck"
+  | Ebase -> print_string "base"
   (*memory*)
   | Ememory _
   | Elast_mem _

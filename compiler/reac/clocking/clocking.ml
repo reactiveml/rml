@@ -902,17 +902,7 @@ let rec schema_of_expression env expr =
     | Enothing -> Clocks_utils.static
 
     | Epause (_, k, ce) ->
-        let c =
-          match ce with
-            | CkExpr ce ->
-                let ck_ce = clock_of_expression env ce in
-                (try
-                    filter_depend ck_ce
-                  with
-                    | Unify -> non_clock_err ce.e_loc)
-            | CkLocal -> !activation_carrier
-            | CkTop -> topck_carrier
-        in
+        let c = type_clock_expr env ce in
         let cr = carrier_closed_row c in
         add_effect (eff_depend cr);
         (match k with
@@ -1161,6 +1151,7 @@ let rec schema_of_expression env expr =
         Clocks_utils.static
 
     | Etopck -> clock_topck
+    | Ebase -> depend !activation_carrier
 
     | Ememory (s, ce, v, e) ->
         let ty_res = new_clock_var() in
@@ -1259,15 +1250,11 @@ and type_of_event_config ?(force_activation_ck=false) env conf =
       type_of_event_config env c2*)
 
 and type_clock_expr env ce =
-  match ce with
-    | CkExpr e ->
-        let ty_ce = clock_of_expression env e in
-        (try
-            filter_depend ty_ce
-          with
-            | Unify -> non_clock_err e.e_loc)
-    | CkTop -> topck_carrier
-    | CkLocal -> !activation_carrier
+  let ty_ce = clock_of_expression env ce in
+  try
+    filter_depend ty_ce
+  with
+    | Unify -> non_clock_err ce.e_loc
 
 
 (* Typing of let declatations *)

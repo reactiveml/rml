@@ -76,12 +76,10 @@ module type S =
 
     val rml_nothing: unit expr
     val rml_compute: (unit -> 'a) -> 'a expr
-    val rml_pause: unit expr
-    val rml_pause_at : (unit -> clock_expr) -> unit expr
-    val rml_pause_at' : clock_expr -> unit expr
-    val rml_weak_pause: unit expr
-    val rml_weak_pause_at : (unit -> clock_expr) -> unit expr
-    val rml_weak_pause_at' : clock_expr -> unit expr
+    val rml_pause : (unit -> clock_expr) -> unit expr
+    val rml_pause' : clock_expr -> unit expr
+    val rml_weak_pause : (unit -> clock_expr) -> unit expr
+    val rml_weak_pause' : clock_expr -> unit expr
     val rml_halt: 'a expr
     val rml_emit': (unit, 'b) R.event -> unit expr
     val rml_emit: (unit -> (unit, 'b) R.event) -> unit expr
@@ -175,7 +173,7 @@ module type S =
     val rml_pauseclock' : clock_expr -> unit expr
 
     val rml_top_clock : clock_expr
-    val rml_local_clock : clock_expr
+    val rml_base_clock : clock_expr
   end
 
 

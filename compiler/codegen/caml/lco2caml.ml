@@ -271,7 +271,7 @@ let rec translate_ml e =
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_expr_signal",
-                          [translate_clock_expr ck; translate_clock_expr r]))
+                          [translate_ml ck; translate_ml r]))
                       Location.none],
                    translate_ml e)
 
@@ -281,8 +281,8 @@ let rec translate_ml e =
                     make_expr
                       (Cexpr_apply
                          (make_instruction "rml_expr_signal_combine",
-                          [translate_clock_expr ck;
-                           translate_clock_expr r;
+                          [translate_ml ck;
+                           translate_ml r;
                            translate_ml e1;
                            translate_ml e2;]))
                       Location.none],
@@ -290,6 +290,8 @@ let rec translate_ml e =
 
     | Coexpr_topck ->
         (make_instruction "rml_top_clock").cexpr_desc
+    | Coexpr_base ->
+        (make_instruction "rml_base_clock").cexpr_desc
 
     | Coexpr_last_mem s ->
         Cexpr_apply
@@ -313,21 +315,13 @@ and translate_proc e =
     match e.coproc_desc with
     | Coproc_nothing -> (make_instruction "rml_nothing").cexpr_desc
 
-    | Coproc_pause (K_not_boi, k, CkLocal) ->
-      let i = if k = Strong then "rml_pause" else "rml_weak_pause" in
-      (make_instruction i).cexpr_desc
-
-    | Coproc_pause (K_not_boi, k, CkTop) ->
-      let i = if k = Strong then "rml_pause_at'" else "rml_weak_pause_at'" in
-        Cexpr_apply (make_instruction i, [make_instruction "rml_top_clock"])
-
-    | Coproc_pause (K_not_boi, k, CkExpr e) ->
-      if Lco_misc.is_value e then
-        let i = if k = Strong then "rml_pause_at'" else "rml_weak_pause_at'" in
-        Cexpr_apply (make_instruction i, [translate_ml e])
+    | Coproc_pause (K_not_boi, k, ck) ->
+      if Lco_misc.is_value ck then
+        let i = if k = Strong then "rml_pause'" else "rml_weak_pause'" in
+        Cexpr_apply (make_instruction i, [translate_ml ck])
       else
-        let i = if k = Strong then "rml_pause_at" else "rml_weak_pause_at" in
-        Cexpr_apply (make_instruction i, [embed_ml e])
+        let i = if k = Strong then "rml_pause" else "rml_weak_pause" in
+        Cexpr_apply (make_instruction i, [embed_ml ck])
 
     | Coproc_pause (K_boi, _, _) ->
       (make_instruction "rml_pause_kboi").cexpr_desc
@@ -435,8 +429,8 @@ and translate_proc e =
     | Coproc_signal (s, ck, r, None, k) ->
         Cexpr_apply
           (make_instruction "rml_signal",
-           [translate_clock_expr ck;
-            translate_clock_expr r;
+           [translate_ml ck;
+            translate_ml r;
             make_expr
               (Cexpr_function [pattern_of_signal s, translate_proc k])
               Location.none])
@@ -444,8 +438,8 @@ and translate_proc e =
     | Coproc_signal (s, ck, r, Some(e1,e2), k) ->
         Cexpr_apply
           (make_instruction "rml_signal_combine",
-           [translate_clock_expr ck;
-            translate_clock_expr r;
+           [translate_ml ck;
+            translate_ml r;
             embed_ml e1;
             embed_ml e2;
             make_expr
@@ -944,7 +938,7 @@ and translate_proc e =
         let patt = make_patt (Cpatt_var (Cvarpatt_local s)) Location.none in
         Cexpr_apply
           (make_instruction "rml_memory",
-           [translate_clock_expr ck;
+           [translate_ml ck;
             embed_ml e;
             make_expr
               (Cexpr_function [patt, translate_proc k])
@@ -1074,12 +1068,6 @@ and translate_conf c =
             translate_conf c2;])
   in
   make_expr cexpr c.coconf_loc
-
-and translate_clock_expr e =
-  match e with
-    | CkLocal -> make_instruction "rml_local_clock"
-    | CkTop -> make_instruction "rml_top_clock"
-    | CkExpr e -> translate_ml e
 
 let translate_impl_item info_chan item =
   let citem =

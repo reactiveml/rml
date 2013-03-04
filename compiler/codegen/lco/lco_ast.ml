@@ -70,9 +70,10 @@ and expression_desc =
   | Coexpr_emit of expression
   | Coexpr_emit_val of expression * expression
   | Coexpr_signal of
-      (ident * type_expression option) * expression Asttypes.clock_expr * expression Asttypes.clock_expr
+      (ident * type_expression option) * expression (*ck*) * expression (*r*)
     * (expression * expression) option * expression
   | Coexpr_topck
+  | Coexpr_base
   | Coexpr_last_mem of expression
   | Coexpr_update of expression * expression
   | Coexpr_set_mem of expression * expression
@@ -83,7 +84,7 @@ and process =
     coproc_loc: Location.t;}
 and process_desc =
   | Coproc_nothing
-  | Coproc_pause of continue_begin_of_instant * pause_kind * expression Asttypes.clock_expr
+  | Coproc_pause of continue_begin_of_instant * pause_kind * expression
   | Coproc_halt of continue_begin_of_instant
   | Coproc_compute of expression
   | Coproc_emit of expression
@@ -97,7 +98,7 @@ and process_desc =
   | Coproc_par of process list
   | Coproc_merge of process * process
   | Coproc_signal of
-      (ident * type_expression option) * expression Asttypes.clock_expr * expression Asttypes.clock_expr
+      (ident * type_expression option) * expression (*ck*) * expression (*r*)
     * (expression * expression) option * process
   | Coproc_def of (pattern * expression) * process
   | Coproc_def_dyn of (pattern * process) * process
@@ -117,7 +118,7 @@ and process_desc =
   | Coproc_newclock of ident * expression option (*schedule*)
                          * expression option (*period*) * process
   | Coproc_pauseclock of expression
-  | Coproc_memory of ident * expression Asttypes.clock_expr * expression * process
+  | Coproc_memory of ident * expression (*ck*) * expression * process
   | Coproc_await_new of expression * pattern * process
   | Coproc_update of expression * expression
   | Coproc_set_mem of expression * expression

@@ -326,12 +326,9 @@ let rec static_expr ctx e =
     | Epause (_, _, e1) ->
         if ctx = Process
         then
-           (match e1 with
-             | CkTop | CkLocal -> Dynamic Noninstantaneous
-             | CkExpr e1 ->
-               if static_expr ML e1 = Static
-               then Dynamic Noninstantaneous
-               else expr_wrong_static_err e1)
+           (if static_expr ML e1 = Static
+            then Dynamic Noninstantaneous
+            else expr_wrong_static_err e1)
         else expr_wrong_static_err e
 
     | Ehalt _ ->
@@ -403,18 +400,20 @@ let rec static_expr ctx e =
           expr_wrong_static_err e
 
     | Esignal (_, ck, r, None, p) ->
-        (match r with
-          | CkExpr e1 ->
-              if static_expr ML e1 <> Static then
-                expr_wrong_static_err e1;
-          | _ -> ()
-        );
+        if static_expr ML ck <> Static then
+          expr_wrong_static_err ck;
+        if static_expr ML r <> Static then
+          expr_wrong_static_err r;
         if ctx <> Process then
           expr_signal_static_err e;
         let ty = static_expr ctx p in
         max (Dynamic Instantaneous) ty
 
     | Esignal (_, ck, r, Some(e1,e2), p) ->
+        if static_expr ML ck <> Static then
+          expr_wrong_static_err ck;
+        if static_expr ML r <> Static then
+          expr_wrong_static_err r;
         let typ1 = static_expr ML e1 in
         let typ2 = static_expr ML e2 in
         let typ3 = static_expr ctx p in
@@ -423,11 +422,6 @@ let rec static_expr ctx e =
           then typ3
           else expr_wrong_static_err e
         in
-        (match ck with
-          | CkExpr e1 ->
-              if static_expr ML e1 <> Static then
-                expr_wrong_static_err e1
-          | _ -> ());
         if ctx <> Process then
           expr_signal_static_err e;
         max (Dynamic Instantaneous) ty
@@ -610,6 +604,7 @@ let rec static_expr ctx e =
         else expr_wrong_static_err e
 
     | Etopck -> Static
+    | Ebase -> Static
 
     | Ememory(s, ck, e1, p) ->
         let typ1 = static_expr ML e1 in
@@ -619,16 +614,11 @@ let rec static_expr ctx e =
           then typ2
           else expr_wrong_static_err e
         in
-        (match ck with
-          | CkLocal ->
-              if ctx <> Process then
-                expr_wrong_static_err e;
-              max (Dynamic Instantaneous) ty
-          | CkExpr e1 ->
-              if static_expr ML e1 <> Static then
-                expr_wrong_static_err e1;
-              ty
-          | _ -> ty)
+        if ctx <> Process then
+          expr_wrong_static_err e;
+        if static_expr ML ck <> Static then
+          expr_wrong_static_err ck;
+        max (Dynamic Instantaneous) ty
 
     | Elast_mem s ->
         if static_expr ML s = Static

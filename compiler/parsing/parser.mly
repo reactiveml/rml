@@ -208,6 +208,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token BARBAR              /* "||" */
 %token BARRBRACKET         /* "|]" */
 %token BARGRATER           /* "|>" */
+%token BASE                /* "base" */
 %token BEGIN               /* "begin" */
 %token BY                  /* "by" */
 %token <char> CHAR
@@ -408,7 +409,7 @@ The precedences must be listed from low to high.
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
-          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCk LOOP TOPCK BANGBANG WEAK
+          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCK LOOP TOPCK BANGBANG WEAK
 
 
 /* Entry points */
@@ -733,6 +734,8 @@ simple_expr:
       { mkexpr Pexpr_nothing }
   | TOPCK
       { mkexpr Pexpr_topck }
+  | BASE
+      { mkexpr Pexpr_base }
   | BANGBANG simple_expr
       { mkexpr(Pexpr_last_mem $2) }
   | HALT
@@ -773,16 +776,9 @@ simple_expr_list:
   | simple_expr_list simple_expr
       { $2 :: $1 }
 ;
-not_empty_clock_expr:
- | simple_expr {
-     match $1.pexpr_desc with
-       | Pexpr_topck -> CkTop
-       | _ -> CkExpr $1
-   }
-;
 clock_expr:
-    /* empty */ { CkLocal }
-  | not_empty_clock_expr { $1 }
+    /* empty */ { mkexpr Pexpr_base }
+  | simple_expr { $1 }
 ;
 opt_schedule:
    /* empty */ { None}
@@ -1335,9 +1331,9 @@ at_or_clock:
   | AT { () }
   | CLOCK { () }
 opt_at_expr:
-    /* empty */       { CkLocal, CkLocal }
-  | at_or_clock not_empty_clock_expr { $2, $2 }
-  | at_or_clock not_empty_clock_expr RESTRICT simple_expr { $2, CkExpr $4 }
+    /* empty */       { mkexpr Pexpr_base, mkexpr Pexpr_base }
+  | at_or_clock simple_expr { $2, $2 }
+  | at_or_clock simple_expr RESTRICT simple_expr { $2, $4 }
 ;
 
 

@@ -339,24 +339,17 @@ let rec translate_ml e =
         Coexpr_emit_val (translate_ml s, translate_ml e)
 
     | Esignal ((s,typ), ck, r, comb, e) ->
-      let ck = match ck with
-        | CkExpr e -> CkExpr (translate_ml e)
-        | CkLocal -> CkLocal
-        | CkTop -> CkTop
-      in
-      let r = match r with
-        | CkExpr e -> CkExpr (translate_ml e)
-        | CkLocal -> CkLocal
-        | CkTop -> CkTop
-      in
-        Coexpr_signal ((s, opt_map translate_te typ),
-                       ck, r,
-                       opt_map
-                         (fun (e1,e2) ->
-                           translate_ml e1, translate_ml e2) comb,
-                       translate_ml e)
+      let ck = translate_ml ck in
+      let r = translate_ml r in
+      Coexpr_signal ((s, opt_map translate_te typ),
+                     ck, r,
+                     opt_map
+                       (fun (e1,e2) ->
+                         translate_ml e1, translate_ml e2) comb,
+                     translate_ml e)
 
     | Etopck -> Coexpr_topck
+    | Ebase -> Coexpr_base
 
     | Elast_mem s -> Coexpr_last_mem (translate_ml s)
     | Eupdate (s, e) -> Coexpr_update (translate_ml s, translate_ml e)
@@ -380,11 +373,7 @@ and translate_proc p =
         | Enothing -> Coproc_nothing
 
         | Epause (kboi, k, ck) ->
-          let tr_ck = match ck with
-            | CkTop -> CkTop
-            | CkLocal -> CkLocal
-            | CkExpr e -> CkExpr (translate_ml e) in
-          Coproc_pause (kboi, k, tr_ck)
+            Coproc_pause (kboi, k, translate_ml ck)
 
         | Ehalt kboi -> Coproc_halt kboi
 
@@ -465,7 +454,7 @@ and translate_proc p =
 
         | Esignal ((s,typ), ck, r, comb, proc) ->
             Coproc_signal ((s, opt_map translate_te typ),
-                           clock_map translate_ml ck, clock_map translate_ml r,
+                           translate_ml ck, translate_ml r,
                            opt_map
                              (fun (e1,e2) ->
                                translate_ml e1, translate_ml e2) comb,
@@ -547,7 +536,7 @@ and translate_proc p =
 
         (* translate memories to signals *)
         | Ememory (s, ck, v, proc) ->
-            Coproc_memory(s, clock_map translate_ml ck,
+            Coproc_memory(s, translate_ml ck,
                          translate_ml v,
                          translate_proc proc)
 

@@ -24,10 +24,10 @@ let make_label s =
   Global.only_ident { qual = "Domain";
                       id = Ident.create Ident.gen_label s Ident.Internal }
 
-let expr_of_clock_expr act_ck ce = match ce with
-  | CkLocal -> act_ck
-  | CkTop -> topck
-  | CkExpr e -> e
+let expr_of_clock_expr act_ck ce = match ce.e_desc with
+  | Ebase -> act_ck
+  | Etopck -> topck
+  | _ -> ce
 
 let tr_conf label conf = match conf.conf_desc with
   | Cpresent e ->
@@ -115,7 +115,8 @@ let expression_desc funs act_ck ed = match ed with
       let emit_done = make_expr (Eemit (body_done, None)) in
       let e, _ = Reac_mapfold.expression_it funs act_ck e in
       let body = make_expr (Epar [run_hold; make_expr (Eseq [e; emit_done])]) in
-      let body = make_expr (Esignal ((body_done_id, None), CkLocal, CkLocal, None, body)) in
+      let body = make_expr (Esignal ((body_done_id, None), make_expr Ebase,
+                                     make_expr Ebase, None, body)) in
       Elet (Nonrecursive, [pat, mk_signal], body), act_ck
 
   | Eemit (e1, None) ->

@@ -702,10 +702,8 @@ let rec type_of_expression env expr =
     | Enothing -> type_unit
 
     | Epause (_, _, ck) ->
-      (match ck with
-        | CkExpr e -> type_expect env e type_clock
-        | _ -> ());
-      type_unit
+        type_expect env ck type_clock;
+        type_unit
 
     | Ehalt _ -> new_var()
 
@@ -881,7 +879,7 @@ let rec type_of_expression env expr =
       type_expect env ck type_clock;
       type_unit
 
-    | Etopck -> type_clock
+    | Etopck | Ebase -> type_clock
 
     | Ememory (s, _, v, e) ->
         let ty_res = new_var() in

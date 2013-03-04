@@ -136,35 +136,27 @@ module Rml_interpreter =
 (* pause                              *)
 (**************************************)
 
-    let rml_pause_at' pause_ce =
+    let rml_pause' pause_ce =
       fun f_k ctrl jp cd _ ->
         let pause_ck = eval_clock_expr cd pause_ce in
         R.on_eoi pause_ck (fun () -> R.on_next_instant ctrl f_k)
 
-    let rml_pause_at e =
+    let rml_pause e =
       fun f_k ctrl jp cd _ ->
-        rml_pause_at' (e ()) f_k ctrl jp cd unit_value
-
-    let rml_pause =
-      fun f_k ctrl jp cd _ ->
-        R.on_next_instant ctrl f_k
+        rml_pause' (e ()) f_k ctrl jp cd unit_value
 
 (**************************************)
 (* weak pause                              *)
 (**************************************)
 
-    let rml_weak_pause_at' pause_ce =
+    let rml_weak_pause' pause_ce =
       fun f_k ctrl jp cd _ ->
         let pause_ck = eval_clock_expr cd pause_ce in
         R.on_eoi pause_ck (fun () -> R.on_next_instant ~kind:Weak ctrl f_k)
 
-    let rml_weak_pause_at e =
+    let rml_weak_pause e =
       fun f_k ctrl jp cd _ ->
-        rml_pause_at' (e ()) f_k ctrl jp cd unit_value
-
-    let rml_weak_pause =
-      fun f_k ctrl jp cd _ ->
-        R.on_next_instant ~kind:Weak ctrl f_k
+        rml_weak_pause' (e ()) f_k ctrl jp cd unit_value
 
 (**************************************)
 (* halt                               *)
@@ -819,7 +811,7 @@ let rml_loop p =
           (fun cd ctrl f_k -> p (CkExpr (R.clock cd)) f_k ctrl None cd) sch period f_k
 
     let rml_top_clock = CkTop
-    let rml_local_clock = CkLocal
+    let rml_base_clock = CkLocal
 
 (**************************************)
 (* pauseclock                         *)
@@ -828,7 +820,7 @@ let rml_loop p =
       fun f_k ctrl jp cd _ ->
         let pause_ck = eval_clock_expr cd pause_ce in
         R.set_pauseclock cd pause_ck;
-        rml_pause_at' pause_ce f_k ctrl jp cd ()
+        rml_pause' pause_ce f_k ctrl jp cd ()
 
     let rml_pauseclock e =
       fun f_k ctrl jp cd _ ->

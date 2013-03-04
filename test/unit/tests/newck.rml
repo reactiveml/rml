@@ -4,12 +4,24 @@ let process ck_one_step act =
   newclock ck in
     pause ck; act 0
 
+(*[O 0]*)
+let process ck_base act =
+  newclock ck in
+    pause base; act 0
+
 (* end of macro step with pauseclock *)
 (* let ck = S (O 0, S (O 1, O 2)) in  [ck; ck] *)
 let process ck_macro_pauseck act =
   (newclock ck in
     loop
       act 0; pause; act 1; pause; act 2; pauseclock ck
+    end)
+
+(* let ck = S (O 0, S (O 1, O 2)) in  [ck; ck] *)
+let process ck_macro_pausebase act =
+  (newclock ck in
+    loop
+      act 0; pause base; act 1; pause base; act 2; pauseclock ck
     end)
 
 (* end of macro step with pause on topck *)
@@ -197,8 +209,10 @@ let test =
   let ck = S (O 0, S (O 1, O 2)) in
   let v = P[O 4; O 5; O 6; O 7] in
    [ (ck_one_step, "ck_one_step", [O 0]);
+     (ck_base, "ck_base", [O 0]);
      (ck_macro_pauseck_par, "ck_macro_pauseck_par", [P [ck; O 8]; P [ck; O 7]]);
      (ck_macro_pauseck, "ck_macro_pauseck", [ck; ck]);
+     (ck_macro_pausebase, "ck_macro_pausebase", [ck; ck]);
      (ck_macro_await_slow, "ck_macro_await_slow", [N; N; O 5]);
      (ck_macro_multi, "ck_macro_multi", [ck; ck; P[ck; O 5]]);
      (ck_macro_pause_topck, "ck_macro_pause_topck", [ck; ck]);

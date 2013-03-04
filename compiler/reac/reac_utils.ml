@@ -274,10 +274,7 @@ let expr_free_vars e =
 
     | Enothing -> ()
 
-    | Epause (_, _, ck_e) ->
-      (match ck_e with
-        | CkExpr e1 -> expr_free_vars vars e1
-        | _ -> ())
+    | Epause (_, _, ck) -> expr_free_vars vars ck
 
     | Ehalt _ -> ()
 
@@ -307,12 +304,8 @@ let expr_free_vars e =
 
     | Esignal ((ident, tyexpr_opt), ck, r, comb, e) ->
         let vars' = (Vlocal ident) :: vars in
-        (match ck with
-          | CkExpr e1 -> expr_free_vars vars' e1
-          | _ -> ());
-        (match r with
-          | CkExpr e1 -> expr_free_vars vars' e1
-          | _ -> ());
+        expr_free_vars vars' ck;
+        expr_free_vars vars' r;
         (match comb with
           | None -> ()
           | Some (e1, e2) -> expr_free_vars vars' e1; expr_free_vars vars' e2);
@@ -369,13 +362,11 @@ let expr_free_vars e =
 
     | Epauseclock e -> expr_free_vars vars e
 
-    | Etopck -> ()
+    | Etopck | Ebase -> ()
 
     | Ememory(s, ck, v, e) ->
         let vars' = (Vlocal s) :: vars in
-        (match ck with
-          | CkExpr e1 -> expr_free_vars vars e1
-          | _ -> ());
+        expr_free_vars vars ck;
         expr_free_vars vars v;
         expr_free_vars vars' e
 

@@ -81,7 +81,7 @@ and expression_desc =
   | Elast of expression
   | Edefault of expression
   | Enothing
-  | Epause of continue_begin_of_instant * pause_kind * expression Asttypes.clock_expr
+  | Epause of continue_begin_of_instant * pause_kind * expression
   | Ehalt of continue_begin_of_instant
   | Eemit of expression * expression option
   | Eloop of expression option * expression
@@ -90,7 +90,7 @@ and expression_desc =
   | Epar of expression list
   | Emerge of expression * expression
   | Esignal of
-      (ident * type_expression option) * expression Asttypes.clock_expr * expression Asttypes.clock_expr
+      (ident * type_expression option) * expression (*ck*) * expression (*r*)
         * (expression * expression) option * expression
   | Erun of expression
   | Euntil of event_config * expression * (pattern * expression) option
@@ -105,8 +105,9 @@ and expression_desc =
   | Enewclock of ident * expression option (*schedule*) * expression option (*period*) * expression
   | Epauseclock of expression
   | Etopck
+  | Ebase
 (*memory*)
-  | Ememory of ident * expression Asttypes.clock_expr * expression * expression
+  | Ememory of ident * expression (*ck*) * expression (*last*) * expression
   | Elast_mem of expression
   | Eupdate of expression * expression
   | Eset_mem of expression * expression

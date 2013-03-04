@@ -138,7 +138,7 @@ let rec add_expr bv exp =
       add_expr bv e1; add_expr bv e2; add_expr bv e3
   | Pexpr_seq(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_nothing -> ()
-  | Pexpr_pause (ck, _) -> add_clock_expr bv ck
+  | Pexpr_pause (ck, _) -> add_expr bv ck
   | Pexpr_halt -> ()
   | Pexpr_emit(e1) -> add_expr bv e1
   | Pexpr_emit_val(e1, e2) -> add_expr bv e1; add_expr bv e2
@@ -147,8 +147,8 @@ let rec add_expr bv exp =
   | Pexpr_merge(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_signal(ioel, (ck, r), oee, e) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
-      add_clock_expr bv ck;
-      add_clock_expr bv r;
+      add_expr bv ck;
+      add_expr bv r;
       Misc.opt_iter (fun (e1, e2) -> add_expr bv e1; add_expr bv e2) oee;
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
@@ -175,21 +175,16 @@ let rec add_expr bv exp =
       Misc.opt_iter (add_expr bv) opt_e2;
       add_expr bv e3
   | Pexpr_pauseclock e1 -> add_expr bv e1
-  | Pexpr_topck -> ()
+  | Pexpr_topck | Pexpr_base -> ()
   | Pexpr_memory(_, ck, e1, e2) ->
-      add_clock_expr bv ck;
+      add_expr bv ck;
       add_expr bv e1; add_expr bv e2
   | Pexpr_last_mem e -> add_expr bv e
   | Pexpr_update (e1, e2) | Pexpr_set_mem (e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pexpr_await_new(e1, _, e2) ->add_expr bv e1; add_expr bv e2
+  | Pexpr_await_new(e1, _, e2) -> add_expr bv e1; add_expr bv e2
   | Pconf_present(e1) -> add_expr bv e1
   | Pconf_and(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pconf_or(e1, e2) -> add_expr bv e1; add_expr bv e2
-
-and add_clock_expr bv ck = match ck with
-  | CkExpr e -> add_expr bv e
-  | _ -> ()
-
 and add_pat_expr_list bv pel =
   List.iter (fun (p, e) -> add_pattern bv p; add_expr bv e) pel
 

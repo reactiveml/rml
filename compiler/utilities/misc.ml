@@ -59,11 +59,6 @@ let find_in_path filename =
           if Sys.file_exists b then b else find rest
     in find !load_path
 
-let clock_map f x = match x with
-  | CkTop -> CkTop
-  | CkLocal -> CkLocal
-  | CkExpr e -> CkExpr (f e)
-
 let opt_map f = function
     Some x -> Some (f x)
   | None -> None
