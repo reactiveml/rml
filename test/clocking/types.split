@@ -16,31 +16,27 @@ let f x y =
 
 $
 
-type 'a siglist{'ck|} = ('a, 'a) event{'ck|} list
+type 'a siglist{|'ck|} = ('a, 'a) event{|'ck|} list
 
 $
 
-type siglist{'ck|} = (int, int) event{'ck|} list
+type siglist{|'ck|} = (int, int) event{|'ck|} list
 
 $
 
-type actor{|''f} = unit =>{''f} unit
+type actor{||'f} = unit =>{'f} unit
 
 $
 
-type intproc{'ck|''f} = int process{'ck|''f}
+type intproc{''ck||'f} = int process{''ck||'f}
 
 $
 
-type intproc{'ck|} = int process{'ck|'ck}
+type intproc{''ck||} = int process{''ck|| <''ck>;..}
 
 $
 
-type intproc{|''f} = int process{topck|''f + topck}
-
-$
-
-type 'a siglist{'ck|} = { s_list : ('a, 'a) event{'ck|} list }
+type 'a siglist{|'ck|} = { s_list : ('a, 'a) event{|'ck|} list }
 
 
 let process f ck =
@@ -84,7 +80,7 @@ let p l =
 
 $
 
-let process f ck (s: (int,int)event{ck|}) =
+let process f ck (s: (int,int)event{|ck|}) =
   pause; emit s 0
 
 let process g =
@@ -119,5 +115,5 @@ ${
 *)
 $}
 
-let process p (s:(int, int)event{ck}) =
+let process p (s:(int, int)event{|ck|}) =
   pause; emit s 0

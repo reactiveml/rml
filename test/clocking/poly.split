@@ -7,12 +7,10 @@ ${
    ]
 *)
 
-type t = { lbl : 'ck. (int, int) event{'ck|} =>{'ck} unit }
+type t = { lbl : 'ck. (int, int) event{|'ck|} =>{ <'ck> } unit }
 
 let f s =
-  emit s 0;
-  ignore (pre? s + 0)
-
+  emit s 0
 $}
 
 let z = { lbl = f }
@@ -31,7 +29,7 @@ ${
    ]
 *)
 
-type t = { lbl : 'ck. (int, int) event{'ck|} =>{'ck} unit }
+type t = { lbl : 'ck. (int, int) event{|'ck|} =>{ <'ck> } unit }
 
 $}
 
@@ -59,21 +57,21 @@ ${
 
 $}
 
-let process p (q : 'ck. ('a, 'b) event{'ck|} -> unit process{'ck|'ck}) =
+let process p (q : ''ck. ('a, 'b) event{|''ck|} -> unit process{''ck || <''ck> }) =
   newclock ck in
     signal s at ck in
     run (q s)
 
 $
 
-let process p (q : 'ck. ('a, 'b) event{'ck|} =>{'ck} unit) =
+let process p (q : 'ck. ('a, 'b) event{|'ck|} =>{ <'ck> } unit) =
   newclock ck in
     signal s at ck in
     q s
 
 $
 
-let process p (q : 'ck. ('a, 'b) event{'ck|} =>{'ck} unit) =
+let process p (q : 'ck. ('a, 'b) event{|'ck|} =>{ <'ck> } unit) =
   newclock ck in
     signal s at ck in
     q s
@@ -85,7 +83,7 @@ let process pp = run (p q)
 
 $
 
-let process p (q : 'ck. ('a, 'b) event{'ck|} -> unit process{'ck|'ck}) =
+let process p (q : ''ck. ('a, 'b) event{|''ck|} -> unit process{''ck|| <''ck> }) =
   newclock ck in
     signal s at ck in
     run (q s)
@@ -98,7 +96,7 @@ let process pp =
 
 $
 
-let process p (q : 'ck. ('a, 'b) event{'ck|} -> unit process{'ck|'ck}) =
+let process p (q : 'ck. ('a, 'b) event{|'ck|} -> unit process{'ck || <'ck> }) =
   signal s in
   run (q s)
   ||
