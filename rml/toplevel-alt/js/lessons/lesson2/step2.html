@@ -1,0 +1,23 @@
+<p>
+We now define the data structure to represent the state of a ball.
+</p>
+<p><pre class="code">
+type state =
+    { pos: (float * float, float * float) event;
+      speed: (float * float, float * float) event;
+      radius: float;
+      color: Graphics.color; }
+</pre></p>
+<p>
+It is a record whose
+fields <code>pos</code>, <code>speed</code>, <code>radius</code>
+and <code>color</code> represent respectively the position, velocity,
+radius and color of a ball.
+</p>
+<p>
+The type of the field <code>pos</code> is <code>(float * float, float
+* float) event</code>. That is, it is an event on which we can emit and
+receive a tuple of floating numbers. It will represent the flow of
+positions.
+</p>
+<br />

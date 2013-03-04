@@ -31,6 +31,7 @@ rmltop
 rml/config
 rml/Makefile.common
 rml/compiler/global/version.ml
+rml/compiler/global/rzi.ml
 rml/compiler/parsing/lexer.ml
 rml/compiler/parsing/linenum.ml
 rml/compiler/parsing/parser.ml

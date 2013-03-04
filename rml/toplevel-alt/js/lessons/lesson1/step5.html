@@ -1,0 +1,39 @@
+<h3>Valued events</h3>
+
+<p>
+Events can carry values. When a signal is declared, the programmer can
+specify how to combine multiple values emitted at the same instant
+(the default behavior is to collect all the values into a list).</p>
+
+<p>Here, we define a signal <code>s</code> which sums the values it receives
+during an instant.</p>
+
+<p><pre class="code">signal s default 0 gather (+);;</pre></p>
+
+<p>
+To get the value of a signal, we can use the construct <code>await s(x)
+in e</code> which waits for the emission of <code>s</code> and then executes
+<code>e</code> with <code>x</code> taking the value carried by the signal
+<code>s</code>.
+</p>
+
+<p><pre class="code">let process print_s =
+  loop
+    await s(x) in
+    print_int x;
+    print_newline ()
+  end ;;</pre></p>
+
+<p><pre class="code">#run print_s;;</pre></p>
+
+<p><pre class="code">emit s 1;;</pre></p>
+
+<p><pre class="code">emit s 2;;</pre></p>
+
+<p><pre class="code">emit s 3; emit s 4;;</pre></p>
+
+<p>
+It is possible to access the last value of a signal using
+the <code>last</code> operator.
+</p>
+<p><pre class="code">last ?s;;</pre></p>

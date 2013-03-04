@@ -1,0 +1,192 @@
+(** Simple process management library.
+
+   @author Louis Mandel (louis@reactiveML.org)
+   @author Florence Plateau (florence@reactiveML.org)
+*)
+
+type ident = int
+
+let gen_id =
+  let cpt = ref 0 in
+  fun () ->
+    incr cpt;
+    !cpt
+
+let print_id id =
+  print_endline ("["^(string_of_int id)^"]")
+
+
+(********************)
+(* Killable         *)
+(********************)
+
+signal to_kill;;
+
+let process killable id p =
+  do
+    let v = run p in Some v
+  until to_kill(ids) when List.mem id ids -> None done ;;
+
+
+(********************)
+(* Suspendable      *)
+(********************)
+
+signal to_suspend_resume;;
+
+let process suspendable id p =
+  control
+    run p
+  with to_suspend_resume(ids) when List.mem id ids done ;;
+
+
+(********************)
+(* Resettable       *)
+(********************)
+
+signal to_reset;;
+
+let rec process resettable id p =
+  do
+    run p
+  until to_reset(ids) when List.mem id ids -> run (resettable id p) done ;;
+
+
+(****************************)
+(* Replaceable - Extensible *)
+(****************************)
+
+let rec process replace p_init new_behavior =
+  do
+    run p_init; halt
+  until new_behavior(p) -> run (replace p new_behavior) done ;;
+
+let rec process extend p_init new_behavior =
+  run p_init
+  ||
+  await new_behavior(p) in
+  run (extend p new_behavior) ;;
+
+
+let process basic_requests_manager combinator requests id p_init =
+  signal new_behavior default process ()
+                        gather (fun p q -> process (run p || run q))
+  in
+  run (combinator p_init new_behavior)
+  ||
+  loop
+    await requests(reqs) in
+    List.iter (fun (x,p) -> if x = id then emit new_behavior p) reqs
+  end ;;
+
+signal to_replace;;
+let replaceable = basic_requests_manager replace to_replace ;;
+
+signal to_add;;
+let extensible = basic_requests_manager extend to_add ;;
+
+
+(****************************************)
+(*  Replaceable - Extensible with state *)
+(****************************************)
+
+let process requests_manager combinator requests id p_init state =
+  signal new_behavior default process ()
+                        gather (fun p q -> process (run p || run q))
+  in
+  run (combinator (p_init state) new_behavior)
+  ||
+  loop
+    await requests(reqs) in
+    List.iter
+      (fun (x,p) -> if x = id then emit new_behavior (p state))
+      reqs
+  end ;;
+
+let replaceable_s requests id p_init state =
+  requests_manager replace requests id p_init state ;;
+
+
+let extensible_s requests id p_init state =
+  requests_manager extend requests id p_init state;;
+
+
+(******************************)
+(* Composition of combinators *)
+(******************************)
+
+let killable_suspendable id p =
+  killable id (suspendable id p) ;;
+
+let suspendable_killable id p =
+  suspendable id (killable id p) ;;
+
+
+(**********************)
+(* process management *)
+(**********************)
+
+type kind = Killable | Suspendable | Extensible | Resettable | Replaceable
+
+let string_of_kind k =
+  match k with
+  | Killable -> "k"
+  | Suspendable -> "s"
+  | Extensible -> "x"
+  | Resettable -> "r"
+  | Replaceable -> "c"
+
+
+let processes = ref ([] : (ident * kind list) list)
+
+let ps () =
+  List.iter
+    (fun (id, kinds) ->
+      print_int id;
+      print_string ": ";
+      begin match kinds with
+      | [] -> print_string "?"
+      | _ -> List.iter (fun k -> print_string ((string_of_kind k)^" ")) kinds
+      end;
+      print_newline())
+    !processes
+
+let process id_manager p kinds =
+  let id = gen_id () in
+  print_id id;
+  processes := (id, kinds) :: !processes;
+  let v = run (p id) in
+  processes := List.filter (fun (x,_) -> x <> id) !processes;
+  v
+
+
+(***********************)
+(* Managed combinators *)
+(***********************)
+
+let killable p =
+  id_manager (fun id -> killable id p) [ Killable ]
+
+let suspendable p =
+  id_manager (fun id -> suspendable id p) [ Suspendable ]
+
+let resettable p =
+  id_manager (fun id -> resettable id p) [ Resettable ]
+
+let replaceable p =
+  id_manager (fun id -> replaceable id p) [ Replaceable ]
+
+let extensible p =
+  id_manager (fun id -> extensible id p) [ Extensible ]
+
+let replaceable_s to_replace p state =
+  id_manager (fun id -> replaceable_s to_replace id p state) [ Replaceable ]
+
+let extensible_s to_add p_init state =
+  id_manager (fun id -> extensible_s to_add id p_init state) [ Extensible ]
+
+let killable_suspendable p =
+  id_manager (fun id -> killable_suspendable id p) [ Killable; Suspendable ]
+
+let suspendable_killable p =
+  id_manager (fun id -> suspendable_killable id p) [ Suspendable; Killable ]

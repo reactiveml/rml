@@ -618,7 +618,7 @@ let translate_type_declaration l =
     l_rename
 
 (* Translation of implementation item *)
-let translate_impl_item info_chan item =
+let translate_impl_item info_fmt item =
   let ritem =
     match item.pimpl_desc with
     | Pimpl_expr expr -> Rimpl_expr (translate Env.empty expr)
@@ -678,7 +678,7 @@ let translate_impl_item info_chan item =
   make_impl ritem item.pimpl_loc
 
 (* Translation of interfacr item *)
-let translate_intf_item info_chan item =
+let translate_intf_item info_fmt item =
   let ritem =
     match item.pintf_desc with
     | Pintf_val (s, t) ->

@@ -1,0 +1,31 @@
+<p>
+We program a way to observe the moving points. To do that we
+define a global signal <code>to_draw</code> on which points will
+send their states.
+</p>
+<p><pre class="code">
+signal to_draw;;
+</pre></p>
+<p>
+Then we define a process called <code>window</code> which opens the
+graphical window and displays the points.
+</p>
+<p><pre class="code">
+let process window =
+  Graphics.open_graph "";
+  loop
+    await to_draw (all) in
+    Graphics.clear_graph();
+    List.iter
+      (fun state ->
+        let x, y = last ?state.pos in
+        let x_int = (truncate x) mod (Graphics.size_x()) in
+        let y_int = truncate y in
+        Graphics.set_color state.color;
+        Graphics.fill_circle x_int y_int 5)
+      all
+  end
+</pre></p>
+<p><pre class="code">
+#run window;;
+</pre></p>

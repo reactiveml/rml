@@ -29,7 +29,7 @@ open Parse_ast
 (* Printing of error messages about Lucky import *)
 
 let not_implemented_type ty =
-  Printf.eprintf
+  Format.fprintf !err_fmt
     "%aThis type cannot be used in a Lucky process."
-    Location.print_oc ty.pte_loc;
+    Location.print ty.pte_loc;
   raise Error

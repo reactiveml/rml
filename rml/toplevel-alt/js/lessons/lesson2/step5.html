@@ -1,0 +1,29 @@
+<p>
+Let us create a ball:
+</p>
+<p><pre class="code">
+#run (move (new_state ())) ;;
+</pre></p>
+
+<p>
+To observe the position of the ball, we program a process which
+displays the value of the <code>draw</code> signal.
+</p>
+<p><pre class="code">
+let process window =
+  loop
+    await draw (all) in
+    Graphics.clear_graph();
+    List.iter
+      (fun state ->
+        let x, y = last ?state.pos in
+        Graphics.set_color state.color;
+        Graphics.fill_circle
+          (int_of_float x) (int_of_float y)
+          (int_of_float state.radius))
+      all
+  end
+</pre></p>
+<p><pre class="code">
+#run window ;;
+</pre></p>

@@ -1,0 +1,29 @@
+<h3>Suspend/resume</h3>
+
+<p>
+Processes can also be suspended and resumed using events via the
+<code>control/with</code> construct.
+</p>
+
+<p><pre class="code">signal ctrl;;</pre></p>
+
+<p><pre class="code">let process p =
+  control
+    for i = 1 to max_int do
+      print_int i;
+      print_newline ();
+      pause
+    done
+  with ctrl done ;;</pre></p>
+
+<p><pre class="code">#run p;;</pre></p>
+
+The first emission of the <code>ctrl</code> event suspends the execution.
+<p><pre class="code">emit ctrl;;</pre></p>
+
+The second emission of <code>ctrl</code> resumes the execution at the
+point where it was suspended.
+<p><pre class="code">emit ctrl;;</pre></p>
+
+The next emission suspends the execution again.
+<p><pre class="code">emit ctrl;;</pre></p>

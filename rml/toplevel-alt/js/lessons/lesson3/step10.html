@@ -1,0 +1,32 @@
+<p>
+Now, to replace the point moving from left to right, we define the
+behavior of a point moving up and down.
+</p>
+<p><pre class="code">
+let process up_down state =
+  for i = 1 to 50 do emit state.vel (0., 2.); pause done;
+  loop
+    for i = 1 to 100 do emit state.vel (0., - 2.); pause done;
+    for i = 1 to 100 do emit state.vel (0., 2.); pause done
+  end
+</pre></p>
+<p><pre class="code">
+let process moving_point' state =
+   run (up_down state) ||
+   run (compute_pos state) || run (draw state)
+</pre></p>
+
+<p>
+To reconfigure the previous point, we need only send
+this <code>moving_point'</code> process on the
+signal <code>new_behavior</code>.
+</p>
+<p><pre class="code">
+emit new_behavior moving_point';;
+</pre></p>
+<p>
+We can restore the previous behavior as follows.
+</p>
+<p><pre class="code">
+emit new_behavior moving_point;;
+</pre></p>

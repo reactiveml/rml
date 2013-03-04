@@ -3,13 +3,15 @@ BIN = rmlc
 DIRECTORIES = global parsing external static typing other_analysis reac lco lk caml optimization main
 
 
-GLOBAL = global/asttypes.mli \
+GLOBAL = global/asttypes.ml \
 	global/global.ml \
 	global/global_ident.ml \
 	global/ident.ml \
 	global/initialization.ml \
 	global/misc.ml \
 	global/modules.ml \
+	global/def_modules.ml \
+	global/rzi.ml \
 	global/symbol_table.ml \
 	global/warnings.ml \
 
@@ -70,6 +72,7 @@ OPTIMIZATION = optimization/reac_optimization.ml \
 
 MAIN = 	main/compiler.ml \
 	main/configure.ml \
+	main/options.ml \
 	main/errors.ml \
 	main/interactive.ml \
 	main/main.ml \
@@ -78,6 +81,7 @@ SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(OTHER_ANALYSIS) $(EXTERNAL) $(STA
 
 
 OBJ =	global/version.cmo \
+	global/asttypes.cmo \
 	global/warnings.cmo \
 	parsing/linenum.cmo \
 	parsing/location.cmo \
@@ -87,12 +91,15 @@ OBJ =	global/version.cmo \
 	global/global.cmo \
 	static/def_static.cmo \
 	typing/def_types.cmo \
+	global/rzi.cmo \
+	global/def_modules.cmo \
 	global/modules.cmo \
 	global/symbol_table.cmo \
 	parsing/lexer.cmo \
 	parsing/syntaxerr.cmo \
 	main/errors.cmo \
 	main/configure.cmo \
+	main/options.cmo \
 	parsing/parse_ast.cmo \
 	parsing/parse_ident.cmo \
 	parsing/parser.cmo \
@@ -147,19 +154,42 @@ GENSOURCES = global/version.ml parsing/parser.mli parsing/lexer.ml parsing/parse
 include ../config
 include ../configure-tools/Makefile.common
 
-all: $(TARGET)
+OCAMLFLAGS+=-for-pack Rmlcompiler
+OCAMLOPTFLAGS+=-for-pack Rmlcompiler
+
+all:: $(TARGET) rmlcompiler.cmo
+ifeq ($(TARGET), opt)
+all:: rmlcompiler.cmx
+endif
+
+rzi:
+	$(MAKE) $(TARGET)
+	$(MAKE) -C ../stdlib all
+	$(MAKE) -C ../toplevel-alt rmltop_alt_global.rzi
+	-$(RM) -f global/rzi.ml
+	$(MAKE) $(TARGET) rmlcompiler.cmo
+
 install: install.$(TARGET)
 	cp $(BINDIR)/$(BIN).$(TARGET) $(BINDIR)/$(BIN)
 uninstall: uninstall.$(TARGET)
 	rm -f $(BINDIR)/$(BIN)
 
 
+C_OBJ_BYTE = $(filter-out main/options.cmo main/main.cmo,$(OBJ))
+C_OBJ_OPT  = $(C_OBJ_BYTE:.cmo=.cmx)
+
+rmlcompiler.cmo: $(C_OBJ_BYTE)
+	$(OCAMLC) -g -pack -o $@ $(INCLUDES) $^
+
+rmlcompiler.cmx: $(C_OBJ_OPT)
+	$(OCAMLOPT) -g -pack -o $@ $(INCLUDES) $^
+
 diff: FORCE
 	(cd diff; $(MAKE) diff)
 
 # cleaning:
 clean:
-	(for d in $(DIRECTORIES); \
+	(for d in . $(DIRECTORIES); \
 	 do rm -f $$d/*.cmi $$d/*.cmo $$d/*.cmx $$d/*.o $$d/*.annot; \
 	 done)
 
@@ -168,7 +198,7 @@ realclean: clean
 	 do rm -f $$d/*~; \
 	 done)
 	rm -f $(BIN).byte $(BIN).opt $(GENSOURCES) parsing/parser.output
-	rm -f rmlc global/version.ml *~
+	rm -f rmlc global/version.ml global/rzi.ml *~
 
 cleanall: realclean
 
@@ -186,6 +216,10 @@ wc:
 parsing/parser.mli parsing/parser.ml: parsing/parser.mly
 	$(OCAMLYACC) -v parsing/parser.mly
 lexer.cmx: parser.cmi
+
+#.PHONY: global/rzi.ml
+global/rzi.ml: global/rzi.cmi global/def_modules.cmo
+	$(OCAML) -I $(CURDIR)/global global/def_modules.cmo $(CURDIR)/../configure-tools/embedrzi.ml "$(CURDIR)/../"
 
 # version
 global/version.ml:

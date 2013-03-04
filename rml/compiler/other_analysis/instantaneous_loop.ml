@@ -150,12 +150,12 @@ module Env :
 
 (* Warnings *)
 let rec_warning expr =
-  Printf.eprintf "%aWarning: This expression may produce an instantaneous recursion.\n"
-    Location.print_oc expr.expr_loc
+  Format.fprintf !err_fmt "%aWarning: This expression may produce an instantaneous recursion.\n"
+    Location.print expr.expr_loc
 
 let loop_warning expr =
-  Printf.eprintf "%aWarning: This expression may be an instantaneous loop.\n"
-    Location.print_oc expr.expr_loc
+  Format.fprintf !err_fmt "%aWarning: This expression may be an instantaneous loop.\n"
+    Location.print expr.expr_loc
 
 
 let static_of_list filter l =

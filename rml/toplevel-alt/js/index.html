@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Try ReactiveML</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link type="text/css" href="scripts/style.css" rel="stylesheet" />
+  </head>
+  <body>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37633890-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    <div id="maincontent">
+      <h1 id="main-title">Try ReactiveML</h1>
+
+      <div id="sidebar">
+        <div id="intro">
+          <p>
+            <b>ReactiveML</b> is a programming language similar to
+            OCaml extended with the synchronous reactive model. It is
+            dedicated to the implementation of interactive systems as
+            found in graphical user interfaces, video games and
+            simulation problems.
+          </p>
+	  <br />
+
+          <p>For more details about OCaml programming you can
+          try <a href="http://try.ocamlpro.com">TryOcaml</a>.
+          </p>
+
+          <hr />
+
+          <table class="zebra-striped">
+            <thead>
+              <tr>
+                <th id="text-commands">Commands</th>
+                <th id="text-effects">Effects</th>
+              </tr>
+            </thead>
+            <tr>
+              <td id="text-enter">Enter</td>
+              <td id="text-submit">Submit code</td>
+            </tr>
+            <tr>
+              <td id="text-arrows">Up / Down</td>
+              <td id="text-history">Cycle through history</td>
+            </tr>
+            <tr>
+              <td id="text-newline">Shift + Enter</td>
+              <td id="text-multiline">Multiline edition</td>
+            </tr>
+          </table>
+
+          <hr />
+
+	  <p>
+	    To test the toplevel, you can copy the following code or
+	    simply click on it.
+	  </p>
+	  <p><pre class="code">print_endline "Hello world!" ;;</pre></p>
+	  <p>
+	    You can also drag and drop a ReactiveML file into the
+	    toplevel window if you want to evaluate it. Here is an
+	    example to download and drag and
+	    drop: <a href="lessons/planets.rml" target="_blank">planets.rml</a> (or
+	    <a class="code-file">lessons/planets.rml</a>).
+	  </p>
+	  <br />
+
+	  <p>
+	    An interactive tutorial is also available.
+	  </p>
+
+        </div>
+
+        <div id="info">
+        </div>
+
+        <div id="tutorial">
+        </div>
+
+        <div id="navbar">
+        </div>
+      </div>
+
+      <div id="ocaml">
+        <div id="toplevel-container">
+          <pre id="output"></pre>
+          <div id="sharp">#</div>
+          <div id="toplevel"></div>
+        </div>
+        <div id="buttons-left"></div>
+        <div id="buttons-right"></div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <div class="ressources">
+        <a href="http://reactiveml.org">ReactiveML</a>
+      </div>
+    </div>
+
+    <div id="graphics">
+      <div id="graphicstitle">Graphics window</div>
+      <canvas id="canvas" width="300" height="300"></canvas>
+    </div>
+
+    <script type="text/javascript"
+            src="scripts/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript"
+            src="scripts/jquery-ui-1.8.22.custom.min.js"></script>
+    <script type="text/javascript"
+            src="scripts/graphics_init.js"></script>
+    <script type="text/javascript"
+            src="toplevel.js"></script>
+  </body>
+</html>

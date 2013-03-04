@@ -1,0 +1,20 @@
+<p>
+To use this process, we need a signal on which we can send and receive
+a process. To handle multiple emissions during the same instant, we
+build the parallel composition of the sent processes.
+</p>
+<p><pre class="code">
+signal new_behavior
+  default (fun state -> process ())
+  gather (fun p q state ->
+            process (run (p state) || run (q state)))
+;;
+</pre></p>
+<p>
+We can now execute a moving point whose behavior can be replaced
+dynamically.
+</p>
+<p><pre class="code">
+#run replace moving_point (new_state ()) new_behavior;;
+</pre></p>
+

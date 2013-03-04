@@ -1,0 +1,24 @@
+<p>
+Similarly to <code>new_behavior</code>, we define a
+signal <code>add_behavior</code> on which the adding requests will be sent.
+</p>
+<p><pre class="code">
+signal add_behavior
+  default (fun state -> process ())
+  gather (fun p q state ->
+            process (run (p state) || run (q state)))
+;;
+</pre></p>
+
+<p>
+We can run an extensible moving point,
+</p>
+<p><pre class="code">
+#run extend moving_point (new_state ()) add_behavior ;;
+</pre></p>
+<p>
+and add an up/down behavior to this point moving left to right.
+</p>
+<p><pre class="code">
+emit add_behavior up_down ;;
+</pre></p>

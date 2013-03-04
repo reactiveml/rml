@@ -51,7 +51,6 @@ let report_error ppf exn =
 	Syntaxerr.report_error ppf err
 
     | Misc.Error -> ()
-(*	fprintf ppf "@.Error." *)
     | Misc.Internal (loc,msg) ->
 	if loc = Location.none
       	then fprintf ppf "@.Internal error: %s. \nPlease report it." msg

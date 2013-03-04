@@ -32,7 +32,7 @@ let add_to_compile file =
 (* standard libraries and includes *)
 let set_init_stdlib () =
   let standard_lib = try Sys.getenv "RMLLIB" with Not_found -> standard_lib in
-  load_path := [standard_lib]
+  load_path := standard_lib :: !load_path
 
 let set_stdlib p =
   load_path := [p]
@@ -149,6 +149,12 @@ let set_runtime s =
       set_interpreter_module "Machine_controler_machine";
       set_translation Lco
 
+  | "Rmltop_alt" ->
+      set_interpreter_intf "Lco_interpreter";
+      set_interpreter_impl "Rmltop_alt_implem";
+      set_interpreter_module "Machine_controler_machine";
+      set_translation Lco
+
 
   | _ -> raise (Arg.Bad ("don't know what to do with " ^ s))
 
@@ -225,43 +231,8 @@ Options are:"
 (* the main function: parse the command line *)
 let configure () =
   set_init_stdlib ();
-  set_init_pervasives ();
-  try
-    Arg.parse
-      [ "-stdlib", Arg.String set_stdlib, doc_stdlib;
-	"-v", Arg.Unit show_v, doc_v;
-	"-version", Arg.Unit show_version, doc_version;
-	"-where", Arg.Unit show_where, doc_where;
-	"-c",Arg.Set no_link, doc_compilation;
-	"-I",Arg.String add_include,doc_libraries;
-	"-s", Arg.String set_simulation_process, doc_simulation;
-	"-n", Arg.Int set_number_of_instant, doc_number_of_instant;
-	"-sampling", Arg.Float set_sampling, doc_sampling;
-	"-i", Arg.Unit set_verbose, doc_verbose;
-	"-dtypes", Arg.Unit set_save_types, doc_save_types;
-	"-no_reactivity_warning", Arg.Unit unset_reactivity_warning, doc_no_reactivity_warning;
-	"-dreactivity", Arg.Unit set_dreactivity, doc_dreactivity;
-        "-no_reactivity_simpl", Arg.Unit unset_no_reactivity_simpl, doc_no_reactivity_simpl;
-	"-old_loop_warning", Arg.Unit set_old_instantaneous_loop_warning, doc_old_loop_warning;
-	"-runtime", Arg.String set_runtime, doc_runtime;
-	"-interactive", Arg.Unit set_interactive, doc_interactive;
-	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;
-	"-no_nary_opt", Arg.Unit set_no_nary, doc_no_nary;
-	"-no_static_opt", Arg.Unit set_no_static, doc_no_static;
-	"-no_for_opt", Arg.Unit set_no_for, doc_no_for;
-	"-no_const_opt", Arg.Clear const_optimization, doc_no_const_opt;
-	"-dparse", Arg.Unit set_dparse, doc_dparse;
-	"-dtime", Arg.Unit set_dtime, doc_dtime;
-      ]
-      add_to_compile
-      errmsg;
-  with x ->
-    Errors.report_error Format.err_formatter x;
-    exit 2
-;;
-
+  set_init_pervasives ()
 
 let _ =
-  Printexc.catch configure ();
-  to_compile := List.rev !to_compile
+  Printexc.catch configure ()
 
