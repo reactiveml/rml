@@ -176,8 +176,9 @@ let rec add_expr bv exp =
       add_expr bv e3
   | Pexpr_pauseclock e1 -> add_expr bv e1
   | Pexpr_topck | Pexpr_base -> ()
-  | Pexpr_memory(_, ck, e1, e2) ->
+  | Pexpr_memory(_, ck, e1, opt_r, e2) ->
       add_expr bv ck;
+      Misc.opt_iter (add_expr bv) opt_r;
       add_expr bv e1; add_expr bv e2
   | Pexpr_last_mem e -> add_expr bv e
   | Pexpr_update (e1, e2) | Pexpr_set_mem (e1, e2) -> add_expr bv e1; add_expr bv e2
