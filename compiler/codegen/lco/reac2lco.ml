@@ -535,9 +535,10 @@ and translate_proc p =
           Coproc_pauseclock (translate_ml e1)
 
         (* translate memories to signals *)
-        | Ememory (s, ck, v, proc) ->
+        | Ememory (s, ck, v, opt_reset, proc) ->
             Coproc_memory(s, translate_ml ck,
                          translate_ml v,
+                         Misc.opt_map translate_ml opt_reset,
                          translate_proc proc)
 
         | Eawait_new (s, patt, proc) ->

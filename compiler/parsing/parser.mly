@@ -315,6 +315,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token RBRACE              /* "}" */
 %token RBRACKET            /* "]" */
 %token REC                 /* "rec" */
+%token RESET               /* "reset" */
 %token RESTRICT            /* "restrict" */
 %token RPAREN              /* "(" */
 %token RUN                 /* "run" */
@@ -669,8 +670,8 @@ expr:
       { mkexpr (Pexpr_pause ($3, Weak)) }
   | PAUSECLOCK simple_expr
       { mkexpr (Pexpr_pauseclock $2) }
-  | MEMORY LIDENT opt_at_expr LAST par_expr IN par_expr
-      { mkexpr (Pexpr_memory (mksimple $2 2, fst $3, $5, $7)) }
+  | MEMORY LIDENT opt_at_expr LAST par_expr opt_reset IN par_expr
+      { mkexpr (Pexpr_memory (mksimple $2 2, fst $3, $5, $6, $8)) }
   | expr LESSLESSMINUS expr
       { mkexpr (Pexpr_update($1, $3)) }
   | expr COLONCOLONEQUAL expr
@@ -786,6 +787,9 @@ opt_schedule:
 opt_by:
   /* empty */ { None }
   | BY par_expr { Some $2 }
+opt_reset:
+  /* empty */ { None }
+  | RESET simple_expr { Some $2 }
 
 let_bindings:
     let_binding                                 { [$1] }

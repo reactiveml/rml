@@ -126,7 +126,7 @@ struct
 
     module SignalHandle = Dhandle.Make (struct
       type key = C.gid
-      type ('a, 'b) value = ('a, 'b) E.t * clock * region
+      type ('a, 'b) value = ('a, 'b) E.t * clock * region * clock option
       let compare = compare
     end)
 
@@ -217,15 +217,15 @@ struct
             assert false
     let get_event ev =
       let site = get_site () in
-      let n, _, _ =  SignalHandle.get site.s_signal_cache ev.ev_handle in
+      let n, _, _, _ =  SignalHandle.get site.s_signal_cache ev.ev_handle in
       n
     let get_event_clock ev =
       let site = get_site () in
-      let _, ck, _ = SignalHandle.get site.s_signal_cache ev.ev_handle in
+      let _, ck, _, _ = SignalHandle.get site.s_signal_cache ev.ev_handle in
       ck
     let get_event_region ev =
       let site = get_site () in
-      let _, _, r = SignalHandle.get site.s_signal_cache ev.ev_handle in
+      let _, _, r, _ = SignalHandle.get site.s_signal_cache ev.ev_handle in
       r
     let get_event_whole ev =
       let site = get_site () in
@@ -399,7 +399,7 @@ struct
 
         let do_emit ev v =
           print_debug "Emitting a value for %a@." print_signal ev;
-          let n, ev_ck, ev_r = get_event_whole ev in
+          let n, ev_ck, ev_r, _ = get_event_whole ev in
           let already_present = E.status n in
           if not (C.is_local ev_r.ck_gid) then
             print_debug "Error: do_emit on remote signal %a at region %a of clock %a@."
@@ -437,30 +437,43 @@ struct
             E.set_value n v;
             wake_up_now (Wsignal_wa gid)
 
-        let setup_local_copy gid n ck =
+        let add_reset n reset =
+          (* create callback for resetting the signal *)
+          (* TODO: use weak pointer *)
+          match reset with
+            | None -> ()
+            | Some rck ->
+              let rec reset_evt () =
+                E.reset n;
+                add_waiting (Weoi rck.ck_gid) reset_evt
+              in
+              add_waiting (Weoi rck.ck_gid) reset_evt
+
+        let setup_local_copy gid n ck reset =
           add_callback (Mvalue gid) (update_local_value gid n);
-          E.set_clock n (get_clock ck.ck_clock)
+          E.set_clock n (get_clock ck.ck_clock);
+          add_reset n reset
 
         (* Called when a local process tries to access a remote signal for the first time.
            Creates local callbacks for this signal. *)
         (** TODO: remove callbacks when signal is no longer needed *)
-        let signal_local_value gid (n, ck, r) =
+        let signal_local_value gid (n, ck, r, reset) =
           let site = get_site () in
           (* request the current value of the signal *)
           Msgs.send_req_signal gid (C.fresh site.s_seed);
-          setup_local_copy gid n ck;
+          setup_local_copy gid n ck reset;
           let msg = Callbacks.recv_given_msg site.s_msg_queue (Msignal gid) in
           (* set the local value to the one received *)
           let new_n = C.from_msg msg in
           E.copy n new_n;
-          n, ck, r
+          n, ck, r, reset
 
-        let new_local_evt ck r is_memory default combine =
+        let new_local_evt ck r is_memory default combine reset =
           let site = get_site () in
           let n = E.create (get_clock ck.ck_clock) is_memory default combine in
           let gid = C.fresh site.s_seed in
           let ev  =
-            { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck, r);
+            { ev_handle = SignalHandle.init site.s_signal_cache gid (n, ck, r, reset);
               ev_gid = gid }
           in
           print_debug "Created signal %a at region %a of clock %a@." print_signal ev
@@ -469,13 +482,14 @@ struct
             add_callback (Memit gid) (receive_emit ev);
             add_callback (Mreq_signal gid) (receive_req n gid)
           );
+          add_reset n reset;
           ev
 
-        let new_remote_evt ck r is_memory default (combine : 'a -> 'b -> 'b) =
+        let new_remote_evt ck r is_memory default (combine : 'a -> 'b -> 'b) reset =
           let site = get_site () in
           let tmp_id = C.fresh site.s_seed in
           let create_signal () =
-            let ev = new_local_evt ck r is_memory default combine in
+            let ev = new_local_evt ck r is_memory default combine reset in
             if !Runtime_options.use_signals_users_set then
               add_signal_remote (C.site_of_gid tmp_id) ev.ev_gid;
             print_debug "Created signal %a at region %a of clock %a from request by %a@." print_signal ev
@@ -488,18 +502,21 @@ struct
           let ev:('a, 'b) event = C.from_msg msg in
           SignalHandle.set_valid ev.ev_handle;
           let n = get_event ev in
-          setup_local_copy ev.ev_gid n ck;
+          setup_local_copy ev.ev_gid n ck reset;
           ev
 
-        let new_evt_expr ck r is_memory default combine =
+        let new_evt_any ck r is_memory default combine reset =
           let r = if !Runtime_options.use_local_slow_signals then r else ck in
           if C.is_local r.ck_gid then
-            new_local_evt ck r is_memory default combine
+            new_local_evt ck r is_memory default combine reset
           else
-            new_remote_evt ck r is_memory default combine
+            new_remote_evt ck r is_memory default combine reset
 
-        let new_evt _ ck r is_memory default combine k =
-          let evt = new_evt_expr ck r is_memory default combine in
+        let new_evt_expr ck r is_memory default combine =
+          new_evt_any ck r is_memory default combine None
+
+        let new_evt _ ck r is_memory default combine reset k =
+          let evt = new_evt_any ck r is_memory default combine reset in
           k evt
 
         let new_evt_global is_memory default (combine : 'a -> 'b -> 'b) =
@@ -507,7 +524,7 @@ struct
           if C.is_master () then (
             (* create the signal *)
             let ck = (get_top_clock_domain ()).cd_clock in
-            let ev = new_local_evt ck ck is_memory default combine in
+            let ev = new_local_evt ck ck is_memory default combine None in
             (* send it to all other sites *)
             print_debug "Sending global signal %a@." print_signal ev;
             C.broadcast (Msignal ev.ev_gid) ev;
@@ -526,8 +543,8 @@ struct
             print_debug "Received global signal %a@." C.print_gid ev_id;
             (* setup the local copy *)
             SignalHandle.set_valid ev.ev_handle;
-            let n, ck, _ = get_event_whole ev in
-            setup_local_copy ev.ev_gid n ck;
+            let n, ck, _, _ = get_event_whole ev in
+            setup_local_copy ev.ev_gid n ck None;
             ev
           )
 

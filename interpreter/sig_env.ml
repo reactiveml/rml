@@ -50,6 +50,7 @@ module type S =
     val one: ('a, 'a list) t -> 'a
 
     val emit: ('a, 'b) t -> 'a -> unit
+    val reset: ('a, 'b) t -> unit
 
     val set_value : ('a, 'b) t -> 'b -> unit
     val copy : ('a, 'b) t -> ('a, 'b) t -> unit
@@ -72,6 +73,7 @@ module Record  (*: S*)  =
         { mutable clock : clock;
           is_memory : bool;
           mutable status: int;
+          mutable reset : bool;
           mutable value: 'b;
           mutable pre_status: int;
           mutable last: 'b;
@@ -84,6 +86,7 @@ module Record  (*: S*)  =
       { clock = ck;
         is_memory = is_memory;
         status = absent;
+        reset = false;
         value = default;
         pre_status = absent;
         last = default;
@@ -103,9 +106,13 @@ module Record  (*: S*)  =
       else n.status = !(n.clock) - 1
 
     let last n =
-      if n.status = !(n.clock)
-      then n.last
-      else n.value
+      if n.reset
+      then n.default
+      else (
+        if n.status = !(n.clock)
+        then n.last
+        else n.value
+      )
 
     let pre_value n =
       if n.status = !(n.clock)
@@ -127,9 +134,10 @@ module Record  (*: S*)  =
       if n.status <> !(n.clock)
       then
         (n.pre_status <- n.status;
-         n.last <- n.value;
+         n.last <- if n.reset then n.default else n.value;
          n.status <- !(n.clock);
-         n.value <- if n.is_memory then n.combine v n.value else n.combine v n.default)
+         n.reset <- false;
+         n.value <- if n.is_memory then n.combine v n.last else n.combine v n.default)
       else
         n.value <- n.combine v n.value
 
@@ -137,8 +145,9 @@ module Record  (*: S*)  =
       if n.status <> !(n.clock)
       then
         (n.pre_status <- n.status;
-         n.last <- n.value;
+         n.last <- if n.reset then n.default else n.value;
          n.status <- !(n.clock);
+         n.reset <- false;
          n.value <- v)
       else
         n.value <- v
@@ -148,6 +157,9 @@ module Record  (*: S*)  =
       n.value <- new_n.value;
       n.pre_status <- new_n.pre_status;
       n.last <- new_n.last
+
+    let reset n =
+      n.reset <- true
 
     let init_clock () =
       ref 0

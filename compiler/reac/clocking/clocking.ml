@@ -1153,7 +1153,8 @@ let rec schema_of_expression env expr =
     | Etopck -> clock_topck
     | Ebase -> depend !activation_carrier
 
-    | Ememory (s, ce, v, e) ->
+    | Ememory (s, ce, v, _, e) ->
+        (* TODO: a t-on besoin de clocker le reset ? *)
         let ty_res = new_clock_var() in
         let ty_ck = carrier_open_row (type_clock_expr env ce) in
         let ty_s = constr_notabbrev memory_ident [Kclock ty_res; Kcarrier_row ty_ck] in

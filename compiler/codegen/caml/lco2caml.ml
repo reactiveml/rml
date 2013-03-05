@@ -934,12 +934,19 @@ and translate_proc e =
       else
         Cexpr_apply (make_instruction "rml_pauseclock", [embed_ml e])
 
-    | Coproc_memory (s, ck, e, k) ->
+    | Coproc_memory (s, ck, e, opt_reset, k) ->
         let patt = make_patt (Cpatt_var (Cvarpatt_local s)) Location.none in
+        let reset = match opt_reset with
+          | None -> make_constr "Pervasives" "None" None
+          | Some e ->
+              let e = translate_ml e in
+              make_constr "Pervasives" "Some" (Some e)
+        in
         Cexpr_apply
           (make_instruction "rml_memory",
            [translate_ml ck;
             embed_ml e;
+            reset;
             make_expr
               (Cexpr_function [patt, translate_proc k])
               Location.none])

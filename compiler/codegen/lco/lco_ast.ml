@@ -118,7 +118,8 @@ and process_desc =
   | Coproc_newclock of ident * expression option (*schedule*)
                          * expression option (*period*) * process
   | Coproc_pauseclock of expression
-  | Coproc_memory of ident * expression (*ck*) * expression * process
+  | Coproc_memory of ident * expression (*ck*) * expression (*last*)
+     * expression option (*reset*) * process
   | Coproc_await_new of expression * pattern * process
   | Coproc_update of expression * expression
   | Coproc_set_mem of expression * expression

@@ -364,10 +364,11 @@ let expr_free_vars e =
 
     | Etopck | Ebase -> ()
 
-    | Ememory(s, ck, v, e) ->
+    | Ememory(s, ck, v, opt_reset, e) ->
         let vars' = (Vlocal s) :: vars in
         expr_free_vars vars ck;
         expr_free_vars vars v;
+        Misc.opt_iter (expr_free_vars vars) opt_reset;
         expr_free_vars vars' e
 
     | Elast_mem e ->

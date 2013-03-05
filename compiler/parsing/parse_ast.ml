@@ -103,7 +103,8 @@ and expression_desc =
   | Pexpr_topck
   | Pexpr_base
 (* memory *)
-  | Pexpr_memory of simple_ident * expression (*ck*) * expression * expression
+  | Pexpr_memory of simple_ident * expression (*ck*)
+      * expression (*last*) * expression option (*reset*) * expression
   | Pexpr_last_mem of expression
   | Pexpr_update of expression * expression
   | Pexpr_set_mem of expression * expression

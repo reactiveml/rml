@@ -107,7 +107,8 @@ and expression_desc =
   | Etopck
   | Ebase
 (*memory*)
-  | Ememory of ident * expression (*ck*) * expression (*last*) * expression
+  | Ememory of ident * expression (*ck*) * expression (*last*)
+      * expression option (*reset*) * expression
   | Elast_mem of expression
   | Eupdate of expression * expression
   | Eset_mem of expression * expression

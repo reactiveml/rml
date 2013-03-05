@@ -55,74 +55,6 @@ struct
         | None -> raise Types.RML
         | Some cd -> cd
 
-    module Event =
-      struct
-        let new_evt_expr cd _ is_memory default combine =
-          (E.create cd.cd_clock is_memory default combine, cd,
-           D.mk_waiting_list (), D.mk_waiting_list ())
-
-        let new_evt _ cd r is_memory default combine k =
-          let evt = new_evt_expr cd r is_memory default combine in
-          k evt
-
-        let new_evt_global is_memory default combine =
-          let cd = get_top_clock_domain () in
-          new_evt_expr cd cd is_memory default combine
-
-        let status ?(only_at_eoi=false) (n,sig_cd,_,_) =
-          E.status n && (not only_at_eoi || !(sig_cd.cd_eoi))
-
-        let value (n,_,_,_) =
-          if E.status n then
-            E.value n
-          else
-            raise Types.RML
-
-        let one (n,_,_,_) = E.one n
-        let pre_status (n,_,_,_) = E.pre_status n
-        let pre_value (n,_,_,_) = E.pre_value n
-        let last (n,_,_,_) = E.last n
-        let default (n,_,_,_) = E.default n
-        let clock (_,sig_cd,_,_) = sig_cd
-
-        let region_of_clock cd = cd
-
-        let emit (n,sig_cd,wa,wp) v =
-          E.emit n v;
-          D.add_current_waiting_list wa sig_cd.cd_current;
-          D.add_current_waiting_list wp sig_cd.cd_current
-
-        let cfg_present ((n,sig_cd,wa,wp) as evt) =
-          Cevent ((fun eoi -> status ~only_at_eoi:eoi evt), sig_cd, wa, wp)
-        let cfg_or ev1 ev2 =
-          Cor (ev1, ev2)
-        let cfg_and ev1 ev2 =
-          Cand (ev1, ev2)
-
-        let cfg_status ?(only_at_eoi=false) evt_cfg =
-          let rec status k = match k with
-            | Cevent (c, _, _, _) -> c only_at_eoi
-            | Cand (cfg1, cfg2) -> status cfg1 && status cfg2
-            | Cor (cfg1, cfg2) -> status cfg1 || status cfg2
-          in
-          status evt_cfg
-
-        let cfg_events evt_cfg long_wait =
-          let rec events k = match k with
-            | Cevent (_, cd, wa, wp) -> [(if long_wait then wa else wp), cd]
-            | Cand (cfg1, cfg2) | Cor (cfg1, cfg2) ->
-              List.rev_append (events cfg1) (events cfg2)
-          in
-          events evt_cfg
-      end
-
-    let rec save_clock_state cd =
-      let l = match cd.cd_parent with
-        | None -> []
-        | Some cd -> save_clock_state cd
-      in
-        (cd, E.get cd.cd_clock)::l
-
 (**************************************)
 (* control tree                       *)
 (**************************************)
@@ -147,6 +79,13 @@ struct
       List.iter set_kill p.children;
       p.children <- [];
       p.instance <- p.instance + 1
+
+    let rec save_clock_state cd =
+      let l = match cd.cd_parent with
+        | None -> []
+        | Some cd -> save_clock_state cd
+      in
+        (cd, E.get cd.cd_clock)::l
 
     let start_ctrl cd ctrl new_ctrl =
       new_ctrl.last_activation <- save_clock_state cd;
@@ -318,6 +257,88 @@ struct
     let wake_up_all ck =
       List.iter (fun wp -> D.add_current_waiting_list wp ck.cd_current) ck.cd_wake_up;
       ck.cd_wake_up <- []
+
+(* ------------------------------------------------------------------------ *)
+
+    module Event =
+      struct
+        let new_evt_expr cd _ is_memory default combine =
+          (E.create cd.cd_clock is_memory default combine, cd,
+           D.mk_waiting_list (), D.mk_waiting_list ())
+
+        let new_evt _ cd r is_memory default combine reset k =
+          let evt = new_evt_expr cd r is_memory default combine in
+          let k =
+         (* create a callback to reset the signal at each eoi of the reset *)
+            match reset with
+              | None -> k
+              | Some rck ->
+                fun evt _ ->
+                  let (n, _, _, _) = evt in
+                  let w = Weak.create 1 in
+                  Weak.set w 0 (Some evt);
+                  let rec reset_evt () =
+                    (match Weak.get w 0 with
+                      | None -> () (* signal is no longer used, terminate *)
+                      | Some evt ->
+                        E.reset n;
+                        add_weoi rck reset_evt)
+                  in
+                  add_weoi rck reset_evt;
+                  k evt ()
+          in
+          k evt
+
+        let new_evt_global is_memory default combine =
+          let cd = get_top_clock_domain () in
+          new_evt_expr cd cd is_memory default combine
+
+        let status ?(only_at_eoi=false) (n,sig_cd,_,_) =
+          E.status n && (not only_at_eoi || !(sig_cd.cd_eoi))
+
+        let value (n,_,_,_) =
+          if E.status n then
+            E.value n
+          else
+            raise Types.RML
+
+        let one (n,_,_,_) = E.one n
+        let pre_status (n,_,_,_) = E.pre_status n
+        let pre_value (n,_,_,_) = E.pre_value n
+        let last (n,_,_,_) = E.last n
+        let default (n,_,_,_) = E.default n
+        let clock (_,sig_cd,_,_) = sig_cd
+
+        let region_of_clock cd = cd
+
+        let emit (n,sig_cd,wa,wp) v =
+          E.emit n v;
+          D.add_current_waiting_list wa sig_cd.cd_current;
+          D.add_current_waiting_list wp sig_cd.cd_current
+
+        let cfg_present ((n,sig_cd,wa,wp) as evt) =
+          Cevent ((fun eoi -> status ~only_at_eoi:eoi evt), sig_cd, wa, wp)
+        let cfg_or ev1 ev2 =
+          Cor (ev1, ev2)
+        let cfg_and ev1 ev2 =
+          Cand (ev1, ev2)
+
+        let cfg_status ?(only_at_eoi=false) evt_cfg =
+          let rec status k = match k with
+            | Cevent (c, _, _, _) -> c only_at_eoi
+            | Cand (cfg1, cfg2) -> status cfg1 && status cfg2
+            | Cor (cfg1, cfg2) -> status cfg1 || status cfg2
+          in
+          status evt_cfg
+
+        let cfg_events evt_cfg long_wait =
+          let rec events k = match k with
+            | Cevent (_, cd, wa, wp) -> [(if long_wait then wa else wp), cd]
+            | Cand (cfg1, cfg2) | Cor (cfg1, cfg2) ->
+              List.rev_append (events cfg1) (events cfg2)
+          in
+          events evt_cfg
+      end
 
 (* ------------------------------------------------------------------------ *)
 
@@ -531,7 +552,7 @@ struct
          let w_list = Event.cfg_events evt_cfg true in
          List.iter (fun (w,sig_cd) -> _on_event_at_eoi sig_cd ctrl w f) w_list
 
-
+    (* Control structures *)
     let create_control kind body f_k ctrl cd =
       let new_ctrl = new_ctrl kind in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in

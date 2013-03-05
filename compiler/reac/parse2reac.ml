@@ -586,12 +586,13 @@ let rec translate env e =
     | Pexpr_topck -> Etopck
     | Pexpr_base -> Ebase
 
-    | Pexpr_memory(x, ck,  v, e) ->
+    | Pexpr_memory(x, ck,  v, opt_reset, e) ->
       let id = Ident.create Ident.gen_var x.psimple_id Ident.Mem in
       let v = translate env v in
       let ck = translate env ck in
+      let opt_reset = Misc.opt_map (translate env) opt_reset in
       let env = Env.add x.psimple_id id env in
-      Ememory(id, ck, v, translate env e)
+      Ememory(id, ck, v, opt_reset, translate env e)
 
     | Pexpr_last_mem e ->
         Elast_mem (translate env e)

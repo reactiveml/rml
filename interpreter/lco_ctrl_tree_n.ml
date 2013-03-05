@@ -459,21 +459,22 @@ let rml_loop p =
         let ck = eval_clock_expr cd ce in
         let r = R.Event.region_of_clock (eval_clock_expr cd re) in
         let k evt = p evt f_k ctrl jp cd in
-        R.Event.new_evt cd ck r false (default()) (comb()) k ()
+        R.Event.new_evt cd ck r false (default()) (comb()) None k ()
 
     let rml_signal ce re p =
       fun f_k ctrl jp cd _ ->
         let ck = eval_clock_expr cd ce in
         let r = R.Event.region_of_clock (eval_clock_expr cd re) in
         let k evt = p evt f_k ctrl jp cd in
-        R.Event.new_evt cd ck r false default_default default_combine k ()
+        R.Event.new_evt cd ck r false default_default default_combine None k ()
 
-    let rml_memory ce default p =
+    let rml_memory ce default reset p =
       fun f_k ctrl jp cd _ ->
         let ck = eval_clock_expr cd ce in
         let r = R.Event.region_of_clock ck in
+        let reset = (match reset with None -> None | Some r -> Some (eval_clock_expr cd r)) in
         let k evt = p evt f_k ctrl jp cd in
-        R.Event.new_evt cd ck r true (default()) memory_combine k ()
+        R.Event.new_evt cd ck r true (default()) memory_combine reset k ()
 
 (**************************************)
 (* def                                *)

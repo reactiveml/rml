@@ -881,10 +881,12 @@ let rec type_of_expression env expr =
 
     | Etopck | Ebase -> type_clock
 
-    | Ememory (s, _, v, e) ->
+    | Ememory (s, ck, v, opt_r, e) ->
         let ty_res = new_var() in
         let ty_s = constr_notabbrev memory_ident [ty_res] in
         type_expect env v ty_res;
+        type_expect env ck type_clock;
+        Misc.opt_iter (fun r -> type_expect env r type_clock) opt_r;
         type_of_expression (Env.add s (forall [] ty_s) env) e
 
     | Elast_mem s ->

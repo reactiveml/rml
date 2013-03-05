@@ -229,11 +229,12 @@ and expression_desc funs acc ed = match ed with
   | Etopck -> Etopck, acc
   | Ebase -> Ebase, acc
 (*memory*)
-  | Ememory (id, ck, e1, e) ->
+  | Ememory (id, ck, e1, opt_e2, e) ->
       let ck, acc = expression_it funs acc ck in
       let e1, acc = expression_it funs acc e1 in
+      let opt_e2, acc = optional_wacc (expression_it funs) acc opt_e2 in
       let e, acc = expression_it funs acc e in
-      Ememory (id, ck, e1, e), acc
+      Ememory (id, ck, e1, opt_e2, e), acc
   | Elast_mem e ->
       let e, acc = expression_it funs acc e in
       Elast_mem e, acc

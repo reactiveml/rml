@@ -606,7 +606,7 @@ let rec static_expr ctx e =
     | Etopck -> Static
     | Ebase -> Static
 
-    | Ememory(s, ck, e1, p) ->
+    | Ememory(s, ck, e1, opt_r, p) ->
         let typ1 = static_expr ML e1 in
         let typ2 = static_expr ctx p in
         let ty =
@@ -618,6 +618,11 @@ let rec static_expr ctx e =
           expr_wrong_static_err e;
         if static_expr ML ck <> Static then
           expr_wrong_static_err ck;
+        (match opt_r with
+          | None -> ()
+          | Some r ->
+            if static_expr ML r <> Static then
+              expr_wrong_static_err r);
         max (Dynamic Instantaneous) ty
 
     | Elast_mem s ->

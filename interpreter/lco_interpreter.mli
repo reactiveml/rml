@@ -132,7 +132,7 @@ module type S =
         clock_expr -> region_expr -> (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
           (('a, 'b) R.event -> 'c expr) -> 'c expr
     val rml_memory :
-      clock_expr -> (unit -> 'a) ->
+      clock_expr -> (unit -> 'a) -> clock_expr option ->
       ('a memory -> 'b expr) -> 'b expr
     val rml_def: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
     val rml_def_dyn: 'a expr -> ('a -> 'b expr) -> 'b expr
