@@ -13,28 +13,21 @@ let process half s =
 
 (* [S (O 0, O 1); O 2] *)
 let process when_simple_ck act =
-  newclock ck in
-  signal s in
-  do
-    run (counter act)
-  when s done
-  ||
-  run (half s)
-  ||
-  loop
-    pause; pause; pauseclock ck
-  end
+  domain ck do
+    signal s in
+    do
+      run (counter act)
+    when s done
+    ||
+    run (half s)
+  by 3 done
 
 (* [S (O 0, O 1); O 2; O 9] *)
 let process when_until_ck act =
   signal s2 in
   pause; emit s2
   ||
-  newclock ck in
-    loop
-      pause; pause; pauseclock ck
-    end
-    ||
+  domain ck do
     signal s1 in
     do
       do
@@ -44,12 +37,13 @@ let process when_until_ck act =
     act 9
     ||
     run (half s1)
+  by 3 done
 
 
 (* [N; O 5] *)
 let process when_await_ck act =
   signal s2 default 0 gather (+) in
-  newclock ck in
+  domain ck do
     signal s1 in
     do
       await s2(x) in act x
@@ -58,40 +52,37 @@ let process when_await_ck act =
     run (half s1)
     ||
     pause; emit s2 5
-    ||
-    loop
-      pause; pause; pauseclock ck
-    end
+  by 3 done
 
 (* [N; N; O 2] *)
 let process when_await_ck2 act =
   signal s2 default 0 gather (+) in
-  (newclock ck in
+  (domain ck do
     signal s1 in
     do
       await s2(x) in act x
     when s1 done
     ||
     loop
-      emit s1; pause; pauseclock ck
+      emit s1; pause; pause
     end
-  )
+  by 2 done)
   ||
   pause; emit s2 2
 
 (* [N; N; O 2] *)
 let process when_await_ck3 act =
   signal s2 default 0 gather (+) in
-  (newclock ck in
+  (domain ck do
     signal s1 in
     do
       await s2(x) in act x
     when s1 done
     ||
     loop
-      emit s1; pause; emit s1; pauseclock ck
+      emit s1; pause; emit s1; pause
     end
-  )
+  by 3 done)
   ||
   pause; emit s2 2
 

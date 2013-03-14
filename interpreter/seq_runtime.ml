@@ -25,7 +25,6 @@ struct
 
     and clock_domain =
         { cd_current : D.current;
-          cd_pause_clock: bool ref; (* end of macro instant *)
           cd_eoi : bool ref; (* is it the eoi of this clock *)
           cd_weoi : D.waiting_list; (* processes waiting for eoi *)
           cd_next_instant : D.waiting_list; (* processes waiting for the move to next instant *)
@@ -209,7 +208,6 @@ struct
 
     let mk_clock_domain parent =
       let cd = { cd_current = D.mk_current ();
-        cd_pause_clock = ref false;
         cd_eoi = ref false;
         cd_weoi = D.mk_waiting_list ();
         cd_next_instant = D.mk_waiting_list ();
@@ -234,8 +232,6 @@ struct
         | Some _ -> () (* init already done *)
 
     let is_eoi cd = !(cd.cd_eoi)
-    let set_pauseclock _ cd =
-      cd.cd_pause_clock := true
     let control_tree cd = cd.cd_top
     let clock cd = cd
    (* let rec top_clock cd = match cd.cd_parent with
@@ -262,12 +258,12 @@ struct
 
     module Event =
       struct
-        let new_evt_expr cd _ is_memory default combine =
-          (E.create cd.cd_clock is_memory default combine, cd,
+        let new_evt_expr cd _ kind default combine =
+          (E.create cd.cd_clock kind default combine, cd,
            D.mk_waiting_list (), D.mk_waiting_list ())
 
-        let new_evt _ cd r is_memory default combine reset k =
-          let evt = new_evt_expr cd r is_memory default combine in
+        let new_evt _ cd r kind default combine reset k =
+          let evt = new_evt_expr cd r kind default combine in
           let k =
          (* create a callback to reset the signal at each eoi of the reset *)
             match reset with
@@ -289,9 +285,9 @@ struct
           in
           k evt
 
-        let new_evt_global is_memory default combine =
+        let new_evt_global kind default combine =
           let cd = get_top_clock_domain () in
-          new_evt_expr cd cd is_memory default combine
+          new_evt_expr cd cd kind default combine
 
         let status ?(only_at_eoi=false) (n,sig_cd,_,_) =
           E.status n && (not only_at_eoi || !(sig_cd.cd_eoi))
@@ -612,8 +608,7 @@ struct
       schedule cd;
       (* next instant of this clock domain *)
       eval_control_and_next_to_current cd;
-      cd.cd_eoi := false;
-      cd.cd_pause_clock := false
+      cd.cd_eoi := false
 
     let rec has_next ctrl =
       if not ctrl.alive then
@@ -632,7 +627,7 @@ struct
       not (D.is_empty_next ctrl.next) || List.exists has_next ctrl.children
 
     let macro_step_done cd =
-      !(cd.cd_pause_clock) || not (has_next cd.cd_top)
+      not (has_next cd.cd_top)
 
     let step_clock_domain ctrl new_ctrl cd new_cd period =
       let next_instant_clock_domain _ = next_instant new_cd in

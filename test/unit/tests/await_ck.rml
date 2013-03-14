@@ -42,7 +42,7 @@ let process await_match_fast act =
   newclock ck in
   signal s default 0 gather (+) in
     (loop
-      act 0; pause; act 1; pause; act 2; pauseclock ck
+      act 0; pause; act 1; pause; act 2; pause topck
     end
     ||
     (await s(0) in act 5)
@@ -54,7 +54,7 @@ let process await_match_fast act =
 let process await_immediate_ck act =
   newclock ck in (
     signal s in
-    pause; pause; pauseclock ck;emit s
+    pause; pause; pause topck; emit s
     ||
     await immediate s; act 0
   )

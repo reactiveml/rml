@@ -85,19 +85,6 @@ let filter_multi_event ck =
   add_effect_ck sck;
   ck1, sck
 
-let filter_memory ?(force_activation_ck=false) ck =
-  let ck = clock_repr ck in
-  let ck1 = new_clock_var() in
-  let sck =
-    if force_activation_ck then
-      carrier_closed_row !activation_carrier
-    else
-      new_carrier_row_var ()
-  in
-  unify ck (constr_notabbrev memory_ident [Kclock ck1; Kcarrier_row sck]);
-  add_effect_ck sck;
-  ck1, sck
-
 let unify_expr expr expected_ty actual_ty =
   try
     unify expected_ty actual_ty
@@ -191,7 +178,7 @@ let rec is_nonexpansive expr =
       is_nonexpansive_conf e && is_nonexpansive e1 && is_nonexpansive e2
   | Eawait (_, e) ->
       is_nonexpansive_conf e
-  | Eawait_val (_, _, s, _, e) | Eawait_new (s, _, e) ->
+  | Eawait_val (_, _, s, _, e) ->
       is_nonexpansive s && is_nonexpansive e
   | Euntil (c, e, None) ->
       is_nonexpansive_conf c && is_nonexpansive e
@@ -873,7 +860,8 @@ let rec schema_of_expression env expr =
         unify_emit e.e_loc ty ty_e;
         Clocks_utils.static
 
-    | Esignal ((s,te_opt), ce, _, combine_opt, e) ->
+    | Esignal (_, (s,te_opt), ce, _, combine_opt, _, e) ->
+      (* TODO: comment clocker le reset et la region ? *)
         let ty_emit = new_clock_var() in
         let ty_get = new_clock_var() in
         let ty_ck = type_clock_expr env ce in
@@ -1140,80 +1128,8 @@ let rec schema_of_expression env expr =
       expr.e_react <- !current_react;
       ck
 
-    | Epauseclock ce ->
-        let ty_ce = clock_of_expression env ce in
-        let _ =
-          try
-            filter_depend ty_ce
-          with
-            | Unify -> non_clock_err ce.e_loc
-        in
-        Clocks_utils.static
-
     | Etopck -> clock_topck
     | Ebase -> depend !activation_carrier
-
-    | Ememory (s, ce, v, _, e) ->
-        (* TODO: a t-on besoin de clocker le reset ? *)
-        let ty_res = new_clock_var() in
-        let ty_ck = carrier_open_row (type_clock_expr env ce) in
-        let ty_s = constr_notabbrev memory_ident [Kclock ty_res; Kcarrier_row ty_ck] in
-        type_expect env v ty_res;
-        clock_of_expression (Env.add s (forall [] ty_s) env) e
-
-    | Elast_mem s ->
-        let ty_s = clock_of_expression env s in
-        let ty, _ =
-          try
-            filter_memory ty_s
-          with Unify ->
-            non_memory_err s
-        in
-        ty
-
-    | Eupdate(s, e) ->
-        let ty_s = clock_of_expression env s in
-        let ty, _ =
-          try
-            filter_memory ty_s
-          with Unify ->
-            non_memory_err s
-        in
-        let ty_fun = comb_arrow ty ty in
-        let ty_e = clock_of_expression env e in
-        unify_update e.e_loc ty_fun ty_e;
-        Clocks_utils.static
-
-    | Eset_mem(s, e) ->
-        let ty_s = clock_of_expression env s in
-        let ty, _ =
-          try
-            filter_memory ty_s
-          with Unify ->
-            non_memory_err s
-        in
-        let ty_e = clock_of_expression env e in
-        unify_update e.e_loc ty ty_e;
-        Clocks_utils.static
-
-    | Eawait_new(s, patt, e) ->
-        let ty_s = clock_of_expression env s in
-        let ty, mck =
-          try
-            filter_memory ty_s
-          with Unify ->
-            non_memory_err s
-        in
-        set_current_react (react_carrier mck);
-        let gl_env, loc_env = clock_of_pattern [] [] env patt ty in
-        assert (gl_env = []);
-        let new_env =
-          List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] ty) env)
-            env loc_env
-        in
-        clock_of_expression new_env e
-
   in
   expr.e_clock <- t;
   Stypes.record (Ti_expr expr);
@@ -1455,7 +1371,7 @@ let impl info_chan has_intf item =
 
   | Isignal (l) ->
       List.iter
-        (fun ((s,te_opt), combine_opt) ->
+        (fun (_, (s,te_opt), combine_opt) ->
           let ty_emit = new_clock_var() in
           let ty_get = new_clock_var() in
           let ty_ck = carrier_closed_row topck_carrier in
@@ -1482,15 +1398,6 @@ let impl info_chan has_intf item =
           if !print_type
           then Clocks_printer.output_value_declaration info_chan [s])
         l
-  | Imemory(s, e) ->
-      let ty_mem = new_clock_var() in
-      let ty_s = constr_notabbrev memory_ident
-        [Kclock ty_mem; Kcarrier_row (carrier_closed_row topck_carrier)]
-      in
-      type_expect Env.empty e ty_mem;
-      s.ck_info <- Some { value_ck = forall [] ty_s };
-      if !print_type
-      then Types_printer.output_value_type_declaration info_chan [s]
   | Itype (l) ->
       let global_env =
         List.map (clock_of_type_declaration item.impl_loc) l

@@ -301,7 +301,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 /* %token OUT */                 /* "out" */
 /* %token PARSER */
 %token PAUSE               /* "pause" */
-%token PAUSECLOCK          /* "pauseclock" */
 %token PLUS                /* "+" */
 %token PRE                 /* "pre" */
 %token <string> PREFIXOP
@@ -410,7 +409,7 @@ The precedences must be listed from low to high.
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
-          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE PAUSECLOCK LOOP TOPCK BANGBANG WEAK
+          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE LOOP TOPCK WEAK
 
 
 /* Entry points */
@@ -464,12 +463,8 @@ structure_item:
       { match $3 with
           [{ppatt_desc = Ppatt_any}, exp] -> mkimpl(Pimpl_expr exp)
         | _ -> mkimpl(Pimpl_let($2, List.rev $3)) }
-  | SIGNAL signal_comma_list opt_at_expr
-      { mkimpl(Pimpl_signal(List.rev $2, None)) }
-  | SIGNAL signal_comma_list opt_at_expr DEFAULT par_expr GATHER par_expr
-      { mkimpl(Pimpl_signal(List.rev $2, Some($5, $7))) }
-  | MEMORY LIDENT opt_at_expr LAST par_expr
-      { mkimpl(Pimpl_memory(mksimple $2 2, $5)) }
+  | signal_kind signal_comma_list opt_default_gather
+      { mkimpl(Pimpl_signal($1, List.rev $2, $3)) }
   | TYPE type_declarations
       { mkimpl(Pimpl_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
@@ -611,10 +606,8 @@ expr:
       { mkexpr(Pexpr_emit $2 ) }
   | EMIT simple_expr simple_expr
       { mkexpr(Pexpr_emit_val($2, $3)) }
-  | SIGNAL signal_comma_list opt_at_expr IN par_expr
-      { mkexpr(Pexpr_signal(List.rev $2, $3, None, $5)) }
-  | SIGNAL signal_comma_list opt_at_expr DEFAULT par_expr GATHER par_expr IN par_expr
-      { mkexpr(Pexpr_signal(List.rev $2, $3, Some($5, $7), $9)) }
+  | signal_kind signal_comma_list opt_at_expr opt_default_gather opt_reset IN par_expr
+      { mkexpr(Pexpr_signal($1, List.rev $2, $3, $4, $5, $7)) }
   | DO par_expr UNTIL opt_bar until_cases DONE
       { mkexpr_until $2 (List.rev $5) }
   | DO par_expr WHEN simple_expr DONE
@@ -668,19 +661,6 @@ expr:
       { mkexpr (Pexpr_pause ($2, Strong)) }
   | WEAK PAUSE clock_expr
       { mkexpr (Pexpr_pause ($3, Weak)) }
-  | PAUSECLOCK simple_expr
-      { mkexpr (Pexpr_pauseclock $2) }
-  | MEMORY LIDENT opt_at_expr LAST par_expr opt_reset IN par_expr
-      { mkexpr (Pexpr_memory (mksimple $2 2, fst $3, $5, $6, $8)) }
-  | expr LESSLESSMINUS expr
-      { mkexpr (Pexpr_update($1, $3)) }
-  | expr COLONCOLONEQUAL expr
-      { mkexpr (Pexpr_set_mem($1, $3)) }
-  | AWAIT NEW simple_expr LPAREN pattern RPAREN IN par_expr
-      { mkexpr (Pexpr_await_new($3, $5, $8)) }
-  | AWAIT NEW simple_expr LPAREN pattern RPAREN WHEN par_expr IN par_expr
-      { let e = mkexpr (Pexpr_when_match ($8, $10)) in
-        mkexpr (Pexpr_await_new($3, $5, e)) }
 ;
 simple_expr:
     val_longident
@@ -737,8 +717,6 @@ simple_expr:
       { mkexpr Pexpr_topck }
   | BASE
       { mkexpr Pexpr_base }
-  | BANGBANG simple_expr
-      { mkexpr(Pexpr_last_mem $2) }
   | HALT
       { mkexpr Pexpr_halt }
   | LOOP par_expr END
@@ -790,7 +768,12 @@ opt_by:
 opt_reset:
   /* empty */ { None }
   | RESET simple_expr { Some $2 }
-
+opt_default_gather:
+  | /*empty*/ { None }
+  | DEFAULT par_expr GATHER par_expr { Some ($2, $4) }
+signal_kind:
+  | SIGNAL { Signal }
+  | MEMORY { Memory }
 let_bindings:
     let_binding                                 { [$1] }
   | let_bindings AND let_binding                { $3 :: $1 }

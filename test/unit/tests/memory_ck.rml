@@ -1,7 +1,12 @@
+let (<<-) s f = emit s f
+let (<==) s v = emit s (fun _ -> v)
+let (!!) s = last s
+let mem_gather f acc = f acc
+
 (* [O 1; O 3]*)
 let process memory_update_ck act =
   newclock ck in
-    memory s last 0 in
+    memory s default 0 gather mem_gather in
     s <<- (+) 1;
     pause ck;
     act !!s;
@@ -9,24 +14,10 @@ let process memory_update_ck act =
     pause topck;
     act !!s
 
-(* [N; O 12]*)
-let process memory_await_new_match_ck act =
-  newclock ck in (
-    memory s at ck last 0 in
-    loop
-      s <<- (+) 4;
-      pause ck;
-      s <<- (+) 4;
-      pause topck
-    end
-    ||
-    await new s(v) when v > 10 in act v
-  )
-
 (* [O 4; O 0] *)
 let process memory_reset act =
   domain ck do
-    memory s last 0 reset topck in
+    memory s default 0 gather mem_gather reset topck in
     s <<- (+) 4;
     pause ck;
     act !!s;
@@ -37,7 +28,7 @@ let process memory_reset act =
 (* [O 4; O 3] *)
 let process memory_reset_emit act =
   domain ck do
-    memory s last 0 reset topck in
+    memory s default 0 gather mem_gather reset topck in
     s <<- (+) 4;
     pause ck;
     act !!s;
@@ -52,7 +43,6 @@ open Rmltest
 let test =
   [
    (memory_update_ck, "memory_update_ck",  [O 1; O 3]);
-   (memory_await_new_match_ck, "memory_await_new_match_ck", [N; O 12]);
    (memory_reset, "memory_reset", [O 4; O 0]);
    (memory_reset_emit, "memory_reset_emit", [O 4; O 3])
   ]

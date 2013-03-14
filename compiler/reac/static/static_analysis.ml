@@ -399,33 +399,27 @@ let rec static_expr ctx e =
         else
           expr_wrong_static_err e
 
-    | Esignal (_, ck, r, None, p) ->
+    | Esignal (_, _, ck, r, comb, reset, p) ->
         if static_expr ML ck <> Static then
           expr_wrong_static_err ck;
         if static_expr ML r <> Static then
           expr_wrong_static_err r;
         if ctx <> Process then
           expr_signal_static_err e;
+        (match comb with
+          | None -> ()
+          | Some (e1, e2) ->
+            if static_expr ML e1 <> Static then
+              expr_wrong_static_err e1;
+            if static_expr ML e2 <> Static then
+              expr_wrong_static_err e2);
+        (match reset with
+          | None -> ()
+          | Some r ->
+            if static_expr ML r <> Static then
+              expr_wrong_static_err r);
         let ty = static_expr ctx p in
         max (Dynamic Instantaneous) ty
-
-    | Esignal (_, ck, r, Some(e1,e2), p) ->
-        if static_expr ML ck <> Static then
-          expr_wrong_static_err ck;
-        if static_expr ML r <> Static then
-          expr_wrong_static_err r;
-        let typ1 = static_expr ML e1 in
-        let typ2 = static_expr ML e2 in
-        let typ3 = static_expr ctx p in
-        let ty =
-          if max typ1 typ2 = Static
-          then typ3
-          else expr_wrong_static_err e
-        in
-        if ctx <> Process then
-          expr_signal_static_err e;
-        max (Dynamic Instantaneous) ty
-
 
     | Eprocess (p) ->
         let typ = static_expr Process p in
@@ -595,60 +589,8 @@ let rec static_expr ctx e =
           Dynamic Dontknow
         ) else expr_wrong_static_err e
 
-    | Epauseclock e1 ->
-        if ctx = Process
-        then
-          if static_expr ML e1 = Static
-          then Dynamic Noninstantaneous
-          else expr_wrong_static_err e1
-        else expr_wrong_static_err e
-
     | Etopck -> Static
     | Ebase -> Static
-
-    | Ememory(s, ck, e1, opt_r, p) ->
-        let typ1 = static_expr ML e1 in
-        let typ2 = static_expr ctx p in
-        let ty =
-          if typ1 = Static
-          then typ2
-          else expr_wrong_static_err e
-        in
-        if ctx <> Process then
-          expr_wrong_static_err e;
-        if static_expr ML ck <> Static then
-          expr_wrong_static_err ck;
-        (match opt_r with
-          | None -> ()
-          | Some r ->
-            if static_expr ML r <> Static then
-              expr_wrong_static_err r);
-        max (Dynamic Instantaneous) ty
-
-    | Elast_mem s ->
-        if static_expr ML s = Static
-        then Static
-        else expr_wrong_static_err s
-
-    | Eupdate (s, e1) | Eset_mem (s, e1) ->
-        if static_expr ML s = Static
-        then
-          if static_expr ML e1 = Static
-          then Static
-          else expr_wrong_static_err e1
-        else expr_wrong_static_err s
-
-    | Eawait_new (s, _, p) ->
-        if ctx = Process
-        then
-          if static_expr ML s = Static
-          then
-            let _typ1 = static_expr Process p in
-            Dynamic Noninstantaneous
-          else expr_wrong_static_err s
-        else
-          expr_wrong_static_err e
-
   in
   e.e_static <- t;
   t
@@ -680,7 +622,7 @@ let impl info_chan impl =
         static_expr_list static_expr max snd ML l
     | Isignal (s_list) ->
         List.iter
-          (fun (_, combine) ->
+          (fun (_, _, combine) ->
             match combine with
             | Some(e1,e2) ->
                 if (static_expr ML e1) <> Static
@@ -691,10 +633,6 @@ let impl info_chan impl =
                   else ()
             | None -> ())
           s_list;
-        Static
-    | Imemory(_, e) ->
-        if (static_expr ML e) <> Static
-         then expr_wrong_static_err e;
         Static
     | _ -> Static
   in

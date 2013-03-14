@@ -338,22 +338,8 @@ let rec translate_ml e =
     | Eemit (s, Some e) ->
         Coexpr_emit_val (translate_ml s, translate_ml e)
 
-    | Esignal ((s,typ), ck, r, comb, e) ->
-      let ck = translate_ml ck in
-      let r = translate_ml r in
-      Coexpr_signal ((s, opt_map translate_te typ),
-                     ck, r,
-                     opt_map
-                       (fun (e1,e2) ->
-                         translate_ml e1, translate_ml e2) comb,
-                     translate_ml e)
-
     | Etopck -> Coexpr_topck
     | Ebase -> Coexpr_base
-
-    | Elast_mem s -> Coexpr_last_mem (translate_ml s)
-    | Eupdate (s, e) -> Coexpr_update (translate_ml s, translate_ml e)
-    | Eset_mem (s, e) -> Coexpr_set_mem (translate_ml s, translate_ml e)
 
     | _ ->
         raise (Internal (e.e_loc,
@@ -452,13 +438,13 @@ and translate_proc p =
             Coproc_merge (translate_proc p1,
                           translate_proc p2)
 
-        | Esignal ((s,typ), ck, r, comb, proc) ->
-            Coproc_signal ((s, opt_map translate_te typ),
-                           translate_ml ck, translate_ml r,
-                           opt_map
-                             (fun (e1,e2) ->
-                               translate_ml e1, translate_ml e2) comb,
-                           translate_proc proc)
+        | Esignal (k, (s,typ), ck, r, comb, reset, proc) ->
+            let ck = translate_ml ck in
+            let r = translate_ml r in
+            let comb = opt_map (fun (e1,e2) -> translate_ml e1, translate_ml e2) comb in
+            let reset = opt_map translate_ml reset in
+            Coproc_signal (k, (s, opt_map translate_te typ),
+                         ck, r, comb, reset, translate_proc proc)
 
 (*
    | Elet (Nonrecursive,[(patt, expr)], proc) ->
@@ -530,25 +516,6 @@ and translate_proc p =
         | Enewclock (id, sch, period, e) ->
             Coproc_newclock (id, Misc.opt_map translate_ml sch,
                              Misc.opt_map translate_ml period, translate_proc e)
-
-        | Epauseclock e1 ->
-          Coproc_pauseclock (translate_ml e1)
-
-        (* translate memories to signals *)
-        | Ememory (s, ck, v, opt_reset, proc) ->
-            Coproc_memory(s, translate_ml ck,
-                         translate_ml v,
-                         Misc.opt_map translate_ml opt_reset,
-                         translate_proc proc)
-
-        | Eawait_new (s, patt, proc) ->
-            Coproc_await_new (translate_ml s, translate_pattern patt, translate_proc proc)
-
-        | Eupdate(s, e) ->
-            Coproc_update (translate_ml s, translate_ml e)
-
-        | Eset_mem(s, e) ->
-            Coproc_set_mem (translate_ml s, translate_ml e)
 
         | _ ->
             raise (Internal (p.e_loc,
@@ -816,14 +783,12 @@ let translate_impl_item info_chan item =
     | Isignal (l) ->
         Coimpl_signal
           (List.map
-             (fun ((s, ty_opt), comb_opt) ->
-               (s, opt_map translate_te ty_opt),
+             (fun (k, (s, ty_opt), comb_opt) ->
+               k, (s, opt_map translate_te ty_opt),
                opt_map
                  (fun (e1,e2) ->(translate_ml e1, translate_ml e2))
                  comb_opt)
              l)
-    | Imemory(s, e) ->
-        Coimpl_memory(s, translate_ml e)
     | Itype l ->
         let l =
           List.map

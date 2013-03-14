@@ -69,14 +69,8 @@ and expression_desc =
   | Coexpr_default of expression
   | Coexpr_emit of expression
   | Coexpr_emit_val of expression * expression
-  | Coexpr_signal of
-      (ident * type_expression option) * expression (*ck*) * expression (*r*)
-    * (expression * expression) option * expression
   | Coexpr_topck
   | Coexpr_base
-  | Coexpr_last_mem of expression
-  | Coexpr_update of expression * expression
-  | Coexpr_set_mem of expression * expression
 
 (* Process expressions *)
 and process =
@@ -98,8 +92,8 @@ and process_desc =
   | Coproc_par of process list
   | Coproc_merge of process * process
   | Coproc_signal of
-      (ident * type_expression option) * expression (*ck*) * expression (*r*)
-    * (expression * expression) option * process
+     signal_kind * (ident * type_expression option) * expression (*ck*) * expression (*r*)
+     * (expression * expression) option * expression option (*reset*) * process
   | Coproc_def of (pattern * expression) * process
   | Coproc_def_dyn of (pattern * process) * process
   | Coproc_def_and_dyn of (pattern * process) list * process
@@ -117,12 +111,6 @@ and process_desc =
       immediate_flag * await_kind * expression * pattern * process
   | Coproc_newclock of ident * expression option (*schedule*)
                          * expression option (*period*) * process
-  | Coproc_pauseclock of expression
-  | Coproc_memory of ident * expression (*ck*) * expression (*last*)
-     * expression option (*reset*) * process
-  | Coproc_await_new of expression * pattern * process
-  | Coproc_update of expression * expression
-  | Coproc_set_mem of expression * expression
 
 (* event configuration *)
 and event_config =
@@ -223,9 +211,8 @@ and impl_desc =
   | Coimpl_expr of expression
   | Coimpl_let of rec_flag * (pattern * expression) list
   | Coimpl_signal of
-      ((value_description * type_expression option)
-	 * (expression * expression) option) list
-  | Coimpl_memory of value_description * expression
+      (signal_kind * (value_description * type_expression option)
+       * (expression * expression) option) list
   | Coimpl_type of
       (type_description * type_var_kind list * type_declaration) list
   | Coimpl_exn of

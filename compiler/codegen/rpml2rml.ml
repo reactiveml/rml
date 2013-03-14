@@ -92,7 +92,7 @@ let expression_desc funs act_ck ed = match ed with
     TODO: ce n'est pas correct si le signal est declare dans une structure de controle
     car le processus hold doit etre actif a tous les instants
   *)
-  | Esignal ((id, _), ck, _, comb, e) ->
+  | Esignal (Signal, (id, _), ck, _, comb, _, e) ->
       let hold_id = Ident.create Ident.gen_var ("hold_"^id.Ident.name) Ident.Val_RML in
       let hold = make_expr (Elocal hold_id) in
 
@@ -115,8 +115,8 @@ let expression_desc funs act_ck ed = match ed with
       let emit_done = make_expr (Eemit (body_done, None)) in
       let e, _ = Reac_mapfold.expression_it funs act_ck e in
       let body = make_expr (Epar [run_hold; make_expr (Eseq [e; emit_done])]) in
-      let body = make_expr (Esignal ((body_done_id, None), make_expr Ebase,
-                                     make_expr Ebase, None, body)) in
+      let body = make_expr (Esignal (Signal, (body_done_id, None), make_expr Ebase,
+                                     make_expr Ebase, None, None, body)) in
       Elet (Nonrecursive, [pat, mk_signal], body), act_ck
 
   | Eemit (e1, None) ->

@@ -302,13 +302,14 @@ let expr_free_vars e =
         expr_free_vars vars e1;
         expr_free_vars vars e2
 
-    | Esignal ((ident, tyexpr_opt), ck, r, comb, e) ->
-        let vars' = (Vlocal ident) :: vars in
-        expr_free_vars vars' ck;
-        expr_free_vars vars' r;
+    | Esignal (_, (ident, tyexpr_opt), ck, r, comb, reset, e) ->
+        expr_free_vars vars ck;
+        expr_free_vars vars r;
         (match comb with
           | None -> ()
-          | Some (e1, e2) -> expr_free_vars vars' e1; expr_free_vars vars' e2);
+          | Some (e1, e2) -> expr_free_vars vars e1; expr_free_vars vars e2);
+        Misc.opt_iter (expr_free_vars vars) reset;
+        let vars' = (Vlocal ident) :: vars in
         expr_free_vars vars' e
 
     | Erun e ->
@@ -360,26 +361,7 @@ let expr_free_vars e =
         Misc.opt_iter (expr_free_vars vars') period;
         expr_free_vars vars' e1
 
-    | Epauseclock e -> expr_free_vars vars e
-
     | Etopck | Ebase -> ()
-
-    | Ememory(s, ck, v, opt_reset, e) ->
-        let vars' = (Vlocal s) :: vars in
-        expr_free_vars vars ck;
-        expr_free_vars vars v;
-        Misc.opt_iter (expr_free_vars vars) opt_reset;
-        expr_free_vars vars' e
-
-    | Elast_mem e ->
-        expr_free_vars vars e
-    | Eupdate (s, e) | Eset_mem (s, e) ->
-        expr_free_vars vars s;
-        expr_free_vars vars e
-    | Eawait_new (s, patt, e) ->
-        expr_free_vars vars s;
-        let vars' = (vars_of_patt patt) @ vars in
-        expr_free_vars vars' e
     end
 
   and config_free_vars vars config =

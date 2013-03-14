@@ -33,14 +33,16 @@ end
 
 *)
 
+open Types
+
 module type S =
   sig
     type clock
     type clock_index
     type ('a, 'b) t
 
-    (* create ck is_memory default combine *)
-    val create: clock -> bool -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) t
+    (* create ck kind default combine *)
+    val create: clock -> signal_kind -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) t
     val status: ('a, 'b) t -> bool
     val value: ('a, 'b) t -> 'b
     val pre_status: ('a, 'b) t -> bool
@@ -71,7 +73,7 @@ module Record  (*: S*)  =
     type clock_index = int
     type ('a, 'b) t =
         { mutable clock : clock;
-          is_memory : bool;
+          kind : signal_kind;
           mutable status: int;
           mutable reset : bool;
           mutable value: 'b;
@@ -82,9 +84,9 @@ module Record  (*: S*)  =
 
     let absent = -2
 
-    let create ck is_memory default combine =
+    let create ck kind default combine =
       { clock = ck;
-        is_memory = is_memory;
+        kind = kind;
         status = absent;
         reset = false;
         value = default;
@@ -137,7 +139,7 @@ module Record  (*: S*)  =
          n.last <- if n.reset then n.default else n.value;
          n.status <- !(n.clock);
          n.reset <- false;
-         n.value <- if n.is_memory then n.combine v n.last else n.combine v n.default)
+         n.value <- if n.kind = Memory then n.combine v n.last else n.combine v n.default)
       else
         n.value <- n.combine v n.value
 

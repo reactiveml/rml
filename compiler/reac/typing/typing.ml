@@ -95,12 +95,6 @@ let filter_multi_event ty =
                                           constr_notabbrev list_ident [ty1]]);
   ty1
 
-let filter_memory ty =
-  let ty = type_repr ty in
-  let ty1 = new_var() in
-  unify ty (constr_notabbrev memory_ident [ty1]);
-  ty1
-
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
@@ -174,7 +168,7 @@ let rec is_nonexpansive expr =
       is_nonexpansive_conf e && is_nonexpansive e1 && is_nonexpansive e2
   | Eawait (_, e) ->
       is_nonexpansive_conf e
-  | Eawait_val (_, _, s, _, e) | Eawait_new (s, _, e) ->
+  | Eawait_val (_, _, s, _, e) ->
       is_nonexpansive s && is_nonexpansive e
   | Euntil (c, e, None) ->
       is_nonexpansive_conf c && is_nonexpansive e
@@ -678,7 +672,7 @@ let rec type_of_expression env expr =
         unify_emit e.e_loc ty ty_e;
         type_unit
 
-    | Esignal ((s,te_opt), _, _, combine_opt, e) ->
+    | Esignal (_, (s,te_opt), ck, r, combine_opt, reset, e) ->
         let ty_emit = new_var() in
         let ty_get = new_var() in
         let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in
@@ -697,6 +691,9 @@ let rec type_of_expression env expr =
               type_expect env default ty_get;
               type_expect env comb (arrow ty_emit (arrow ty_get ty_get))
         end;
+        type_expect env ck type_clock;
+        type_expect env r type_clock;
+        Misc.opt_iter (fun r -> type_expect env r type_clock) reset;
         type_of_expression (Env.add s (forall [] ty_s) env) e
 
     | Enothing -> type_unit
@@ -875,71 +872,7 @@ let rec type_of_expression env expr =
       Misc.opt_iter (fun sch -> type_expect env sch type_int) period;
       type_of_expression env e
 
-    | Epauseclock ck ->
-      type_expect env ck type_clock;
-      type_unit
-
     | Etopck | Ebase -> type_clock
-
-    | Ememory (s, ck, v, opt_r, e) ->
-        let ty_res = new_var() in
-        let ty_s = constr_notabbrev memory_ident [ty_res] in
-        type_expect env v ty_res;
-        type_expect env ck type_clock;
-        Misc.opt_iter (fun r -> type_expect env r type_clock) opt_r;
-        type_of_expression (Env.add s (forall [] ty_s) env) e
-
-    | Elast_mem s ->
-        let ty_s = type_of_expression env s in
-        let ty =
-          try
-            filter_memory ty_s
-          with Unify ->
-            non_memory_err s
-        in
-        ty
-
-    | Eupdate(s, e) ->
-        let ty_s = type_of_expression env s in
-        let ty =
-          try
-            filter_memory ty_s
-          with Unify ->
-            non_memory_err s
-        in
-        let ty_fun = arrow ty ty in
-        let ty_e = type_of_expression env e in
-        unify_update e.e_loc ty_fun ty_e;
-        type_unit
-
-    | Eset_mem(s, e) ->
-        let ty_s = type_of_expression env s in
-        let ty =
-          try
-            filter_memory ty_s
-          with Unify ->
-            non_memory_err s
-        in
-        let ty_e = type_of_expression env e in
-        unify_update e.e_loc ty ty_e;
-        type_unit
-
-    | Eawait_new(s, patt, e) ->
-        let ty_s = type_of_expression env s in
-        let ty =
-          try
-            filter_memory ty_s
-          with Unify ->
-            non_memory_err s
-        in
-        let gl_env, loc_env = type_of_pattern [] [] patt ty in
-        assert (gl_env = []);
-        let new_env =
-          List.fold_left
-            (fun env (x, ty) -> Env.add x (forall [] ty) env)
-            env loc_env
-        in
-        type_of_expression new_env e
   in
   expr.e_type <- t;
   Stypes.record (Ti_expr expr);
@@ -1135,7 +1068,7 @@ let impl info_chan item =
 
   | Isignal (l) ->
       List.iter
-        (fun ((s,te_opt), combine_opt) ->
+        (fun (k, (s,te_opt), combine_opt) ->
           let ty_emit = new_var() in
           let ty_get = new_var() in
           let ty_s = constr_notabbrev event_ident [ty_emit; ty_get] in
@@ -1160,13 +1093,6 @@ let impl info_chan item =
           if !print_type
           then Types_printer.output_value_type_declaration info_chan [s])
         l
-  | Imemory(s, e) ->
-      let ty_mem = new_var() in
-      let ty_s = constr_notabbrev memory_ident [ty_mem] in
-      type_expect Env.empty e ty_mem;
-      s.ty_info <- Some { value_typ = forall [] ty_s };
-      if !print_type
-      then Types_printer.output_value_type_declaration info_chan [s]
   | Itype (l) ->
       let global_env =
         List.map (type_of_type_declaration item.impl_loc) l

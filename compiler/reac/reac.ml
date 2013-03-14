@@ -90,8 +90,9 @@ and expression_desc =
   | Epar of expression list
   | Emerge of expression * expression
   | Esignal of
-      (ident * type_expression option) * expression (*ck*) * expression (*r*)
-        * (expression * expression) option * expression
+      signal_kind * (ident * type_expression option) * expression (*ck*) * expression (*r*)
+        * (expression * expression) option (* gather, default *)
+        * expression option (* reset *) * expression
   | Erun of expression
   | Euntil of event_config * expression * (pattern * expression) option
   | Ewhen of event_config * expression
@@ -103,16 +104,8 @@ and expression_desc =
       immediate_flag * await_kind * expression * pattern * expression
 (*reparml related expressions*)
   | Enewclock of ident * expression option (*schedule*) * expression option (*period*) * expression
-  | Epauseclock of expression
   | Etopck
   | Ebase
-(*memory*)
-  | Ememory of ident * expression (*ck*) * expression (*last*)
-      * expression option (*reset*) * expression
-  | Elast_mem of expression
-  | Eupdate of expression * expression
-  | Eset_mem of expression * expression
-  | Eawait_new of expression * pattern * expression
 
 (* event configuration *)
 and event_config =
@@ -216,9 +209,8 @@ and impl_desc =
   | Iexpr of expression
   | Ilet of rec_flag * (pattern * expression) list
   | Isignal of
-      ((value_description * type_expression option)
+      (signal_kind * (value_description * type_expression option)
          * (expression * expression) option) list
-  | Imemory of value_description * expression
   | Itype of
       (type_description * type_var_kind list * type_declaration) list
   | Iexn of

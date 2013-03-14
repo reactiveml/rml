@@ -23,7 +23,6 @@ struct
           | Mstep (* do one global step of the clock domain *)
           | Mstep_done of 'gid (* a clock domain has finished its step *)
           | Mdone of 'gid (* global step done *)
-          | Mpauseclock of 'gid
           | Mbefore_eoi (* Before the end of instant of clock domain *)
           | Meoi (* End of instant of clock domain *)
           | Meoi_control of 'gid
@@ -56,7 +55,6 @@ struct
         | Mstep -> fprintf ff "Mstep"
         | Mstep_done gid -> fprintf ff "Mstep_done %a" print_gid gid
         | Mdone gid -> fprintf ff "Mdone %a" print_gid gid
-        | Mpauseclock gid -> fprintf ff "Mpauseclock %a" print_gid gid
         | Meoi -> fprintf ff "Mbefore_eoi"
         | Mbefore_eoi -> fprintf ff "Meoi"
         | Meoi_control gid -> fprintf ff "Meoi_control %a" print_gid gid
@@ -142,7 +140,6 @@ struct
 
     type clock_domain =
         { cd_current : D.current;
-          mutable cd_pause_clock: bool; (* end of macro instant *)
           mutable cd_eoi : bool; (* is it the eoi of this clock *)
           mutable cd_wake_up : waiting_kind list;
           (* waiting lists to wake up at the end of the instant*)
@@ -273,10 +270,6 @@ struct
         send, recv
       let send_done, recv_done =
         let send dest_id id (d:'a) = C.send_owner dest_id (Mdone id) d in
-        let recv = (C.from_msg : C.msg -> 'a) in
-        send, recv
-      let send_pauseclock, recv_pauseclock =
-        let send id (d:'a) = C.send_owner id (Mpauseclock id) d in
         let recv = (C.from_msg : C.msg -> 'a) in
         send, recv
       let broadcast_before_eoi, recv_before_eoi = mk_broadcast_set_recv Mbefore_eoi
@@ -712,7 +705,6 @@ struct
       let site = get_site () in
       let cd = {
         cd_current = D.mk_current ();
-        cd_pause_clock = false;
         cd_eoi = false;
         cd_wake_up = [];
         cd_clock = clock;
@@ -837,9 +829,9 @@ struct
 
     let macro_step_done cd =
       let has_next = has_next_cd cd in
-      print_debug "Macro step of clock domain %a: pauseclock = %b and has_next = %b@."
-        print_cd cd  cd.cd_pause_clock  has_next;
-      cd.cd_pause_clock || not has_next
+      print_debug "Macro step of clock domain %a: has_next = %b@."
+        print_cd cd  has_next;
+      not has_next
 
     (* cd.cd_current_lock should be locked when calling schedule and is still locked
        when it returns.  *)
@@ -877,7 +869,6 @@ struct
       eval_control_and_next_to_current cd;
       (* reset the clock domain *)
       cd.cd_eoi <- false;
-      cd.cd_pause_clock <- false;
       cd.cd_children_have_next <- false
 
     let rec exec_cd cd () =
@@ -964,18 +955,6 @@ struct
         print_debug "Error: counter of %a is < 0@." print_cd cd;
       cd.cd_children_have_next <- has_next or cd.cd_children_have_next
 
-    let set_pauseclock cd ck =
-      if C.is_local ck.ck_gid then
-        let cd = get_clock_domain ck in
-          cd.cd_pause_clock <- true
-      else
-        Msgs.send_pauseclock ck.ck_gid ()
-
-    (* After receiving Mpauseclock *)
-    let gather_pauseclock cd _ =
-      cd.cd_pause_clock <- true
-
-
     let step_remote_clock_domain cd ck_id () =
       print_debug "++%a@." print_cd cd;
       incr cd.cd_remaining_async;
@@ -1045,7 +1024,6 @@ struct
     (* Registers callbacks for messages sent by child cds *)
     and register_cd_callbacks cd =
       add_callback (Mhas_next cd.cd_clock.ck_gid) (gather_has_next cd);
-      add_callback (Mpauseclock cd.cd_clock.ck_gid) (gather_pauseclock cd);
       add_callback (Mnew_remote cd.cd_clock.ck_gid) (receive_new_remote cd)
 
     (* Registers callbacks for messages sent by the parent cd *)
@@ -1058,7 +1036,6 @@ struct
       Callbacks.remove_callback (Mhas_next cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Meoi_control cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Mreq_has_next cd.cd_clock.ck_gid) site.s_callbacks;
-      Callbacks.remove_callback (Mpauseclock cd.cd_clock.ck_gid) site.s_callbacks;
       Callbacks.remove_callback (Mnew_remote cd.cd_clock.ck_gid) site.s_callbacks
 
     let end_clock_domain new_cd new_ctrl f_k () =

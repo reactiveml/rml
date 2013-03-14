@@ -171,7 +171,7 @@ and expression_desc funs acc ed = match ed with
     let e1, acc = expression_it funs acc e1 in
     let e2, acc = expression_it funs acc e2 in
     Emerge (e1, e2), acc
-  | Esignal ((x, te_opt), ck, r, e_e_opt, e) ->
+  | Esignal (k, (x, te_opt), ck, r, e_e_opt, opt_reset, e) ->
     let aux acc (e1, e2) =
       let e1, acc = expression_it funs acc e1 in
       let e2, acc = expression_it funs acc e2 in
@@ -181,8 +181,9 @@ and expression_desc funs acc ed = match ed with
     let ck, acc = expression_it funs acc ck in
     let r, acc = expression_it funs acc r in
     let e_e_opt, acc = optional_wacc aux acc e_e_opt in
+    let opt_reset, acc = optional_wacc (expression_it funs) acc opt_reset in
     let e, acc = expression_it funs acc e in
-    Esignal ((x, te_opt), ck, r, e_e_opt, e), acc
+    Esignal (k, (x, te_opt), ck, r, e_e_opt, opt_reset, e), acc
   | Erun e ->
     let e, acc = expression_it funs acc e in
     Erun e, acc
@@ -223,34 +224,8 @@ and expression_desc funs acc ed = match ed with
       let period, acc = optional_wacc (expression_it funs) acc period in
       let e, acc = expression_it funs acc e in
       Enewclock (id, sch, period, e), acc
-  | Epauseclock e ->
-      let e, acc = expression_it funs acc e in
-      Epauseclock e, acc
   | Etopck -> Etopck, acc
   | Ebase -> Ebase, acc
-(*memory*)
-  | Ememory (id, ck, e1, opt_e2, e) ->
-      let ck, acc = expression_it funs acc ck in
-      let e1, acc = expression_it funs acc e1 in
-      let opt_e2, acc = optional_wacc (expression_it funs) acc opt_e2 in
-      let e, acc = expression_it funs acc e in
-      Ememory (id, ck, e1, opt_e2, e), acc
-  | Elast_mem e ->
-      let e, acc = expression_it funs acc e in
-      Elast_mem e, acc
-  | Eupdate (e1, e2) ->
-      let e1, acc = expression_it funs acc e1 in
-      let e2, acc = expression_it funs acc e2 in
-      Eupdate (e1, e2), acc
-  | Eset_mem (e1, e2) ->
-      let e1, acc = expression_it funs acc e1 in
-      let e2, acc = expression_it funs acc e2 in
-      Eset_mem (e1, e2), acc
-  | Eawait_new (e1, p, e2) ->
-    let e1, acc = expression_it funs acc e1 in
-    let p, acc = pattern_it funs acc p in
-    let e2, acc = expression_it funs acc e2 in
-    Eawait_new (e1, p, e2), acc
 
 
 and pattern_expression_it funs acc (p,e) =
@@ -512,16 +487,13 @@ and impl_item_desc funs acc id = match id with
       let e2, acc = expression_it funs acc e2 in
       (e1, e2), acc
     in
-    let aux acc ((f,te_opt), e_e_opt) =
+    let aux acc (k, (f,te_opt), e_e_opt) =
       let te_opt, acc = optional_wacc (type_expression_it funs) acc te_opt in
       let e_e_opt, acc = optional_wacc exp_exp_it acc e_e_opt in
-      ((f,te_opt), e_e_opt), acc
+      (k, (f,te_opt), e_e_opt), acc
     in
     let v_list, acc = mapfold aux acc v_list in
     Isignal v_list, acc
-  | Imemory (n, e) ->
-      let e, acc = expression_it funs acc e in
-      Imemory (n, e), acc
   | Itype i_list ->
     let aux acc (id, sl, td) =
       let td, acc = type_declaration_it funs acc td in

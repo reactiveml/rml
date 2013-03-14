@@ -78,9 +78,10 @@ and expression_desc =
   | Pexpr_par of expression * expression
   | Pexpr_merge of expression * expression
   | Pexpr_signal of
-      (simple_ident * type_expression option) list *
+      signal_kind * (simple_ident * type_expression option) list *
         (expression (*ck*) * expression (*region*)) *
-        (expression * expression) option * expression
+        (expression * expression) option (*default * gather *) *
+        expression option (*reset*) * expression
   | Pexpr_process of expression
   | Pexpr_run of expression
   | Pexpr_until of
@@ -99,16 +100,8 @@ and expression_desc =
   (*reparml related expreessions *)
   | Pexpr_newclock of simple_ident * expression option * expression option * expression
       (* ck, scheduling annotation, period, body *)
-  | Pexpr_pauseclock of expression
   | Pexpr_topck
   | Pexpr_base
-(* memory *)
-  | Pexpr_memory of simple_ident * expression (*ck*)
-      * expression (*last*) * expression option (*reset*) * expression
-  | Pexpr_last_mem of expression
-  | Pexpr_update of expression * expression
-  | Pexpr_set_mem of expression * expression
-  | Pexpr_await_new of expression * pattern * expression
 (* event configuration *)
   | Pconf_present of expression
   | Pconf_and of event_config * event_config
@@ -206,9 +199,8 @@ and impl_desc =
   | Pimpl_expr of expression
   | Pimpl_let of rec_flag * (pattern * expression) list
   | Pimpl_signal of
-      (simple_ident * type_expression option) list *
-	(expression * expression) option
-  | Pimpl_memory of simple_ident * expression
+      signal_kind * (simple_ident * type_expression option) list *
+        (expression * expression) option
   | Pimpl_type of (simple_ident * type_var_kind list * type_declaration) list
   | Pimpl_exn of simple_ident * type_expression option
   | Pimpl_exn_rebind of simple_ident * ident

@@ -498,14 +498,15 @@ let rec translate env e =
         Eemit (translate env s,
                     Some (translate env expr))
 
-    | Pexpr_signal (sig_typ_list, (ck, r), comb, expr) ->
+    | Pexpr_signal (k, sig_typ_list, (ck, r), comb, reset, expr) ->
       let ck = translate env ck in
       let r = translate env r in
       let comb = match comb with
         | None -> None
         | Some (e1, e2) -> Some (translate env e1, translate env e2)
       in
-        (translate_signal env sig_typ_list ck r comb expr).e_desc
+      let reset = Misc.opt_map (translate env) reset in
+      (translate_signal env sig_typ_list k ck r comb reset expr).e_desc
 
     | Pexpr_fordopar (i, e1, e2, flag, e3) ->
         let id = Ident.create Ident.gen_var i.psimple_id Ident.Val_RML in
@@ -580,33 +581,8 @@ let rec translate env e =
       let period = Misc.opt_map (translate env) period in
       Enewclock (id, sch, period, translate env e)
 
-    | Pexpr_pauseclock e ->
-      Epauseclock (translate env e)
-
     | Pexpr_topck -> Etopck
     | Pexpr_base -> Ebase
-
-    | Pexpr_memory(x, ck,  v, opt_reset, e) ->
-      let id = Ident.create Ident.gen_var x.psimple_id Ident.Mem in
-      let v = translate env v in
-      let ck = translate env ck in
-      let opt_reset = Misc.opt_map (translate env) opt_reset in
-      let env = Env.add x.psimple_id id env in
-      Ememory(id, ck, v, opt_reset, translate env e)
-
-    | Pexpr_last_mem e ->
-        Elast_mem (translate env e)
-
-    | Pexpr_update (s, e) ->
-        Eupdate (translate env s, translate env e)
-
-    | Pexpr_set_mem (s, e) ->
-        Eset_mem (translate env s, translate env e)
-
-    | Pexpr_await_new (s, patt, e) ->
-        let vars, rpatt = translate_pattern env false patt in
-        let new_env = add_varpatt env vars in
-        Eawait_new (translate env s, rpatt, translate new_env e)
 
     | Pexpr_get _ ->
         raise (Internal (e.pexpr_loc,
@@ -678,7 +654,7 @@ and translate_record env lab_expr_list =
     lab_expr_list
 
 
-and translate_signal env sig_typ_list ck r comb expr =
+and translate_signal env sig_typ_list k ck r comb reset expr =
   match sig_typ_list with
   | [] -> translate env expr
   | (s,typ) :: sig_typ_list ->
@@ -689,9 +665,9 @@ and translate_signal env sig_typ_list ck r comb expr =
       let env = Env.add s.psimple_id id env in
       make_expr
         (Esignal
-           ((id, rtyp),
-            ck, r, comb,
-            translate_signal env sig_typ_list ck r comb expr))
+           (k, (id, rtyp),
+            ck, r, comb, reset,
+            translate_signal env sig_typ_list k ck r comb reset expr))
         Location.none
 
 (* Add a varpatt in the environment *)
@@ -748,7 +724,7 @@ let translate_impl_item info_chan item =
         in
         Ilet (flag, rpatt_rexpr_list)
 
-    | Pimpl_signal (sig_typ_list, comb_opt) ->
+    | Pimpl_signal (k, sig_typ_list, comb_opt) ->
         Isignal
           (List.map
              (fun (s,ty_opt) ->
@@ -762,14 +738,8 @@ let translate_impl_item info_chan item =
                      (translate Env.empty e1, translate Env.empty e2))
                    comb_opt
                in
-               (gl,rty_opt), rcomb_opt)
+               k, (gl,rty_opt), rcomb_opt)
              sig_typ_list)
-
-    | Pimpl_memory(s, v) ->
-        let id = Ident.create Ident.gen_var s.psimple_id Ident.Sig in
-        let gl = Modules.defined_global id (no_info()) (no_info()) in
-        let _ = Modules.add_value gl in
-        Imemory (gl, translate Env.empty v)
 
     | Pimpl_type l ->
         let l_translate = translate_type_declaration l in

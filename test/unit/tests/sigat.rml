@@ -24,7 +24,7 @@ let process sigat act =
   newclock ck in
   signal s at topck default 0 gather (+) in
     loop
-      pause; pauseclock ck
+      pause; pause topck
     end
     ||
     emit s 3

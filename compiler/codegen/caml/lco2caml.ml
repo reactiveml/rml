@@ -265,43 +265,10 @@ let rec translate_ml e =
            [translate_ml s;
             translate_ml e])
 
-    | Coexpr_signal (s, ck, r, None, e) ->
-        Cexpr_let (Nonrecursive,
-                   [pattern_of_signal s,
-                    make_expr
-                      (Cexpr_apply
-                         (make_instruction "rml_expr_signal",
-                          [translate_ml ck; translate_ml r]))
-                      Location.none],
-                   translate_ml e)
-
-    | Coexpr_signal (s, ck, r, Some(e1,e2), e) ->
-        Cexpr_let (Nonrecursive,
-                   [pattern_of_signal s,
-                    make_expr
-                      (Cexpr_apply
-                         (make_instruction "rml_expr_signal_combine",
-                          [translate_ml ck;
-                           translate_ml r;
-                           translate_ml e1;
-                           translate_ml e2;]))
-                      Location.none],
-                   translate_ml e)
-
     | Coexpr_topck ->
         (make_instruction "rml_top_clock").cexpr_desc
     | Coexpr_base ->
         (make_instruction "rml_base_clock").cexpr_desc
-
-    | Coexpr_last_mem s ->
-        Cexpr_apply
-          (make_instruction "rml_last_mem", [translate_ml s])
-    | Coexpr_update (s, e) ->
-        Cexpr_apply
-          (make_instruction "rml_expr_update", [translate_ml s; translate_ml e])
-    | Coexpr_set_mem (s, e) ->
-        Cexpr_apply
-          (make_instruction "rml_expr_set_mem", [translate_ml s; translate_ml e])
   in
   make_expr cexpr e.coexpr_loc
 
@@ -426,25 +393,31 @@ and translate_proc e =
            [translate_proc k1;
             translate_proc k2;])
 
-    | Coproc_signal (s, ck, r, None, k) ->
-        Cexpr_apply
-          (make_instruction "rml_signal",
-           [translate_ml ck;
-            translate_ml r;
-            make_expr
-              (Cexpr_function [pattern_of_signal s, translate_proc k])
-              Location.none])
-
-    | Coproc_signal (s, ck, r, Some(e1,e2), k) ->
-        Cexpr_apply
-          (make_instruction "rml_signal_combine",
-           [translate_ml ck;
-            translate_ml r;
-            embed_ml e1;
-            embed_ml e2;
-            make_expr
-              (Cexpr_function [pattern_of_signal s, translate_proc k])
-              Location.none])
+    | Coproc_signal (k, s, ck, r, comb, opt_reset, e) ->
+       let reset = match opt_reset with
+          | None -> make_constr "Pervasives" "None" None
+          | Some e -> make_constr "Pervasives" "Some" (Some (translate_ml e))
+       in
+       let k = match k with
+         | Signal -> make_constr "Types" "Signal" None
+         | Memory -> make_constr "Types" "Memory" None
+       in
+       (match comb with
+         | None ->
+           Cexpr_apply
+             (make_instruction "rml_signal",
+              [k; translate_ml ck; translate_ml r; reset;
+               make_expr
+                 (Cexpr_function [pattern_of_signal s, translate_proc e])
+                 Location.none])
+         | Some (e1, e2) ->
+           Cexpr_apply
+             (make_instruction "rml_signal_combine",
+              [k; translate_ml ck; translate_ml r;
+               embed_ml e1; embed_ml e2; reset;
+               make_expr
+                 (Cexpr_function [pattern_of_signal s, translate_proc e])
+                 Location.none]))
 
     | Coproc_def ((patt, expr), k) ->
         if Lco_misc.is_value expr then
@@ -927,125 +900,6 @@ and translate_proc e =
               make_constr "Pervasives" "Some" (Some e)
         in
           Cexpr_apply (make_instruction "rml_newclock", [sch; period; e])
-
-    | Coproc_pauseclock e ->
-      if Lco_misc.is_value e then
-        Cexpr_apply (make_instruction "rml_pauseclock'", [translate_ml e])
-      else
-        Cexpr_apply (make_instruction "rml_pauseclock", [embed_ml e])
-
-    | Coproc_memory (s, ck, e, opt_reset, k) ->
-        let patt = make_patt (Cpatt_var (Cvarpatt_local s)) Location.none in
-        let reset = match opt_reset with
-          | None -> make_constr "Pervasives" "None" None
-          | Some e ->
-              let e = translate_ml e in
-              make_constr "Pervasives" "Some" (Some e)
-        in
-        Cexpr_apply
-          (make_instruction "rml_memory",
-           [translate_ml ck;
-            embed_ml e;
-            reset;
-            make_expr
-              (Cexpr_function [patt, translate_proc k])
-              Location.none])
-
-    | Coproc_update (s, e) ->
-        if Lco_misc.is_value s then
-          Cexpr_apply
-            (make_instruction "rml_update'",
-             [translate_ml s;
-              embed_ml e;])
-        else
-          Cexpr_apply
-            (make_instruction "rml_update",
-             [embed_ml s;
-              embed_ml e;])
-
-    | Coproc_set_mem (s, e) ->
-        if Lco_misc.is_value s then
-          Cexpr_apply
-            (make_instruction "rml_set_mem'",
-             [translate_ml s;
-              embed_ml e;])
-        else
-          Cexpr_apply
-            (make_instruction "rml_set_mem",
-             [embed_ml s;
-              embed_ml e;])
-
-    | Coproc_await_new (s, patt, k) ->
-        let cpatt = translate_pattern patt in
-        begin match Caml_misc.partial_match cpatt, k.coproc_desc with
-          | partial_match, Coproc_when_match (e1, k) ->
-              let matching =
-              make_expr
-                (Cexpr_function
-                   [cpatt,
-                    make_expr
-                      (Cexpr_when_match(translate_ml e1,
-                                        make_expr
-                                          (Cexpr_constant (Const_bool true))
-                                          Location.none))
-                      Location.none;
-                    make_patt Cpatt_any Location.none,
-                    make_expr
-                      (Cexpr_constant (Const_bool false)) Location.none;])
-                Location.none
-            in
-            Cexpr_apply
-              (make_instruction ("rml_await_new_match"),
-               [embed_ml s;
-                matching;
-                make_expr
-                  (Cexpr_function
-                     ((cpatt, translate_proc k)::
-                      if partial_match then
-                        [(make_patt Cpatt_any Location.none, make_raise_RML())]
-                      else
-                        []))
-                  Location.none])
-
-          | true, _ ->
-              let matching =
-                make_expr
-                  (Cexpr_function
-                      [cpatt,
-                      make_expr
-                        (Cexpr_constant (Const_bool true)) Location.none;
-                       make_patt Cpatt_any Location.none,
-                      make_expr
-                        (Cexpr_constant (Const_bool false)) Location.none;])
-                  Location.none
-              in
-              Cexpr_apply
-                (make_instruction ("rml_await_new_match"),
-                [embed_ml s;
-                 matching;
-                 make_expr
-                   (Cexpr_function
-                       [(cpatt, translate_proc k);
-                        (make_patt Cpatt_any Location.none, make_raise_RML())])
-                   Location.none])
-
-          | false, _ ->
-              if Lco_misc.is_value s then
-                Cexpr_apply
-                  (make_instruction ("rml_await_new'"),
-                  [translate_ml s;
-                   make_expr
-                     (Cexpr_function [cpatt, translate_proc k])
-                     Location.none])
-              else
-                Cexpr_apply
-                  (make_instruction ("rml_await_new"),
-                  [embed_ml s;
-                   make_expr
-                     (Cexpr_function [cpatt, translate_proc k])
-                     Location.none])
-        end
-
   in
   make_expr cexpr e.coproc_loc
 
@@ -1086,34 +940,26 @@ let translate_impl_item info_chan item =
                      (fun (p,e) -> (translate_pattern p, translate_ml e))
                      l)
     | Coimpl_signal l ->
-        Cimpl_let (Nonrecursive,
-                   List.map
-                     (function
-                       | ((s,ty_opt), None) ->
-                           pattern_of_signal_global (s, ty_opt),
-                           make_expr
-                             (Cexpr_apply
-                                (make_instruction "rml_global_signal",
-                                 [make_expr
-                                    (Cexpr_constant Const_unit)
-                                    Location.none]))
-                             Location.none
-                       | ((s,ty_opt), Some(e1,e2)) ->
-                           pattern_of_signal_global (s, ty_opt),
-                           make_expr
-                             (Cexpr_apply
-                                (make_instruction "rml_global_signal_combine",
-                                 [translate_ml e1;
-                                  translate_ml e2;]))
-                             Location.none)
-                     l)
-    | Coimpl_memory (s, e) ->
-        let e =
-          make_expr
-            (Cexpr_apply (make_instruction "rml_global_memory", [translate_ml e]))
-            Location.none
-        in
-        Cimpl_let(Nonrecursive, [pattern_of_signal_global (s, None), e])
+       let translate_signal (k, (s, ty_opt), comb) =
+         let k = match k with
+           | Signal -> make_constr "Types" "Signal" None
+           | Memory -> make_constr "Types" "Memory" None
+         in
+         let p = pattern_of_signal_global (s, ty_opt) in
+         let e =
+           match comb with
+             | None ->
+               make_expr
+                 (Cexpr_apply (make_instruction "rml_global_signal",
+                               [k])) Location.none
+             | Some (e1, e2) ->
+               make_expr
+                 (Cexpr_apply (make_instruction "rml_global_signal_combine",
+                               [k; translate_ml e1; translate_ml e2])) Location.none
+         in
+         p, e
+       in
+       Cimpl_let (Nonrecursive, List.map translate_signal l)
     | Coimpl_type l ->
         let l =
           List.map

@@ -32,6 +32,10 @@ let priority_te t =
   | Tproduct _ -> 1
   | _ -> 2
 
+let print_signal_kind k = match k with
+  | Signal -> print_string "signal "
+  | Memory -> print_string "memory "
+
 let rec print pri e =
   open_box 2;
   let pri_e = priority e.e_desc in
@@ -276,8 +280,8 @@ let rec print pri e =
                           print pri_e e) el
   | Epar [] -> ()
   | Emerge _ -> assert false
-  | Esignal ((s, _), ck, _, comb, e1) ->
-      print_string "signal ";
+  | Esignal (k, (s, _), ck, _, comb, reset, e1) ->
+      print_signal_kind k;
       print_name (Ident.unique_name s);
       (match ck.e_desc with
         | Ebase -> ()
@@ -287,6 +291,9 @@ let rec print pri e =
         | Some (ed, eg) ->
             print_string " default "; print pri_e ed;
             print_string " gather "; print pri_e eg);
+      (match reset with
+        | None -> ()
+        | Some r -> print_string " reset "; print pri_e r);
       print_string " in";
       print_space ();
       print pri_e e1
@@ -367,15 +374,8 @@ let rec print pri e =
         | None -> ()
         | Some e3 -> print_string "by "; print 0 e; print_space ());
       print_string "done"
-  | Epauseclock _ -> assert false
   | Etopck -> print_string "topck"
   | Ebase -> print_string "base"
-  (*memory*)
-  | Ememory _
-  | Elast_mem _
-  | Eupdate _
-  | Eset_mem _
-  | Eawait_new _ -> assert false
   end;
   if pri > pri_e then print_string ")";
   close_box()
@@ -662,12 +662,11 @@ let print_impl_item item =
       print_string s;
       print_space ();
       print_string ";;"
-  | Imemory _ -> assert false
   | Isignal l ->
       print_list
-        (fun ((n, _), comb) ->
+        (fun (k, (n, _), comb) ->
           begin
-            print_string "signal ";
+            print_signal_kind k;
             print_global n;
             (match comb with
               | None -> ()

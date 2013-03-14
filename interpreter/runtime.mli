@@ -59,10 +59,9 @@ sig
   type event_cfg
   module Event :
     (sig
-      val new_evt_expr : clock -> region -> bool -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
-      val new_evt_global : bool -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+      val new_evt_global: Types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
       val new_evt : clock_domain -> clock -> region ->
-        bool -> 'b -> ('a -> 'b -> 'b) -> clock option ->
+        Types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> clock option ->
         (('a, 'b) event -> unit step) -> unit step
 
       val status: ?only_at_eoi:bool -> ('a, 'b) event -> bool
@@ -104,7 +103,6 @@ sig
 
   (* various functions on the clock domain *)
   val is_eoi : clock_domain -> bool
-  val set_pauseclock : clock_domain -> clock -> unit
   val control_tree : clock_domain -> control_tree
   val clock : clock_domain -> clock
   val top_clock : unit -> clock

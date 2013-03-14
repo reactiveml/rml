@@ -60,13 +60,8 @@ module type S =
     val rml_expr_update : 'a memory -> ('a -> 'a) -> unit
     val rml_expr_set_mem : 'a memory -> 'a -> unit
 
-    val rml_global_signal: unit -> ('a, 'a list) R.event
-    val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
-    val rml_global_memory: 'a -> 'a memory
-
-    val rml_expr_signal: clock_expr -> region_expr -> ('a, 'a list) R.event
-    val rml_expr_signal_combine: clock_expr -> region_expr ->
-      'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
+    val rml_global_signal: Types.signal_kind -> ('a, 'a list) R.event
+    val rml_global_signal_combine: Types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
 
     type event_cfg_gen = unit -> R.event_cfg
     val cfg_present': ('a,'b) R.event -> event_cfg_gen
@@ -106,12 +101,6 @@ module type S =
         ('a , 'a list) R.event -> ('a -> 'c expr) -> 'c expr
     val rml_await_immediate_one:
         (unit -> ('a , 'a list) R.event) -> ('a -> 'c expr) -> 'c expr
-    val rml_await_new' : 'a memory -> ('a -> 'b expr) -> 'b expr
-    val rml_await_new : (unit -> 'a memory) -> ('a -> 'b expr) -> 'b expr
-    val rml_update' : 'a memory -> (unit -> 'a -> 'a) -> unit expr
-    val rml_update : (unit -> 'a memory) -> (unit -> 'a -> 'a) -> unit expr
-    val rml_set_mem' : 'a memory -> (unit -> 'a) -> unit expr
-    val rml_set_mem : (unit -> 'a memory) -> (unit -> 'a) -> unit expr
     val rml_present': ('a, 'b) R.event -> 'c expr -> 'c expr -> 'c expr
     val rml_present: (unit -> ('a, 'b) R.event) -> 'c expr -> 'c expr -> 'c expr
     val rml_present_conf: event_cfg_gen -> 'a expr -> 'a expr -> 'a expr
@@ -127,13 +116,12 @@ module type S =
         (unit -> int) -> (unit -> int) -> bool -> (int -> 'a expr) ->
           unit expr
     val rml_signal:
-      clock_expr -> region_expr -> (('a, 'a list) R.event -> 'b expr) -> 'b expr
+      Types.signal_kind -> clock_expr -> region_expr ->
+      clock_expr option -> (('a, 'a list) R.event -> 'b expr) -> 'b expr
     val rml_signal_combine:
-        clock_expr -> region_expr -> (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
-          (('a, 'b) R.event -> 'c expr) -> 'c expr
-    val rml_memory :
-      clock_expr -> (unit -> 'a) -> clock_expr option ->
-      ('a memory -> 'b expr) -> 'b expr
+      Types.signal_kind -> clock_expr -> region_expr ->
+      (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
+      clock_expr option -> (('a, 'b) R.event -> 'c expr) -> 'c expr
     val rml_def: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
     val rml_def_dyn: 'a expr -> ('a -> 'b expr) -> 'b expr
 (*    val rml_def_and_dyn: expr array -> (value array -> expr) -> expr *)
@@ -168,9 +156,6 @@ module type S =
 *)
 
     val rml_newclock : (int -> int* int) option -> int option -> (clock_expr -> unit expr) -> unit expr
-
-    val rml_pauseclock : (unit -> clock_expr) -> unit expr
-    val rml_pauseclock' : clock_expr -> unit expr
 
     val rml_top_clock : clock_expr
     val rml_base_clock : clock_expr

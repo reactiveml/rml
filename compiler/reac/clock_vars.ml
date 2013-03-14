@@ -97,8 +97,7 @@ let find_new_vars decl_ids td =
           in
           if List.mem gcstr.gi decl_ids then
             te, (vars_list, add_to_list gcstr.gi id_list)
-          else if gcstr.gi = Initialization.event_ident
-                  || gcstr.gi = Initialization.memory_ident then (
+          else if gcstr.gi = Initialization.event_ident then (
             let arity = list_arity pe_list in
             if arity.k_carrier_row = 0 then (
               let var = mkfresh_car_row () in

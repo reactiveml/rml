@@ -4,7 +4,7 @@ let process until_simple_ck act =
   signal s in
   do
    loop
-     act 1; pause; act 2; pause
+     act 1; pause; act 2; pause topck
    end
   until s done;
   act 8
@@ -17,7 +17,7 @@ let process until_handler_ck act =
   signal s default 0 gather (+) in
   do
    loop
-     act 1; pause; act 2; pause
+     act 1; pause; act 2; pause topck
    end
   until s(x) -> act x done;
   act 8
@@ -32,14 +32,10 @@ let process until_slow act =
   newclock ck in
    do
      loop
-       act 1; pause; act 2; pause
+       act 1; pause; act 2; pause topck
      end
    until s done;
    act 8
-   ||
-   loop
-     pause; pauseclock ck
-   end
 
 (* [S(O 1, O 2); S(O 1, O 2); S(O 3, O 8)] *)
 let process until_handler_slow act =
@@ -49,14 +45,10 @@ let process until_handler_slow act =
   newclock ck in
    do
      loop
-       act 1; pause; act 2; pause
+       act 1; pause; act 2; pause topck
      end
    until s(x) -> act x done;
    act 8
-   ||
-   loop
-     pause; pauseclock ck
-   end
 
 
 (* [S(O 1, O 2); S(O 1, O 2); S(O 3, O 8)] *)
@@ -67,14 +59,10 @@ let process until_handler_match_slow act =
   newclock ck in
    do
      loop
-       act 1; pause; act 2; pause
+       act 1; pause; act 2; pause topck
      end
    until s(3) -> act 3 done;
    act 8
-   ||
-   loop
-     pause; pauseclock ck
-   end
 
 (* [S(O 1, S(O 2, O 3)); S(S(O 1, O 2), O 9) ] *)
 let process until_nested_clocks act =

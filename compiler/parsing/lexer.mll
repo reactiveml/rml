@@ -120,7 +120,6 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
 (*    "out", OUT;*)
 (*  "parser", PARSER; *)
     "pause", PAUSE;
-    "pauseclock", PAUSECLOCK;
     "pre", PRE;
     "present", PRESENT;
     "private", PRIVATE;
@@ -423,9 +422,6 @@ rule token = parse
   | ">]" { GREATERRBRACKET }
   | "}"  { RBRACE }
   | ">}" { GREATERRBRACE }
-  | "<<-" { LESSLESSMINUS }
-  | "!!" { BANGBANG }
-  | "::=" { COLONCOLONEQUAL }
 
   | "!=" { INFIXOP0 "!=" }
   | "+"  { PLUS }

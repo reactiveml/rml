@@ -145,11 +145,12 @@ let rec add_expr bv exp =
   | Pexpr_loop(e1) -> add_expr bv e1
   | Pexpr_par(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_merge(e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pexpr_signal(ioel, (ck, r), oee, e) ->
+  | Pexpr_signal(_, ioel, (ck, r), oee, opt_r, e) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
       add_expr bv ck;
       add_expr bv r;
       Misc.opt_iter (fun (e1, e2) -> add_expr bv e1; add_expr bv e2) oee;
+      Misc.opt_iter (add_expr bv) opt_r;
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
   | Pexpr_run(e1) -> add_expr bv e1
@@ -174,15 +175,7 @@ let rec add_expr bv exp =
       Misc.opt_iter (add_expr bv) opt_e1;
       Misc.opt_iter (add_expr bv) opt_e2;
       add_expr bv e3
-  | Pexpr_pauseclock e1 -> add_expr bv e1
   | Pexpr_topck | Pexpr_base -> ()
-  | Pexpr_memory(_, ck, e1, opt_r, e2) ->
-      add_expr bv ck;
-      Misc.opt_iter (add_expr bv) opt_r;
-      add_expr bv e1; add_expr bv e2
-  | Pexpr_last_mem e -> add_expr bv e
-  | Pexpr_update (e1, e2) | Pexpr_set_mem (e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pexpr_await_new(e1, _, e2) -> add_expr bv e1; add_expr bv e2
   | Pconf_present(e1) -> add_expr bv e1
   | Pconf_and(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pconf_or(e1, e2) -> add_expr bv e1; add_expr bv e2
@@ -215,12 +208,10 @@ and add_struct_item bv item =
       add_expr bv e; bv
   | Pimpl_let(_, pel) ->
       add_pat_expr_list bv pel; bv
-  | Pimpl_signal(ioel, oee) ->
+  | Pimpl_signal(_, ioel, oee) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
       Misc.opt_iter (fun (e1, e2) -> add_expr bv e1; add_expr bv e2) oee;
       bv
-  | Pimpl_memory(_, e) ->
-      add_expr bv e; bv
   | Pimpl_type dcls ->
       List.iter (fun (_, _, td) -> add_type_declaration bv td) dcls; bv
   | Pimpl_exn(id, oty) ->
