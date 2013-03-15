@@ -63,6 +63,8 @@ let add_to_stack s b =
 
 let step_stack s =
   check_empty s;
+  if s.s_failed then
+    (status s "Test failed"; exit 2);
   s.s_ttl <- s.s_ttl - 1;
   if s.s_ttl = 0 then (
     status s "Test OK";
