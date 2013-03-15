@@ -9,6 +9,12 @@ let process simple_loop act =
     act 8; pause; act 7; pause
   end
 
+(* [P [O 0; O 1]; P [O 0; O 1]; P [O 0; O 1]; P [O 0; O 1]] *)
+let process par_loop act =
+  loop
+    (act 0 || act 1); pause
+  end
+
 (* [N; O 0] *)
 let process await_match act =
   signal s default 0 gather (+) in
@@ -98,6 +104,7 @@ open Rmltest
 let test =
   [ (par_seq, "par_seq", [P [O 2; O 3]; O 1; O 2]);
     (simple_loop, "simple_loop", [O 8; O 7; O 8]);
+    (par_loop, "par_loop", [P [O 0; O 1]; P [O 0; O 1]; P [O 0; O 1]; P [O 0; O 1]]);
     (await_match, "await_match", [N; O 0]);
     (await_norm, "await_norm", [N; O 0]);
     (await_all, "await_all", [N; O 8]);

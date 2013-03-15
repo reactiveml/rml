@@ -347,7 +347,7 @@ module Rml_interpreter =
     let rml_seq p_1 p_2 =
       fun f_k ctrl jp cd ->
         let f_2 = p_2 f_k ctrl jp cd in
-        let f_1 = p_1 (fun x -> f_2 ()) ctrl None cd in
+        let f_1 = p_1 (fun _ -> f_2 ()) ctrl None cd in
         f_1
 
 (**************************************)
@@ -364,23 +364,18 @@ module Rml_interpreter =
 
     let rml_par p_1 p_2 =
       fun f_k ctrl jp cd ->
-        let cpt, f_1, f_2 =
+        let cpt, j =
           match jp with
             | None ->
-              let cpt = ref 2 in
-              let j = join_n cpt f_k ctrl jp cd in
-              let f_1 = p_1 (Obj.magic j: 'a step) ctrl (Some cpt) cd in
-              let f_2 = p_2 (Obj.magic j: 'b step) ctrl (Some cpt) cd in
-              cpt, f_1, f_2
-            | Some cpt ->
-              let f_1 = p_1 (Obj.magic f_k: 'a step) ctrl (Some cpt) cd in
-              let f_2 = p_2 (Obj.magic f_k: 'b step) ctrl (Some cpt) cd in
-              cpt, f_1, f_2
+                let cpt = ref 0 in
+                cpt, join_n cpt f_k ctrl jp cd
+            | Some cpt -> cpt, f_k
         in
+        let f_1 = p_1 (Obj.magic j: 'a step) ctrl (Some cpt) cd in
+        let f_2 = p_2 (Obj.magic j: 'b step) ctrl (Some cpt) cd in
         fun () ->
-          (* if we are reusing the counter, increase it by one but only when running *)
           (match jp with
-            | None -> ()
+            | None -> cpt := !cpt + 2
             | Some cpt -> incr cpt);
           R.on_current_instant cd f_2;
           f_1 unit_value
@@ -405,7 +400,7 @@ let rml_loop p =
 *)
 
     let rml_loop p =
-      fun f_k ctrl jp cd ->
+      fun _ ctrl jp cd ->
         let f_1 = ref dummy_step in
         let f_loop = p (fun _ -> !f_1 unit_value) ctrl None cd in
         f_1 := f_loop;
@@ -626,19 +621,18 @@ let rml_loop p =
     let rml_par_n p_list =
       fun f_k ctrl jp cd ->
         let nb = List.length p_list in
-        let cpt, f_list =
+        let cpt, j =
           match jp with
             | None ->
-              let cpt = ref nb in
-              let j = join_n cpt f_k ctrl jp cd in
-              let f_list = List.rev_map (fun p -> p j ctrl (Some cpt) cd) p_list in
-              cpt, f_list
-            | Some cpt ->
-              let f_list = List.rev_map (fun p -> p f_k ctrl (Some cpt) cd) p_list in
-              cpt := !cpt + nb - 1;
-              cpt, f_list
+                let cpt = ref 0 in
+                cpt, join_n cpt f_k ctrl jp cd
+            | Some cpt -> cpt, f_k
         in
+        let f_list = List.rev_map (fun p -> p j ctrl (Some cpt) cd) p_list in
         fun _ ->
+          (match jp with
+            | None -> cpt := !cpt + nb
+            | Some cpt -> cpt := !cpt + nb - 1);
           R.on_current_instant_list cd f_list
 
     let rml_seq_n =
