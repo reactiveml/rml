@@ -175,26 +175,6 @@ module Rml_interpreter =
     let rml_expr_emit evt =
       rml_expr_emit_val evt ()
 
-    let rml_update' = rml_emit_val'
-    let rml_update = rml_emit_val
-
-    let rml_set_mem' evt e =
-      fun f_k ctrl jp cd _ ->
-        let v = e () in
-        R.Event.emit evt (fun _ -> v);
-        f_k unit_value
-
-    let rml_set_mem expr_evt e =
-      fun f_k ctrl jp cd _ ->
-        let evt = expr_evt() in
-        let v = e () in
-        R.Event.emit evt (fun _ -> v);
-        f_k unit_value
-
-    let rml_expr_update = rml_expr_emit_val
-    let rml_expr_set_mem evt v =
-      R.Event.emit evt (fun _ -> v)
-
 (**************************************)
 (* await_immediate                    *)
 (**************************************)
@@ -307,11 +287,6 @@ module Rml_interpreter =
     let rml_await_conf expr_cfg =
       fun f_k ctrl jp cd _ ->
         R.on_event_cfg_at_eoi (expr_cfg ()) ctrl (fun () -> R.on_next_instant ctrl f_k)
-
-    let rml_await_new' = rml_await_all'
-    let rml_await_new = rml_await_all
-    let rml_await_new_match' = rml_await_all_match'
-    let rml_await_new_match = rml_await_all_match
 
 (**************************************)
 (* present                            *)

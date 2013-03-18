@@ -57,8 +57,6 @@ module type S =
 
     val rml_expr_emit: (unit, 'b) R.event -> unit
     val rml_expr_emit_val: ('a, 'b) R.event -> 'a -> unit
-    val rml_expr_update : 'a memory -> ('a -> 'a) -> unit
-    val rml_expr_set_mem : 'a memory -> 'a -> unit
 
     val rml_global_signal: Types.signal_kind -> ('a, 'a list) R.event
     val rml_global_signal_combine: Types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
