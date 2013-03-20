@@ -13,7 +13,7 @@ let make_domain_var s =
   Global.only_ident { qual = "Domain";
                       id = Ident.create Ident.gen_var s Ident.Internal }
 
-let topck = make_expr (Eglobal (make_domain_var "top_ck"))
+let topck = make_expr (Eglobal (make_domain_var "topck"))
 let topck_domain = make_expr (Eglobal (make_domain_var "topck_domain"))
 let unit_expr = make_expr (Econstant Const_unit)
 
@@ -85,39 +85,19 @@ let expression_desc funs act_ck ed = match ed with
   (*
     signal s default d gather g in e
     --->
-    let hold, s = mk_signal d g act_ck in
-    signal body_done in
-    do run hold until body_done || e; emit done
-
-    TODO: ce n'est pas correct si le signal est declare dans une structure de controle
-    car le processus hold doit etre actif a tous les instants
+    let s = mk_signal d g act_ck in
+    e
   *)
   | Esignal (Signal, (id, _), ck, _, comb, _, e) ->
-      let hold_id = Ident.create Ident.gen_var ("hold_"^id.Ident.name) Ident.Val_RML in
-      let hold = make_expr (Elocal hold_id) in
-
       let clock = expr_of_clock_expr act_ck ck in
       let mk_signal =
         match comb with
           | None -> make_expr (Eapply (make_instruction "mk_signal_default", [clock]))
           | Some (ed, eg) -> make_expr (Eapply (make_instruction "mk_signal", [ed; eg; clock]))
       in
-      let pat =
-        make_patt (Ptuple [make_patt (Pvar (Vlocal hold_id));
-                           make_patt (Pvar (Vlocal id))]) in
-
-
-      let body_done_id = Ident.create Ident.gen_var ("body_done_"^id.Ident.name) Ident.Val_RML in
-      let body_done = make_expr (Elocal body_done_id) in
-      let run_hold =
-        make_expr (Euntil (make_conf (Cpresent body_done), make_expr (Erun hold), None))
-      in
-      let emit_done = make_expr (Eemit (body_done, None)) in
+      let pat = make_patt (Pvar (Vlocal id)) in
       let e, _ = Reac_mapfold.expression_it funs act_ck e in
-      let body = make_expr (Epar [run_hold; make_expr (Eseq [e; emit_done])]) in
-      let body = make_expr (Esignal (Signal, (body_done_id, None), make_expr Ebase,
-                                     make_expr Ebase, None, None, body)) in
-      Elet (Nonrecursive, [pat, mk_signal], body), act_ck
+      Elet (Nonrecursive, [pat, mk_signal], e), act_ck
 
   | Eemit (e1, None) ->
       let e1, _ = Reac_mapfold.expression_it funs act_ck e1 in
@@ -131,7 +111,7 @@ let expression_desc funs act_ck ed = match ed with
   (*
     await s(v) in p
     --->
-    let v = run (await_sig s act_ck) in p
+    let v = run (await_all s act_ck) in p
   *)
   | Eawait_val (Nonimmediate, All, e1, p, e2) ->
       let e1, _ = Reac_mapfold.expression_it funs act_ck e1 in
