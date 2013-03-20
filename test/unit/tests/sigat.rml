@@ -1,11 +1,11 @@
 let process f =
   newclock ck in
   signal ss in
-  signal s2 at base in
+  signal s2 at local_ck in
   signal sss default 0 gather (+) in
   signal s at ck in
-  signal s3 at topck in
-  signal s2 at topck default 0 gather (+) in
+  signal s3 at global_ck in
+  signal s2 at global_ck default 0 gather (+) in
   signal s2 at ck default 0 gather (+) in
     emit s
 
@@ -14,8 +14,8 @@ let process g =
   signal ss in
   signal sss default 0 gather (+) in
   signal s at ck in
-  signal s3 at topck in
-  signal s2 at topck default 0 gather (+) in
+  signal s3 at global_ck in
+  signal s2 at global_ck default 0 gather (+) in
   signal s2 at ck default 0 gather (+) in
     pause; emit s
 

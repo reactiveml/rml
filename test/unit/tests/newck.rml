@@ -7,7 +7,7 @@ let process ck_one_step act =
 (*[O 0]*)
 let process ck_base act =
   newclock ck in
-    pause base; act 0
+    pause local_ck; act 0
 
 (* end of macro step with pause on topck *)
 (* let ck = S (O 0, S (O 1, O 2)) in  [ck; ck] *)
@@ -171,11 +171,11 @@ let process ck_sch_annot act =
 
 (* [S (O 0, S(O 0, O 0)); S (O 0, S(O 0, O 0))]*)
 let process ck_by act =
-  domain(ck) do
+  domain ck by 3 do
     loop
       act 0; pause ck
     end
-  by 3 done
+  done
 
 open Rmltest
 

@@ -73,7 +73,7 @@ let process when_await_ck2 act =
 (* [N; N; O 2] *)
 let process when_await_ck3 act =
   signal s2 default 0 gather (+) in
-  (domain ck do
+  (domain ck by 3 do
     signal s1 in
     do
       await s2(x) in act x
@@ -82,7 +82,7 @@ let process when_await_ck3 act =
     loop
       emit s1; pause; emit s1; pause
     end
-  by 3 done)
+  done)
   ||
   pause; emit s2 2
 

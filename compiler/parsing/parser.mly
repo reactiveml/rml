@@ -246,6 +246,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token FUNCTION            /* "function" */
 %token FUNCTOR             /* "functor" */
 %token GATHER              /* "gather" */
+%token GLOBAL_CK           /* "global_ck" */
 %token GREATER             /* ">" */
 %token GREATERRBRACE       /* ">}" */
 %token GREATERRBRACKET     /* ">]" */
@@ -278,6 +279,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token LESSLESSMINUS       /* "<<-" */
 %token LET                 /* "let" */
 %token <string> LIDENT
+%token LOCAL_CK            /* "local_ck" */
 %token LOOP                /* "loop" */
 %token LPAREN              /* "(" */
 %token MATCH               /* "match" */
@@ -409,7 +411,8 @@ The precedences must be listed from low to high.
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
-          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE LOOP TOPCK WEAK
+          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE LOOP
+          TOPCK GLOBAL_CK LOCAL_CK WEAK
 
 
 /* Entry points */
@@ -463,8 +466,8 @@ structure_item:
       { match $3 with
           [{ppatt_desc = Ppatt_any}, exp] -> mkimpl(Pimpl_expr exp)
         | _ -> mkimpl(Pimpl_let($2, List.rev $3)) }
-  | signal_kind signal_comma_list opt_default_gather
-      { mkimpl(Pimpl_signal($1, List.rev $2, $3)) }
+  | signal_kind signal_comma_list opt_at_expr opt_default_gather
+      { mkimpl(Pimpl_signal($1, List.rev $2, $4)) }
   | TYPE type_declarations
       { mkimpl(Pimpl_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
@@ -653,10 +656,8 @@ expr:
       { mkexpr(Pexpr_run($2)) }
   | NEWCLOCK LIDENT opt_schedule IN par_expr
       { mkexpr (Pexpr_newclock (mksimple $2 2, $3, None, $5)) }
-  | DOMAIN LPAREN LIDENT RPAREN DO par_expr opt_schedule opt_by DONE
-      { mkexpr (Pexpr_newclock (mksimple $3 2, $7, $8, $6)) }
-  | DOMAIN LIDENT DO par_expr opt_schedule opt_by DONE
-      { mkexpr (Pexpr_newclock (mksimple $2 2, $5, $6, $4)) }
+  | DOMAIN LIDENT opt_by opt_schedule DO par_expr DONE
+      { mkexpr (Pexpr_newclock (mksimple $2 2, $4, $3, $6)) }
   | PAUSE clock_expr
       { mkexpr (Pexpr_pause ($2, Strong)) }
   | WEAK PAUSE clock_expr
@@ -715,7 +716,9 @@ simple_expr:
       { mkexpr Pexpr_nothing }
   | TOPCK
       { mkexpr Pexpr_topck }
-  | BASE
+  | GLOBAL_CK
+      { mkexpr Pexpr_topck }
+  | LOCAL_CK
       { mkexpr Pexpr_base }
   | HALT
       { mkexpr Pexpr_halt }
@@ -1130,6 +1133,7 @@ clock_type:
   | clock_var { mkce (Pcar_var $1) }
   | LIDENT { mkce (Pcar_ident $1) }
   | TOPCK { mkce (Pcar_topck) }
+  | GLOBAL_CK { mkce (Pcar_topck) }
 ;
 clock_row_type:
   | clock_row_var { mkcer (Pcar_row_var $1) }

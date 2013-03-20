@@ -68,7 +68,6 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "assert", ASSERT;
     "at", AT;
     "await", AWAIT;
-    "base", BASE;
     "begin", BEGIN;
     "by", BY;
     "class", CLASS;
@@ -92,6 +91,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "function", FUNCTION;
     "functor", FUNCTOR;
     "gather", GATHER;
+    "global_ck", GLOBAL_CK;
     "halt", HALT;
     "if", IF;
     "immediate", IMMEDIATE;
@@ -103,6 +103,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "last", LAST;
     "lazy", LAZY;
     "let", LET;
+    "local_ck", LOCAL_CK;
     "loop", LOOP;
     "match", MATCH;
     "method", METHOD;
