@@ -1,0 +1,111 @@
+$$$good
+${
+(*
+  run_test:
+   [
+     Good: "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
+   ]
+*)
+let process g =
+  pause
+
+$}
+
+let process f =
+  let process h = pause in
+  run h
+
+$
+
+let process h =
+  newclock ck in
+    run g
+
+$
+
+let process h =
+  run g;
+  newclock ck in
+    run g
+
+$
+
+let process f =
+  signal s at topck in
+    present s then () else ()
+
+$
+
+let process f =
+  signal s at topck in
+    do () when s done
+
+$
+
+let process f =
+  signal s at topck in
+    await immediate s
+
+$
+
+let process f =
+  signal s at topck in
+    await s
+
+$
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    await s
+
+$
+
+let process h s =
+  await s(v) in ignore v
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    run h s
+
+$$$bad
+${
+(*
+  run_test:
+   [
+     Bad 2 "": "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
+   ]
+*)
+let process g =
+  pause
+
+$}
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    present s then () else ()
+
+$
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    do () when s done
+
+$
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    await immediate s
+
+$
+
+let process h s = await immediate s; pause
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    run h s

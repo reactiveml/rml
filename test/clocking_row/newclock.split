@@ -1,0 +1,121 @@
+$$$good
+${
+(*
+  run_test:
+   [
+     Good: "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
+   ]
+*)
+
+$}
+let process f =
+  newclock ck in
+    pause; 3
+
+$
+
+let process f =
+  newclock ck in
+    let ck2 = ck in
+    pause ck2
+
+$
+
+let process g =
+  signal s at topck default 0 gather (+) in
+  newclock ck in
+    emit s 9
+
+$
+
+let process g =
+  signal s at topck default 0 gather (+) in
+  signal s2 at topck default 0 gather (+) in
+  newclock ck in
+    [s; s2]
+
+$
+
+let process f =
+  newclock ck in
+    let id x = x in
+    let ck2 = id ck in
+    id 4
+
+$
+
+let process create_sig ck =
+  signal s at ck default 0 gather (+) in
+  s
+
+let process f =
+  let s = run create_sig topck in
+  newclock ck in
+    let s2 = run create_sig ck in
+    emit s2 3; emit s 4; ()
+
+$
+
+let process p =
+  pause
+
+let process q =
+  signal s in
+    emit s
+
+let z = [p; q]
+
+$
+
+let process p s =
+  signal s1 at topck in
+    emit s1 0; emit s 0
+
+let process q s =
+  emit s 0
+
+let l s = [p s; q s]
+
+$$$scope
+${
+(*
+  run_test:
+   [
+     Bad 2 "escape its scope": "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
+   ]
+*)
+
+$}
+let process f =
+  newclock ck in
+    pause; ck
+
+$
+
+let process f =
+  newclock ck in
+    ck
+
+$
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    signal s2 at ck in
+    emit s s2
+
+$
+
+let process g =
+  let r = ref None in
+  newclock ck in
+    signal s2 at ck in
+    r := Some s2
+
+let process f =
+  signal s at topck in
+  newclock ck in
+    signal s2 at ck in
+    let l = [s; s2] in
+    l
+

@@ -1,0 +1,49 @@
+$$$good
+${
+(*
+  run_test:
+   [
+     Good: "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
+   ]
+*)
+
+$}
+let f s () = ()
+
+let g s () = emit s 0
+
+let process main =
+  signal s in
+   let z = [f s; g s] in
+   z
+
+$
+
+let process main =
+  signal s in
+  newclock ck in
+    let process f = emit s 0 in
+    let process g = signal s2 in emit s2 0; emit s 0 in
+    let z = [f; g] in
+    ()
+
+$
+
+let process main =
+  signal s in
+  newclock ck in
+    let process f = emit s 0 in
+    let process g = signal s2 at topck in emit s2 0; emit s 0 in
+    let z = [f; g] in
+    ()
+
+$
+
+
+let process main =
+  newclock ck in
+    signal s in
+    let process f = emit s 0 in
+    let process g = signal s2 at topck in emit s2 0; emit s 0 in
+    let z = [f; g] in
+    ()
