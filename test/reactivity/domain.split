@@ -10,7 +10,7 @@ ${
 $}
 
 let process q =
-  domain(ck) do
+  domain ck do
     loop
       pause topck
     end
@@ -20,8 +20,8 @@ $
 
 
 let process q =
-  domain(ck) do
-    domain(ck2) do
+  domain ck do
+    domain ck2 do
       loop
         pause topck
       end
@@ -31,8 +31,8 @@ let process q =
 $
 
 let process p =
-  domain(ck) do
-    signal s at topck in
+  domain ck do
+    signal s clock topck in
     loop
       emit s 0;
       await s(v) in
@@ -44,8 +44,8 @@ let process p =
 $
 
 let process p =
-  domain(ck) do
-    signal s at topck in
+  domain ck do
+    signal s clock topck in
     loop
       emit s 0;
       await s(v) in
@@ -56,7 +56,7 @@ let process p =
       pause topck
     end
     ||
-    domain(ck2) do
+    domain ck2 do
       loop
         pause ck;
         pause topck
@@ -64,6 +64,16 @@ let process p =
     done
   done
 
+$
+
+let process p (q: 'ck. unit process{'ck|'er}) =
+  domain ck do
+    run q
+  done
+
+let process q = pause; pause
+
+let process g = p q
 
 $$$bad
 ${
@@ -77,7 +87,7 @@ ${
 $}
 
 let process q =
-  domain(ck) do
+  domain ck do
     loop
       pause ck
     done
@@ -86,7 +96,7 @@ let process q =
 $
 
 let process p =
-  domain(ck) do
+  domain ck do
     signal s in
     loop
       emit s 0;
@@ -104,7 +114,7 @@ let process hold s =
   end
 
 let process p =
-  domain(ck) do
+  domain ck do
     signal s in
     run hold s
     ||

@@ -1116,7 +1116,12 @@ let rec schema_of_expression env expr =
       (* remove clock from current effect *)
       current_effect := remove_ck_from_effect c !current_effect;
       (* r = r[c <- 0] *)
-      set_current_react (remove_ck_from_react c r);
+      let r =
+        match period with
+          | None -> remove_ck_from_react c r (* r [ck <- 0] *)
+          | Some _ -> cond_subst_react c (react_carrier !activation_carrier) r
+      in
+      set_current_react r;
       expr.e_react <- !current_react;
       ck
 

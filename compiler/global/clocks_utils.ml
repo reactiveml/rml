@@ -1856,3 +1856,39 @@ let add_type_description g =
   { gi = g.gi;
     ty_info = None;
     ck_info = g.ck_info }
+
+
+let cond_subst_react ck subst r =
+  let sub ckz cksub =
+    List.iter (fun ck -> ck.desc <- React_empty) ckz;
+    List.iter (fun ck -> ck.desc <- React_link subst) cksub
+  in
+  let rec aux rec_vars (ckz, cksub, b) r = match r.desc with
+    | React_empty -> ckz, cksub, b
+    | React_carrier ck ->
+      if ck.index = r.index then r::ckz, cksub, b else ckz, r::cksub, true
+    | React_var ->
+      if List.mem r.index rec_vars then
+        (sub ckz cksub; [],[],b)
+      else
+        ckz, cksub, b
+    | React_seq rl ->
+      let one_step (ckz, cksub, b) r =
+        let rec_vars = if b then [] else rec_vars in aux rec_vars (ckz, cksub, b) r
+      in
+      List.fold_left one_step (ckz, cksub, b) rl
+    | React_or rl ->
+      let ckz_list, cksub_list, b_list = Misc.split3 (List.map (aux rec_vars (ckz, cksub, b)) rl) in
+      List.flatten ckz_list, List.flatten cksub_list, b || List.for_all (fun b -> b) b_list
+    | React_par rl ->
+      let ckz_list, cksub_list, b_list = Misc.split3 (List.map (aux rec_vars (ckz, cksub, b)) rl) in
+      List.flatten ckz_list, List.flatten cksub_list, b || (List.exists (fun b -> b) b_list)
+    | React_run r1 -> aux rec_vars (ckz, cksub, b) r1
+    | React_rec(_, var, r1) ->  aux (var.index::rec_vars) (ckz, cksub, b) r1
+    | React_link r1 -> aux rec_vars (ckz, cksub, b) r1
+  in
+  let r_copy = copy_subst_react [] r in
+  cleanup ();
+  let ckz, cksub, _ = aux [] ([], [], false) r_copy in
+  sub ckz cksub;
+  r_copy

@@ -1,0 +1,37 @@
+$$$good
+${
+(*
+  run_test:
+   [
+    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+   ]
+*)
+
+$}
+
+let process q =
+  domain ck by 2 do
+    loop
+      pause ck
+    end
+  done
+
+$$$bad
+${
+(*
+  run_test:
+   [
+    Bad 2 "domain": "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+   ]
+*)
+
+$}
+
+let process q =
+  domain ck1 do
+    domain ck2 by 2 do
+      loop
+        pause ck2
+      end
+    done
+  done
