@@ -347,8 +347,17 @@ let repr_record =
   mk_kind_prod ~clock:clock_repr ~carrier:carrier_repr ~carrier_row:carrier_row_repr
     ~effect:effect_repr ~effect_row:effect_row_repr ~react:react_repr
 
+let get_eff er =
+  match er.desc with
+    | Effect_row_one eff -> eff
+    | _ -> Printf.eprintf "Unexpected effect row: %a\n" Clocks_printer.output_effect_row er; assert false
+
+let get_car cr =
+  match cr.desc with
+    | Carrier_row_one car -> car
+    | _ -> Printf.eprintf "Unexpected carrier row: %a\n" Clocks_printer.output_carrier_row cr; assert false
+
 (* simplification of effects *)
-(*
 let equal_carrier c1 c2 =
   let c1 = carrier_repr c1 in
   let c2 = carrier_repr c2 in
@@ -363,10 +372,9 @@ let equal_effect eff1 eff2 =
   let eff2 = effect_repr eff2 in
   match eff1.desc, eff2.desc with
     | Effect_var, Effect_var -> eff1.index = eff2.index
-    | Effect_depend c1, Effect_depend c2 -> equal_carrier c1 c2
+    | Effect_depend c1, Effect_depend c2 -> equal_carrier (get_car c1) (get_car c2)
     | _ -> false
-*)
-(*
+
 let simplify_effect eff =
   let rec mem_effect eff l = match l with
     | [] -> false
@@ -376,7 +384,7 @@ let simplify_effect eff =
     if mem_effect x l then l else x::l
   in
   let rec clocks_of acc eff = match eff.desc with
-    | Effect_empty -> acc
+    | Effect_empty | Effect_one _ -> acc
     | Effect_var | Effect_depend _ -> add_to_list eff acc
     | Effect_link link -> clocks_of acc link
     | Effect_sum (eff1, eff2) -> clocks_of (clocks_of acc eff2) eff1
@@ -384,8 +392,9 @@ let simplify_effect eff =
   let eff = effect_repr eff in
   let new_eff = eff_sum_list (clocks_of [] eff) in
   new_eff
-*)
-let simplify_effect eff = eff (* TODO : re-enable*)
+
+let simplify_effect eff =
+  if !Compiler_options.use_row_clocking then eff (* TODO *) else simplify_effect eff
 
 (*
 let rec remove_ck_from_carrier ck car = match car.desc with
@@ -395,6 +404,36 @@ let rec remove_ck_from_carrier ck car = match car.desc with
   | Carrier_link link -> remove_ck_from_carrier ck link
 *)
 
+let rec remove_var_from_effect index eff = match eff.desc with
+  | Effect_var ->
+      if eff.index = index then
+        no_effect
+      else
+        eff
+  | Effect_empty | Effect_depend _ | Effect_one _ -> eff
+  | Effect_link link -> remove_var_from_effect index link
+  | Effect_sum (eff1, eff2) ->
+      { eff with desc = Effect_sum (remove_var_from_effect index eff1,
+                                   remove_var_from_effect index eff2) }
+let remove_var_from_effect index eff =
+  simplify_effect (remove_var_from_effect index eff)
+
+(* Remove local clock from effect without rows *)
+let rec remove_ck_from_effect ck eff = match eff.desc with
+  | Effect_depend { desc = Carrier_row_one c } ->
+      if (carrier_repr c).desc = ck.desc then
+        no_effect
+      else
+        eff
+  | Effect_empty | Effect_var | Effect_one _ | Effect_depend _ -> eff
+  | Effect_link link -> remove_ck_from_effect ck link
+  | Effect_sum (eff1, eff2) ->
+      { eff with desc = Effect_sum (remove_ck_from_effect ck eff1,
+                                   remove_ck_from_effect ck eff2) }
+let remove_ck_from_effect_simple ck eff =
+  simplify_effect (remove_ck_from_effect ck eff)
+
+(* Remove local clock from effect with rows *)
 let rec remove_ck_from_carrier_row ck cr = match cr.desc with
   | Carrier_row_empty | Carrier_row_var -> cr
   | Carrier_row_one car ->
@@ -428,6 +467,12 @@ and remove_ck_from_effect_row ck eff = match eff.desc with
   | Effect_row_rec (var, body) ->
     { eff with desc = Effect_row_rec (var, remove_ck_from_effect_row ck body) }
   | Effect_row_link link -> remove_ck_from_effect_row ck link
+
+let remove_ck_from_effect ck eff =
+  if !Compiler_options.use_row_clocking then
+    remove_ck_from_effect ck eff
+  else
+    remove_ck_from_effect_simple ck eff
 
 let subst_var_effect_row index subst er =
   let effect_row funs () er = match er.desc with
@@ -1051,7 +1096,7 @@ let copy_param p = copy_subst_param [] p
 
 (* instanciation *)
 let instance { cs_desc = ck } =
-  (*Printf.printf "before: %a\n" Clocks_printer.output ck;*)
+  (*Printf.eprintf "before: %a\n" Clocks_printer.output ck;*)
   let ck_i = copy_clock ck in
   cleanup ();
   (*Printf.printf "After: %a\n" Clocks_printer.output ck_i;*)
@@ -1596,10 +1641,16 @@ and effect_unify expected_eff actual_eff =
         | Effect_empty, Effect_empty -> ()
         | Effect_var, _ ->
             effect_occur_check expected_eff.level expected_eff.index actual_eff;
-            expected_eff.desc <- Effect_link actual_eff
+            if !Compiler_options.use_row_clocking then
+              expected_eff.desc <- Effect_link actual_eff
+            else
+              expected_eff.desc <- Effect_link (remove_var_from_effect expected_eff.index actual_eff)
         | _, Effect_var ->
             effect_occur_check actual_eff.level actual_eff.index expected_eff;
-            actual_eff.desc <- Effect_link expected_eff
+            if !Compiler_options.use_row_clocking then
+              actual_eff.desc <- Effect_link expected_eff
+            else
+              actual_eff.desc <- Effect_link (remove_var_from_effect actual_eff.index expected_eff)
         | Effect_depend c1, Effect_depend c2 -> carrier_row_unify c1 c2
         | Effect_sum (eff1, eff2), Effect_sum (eff3, eff4) ->
             (* only called for identical effects *)

@@ -115,15 +115,28 @@ let rec print priority ty =
         if n > 1 then print_string ")";
         if p_list.k_clock <> [] then print_space ();
         print_qualified_ident name.gi;
-        if p_list.k_carrier <> [] || p_list.k_carrier_row <> [] || p_list.k_effect_row <> [] then (
-          print_string "{";
-          print_carrier_list 2 "," p_list.k_carrier;
-          print_string "|";
-          print_carrier_row_list 2 "," p_list.k_carrier_row;
-          print_string "|";
-          print_effect_list 2 "," p_list.k_effect;
-          print_string "}"
-        );
+        if !Compiler_options.use_row_clocking then
+          begin
+            if p_list.k_carrier <> [] || p_list.k_carrier_row <> [] || p_list.k_effect_row <> [] then (
+              print_string "{";
+              print_carrier_list 2 "," p_list.k_carrier;
+              print_string "|";
+              print_carrier_row_list 2 "," p_list.k_carrier_row;
+              print_string "|";
+              print_effect_row_list 2 "," p_list.k_effect_row;
+              print_string "}"
+            );
+          end
+        else
+          begin
+            if p_list.k_carrier <> [] || p_list.k_effect <> [] then (
+              print_string "{";
+              print_carrier_list 2 "," p_list.k_carrier;
+              print_string "|";
+              print_effect_list 2 "," p_list.k_effect;
+              print_string "}"
+            );
+          end;
         if p_list.k_react <> [] then (
           print_string "[";
           print_react_list 2 ", " p_list.k_react;
@@ -138,7 +151,10 @@ let rec print priority ty =
         print 2 ty;
         print_string " process {";
         print_carrier priority c;
-        print_string "||";
+        if !Compiler_options.use_row_clocking then
+          print_string "||"
+        else
+          print_string "|";
         print_effect_row priority eff;
         print_string "}[";
         print_react priority r;
@@ -152,7 +168,10 @@ and print_carrier priority car =
   open_box 0;
   begin match car.desc with
     | Carrier_var(s) ->
-      print_string "''";
+      if !Compiler_options.use_row_clocking then
+        print_string "''"
+      else
+        print_string "'";
       if car.level <> generic then print_string "_";
       print_string ("c"^string_of_int car.index) (*(names.k_carrier#name car.index) *)
     | Carrier_skolem(n, i) ->

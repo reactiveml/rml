@@ -60,16 +60,6 @@ let set_current_react r =
 let add_to_list x l =
   if List.mem x l then l else x::l
 
-let get_eff er =
-  match er.desc with
-    | Effect_row_one eff -> eff
-    | _ -> assert false
-
-let get_car cr =
-  match cr.desc with
-    | Carrier_row_one car -> car
-    | _ -> assert false
-
 let arrow ck1 ck2 eff = arrow ck1 ck2 (eff_row_one eff)
 let process ck act_ck eff r = process ck act_ck (eff_row_one eff) r
 let eff_depend c = eff_depend (carrier_row_one c)
