@@ -108,7 +108,12 @@ let compile_implementation module_name filename =
     Location.init lexbuf source_name;
 
     (* parsing of the file *)
-    let decl_list = Parse.implementation lexbuf in
+    let decl_list =
+      if !Compiler_options.use_row_clocking then
+        Parse_row.implementation lexbuf
+      else
+        Parse.implementation lexbuf
+    in
 
     let has_intf = Sys.file_exists (filename ^ ".rmli") || Sys.file_exists (filename ^ ".mli") in
     (* front-end *)
@@ -191,9 +196,11 @@ let compile_interface parse module_name filename filename_end =
 (* compiling a scalar interface *)
 let compile_scalar_interface module_name filename =
   no_link := true;
-  compile_interface Parse.interface module_name filename ".mli"
+  let parse = if !Compiler_options.use_row_clocking then Parse_row.interface else Parse.interface in
+  compile_interface parse module_name filename ".mli"
 
 (* compiling a Reactive ML interface *)
 let compile_interface module_name filename =
-  compile_interface Parse.interface module_name filename ".rmli"
+  let parse = if !Compiler_options.use_row_clocking then Parse_row.interface else Parse.interface in
+  compile_interface parse module_name filename ".rmli"
 

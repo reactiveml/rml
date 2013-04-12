@@ -1152,7 +1152,7 @@ and effect_occur_check level index eff =
     let eff = effect_repr eff in
     match eff.desc with
       | Effect_var ->
-          if eff.index = index then
+          if eff.index = index && !Compiler_options.use_row_clocking then
             raise Unify
           else if eff.level > level then
             eff.level <- level
@@ -1604,15 +1604,21 @@ and effect_unify expected_eff actual_eff =
         | Effect_sum (eff1, eff2), Effect_sum (eff3, eff4) ->
             (* only called for identical effects *)
             effect_unify eff1 eff3; effect_unify eff2 eff4
+        | (Effect_depend _ | Effect_empty), Effect_sum (eff1, eff2)
+          when not !Compiler_options.use_row_clocking ->
+            effect_unify expected_eff eff1; effect_unify expected_eff eff2
+        | Effect_sum (eff1, eff2), (Effect_depend _ | Effect_empty)
+          when not !Compiler_options.use_row_clocking ->
+            effect_unify eff1 actual_eff; effect_unify eff2 actual_eff
         (* unifications with the empty effect: all the effects should be the empty effect
            and effect row vars empty *)
-        | Effect_empty, Effect_sum (eff1, eff2) ->
+        | Effect_empty, Effect_sum (eff1, eff2) when !Compiler_options.use_row_clocking ->
             effect_unify expected_eff eff1; effect_unify expected_eff eff2
-        | Effect_sum (eff1, eff2), Effect_empty ->
+        | Effect_sum (eff1, eff2), Effect_empty when !Compiler_options.use_row_clocking ->
             effect_unify expected_eff eff1; effect_unify expected_eff eff2
-        | Effect_empty, Effect_one actual_effr ->
+        | Effect_empty, Effect_one actual_effr when !Compiler_options.use_row_clocking ->
             effect_row_unify (eff_closed_row expected_eff) actual_effr
-        | Effect_one expected_effr, Effect_empty ->
+        | Effect_one expected_effr, Effect_empty when !Compiler_options.use_row_clocking ->
             effect_row_unify expected_effr (eff_closed_row actual_eff)
         | _ ->
              Printf.eprintf "Failed to unify effects '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff;
@@ -1760,19 +1766,6 @@ and unify_param_list l1 l2 =
     | Invalid_argument _ -> raise Unify
 
 (* special cases of unification *)
-let rec filter_arrow ck =
-  let ck = clock_repr ck in
-  match ck.desc with
-    | Clock_arrow(ck1, ck2, eff) -> ck1, ck2, eff
-    | Clock_constr({ck_info = Some { constr_abbr = Constr_abbrev (params, body) }}, args) ->
-        filter_arrow (expand_abbrev params body args)
-    | _ ->
-        let ck1 = new_clock_var () in
-        let ck2 = new_clock_var () in
-        let eff = new_effect_row_var () in
-        unify ck (arrow ck1 ck2 eff);
-        ck1, ck2, eff
-
 let rec filter_product arity ck =
   let ck = clock_repr ck in
   match ck.desc with
@@ -1794,6 +1787,18 @@ let rec filter_depend ck =
         unify ck (depend c);
         c
 
+let rec filter_arrow ck =
+  let ck = clock_repr ck in
+  match ck.desc with
+    | Clock_arrow(ck1, ck2, eff) -> ck1, ck2, eff
+    | Clock_constr({ck_info = Some { constr_abbr = Constr_abbrev (params, body) }}, args) ->
+        filter_arrow (expand_abbrev params body args)
+    | _ ->
+        let ck1 = new_clock_var () in
+        let ck2 = new_clock_var () in
+        let eff = new_effect_row_var () in
+        unify ck (arrow ck1 ck2 eff);
+        ck1, ck2, eff
 
 let add_type_description g =
   { gi = g.gi;

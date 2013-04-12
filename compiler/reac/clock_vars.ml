@@ -99,12 +99,24 @@ let find_new_vars decl_ids td =
             te, (vars_list, add_to_list gcstr.gi id_list)
           else if gcstr.gi = Initialization.event_ident then (
             let arity = list_arity pe_list in
-            if arity.k_carrier_row = 0 then (
-              let var = mkfresh_car_row () in
-              let te = { te with pte_desc = Ptype_constr(cstr, pe_list @ [param_of_var var]) } in
-              te, (var::vars_list, id_list)
-            ) else
-              te, (vars_list, id_list)
+            if !Compiler_options.use_row_clocking then
+              begin
+                if arity.k_carrier_row = 0 then (
+                  let var = mkfresh_car_row () in
+                  let te = { te with pte_desc = Ptype_constr(cstr, pe_list @ [param_of_var var]) } in
+                  te, (var::vars_list, id_list)
+                ) else
+                  te, (vars_list, id_list)
+              end
+            else
+              begin
+                if arity.k_carrier = 0 then (
+                  let var = mkfresh_car () in
+                  let te = { te with pte_desc = Ptype_constr(cstr, pe_list @ [param_of_var var]) } in
+                  te, (var::vars_list, id_list)
+                ) else
+                  te, (vars_list, id_list)
+              end
           ) else (
             (* check if the identifier is defined*)
             (* check the arity of parameters in the source *)

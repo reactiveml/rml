@@ -133,7 +133,11 @@ let clock_array = Clocks_utils.constr_notabbrev array_ident [Kclock (Clocks_util
 (* event *)
 (* let event_ident = interpreter_type "event" *)
 let event_ident = pervasives_type "event"
-let event_arity = { zero_arity with k_clock = 2; k_carrier_row = 1 }
+let event_arity =
+  if !Compiler_options.use_row_clocking then
+    { zero_arity with k_clock = 2; k_carrier_row = 1 }
+  else
+    { zero_arity with k_clock = 2; k_carrier = 1 }
 
 let type_desc_event =
   { gi = event_ident;
@@ -151,10 +155,17 @@ let type_desc_event =
 
 let type_event = Types_utils.constr_notabbrev event_ident [Types_utils.new_generic_var();
 						     Types_utils.new_generic_var(); ]
-let clock_event = Clocks_utils.constr_notabbrev event_ident
-  [Kclock (Clocks_utils.new_generic_clock_var());
-   Kclock (Clocks_utils.new_generic_clock_var());
-   Kcarrier_row (Clocks_utils.new_generic_carrier_row_var ()) ]
+let clock_event =
+  if !Compiler_options.use_row_clocking then
+    Clocks_utils.constr_notabbrev event_ident
+      [Kclock (Clocks_utils.new_generic_clock_var());
+       Kclock (Clocks_utils.new_generic_clock_var());
+       Kcarrier_row (Clocks_utils.new_generic_carrier_row_var ()) ]
+  else
+    Clocks_utils.constr_notabbrev event_ident
+      [Kclock (Clocks_utils.new_generic_clock_var());
+       Kclock (Clocks_utils.new_generic_clock_var());
+       Kcarrier (Clocks_utils.new_generic_carrier_var Clocks_utils.generic_prefix_name) ]
 
 (* clock *)
 let clock_ident = pervasives_type "clock"
