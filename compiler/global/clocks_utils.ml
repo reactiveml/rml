@@ -528,7 +528,10 @@ and remove_local_from_effect_row level bound_vars eff = match eff.desc with
 let rec remove_ck_from_react ck r = match r.desc with
   | React_empty | React_var -> r
   | React_carrier cr ->
-      { r with desc = React_carrier (remove_ck_from_carrier_row ck cr) }
+    let cr = remove_ck_from_carrier_row ck cr in
+    (match cr.desc with
+      | Carrier_row_empty -> no_react
+      | _ -> { r with desc = React_carrier cr })
   | React_seq rl ->
       { r with desc = React_seq (List.map (remove_ck_from_react ck) rl) }
   | React_par rl ->
@@ -564,11 +567,9 @@ let rec remove_local_from_react level bound_vars r = match r.desc with
   | React_link link -> remove_local_from_react level bound_vars link
 
 let subst_var_react index subst r =
-  let react_effect funs () er = match r.desc with
+  let react_effect funs () r =  match r.desc with
     | React_var when r.index = index -> subst, ()
-    | _ ->
-      let r, _ = Clock_mapfold.react_effect funs () er in
-      r, ()
+    | _ -> Clock_mapfold.react_effect funs () r
   in
   let funs = { Clock_mapfold.defaults with react_effect = react_effect } in
   fst (Clock_mapfold.react_effect_it funs () r)
