@@ -81,6 +81,12 @@ let assert_empty l = match l with
   | [] -> ()
   | _ -> fatal_error "assert_empty"
 
+let rec split3 l = match l with
+| [] -> [], [], []
+| (x1, x2, x3)::l ->
+  let l1, l2, l3 = split3 l in
+  x1::l1, x2::l2, x3::l3
+
 (* association table with memoization *)
 class name_assoc_table f =
   object

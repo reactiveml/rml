@@ -76,7 +76,7 @@ let rec translate_te env typ =
         Tprocess ((translate_te env t), k,
                  translate_ce env act, translate_eer env eer)
 
-    | Ptype_depend ce -> Tdepend (translate_ce env ce)
+    | Ptype_depend cer -> Tdepend (translate_cer env cer)
   in
   make_te rtyp typ.pte_loc
 
@@ -99,6 +99,11 @@ and translate_cer env pcer =
   let cer =
     match pcer.pcer_desc with
       | Pcar_row_var s -> Crow_var s
+      | Pcar_row_ident s ->
+          (try
+              Crow_ident (Env.find s env)
+            with
+              | Not_found -> unbound_ident_err s pcer.pcer_loc)
       | Pcar_row_empty -> Crow_empty
       | Pcar_row_one pce -> Crow_one (translate_ce env pce)
       | Pcar_row (pcer1, pcer2) -> Crow (translate_cer env pcer1, translate_cer env pcer2)

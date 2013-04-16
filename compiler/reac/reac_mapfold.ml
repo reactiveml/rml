@@ -343,9 +343,9 @@ and type_expression_desc funs acc ted = match ted with
     let p_list, acc = mapfold (param_expression_it funs) acc p_list in
     let te, acc = type_expression_it funs acc te in
     Tforall (p_list, te), acc
-  | Tdepend ce ->
-    let ce, acc = carrier_expression_it funs acc ce in
-    Tdepend ce, acc
+  | Tdepend cer ->
+    let cer, acc = carrier_row_expression_it funs acc cer in
+    Tdepend cer, acc
 
 and carrier_expression_it funs acc e = funs.carrier_expression funs acc e
 and carrier_expression funs acc e =
@@ -367,7 +367,7 @@ and carrier_row_expression_desc_it funs acc ed =
   try funs.carrier_row_expression_desc funs acc ed
   with Fallback -> carrier_row_expression_desc funs acc ed
 and carrier_row_expression_desc funs acc ced = match ced with
-  | Crow_var _ | Crow_empty -> ced, acc
+  | Crow_var _ | Crow_empty | Crow_ident _ -> ced, acc
   | Crow_one ce1 ->
     let ce1, acc = carrier_expression_it funs acc ce1 in
     Crow_one ce1, acc

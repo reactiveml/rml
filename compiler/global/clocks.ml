@@ -45,7 +45,7 @@ and clock = clock_desc repr
 and clock_desc =
   | Clock_static
   | Clock_var
-  | Clock_depend of carrier
+  | Clock_depend of carrier_row
   | Clock_arrow of clock * clock * effect_row
   | Clock_product of clock list
   | Clock_constr of clock_constr global * clock_param list

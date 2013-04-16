@@ -1071,7 +1071,7 @@ simple_type:
   | type_var
       { mkte (Ptype_var $1) }
   | LBRACKET clock_type RBRACKET
-      { mkte (Ptype_depend $2) }
+      { mkte (Ptype_depend (mkcer_of_ce $2)) }
   | type_longident clock_effect_params
       { mkte(Ptype_constr($1, $2)) }
   | type_params type_longident clock_effect_params

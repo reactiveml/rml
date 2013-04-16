@@ -62,8 +62,18 @@ let add_to_list x l =
 
 let arrow ck1 ck2 eff = arrow ck1 ck2 (eff_row_one eff)
 let process ck act_ck eff r = process ck act_ck (eff_row_one eff) r
+let depend c = depend (carrier_row_one c)
 let eff_depend c = eff_depend (carrier_row_one c)
 let react_carrier c = react_carrier (carrier_row_one c)
+
+let rec filter_depend ck =
+  let ck = clock_repr ck in
+  match ck.desc with
+    | Clock_depend c -> get_car c
+    | _ ->
+        let c = new_carrier_var generic_prefix_name in
+        unify ck (depend c);
+        c
 
 let rec filter_arrow ck =
   let ck = clock_repr ck in
@@ -297,8 +307,8 @@ let clock_of_type_expression ty_vars env typexp =
         process (clock_of_te ty_vars te) (carrier_of_ce ty_vars ce)
           (get_eff (effect_row_of_eer ty_vars ee)) (*TODO*) no_react
 
-    | Tdepend ce ->
-        depend (carrier_of_ce ty_vars ce)
+    | Tdepend cer ->
+        depend (get_car (carrier_row_of_cer ty_vars cer))
 
   and carrier_of_ce ty_vars ce = match ce.ce_desc with
     | Cvar s ->
@@ -1125,7 +1135,7 @@ let rec schema_of_expression env expr =
       expr.e_react <- !current_react;
       ck
 
-    | Etopck -> clock_topck
+    | Etopck -> depend topck_carrier
     | Ebase -> depend !activation_carrier
   in
   expr.e_clock <- t;

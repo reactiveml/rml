@@ -138,7 +138,7 @@ and type_expression_desc =
   | Ptype_constr of ident * param_expression list
   | Ptype_process of type_expression * Static.instantaneous
                        * carrier_expression * effect_row_expression
-  | Ptype_depend of carrier_expression
+  | Ptype_depend of carrier_row_expression
 
 and carrier_expression =
    { pce_desc : carrier_expression_desc;
@@ -154,6 +154,7 @@ and carrier_row_expression =
      pcer_loc : Location.t }
 and carrier_row_expression_desc =
     | Pcar_row_var of string
+    | Pcar_row_ident of string
     | Pcar_row_fresh
     | Pcar_row_empty
     | Pcar_row_one of carrier_expression

@@ -151,7 +151,7 @@ and type_expression_desc =
   | Cotype_product of type_expression list
   | Cotype_constr of type_description * param_expression list
   | Cotype_process of type_expression * carrier_expression * effect_row_expression
-  | Cotype_depend of carrier_expression
+  | Cotype_depend of carrier_row_expression
   | Cotype_forall of param_expression list * type_expression
   | Cotype_some of param_expression list * type_expression
 
@@ -168,6 +168,7 @@ and carrier_row_expression =
       cocer_loc : Location.t }
 and carrier_row_expression_desc =
   | Cocar_row_var of string
+  | Cocar_row_ident of ident
   | Cocar_row_empty
   | Cocar_row_one of carrier_expression
   | Cocar_row of carrier_row_expression * carrier_row_expression

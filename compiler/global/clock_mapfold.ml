@@ -30,9 +30,9 @@ and clock_desc_it funs acc ckd =
   with Fallback -> clock_desc funs acc ckd
 and clock_desc funs acc ckd = match ckd with
   | Clock_static | Clock_var -> ckd, acc
-  | Clock_depend car ->
-    let car, acc = carrier_it funs acc car in
-    Clock_depend car, acc
+  | Clock_depend cr ->
+    let cr, acc = carrier_row_it funs acc cr in
+    Clock_depend cr, acc
   | Clock_arrow (ck1, ck2, eff) ->
     let ck1, acc = clock_it funs acc ck1 in
     let ck2, acc = clock_it funs acc ck2 in

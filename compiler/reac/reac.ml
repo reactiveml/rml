@@ -151,7 +151,7 @@ and type_expression_desc =
   | Tconstr of type_description * param_expression list
   | Tprocess of type_expression * Static.instantaneous * carrier_expression * effect_row_expression
       (* result type, static, activation clock *)
-  | Tdepend of carrier_expression
+  | Tdepend of carrier_row_expression
 
 and carrier_expression =
     { ce_desc : carrier_expression_desc;
@@ -166,6 +166,7 @@ and carrier_row_expression =
       cer_loc : Location.t }
 and carrier_row_expression_desc =
   | Crow_var of string
+  | Crow_ident of ident
   | Crow_empty
   | Crow_one of carrier_expression
   | Crow of carrier_row_expression * carrier_row_expression

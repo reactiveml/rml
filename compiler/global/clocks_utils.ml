@@ -167,8 +167,6 @@ let topck_carrier =
   { desc = Carrier_skolem ("topck", names#name);
     index = -2;
     level = notgeneric }
-let clock_topck =
-  make_generic (Clock_depend topck_carrier)
 
 (* Constructors for carrier rows *)
 
@@ -192,6 +190,8 @@ let carrier_closed_row c =
   carrier_row (carrier_row_one c) carrier_row_empty
 let carrier_open_row c =
   carrier_row (carrier_row_one c) (new_carrier_row_var ())
+let carrier_generic_open_row c =
+  carrier_row (carrier_row_one c) (new_generic_carrier_row_var ())
 
 (* Constructors for effects *)
 
@@ -595,8 +595,8 @@ let rec gen_clock is_gen ck =
             list_of_vars := (Kclock ck) :: !list_of_vars
           ) else
             ck.level <- !current_level
-    | Clock_depend car ->
-        ck.level <- gen_carrier is_gen car
+    | Clock_depend cr ->
+        ck.level <- gen_carrier_row is_gen cr
     | Clock_arrow(ck1, ck2, eff) ->
         let level1 = gen_clock is_gen ck1 in
         let level2 = gen_clock is_gen ck2 in
@@ -763,7 +763,7 @@ let free_clock_vars level ck =
           free_vars_carrier act;
           free_vars_effect_row eff;
           free_vars_react [] r
-      | Clock_depend c -> free_vars_carrier c
+      | Clock_depend cr -> free_vars_carrier_row cr
       | Clock_forall sch -> (*TODO*) ()
   and free_vars_carrier car =
     let car = carrier_repr car in
@@ -864,9 +864,9 @@ let rec copy_subst_clock m ck =
         else
           ck
     | Clock_static -> ck
-    | Clock_depend c ->
+    | Clock_depend cr ->
         if level = generic then
-          depend (copy_subst_carrier m c)
+          depend (copy_subst_carrier_row m cr)
         else
           ck
     | Clock_link link ->
@@ -1141,7 +1141,7 @@ let rec occur_check level index ck =
         else if ck.level > level then
           ck.level <- level
       | Clock_static -> ()
-      | Clock_depend c -> carrier_occur_check level index c
+      | Clock_depend cr -> carrier_row_occur_check level index cr
       | Clock_arrow (ck1, ck2, eff) ->
           check ck1; check ck2;
           effect_row_occur_check level index eff
@@ -1510,7 +1510,7 @@ let rec unify expected_ck actual_ck =
         | _, Clock_var ->
             occur_check actual_ck.level actual_ck.index expected_ck;
             actual_ck.desc <- Clock_link expected_ck
-        | Clock_depend c1, Clock_depend c2 -> carrier_unify c1 c2
+        | Clock_depend cr1, Clock_depend cr2 -> carrier_row_unify cr1 cr2
         | Clock_product ck_l1, Clock_product ck_l2 -> unify_list ck_l1 ck_l2
         | Clock_arrow(ck1, ck2, eff1), Clock_arrow(ck3, ck4, eff2) ->
             unify ck1 ck3;
@@ -1835,7 +1835,7 @@ let rec filter_depend ck =
   match ck.desc with
     | Clock_depend c -> c
     | _ ->
-        let c = new_carrier_var generic_prefix_name in
+        let c = new_carrier_row_var () in
         unify ck (depend c);
         c
 

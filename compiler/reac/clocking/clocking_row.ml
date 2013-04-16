@@ -282,7 +282,7 @@ let clock_of_type_expression ty_vars env typexp =
           (effect_row_of_eer ty_vars eer) (*TODO*) no_react
 
     | Tdepend ce ->
-        depend (carrier_of_ce ty_vars ce)
+        depend (carrier_row_of_cer ty_vars ce)
 
   and carrier_of_ce ty_vars ce = match ce.ce_desc with
     | Cvar s ->
@@ -290,13 +290,7 @@ let clock_of_type_expression ty_vars env typexp =
             expect_carrier (List.assoc s ty_vars)
           with
               Not_found | Invalid_argument _  -> unbound_carrier_err s ce.ce_loc)
-    | Cident n ->
-        let ck_sch = Env.find n env in
-        let ck = ensure_monotype (clock_of_sch ck_sch) in
-        (try
-            filter_depend ck
-          with
-            | Unify -> non_clock_err ce.ce_loc)
+    | Cident n -> assert false
     | Ctopck -> topck_carrier
 
   and carrier_row_of_cer ty_vars cer = match cer.cer_desc with
@@ -305,6 +299,13 @@ let clock_of_type_expression ty_vars env typexp =
            expect_carrier_row (List.assoc s ty_vars)
          with
            | Not_found | Invalid_argument _ -> unbound_carrier_err s cer.cer_loc)
+    | Crow_ident n ->
+        let ck_sch = Env.find n env in
+        let ck = ensure_monotype (clock_of_sch ck_sch) in
+        (try
+            filter_depend ck
+          with
+            | Unify -> non_clock_err cer.cer_loc)
     | Crow_empty -> carrier_row_empty
     | Crow_one ce ->
       let c = carrier_of_ce ty_vars ce in
@@ -865,7 +866,6 @@ let rec schema_of_expression env expr =
         let ty_emit = new_clock_var() in
         let ty_get = new_clock_var() in
         let ty_ck = type_clock_expr env ce in
-        let ty_ck = carrier_open_row ty_ck in
         let ty_s = constr_notabbrev event_ident
           [Kclock ty_emit; Kclock ty_get; Kcarrier_row ty_ck] in
         opt_iter
@@ -890,8 +890,7 @@ let rec schema_of_expression env expr =
     | Enothing -> Clocks_utils.static
 
     | Epause (_, k, ce) ->
-        let c = type_clock_expr env ce in
-        let cr = carrier_closed_row c in
+        let cr = type_clock_expr env ce in
         add_effect (eff_depend cr);
         (match k with
           | Strong -> set_current_react (react_carrier cr)
@@ -1111,7 +1110,7 @@ let rec schema_of_expression env expr =
       push_type_level ();
       (* create a fresh skolem *)
       let c = carrier_skolem id.Ident.name Clocks_utils.names#name in
-      let new_ck = depend c in
+      let new_ck = depend (carrier_generic_open_row c) in
       let env = Env.add id (forall [] new_ck) env in
       (* change activation clock *)
       let old_activation_carrier = !activation_carrier in
@@ -1128,8 +1127,8 @@ let rec schema_of_expression env expr =
       expr.e_react <- !current_react;
       ck
 
-    | Etopck -> clock_topck
-    | Ebase -> depend !activation_carrier
+    | Etopck -> depend (carrier_open_row topck_carrier)
+    | Ebase -> depend (carrier_open_row !activation_carrier)
   in
   expr.e_clock <- t;
   Stypes.record (Ti_expr expr);

@@ -58,8 +58,14 @@ let compile_implementation_front_end info_chan itf has_intf impl_list =
     if not has_intf then Typing.check_nongen_values rml_code;
 
     (* clocking *)
-    let rml_code = silent_pass "Clocking" (not !Compiler_options.no_clocking)
-      (Clocking.impl info_chan has_intf) rml_code in
+    let rml_code =
+      if !Compiler_options.use_row_clocking then
+        silent_pass "Clocking with rows" (not !Compiler_options.no_clocking)
+          (Clocking_row.impl info_chan has_intf) rml_code
+      else
+        silent_pass "Clocking" (not !Compiler_options.no_clocking)
+          (Clocking.impl info_chan has_intf) rml_code
+    in
 
     let rml_code = silent_pass "Reactivity analysis" (not !Compiler_options.no_reactivity)
       (Reactivity.impl info_chan) rml_code in

@@ -1081,7 +1081,7 @@ two_bars: BAR BAR { () } | BARBAR { () }
 simple_type:
   | type_var
       { mkte (Ptype_var $1) }
-  | LBRACKET clock_type RBRACKET
+  | LBRACKET clock_row_type RBRACKET
       { mkte (Ptype_depend $2) }
   | type_longident clock_effect_params
       { mkte(Ptype_constr($1, $2)) }
@@ -1131,11 +1131,11 @@ annot_var:
 ;
 clock_type:
   | clock_var { mkce (Pcar_var $1) }
-  | LIDENT { mkce (Pcar_ident $1) }
   | TOPCK { mkce (Pcar_topck) }
   | GLOBAL_CK { mkce (Pcar_topck) }
 ;
 clock_row_type:
+  | LIDENT { mkcer (Pcar_row_ident $1) }
   | clock_row_var { mkcer (Pcar_row_var $1) }
   | clock_type { mkcer (Pcar_row (mkcer (Pcar_row_one $1), mkcer Pcar_row_empty)) }
   | clock_type SEMI ne_clock_row { mkcer (Pcar_row (mkcer (Pcar_row_one $1), $3)) }

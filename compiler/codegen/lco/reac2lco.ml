@@ -89,7 +89,7 @@ let rec translate_te typ =
   let cotyp =
     match typ.te_desc with
     | Tvar x -> Cotype_var x
-    | Tdepend ce -> Cotype_depend (translate_ce ce)
+    | Tdepend cer -> Cotype_depend (translate_cer cer)
     | Tarrow (t1, t2, ee) ->
         Cotype_arrow (translate_te t1, translate_te t2, translate_eer ee)
     | Tproduct typ_list ->
@@ -118,6 +118,7 @@ and translate_cer cer =
   let cocer =
     match cer.cer_desc with
       | Crow_var s -> Cocar_row_var s
+      | Crow_ident id -> Cocar_row_ident id
       | Crow_empty -> Cocar_row_empty
       | Crow_one ce -> Cocar_row_one (translate_ce ce)
       | Crow (cer1, cer2) -> Cocar_row (translate_cer cer1, translate_cer cer2)

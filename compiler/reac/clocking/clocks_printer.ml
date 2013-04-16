@@ -89,9 +89,9 @@ let rec print priority ty =
         print_string "'";
         if ty.level <> generic then print_string "_";
         print_string (names.k_clock#name ty.index)
-    | Clock_depend c ->
+    | Clock_depend cr ->
         print_string "{";
-        print_carrier priority c;
+        print_carrier_row priority cr;
         print_string "}"
     | Clock_arrow(ty1, ty2, eff) ->
         if priority >= 1 then print_string "(";

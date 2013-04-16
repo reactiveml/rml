@@ -56,9 +56,9 @@ and type_expression_desc funs acc ted = match ted with
       let act, acc = carrier_expression_it funs acc act in
       let ee, acc = effect_row_expression_it funs acc ee in
       Ptype_process (t,k,act,ee), acc
-  | Ptype_depend ce ->
-      let ce, acc = carrier_expression_it funs acc ce in
-      Ptype_depend ce, acc
+  | Ptype_depend cer ->
+      let cer, acc = carrier_row_expression_it funs acc cer in
+      Ptype_depend cer, acc
   | Ptype_forall (pe_list, te) ->
       let pe_list, acc = mapfold (param_expression_it funs) acc pe_list in
       let te, acc = type_expression_it funs acc te in
@@ -88,7 +88,7 @@ and carrier_row_expression_desc_it funs acc ed =
   try funs.carrier_row_expression_desc funs acc ed
   with Fallback -> carrier_row_expression_desc funs acc ed
 and carrier_row_expression_desc funs acc ced = match ced with
-  | Pcar_row_var _ | Pcar_row_empty | Pcar_row_fresh -> ced, acc
+  | Pcar_row_var _ | Pcar_row_ident _ | Pcar_row_empty | Pcar_row_fresh -> ced, acc
   | Pcar_row_one ce1 ->
     let ce1, acc = carrier_expression_it funs acc ce1 in
     Pcar_row_one ce1, acc
