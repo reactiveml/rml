@@ -945,7 +945,7 @@ let rec schema_of_expression env expr =
         let r = new_react_var () in
         unify_run e1.e_loc ty_e (process ty !activation_carrier eff r);
         add_effect eff;
-        set_current_react (make_generic (React_run r));
+        set_current_react (react_run r);
         expr.e_react <- !current_react;
         ty
 

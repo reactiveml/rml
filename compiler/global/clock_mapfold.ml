@@ -25,7 +25,9 @@ let react_visited_list, react_visited = mk_visited ()
 let rec clock_it funs acc ck = funs.clock funs acc ck
 and clock funs acc ck =
   let ckd, acc = clock_desc_it funs acc ck.desc in
-  { ck with desc = ckd }, acc
+  match ckd with
+    | Clock_var -> ck, acc
+    | _ -> { ck with desc = ckd }, acc
 
 and clock_desc_it funs acc ckd =
   try funs.clock_desc funs acc ckd
@@ -63,7 +65,9 @@ and clock_desc funs acc ckd = match ckd with
 and carrier_it funs acc car = funs.carrier funs acc car
 and carrier funs acc car =
   let card, acc = carrier_desc_it funs acc car.desc in
-  { car with desc = card }, acc
+  match card with
+    | Carrier_var _ -> car, acc
+    | _ -> { car with desc = card }, acc
 
 and carrier_desc_it funs acc ckd =
   try funs.carrier_desc funs acc ckd
@@ -78,7 +82,9 @@ and carrier_desc funs acc card = match card with
 and carrier_row_it funs acc cr = funs.carrier_row funs acc cr
 and carrier_row funs acc cr =
   let crd, acc = carrier_row_desc_it funs acc cr.desc in
-  { cr with desc = crd }, acc
+  match crd with
+    | Carrier_row_var -> cr, acc
+    | _ -> { cr with desc = crd }, acc
 
 and carrier_row_desc_it funs acc ckd =
   try funs.carrier_row_desc funs acc ckd
@@ -100,7 +106,9 @@ and carrier_row_desc funs acc crd = match crd with
 and effect_it funs acc eff = funs.effect funs acc eff
 and effect funs acc eff =
   let effd, acc = effect_desc_it funs acc eff.desc in
-  { eff with desc = effd }, acc
+  match effd with
+    | Effect_var -> eff, acc
+    | _ -> { eff with desc = effd }, acc
 
 and effect_desc_it funs acc effd =
   try funs.effect_desc funs acc effd
@@ -125,7 +133,9 @@ and effect_desc funs acc effd = match effd with
 and effect_row_it funs acc eff = funs.effect_row funs acc eff
 and effect_row funs acc eff =
   let effd, acc = effect_row_desc_it funs acc eff.desc in
-  { eff with desc = effd }, acc
+  match effd with
+    | Effect_row_var -> eff, acc
+    | _ -> { eff with desc = effd }, acc
 
 and effect_row_desc_it funs acc effd =
   try funs.effect_row_desc funs acc effd
@@ -158,7 +168,9 @@ and react_effect funs acc r =
           r, acc
     | _ ->
       let rd, acc = react_effect_desc_it funs acc r.desc in
-      { r with desc = rd }, acc
+      (match rd with
+        | React_var -> r, acc
+        | _ -> { r with desc = rd }, acc)
 
 and react_effect_desc_it funs acc rd =
   try funs.react_effect_desc funs acc rd

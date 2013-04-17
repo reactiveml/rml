@@ -671,8 +671,8 @@ let rec copy_subst_clock m ck =
     | Clock_var ->
         if level = generic then
           let v = new_clock_var () in
-          ck.desc <- Clock_link(v);
           saves.k_clock#save ck;
+          ck.desc <- Clock_link(v);
           v
         else
           ck
@@ -724,8 +724,8 @@ and copy_subst_carrier m car =
           with
             | Not_found ->
                 let v = new_carrier_var s in
-                car.desc <- Carrier_link v;
                 saves.k_carrier#save car;
+                car.desc <- Carrier_link v;
                 v
           )
         else
@@ -748,8 +748,8 @@ and copy_subst_carrier_row m cr =
     | Carrier_row_var ->
       if level = generic then
         let v = new_carrier_row_var () in
-        cr.desc <- Carrier_row_link v;
         saves.k_carrier_row#save cr;
+        cr.desc <- Carrier_row_link v;
         v
       else
         cr
@@ -781,8 +781,8 @@ and copy_subst_effect m eff =
     | Effect_var ->
         if level = generic then
           let v = new_effect_var () in
-          eff.desc <- Effect_link v;
           saves.k_effect#save eff;
+          eff.desc <- Effect_link v;
           v
         else
           eff
@@ -809,8 +809,8 @@ and copy_subst_effect_row m eff =
     | Effect_row_var ->
       if level = generic then
         let v = new_effect_row_var () in
-        eff.desc <- Effect_row_link v;
         saves.k_effect_row#save eff;
+        eff.desc <- Effect_row_link v;
         v
       else
         eff
@@ -842,8 +842,8 @@ and copy_subst_react m r =
     | React_var ->
         if level = generic then
           let v = new_react_var () in
-          r.desc <- React_link v;
           saves.k_react#save r;
+          r.desc <- React_link v;
           v
         else
           r
