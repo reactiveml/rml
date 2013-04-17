@@ -272,10 +272,17 @@ let react_or r1 r2 =
   in
   make_generic desc
 
-let react_loop r =
-  let var = new_react_var () in
-  let body = react_seq r var in
-  make_generic (React_rec (false, var, body))
+let react_run r =
+  make_generic (React_run r)
+
+let react_rec b k =
+  make_generic (React_rec (b, k))
+
+let react_loop k =
+  let v = make_generic React_empty in
+  let rk = react_rec false (react_seq k (react_run v)) in
+  v.desc <- React_link rk;
+  rk
 
 (* Type schemes *)
 
@@ -357,222 +364,21 @@ let get_car cr =
     | Carrier_row_one car -> car
     | _ -> Printf.eprintf "Unexpected carrier row: %a\n" Clocks_printer.output_carrier_row cr; assert false
 
-(* simplification of effects *)
-let equal_carrier c1 c2 =
-  let c1 = carrier_repr c1 in
-  let c2 = carrier_repr c2 in
-  match c1.desc, c2.desc with
-    | Carrier_var _, Carrier_var _ -> c1.index = c2.index
-    | Carrier_skolem (_, i1), Carrier_skolem (_, i2) -> i1 = i2
-    | _ -> false
-
-(* Compares two effects, but only if they are leaves *)
-let equal_effect eff1 eff2 =
-  let eff1 = effect_repr eff1 in
-  let eff2 = effect_repr eff2 in
-  match eff1.desc, eff2.desc with
-    | Effect_var, Effect_var -> eff1.index = eff2.index
-    | Effect_depend c1, Effect_depend c2 -> equal_carrier (get_car c1) (get_car c2)
-    | _ -> false
-
-let simplify_effect eff =
-  let rec mem_effect eff l = match l with
-    | [] -> false
-    | eff2::l -> equal_effect eff eff2 || mem_effect eff l
-  in
-  let add_to_list x l =
-    if mem_effect x l then l else x::l
-  in
-  let rec clocks_of acc eff = match eff.desc with
-    | Effect_empty | Effect_one _ -> acc
-    | Effect_var | Effect_depend _ -> add_to_list eff acc
-    | Effect_link link -> clocks_of acc link
-    | Effect_sum (eff1, eff2) -> clocks_of (clocks_of acc eff2) eff1
-  in
-  let eff = effect_repr eff in
-  let new_eff = eff_sum_list (clocks_of [] eff) in
-  new_eff
-
-let simplify_effect eff =
-  if !Compiler_options.use_row_clocking then eff (* TODO *) else simplify_effect eff
-
-(*
-let rec remove_ck_from_carrier ck car = match car.desc with
-  | Carrier_var _ -> car
-  | Carrier_skolem _ ->
-      if ck.index = car.index then carrier_empty else car
-  | Carrier_link link -> remove_ck_from_carrier ck link
-*)
-
-let rec remove_var_from_effect index eff = match eff.desc with
-  | Effect_var ->
-      if eff.index = index then
-        no_effect
-      else
-        eff
-  | Effect_empty | Effect_depend _ | Effect_one _ -> eff
-  | Effect_link link -> remove_var_from_effect index link
-  | Effect_sum (eff1, eff2) ->
-      { eff with desc = Effect_sum (remove_var_from_effect index eff1,
-                                   remove_var_from_effect index eff2) }
-let remove_var_from_effect index eff =
-  simplify_effect (remove_var_from_effect index eff)
-
-(* Remove local clock from effect without rows *)
-let rec remove_ck_from_effect ck eff = match eff.desc with
-  | Effect_depend { desc = Carrier_row_one c } ->
-      if (carrier_repr c).desc = ck.desc then
-        no_effect
-      else
-        eff
-  | Effect_empty | Effect_var | Effect_one _ | Effect_depend _ -> eff
-  | Effect_link link -> remove_ck_from_effect ck link
-  | Effect_sum (eff1, eff2) ->
-      { eff with desc = Effect_sum (remove_ck_from_effect ck eff1,
-                                   remove_ck_from_effect ck eff2) }
-let remove_ck_from_effect_simple ck eff =
-  simplify_effect (remove_ck_from_effect ck eff)
-
-(* Remove local clock from effect with rows *)
-let rec remove_ck_from_carrier_row ck cr = match cr.desc with
-  | Carrier_row_empty | Carrier_row_var -> cr
-  | Carrier_row_one car ->
-    let car = carrier_repr car in
-    if ck.index = car.index then carrier_row_empty else cr
-  | Carrier_row (cr1, cr2) ->
-    { cr with desc = Carrier_row (remove_ck_from_carrier_row ck cr1,
-                                   remove_ck_from_carrier_row ck cr2) }
-  | Carrier_row_link link -> remove_ck_from_carrier_row ck link
-
-let rec remove_ck_from_effect ck eff = match eff.desc with
-  | Effect_empty | Effect_var -> eff
-  | Effect_depend cr ->
-    { eff with desc = Effect_depend (remove_ck_from_carrier_row ck cr) }
-  | Effect_one er ->
-    { eff with desc = Effect_one (remove_ck_from_effect_row ck er) }
-  | Effect_sum (eff1, eff2) ->
-      { eff with desc = Effect_sum (remove_ck_from_effect ck eff1,
-                                   remove_ck_from_effect ck eff2) }
-  | Effect_link link -> remove_ck_from_effect ck link
-(*and remove_ck_from_effect ck eff =
-  simplify_effect (remove_ck_from_effect ck eff) *)
-
-and remove_ck_from_effect_row ck eff = match eff.desc with
-  | Effect_row_var | Effect_row_empty -> eff
-  | Effect_row_one eff1 ->
-    { eff with desc = Effect_row_one (remove_ck_from_effect ck eff1) }
-  | Effect_row (eff1, eff2) ->
-    { eff with desc = Effect_row (remove_ck_from_effect_row ck eff1,
-                                  remove_ck_from_effect_row ck eff2) }
-  | Effect_row_rec (var, body) ->
-    { eff with desc = Effect_row_rec (var, remove_ck_from_effect_row ck body) }
-  | Effect_row_link link -> remove_ck_from_effect_row ck link
-
-let remove_ck_from_effect ck eff =
-  if !Compiler_options.use_row_clocking then
-    remove_ck_from_effect ck eff
-  else
-    remove_ck_from_effect_simple ck eff
-
 let subst_var_effect_row index subst er =
   let effect_row funs () er = match er.desc with
     | Effect_row_var when er.index = index -> subst, ()
-    | _ ->
-      let er, _ = Clock_mapfold.effect_row funs () er in
-      er, ()
+    | _ -> Clock_mapfold.effect_row funs () er
   in
   let funs = { Clock_mapfold.defaults with effect_row = effect_row } in
   fst (Clock_mapfold.effect_row_it funs () er)
 
-let rec remove_local_from_carrier_row level cr = match cr.desc with
-  | Carrier_row_empty | Carrier_row_one _ -> cr
-  | Carrier_row_var ->
-      if cr.level > level then
-        carrier_row_empty
-      else
-        cr
-  | Carrier_row (cr1, cr2) ->
-    { cr with desc = Carrier_row (remove_local_from_carrier_row level cr1,
-                                  remove_local_from_carrier_row level cr2) }
-  | Carrier_row_link link -> remove_local_from_carrier_row level link
-
-let rec remove_local_from_effect level bound_vars eff = match eff.desc with
-  | Effect_empty | Effect_var -> eff
-  | Effect_depend cr ->
-    { eff with desc = Effect_depend (remove_local_from_carrier_row level cr) }
-  | Effect_one er ->
-    { eff with desc = Effect_one (remove_local_from_effect_row level bound_vars er) }
-  | Effect_sum (eff1, eff2) ->
-    { eff with desc = Effect_sum (remove_local_from_effect level bound_vars eff1,
-                                  remove_local_from_effect level bound_vars eff2) }
-  | Effect_link link -> remove_local_from_effect level bound_vars link
-
-and remove_local_from_effect_row level bound_vars eff = match eff.desc with
-  | Effect_row_empty -> eff
-  | Effect_row_var ->
-      if eff.level > level && not (List.memq eff bound_vars) then
-        effect_row_empty
-      else
-        eff
-  | Effect_row_one eff1 ->
-     { eff with desc = Effect_row_one (remove_local_from_effect level bound_vars eff1) }
-  | Effect_row (eff1, eff2) ->
-    { eff with desc = Effect_row (remove_local_from_effect_row level bound_vars eff1,
-                                  remove_local_from_effect_row level bound_vars eff2) }
-  | Effect_row_rec (var, body) ->
-    { eff with
-      desc = Effect_row_rec (var, remove_local_from_effect_row level (var::bound_vars) body) }
-  | Effect_row_link link -> remove_local_from_effect_row level bound_vars link
-
-(* Operations on reactivity effects *)
-let rec remove_ck_from_react ck r = match r.desc with
-  | React_empty | React_var -> r
-  | React_carrier cr ->
-    let cr = remove_ck_from_carrier_row ck cr in
-    (match cr.desc with
-      | Carrier_row_empty -> no_react
-      | _ -> { r with desc = React_carrier cr })
-  | React_seq rl ->
-      { r with desc = React_seq (List.map (remove_ck_from_react ck) rl) }
-  | React_par rl ->
-      { r with desc = React_par (List.map (remove_ck_from_react ck) rl) }
-  | React_or rl ->
-      { r with desc = React_or (List.map (remove_ck_from_react ck) rl) }
-  | React_run r1 ->
-      { r with desc = React_run (remove_ck_from_react ck r1) }
-  | React_rec (b, r1, r2) ->
-      { r with desc = React_rec (b, r1, remove_ck_from_react ck r2) }
-  | React_link link -> remove_ck_from_react ck link
-
-let is_not_local_var level bound_vars r = match r.desc with
-  | React_var when r.level > level && not (List.memq r bound_vars) -> false
-  | _ -> true
-
-let rec remove_local_from_react level bound_vars r = match r.desc with
-  | React_empty | React_var | React_carrier _ -> r
-  | React_seq rl ->
-      { r with desc = React_seq (List.map (remove_local_from_react level bound_vars) rl) }
-  | React_par rl ->
-      { r with desc = React_par (List.map (remove_local_from_react level bound_vars) rl) }
-  | React_or rl ->
-      let rl = List.filter (is_not_local_var level bound_vars) rl in
-      (match rl with
-        | [] -> assert false
-        | [r] -> r
-        | _ -> { r with desc = React_or (List.map (remove_local_from_react level bound_vars) rl) })
-  | React_run r1 ->
-      { r with desc = React_run (remove_local_from_react level bound_vars r1) }
-  | React_rec (b, r1, r2) ->
-      { r with desc = React_rec (b, r1, remove_local_from_react level (r1::bound_vars) r2) }
-  | React_link link -> remove_local_from_react level bound_vars link
-
-let subst_var_react index subst r =
-  let react_effect funs () r =  match r.desc with
-    | React_var when r.index = index -> subst, ()
-    | _ -> Clock_mapfold.react_effect funs () r
+let rec remove_var_from_effect index eff =
+  let effect funs () eff = match eff.desc with
+    | Effect_var when eff.index = index -> no_effect, ()
+    | _ -> Clock_mapfold.effect funs () eff
   in
-  let funs = { Clock_mapfold.defaults with react_effect = react_effect } in
-  fst (Clock_mapfold.react_effect_it funs () r)
+  let funs = { Clock_mapfold.defaults with effect = effect } in
+  fst (Clock_mapfold.effect_it funs () eff)
 
 (* To generalize a type *)
 
@@ -583,6 +389,7 @@ let subst_var_react index subst r =
 (* returns [generic] when a sub-term can be generalised *)
 
 let list_of_vars = ref []
+let visited_list, visited = mk_visited ()
 
 let rec gen_clock is_gen ck =
   let ck = clock_repr ck in
@@ -702,8 +509,9 @@ and gen_react is_gen r =
     | React_carrier c -> r.level <- gen_carrier_row is_gen c
     | React_seq rl | React_par rl | React_or rl ->
         r.level <- gen_react_list is_gen rl
-    | React_rec (_, r1, r2) ->
-        r.level <- min (gen_react is_gen r1) (gen_react is_gen r2)
+    | React_rec (checked, r1) ->
+        if not (visited r) then
+          r.level <- min generic (gen_react is_gen r1)
     | React_run r2 ->
         let _ = react_repr r2 in
         r.level <- gen_react is_gen r2
@@ -735,6 +543,7 @@ and gen_param_list is_gen param_list =
 let gen ck =
   (*Printf.eprintf "generalizing %a\n" Clocks_printer.output ck;*)
   list_of_vars:= [];
+  visited_list := [];
   let _ = gen_clock true ck in
   { cs_vars = !list_of_vars;
     cs_desc = ck }
@@ -742,6 +551,7 @@ let gen ck =
 let non_gen ck = ignore (gen_clock false ck)
 
 (* To compute the free type variables in a type *)
+let visited_list, visited = mk_visited ()
 let free_clock_vars level ck =
   let fv = ref [] in
   let rec free_vars ck =
@@ -762,7 +572,7 @@ let free_clock_vars level ck =
           free_vars ck;
           free_vars_carrier act;
           free_vars_effect_row eff;
-          free_vars_react [] r
+          free_vars_reactivity r
       | Clock_depend cr -> free_vars_carrier_row cr
       | Clock_forall sch -> (*TODO*) ()
   and free_vars_carrier car =
@@ -805,23 +615,26 @@ let free_clock_vars level ck =
       | Effect_row (eff1, eff2) | Effect_row_rec (eff1, eff2) ->
           free_vars_effect_row eff1; free_vars_effect_row eff2
       | Effect_row_link link -> free_vars_effect_row link
-  and free_vars_react bound r =
+  and free_vars_react r =
     let r = react_repr r in
     match r.desc with
       | React_var ->
-          if r.level >= level && (not (List.memq r bound))
+          if r.level >= level
           then fv := (Kreact r) :: !fv
       | React_empty -> ()
       | React_carrier c -> free_vars_carrier_row c
       | React_seq rl | React_par rl | React_or rl ->
-          List.iter (free_vars_react bound) rl
-      | React_rec (_, r1, r2) -> free_vars_react (r1::bound) r2
-      | React_run r  | React_link r -> free_vars_react bound r
+          List.iter free_vars_react rl
+      | React_rec (_, r1) -> if not (visited r) then free_vars_react r1
+      | React_run r  | React_link r -> free_vars_react  r
+  and free_vars_reactivity r =
+    visited_list := [];
+    free_vars_react r
   and free_vars_param p =
     let f =
       mk_kind_prod ~clock:free_vars ~carrier:free_vars_carrier
         ~carrier_row:free_vars_carrier_row ~effect:free_vars_effect
-        ~effect_row:free_vars_effect_row ~react:(free_vars_react [])
+        ~effect_row:free_vars_effect_row ~react:free_vars_reactivity
     in
     kind_iter f p
   in
@@ -834,7 +647,7 @@ let free_clock_vars level ck =
 class ['a,'b] save =
   object
     val mutable s = ([] : ('a * 'b) list)
-    method save value desc = s <- (value, desc) :: s
+    method save value = s <- (value, value.desc) :: s
     method cleanup =
       List.iter (fun (value, desc) -> value.desc <- desc) s;
       s <- []
@@ -859,7 +672,7 @@ let rec copy_subst_clock m ck =
         if level = generic then
           let v = new_clock_var () in
           ck.desc <- Clock_link(v);
-          saves.k_clock#save ck Clock_var;
+          saves.k_clock#save ck;
           v
         else
           ck
@@ -912,7 +725,7 @@ and copy_subst_carrier m car =
             | Not_found ->
                 let v = new_carrier_var s in
                 car.desc <- Carrier_link v;
-                saves.k_carrier#save car (Carrier_var s);
+                saves.k_carrier#save car;
                 v
           )
         else
@@ -936,7 +749,7 @@ and copy_subst_carrier_row m cr =
       if level = generic then
         let v = new_carrier_row_var () in
         cr.desc <- Carrier_row_link v;
-        saves.k_carrier_row#save cr Carrier_row_var;
+        saves.k_carrier_row#save cr;
         v
       else
         cr
@@ -969,7 +782,7 @@ and copy_subst_effect m eff =
         if level = generic then
           let v = new_effect_var () in
           eff.desc <- Effect_link v;
-          saves.k_effect#save eff Effect_var;
+          saves.k_effect#save eff;
           v
         else
           eff
@@ -997,7 +810,7 @@ and copy_subst_effect_row m eff =
       if level = generic then
         let v = new_effect_row_var () in
         eff.desc <- Effect_row_link v;
-        saves.k_effect_row#save eff Effect_row_var;
+        saves.k_effect_row#save eff;
         v
       else
         eff
@@ -1030,7 +843,7 @@ and copy_subst_react m r =
         if level = generic then
           let v = new_react_var () in
           r.desc <- React_link v;
-          saves.k_react#save r React_var;
+          saves.k_react#save r;
           v
         else
           r
@@ -1054,11 +867,13 @@ and copy_subst_react m r =
           make_generic (React_or (List.map (copy_subst_react m) rl))
         else
           r
-    | React_rec (b, r1, r2) ->
-        if level = generic then
-          make_generic (React_rec (b, copy_subst_react m r1, copy_subst_react m r2))
-        else
-          r
+    | React_rec (b, r1) ->
+        let v = make_generic React_empty in
+        saves.k_react#save r;
+        r.desc <- React_link v;
+        let v2 = react_rec b (copy_subst_react m r1) in
+        v.desc <- React_link v2;
+        v
     | React_run r2 ->
         if level = generic then
           make_generic (React_run (copy_subst_react m r2))
@@ -1082,13 +897,13 @@ and copy_subst_param m p =
 and no_copy_param p = match p with
   | Kcarrier ({ desc = Carrier_var s } as car) ->
       let v = new_generic_carrier_var s in
+      saves.k_carrier#save car;
       car.desc <- Carrier_link v;
-      saves.k_carrier#save car (Carrier_var s);
       Kcarrier v
   | Kcarrier_row ({ desc = Carrier_row_var } as cr) ->
       let v = new_generic_carrier_row_var () in
+      saves.k_carrier_row#save cr;
       cr.desc <- Carrier_row_link v;
-      saves.k_carrier_row#save cr Carrier_row_var;
       Kcarrier_row v
   | _ -> p
 
@@ -1130,6 +945,7 @@ let rec ensure_monotype ck =
 
 (* the occur check *)
 let is_rec = ref false
+let visited_list, visited = mk_visited ()
 let rec occur_check level index ck =
   let rec check ck =
     let ck = clock_repr ck in
@@ -1240,10 +1056,11 @@ and react_occur_check level index r =
       | React_seq rl | React_par rl | React_or rl ->
           List.iter check rl
       | React_run r1 -> check r1
-      | React_rec (_, _, r2) -> (* TODO: parcourir r1 ?*)
-          check r2
+      | React_rec (_, r1) -> (* TODO: parcourir r1 ?*)
+          if not (visited r) then check r1
       | React_link link -> check link
   in
+  visited_list := [];
   check r
 
 and param_occur_check level index p = match p with
@@ -1476,21 +1293,6 @@ let rec find_react_row_var rl = match rl with
             let r' = make_generic (React_or (r::rl)) in
             Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_react r';
             raise Unify)
-
-(* create the react effect 'rec rec_var. body'*)
-let mk_react_rec rec_var body =
-  let new_var = new_generic_react_var () in
-  match body with
-    | { desc = React_or (({ desc = React_var; index = i } as row_var)::rl) }
-        when i <> rec_var.index ->
-        (* the body is of the form 'phi + body': we generate 'phi + rec rec_var.body' *)
-        let body = make_generic (React_or rl) in
-        let body = subst_var_react rec_var.index new_var body in
-        let new_r = make_generic (React_rec (false, new_var, body)) in
-        react_or row_var new_r
-    | _ ->
-        let body = subst_var_react rec_var.index new_var body in
-        make_generic (React_rec (false, new_var, body))
 
 (* unification *)
 let rec unify expected_ck actual_ck =
@@ -1764,23 +1566,22 @@ and react_unify expected_r actual_r =
       match expected_r.desc, actual_r.desc with
         | React_empty, React_empty -> ()
         | React_carrier c1, React_carrier c2 -> carrier_row_unify c1 c2
-            (* phi == uphi. r *)
-        (*| React_var, React_rec (r2, _) when expected_r.index = r2.index -> ()
-        | React_rec(r2, _), React_var when actual_r.index = r2.index -> ()*)
         | React_var, _ ->
             let is_rec = react_occur_check_is_rec expected_r.level expected_r.index actual_r in
             if is_rec then (
-              let new_r = mk_react_rec expected_r actual_r in
+              let new_r = react_rec false actual_r in
               expected_r.desc <- React_link new_r
             ) else
               expected_r.desc <- React_link actual_r
         | _, React_var ->
             let is_rec = react_occur_check_is_rec actual_r.level actual_r.index expected_r in
             if is_rec then (
-              let new_r = mk_react_rec actual_r expected_r in
+              let new_r = react_rec false expected_r in
               actual_r.desc <- React_link new_r
             ) else
               actual_r.desc <- React_link expected_r
+        | React_rec(_, expected_r), _ -> react_unify expected_r actual_r
+        | _, React_rec (_, actual_r) -> react_unify expected_r actual_r
         (* unification of row types *)
         | React_or rl1, React_or rl2 ->
             let rl1, var1 = find_react_row_var rl1 in
@@ -1788,7 +1589,7 @@ and react_unify expected_r actual_r =
             if var1.index = var2.index then
               (* this should only be the case if we are unifying two reacts
                that are just copies *)
-              List.iter2 react_unify rl1 rl2
+              () (*List.iter2 react_unify rl1 rl2*)
             else (
               let var = new_react_var () in
               let new_rl1 = make_generic (React_or (var::rl1)) in
@@ -1796,10 +1597,8 @@ and react_unify expected_r actual_r =
               react_unify var1 new_rl2;
               react_unify var2 new_rl1
             )
-        | React_rec (_, var1, r1), React_rec (_, var2, r2) ->
-            react_unify var1 var2; react_unify r1 r2
-       (* | React_rec (_, expected_r), _ -> react_unify expected_r actual_r
-        | _, React_rec (_, actual_r) -> react_unify expected_r actual_r *)
+        (* only for unifying two instances of the same react *)
+
         | _ ->
             Printf.eprintf "Failed to unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r;
             raise Unify
@@ -1857,38 +1656,3 @@ let add_type_description g =
     ty_info = None;
     ck_info = g.ck_info }
 
-
-let cond_subst_react ck subst r =
-  let sub ckz cksub =
-    List.iter (fun ck -> ck.desc <- React_empty) ckz;
-    List.iter (fun ck -> ck.desc <- React_link subst) cksub
-  in
-  let rec aux rec_vars (ckz, cksub, b) r = match r.desc with
-    | React_empty -> ckz, cksub, b
-    | React_carrier ck ->
-      if ck.index = r.index then r::ckz, cksub, b else ckz, r::cksub, true
-    | React_var ->
-      if List.mem r.index rec_vars then
-        (sub ckz cksub; [],[],b)
-      else
-        ckz, cksub, b
-    | React_seq rl ->
-      let one_step (ckz, cksub, b) r =
-        let rec_vars = if b then [] else rec_vars in aux rec_vars (ckz, cksub, b) r
-      in
-      List.fold_left one_step (ckz, cksub, b) rl
-    | React_or rl ->
-      let ckz_list, cksub_list, b_list = Misc.split3 (List.map (aux rec_vars (ckz, cksub, b)) rl) in
-      List.flatten ckz_list, List.flatten cksub_list, b || List.for_all (fun b -> b) b_list
-    | React_par rl ->
-      let ckz_list, cksub_list, b_list = Misc.split3 (List.map (aux rec_vars (ckz, cksub, b)) rl) in
-      List.flatten ckz_list, List.flatten cksub_list, b || (List.exists (fun b -> b) b_list)
-    | React_run r1 -> aux rec_vars (ckz, cksub, b) r1
-    | React_rec(_, var, r1) ->  aux (var.index::rec_vars) (ckz, cksub, b) r1
-    | React_link r1 -> aux rec_vars (ckz, cksub, b) r1
-  in
-  let r_copy = copy_subst_react [] r in
-  cleanup ();
-  let ckz, cksub, _ = aux [] ([], [], false) r_copy in
-  sub ckz cksub;
-  r_copy

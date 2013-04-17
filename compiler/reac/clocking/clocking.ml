@@ -33,6 +33,8 @@
 open Compiler_options
 open Clocks
 open Clocks_utils
+open Clocks_utils_norow
+open Reactivity
 open Clocking_errors
 open Initialization
 open Asttypes
@@ -578,7 +580,7 @@ let rec schema_of_expression env expr =
         (* take the current effect and put it in the arrow *)
         let computed_eff =
           if !Compiler_options.no_clock_effects then
-            no_effect
+            new_effect_var ()
           else
             !current_effect
         in
@@ -784,16 +786,16 @@ let rec schema_of_expression env expr =
         push_type_level ();
         let ck, r = clock_react_of_expression env e in
         pop_type_level ();
-        let r = remove_local_from_react !current_level [] r in
+        let r = remove_local_from_react r in
         let r =
           if !Compiler_options.no_reactivity then
-            no_react
+            new_react_var ()
           else
             react_or (new_react_var ()) r
         in
         let eff =
           if !Compiler_options.no_clock_effects then
-            no_effect
+            new_effect_var ()
           else
             !current_effect
         in
@@ -1132,7 +1134,7 @@ let rec schema_of_expression env expr =
           | Some _ -> cond_subst_react c (react_carrier !activation_carrier) r
       in
       set_current_react r;
-      expr.e_react <- !current_react;
+      expr.e_react <- r;
       ck
 
     | Etopck -> depend topck_carrier

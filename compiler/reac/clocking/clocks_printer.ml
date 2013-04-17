@@ -76,6 +76,7 @@ let names ={
 }
 let skolem_name = new name_assoc_table (fun i -> "c"^string_of_int i)
 
+let react_visited_list, react_visited = mk_visited ()
 
 let print_skolem_name (n, i) =
   print_string "?";
@@ -139,7 +140,7 @@ let rec print priority ty =
           end;
         if p_list.k_react <> [] then (
           print_string "[";
-          print_react_list 2 ", " p_list.k_react;
+          print_reactivity_list 2 ", " p_list.k_react;
           print_string "]"
         )
        (* (match name.ck_info with
@@ -157,7 +158,7 @@ let rec print priority ty =
           print_string "|";
         print_effect_row priority eff;
         print_string "}[";
-        print_react priority r;
+        print_reactivity priority r;
         print_string "]"
     | Clock_forall sch ->
         print_scheme_full priority sch
@@ -274,16 +275,22 @@ and print_react priority r =
         print_string "("; print_react_list 2 " || " rl; print_string ")"
     | React_or rl ->
         print_string "("; print_react_list 2 " + " rl; print_string ")"
-    | React_rec (b, r1, r2) ->
-        print_string "(";
-        if b then
-          print_string "rec* "
-        else
-          print_string "rec ";
-        print_react priority r1;
-        print_string ". ";
-        print_react priority r2;
-        print_string ")"
+    | React_rec (b, r1) ->
+        if not (react_visited r) then (
+          print_string "(";
+          if b then
+            print_string "rec* "
+          else
+            print_string "rec ";
+          print_string "'";
+          print_string (names.k_react#name r.index);
+          print_string ". ";
+          print_react priority r1;
+          print_string ")"
+        ) else (
+          print_string "'";
+          print_string (names.k_react#name r.index)
+        )
     | React_run r1 ->
         print_string "(run ";
         print_react priority r1;
@@ -291,6 +298,10 @@ and print_react priority r =
     | React_link link -> print_react priority link
   end;
   close_box ()
+
+and print_reactivity priority r =
+  react_visited_list := [];
+  print_react priority r
 
 and print_scheme_full priority { cs_vars = vars; cs_desc = ty } =
   let vars = kind_sum_split vars in
@@ -329,10 +340,11 @@ and print_carrier_row_list priority sep l = _print_list print_carrier_row priori
 and print_effect_list priority sep l = _print_list print_effect priority sep l
 and print_effect_row_list priority sep l  = _print_list print_effect_row priority sep l
 and print_react_list priority sep l = _print_list print_react priority sep l
+and print_reactivity_list priority sep l = _print_list print_reactivity priority sep l
 
 and print_param priority =
   kind_fold ~clock:print ~carrier:print_carrier ~carrier_row:print_carrier_row
-    ~effect:print_effect ~effect_row:print_effect_row ~react:print_react
+    ~effect:print_effect ~effect_row:print_effect_row ~react:print_reactivity
 
 let print ty =
   names.k_clock#reset;
@@ -526,7 +538,7 @@ let output_effect_row oc effr =
 let output_react oc r =
   set_formatter_out_channel oc;
 (*   print_string "  "; *)
-  print_react 0 r;
+  print_reactivity 0 r;
   print_flush ()
 
 let output_value_declaration oc global_list =

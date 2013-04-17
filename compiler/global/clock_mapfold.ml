@@ -20,6 +20,8 @@ type 'a clock_it_funs = {
   clock_scheme : 'a clock_it_funs -> 'a -> clock_scheme -> clock_scheme * 'a;
 }
 
+let react_visited_list, react_visited = mk_visited ()
+
 let rec clock_it funs acc ck = funs.clock funs acc ck
 and clock funs acc ck =
   let ckd, acc = clock_desc_it funs acc ck.desc in
@@ -145,11 +147,18 @@ and effect_row_desc funs acc effd = match effd with
     let eff, acc = effect_row_it funs acc eff in
     Effect_row_link eff, acc
 
-
 and react_effect_it funs acc r = funs.react_effect funs acc r
 and react_effect funs acc r =
-  let rd, acc = react_effect_desc_it funs acc r.desc in
-  { r with desc = rd }, acc
+  match r.desc with
+    | React_rec _ ->
+        if not (react_visited r) then
+          let rd, acc = react_effect_desc_it funs acc r.desc in
+          r.desc <- rd; r, acc
+        else
+          r, acc
+    | _ ->
+      let rd, acc = react_effect_desc_it funs acc r.desc in
+      { r with desc = rd }, acc
 
 and react_effect_desc_it funs acc rd =
   try funs.react_effect_desc funs acc rd
@@ -168,10 +177,9 @@ and react_effect_desc funs acc rd = match rd with
   | React_or r_l ->
     let r_l, acc = mapfold (react_effect_it funs) acc r_l in
     React_or r_l, acc
-  | React_rec (b, r1, r2) ->
+  | React_rec (b, r1) ->
     let r1, acc = react_effect_it funs acc r1 in
-    let r2, acc = react_effect_it funs acc r2 in
-    React_rec (b, r1, r2), acc
+    React_rec (b, r1), acc
   | React_run r1 ->
     let r1, acc = react_effect_it funs acc r1 in
     React_run r1, acc
@@ -226,3 +234,15 @@ let defaults = {
   clock_param = clock_param;
   clock_scheme = clock_scheme;
 }
+
+let wrapper f funs acc e =
+  react_visited_list := [];
+  f funs acc e
+let clock_it funs acc = wrapper clock_it funs acc
+let carrier_it funs acc = wrapper carrier_it funs acc
+let carrier_row_it funs acc = wrapper carrier_row_it funs acc
+let effect_it funs acc = wrapper effect_it funs acc
+let effect_row_it funs acc = wrapper effect_row_it funs acc
+let react_effect_it funs acc = wrapper react_effect_it funs acc
+let clock_param_it funs acc = wrapper clock_param_it funs acc
+let clock_scheme_it funs acc = wrapper clock_scheme_it funs acc

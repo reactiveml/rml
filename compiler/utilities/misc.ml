@@ -315,3 +315,13 @@ let list_arity l =
     | Kreact _ -> { ar with k_react = ar.k_react + 1 }
   in
   List.fold_left add_arity zero_arity l
+
+
+(* List of visited nodes in a graph *)
+let mk_visited () =
+  let visited_list = ref [] in
+  let visited k =
+    if List.memq k !visited_list then true
+    else (visited_list := k::!visited_list; false)
+  in
+  visited_list, visited

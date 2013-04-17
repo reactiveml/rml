@@ -33,6 +33,8 @@
 open Compiler_options
 open Clocks
 open Clocks_utils
+open Clocks_utils_row
+open Reactivity
 open Clocking_errors
 open Initialization
 open Asttypes
@@ -779,7 +781,7 @@ let rec schema_of_expression env expr =
         push_type_level ();
         let ck, r = clock_react_of_expression env e in
         pop_type_level ();
-        let r = remove_local_from_react !current_level [] r in
+        let r = remove_local_from_react r in
         let r =
           if !Compiler_options.no_reactivity then
             no_react
@@ -905,7 +907,7 @@ let rec schema_of_expression env expr =
         push_type_level ();
         let r = type_statement_react env p in
         pop_type_level ();
-        let r = remove_local_from_react !current_level [] r in
+        let r = remove_local_from_react r in
         set_current_react (react_loop r);
         expr.e_react <- !current_react;
         Clocks_utils.static
