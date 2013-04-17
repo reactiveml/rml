@@ -73,4 +73,6 @@ let remove_ck_from_react ck r =
      | _ -> Clock_mapfold.react_effect funs () r
   in
   let funs = { Clock_mapfold.defaults with Clock_mapfold.react_effect = react_effect } in
-  fst (Clock_mapfold.react_effect_it funs () r)
+  let r_copy = copy_subst_react [] r in
+  cleanup ();
+  fst (Clock_mapfold.react_effect_it funs () r_copy)

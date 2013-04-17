@@ -279,7 +279,7 @@ let react_rec b k =
   make_generic (React_rec (b, k))
 
 let react_loop k =
-  let v = make_generic React_empty in
+  let v = make_local React_empty in
   let rk = react_rec false (react_seq k (react_run v)) in
   v.desc <- React_link rk;
   rk
@@ -868,7 +868,7 @@ and copy_subst_react m r =
         else
           r
     | React_rec (b, r1) ->
-        let v = make_generic React_empty in
+        let v = make_local React_empty in
         saves.k_react#save r;
         r.desc <- React_link v;
         let v2 = react_rec b (copy_subst_react m r1) in

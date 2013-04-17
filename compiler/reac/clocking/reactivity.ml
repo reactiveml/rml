@@ -78,8 +78,9 @@ let rec remove_local_from_react level r = match r.desc with
 
 let remove_local_from_react r =
   visited_list := [];
-  remove_local_from_react !current_level r
-
+  let r_copy = copy_subst_react [] r in
+  cleanup ();
+  remove_local_from_react !current_level r_copy
 
 
 let subst_var_react index subst r =
@@ -88,7 +89,9 @@ let subst_var_react index subst r =
     | _ -> Clock_mapfold.react_effect funs () r
   in
   let funs = { Clock_mapfold.defaults with Clock_mapfold.react_effect = react_effect } in
-  fst (Clock_mapfold.react_effect_it funs () r)
+  let r_copy = copy_subst_react [] r in
+  cleanup ();
+  fst (Clock_mapfold.react_effect_it funs () r_copy)
 
 
 let visited_list, visited = mk_visited ()
