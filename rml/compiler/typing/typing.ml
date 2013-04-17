@@ -114,9 +114,8 @@ let visited_list, visited = mk_visited ()
 let rec gen_react is_gen k =
   let k = react_effect_repr k in
   begin match k.react_desc with
-  | React_var
-  | React_pause
-  | React_epsilon ->
+  | React_pause | React_epsilon -> ()
+  | React_var ->
       if k.react_level > !reactivity_current_level
       then if is_gen
       then (k.react_level <- generic;
@@ -181,6 +180,7 @@ let rec gen_ty is_gen ty =
 let gen ty =
   list_of_typ_vars := [];
   list_of_react_vars := [];
+  visited_list := [];
   let _ = gen_ty true ty in
   { ts_binders = !list_of_typ_vars;
     ts_rbinders = !list_of_react_vars;

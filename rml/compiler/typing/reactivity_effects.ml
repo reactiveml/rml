@@ -39,6 +39,11 @@ let make_react k =
     react_level = generic;
     react_index = names#name; }
 
+let make_local_react k =
+  { react_desc = k;
+    react_level = !reactivity_current_level;
+    react_index = names#name; }
+
 let react_pause () =
   make_react React_pause
 
@@ -92,8 +97,8 @@ let react_rec b k =
     react_index = names#name }
 
 let react_loop k =
-  let v = react_epsilon () in
-  let rk = react_rec false (react_seq [ k; v ]) in
+  let v = make_local_react React_epsilon in
+  let rk = react_rec false (react_seq [ k; react_run v ]) in
   v.react_desc <- React_link rk;
   rk
 
@@ -220,7 +225,7 @@ let rec copy_react k =
       else
 	k
   | React_rec (b, k1) ->
-      let v = react_epsilon () in
+      let v = make_local_react React_epsilon in
       save_react k;
       k.react_desc <- React_link v;
       let v2 = react_rec b (copy_react k1) in
@@ -234,7 +239,6 @@ let rec copy_react k =
 	k
 
 let copy_react k =
-  visited_list := [];
   copy_react k
 
 
