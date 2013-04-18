@@ -1524,8 +1524,7 @@ and effect_row_unify expected_eff actual_eff =
                 expected_eff.index actual_eff
             in
             if is_rec then
-              let new_eff = eff_row_rec actual_eff in
-              expected_eff.desc <- Effect_row_link new_eff
+              expected_eff.desc <- Effect_row_link (eff_row_rec actual_eff)
             else
               expected_eff.desc <- Effect_row_link actual_eff
         | _, Effect_row_var ->
@@ -1534,8 +1533,7 @@ and effect_row_unify expected_eff actual_eff =
                 actual_eff.index expected_eff
             in
             if is_rec then
-              let new_eff = eff_row_rec expected_eff in
-              actual_eff.desc <- Effect_row_link new_eff
+              actual_eff.desc <- Effect_row_link (eff_row_rec expected_eff)
             else
               actual_eff.desc <- Effect_row_link expected_eff
         | Effect_row_rec expected_eff, _ -> effect_row_unify expected_eff actual_eff
@@ -1593,17 +1591,15 @@ and react_unify expected_r actual_r =
         | React_carrier c1, React_carrier c2 -> carrier_row_unify c1 c2
         | React_var, _ ->
             let is_rec = react_occur_check_is_rec expected_r.level expected_r.index actual_r in
-            if is_rec then (
-              let new_r = react_rec false actual_r in
-              expected_r.desc <- React_link new_r
-            ) else
+            if is_rec then
+              expected_r.desc <- React_link (react_rec false actual_r)
+            else
               expected_r.desc <- React_link actual_r
         | _, React_var ->
             let is_rec = react_occur_check_is_rec actual_r.level actual_r.index expected_r in
-            if is_rec then (
-              let new_r = react_rec false expected_r in
-              actual_r.desc <- React_link new_r
-            ) else
+            if is_rec then
+              actual_r.desc <- React_link (react_rec false expected_r)
+            else
               actual_r.desc <- React_link expected_r
         | React_rec(_, expected_r), _ -> react_unify expected_r actual_r
         | _, React_rec (_, actual_r) -> react_unify expected_r actual_r

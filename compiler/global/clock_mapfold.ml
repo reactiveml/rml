@@ -260,10 +260,6 @@ let wrapper f funs acc e =
   react_visited_list := [];
   f funs acc e
 let clock_it funs acc = wrapper clock_it funs acc
-let carrier_it funs acc = wrapper carrier_it funs acc
-let carrier_row_it funs acc = wrapper carrier_row_it funs acc
-let effect_it funs acc = wrapper effect_it funs acc
-let effect_row_it funs acc = wrapper effect_row_it funs acc
 let react_effect_it funs acc = wrapper react_effect_it funs acc
 let clock_param_it funs acc = wrapper clock_param_it funs acc
 let clock_scheme_it funs acc = wrapper clock_scheme_it funs acc
