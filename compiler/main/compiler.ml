@@ -152,8 +152,14 @@ let compile_interface_front_end info_chan itf intf_list =
     (* typing *)
     let rml_code = silent_pass "Typing interface" true (Typing.intf info_chan) rml_code in
     (* clocking *)
-    let rml_code = silent_pass "Clocking interface" (not !Compiler_options.no_clocking)
-      (Clocking.intf info_chan) rml_code in
+    let rml_code =
+      if !Compiler_options.use_row_clocking then
+        silent_pass "Clocking interface with rows" (not !Compiler_options.no_clocking)
+          (Clocking_row.intf info_chan) rml_code
+      else
+        silent_pass "Clocking interface" (not !Compiler_options.no_clocking)
+          (Clocking.intf info_chan) rml_code
+    in
     rml_code
   in
   (* compilation of the whole file *)
