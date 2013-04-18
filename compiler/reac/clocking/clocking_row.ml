@@ -573,7 +573,7 @@ let rec schema_of_expression env expr =
             type_expect new_env e ty_res)
           matching;
         (* take the current effect and put it in the arrow *)
-        let computed_eff = (*remove_local_from_effect !current_level*) !current_effect in
+        let computed_eff = remove_local_from_effect !current_effect in
         let computed_eff =
           if !Compiler_options.no_clock_effects then
             new_effect_row_var ()
@@ -788,7 +788,7 @@ let rec schema_of_expression env expr =
           else
             react_or (new_react_var ()) r
         in
-        let eff = (*remove_local_from_effect !current_level*) !current_effect in
+        let eff = remove_local_from_effect !current_effect in
         let eff =
           if !Compiler_options.no_clock_effects then
             new_effect_row_var ()
@@ -1112,8 +1112,9 @@ let rec schema_of_expression env expr =
       push_type_level ();
       (* create a fresh skolem *)
       let c = carrier_skolem id.Ident.name Clocks_utils.names#name in
-      let new_ck = depend (carrier_generic_open_row c) in
-      let env = Env.add id (forall [] new_ck) env in
+      let var = new_generic_carrier_row_var () in
+      let new_ck = depend (carrier_row (carrier_row_one c) var) in
+      let env = Env.add id (forall [Kcarrier_row var] new_ck) env in
       (* change activation clock *)
       let old_activation_carrier = !activation_carrier in
       activation_carrier := c;
