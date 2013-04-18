@@ -21,6 +21,7 @@ type 'a clock_it_funs = {
 }
 
 let react_visited_list, react_visited = mk_visited ()
+let eff_visited_list, eff_visited = mk_visited ()
 
 let rec clock_it funs acc ck = funs.clock funs acc ck
 and clock funs acc ck =
@@ -132,10 +133,19 @@ and effect_desc funs acc effd = match effd with
 
 and effect_row_it funs acc eff = funs.effect_row funs acc eff
 and effect_row funs acc eff =
-  let effd, acc = effect_row_desc_it funs acc eff.desc in
-  match effd with
-    | Effect_row_var -> eff, acc
-    | _ -> { eff with desc = effd }, acc
+  match eff.desc with
+    | Effect_row_rec _ ->
+        if not (eff_visited eff) then
+          let effd, acc = effect_row_desc_it funs acc eff.desc in
+          eff.desc <- effd; eff, acc
+        else
+          eff, acc
+    | _ ->
+      let effd, acc = effect_row_desc_it funs acc eff.desc in
+      (match effd with
+        | Effect_row_var -> eff, acc
+        | _ -> { eff with desc = effd }, acc)
+
 
 and effect_row_desc_it funs acc effd =
   try funs.effect_row_desc funs acc effd
@@ -149,10 +159,9 @@ and effect_row_desc funs acc effd = match effd with
     let eff1, acc = effect_row_it funs acc eff1 in
     let eff2, acc = effect_row_it funs acc eff2 in
     Effect_row (eff1, eff2), acc
-  | Effect_row_rec (eff1, eff2) ->
+  | Effect_row_rec eff1 ->
     let eff1, acc = effect_row_it funs acc eff1 in
-    let eff2, acc = effect_row_it funs acc eff2 in
-    Effect_row_rec (eff1, eff2), acc
+    Effect_row_rec eff1, acc
   | Effect_row_link eff ->
     let eff, acc = effect_row_it funs acc eff in
     Effect_row_link eff, acc

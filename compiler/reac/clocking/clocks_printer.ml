@@ -77,6 +77,7 @@ let names ={
 let skolem_name = new name_assoc_table (fun i -> "c"^string_of_int i)
 
 let react_visited_list, react_visited = mk_visited ()
+let eff_visited_list, eff_visited = mk_visited ()
 
 let print_skolem_name (n, i) =
   print_string "?";
@@ -99,7 +100,7 @@ let rec print priority ty =
         print 1 ty1;
         print_space ();
         print_string"=>{";
-        print_effect_row priority eff;
+        print_effect_row_safe priority eff;
         print_string "}";
         print_space ();
         print 0 ty2;
@@ -124,7 +125,7 @@ let rec print priority ty =
               print_string "|";
               print_carrier_row_list 2 "," p_list.k_carrier_row;
               print_string "|";
-              print_effect_row_list 2 "," p_list.k_effect_row;
+              print_effect_row_safe_list 2 "," p_list.k_effect_row;
               print_string "}"
             );
           end
@@ -156,7 +157,7 @@ let rec print priority ty =
           print_string "||"
         else
           print_string "|";
-        print_effect_row priority eff;
+        print_effect_row_safe priority eff;
         print_string "}[";
         print_reactivity priority r;
         print_string "]"
@@ -240,22 +241,31 @@ and print_effect_row priority eff =
     | Effect_row(c, { desc = Effect_row_var }) ->
       print_effect_row priority c;
       print_string ";.."
-    | Effect_row(c, { desc = Effect_row_empty }) ->
-      print_effect_row priority c
+  (*  | Effect_row(c, { desc = Effect_row_empty }) ->
+      print_effect_row priority c *)
     | Effect_row(c1, c2) ->
-      print_effect_row priority c2;
-      print_string ";";
-      print_effect_row priority c1
-    | Effect_row_rec (c1, c2) ->
-      print_string "(rec ";
       print_effect_row priority c1;
-      print_string ".";
-      print_effect_row priority c2;
-      print_string ")"
+      print_string ";";
+      print_effect_row priority c2
+    | Effect_row_rec eff1 ->
+      if not (eff_visited eff) then (
+        print_string "(rec '";
+        print_string (names.k_effect_row#name eff.index);
+        print_string ".";
+        print_effect_row priority eff1;
+        print_string ")"
+      ) else (
+        print_string "'";
+        print_string (names.k_effect_row#name eff.index);
+      )
     | Effect_row_empty -> print_string "empty"
     | Effect_row_link(link) -> print_effect_row priority link
   end;
   close_box ()
+
+and print_effect_row_safe priority r =
+  eff_visited_list := [];
+  print_effect_row priority r
 
 and print_react priority r =
   open_box 0;
@@ -339,6 +349,7 @@ and print_carrier_list priority sep l = _print_list print_carrier priority sep l
 and print_carrier_row_list priority sep l = _print_list print_carrier_row priority sep l
 and print_effect_list priority sep l = _print_list print_effect priority sep l
 and print_effect_row_list priority sep l  = _print_list print_effect_row priority sep l
+and print_effect_row_safe_list priority sep l  = _print_list print_effect_row_safe priority sep l
 and print_react_list priority sep l = _print_list print_react priority sep l
 and print_reactivity_list priority sep l = _print_list print_reactivity priority sep l
 

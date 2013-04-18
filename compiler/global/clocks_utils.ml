@@ -234,6 +234,9 @@ let eff_open_row eff =
 let eff_closed_row eff =
   eff_row (eff_row_one eff) effect_row_empty
 
+let eff_row_rec eff =
+  make_generic (Effect_row_rec eff)
+
 let comb_arrow ck1 ck2 =
   arrow ck1 ck2 (eff_closed_row no_effect)
 
@@ -389,7 +392,8 @@ let rec remove_var_from_effect index eff =
 (* returns [generic] when a sub-term can be generalised *)
 
 let list_of_vars = ref []
-let visited_list, visited = mk_visited ()
+let react_visited_list, react_visited = mk_visited ()
+let eff_visited_list, eff_visited = mk_visited ()
 
 let rec gen_clock is_gen ck =
   let ck = clock_repr ck in
@@ -496,8 +500,11 @@ and gen_effect_row is_gen eff =
           eff.level <- !current_level
     | Effect_row_empty -> ()
     | Effect_row_one eff1 -> eff.level <- gen_effect is_gen eff1
-    | Effect_row (eff1, eff2) | Effect_row_rec (eff1, eff2) ->
+    | Effect_row (eff1, eff2) ->
       eff.level <- min (gen_effect_row is_gen eff1) (gen_effect_row is_gen eff2)
+    | Effect_row_rec eff1 ->
+      if not (eff_visited eff) then
+          eff.level <- min generic (gen_effect_row is_gen eff1)
     | Effect_row_link link -> eff.level <- gen_effect_row is_gen link
   );
   eff.level
@@ -510,7 +517,7 @@ and gen_react is_gen r =
     | React_seq rl | React_par rl | React_or rl ->
         r.level <- gen_react_list is_gen rl
     | React_rec (checked, r1) ->
-        if not (visited r) then
+        if not (react_visited r) then
           r.level <- min generic (gen_react is_gen r1)
     | React_run r2 ->
         let _ = react_repr r2 in
@@ -543,7 +550,8 @@ and gen_param_list is_gen param_list =
 let gen ck =
   (*Printf.eprintf "generalizing %a\n" Clocks_printer.output ck;*)
   list_of_vars:= [];
-  visited_list := [];
+  react_visited_list := [];
+  eff_visited_list := [];
   let _ = gen_clock true ck in
   { cs_vars = !list_of_vars;
     cs_desc = ck }
@@ -551,7 +559,8 @@ let gen ck =
 let non_gen ck = ignore (gen_clock false ck)
 
 (* To compute the free type variables in a type *)
-let visited_list, visited = mk_visited ()
+let react_visited_list, react_visited = mk_visited ()
+let eff_visited_list, eff_visited = mk_visited ()
 let free_clock_vars level ck =
   let fv = ref [] in
   let rec free_vars ck =
@@ -612,8 +621,10 @@ let free_clock_vars level ck =
       | Effect_row_var ->
           if eff.level >= level then fv := (Keffect_row eff) :: !fv
       | Effect_row_one e -> free_vars_effect e
-      | Effect_row (eff1, eff2) | Effect_row_rec (eff1, eff2) ->
+      | Effect_row (eff1, eff2) ->
           free_vars_effect_row eff1; free_vars_effect_row eff2
+      | Effect_row_rec eff1 ->
+          if not (eff_visited eff) then free_vars_effect_row eff1
       | Effect_row_link link -> free_vars_effect_row link
   and free_vars_react r =
     let r = react_repr r in
@@ -625,10 +636,10 @@ let free_clock_vars level ck =
       | React_carrier c -> free_vars_carrier_row c
       | React_seq rl | React_par rl | React_or rl ->
           List.iter free_vars_react rl
-      | React_rec (_, r1) -> if not (visited r) then free_vars_react r1
+      | React_rec (_, r1) -> if not (react_visited r) then free_vars_react r1
       | React_run r  | React_link r -> free_vars_react  r
   and free_vars_reactivity r =
-    visited_list := [];
+    react_visited_list := [];
     free_vars_react r
   and free_vars_param p =
     let f =
@@ -824,11 +835,13 @@ and copy_subst_effect_row m eff =
         eff_row (copy_subst_effect_row m eff1) (copy_subst_effect_row m eff2)
       else
         eff
-    | Effect_row_rec (eff1, eff2) ->
-      if level = generic then
-        make_generic (Effect_row_rec (copy_subst_effect_row m eff1, copy_subst_effect_row m eff2))
-      else
-        eff
+    | Effect_row_rec eff1 ->
+        let v = make_local Effect_row_empty in
+        saves.k_effect_row#save eff;
+        eff.desc <- Effect_row_link v;
+        let v2 = eff_row_rec (copy_subst_effect_row m eff1) in
+        v.desc <- Effect_row_link v2;
+        v
     | Effect_row_link link ->
       if level = generic then
         link
@@ -945,7 +958,8 @@ let rec ensure_monotype ck =
 
 (* the occur check *)
 let is_rec = ref false
-let visited_list, visited = mk_visited ()
+let react_visited_list, react_visited = mk_visited ()
+let eff_visited_list, eff_visited = mk_visited ()
 let rec occur_check level index ck =
   let rec check ck =
     let ck = clock_repr ck in
@@ -1037,7 +1051,8 @@ and effect_row_occur_check level index eff =
           eff.level <- level
       | Effect_row_empty -> ()
       | Effect_row_one eff1 -> effect_occur_check level index eff1
-      | Effect_row (eff1, eff2) | Effect_row_rec (eff1, eff2) -> check eff1; check eff2
+      | Effect_row (eff1, eff2) -> check eff1; check eff2
+      | Effect_row_rec eff1 -> if not (eff_visited eff) then check eff1
       | Effect_row_link link -> check link
   in
   check eff
@@ -1056,11 +1071,10 @@ and react_occur_check level index r =
       | React_seq rl | React_par rl | React_or rl ->
           List.iter check rl
       | React_run r1 -> check r1
-      | React_rec (_, r1) -> (* TODO: parcourir r1 ?*)
-          if not (visited r) then check r1
+      | React_rec (_, r1) -> if not (react_visited r) then check r1
       | React_link link -> check link
   in
-  visited_list := [];
+  react_visited_list := [];
   check r
 
 and param_occur_check level index p = match p with
@@ -1073,6 +1087,7 @@ and param_occur_check level index p = match p with
 
 let effect_row_occur_check_is_rec level index r =
   is_rec := false;
+  eff_visited_list := [];
   effect_row_occur_check level index r;
   !is_rec
 
@@ -1080,6 +1095,14 @@ let react_occur_check_is_rec level index r =
   is_rec := false;
   ignore (react_occur_check level index r);
   !is_rec
+
+let occur_check level index eff =
+  eff_visited_list := [];
+  occur_check level index eff
+
+let effect_occur_check level index eff =
+  eff_visited_list := [];
+  effect_occur_check level index eff
 
 (* the occur check *)
 (*
@@ -1263,6 +1286,7 @@ let rec find_carrier_row_var c =
   | _ -> raise Unify
 
 let rec find_effect_row_var eff =
+  Printf.eprintf "Find row var: %a\n" Clocks_printer.output_effect_row eff;
   let eff = effect_row_repr eff in
   match eff.desc with
   | Effect_row (eff1, eff2) ->
@@ -1272,12 +1296,9 @@ let rec find_effect_row_var eff =
         | _ ->
             let var, eff2 = find_effect_row_var eff2 in
             var, eff_row eff1 eff2)
-  | _ -> raise Unify
-
-let mk_effect_row_rec rec_var body =
-  let new_var = new_effect_row_var () in
-  let body = subst_var_effect_row rec_var.index new_var body in
-  make_generic (Effect_row_rec (new_var, body))
+  | _ ->
+    Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_effect_row eff;
+    raise Unify
 
 (* the row variable is the first variable in the + *)
 let rec find_react_row_var rl = match rl with
@@ -1411,8 +1432,8 @@ and carrier_row_unify expected_cr actual_cr =
                   carrier_row_unify c1 actual_cr
               | _ , _ ->
                   let var = new_carrier_row_var () in
-                  let new_c1 = carrier_row var c1 in
-                  let new_c2 = carrier_row var c2 in
+                  let new_c1 = carrier_row c1 var in
+                  let new_c2 = carrier_row c2 var in
                   carrier_row_unify var1 new_c2;
                   carrier_row_unify var2 new_c1
             )
@@ -1479,7 +1500,7 @@ and effect_unify expected_eff actual_eff =
             raise Unify
 
 and effect_row_unify expected_eff actual_eff =
-  (* Printf.eprintf "Unify effects rows '%a' and %a\n" Clocks_printer.output_effect_row expected_eff  Clocks_printer.output_effect_row actual_eff_row *)
+  (* Printf.eprintf "Unify effects rows '%a' and %a\n" Clocks_printer.output_effect_row expected_eff  Clocks_printer.output_effect_row actual_eff; *)
   if expected_eff == actual_eff then ()
   else
     let expected_eff = effect_row_repr expected_eff in
@@ -1498,7 +1519,7 @@ and effect_row_unify expected_eff actual_eff =
                 expected_eff.index actual_eff
             in
             if is_rec then
-              let new_eff = mk_effect_row_rec expected_eff actual_eff in
+              let new_eff = eff_row_rec actual_eff in
               expected_eff.desc <- Effect_row_link new_eff
             else
               expected_eff.desc <- Effect_row_link actual_eff
@@ -1508,16 +1529,18 @@ and effect_row_unify expected_eff actual_eff =
                 actual_eff.index expected_eff
             in
             if is_rec then
-              let new_eff = mk_effect_row_rec actual_eff expected_eff in
+              let new_eff = eff_row_rec expected_eff in
               actual_eff.desc <- Effect_row_link new_eff
             else
               actual_eff.desc <- Effect_row_link expected_eff
+        | Effect_row_rec expected_eff, _ -> effect_row_unify expected_eff actual_eff
+        | _, Effect_row_rec actual_eff -> effect_row_unify expected_eff actual_eff
         | Effect_row _, Effect_row _ ->
             let var1, e1 = find_effect_row_var expected_eff in
             let var2, e2 = find_effect_row_var actual_eff in
             (match var1.desc, var2.desc with
-              | _, _ when var1 == var2 -> effect_row_unify e1 e2
-              | Effect_row_empty, Effect_row_empty -> effect_row_unify e1 e2
+              | _, _ when var1.index = var2.index -> () (*effect_row_unify e1 e2*)
+              | Effect_row_empty, Effect_row_empty -> ()
               | Effect_row_empty, _ ->
                   effect_row_unify var2 effect_row_empty;
                   effect_row_unify expected_eff e2
@@ -1526,19 +1549,11 @@ and effect_row_unify expected_eff actual_eff =
                   effect_row_unify e1 actual_eff
               | _ , _ ->
                 let var = new_effect_row_var () in
-                let new_e1 = eff_row var e1 in
-                let new_e2 = eff_row var e2 in
+                let new_e1 = eff_row e1 var in
+                let new_e2 = eff_row e2 var in
                 effect_row_unify var1 new_e2;
                 effect_row_unify var2 new_e1
             )
-        (* Not correct in general, but should be correct in our setting *)
-        | Effect_row_rec (var1, body1), Effect_row_rec (var2, body2) ->
-          effect_row_unify var1 var2;
-          effect_row_unify body1 body2
-        | Effect_row_rec (_, expected_body), (Effect_row _ | Effect_row_one _) ->
-            effect_row_unify expected_body actual_eff
-        | (Effect_row _ | Effect_row_one _), Effect_row_rec (_, actual_body) ->
-            effect_row_unify expected_eff actual_body
         (* this cases are used when unifying a closed row with on open row.
            Here we unify a row without a var or empty with a single effect,
            by unifying all effects in the row with the one effect *)

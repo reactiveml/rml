@@ -84,7 +84,7 @@ and effect_row_desc =
   | Effect_row_one of effect
   | Effect_row of effect_row * effect_row (* row var last in prefix traversal *)
   | Effect_row_link of effect_row
-  | Effect_row_rec of effect_row * effect_row
+  | Effect_row_rec of effect_row
 
 and react_effect = react_effect_desc repr
 
