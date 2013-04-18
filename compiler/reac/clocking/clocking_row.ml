@@ -573,10 +573,10 @@ let rec schema_of_expression env expr =
             type_expect new_env e ty_res)
           matching;
         (* take the current effect and put it in the arrow *)
-        let computed_eff = remove_local_from_effect !current_level [] !current_effect in
+        let computed_eff = (*remove_local_from_effect !current_level*) !current_effect in
         let computed_eff =
           if !Compiler_options.no_clock_effects then
-            effect_row_empty
+            new_effect_row_var ()
           else
             eff_open_row computed_eff
         in
@@ -788,10 +788,10 @@ let rec schema_of_expression env expr =
           else
             react_or (new_react_var ()) r
         in
-        let eff = remove_local_from_effect !current_level [] !current_effect in
+        let eff = (*remove_local_from_effect !current_level*) !current_effect in
         let eff =
           if !Compiler_options.no_clock_effects then
-            effect_row_empty
+            new_effect_row_var ()
           else
             eff_open_row eff
         in

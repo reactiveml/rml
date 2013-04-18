@@ -1286,7 +1286,6 @@ let rec find_carrier_row_var c =
   | _ -> raise Unify
 
 let rec find_effect_row_var eff =
-  Printf.eprintf "Find row var: %a\n" Clocks_printer.output_effect_row eff;
   let eff = effect_row_repr eff in
   match eff.desc with
   | Effect_row (eff1, eff2) ->
@@ -1299,6 +1298,12 @@ let rec find_effect_row_var eff =
   | _ ->
     Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_effect_row eff;
     raise Unify
+
+let rec first_effect_of_row eff = match eff.desc with
+| Effect_row_var | Effect_row_empty -> raise Unify
+| Effect_row_one eff -> eff
+| Effect_row (_, eff2) -> first_effect_of_row eff2
+| Effect_row_rec eff1 | Effect_row_link eff1 -> first_effect_of_row eff1
 
 (* the row variable is the first variable in the + *)
 let rec find_react_row_var rl = match rl with
@@ -1492,15 +1497,15 @@ and effect_unify expected_eff actual_eff =
         | Effect_sum (eff1, eff2), Effect_empty when !Compiler_options.use_row_clocking ->
             effect_unify expected_eff eff1; effect_unify expected_eff eff2
         | Effect_empty, Effect_one actual_effr when !Compiler_options.use_row_clocking ->
-            effect_row_unify (eff_closed_row expected_eff) actual_effr
+            unify_effect_row_effect expected_eff actual_effr
         | Effect_one expected_effr, Effect_empty when !Compiler_options.use_row_clocking ->
-            effect_row_unify expected_effr (eff_closed_row actual_eff)
+            unify_effect_row_effect actual_eff expected_effr
         | _ ->
              Printf.eprintf "Failed to unify effects '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff;
             raise Unify
 
 and effect_row_unify expected_eff actual_eff =
-  (* Printf.eprintf "Unify effects rows '%a' and %a\n" Clocks_printer.output_effect_row expected_eff  Clocks_printer.output_effect_row actual_eff; *)
+  (* Printf.eprintf "Unify effects rows '%a' and %a\n" Clocks_printer.output_effect_row expected_eff  Clocks_printer.output_effect_row actual_eff;*)
   if expected_eff == actual_eff then ()
   else
     let expected_eff = effect_row_repr expected_eff in
@@ -1543,10 +1548,10 @@ and effect_row_unify expected_eff actual_eff =
               | Effect_row_empty, Effect_row_empty -> ()
               | Effect_row_empty, _ ->
                   effect_row_unify var2 effect_row_empty;
-                  effect_row_unify expected_eff e2
+                  unify_effect_row_effect (first_effect_of_row e1) e2
               | _, Effect_row_empty ->
                   effect_row_unify var1 effect_row_empty;
-                  effect_row_unify e1 actual_eff
+                  unify_effect_row_effect (first_effect_of_row e2) e1
               | _ , _ ->
                 let var = new_effect_row_var () in
                 let new_e1 = eff_row e1 var in
@@ -1554,20 +1559,25 @@ and effect_row_unify expected_eff actual_eff =
                 effect_row_unify var1 new_e2;
                 effect_row_unify var2 new_e1
             )
-        (* this cases are used when unifying a closed row with on open row.
-           Here we unify a row without a var or empty with a single effect,
-           by unifying all effects in the row with the one effect *)
-        | Effect_row (eff1, eff2), Effect_row_one _ ->
-            effect_row_unify eff1 actual_eff;
-            effect_row_unify eff2 actual_eff
-        | Effect_row_one _, Effect_row (eff1, eff2) ->
-            effect_row_unify expected_eff eff1;
-            effect_row_unify expected_eff eff2
-        | Effect_row_empty, Effect_row_one _ -> ()
-        | Effect_row_one _, Effect_row_empty -> ()
         | _, _ ->
           Printf.eprintf "Failed to unify effect rows '%a' and '%a'\n"  Clocks_printer.output_effect_row expected_eff  Clocks_printer.output_effect_row actual_eff;
           raise Unify
+
+(* Unifies all the elements in the effect row actual_eff with the effect expected_eff *)
+and unify_effect_row_effect expected_eff actual_eff =
+  (*Printf.eprintf "Unify effect %a and effect row %a\n" Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect_row actual_eff;*)
+  match actual_eff.desc with
+    | Effect_row_var -> actual_eff.desc <- Effect_row (eff_row_one expected_eff, effect_row_empty)
+    | Effect_row_empty -> ()
+    | Effect_row (eff1, eff2) ->
+      unify_effect_row_effect expected_eff eff1;
+      unify_effect_row_effect expected_eff eff2
+    | Effect_row_one actual_eff -> effect_unify expected_eff actual_eff
+    | Effect_row_rec eff1 ->
+      actual_eff.desc <- Effect_row_empty;
+      unify_effect_row_effect expected_eff eff1;
+      actual_eff.desc <- Effect_row(eff_row_one expected_eff, effect_row_empty)
+    | Effect_row_link eff1 -> unify_effect_row_effect expected_eff eff1
 
 
 and react_unify expected_r actual_r =
