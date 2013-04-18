@@ -256,10 +256,13 @@ let defaults = {
   clock_scheme = clock_scheme;
 }
 
-let wrapper f funs acc e =
-  react_visited_list := [];
+let wrapper reset_react reset_eff f funs acc e =
+  if reset_react then react_visited_list := [];
+  if reset_eff then eff_visited_list := [];
   f funs acc e
-let clock_it funs acc = wrapper clock_it funs acc
-let react_effect_it funs acc = wrapper react_effect_it funs acc
-let clock_param_it funs acc = wrapper clock_param_it funs acc
-let clock_scheme_it funs acc = wrapper clock_scheme_it funs acc
+let clock_it funs acc = wrapper true true clock_it funs acc
+let effect_it funs acc = wrapper false true effect_it funs acc
+let effect_row_it funs acc = wrapper false true effect_row_it funs acc
+let react_effect_it funs acc = wrapper true false react_effect_it funs acc
+let clock_param_it funs acc = wrapper true true clock_param_it funs acc
+let clock_scheme_it funs acc = wrapper true true clock_scheme_it funs acc
