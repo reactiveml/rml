@@ -561,6 +561,7 @@ let rec schema_of_expression env expr =
         let ty = arrow ty_arg ty_res eff in
         let old_current_effect = !current_effect in
         current_effect := no_effect;
+        push_type_level ();
         List.iter
           (fun (p,e) ->
             let gl_env, loc_env = clock_of_pattern [] [] env p ty_arg in
@@ -572,8 +573,9 @@ let rec schema_of_expression env expr =
             in
             type_expect new_env e ty_res)
           matching;
+        pop_type_level ();
         (* take the current effect and put it in the arrow *)
-        let computed_eff = remove_local_from_effect !current_effect in
+        let computed_eff = simplify_effect (remove_local_from_effect !current_effect) in
         let computed_eff =
           if !Compiler_options.no_clock_effects then
             new_effect_row_var ()
@@ -788,7 +790,7 @@ let rec schema_of_expression env expr =
           else
             react_or (new_react_var ()) r
         in
-        let eff = remove_local_from_effect !current_effect in
+        let eff = simplify_effect (remove_local_from_effect !current_effect) in
         let eff =
           if !Compiler_options.no_clock_effects then
             new_effect_row_var ()
@@ -1205,6 +1207,7 @@ and type_let is_rec env patt_expr_list =
     (fun (_,expr) ty -> if not (is_nonexpansive expr) then non_gen ty)
     patt_expr_list
     ty_list;
+  List.iter simplify_clock ty_list;
   let _ =
     List.iter
       (fun gl ->
