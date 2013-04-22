@@ -3,7 +3,7 @@ ${
 (*
   run_test:
    [
-    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error"
+    Good: "../../compiler/rpmlc.byte -I ../../lib/ -c -dwarn_error -dno_clock_effects"
    ]
 *)
 
@@ -66,7 +66,7 @@ let process p =
 
 $
 
-let process p (q: 'ck. unit process{'ck|'er}) =
+let process p (q: 'ck. unit process{'ck|'ck}) =
   domain ck do
     run q
   done

@@ -3,7 +3,7 @@ ${
 (*
   run_test:
    [
-     Good: "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
+     Good: "../../compiler/rpmlc.byte -row-clocking -no-reactivity -I ../../lib/ -c"
    ]
 *)
 
@@ -25,7 +25,7 @@ ${
 (*
   run_test:
    [
-     Bad 2 "": "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
+     Bad 2 "": "../../compiler/rpmlc.byte -row-clocking -no-reactivity -I ../../lib/ -c"
    ]
 *)
 
@@ -51,7 +51,7 @@ ${
 (*
   run_test:
    [
-     Good: "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
+     Good: "../../compiler/rpmlc.byte -row-clocking -no-reactivity -I ../../lib/ -c"
    ]
 *)
 
@@ -150,7 +150,7 @@ ${
 (*
   run_test:
    [
-     Bad 2 "": "../../compiler/rpmlc.byte -no-reactivity -I ../../lib/ -c"
+     Bad 2 "": "../../compiler/rpmlc.byte -row-clocking -no-reactivity -I ../../lib/ -c"
    ]
 *)
 
