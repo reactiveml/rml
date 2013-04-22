@@ -48,7 +48,7 @@ open Reac_mapfold
 
 let add_effect eff =
   if not !Compiler_options.no_clock_effects then
-    current_effect := simplify_effect (eff_sum !current_effect eff)
+    current_effect := eff_sum !current_effect eff
 let add_effect_ck ck =
   if not !Compiler_options.no_clock_effects then
     add_effect (eff_depend (carrier_row_one ck))
@@ -583,7 +583,7 @@ let rec schema_of_expression env expr =
           if !Compiler_options.no_clock_effects then
             new_effect_var ()
           else
-            !current_effect
+            simplify_effect !current_effect
         in
         effect_unify eff computed_eff;
         current_effect := old_current_effect;
@@ -798,7 +798,7 @@ let rec schema_of_expression env expr =
           if !Compiler_options.no_clock_effects then
             new_effect_var ()
           else
-            !current_effect
+            simplify_effect !current_effect
         in
         let res_ck = process ck !activation_carrier eff r in
         activation_carrier := old_activation_carrier;
@@ -1213,6 +1213,7 @@ and type_let is_rec env patt_expr_list =
     (fun (_,expr) ty -> if not (is_nonexpansive expr) then non_gen ty)
     patt_expr_list
     ty_list;
+  List.iter simplify_clock ty_list;
   let _ =
     List.iter
       (fun gl ->

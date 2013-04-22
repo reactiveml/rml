@@ -7,19 +7,23 @@ open Clocks_utils
 let equal_carrier c1 c2 =
   let c1 = carrier_repr c1 in
   let c2 = carrier_repr c2 in
-  match c1.desc, c2.desc with
-    | Carrier_var _, Carrier_var _ -> c1.index = c2.index
-    | Carrier_skolem (_, i1), Carrier_skolem (_, i2) -> i1 = i2
-    | _ -> false
+  if c1 == c2 then true
+  else
+    match c1.desc, c2.desc with
+      | Carrier_var _, Carrier_var _ -> c1.index = c2.index
+      | Carrier_skolem (_, i1), Carrier_skolem (_, i2) -> i1 = i2
+      | _ -> false
 
 (* Compares two effects, but only if they are leaves *)
 let equal_effect eff1 eff2 =
   let eff1 = effect_repr eff1 in
   let eff2 = effect_repr eff2 in
-  match eff1.desc, eff2.desc with
-    | Effect_var, Effect_var -> eff1.index = eff2.index
-    | Effect_depend c1, Effect_depend c2 -> equal_carrier (get_car c1) (get_car c2)
-    | _ -> false
+  if eff1 == eff2 then true
+  else
+    match eff1.desc, eff2.desc with
+      | Effect_var, Effect_var -> eff1.index = eff2.index
+      | Effect_depend c1, Effect_depend c2 -> equal_carrier (get_car c1) (get_car c2)
+      | _ -> false
 
 let simplify_effect eff =
   let rec mem_effect eff l = match l with
@@ -35,9 +39,16 @@ let simplify_effect eff =
     | Effect_link link -> clocks_of acc link
     | Effect_sum (eff1, eff2) -> clocks_of (clocks_of acc eff2) eff1
   in
-  let eff = effect_repr eff in
   let new_eff = eff_sum_list (clocks_of [] eff) in
+  Printf.eprintf "Simpl before:  %a\n" Clocks_printer.output_effect eff;
+  Printf.eprintf "Simpl afterr:  %a\n" Clocks_printer.output_effect new_eff;
   new_eff
+
+
+let simplify_clock ck =
+  let effect funs () eff = eff.desc <- (simplify_effect eff).desc; eff, () in
+  let funs = { Clock_mapfold.defaults with Clock_mapfold.effect = effect } in
+  ignore (Clock_mapfold.clock_it funs () ck)
 
 
 let remove_var_from_effect index eff =
