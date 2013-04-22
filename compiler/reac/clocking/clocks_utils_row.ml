@@ -134,9 +134,7 @@ let simplify_effect, simplify_effect_row =
 let simplify_clock ck =
   let effect_row funs () effr = effr.desc <- (simplify_effect_row effr).desc; effr, () in
   let funs = { Clock_mapfold.defaults with Clock_mapfold.effect_row = effect_row } in
-  Printf.eprintf "Before simplify: %a\n" Clocks_printer.output ck;
-  ignore (Clock_mapfold.clock_it funs () ck);
-  Printf.eprintf "After  simplify: %a\n" Clocks_printer.output ck
+  ignore (Clock_mapfold.clock_it funs () ck)
 
 
 (* Effect masking *)
