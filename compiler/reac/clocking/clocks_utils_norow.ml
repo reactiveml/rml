@@ -39,10 +39,7 @@ let simplify_effect eff =
     | Effect_link link -> clocks_of acc link
     | Effect_sum (eff1, eff2) -> clocks_of (clocks_of acc eff2) eff1
   in
-  let new_eff = eff_sum_list (clocks_of [] eff) in
-  Printf.eprintf "Simpl before:  %a\n" Clocks_printer.output_effect eff;
-  Printf.eprintf "Simpl afterr:  %a\n" Clocks_printer.output_effect new_eff;
-  new_eff
+  eff_sum_list (clocks_of [] eff)
 
 
 let simplify_clock ck =
