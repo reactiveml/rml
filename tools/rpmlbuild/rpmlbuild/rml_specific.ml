@@ -224,6 +224,8 @@ let init () =
       flag ["rml"; "compile"; "lco_mpi_new"] (S [A "-runtime"; A "Lco_mpi_new"]);
       flag ["rml"; "compile"; "no_clocking"] (A "-no-clocking");
       flag ["rml"; "compile"; "no_reactivity"] (A "-no-reactivity");
+      flag ["rml"; "compile"; "row_clocking"] (A "-row-clocking")
+
 ;;
 
 
