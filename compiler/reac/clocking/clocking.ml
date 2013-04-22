@@ -176,6 +176,7 @@ let rec is_nonexpansive expr =
   | Elocal _ -> true
   | Eglobal _ -> true
   | Econstant _ -> true
+  | Ebase | Etopck -> true
   | Etuple l -> List.for_all is_nonexpansive l
   | Econstruct (_, None) -> true
   | Econstruct(_, Some e) -> is_nonexpansive e

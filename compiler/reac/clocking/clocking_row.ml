@@ -150,6 +150,7 @@ let rec is_nonexpansive expr =
   | Elocal _ -> true
   | Eglobal _ -> true
   | Econstant _ -> true
+  | Ebase | Etopck -> true
   | Etuple l -> List.for_all is_nonexpansive l
   | Econstruct (_, None) -> true
   | Econstruct(_, Some e) -> is_nonexpansive e
@@ -869,7 +870,16 @@ let rec schema_of_expression env expr =
       (* TODO: comment clocker le reset et la region ? *)
         let ty_emit = new_clock_var() in
         let ty_get = new_clock_var() in
+        (* generalise only vars in the clock *)
+        push_type_level ();
         let ty_ck = type_clock_expr env ce in
+        pop_type_level ();
+        let vars =
+          if not (is_nonexpansive ce) then
+            (Printf.eprintf "Nongen\n"; non_gen_cr ty_ck; [])
+          else
+            gen_cr ty_ck
+        in
         let ty_s = constr_notabbrev event_ident
           [Kclock ty_emit; Kclock ty_get; Kcarrier_row ty_ck] in
         opt_iter
@@ -889,7 +899,7 @@ let rec schema_of_expression env expr =
               type_expect env default ty_get;
               type_expect env comb (comb_arrow ty_emit (comb_arrow ty_get ty_get))
         end;
-        clock_of_expression (Env.add s (forall [] ty_s) env) e
+        clock_of_expression (Env.add s (forall vars ty_s) env) e
 
     | Enothing -> Clocks_utils.static
 

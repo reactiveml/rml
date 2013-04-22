@@ -549,14 +549,20 @@ and gen_param_list is_gen param_list =
 (* main generalisation function *)
 let gen ck =
   (*Printf.eprintf "generalizing %a\n" Clocks_printer.output ck;*)
-  list_of_vars:= [];
+  list_of_vars := [];
   react_visited_list := [];
   eff_visited_list := [];
   let _ = gen_clock true ck in
   { cs_vars = !list_of_vars;
     cs_desc = ck }
 
+let gen_cr cr =
+  list_of_vars := [];
+  let _ = gen_carrier_row true cr in
+  !list_of_vars
+
 let non_gen ck = ignore (gen_clock false ck)
+let non_gen_cr cr = ignore (gen_carrier_row false cr)
 
 (* To compute the free type variables in a type *)
 let react_visited_list, react_visited = mk_visited ()
