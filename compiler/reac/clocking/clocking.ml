@@ -1350,7 +1350,8 @@ let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
 let check_nongen_values patt_expr_list =
   let check_expr expr =
     let vars = kind_sum_split (free_clock_vars notgeneric expr.e_clock) in
-    if vars.k_clock != [] or vars.k_react != [] then
+    if vars.k_clock != [] or
+      (vars.k_react != [] && not !Compiler_options.no_reactivity) then
       cannot_generalize_err expr;
     (*  Non-generalizable carriers and effects are set to topck *)
     List.iter (fun ck -> carrier_unify ck topck_carrier) vars.k_carrier;

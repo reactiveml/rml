@@ -158,9 +158,12 @@ let rec print priority ty =
         else
           print_string "|";
         print_effect_row_safe priority eff;
-        print_string "}[";
-        print_reactivity priority r;
-        print_string "]"
+        print_string "}";
+        if not !Compiler_options.no_reactivity then (
+          print_string "[";
+          print_reactivity priority r;
+          print_string "]"
+        )
     | Clock_forall sch ->
         print_scheme_full priority sch
   end;
