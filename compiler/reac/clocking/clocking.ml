@@ -783,7 +783,6 @@ let rec schema_of_expression env expr =
         let old_current_effect = !current_effect in
         activation_carrier := new_carrier_var generic_activation_name;
         current_effect := no_effect;
-        add_effect_ck !activation_carrier;
         push_type_level ();
         let ck, r = clock_react_of_expression env e in
         pop_type_level ();
