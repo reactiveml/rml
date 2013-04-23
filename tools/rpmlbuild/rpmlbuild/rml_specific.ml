@@ -97,7 +97,8 @@ let init () =
         let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
-               @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
+               @ includes @ [T (tags_of_pathname file++"rml"++"depend")]
+               @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
       end;
 
       rule "rmldep: mli -> rmldepends"
@@ -107,7 +108,8 @@ let init () =
         let file = env "%.mli" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
-               @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
+               @ includes @ [T (tags_of_pathname file++"rml"++"depend")]
+               @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
       end;
 
      rule "rmldep: rmli -> rmldepends"
@@ -117,7 +119,8 @@ let init () =
         let file = env "%.rmli" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
-               @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
+               @ includes @[T (tags_of_pathname file++"rml"++"depend")]
+               @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
       end;
 
       rule "rml: mli -> rzi"
@@ -145,7 +148,7 @@ let init () =
 
         let file = env "%.rmli" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc] @ [A "-c"] @ includes @ [P file]))
+        Cmd(S ([rmlc] @ [A "-c"] @ includes @[T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
       rule "rml: rml -> ml, rzi"
@@ -224,7 +227,9 @@ let init () =
       flag ["rml"; "compile"; "lco_mpi_new"] (S [A "-runtime"; A "Lco_mpi_new"]);
       flag ["rml"; "compile"; "no_clocking"] (A "-no-clocking");
       flag ["rml"; "compile"; "no_reactivity"] (A "-no-reactivity");
-      flag ["rml"; "compile"; "row_clocking"] (A "-row-clocking")
+      flag ["rml"; "compile"; "row_clocking"] (A "-row-clocking");
+      flag ["rml"; "depend"; "row_clocking"] (A "-row-clocking")
+
 
 ;;
 

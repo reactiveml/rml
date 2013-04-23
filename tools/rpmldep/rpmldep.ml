@@ -54,6 +54,7 @@ let native_only = ref false
 let force_slash = ref false
 let error_occurred = ref false
 let raw_dependencies = ref false
+let use_row_clocking = ref false
 
 (* Fix path to use '/' as directory separator instead of '\'.
    Only under Windows. *)
@@ -210,12 +211,18 @@ let remove_preprocessed inputfile =
 let parse_use_file ic =
     seek_in ic 0;
     let lb = Lexing.from_channel ic in
-    Parse.implementation lb
+    if !use_row_clocking then
+      Parse_row.implementation lb
+    else
+      Parse.implementation lb
 
 let parse_interface ic =
     seek_in ic 0;
     let lb = Lexing.from_channel ic in
-    Parse.interface lb
+    if !use_row_clocking then
+      Parse_row.interface lb
+    else
+      Parse.interface lb
 
 (* Process one file *)
 
@@ -331,6 +338,8 @@ let _ =
        "  Generate dependencies for a pure native-code project (no .cmo files)";
      "-pp", Arg.String(fun s -> preprocessor := Some s),
        "<cmd> Pipe sources through preprocessor <cmd>";
+     "-row-clocking", Arg.Set use_row_clocking,
+       "  Use clocking with rows (experimental)";
      "-slash", Arg.Set force_slash,
        "   (Windows) Use forward slash / instead of backslash \\ in file paths";
      "-version", Arg.Unit print_version,
