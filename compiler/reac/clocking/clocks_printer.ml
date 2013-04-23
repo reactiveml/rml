@@ -178,7 +178,7 @@ and print_carrier priority car =
       else
         print_string "'";
       if car.level <> generic then print_string "_";
-      print_string ("c"^string_of_int car.index) (*(names.k_carrier#name car.index) *)
+      print_string (names.k_carrier#name car.index)
     | Carrier_skolem(n, i) ->
       print_skolem_name (n, i)
     | Carrier_link(link) -> print_carrier priority link
