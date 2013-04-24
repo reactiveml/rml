@@ -86,7 +86,6 @@ let print_skolem_name (n, i) =
 let rec print priority ty =
   open_box 0;
   begin match ty.desc with
-    | Clock_static -> print_string "."
     | Clock_var ->
         print_string "'";
         if ty.level <> generic then print_string "_";

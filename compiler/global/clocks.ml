@@ -43,7 +43,6 @@ type clock_scheme =
 
 and clock = clock_desc repr
 and clock_desc =
-  | Clock_static
   | Clock_var
   | Clock_depend of carrier_row
   | Clock_arrow of clock * clock * effect_row

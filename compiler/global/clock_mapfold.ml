@@ -34,7 +34,7 @@ and clock_desc_it funs acc ckd =
   try funs.clock_desc funs acc ckd
   with Fallback -> clock_desc funs acc ckd
 and clock_desc funs acc ckd = match ckd with
-  | Clock_static | Clock_var -> ckd, acc
+  | Clock_var -> ckd, acc
   | Clock_depend cr ->
     let cr, acc = carrier_row_it funs acc cr in
     Clock_depend cr, acc

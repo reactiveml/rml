@@ -65,9 +65,8 @@ let abstract_type id = { type_constr =
 let abstract_type_clock id =
   { clock_constr = { gi = id;
                      ty_info = None;
-                     ck_info = Some { Clocks.constr_abbr =
-                         Clocks.Constr_abbrev ([], Clocks_utils.static) } };
-    clock_kind = Clock_rebind Clocks_utils.static;
+                     ck_info = Some { Clocks.constr_abbr = Clocks.Constr_notabbrev } };
+    clock_kind = Clocks.Clock_abstract;
     clock_arity = zero_arity;
     clock_def_arity = zero_arity; }
 let type_desc id =
@@ -79,36 +78,43 @@ let type_desc id =
 let int_ident = pervasives_type "int"
 let type_desc_int = type_desc int_ident
 let type_int = Types_utils.constr_notabbrev int_ident []
+let clock_int = Clocks_utils.constr_notabbrev int_ident []
 
 (* bool *)
 let bool_ident = pervasives_type "bool"
 let type_desc_bool = type_desc bool_ident
 let type_bool = Types_utils.constr_notabbrev bool_ident []
+let clock_bool = Clocks_utils.constr_notabbrev bool_ident []
 
 (* float *)
 let float_ident = pervasives_type "float"
 let type_desc_float = type_desc float_ident
 let type_float = Types_utils.constr_notabbrev float_ident []
+let clock_float = Clocks_utils.constr_notabbrev float_ident []
 
 (* char *)
 let char_ident = pervasives_type "char"
 let type_desc_char = type_desc char_ident
 let type_char = Types_utils.constr_notabbrev char_ident []
+let clock_char = Clocks_utils.constr_notabbrev char_ident []
 
 (* string *)
 let string_ident = pervasives_type "string"
 let type_desc_string = type_desc string_ident
 let type_string = Types_utils.constr_notabbrev string_ident []
+let clock_string = Clocks_utils.constr_notabbrev string_ident []
 
 (* unit *)
 let unit_ident = pervasives_type "unit"
 let type_desc_unit = type_desc unit_ident
 let type_unit =  Types_utils.constr_notabbrev unit_ident []
+let clock_unit =  Clocks_utils.constr_notabbrev unit_ident []
 
 (* exn *)
 let exn_ident = pervasives_type "exn"
 let type_desc_exn = type_desc exn_ident
 let type_exn = Types_utils.constr_notabbrev exn_ident []
+let clock_exn = Clocks_utils.constr_notabbrev exn_ident []
 
 (* array *)
 let array_ident = pervasives_type "array"

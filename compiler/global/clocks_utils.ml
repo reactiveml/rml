@@ -120,9 +120,8 @@ let rec new_clock_var_list n =
     | n -> (new_clock_var ()) :: new_clock_var_list (n - 1)
 
 (* Simple constructors for clocks *)
-let static = make_generic Clock_static
 let no_clock =
-  { desc = Clock_static;
+  { desc = Clock_product [];
     level = generic;
     index = -1; }
 
@@ -398,7 +397,6 @@ let eff_visited_list, eff_visited = mk_visited ()
 let rec gen_clock is_gen ck =
   let ck = clock_repr ck in
   (match ck.desc with
-    | Clock_static -> ()
     | Clock_var ->
         if ck.level > !current_level then
           if is_gen then (
@@ -572,7 +570,6 @@ let free_clock_vars level ck =
   let rec free_vars ck =
     let ck = clock_repr ck in
     match ck.desc with
-      | Clock_static-> ()
       | Clock_var ->
           if ck.level >= level then fv := (Kclock ck) :: !fv
       | Clock_arrow(t1,t2, eff) ->
@@ -693,7 +690,6 @@ let rec copy_subst_clock m ck =
           v
         else
           ck
-    | Clock_static -> ck
     | Clock_depend cr ->
         if level = generic then
           depend (copy_subst_carrier_row m cr)
@@ -976,7 +972,6 @@ let rec occur_check level index ck =
           raise Unify
         else if ck.level > level then
           ck.level <- level
-      | Clock_static -> ()
       | Clock_depend cr -> carrier_row_occur_check level index cr
       | Clock_arrow (ck1, ck2, eff) ->
           check ck1; check ck2;
@@ -1337,7 +1332,6 @@ let rec unify expected_ck actual_ck =
     if expected_ck == actual_ck then ()
     else
       match expected_ck.desc, actual_ck.desc with
-        | Clock_static, Clock_static -> ()
         | Clock_var, _ ->
             occur_check expected_ck.level expected_ck.index actual_ck;
             expected_ck.desc <- Clock_link actual_ck

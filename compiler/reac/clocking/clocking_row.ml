@@ -403,6 +403,16 @@ let simple_clock_of_type_expression env typ =
   let typ = clock_of_type_expression ty_vars env typ in
   typ
 
+(* Typing of constants *)
+let clock_of_immediate i =
+  match i with
+  | Const_unit -> clock_unit
+  | Const_bool _ -> clock_bool
+  | Const_int(i) -> clock_int
+  | Const_float(i) -> clock_float
+  | Const_char(c) -> clock_char
+  | Const_string(c) -> clock_string
+
 (* Typing of patterns *)
 let rec clock_of_pattern global_env local_env env patt ty =
   patt.patt_clock <- ty;
@@ -432,7 +442,7 @@ let rec clock_of_pattern global_env local_env env patt ty =
       clock_of_pattern global_env ((x,ty)::local_env) env p ty
 
   | Pconstant (i) ->
-      unify_patt patt ty Clocks_utils.static;
+      unify_patt patt ty (clock_of_immediate i);
       global_env, local_env
 
   | Ptuple (l) ->
@@ -538,7 +548,7 @@ and clock_of_pattern_list global_env local_env env patt_list ty_list =
 let rec schema_of_expression env expr =
   let t =
     match expr.e_desc with
-    | Econstant (i) -> Clocks_utils.static
+    | Econstant (i) -> clock_of_immediate i
 
     | Elocal (n) ->
         let typ_sch = Env.find n env in
@@ -689,7 +699,7 @@ let rec schema_of_expression env expr =
         in
         type_expect env e1 ty_arg;
         type_expect env e2 ty_res;
-        Clocks_utils.static
+        clock_unit
 
     | Econstraint(e,t) ->
         let expected_ty = instance (full_clock_of_type_expression env t) in
@@ -700,7 +710,7 @@ let rec schema_of_expression env expr =
         let ty = clock_of_expression env body in
         List.iter
           (fun (p,e) ->
-            let gl_env, loc_env = clock_of_pattern [] [] env p Clocks_utils.static in
+            let gl_env, loc_env = clock_of_pattern [] [] env p clock_exn in
             assert (gl_env = []);
             let new_env =
               List.fold_left
@@ -712,11 +722,11 @@ let rec schema_of_expression env expr =
         ty
 
     | Eassert e ->
-        type_expect env e Clocks_utils.static;
+        type_expect env e clock_bool;
         new_clock_var()
 
     | Eifthenelse (cond,e1,e2) ->
-        type_expect env cond Clocks_utils.static;
+        type_expect env cond clock_bool;
         let ty, r2 = clock_react_of_expression env e2 in
         let r1 = type_react_expect env e1 ty in
         set_current_react (react_or r1 r2);
@@ -746,19 +756,19 @@ let rec schema_of_expression env expr =
         ty_res
 
     | Ewhen_match (e1,e2) ->
-        type_expect env e1 Clocks_utils.static;
+        type_expect env e1 clock_bool;
         clock_of_expression env e2
 
     | Ewhile (e1,e2) ->
-        type_expect env e1 Clocks_utils.static;
+        type_expect env e1 clock_bool;
         type_statement env e2;
-        Clocks_utils.static
+        clock_unit
 
     | Efor(i,e1,e2,flag,e3) ->
-        type_expect env e1 Clocks_utils.static;
-        type_expect env e2 Clocks_utils.static;
-        type_statement (Env.add i (forall [] Clocks_utils.static) env) e3;
-        Clocks_utils.static
+        type_expect env e1 clock_int;
+        type_expect env e2 clock_int;
+        type_statement (Env.add i (forall [] clock_int) env) e3;
+        clock_unit
 
     | Eseq e_list ->
         let local_react = ref no_react in
@@ -814,7 +824,7 @@ let rec schema_of_expression env expr =
           with Unify ->
           non_event_err s
         in
-        Clocks_utils.static
+        clock_bool
     | Epre (Value, s) ->
         let ty_s = clock_of_expression env s in
         let _, ty, _ =
@@ -853,8 +863,8 @@ let rec schema_of_expression env expr =
           with Unify ->
             non_event_err s
         in
-        unify_emit expr.e_loc Clocks_utils.static ty;
-        Clocks_utils.static
+        unify_emit expr.e_loc clock_unit ty;
+        clock_unit
 
     | Eemit (s, Some e) ->
         let ty_s = clock_of_expression env s in
@@ -866,7 +876,7 @@ let rec schema_of_expression env expr =
         in
         let ty_e = clock_of_expression env e in
         unify_emit e.e_loc ty ty_e;
-        Clocks_utils.static
+        clock_unit
 
     | Esignal (_, (s,te_opt), ce, _, combine_opt, _, e) ->
       (* TODO: comment clocker le reset et la region ? *)
@@ -903,7 +913,7 @@ let rec schema_of_expression env expr =
         end;
         clock_of_expression (Env.add s (forall vars ty_s) env) e
 
-    | Enothing -> Clocks_utils.static
+    | Enothing -> clock_unit
 
     | Epause (_, k, ce) ->
         let cr = type_clock_expr env ce in
@@ -911,7 +921,7 @@ let rec schema_of_expression env expr =
         (match k with
           | Strong -> set_current_react (react_carrier cr)
           | Weak -> set_current_react (react_carrier (carrier_closed_row topck_carrier)));
-        Clocks_utils.static
+        clock_unit
 
     | Ehalt _ ->
         set_current_react (react_loop (react_carrier (carrier_closed_row !activation_carrier)));
@@ -924,30 +934,30 @@ let rec schema_of_expression env expr =
         let r = remove_local_from_react r in
         set_current_react (react_loop r);
         expr.e_react <- !current_react;
-        Clocks_utils.static
+        clock_unit
 
     | Eloop (Some n, p) ->
-        type_expect env n Clocks_utils.static;
+        type_expect env n clock_int;
         let r = type_statement_react env p in
         set_current_react (react_loop r);
         expr.e_react <- !current_react;
-        Clocks_utils.static
+        clock_unit
 
     | Efordopar(i,e1,e2,flag,p) ->
-        type_expect env e1 Clocks_utils.static;
-        type_expect env e2 Clocks_utils.static;
-        type_statement (Env.add i (forall [] Clocks_utils.static) env) p;
-        Clocks_utils.static
+        type_expect env e1 clock_int;
+        type_expect env e2 clock_int;
+        type_statement (Env.add i (forall [] clock_int) env) p;
+        clock_unit
 
     | Epar p_list ->
         let rl = List.map (fun p -> type_statement_react env p) p_list in
         set_current_react (make_generic (React_par rl));
-        Clocks_utils.static
+        clock_unit
 
     | Emerge (p1,p2) ->
         type_statement env p1;
         type_statement env p2;
-        Clocks_utils.static
+        clock_unit
 
     | Erun (e1) ->
         let ty_e = clock_of_expression env e1 in
@@ -964,8 +974,8 @@ let rec schema_of_expression env expr =
         begin match patt_proc_opt with
         | None ->
             ignore (type_of_event_config env s);
-            type_expect env p Clocks_utils.static;
-            Clocks_utils.static
+            type_expect env p clock_unit;
+            clock_unit
         | Some _ ->
             let cont_react = ref no_react in
             begin match s.conf_desc with
@@ -1027,7 +1037,7 @@ let rec schema_of_expression env expr =
                 (fun env (x, ty) -> Env.add x (forall [] ty) env)
                 env loc_env
             in
-            type_expect new_env e Clocks_utils.static;
+            type_expect new_env e clock_bool;
             ty_body
         | _ ->
             non_event_err2 s
@@ -1070,7 +1080,7 @@ let rec schema_of_expression env expr =
             | Escape (sk, _) when imm = Immediate -> immediate_dep_escape_err expr.e_loc sk
         in
         if imm <> Immediate then set_current_react (react_carrier sck);
-        Clocks_utils.static
+        clock_unit
 
     | Eawait_val (_,All,s,patt,p) ->
         let ty_s = clock_of_expression env s in
@@ -1119,10 +1129,10 @@ let rec schema_of_expression env expr =
         ck
 
     | Enewclock (id, sch, period, e) ->
-      let sch_type = comb_arrow Clocks_utils.static
-        (product [Clocks_utils.static; Clocks_utils.static]) in
+      let sch_type = comb_arrow clock_int
+        (product [clock_int; clock_int]) in
       Misc.opt_iter (fun sch -> type_expect env sch sch_type) sch;
-      Misc.opt_iter (fun sch -> type_expect env sch Clocks_utils.static) period;
+      Misc.opt_iter (fun p -> type_expect env p clock_int) period;
       push_type_level ();
       (* create a fresh skolem *)
       let c = carrier_skolem id.Ident.name Clocks_utils.names#name in
@@ -1427,7 +1437,7 @@ let impl info_chan has_intf item =
   | Iexn (gl_cstr, te_opt) ->
       gl_cstr.ck_info <-
         Some {cstr_arg = opt_map (clock_of_type_expression [] Env.empty) te_opt;
-              cstr_res = Clocks_utils.static; };
+              cstr_res = clock_exn; };
       (* verbose mode *)
       if !print_type
       then Clocks_printer.output_exception_declaration info_chan gl_cstr
@@ -1463,7 +1473,7 @@ let intf info_chan item =
   | Dexn (gl_cstr, te_opt) ->
       gl_cstr.ck_info <-
         Some {cstr_arg = opt_map (clock_of_type_expression [] Env.empty) te_opt;
-              cstr_res = Clocks_utils.static; };
+              cstr_res = clock_exn; };
       (* verbose mode *)
       if !print_type
       then Clocks_printer.output_exception_declaration info_chan gl_cstr
