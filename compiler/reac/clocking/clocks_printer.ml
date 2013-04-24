@@ -222,9 +222,12 @@ and print_effect priority eff =
       print_space ();
       print_effect priority eff2
     | Effect_depend c ->
-      print_string "<";
-      print_carrier_row priority c;
-      print_string ">"
+      if !Compiler_options.use_row_clocking then (
+        print_string "<";
+        print_carrier_row priority c;
+        print_string ">"
+      ) else
+        print_carrier_row priority c
     | Effect_one er ->
       print_string "{";
       print_effect_row priority er;
