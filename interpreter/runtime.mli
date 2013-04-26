@@ -82,6 +82,15 @@ sig
       val cfg_status: ?only_at_eoi:bool -> event_cfg -> bool
      end)
 
+  type join_point
+  module Join :
+    (sig
+        val new_join_point : int -> join_point
+        val incr : join_point -> int -> unit
+        (* Returns whether the join point counter has reached zero *)
+        val decr : join_point -> bool
+     end)
+
   (* functions on the control tree *)
   (* let f = create_control kind (fun f_k new_ctrl -> body new_ctrl f_k) f_k ctrl s (fun v -> .) in]
      f ()

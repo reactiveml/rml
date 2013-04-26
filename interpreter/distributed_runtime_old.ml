@@ -340,6 +340,9 @@ struct
           check_last_activation st
     end
 
+    module Join = Seq_runtime.JoinRef
+    type join_point = Seq_runtime.JoinRef.join_point
+
     module Event =
       struct
         let lift_handle f ev =

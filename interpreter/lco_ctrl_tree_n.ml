@@ -43,7 +43,7 @@ open Runtime
 module Rml_interpreter =
   functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
   struct
-    type join_point = int ref option
+    type join_point = R.join_point option
     and 'a expr = 'a R.step -> R.control_tree -> join_point -> R.clock_domain -> unit R.step
     and 'a process = unit -> 'a expr
 
@@ -344,8 +344,7 @@ module Rml_interpreter =
 
     let join_n cpt =
       fun f_k ctrl jp cd _ ->
-        decr cpt;
-        if !cpt = 0 then
+        if R.Join.decr cpt then
           f_k unit_value
 
     let rml_par p_1 p_2 =
@@ -354,14 +353,14 @@ module Rml_interpreter =
         let cpt, j =
           match jp with
             | None ->
-                let cpt = ref 0 in
+                let cpt = R.Join.new_join_point 0 in
                 cpt, join_n cpt f_k ctrl jp cd
             | Some cpt -> cpt, f_k
         in
         let f_1 = p_1 (Obj.magic j: 'a step) ctrl (Some cpt) cd in
         let f_2 = p_2 (Obj.magic j: 'b step) ctrl (Some cpt) cd in
         fun () ->
-          cpt := !cpt + i;
+          R.Join.incr cpt i;
           R.on_current_instant cd f_2;
           f_1 unit_value
 
@@ -397,22 +396,22 @@ let rml_loop p =
 
     let rml_loop_n e p =
       fun f_k ctrl jp cd ->
-        let cpt = ref 0 in
+        let cpt = R.Join.new_join_point 0 in
         let f_1 = ref dummy_step in
         let f_loop =
           p
             (fun _ ->
-              if !cpt > 0 then
-                (decr cpt; !f_1 unit_value)
+              if R.Join.decr cpt then
+                f_k unit_value
               else
-                f_k unit_value)
+                !f_1 unit_value)
             ctrl None cd
         in
         f_1 := f_loop;
         fun _ ->
           let n = e() in
           if n > 0 then
-            (cpt := n - 1;
+            (R.Join.incr cpt (n - 1);
              f_loop unit_value)
           else
             f_k unit_value
@@ -571,15 +570,16 @@ let rml_loop p =
 
     let rml_fordopar e1 e2 dir p =
       fun f_k ctrl jp cd ->
-        let cpt = ref 0 in
+        let cpt = R.Join.new_join_point 0 in
         let j = join_n cpt f_k jp ctrl cd in
         let f_fordopar _ =
           if dir then
             begin
               let min = e1() in
               let max = e2() in
-              cpt := max - min + 1;
-              if !cpt <= 0 then
+              let n = max - min + 1 in
+              R.Join.incr cpt n;
+              if n <= 0 then
                 f_k unit_value
               else
                 for i = max downto min do
@@ -591,8 +591,9 @@ let rml_loop p =
             begin
               let max = e1() in
               let min = e2() in
-              cpt := max - min + 1;
-              if !cpt <= 0 then
+              let n = max - min + 1 in
+              R.Join.incr cpt n;
+              if n <= 0 then
                 f_k unit_value
               else
                 for i = min to max do
@@ -610,13 +611,13 @@ let rml_loop p =
         let cpt, j =
           match jp with
             | None ->
-                let cpt = ref 0 in
+                let cpt = R.Join.new_join_point 0 in
                 cpt, join_n cpt f_k ctrl jp cd
             | Some cpt -> cpt, f_k
         in
         let f_list = List.rev_map (fun p -> p j ctrl (Some cpt) cd) p_list in
         fun _ ->
-          cpt := !cpt + i;
+          R.Join.incr cpt i;
           R.on_current_instant_list cd f_list
 
     let rml_seq_n =
@@ -785,13 +786,12 @@ let rml_loop p =
     let rml_make cd result p =
      (* Function to create the last continuation of a toplevel process *)
       let jp, join_end =
-        let term_cpt = ref 0 in
+        let term_cpt = R.Join.new_join_point 0 in
         Some term_cpt,
         fun () ->
-          incr term_cpt;
+          R.Join.incr term_cpt 1;
           let f x =
-            decr term_cpt;
-            if !term_cpt <= 0 then
+            if R.Join.decr term_cpt then
               result := Some x
           in f
       in
@@ -799,13 +799,12 @@ let rml_loop p =
 
     let rml_make_n cd result pl =
       let jp, join_end =
-        let term_cpt = ref 0 in
+        let term_cpt = R.Join.new_join_point 0 in
         Some term_cpt,
         fun () ->
-          term_cpt := !term_cpt + (List.length pl);
+          R.Join.incr term_cpt (List.length pl);
           let f x =
-            decr term_cpt;
-            if !term_cpt <= 0 then
+            if R.Join.decr term_cpt then
               result := Some x
           in f
       in

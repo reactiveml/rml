@@ -1,6 +1,16 @@
 open Runtime
 open Types
 
+module JoinRef = struct
+  type join_point = int ref
+
+  let new_join_point nb = ref nb
+  let incr j nb =
+    j := !j + nb
+  let decr j =
+    decr j; !j = 0
+end
+
 module Make (D: Runtime.SEQ_DATA_STRUCT) (E: Sig_env.S) =
 struct
     module D = D(struct
@@ -255,6 +265,9 @@ struct
       ck.cd_wake_up <- []
 
 (* ------------------------------------------------------------------------ *)
+
+    module Join = JoinRef
+    type join_point = JoinRef.join_point
 
     module Event =
       struct
