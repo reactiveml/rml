@@ -1373,30 +1373,30 @@ struct
       else
         add_waiting site (Weoi ck.ck_gid) f
 
-  (** [on_event_or_next evt f_w v_w cd ctrl f_next] executes 'f_w v_w' if
+  (** [on_event_or_next evt f_w cd ctrl f_next] executes 'f_w ()' if
       evt is emitted before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
-    let _on_event_or_next site  ev f_w v_w cd ctrl f_next =
+    let _on_event_or_next site  ev f_w cd ctrl f_next =
       let act _ =
         if is_eoi cd then
           (*eoi was reached, launch fallback*)
           D.add_next f_next ctrl.next
         else
           (* signal activated *)
-          f_w v_w
+          f_w ()
       in
       add_waiting site (Wsignal_wp ev.ev_gid) act;
       add_weoi_waiting_list cd (Wsignal_wp ev.ev_gid)
 
-    let on_event_or_next ev f_w v_w cd ctrl f_next =
+    let on_event_or_next ev f_w cd ctrl f_next =
       let site = get_site () in
       let n = get_event site ev in
       if E.status n then
-        f_w v_w
+        f_w ()
       else
-        _on_event_or_next site ev f_w v_w cd ctrl f_next
+        _on_event_or_next site ev f_w cd ctrl f_next
 
-    let on_event_cfg_or_next evt_cfg f_w v_w cd ctrl f_next =
+    let on_event_cfg_or_next evt_cfg f_w cd ctrl f_next =
       ()
 
 (*
@@ -1423,20 +1423,27 @@ struct
           (fun (w,_) -> D.add_waiting try_fire w; add_weoi_waiting_list cd w) w_list
 *)
 
-    (** [on_event evt ctrl f v] executes 'f v' if evt is emitted and
+    let has_been_active site ctrl ev =
+      let ev_ck = get_event_clock site ev in
+      Clock.check_clock_state site ctrl.last_activation ev_ck
+
+    (** [on_event evt ctrl f] executes 'f ()' if evt is emitted and
         ctrl is active in the same step.
         It waits for the next activation of w otherwise,
         or if the call raises Wait_again *)
-    let _on_event site ev ev_ck ctrl f v =
+    let _on_local_event site ev ev_ck ctrl f =
+      let n = get_event site ev in
       let instance = ctrl.instance in
-      let rec self _ =
+      let rec try_launch _ =
+        try
+          f ()
+        with
+          | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self
+      and self _ =
         if ctrl.instance = instance then (
-          if is_active ctrl then
+          if has_been_active site ctrl ev then
             (*ctrl is activated, run continuation*)
-            (try
-                f v
-              with
-                | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self)
+            try_launch ()
           else ((*ctrl is not active, wait end of instant*)
             let is_fired = ref false in
             D.add_next (ctrl_await is_fired) ctrl.next_control;
@@ -1445,32 +1452,52 @@ struct
         )
       and eoi_await is_fired _ =
         if not !is_fired then
-            (*ctrl was not activated, await the signal again *)
+          (*ctrl was not activated, await the signal again *)
           (is_fired := true;
            add_waiting site (Wsignal_wa ev.ev_gid) self)
       and ctrl_await is_fired _ =
         if not !is_fired then
           (* ctrl was activated, signal is present*)
-          (try
-             is_fired := true; f v
-           with
-             | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self)
+          (is_fired := true; try_launch ())
       in
-      add_waiting site (Wsignal_wa ev.ev_gid) self
-
-    let on_event ev ctrl f v =
-      let site = get_site () in
-      let n = get_event site ev in
-      let ev_ck = get_event_clock site ev in
       if E.status n then
-        (try
-           f v
-         with
-           | Wait_again -> _on_event site ev ev_ck ctrl f v)
+        try_launch ()
       else
-        _on_event site ev ev_ck ctrl f v
+        add_waiting site (Wsignal_wa ev.ev_gid) self
 
-    let on_event_cfg evt_cfg ctrl f v  =
+    let _on_remote_event site ev ev_ck ctrl f =
+      let instance = ctrl.instance in
+      let rec self _ =
+        if ctrl.instance = instance then (
+          if has_been_active site ctrl ev then
+            (*ctrl is activated, run continuation*)
+            (try
+                f ()
+              with
+                | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self)
+          else (
+            IFDEF RML_DEBUG THEN
+              print_debug "Signal %a was emitted, but ctrl is not active so keep waiting@." print_signal ev
+            ELSE () END;
+            add_waiting site (Wsignal_wa ev.ev_gid) self
+          )
+        )
+      in
+        add_waiting site (Wsignal_wa ev.ev_gid) self
+
+    let on_event ev ctrl f =
+      let site = get_site () in
+      let ev_ck = get_event_clock site ev in
+      if C.is_local ev.ev_gid then
+        _on_local_event site ev ev_ck ctrl f
+      else
+        _on_remote_event site ev ev_ck ctrl f
+
+    let on_event_at_eoi evt ctrl f =
+      on_event evt ctrl (fun () -> on_eoi (Event.clock evt) f)
+
+
+    let on_event_cfg evt_cfg ctrl f =
       ()
 
 (*
@@ -1501,111 +1528,6 @@ struct
         wait_event_cfg ()
 *)
 
-    let has_been_active site ctrl ev =
-      let ev_ck = get_event_clock site ev in
-      Clock.check_clock_state site ctrl.last_activation ev_ck
-
-    (** [on_event_at_eoi evt ctrl f] executes 'f ()' during the eoi
-        (of evt's clock domain) if ctrl is active in the same step.
-        Waits for the next activation of evt otherwise, or if the call
-        raises Wait_again *)
-    let _on_local_event_at_eoi site ev ev_ck ctrl f =
-      let instance = ctrl.instance in
-      let rec self _ =
-        if ctrl.instance = instance then (
-          if has_been_active site ctrl ev then
-            (*ctrl is activated, run continuation*)
-            add_waiting site (Weoi ev_ck.ck_gid) eoi_work
-          else ((*ctrl is not active, wait end of instant*)
-            let is_fired = ref false in
-            D.add_next (ctrl_await is_fired) ctrl.next_control;
-            add_waiting site (Weoi ev_ck.ck_gid) (eoi_await is_fired)
-          )
-        )
-      and eoi_await is_fired _ =
-        if not !is_fired then
-          (*ctrl was not activated, await the signal again *)
-          (is_fired := true;
-           add_waiting site (Wsignal_wa ev.ev_gid) self)
-      and ctrl_await is_fired _ =
-        if not !is_fired then
-         (* ctrl was activated, signal is present*)
-          (is_fired :=  true;
-           add_waiting site (Weoi ev_ck.ck_gid) eoi_work)
-      and eoi_work _ =
-          (try
-            f unit_value
-          with
-            | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self)
-      in
-      add_waiting site (Wsignal_wa ev.ev_gid) self
-
-    let _on_remote_event_at_eoi site ev ev_ck ctrl f =
-      let instance = ctrl.instance in
-      let rec self _ =
-        if ctrl.instance = instance then (
-          if has_been_active site ctrl ev then
-            add_waiting site (Weoi ev_ck.ck_gid) eoi_work
-          else (
-            IFDEF RML_DEBUG THEN
-              print_debug "Signal %a was emitted, but ctrl is not active so keep waiting@." print_signal ev
-            ELSE () END;
-            add_waiting site (Wsignal_wa ev.ev_gid) self
-          )
-        )
-      and eoi_work _ =
-          (try
-            f unit_value
-          with
-            | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self)
-      in
-        add_waiting site (Wsignal_wa ev.ev_gid) self
-
-     let on_event_at_eoi ev ctrl f =
-       let site = get_site () in
-       let n = get_event site ev in
-       let ev_ck = get_event_clock site ev in
-         if C.is_local ev.ev_gid then (
-           if E.status n then
-             let eoi_work _ =
-               (try
-                   f unit_value
-                 with
-                   | Wait_again -> _on_local_event_at_eoi site ev ev_ck ctrl f)
-             in
-               add_waiting site (Weoi ev_ck.ck_gid) eoi_work
-           else
-               _on_local_event_at_eoi site ev ev_ck ctrl f
-         ) else
-             _on_remote_event_at_eoi site ev ev_ck ctrl f
-
-     let on_event_cfg_at_eoi evt_cfg ctrl f =
-       ()
-
-(*
-    (** [on_event_cfg_at_eoi evt ctrl f] executes 'f ()' during the eoi
-        (of evt_cfg's clock domain) if ctrl is active in the same step.
-        Waits for the next activation of evt otherwise. *)
-     let on_event_cfg_at_eoi evt_cfg ctrl f =
-       if Event.cfg_status evt_cfg then
-         (* TODO: trouver le bon cd sur lequel attendre *)
-         let w_list = Event.cfg_events evt_cfg true in
-         let sig_cd = snd (List.hd w_list) in
-         add_weoi sig_cd f
-       else
-         let is_fired = ref false in
-         let f _ =
-           if not !is_fired then
-             (if Event.cfg_status evt_cfg then
-                 (is_fired := true;
-                  D.add_next f ctrl.next)
-              else
-                 raise Wait_again)
-         in
-         let w_list = Event.cfg_events evt_cfg true in
-         List.iter (fun (w,sig_cd) -> _on_event_at_eoi sig_cd ctrl w f) w_list
-*)
-
     let create_control kind body f_k ctrl cd =
       let kind = control_of_runtime_control kind in
       let new_ctrl = new_ctrl kind in
@@ -1617,7 +1539,7 @@ struct
                 wake_up_ctrl new_ctrl cd;
                 on_next_instant ctrl f_when
               and f_when _ =
-                on_event evt ctrl when_act unit_value
+                on_event evt ctrl when_act
               in
               fun () ->
                 start_ctrl cd ctrl new_ctrl;

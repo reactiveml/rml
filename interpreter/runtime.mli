@@ -123,34 +123,25 @@ sig
   (** [on_eoi cd f v] executes 'f v' during the eoi of cd. *)
   val on_eoi : clock -> unit step -> unit
 
-  (** [on_event evt ctrl f v] executes 'f v' if evt is emitted and
+  (** [on_event evt ctrl f] executes 'f ()' if evt is emitted and
       ctrl is active in the same step.
       It waits for the next activation of w otherwise,
       or if the call raises Wait_again *)
-  val on_event : ('a, 'b) event -> control_tree -> 'c step -> 'c -> unit
-  (** [on_event_cfg evt_cfg ctrl f v] executes 'f v' if evt_cfg is true and
+  val on_event : ('a, 'b) event -> control_tree -> unit step -> unit
+  (** [on_event_cfg evt_cfg ctrl f] executes 'f ()' if evt_cfg is true and
       ctrl is active in the same step.
       It waits for the next activation of evt_cfg otherwise,
       or if the call raises Wait_again *)
-  val on_event_cfg : event_cfg -> control_tree -> 'a step -> 'a -> unit
-  (** [on_event_at_eoi evt ctrl f] executes 'f ()' during the eoi
-      (of evt's clock domain) if ctrl is active in the same step.
-      Waits for the next activation of evt otherwise, or if the call
-      raises Wait_again *)
-  val on_event_at_eoi : ('a, 'b) event -> control_tree -> unit step -> unit
-  (** [on_event_cfg_at_eoi evt ctrl f] executes 'f ()' during the eoi
-      (of evt_cfg's clock domain) if ctrl is active in the same step.
-      Waits for the next activation of evt otherwise. *)
-  val on_event_cfg_at_eoi : event_cfg -> control_tree -> unit step -> unit
-  (** [on_event_or_next evt f_w v_w cd ctrl f_next] executes 'f_w v_w' if
+  val on_event_cfg : event_cfg -> control_tree -> unit step -> unit
+  (** [on_event_or_next evt f_w cd ctrl f_next] executes 'f_w ()' if
       evt is emitted before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
-  val on_event_or_next : ('a, 'b) event -> 'c step -> 'c ->
+  val on_event_or_next : ('a, 'b) event -> unit step ->
     clock_domain -> control_tree -> unit step -> unit
- (** [on_event_cfg_or_next evt_cfg f_w v_w cd ctrl f_next] executes 'f_w v_w' if
+ (** [on_event_cfg_or_next evt_cfg f_w cd ctrl f_next] executes 'f_w ()' if
       evt_cfg is true before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
-  val on_event_cfg_or_next : event_cfg -> 'c step -> 'c ->
+  val on_event_cfg_or_next : event_cfg -> unit step ->
     clock_domain -> control_tree -> unit step -> unit
 
   (* scheduling *)

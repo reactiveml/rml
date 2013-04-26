@@ -71,6 +71,17 @@ module Rml_interpreter =
           print_debug "Error: Unexpected local clock@.";
           raise Types.RML
 
+    let rec on_event_at_eoi evt ctrl f =
+      let eoi_work _ =
+        try
+          f ()
+        with
+          | R.Wait_again -> on_event_at_eoi evt ctrl f
+      in
+      R.on_event evt ctrl (fun () -> R.on_eoi (R.Event.clock evt) eoi_work)
+
+    let on_event_cfg_at_eoi evt_cfg ctrl f = ()
+
 (* ------------------------------------------------------------------------ *)
     let rml_pre_status evt = R.Event.pre_status evt
 
@@ -181,7 +192,7 @@ module Rml_interpreter =
 
     let rml_await_immediate' evt =
       fun f_k ctrl jp cd _ ->
-        R.on_event evt ctrl f_k unit_value
+        R.on_event evt ctrl f_k
 
     let rml_await_immediate expr_evt =
       fun f_k ctrl jp cd _ ->
@@ -194,7 +205,7 @@ module Rml_interpreter =
 
     let rml_await_immediate_conf expr_cfg =
       fun f_k ctrl jp cd _ ->
-        R.on_event_cfg (expr_cfg ()) ctrl f_k unit_value
+        R.on_event_cfg (expr_cfg ()) ctrl f_k
 
 (**************************************)
 (* get                                *)
@@ -222,7 +233,7 @@ module Rml_interpreter =
           let x = R.Event.one evt in
           p x f_k ctrl jp cd unit_value
         in
-        R.on_event evt ctrl f unit_value
+        R.on_event evt ctrl f
 
      let rml_await_immediate_one expr_evt p =
        fun f_k ctrl jp cd _ ->
@@ -242,7 +253,7 @@ module Rml_interpreter =
            else
              raise Wait_again
          in
-         R.on_event_at_eoi evt ctrl await_eoi
+         on_event_at_eoi evt ctrl await_eoi
 
     let rml_await_all_match expr_evt matching p =
       fun f_k ctrl jp cd _ ->
@@ -256,7 +267,7 @@ module Rml_interpreter =
     let rml_await' evt =
       fun f_k ctrl jp cd _ ->
         let await_eoi _ = R.on_next_instant ctrl f_k in
-        R.on_event_at_eoi evt ctrl await_eoi
+        on_event_at_eoi evt ctrl await_eoi
 
     let rml_await expr_evt =
       fun f_k ctrl jp cd _ ->
@@ -277,7 +288,7 @@ module Rml_interpreter =
            let v = R.Event.one evt in
            R.on_next_instant ctrl (p v f_k ctrl jp cd)
          in
-         R.on_event_at_eoi evt ctrl await_eoi
+         on_event_at_eoi evt ctrl await_eoi
 
     let rml_await_one expr_evt p =
       fun f_k ctrl jp cd _ ->
@@ -286,7 +297,7 @@ module Rml_interpreter =
 
     let rml_await_conf expr_cfg =
       fun f_k ctrl jp cd _ ->
-        R.on_event_cfg_at_eoi (expr_cfg ()) ctrl (fun () -> R.on_next_instant ctrl f_k)
+        on_event_cfg_at_eoi (expr_cfg ()) ctrl (fun () -> R.on_next_instant ctrl f_k)
 
 (**************************************)
 (* present                            *)
@@ -297,7 +308,7 @@ module Rml_interpreter =
         let f_1 = p_1 f_k ctrl jp cd in
         let f_2 = p_2 f_k ctrl jp cd in
         fun () ->
-          R.on_event_or_next evt f_1 unit_value cd ctrl f_2
+          R.on_event_or_next evt f_1 cd ctrl f_2
 
     let rml_present expr_evt p_1 p_2 =
       fun f_k ctrl jp cd _ ->
@@ -313,7 +324,7 @@ module Rml_interpreter =
         let f_1 = p_1 f_k ctrl jp cd in
         let f_2 = p_2 f_k ctrl jp cd in
         fun () ->
-          R.on_event_cfg_or_next (expr_cfg ()) f_1 unit_value cd ctrl f_2
+          R.on_event_cfg_or_next (expr_cfg ()) f_1 cd ctrl f_2
 
 (**************************************)
 (* seq                                *)
