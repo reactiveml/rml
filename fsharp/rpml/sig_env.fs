@@ -1,42 +1,27 @@
-(**********************************************************************)
-(*                                                                    *)
-(*                           ReactiveML                               *)
-(*                    http://reactiveML.org                           *)
-(*                    http://rml.inria.fr                             *)
-(*                                                                    *)
-(*                          Louis Mandel                              *)
-(*                                                                    *)
-(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
-(*  This file is distributed under the terms of the GNU Library       *)
-(*  General Public License, with the special exception on linking     *)
-(*  described in file ../LICENSE.                                     *)
-(*                                                                    *)
-(*  ReactiveML has been done in the following labs:                   *)
-(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
-(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
-(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
-(*                                                                    *)
-(**********************************************************************)
-
 module Event
 
+open Types
+
 type clock = int ref
-type ('a, 'b, 'cd) t =
-    { clock : clock;
-        clock_domain : 'cd;
-        mutable status: int;
-        mutable value: 'b;
-        mutable pre_status: int;
-        mutable last: 'b;
-        mutable _default: 'b;
-        combine: ('a -> 'b -> 'b); }
+type clock_index = int
+type ('a, 'b) t =
+    { mutable clock : clock;
+      kind : signal_kind;
+      mutable status: int;
+      mutable reset : bool;
+      mutable value: 'b;
+      mutable pre_status: int;
+      mutable last: 'b;
+      mutable _default: 'b;
+      combine: ('a -> 'b -> 'b); }
 
 let absent = -2
 
-let create cd ck _default combine =
-    { clock = ck;
-    clock_domain = cd;
+let create ck kind _default combine =
+  { clock = ck;
+    kind = kind;
     status = absent;
+    reset = false;
     value = _default;
     pre_status = absent;
     last = _default;
@@ -45,49 +30,88 @@ let create cd ck _default combine =
 
 (* -------------------------- Access functions -------------------------- *)
 let _default n = n._default
-let status n = n.status = !(n.clock)
+let status n =
+  n.status = !(n.clock)
 
 let value n = n.value
 
 let pre_status n =
-    if n.status = !(n.clock)
-    then n.pre_status = !(n.clock) - 1
-    else n.status = !(n.clock) - 1
+  if n.status = !(n.clock)
+  then n.pre_status = !(n.clock) - 1
+  else n.status = !(n.clock) - 1
 
 let last n =
+  if n.reset
+  then n._default
+  else (
     if n.status = !(n.clock)
     then n.last
     else n.value
+  )
 
 let pre_value n =
-    if n.status = !(n.clock) then
-      if n.pre_status = !(n.clock) - 1
-      then n.last
-      else n._default
-    else
-      if n.status = !(n.clock) - 1
-      then n.value
-      else n._default
+  if n.status = !(n.clock)
+  then
+    if n.pre_status = !(n.clock) - 1
+    then n.last
+    else n._default
+  else
+    if n.status = !(n.clock) - 1
+    then n.value
+    else n._default
 
 let one n =
-    match n.value with
-    | x :: _ -> x
-    | _ -> assert false
+  match n.value with
+  | x :: _ -> x
+  | _ -> assert false
 
 let emit n v =
-    if n.status <> !(n.clock) then
-     (n.pre_status <- n.status;
-      n.last <- n.value;
-      n.status <- !(n.clock);
-      n.value <- n.combine v n._default)
-    else
-      n.value <- n.combine v n.value
+  if n.status <> !(n.clock)
+  then
+    (n.pre_status <- n.status;
+     n.last <- if n.reset then n._default else n.value;
+     n.status <- !(n.clock);
+     n.reset <- false;
+     n.value <- if n.kind = Memory then n.combine v n.last else n.combine v n._default)
+  else
+    n.value <- n.combine v n.value
 
-let clock_domain n =
-    n.clock_domain
+let set_value n v =
+  if n.status <> !(n.clock)
+  then
+    (n.pre_status <- n.status;
+     n.last <- if n.reset then n._default else n.value;
+     n.status <- !(n.clock);
+     n.reset <- false;
+     n.value <- v)
+  else
+    n.value <- v
+
+let copy n new_n =
+  n.status <- new_n.status;
+  n.value <- new_n.value;
+  n.pre_status <- new_n.pre_status;
+  n.last <- new_n.last
+
+let reset n =
+  n.reset <- true
 
 let init_clock () =
-    ref 0
+  ref 0
+
+let set_clock n ck =
+  n.clock <- ck
 
 let next ck =
-    incr ck
+  incr ck
+
+let get ck = !ck
+let set ck v = ck := v
+
+let equal ck1 ck2 =
+  ck1 = ck2
+
+(*
+let print_clock_index ff c =
+  Format.fprintf ff "%d" c
+*)
