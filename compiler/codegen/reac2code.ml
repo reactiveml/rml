@@ -75,6 +75,29 @@ let compile_impl info_chan filename module_name intermediate_code =
           gen_main_fun out_chan;
         close_out out_chan
 
+    | Lco_fsharp ->
+        let obj_name = filename ^ ".ml" in
+        let fs_name = filename ^ ".fs" in
+        let out_chan = open_out obj_name in
+        output_string out_chan
+          ("(* THIS FILE IS GENERATED. *)\n"^
+              "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
+              "*)\n\n");
+        (* selection of the interpreter *)
+        output_string out_chan "open Caml_compat\n";
+        output_string out_chan ("module Interpreter = "^ !interpreter_module ^"\n");
+        (* the implementation *)
+        compile_implementation_back_end info_chan out_chan module_name intermediate_code;
+        (* main process *)
+        if !simulation_process <> "" then
+          gen_main_fun out_chan;
+        close_out out_chan;
+
+        (* Format output for F# *)
+        let cmd = "camlp4o "^obj_name^" -o "^fs_name in
+        ignore (Sys.command cmd);
+        Sys.remove obj_name
+
     | Rml_print | Rpml2Rml ->
         let obj_name = filename ^ "_gen.rml" in
         let out_chan = open_out obj_name in
