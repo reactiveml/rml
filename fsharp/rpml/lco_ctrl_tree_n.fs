@@ -305,6 +305,9 @@ let join_n cpt =
     if R.Join.decr cpt then
       f_k unit_value
 
+let rml_ignore f_k _ =
+  f_k ()
+
 let rml_par p_1 p_2 =
   fun f_k ctrl jp cd ->
     let i = match jp with None -> 2 | Some _ -> 1 in
@@ -315,8 +318,8 @@ let rml_par p_1 p_2 =
             cpt, join_n cpt f_k ctrl jp cd
         | Some cpt -> cpt, f_k
     in
-    let f_1 = p_1 (Obj.magic j: 'a step) ctrl (Some cpt) cd in
-    let f_2 = p_2 (Obj.magic j: 'b step) ctrl (Some cpt) cd in
+    let f_1 = p_1 (rml_ignore j) ctrl (Some cpt) cd in
+    let f_2 = p_2 (rml_ignore j) ctrl (Some cpt) cd in
     fun () ->
       R.Join.incr cpt i;
       R.on_current_instant cd f_2;
