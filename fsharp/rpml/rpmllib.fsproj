@@ -40,12 +40,6 @@
     <Reference Include="FSharp.Core">
       <HintPath>..\..\..\..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\FSharp.Core.dll</HintPath>
     </Reference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\..\..\..\..\..\Downloads\FSharpPowerPack-4.0.0.0\bin\gac\FSharp.PowerPack.dll</HintPath>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Compatibility">
-      <HintPath>..\..\..\..\..\..\Downloads\FSharpPowerPack-4.0.0.0\bin\gac\FSharp.PowerPack.Compatibility.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="caml_compat.fs" />
@@ -67,4 +61,14 @@
 	<Target Name="AfterBuild">
 	</Target>
 	-->
+  <ItemGroup>
+    <ProjectReference Include="..\FSharp.PowerPack\FSharp.PowerPack.fsproj">
+      <Project>{649FA588-F02E-457C-9FCF-87E46407481F}</Project>
+      <Name>FSharp.PowerPack</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FSharp.PowerPack.Compatibility\FSharp.PowerPack.Compatibility.fsproj">
+      <Project>{6FC3B299-23CB-4098-998D-06C014431807}</Project>
+      <Name>FSharp.PowerPack.Compatibility</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

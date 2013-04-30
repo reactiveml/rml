@@ -1,19 +1,10 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x64" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="../examples/fsharp/planets/planets.fs">
-    <Files>
-      <File FileName="../examples/fsharp/simple/simple.fs" Line="3" Column="25" />
-      <File FileName="../examples/fsharp/planets/planets.fs" Line="431" Column="66" />
-      <File FileName="rpml/caml_compat.fs" Line="22" Column="34" />
-      <File FileName="rpml/lco_ctrl_tree_n.fs" Line="323" Column="14" />
-    </Files>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x64" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="planets" expanded="True">
-            <Node name="planets.fs" selected="True" />
-          </Node>
-          <Node name="simple" expanded="True" />
+          <Node name="FSharp.PowerPack.Compatibility" selected="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">

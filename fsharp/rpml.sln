@@ -9,6 +9,10 @@ Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "planets", "..\examples\fsha
 EndProject
 Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "boids", "..\examples\fsharp\boids\boids.fsproj", "{FCCE2C61-A39D-402A-A448-546DDB3F5146}"
 EndProject
+Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "FSharp.PowerPack.Compatibility", "FSharp.PowerPack.Compatibility\FSharp.PowerPack.Compatibility.fsproj", "{6FC3B299-23CB-4098-998D-06C014431807}"
+EndProject
+Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "FSharp.PowerPack", "FSharp.PowerPack\FSharp.PowerPack.fsproj", "{649FA588-F02E-457C-9FCF-87E46407481F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +28,22 @@ Global
 		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|x64.ActiveCfg = Release|Any CPU
 		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|x64.Build.0 = Release|Any CPU
+		{649FA588-F02E-457C-9FCF-87E46407481F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{649FA588-F02E-457C-9FCF-87E46407481F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{649FA588-F02E-457C-9FCF-87E46407481F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{649FA588-F02E-457C-9FCF-87E46407481F}.Debug|x64.Build.0 = Debug|Any CPU
+		{649FA588-F02E-457C-9FCF-87E46407481F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{649FA588-F02E-457C-9FCF-87E46407481F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{649FA588-F02E-457C-9FCF-87E46407481F}.Release|x64.ActiveCfg = Release|Any CPU
+		{649FA588-F02E-457C-9FCF-87E46407481F}.Release|x64.Build.0 = Release|Any CPU
+		{6FC3B299-23CB-4098-998D-06C014431807}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FC3B299-23CB-4098-998D-06C014431807}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FC3B299-23CB-4098-998D-06C014431807}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6FC3B299-23CB-4098-998D-06C014431807}.Debug|x64.Build.0 = Debug|Any CPU
+		{6FC3B299-23CB-4098-998D-06C014431807}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FC3B299-23CB-4098-998D-06C014431807}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FC3B299-23CB-4098-998D-06C014431807}.Release|x64.ActiveCfg = Release|Any CPU
+		{6FC3B299-23CB-4098-998D-06C014431807}.Release|x64.Build.0 = Release|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|x64.ActiveCfg = Debug|Any CPU
