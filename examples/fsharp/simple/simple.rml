@@ -1,0 +1,10 @@
+let process do_stuff i =
+  let x = ref i in
+  for i=1 to 19324 do
+    x := !x * 435 + 4223
+  done
+
+let process main =
+  for i = 1 to 8821 dopar
+    run (do_stuff i)
+  done
