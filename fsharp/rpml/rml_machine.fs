@@ -41,3 +41,25 @@ let rml_make p =
       Printf.printf "%d ms@." timer.ElapsedMilliseconds
   in
   react, finalize
+  
+let rml_exec p =
+  Runtime_options.parse_cli (); Printf.printf "Test"; R.init();
+  let react, finalize = rml_make p in
+  let react_fun =
+    match !Runtime_options.number_steps > 0, !Runtime_options.sampling_rate > 0.0 with
+      | false, false -> exec_forever
+      | true, false -> exec_n !Runtime_options.number_steps
+      | _ -> raise Types.RML
+      (*| false, true -> exec_sampling_forever !Runtime_options.sampling_rate
+      | true, true -> exec_sampling_n !Runtime_options.number_steps !Runtime_options.sampling_rate*)
+  in
+  try
+    react_fun react finalize
+  with
+    | Types.End_program -> finalize (); exit 0
+    | e ->
+        Printf.eprintf "Error: An exception occurred: %s.@.Aborting all processes@."
+          (Printexc.to_string e);
+        finalize ();
+        exit 2
+
