@@ -2,30 +2,30 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProductVersion>10.0.0</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{9777C021-DB73-49ED-9D6F-AFA870819067}</ProjectGuid>
+    <ProjectGuid>{FCCE2C61-A39D-402A-A448-546DDB3F5146}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>planets</RootNamespace>
-    <AssemblyName>planets</AssemblyName>
+    <RootNamespace>boids</RootNamespace>
+    <AssemblyName>boids</AssemblyName>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <PlatformTarget />
+    <PlatformTarget>x64</PlatformTarget>
     <Externalconsole>True</Externalconsole>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
-    <PlatformTarget />
+    <PlatformTarget>x64</PlatformTarget>
     <Externalconsole>True</Externalconsole>
     <Tailcalls>true</Tailcalls>
   </PropertyGroup>
@@ -37,18 +37,18 @@
     <Reference Include="FSharp.Core">
       <HintPath>..\..\..\..\..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\FSharp.Core.dll</HintPath>
     </Reference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\..\..\..\..\..\..\Downloads\FSharpPowerPack-4.0.0.0\bin\gac\FSharp.PowerPack.dll</HintPath>
-    </Reference>
     <Reference Include="FSharp.PowerPack.Compatibility">
       <HintPath>..\..\..\..\..\..\..\Downloads\FSharpPowerPack-4.0.0.0\bin\gac\FSharp.PowerPack.Compatibility.dll</HintPath>
+    </Reference>
+    <Reference Include="FSharp.PowerPack">
+      <HintPath>..\..\..\..\..\..\..\Downloads\FSharpPowerPack-4.0.0.0\bin\gac\FSharp.PowerPack.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="planets.fs" />
+    <Compile Include="boids.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>

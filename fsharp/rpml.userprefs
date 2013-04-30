@@ -1,22 +1,19 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="../examples/fsharp/simple/simple.fs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x64" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="../examples/fsharp/planets/planets.fs">
     <Files>
+      <File FileName="../examples/fsharp/simple/simple.fs" Line="3" Column="25" />
+      <File FileName="../examples/fsharp/planets/planets.fs" Line="431" Column="66" />
       <File FileName="rpml/caml_compat.fs" Line="22" Column="34" />
-      <File FileName="rpml/graphics.fs" Line="1" Column="1" />
-      <File FileName="rpml/seq_runtime.fs" Line="71" Column="18" />
-      <File FileName="rpml/lco_ctrl_tree_n.fs" Line="757" Column="1" />
-      <File FileName="rpml/runtime_options.fs" Line="38" Column="35" />
-      <File FileName="rpml/rml_machine.fs" Line="62" Column="21" />
-      <File FileName="../examples/fsharp/simple/simple.fs" Line="22" Column="10" />
+      <File FileName="rpml/lco_ctrl_tree_n.fs" Line="323" Column="14" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="rpmllib" expanded="True" />
-          <Node name="simple" expanded="True" selected="True">
-            <Node name="References" expanded="True" />
+          <Node name="planets" expanded="True">
+            <Node name="planets.fs" selected="True" />
           </Node>
+          <Node name="simple" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">

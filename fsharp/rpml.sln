@@ -7,6 +7,8 @@ Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "simple", "..\examples\fshar
 EndProject
 Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "planets", "..\examples\fsharp\planets\planets.fsproj", "{9777C021-DB73-49ED-9D6F-AFA870819067}"
 EndProject
+Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "boids", "..\examples\fsharp\boids\boids.fsproj", "{FCCE2C61-A39D-402A-A448-546DDB3F5146}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,7 @@ Global
 		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|x64.ActiveCfg = Release|Any CPU
+		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|x64.Build.0 = Release|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -37,9 +40,17 @@ Global
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|x64.ActiveCfg = Release|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|x64.Build.0 = Release|Any CPU
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|Any CPU.Build.0 = Debug|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|x64.ActiveCfg = Debug|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|x64.Build.0 = Debug|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|Any CPU.ActiveCfg = Release|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|Any CPU.Build.0 = Release|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|x64.ActiveCfg = Release|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = ..\examples\fsharp\planets\planets.fsproj
+		StartupItem = ..\examples\fsharp\boids\boids.fsproj
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
