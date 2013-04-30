@@ -63,7 +63,7 @@ let pre_value n =
 let one n =
   match n.value with
   | x :: _ -> x
-  | _ -> assert false
+  | _ -> raise Types.RML
 
 let emit n v =
   if n.status <> !(n.clock)

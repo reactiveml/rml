@@ -20,4 +20,4 @@ let main : _ Interpreter.process =
       (fun i__val_rml_8 ->
          Interpreter.rml_run (fun () -> do_stuff i__val_rml_8))
          
-let _ = Rml_machine.rml_exec main
+let _ = Machine.rml_exec main

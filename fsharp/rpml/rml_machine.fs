@@ -1,4 +1,4 @@
-module Rml_machine
+module Machine
 
 open System.Diagnostics
 
