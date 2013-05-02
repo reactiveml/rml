@@ -552,14 +552,10 @@ struct
           f ()
 
 
-    let schedule cd =
-      try
-        while true do
-          let f = D.take_current cd.cd_current in
-          f ()
-        done
-      with
-        | D.Empty_current -> ()
+    let rec schedule cd =
+      match D.take_current cd.cd_current with
+        | Some f -> f (); schedule cd
+        | None -> ()
 
     let eoi cd =
       cd.cd_eoi := true;
@@ -664,10 +660,9 @@ struct
   let current_length c =
     List.length !c
 
-  exception Empty_current
   let take_current c = match !c with
-    | f :: l -> c := l; f
-    | [] -> raise Empty_current
+    | f :: l -> c := l; Some f
+    | [] -> None
 
   let mk_waiting_list () = ref ([]:unit Step.t list)
   let add_waiting p w =
@@ -719,11 +714,10 @@ struct
   let current_length c =
     List.fold_left (fun acc l -> (List.length l) + acc) 0 !c
 
-  exception Empty_current
   let take_current c = match !c with
-    | [] -> raise Empty_current
-    | [f] :: tl -> c := tl; f
-    | (f::l) :: tl -> c := l::tl; f
+    | [] -> None
+    | [f] :: tl -> c := tl; Some f
+    | (f::l) :: tl -> c := l::tl; Some f
     | _ -> assert false
 
   let mk_waiting_list () = ref ([]:unit Step.t list)

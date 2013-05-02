@@ -42,10 +42,9 @@ module D =
   let current_length c =
     List.length !c
 
-  exception Empty_current
   let take_current c = match !c with
-    | f :: l -> c := l; f
-    | [] -> raise Empty_current
+    | f :: l -> c := l; Some f
+    | [] -> None
 
   let mk_waiting_list () = ref ([]:unit Step.t list)
   let add_waiting p w =
@@ -605,14 +604,10 @@ let create_control_evt_conf kind body f_k ctrl cd =
       f ()
 
 
-let schedule cd =
-  try
-    while true do
-      let f = D.take_current cd.cd_current in
-      f ()
-    done
-  with
-    | D.Empty_current -> ()
+let rec schedule cd =
+  match D.take_current cd.cd_current with
+  | Some f -> f (); schedule cd
+  | None -> ()
 
 let eoi cd =
   cd.cd_eoi := true;

@@ -644,14 +644,10 @@ struct
       ELSE () END;
       not has_next
 
-    let schedule cd =
-      try
-        while true do
-          let f = D.take_current cd.cd_current in
-          f ()
-        done
-      with
-        | D.Empty_current -> ()
+    let rec schedule cd =
+      match D.take_current cd.cd_current with
+        | Some f -> f (); schedule cd
+        | None -> ()
 
     let eoi site cd =
       IFDEF RML_DEBUG THEN

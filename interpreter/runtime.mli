@@ -11,10 +11,9 @@ sig
   type current
   type waiting_list
 
-  exception Empty_current
   (* functions on the current data structure *)
   val mk_current : unit -> current
-  val take_current : current -> unit Step.t
+  val take_current : current -> (unit Step.t) option
   val add_current : unit Step.t -> current -> unit
   val add_current_list : unit Step.t list -> current -> unit
   (* Adds all elements of a waiting list or next to current and empty it. *)
