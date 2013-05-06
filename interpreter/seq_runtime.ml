@@ -427,14 +427,16 @@ struct
         or if the call raises Wait_again *)
     let _on_event w sig_cd ctrl f =
       let instance = ctrl.instance in
-      let rec self _ =
+      let rec try_launch () =
+        try
+          f ()
+        with
+          | Wait_again -> D.add_waiting self w
+      and self _ =
         if ctrl.instance = instance then (
           if has_been_active ctrl sig_cd then
             (*ctrl is activated, run continuation*)
-            (try
-                f ()
-              with
-                | Wait_again -> D.add_waiting self w)
+            try_launch ()
           else ((*ctrl is not active, wait end of instant*)
             let is_fired = ref false in
             D.add_next (ctrl_await is_fired) ctrl.next_control;
@@ -449,10 +451,7 @@ struct
       and ctrl_await is_fired _ =
         if not !is_fired then
           (* ctrl was activated, signal is present*)
-          (try
-             is_fired := true; f ()
-           with
-             | Wait_again -> D.add_waiting self w)
+          (is_fired := true; try_launch ())
       in
       D.add_waiting self w
 
