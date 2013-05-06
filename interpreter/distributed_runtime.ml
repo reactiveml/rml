@@ -1436,7 +1436,8 @@ struct
         try
           f ()
         with
-          | Wait_again -> add_waiting site (Wsignal_wa ev.ev_gid) self
+          | Wait_again ->
+            on_eoi ev_ck (fun () -> add_waiting site (Wsignal_wa ev.ev_gid) self)
       and self _ =
         if ctrl.instance = instance then (
           if has_been_active site ctrl ev then

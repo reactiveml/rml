@@ -213,9 +213,6 @@ struct
       new_ctrl.susp <- false;
       next_to_current cd new_ctrl
 
-    let is_active ctrl =
-      ctrl.alive && not ctrl.susp
-
     let mk_clock_domain parent =
       let cd = { cd_current = D.mk_current ();
         cd_eoi = ref false;
@@ -431,7 +428,7 @@ struct
         try
           f ()
         with
-          | Wait_again -> D.add_waiting self w
+          | Wait_again -> on_eoi sig_cd (fun () -> D.add_waiting self w)
       and self _ =
         if ctrl.instance = instance then (
           if has_been_active ctrl sig_cd then
