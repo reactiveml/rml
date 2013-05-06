@@ -1,10 +1,25 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x64" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="../examples/fsharp/boids/boids.fs">
+    <Files>
+      <File FileName="rpml/seq_runtime.fs" Line="328" Column="33" />
+      <File FileName="rpml/rml_machine.fs" Line="31" Column="11" />
+      <File FileName="rpml/runtime.fs" Line="43" Column="34" />
+      <File FileName="rpml/lco_ctrl_tree_n.fs" Line="65" Column="45" />
+      <File FileName="../examples/fsharp/simple/simple.fs" Line="4" Column="32" />
+      <File FileName="../examples/fsharp/planets/planets.fs" Line="6" Column="15" />
+      <File FileName="rpml/sig_env.fs" Line="63" Column="7" />
+      <File FileName="../examples/fsharp/boids/boids.fs" Line="4" Column="3" />
+    </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="FSharp.PowerPack.Compatibility" selected="True" />
+          <Node name="boids" expanded="True">
+            <Node name="boids.fs" selected="True" />
+          </Node>
+          <Node name="planets" expanded="True" />
+          <Node name="rpmllib" expanded="True" />
+          <Node name="simple" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">

@@ -10,6 +10,21 @@
     <RootNamespace>rpml</RootNamespace>
     <AssemblyName>rpml</AssemblyName>
     <Name>rpmllib</Name>
+    <BuildOrder>
+      <BuildOrder>
+        <String>caml_compat.fs</String>
+        <String>graphics.fs</String>
+        <String>types.fs</String>
+        <String>sig_env.fs</String>
+        <String>runtime.fs</String>
+        <String>seq_runtime.fs</String>
+        <String>rml_thread_runtime.fs</String>
+        <String>runtime_options.fs</String>
+        <String>lco_ctrl_tree_n.fs</String>
+        <String>rml_machine.fs</String>
+        <String>rmlarg.fs</String>
+      </BuildOrder>
+    </BuildOrder>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -47,10 +62,11 @@
     <Compile Include="types.fs" />
     <Compile Include="sig_env.fs" />
     <Compile Include="seq_runtime.fs" />
-    <Compile Include="lco_ctrl_tree_n.fs" />
     <Compile Include="runtime_options.fs" />
     <Compile Include="rml_machine.fs" />
     <Compile Include="rmlarg.fs" />
+    <Compile Include="lco_ctrl_tree_n.fs" />
+    <Compile Include="runtime.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />

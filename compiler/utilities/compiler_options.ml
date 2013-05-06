@@ -200,7 +200,8 @@ let set_runtime s =
     | "Rpml2rml" -> set_translation Rpml2Rml
 
     | "Fsharp_Lco" ->
-        set_interpreter_module "Lco";
+        set_interpreter_module "LcoSeq";
+        set_machine_module "Machine.Machine<_,_>(Machine.SeqRuntime)";
         set_translation Lco_fsharp
 
     | _ -> raise (Arg.Bad ("Invalid runtime:" ^ s))

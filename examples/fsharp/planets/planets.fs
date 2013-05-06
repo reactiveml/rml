@@ -1,7 +1,9 @@
 module Planets
 
 open Caml_compat
-module Interpreter = Lco
+
+let Interpreter = Machine.LcoSeq
+let Machine = Machine.Machine<_,_>(Machine.SeqRuntime)
   
 type coord = { x : float; y : float; z : float }
 
@@ -154,7 +156,7 @@ let maj_aff all__val_rml_37 =
        all__val_rml_37)
   
 let planet id__val_rml_42 masse__val_rml_43 pos_init__val_rml_44
-  v_init__val_rml_45 p__val_rml_46 : _ Interpreter.process =
+  v_init__val_rml_45 p__val_rml_46 =
   fun () ->
     Interpreter.rml_def
       (fun () ->
@@ -181,7 +183,7 @@ let planet id__val_rml_42 masse__val_rml_43 pos_init__val_rml_44
                               all__val_rml_48))))))
   
 let soleil id__val_rml_50 masse__val_rml_51 pos_init__val_rml_52
-  p__val_rml_53 : _ Interpreter.process =
+  p__val_rml_53 =
   fun () ->
     Interpreter.rml_def
       (fun () ->
@@ -200,7 +202,7 @@ let soleil id__val_rml_50 masse__val_rml_51 pos_init__val_rml_52
                       me__val_rml_54))
               (Interpreter.rml_pause (fun () -> Interpreter.rml_base_clock))))
   
-let click_of_button_down click__val_rml_56 : _ Interpreter.process =
+let click_of_button_down click__val_rml_56 =
   fun () ->
     Interpreter.rml_loop
       (Interpreter.rml_seq
@@ -213,7 +215,7 @@ let click_of_button_down click__val_rml_56 : _ Interpreter.process =
                else ()))
          (Interpreter.rml_pause (fun () -> Interpreter.rml_base_clock)))
   
-let key_of_key_pressed key__val_rml_58 : _ Interpreter.process =
+let key_of_key_pressed key__val_rml_58 =
   fun () ->
     Interpreter.rml_loop
       (Interpreter.rml_seq
@@ -227,9 +229,9 @@ let key_of_key_pressed key__val_rml_58 : _ Interpreter.process =
          (Interpreter.rml_pause (fun () -> Interpreter.rml_base_clock)))
   
 let fenetre new_planet__val_rml_60 p__val_rml_61 kill_sun__val_rml_62
-  kill__val_rml_63 suspend__val_rml_64 : _ Interpreter.process =
+  kill__val_rml_63 suspend__val_rml_64 =
   fun () ->
-    let read_click__val_rml_65 : _ Interpreter.process =
+    let read_click__val_rml_65 =
       fun () ->
         Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock
           Interpreter.rml_base_clock None
@@ -251,7 +253,7 @@ let fenetre new_planet__val_rml_60 p__val_rml_61 kill_sun__val_rml_62
                                      (new_pos x__val_rml_67 y__val_rml_68)))
                              (Interpreter.rml_pause
                                 (fun () -> Interpreter.rml_base_clock))))))) in
-    let read_key__val_rml_69 : _ Interpreter.process =
+    let read_key__val_rml_69 =
       fun () ->
         Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock
           Interpreter.rml_base_clock None
@@ -327,7 +329,7 @@ let fenetre new_planet__val_rml_60 p__val_rml_61 kill_sun__val_rml_62
                       (Interpreter.rml_run (fun () -> read_key__val_rml_69))))))
   
 let rec add_aux id__val_rml_75 new_planet__val_rml_76 kill__val_rml_77
-  kill_new__val_rml_78 p__val_rml_79 : _ Interpreter.process =
+  kill_new__val_rml_78 p__val_rml_79 =
   fun () ->
     Interpreter.rml_await_all' new_planet__val_rml_76
       (fun pos__val_rml_80 ->
@@ -358,14 +360,14 @@ let rec add_aux id__val_rml_75 new_planet__val_rml_76 kill__val_rml_77
                                Interpreter.rml_expr_emit new_kill_new__sig_81)))))))
   
 let add id__val_rml_83 new_planet__val_rml_84 kill__val_rml_85
-  p__val_rml_86 : _ Interpreter.process =
+  p__val_rml_86 =
   fun () ->
     Interpreter.rml_run
       (fun () ->
          add_aux id__val_rml_83 new_planet__val_rml_84 kill__val_rml_85
            kill__val_rml_85 p__val_rml_86)
   
-let systeme : _ Interpreter.process =
+let systeme =
   fun () ->
     Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock
       Interpreter.rml_base_clock None
@@ -456,6 +458,6 @@ let _ = Random.self_init ()
   
 let main = systeme
   
-let _ = Machine.rml_exec main
+let _ = Machine.rml_exec Interpreter.rml_make main
   
 

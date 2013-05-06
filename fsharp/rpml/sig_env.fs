@@ -60,9 +60,12 @@ let pre_value n =
     then n.value
     else n._default
 
-let one n =
-  match n.value with
-  | x :: _ -> x
+let one (n:('a, 'b) t) =
+  match box n.value with
+  | :? List<'a> as l ->
+      match l with
+      | x :: _ -> x
+      | _ ->  raise Types.RML
   | _ -> raise Types.RML
 
 let emit n v =

@@ -37,12 +37,6 @@
     <Reference Include="FSharp.Core">
       <HintPath>..\..\..\..\..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\FSharp.Core.dll</HintPath>
     </Reference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\..\..\..\..\..\..\Downloads\FSharpPowerPack-4.0.0.0\bin\gac\FSharp.PowerPack.dll</HintPath>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Compatibility">
-      <HintPath>..\..\..\..\..\..\..\Downloads\FSharpPowerPack-4.0.0.0\bin\gac\FSharp.PowerPack.Compatibility.dll</HintPath>
-    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
@@ -55,6 +49,14 @@
     <ProjectReference Include="..\..\..\fsharp\rpml\rpmllib.fsproj">
       <Project>{5CB99DB9-128A-4958-A272-5BE02E2AED05}</Project>
       <Name>rpmllib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\fsharp\FSharp.PowerPack\FSharp.PowerPack.fsproj">
+      <Project>{649FA588-F02E-457C-9FCF-87E46407481F}</Project>
+      <Name>FSharp.PowerPack</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\fsharp\FSharp.PowerPack.Compatibility\FSharp.PowerPack.Compatibility.fsproj">
+      <Project>{6FC3B299-23CB-4098-998D-06C014431807}</Project>
+      <Name>FSharp.PowerPack.Compatibility</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

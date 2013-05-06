@@ -1,9 +1,9 @@
 (* THIS FILE IS GENERATED. *)
-(* /Users/ccpasteur/Documents/work/git/rml/compiler/rpmlc.byte -s main -runtime Fsharp_Lco boids.rml  *)
+(* /Users/ccpasteur/Documents/work/git/rml/compiler/rpmlc.byte -runtime Fsharp_Lco -s main boids.rml  *)
+
 open Caml_compat
-  
-module Interpreter = Lco
-  
+let Interpreter = Machine.LcoSeq
+let Machine = Machine.Machine<_,_>(Machine.SeqRuntime)
 type coord = { mutable x : float; mutable y : float }
 
 type boid = { id : int; pos : coord; v : coord; acc : coord }
@@ -259,279 +259,264 @@ let set_pos b__val_rml_82 =
        b__val_rml_82.pos.y)
   
 let fenetre cpt__val_rml_84 new_boid__val_rml_85 kill_boid__val_rml_86
-  p__val_rml_87 : _ Interpreter.process =
-  fun () ->
-    let read_click__val_rml_88 new_boid__val_rml_89 : _ Interpreter.process =
-      fun () ->
-        Interpreter.rml_def (fun () -> Pervasives.ref false)
-          (fun click__val_rml_90 ->
-             Interpreter.rml_def (fun () -> Pervasives.ref false)
-               (fun pre_click__val_rml_91 ->
-                  Interpreter.rml_def
-                    (fun () -> Pervasives.ref { x = 0.; y = 0.; })
-                    (fun pos__val_rml_92 ->
-                       Interpreter.rml_loop
-                         (Interpreter.rml_seq
-                            (Interpreter.rml_pause
-                               (fun () -> Interpreter.rml_base_clock))
-                            (Interpreter.rml_compute
-                               (fun () ->
-                                  (Pervasives.( := ) click__val_rml_90
-                                     (Graphics.button_down ());
-                                   if
-                                     Pervasives.( && )
-                                       (Pervasives.( ! ) click__val_rml_90)
-                                       (Pervasives.not
-                                          (Pervasives.( ! )
-                                             pre_click__val_rml_91))
-                                   then
-                                     (Pervasives.( := ) pos__val_rml_92
-                                        (get_mouse_pos ());
-                                      Interpreter.rml_expr_emit_val
-                                        new_boid__val_rml_89
-                                        (Pervasives.( ! ) pos__val_rml_92);
-                                      Pervasives.print_string
-                                        (Pervasives.( ^ ) "new_boid "
-                                           (Pervasives.string_of_int
-                                              (Pervasives.( + )
-                                                 (Pervasives.( ! )
-                                                    cpt__val_rml_84)
-                                                 1)));
-                                      Pervasives.print_newline ())
-                                   else ();
-                                   Pervasives.( := ) pre_click__val_rml_91
-                                     (Pervasives.( ! ) click__val_rml_90)))))))) in
-    let read_key__val_rml_93 kill_boid__val_rml_94 : _ Interpreter.process =
-      fun () ->
-        Interpreter.rml_def (fun () -> Pervasives.ref 0)
-          (fun cpt__val_rml_95 ->
-             Interpreter.rml_loop
-               (Interpreter.rml_seq
-                  (Interpreter.rml_pause
-                     (fun () -> Interpreter.rml_base_clock))
-                  (Interpreter.rml_compute
-                     (fun () ->
-                        if Graphics.key_pressed ()
-                        then
-                          (let c__val_rml_96 = get_key ()
-                           in
-                             (Pervasives.print_string "key_pressed = ";
-                              Pervasives.print_char c__val_rml_96;
-                              Pervasives.print_newline ();
-                              if Pervasives.( = ) c__val_rml_96 'k'
-                              then
-                                (Interpreter.rml_expr_emit_val
-                                   kill_boid__val_rml_94
-                                   (Pervasives.( ! ) cpt__val_rml_95);
-                                 Pervasives.print_string "emit kill ";
-                                 Pervasives.print_int
-                                   (Pervasives.( ! ) cpt__val_rml_95);
-                                 Pervasives.print_newline ();
-                                 Pervasives.incr cpt__val_rml_95)
-                              else ()))
-                        else ()))))
-    in
-      Interpreter.rml_par
-        (Interpreter.rml_seq
-           (Interpreter.rml_compute (fun () -> Graphics.open_graph ""))
+            p__val_rml_87 () =
+  let read_click__val_rml_88 new_boid__val_rml_89 () =
+    Interpreter.rml_def (fun () -> Pervasives.ref false)
+      (fun click__val_rml_90 ->
+         Interpreter.rml_def (fun () -> Pervasives.ref false)
+           (fun pre_click__val_rml_91 ->
+              Interpreter.rml_def
+                (fun () -> Pervasives.ref { x = 0.; y = 0.; })
+                (fun pos__val_rml_92 ->
+                   Interpreter.rml_loop
+                     (Interpreter.rml_seq
+                        (Interpreter.rml_pause
+                           (fun () -> Interpreter.rml_base_clock))
+                        (Interpreter.rml_compute
+                           (fun () ->
+                              (Pervasives.( := ) click__val_rml_90
+                                 (Graphics.button_down ());
+                               if
+                                 Pervasives.( && )
+                                   (Pervasives.( ! ) click__val_rml_90)
+                                   (Pervasives.not
+                                      (Pervasives.( ! ) pre_click__val_rml_91))
+                               then
+                                 (Pervasives.( := ) pos__val_rml_92
+                                    (get_mouse_pos ());
+                                  Interpreter.rml_expr_emit_val
+                                    new_boid__val_rml_89
+                                    (Pervasives.( ! ) pos__val_rml_92);
+                                  Pervasives.print_string
+                                    (Pervasives.( ^ ) "new_boid "
+                                       (Pervasives.string_of_int
+                                          (Pervasives.( + )
+                                             (Pervasives.( ! )
+                                                cpt__val_rml_84)
+                                             1)));
+                                  Pervasives.print_newline ())
+                               else ();
+                               Pervasives.( := ) pre_click__val_rml_91
+                                 (Pervasives.( ! ) click__val_rml_90)))))))) in
+  let read_key__val_rml_93 kill_boid__val_rml_94 () =
+    Interpreter.rml_def (fun () -> Pervasives.ref 0)
+      (fun cpt__val_rml_95 ->
+         Interpreter.rml_loop
            (Interpreter.rml_seq
+              (Interpreter.rml_pause (fun () -> Interpreter.rml_base_clock))
               (Interpreter.rml_compute
-                 (fun () -> Graphics.auto_synchronize false))
-              (Interpreter.rml_seq
-                 (Interpreter.rml_compute (fun () -> draw_bounds bounds))
-                 (Interpreter.rml_loop
-                    (Interpreter.rml_await_all' p__val_rml_87
-                       (fun all__val_rml_97 ->
-                          Interpreter.rml_compute
-                            (fun () -> maj_aff all__val_rml_97)))))))
-        (Interpreter.rml_par
-           (Interpreter.rml_run
-              (fun () -> read_click__val_rml_88 new_boid__val_rml_85))
-           (Interpreter.rml_run
-              (fun () -> read_key__val_rml_93 kill_boid__val_rml_86)))
+                 (fun () ->
+                    if Graphics.key_pressed ()
+                    then
+                      (let c__val_rml_96 = get_key ()
+                       in
+                         (Pervasives.print_string "key_pressed = ";
+                          Pervasives.print_char c__val_rml_96;
+                          Pervasives.print_newline ();
+                          if Pervasives.( = ) c__val_rml_96 'k'
+                          then
+                            (Interpreter.rml_expr_emit_val
+                               kill_boid__val_rml_94
+                               (Pervasives.( ! ) cpt__val_rml_95);
+                             Pervasives.print_string "emit kill ";
+                             Pervasives.print_int
+                               (Pervasives.( ! ) cpt__val_rml_95);
+                             Pervasives.print_newline ();
+                             Pervasives.incr cpt__val_rml_95)
+                          else ()))
+                    else ()))))
+  in
+    Interpreter.rml_par
+      (Interpreter.rml_seq
+         (Interpreter.rml_compute (fun () -> Graphics.open_graph ""))
+         (Interpreter.rml_seq
+            (Interpreter.rml_compute
+               (fun () -> Graphics.auto_synchronize false))
+            (Interpreter.rml_seq
+               (Interpreter.rml_compute (fun () -> draw_bounds bounds))
+               (Interpreter.rml_loop
+                  (Interpreter.rml_await_all' p__val_rml_87
+                     (fun all__val_rml_97 ->
+                        Interpreter.rml_compute
+                          (fun () -> maj_aff all__val_rml_97)))))))
+      (Interpreter.rml_par
+         (Interpreter.rml_run
+            (fun () -> read_click__val_rml_88 new_boid__val_rml_85))
+         (Interpreter.rml_run
+            (fun () -> read_key__val_rml_93 kill_boid__val_rml_86)))
   
 let boid id__val_rml_99 pos_init__val_rml_100 p__val_rml_101
-  kill_boid__val_rml_102 : _ Interpreter.process =
-  fun () ->
-    Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock
-      Interpreter.rml_base_clock None
-      (fun kill_me__sig_103 ->
-         Interpreter.rml_until' kill_me__sig_103
-           (Interpreter.rml_def
-              (fun () ->
-                 {
-                   id = id__val_rml_99;
-                   pos = pos_init__val_rml_100;
-                   v = { x = 0.; y = 0.; };
-                   acc = { x = 0.; y = 0.; };
-                 })
-              (fun me__val_rml_104 ->
-                 Interpreter.rml_def (fun () -> { x = 0.; y = 0.; })
-                   (fun f_sep__val_rml_105 ->
-                      Interpreter.rml_def (fun () -> { x = 0.; y = 0.; })
-                        (fun f_cohes__val_rml_106 ->
-                           Interpreter.rml_def
-                             (fun () -> { x = 0.; y = 0.; })
-                             (fun f_alig__val_rml_107 ->
-                                Interpreter.rml_def
-                                  (fun () -> { x = 0.; y = 0.; })
-                                  (fun dep__val_rml_108 ->
-                                     Interpreter.rml_par
-                                       (Interpreter.rml_loop
-                                          (Interpreter.rml_seq
-                                             (Interpreter.rml_compute
+         kill_boid__val_rml_102 () =
+  Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock Interpreter.
+    rml_base_clock None
+    (fun kill_me__sig_103 ->
+       Interpreter.rml_until' kill_me__sig_103
+         (Interpreter.rml_def
+            (fun () ->
+               {
+                 id = id__val_rml_99;
+                 pos = pos_init__val_rml_100;
+                 v = { x = 0.; y = 0.; };
+                 acc = { x = 0.; y = 0.; };
+               })
+            (fun me__val_rml_104 ->
+               Interpreter.rml_def (fun () -> { x = 0.; y = 0.; })
+                 (fun f_sep__val_rml_105 ->
+                    Interpreter.rml_def (fun () -> { x = 0.; y = 0.; })
+                      (fun f_cohes__val_rml_106 ->
+                         Interpreter.rml_def (fun () -> { x = 0.; y = 0.; })
+                           (fun f_alig__val_rml_107 ->
+                              Interpreter.rml_def
+                                (fun () -> { x = 0.; y = 0.; })
+                                (fun dep__val_rml_108 ->
+                                   Interpreter.rml_par
+                                     (Interpreter.rml_loop
+                                        (Interpreter.rml_seq
+                                           (Interpreter.rml_compute
+                                              (fun () ->
+                                                 Interpreter.
+                                                   rml_expr_emit_val
+                                                   p__val_rml_101
+                                                   me__val_rml_104))
+                                           (Interpreter.rml_await_all'
+                                              p__val_rml_101
+                                              (fun all__val_rml_110 ->
+                                                 Interpreter.rml_compute
+                                                   (fun () ->
+                                                      let all__val_rml_111 
+                                                        =
+                                                        List.rev_map
+                                                          (fun b__val_rml_112
+                                                             ->
+                                                             (b__val_rml_112,
+                                                              (distance2
+                                                                 me__val_rml_104.
+                                                                   pos
+                                                                 b__val_rml_112.
+                                                                   pos)))
+                                                          all__val_rml_110
+                                                      in
+                                                        (separation
+                                                           f_sep__val_rml_105
+                                                           me__val_rml_104
+                                                           all__val_rml_111;
+                                                         cohesion
+                                                           f_cohes__val_rml_106
+                                                           me__val_rml_104
+                                                           all__val_rml_111;
+                                                         alignment
+                                                           f_alig__val_rml_107
+                                                           me__val_rml_104
+                                                           all__val_rml_111;
+                                                         set_acc
+                                                           me__val_rml_104
+                                                           f_sep__val_rml_105
+                                                           f_cohes__val_rml_106
+                                                           f_alig__val_rml_107;
+                                                         set_v
+                                                           me__val_rml_104;
+                                                         set_pos
+                                                           me__val_rml_104;
+                                                         check_bounds bounds
+                                                           me__val_rml_104))))))
+                                     (Interpreter.rml_loop
+                                        (Interpreter.rml_await_all'
+                                           kill_boid__val_rml_102
+                                           (fun n__val_rml_109 ->
+                                              Interpreter.rml_compute
                                                 (fun () ->
-                                                   Interpreter.
-                                                     rml_expr_emit_val
-                                                     p__val_rml_101
-                                                     me__val_rml_104))
-                                             (Interpreter.rml_await_all'
-                                                p__val_rml_101
-                                                (fun all__val_rml_110 ->
-                                                   Interpreter.rml_compute
-                                                     (fun () ->
-                                                        let all__val_rml_111 
-                                                          =
-                                                          List.rev_map
-                                                            (fun
-                                                               b__val_rml_112
-                                                               ->
-                                                               (b__val_rml_112,
-                                                                (distance2
-                                                                   me__val_rml_104.
-                                                                    pos
-                                                                   b__val_rml_112.
-                                                                    pos)))
-                                                            all__val_rml_110
-                                                        in
-                                                          (separation
-                                                             f_sep__val_rml_105
-                                                             me__val_rml_104
-                                                             all__val_rml_111;
-                                                           cohesion
-                                                             f_cohes__val_rml_106
-                                                             me__val_rml_104
-                                                             all__val_rml_111;
-                                                           alignment
-                                                             f_alig__val_rml_107
-                                                             me__val_rml_104
-                                                             all__val_rml_111;
-                                                           set_acc
-                                                             me__val_rml_104
-                                                             f_sep__val_rml_105
-                                                             f_cohes__val_rml_106
-                                                             f_alig__val_rml_107;
-                                                           set_v
-                                                             me__val_rml_104;
-                                                           set_pos
-                                                             me__val_rml_104;
-                                                           check_bounds
-                                                             bounds
-                                                             me__val_rml_104))))))
-                                       (Interpreter.rml_loop
-                                          (Interpreter.rml_await_all'
-                                             kill_boid__val_rml_102
-                                             (fun n__val_rml_109 ->
-                                                Interpreter.rml_compute
-                                                  (fun () ->
-                                                     if
-                                                       List.mem
-                                                         me__val_rml_104.id
-                                                         n__val_rml_109
-                                                     then
-                                                       Interpreter.
-                                                         rml_expr_emit
-                                                         kill_me__sig_103
-                                                     else ())))))))))))
+                                                   if
+                                                     List.mem
+                                                       me__val_rml_104.id
+                                                       n__val_rml_109
+                                                   then
+                                                     Interpreter.
+                                                       rml_expr_emit
+                                                       kill_me__sig_103
+                                                   else ())))))))))))
   
-let rec add cpt__val_rml_114 new_boid__val_rml_115 p__val_rml_116
-  kill_boid__val_rml_117 : _ Interpreter.process =
-  fun () ->
-    Interpreter.rml_await_one' new_boid__val_rml_115
-      (fun pos__val_rml_118 ->
-         Interpreter.rml_par
-           (Interpreter.rml_seq
-              (Interpreter.rml_compute
-                 (fun () ->
-                    Pervasives.( := ) cpt__val_rml_114
-                      (Pervasives.( + ) (Pervasives.( ! ) cpt__val_rml_114) 1)))
-              (Interpreter.rml_run
-                 (fun () ->
-                    boid (Pervasives.( ! ) cpt__val_rml_114) pos__val_rml_118
-                      p__val_rml_116 kill_boid__val_rml_117)))
-           (Interpreter.rml_run
-              (fun () ->
-                 add cpt__val_rml_114 new_boid__val_rml_115 p__val_rml_116
-                   kill_boid__val_rml_117)))
+let rec
+  add cpt__val_rml_114 new_boid__val_rml_115 p__val_rml_116
+      kill_boid__val_rml_117 () =
+  Interpreter.rml_await_one' new_boid__val_rml_115
+    (fun pos__val_rml_118 ->
+       Interpreter.rml_par
+         (Interpreter.rml_seq
+            (Interpreter.rml_compute
+               (fun () ->
+                  Pervasives.( := ) cpt__val_rml_114
+                    (Pervasives.( + ) (Pervasives.( ! ) cpt__val_rml_114) 1)))
+            (Interpreter.rml_run
+               (fun () ->
+                  boid (Pervasives.( ! ) cpt__val_rml_114) pos__val_rml_118
+                    p__val_rml_116 kill_boid__val_rml_117)))
+         (Interpreter.rml_run
+            (fun () ->
+               add cpt__val_rml_114 new_boid__val_rml_115 p__val_rml_116
+                 kill_boid__val_rml_117)))
   
 let nb_threads = 4
   
-let boids n__val_rml_121 p__val_rml_122 kill_boid__val_rml_123 :
-  _ Interpreter.process =
-  fun () ->
-    let aux__val_rml_124 : _ Interpreter.process =
-      fun () ->
-        Interpreter.rml_fordopar (fun () -> 1)
-          (fun () -> Pervasives.( / ) n__val_rml_121 nb_threads) true
-          (fun i__val_rml_125 ->
-             Interpreter.rml_run
-               (fun () ->
-                  boid i__val_rml_125 (random_pos ()) p__val_rml_122
-                    kill_boid__val_rml_123))
-    in
-      Interpreter.rml_fordopar (fun () -> 1) (fun () -> nb_threads) true
-        (fun i__val_rml_126 ->
-           Interpreter.rml_run (fun () -> aux__val_rml_124))
+let boids n__val_rml_121 p__val_rml_122 kill_boid__val_rml_123 () =
+  let aux__val_rml_124 () =
+    Interpreter.rml_fordopar (fun () -> 1)
+      (fun () -> Pervasives.( / ) n__val_rml_121 nb_threads) true
+      (fun i__val_rml_125 ->
+         Interpreter.rml_run
+           (fun () ->
+              boid i__val_rml_125 (random_pos ()) p__val_rml_122
+                kill_boid__val_rml_123))
+  in
+    Interpreter.rml_fordopar (fun () -> 1) (fun () -> nb_threads) true
+      (fun i__val_rml_126 -> Interpreter.rml_run (fun () -> aux__val_rml_124))
   
-let systeme n__val_rml_128 cpt__val_rml_129 : _ Interpreter.process =
-  fun () ->
-    Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock
-      Interpreter.rml_base_clock None
-      (fun p__sig_130 ->
-         Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock
-           Interpreter.rml_base_clock None
-           (fun new_boid__sig_131 ->
-              Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock
-                Interpreter.rml_base_clock None
-                (fun kill_boid__sig_132 ->
-                   Interpreter.rml_par
-                     (Interpreter.rml_run
-                        (fun () ->
-                           add cpt__val_rml_129 new_boid__sig_131 p__sig_130
-                             kill_boid__sig_132))
-                     (Interpreter.rml_par
-                        (Interpreter.rml_run
-                           (fun () ->
-                              fenetre cpt__val_rml_129 new_boid__sig_131
-                                kill_boid__sig_132 p__sig_130))
-                        (Interpreter.rml_run
-                           (fun () ->
-                              boids n__val_rml_128 p__sig_130
-                                kill_boid__sig_132))))))
+let systeme n__val_rml_128 cpt__val_rml_129 () =
+  Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock Interpreter.
+    rml_base_clock None
+    (fun p__sig_130 ->
+       Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock
+         Interpreter.rml_base_clock None
+         (fun new_boid__sig_131 ->
+            Interpreter.rml_signal Types.Signal Interpreter.rml_base_clock
+              Interpreter.rml_base_clock None
+              (fun kill_boid__sig_132 ->
+                 Interpreter.rml_par
+                   (Interpreter.rml_run
+                      (fun () ->
+                         add cpt__val_rml_129 new_boid__sig_131 p__sig_130
+                           kill_boid__sig_132))
+                   (Interpreter.rml_par
+                      (Interpreter.rml_run
+                         (fun () ->
+                            fenetre cpt__val_rml_129 new_boid__sig_131
+                              kill_boid__sig_132 p__sig_130))
+                      (Interpreter.rml_run
+                         (fun () ->
+                            boids n__val_rml_128 p__sig_130
+                              kill_boid__sig_132))))))
   
 let usage =
   Pervasives.( ^ ) "Usage: "
     (Pervasives.( ^ ) (Array.get Sys.argv 0) " [nb boids]")
   
-let main : _ Interpreter.process =
-  fun () ->
-    Interpreter.rml_def (fun () -> Random.self_init ())
-      (fun x__val_rml_135 ->
-         Interpreter.rml_def (fun () -> Pervasives.ref 0)
-           (fun cpt__val_rml_136 ->
-              Interpreter.rml_seq
-                (Interpreter.rml_compute
-                   (fun () ->
-                      Rmlarg.parse []
-                        (fun n__val_rml_137 ->
-                           Pervasives.( := ) cpt__val_rml_136
-                             (Pervasives.int_of_string n__val_rml_137))
-                        usage))
-                (Interpreter.rml_run
-                   (fun () ->
-                      systeme (Pervasives.( ! ) cpt__val_rml_136)
-                        cpt__val_rml_136))))
+let main () =
+  Interpreter.rml_def (fun () -> Random.self_init ())
+    (fun x__val_rml_135 ->
+       Interpreter.rml_def (fun () -> Pervasives.ref 0)
+         (fun cpt__val_rml_136 ->
+            Interpreter.rml_seq
+              (Interpreter.rml_compute
+                 (fun () ->
+                    Rmlarg.parse []
+                      (fun n__val_rml_137 ->
+                         Pervasives.( := ) cpt__val_rml_136
+                           (Pervasives.int_of_string n__val_rml_137))
+                      usage))
+              (Interpreter.rml_run
+                 (fun () ->
+                    systeme (Pervasives.( ! ) cpt__val_rml_136)
+                      cpt__val_rml_136))))
   
-let _ = Machine.rml_exec main
+let _ = Machine.rml_exec Interpreter.rml_make main
   
 
