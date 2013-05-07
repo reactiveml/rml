@@ -293,10 +293,10 @@ let wake_up_all (ck:SeqClockDomain) =
 (* ------------------------------------------------------------------------ *)
 
 type SeqEvent<'a, 'b>(S:SeqDataStruct, ck:clock, r, kind, def, combine:'a -> 'b -> 'b) =
-  member this.n = Event.create ck.cd_clock kind def combine
-  member this.clock = ck
-  member this.wa = S.mk_waiting_list ()
-  member this.wp = S.mk_waiting_list ()
+  member val n = Event.create ck.cd_clock kind def combine
+  member val clock = ck
+  member val wa = S.mk_waiting_list ()
+  member val wp = S.mk_waiting_list ()
 
   member this.status only_at_eoi =
     Event.status this.n && (not only_at_eoi || !(this.clock.cd_eoi))
