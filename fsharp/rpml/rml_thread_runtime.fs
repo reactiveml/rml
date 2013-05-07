@@ -513,14 +513,17 @@ type ThreadRuntime(D:#SeqDataStruct) =
       Monitor.Exit done_threads
 
   let thread_fun i =
-    let cd = get_top_clock_domain () in
-    let ev = ref next_step1 in
-    while true do
-      (*attend le debut de l'instant suivant*)
-      (!ev).WaitOne ();
-      ev := current_next_step ();
-      do_one_step cd (current_done_threads ())
-    done
+    try
+      let cd = get_top_clock_domain () in
+      let ev = ref next_step1 in
+      while true do
+        (*attend le debut de l'instant suivant*)
+        (!ev).WaitOne ();
+        ev := current_next_step ();
+        do_one_step cd (current_done_threads ())
+      done
+    with | :? ThreadInterruptedException -> ()
+
 
   let exec_sched (cd:SeqClockDomain) = 
       let ev = 
@@ -577,7 +580,7 @@ type ThreadRuntime(D:#SeqDataStruct) =
 
   member val thread_list = (Array.empty:Thread array) with get, set
   member this.finalize_top_clock_domain _ =
-    Array.iter (fun (t:Thread) -> t.Abort ()) this.thread_list
+    Array.iter (fun (t:Thread) -> t.Interrupt ()) this.thread_list
   member this.init () =
       match !top_clock_ref with
       | None ->

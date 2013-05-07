@@ -56,9 +56,8 @@ type MyForm() =
     key_was_pressed := true
 
   override this.OnClosing e =
-    e.Cancel <- true
-    (*base.OnClosed e
-    Application.Exit () *)
+    base.OnClosing e;
+    Application.Exit () 
  end
 
 let form_opt = ref None
