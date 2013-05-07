@@ -52,7 +52,7 @@ type Machine<'ck, 'ctrl>(R:Runtime<'ck, 'ctrl>) =
       react, finalize
       
     member this.rml_exec rml_make p =
-      Runtime_options.parse_cli (); Printf.printf "Test"; R.init();
+      Runtime_options.parse_cli (); R.init();
       let react, finalize = this.make_react_finalize rml_make p in
       let react_fun =
         match !Runtime_options.number_steps > 0, !Runtime_options.sampling_rate > 0.0 with

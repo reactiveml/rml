@@ -22,7 +22,7 @@ let rml_cli_options =
       "-bench", Arg.Unit ignore, doc_bench;
     ]
 
-let _parse_cli () =
+let parse_cli () =
   try
     let current = ref 1 in
     let n = Array.length Sys.argv in
@@ -54,12 +54,6 @@ let _parse_cli () =
     | Arg.Bad s -> Printf.eprintf "%s@." s; exit 2
     | Arg.Help s -> Printf.eprintf "%s@." s; exit 0
 
-let parsing_done = ref false
-let parse_cli () =
-  if not !parsing_done then (
-    _parse_cli ();
-    parsing_done := true
-  )
 
 (*
 let print_debug fmt =
