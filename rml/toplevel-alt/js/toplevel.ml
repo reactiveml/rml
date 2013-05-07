@@ -536,11 +536,11 @@ let run _ =
     step_button;
     resume_button;
   ];
-  append_children "buttons-right" [
-    debug_button;
-    (* send_button; *)
-    (* save_button; *)
-  ];
+  (* append_children "buttons-right" [ *)
+  (*   debug_button; *)
+  (*   (\* send_button; *\) *)
+  (*   (\* save_button; *\) *)
+  (* ]; *)
 
   append_children "tutorial" [
     start_tutorial_button;
