@@ -82,10 +82,10 @@ type Runtime<'ck, 'ctrl> =
   
   abstract member create_control : control_type<'ck> ->
     ('a Step.t -> 'ctrl -> unit Step.t) -> 'a Step.t -> 'ctrl -> ClockDomain<'ck, 'ctrl> ->
-    (#REvent<'b, 'c, 'ck> -> ('c -> bool) -> unit Step.t)
+    (REvent<'b, 'c, 'ck> -> ('c -> bool) -> unit Step.t)
   abstract member create_control_evt_conf : control_type<'ck> ->
     ('a Step.t -> 'ctrl -> unit Step.t) -> 'a Step.t -> 'ctrl -> ClockDomain<'ck, 'ctrl> ->
-    (#REventCfg -> unit Step.t)
+    (REventCfg -> unit Step.t)
     
   (** [on_current_instant cd f] executes 'f ()' during the current step of [cd]. *)
   abstract member on_current_instant : ClockDomain<'ck, 'ctrl> -> unit Step.t -> unit
@@ -100,21 +100,21 @@ type Runtime<'ck, 'ctrl> =
       ctrl is active in the same step.
       It waits for the next activation of w otherwise,
       or if the call raises Wait_again *)
-  abstract member on_event : #REvent<'a, 'b, 'ck> -> 'ctrl -> unit Step.t -> unit
+  abstract member on_event : REvent<'a, 'b, 'ck> -> 'ctrl -> unit Step.t -> unit
   (** [on_event_cfg evt_cfg ctrl f] executes 'f ()' if evt_cfg is true and
       ctrl is active in the same step.
       It waits for the next activation of evt_cfg otherwise,
       or if the call raises Wait_again *)
-  abstract member on_event_cfg : #REventCfg -> 'ctrl -> unit Step.t -> unit
+  abstract member on_event_cfg : REventCfg -> 'ctrl -> unit Step.t -> unit
   (** [on_event_or_next evt f_w cd ctrl f_next] executes 'f_w ()' if
       evt is emitted before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
-  abstract member on_event_or_next : #REvent<'a, 'b, 'ck> -> unit Step.t ->
+  abstract member on_event_or_next : REvent<'a, 'b, 'ck> -> unit Step.t ->
     ClockDomain<'ck, 'ctrl> -> 'ctrl -> unit Step.t -> unit
  (** [on_event_cfg_or_next evt_cfg f_w cd ctrl f_next] executes 'f_w ()' if
       evt_cfg is true before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
-  abstract member on_event_cfg_or_next : #REventCfg -> unit Step.t ->
+  abstract member on_event_cfg_or_next : REventCfg -> unit Step.t ->
     ClockDomain<'ck, 'ctrl> -> 'ctrl -> unit Step.t -> unit
     
   abstract member new_clock_domain : ClockDomain<'ck, 'ctrl> -> 'ctrl ->

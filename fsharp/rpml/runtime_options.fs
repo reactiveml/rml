@@ -9,7 +9,7 @@ let doc_bench = "Print the elapsed time on the standard output"
 let number_steps = ref (- 1)
 let sampling_rate = ref (-1.0)
 let min_rank = ref 0
-let nb_thread = ref System.Environment.ProcessorCount
+let nb_threads = ref System.Environment.ProcessorCount
 let debug_mode = ref false
 let bench_mode = ref false
 
@@ -36,6 +36,11 @@ let _parse_cli () =
               if !current = n then
                 raise (Arg.Bad ("Expected a number of steps after -n"));
               number_steps := int_of_string Sys.argv.(!current);
+              incr current
+          | "-nb-threads" ->
+              if !current = n then
+                raise (Arg.Bad ("Expected a number of steps after -nb-threads"));
+              nb_threads := int_of_string Sys.argv.(!current);
               incr current
           | "-sampling" ->
               if !current = n then

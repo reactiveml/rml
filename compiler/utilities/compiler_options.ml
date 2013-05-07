@@ -204,6 +204,11 @@ let set_runtime s =
         set_machine_module "Machine.Machine<_,_>(Machine.SeqRuntime)";
         set_translation Lco_fsharp
 
+    | "Fsharp_LcoRmlThread" ->
+        set_interpreter_module "LcoRmlThread";
+        set_machine_module "Machine.Machine<_,_>(Machine.RmlThreadRuntime)";
+        set_translation Lco_fsharp
+
     | _ -> raise (Arg.Bad ("Invalid runtime:" ^ s))
 
 (* sets the display of the parse code *)

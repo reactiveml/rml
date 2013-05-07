@@ -1,94 +1,85 @@
-module SeqRuntime
+module RmlThreadRuntime
 
+open System
+open System.Threading
+open System.Collections.Concurrent
 open Types
 open Runtime
 
-type JoinRef(nb) =
-  let mutable j = nb
+type JoinThread(nb) =
+  let j = ref nb
   interface Join with
     member this.incr nb =
-      j <- j + nb
+      ignore (Interlocked.Add (j, nb))
     member this.decr () =
-      j <- j - 1; j = 0  
+      (Interlocked.Decrement j) = 0
 
-type SeqNext() =
-  let mutable next = [] : unit Step.t list
-  member this.Add(p)=
-      next <- p :: next
-  member this.Clear () =
-      next <- []
-  member this.TakeAll () =
-    let l = next in
-    next <- [];
-    l
-  member this.AddNext (n1:Next) =
-      let n1 = n1 :?> SeqNext in
-      next <- List.rev_append (n1.TakeAll ()) next
-  member this.IsEmpty
-      with get () =
-        (*!next = []*)
-        match next with 
-        | [] -> true 
-        | _ -> false
+type ThreadNext() =
+  inherit ConcurrentStack<unit Step.t>()
+  member this.Add p = this.Push p
+  member this.AddNext (n:Next) =
+    let n = n :?> ThreadNext in 
+    this.PushRange (n.ToArray ());
+    n.Clear ()
+
   interface Next with
     member this.Add p = this.Add p
     member this.Clear () = this.Clear ()
     member this.AddNext n1 = this.AddNext n1
     member this.IsEmpty = this.IsEmpty
 
-type SeqWaitingList() =
-  let mutable w = [] : unit Step.t list
-  member this.Add p =
-    w <- p::w
+type ThreadWaitingList() =
+  inherit ConcurrentStack<unit Step.t>()
+  member this.Add p = this.Push p
   member this.TakeAll () =
-    let l = w in
-    w <- [];
-    l
-  member this.Length 
-    with get () = List.length w  
+    let a = this.ToArray () in
+    this.Clear ();
+    List.ofArray a
+ 
   interface WaitingList with       
     member this.Add p = this.Add p
     member this.TakeAll () = this.TakeAll ()
-    member this.Length = this.Length
-  
-type SeqCurrent() =
-  let mutable c = [] : unit Step.t list
-  member this.Add p =
-      c <- p :: c
+    member this.Length = this.Count
+
+let tmp = new ThreadLocal<unit Step.t ref> (fun () -> ref (fun () -> ()))  
+
+type ThreadCurrent() =
+  inherit ConcurrentBag<unit Step.t>()
   member this.AddList pl =
-      c <- List.rev_append pl c
+    List.iter this.Add pl
   member this.AddWaitingList (w:WaitingList) =
-      let w = w :?> SeqWaitingList in
-      c <- List.rev_append (w.TakeAll ()) c
-  member this.AddNext (next:Next) =
-      let next = next :?> SeqNext in
-      c <- List.rev_append (next.TakeAll ()) c
-  member this.Length
-      with get () = List.length c
-  member this.Take () = match c with
-      | f :: l -> c <- l; Some f
-      | [] -> None   
+    this.AddList (w.TakeAll ())
+  member this.AddNext (n:Next) =
+    let n = n :?> ThreadNext in 
+    for p in n do this.Add p done;
+    n.Clear ()
+  member this.Take () =
+    if this.TryTake tmp.Value then
+      Some !tmp.Value
+    else
+      None
+
   interface Current with
     member this.Add p = this.Add p
     member this.AddList pl = this.AddList pl
     member this.AddWaitingList w = this.AddWaitingList w
     member this.AddNext next = this.AddNext next
-    member this.Length = this.Length
+    member this.Length = this.Count
     member this.Take () = this.Take ()
          
                                                                                  
 type ListStruct() =
   interface SeqDataStruct with
-    member this.mk_current () = new SeqCurrent () :> Current
-    member this.mk_waiting_list () = new SeqWaitingList () :> WaitingList
-    member this.mk_next () = new SeqNext () :> Next
+    member this.mk_current () = new ThreadCurrent () :> Current
+    member this.mk_waiting_list () = new ThreadWaitingList () :> WaitingList
+    member this.mk_next () = new ThreadNext () :> Next
 
 
-type SeqControlTree(D:SeqDataStruct, kind, cond) =
+type ThreadControlTree(D:SeqDataStruct, kind, cond) =
   member val alive = true with get, set
   member val kind = kind
   member val susp = false with get, set
-  member val children = ([]:SeqControlTree list) with get, set
+  member val children = ([]:ThreadControlTree list) with get, set
   member val cond = cond with get, set
   member val cond_v = false with get, set
   member val next = D.mk_next ();
@@ -96,24 +87,24 @@ type SeqControlTree(D:SeqDataStruct, kind, cond) =
   member val last_activation = [] with get, set
   member val instance = 0 with get, set
   new (D:SeqDataStruct, kind) =
-    SeqControlTree(D, kind, fun () -> false)
+    ThreadControlTree(D, kind, fun () -> false)
   member this.setKill () =
     this.alive <- true; (* set to true, to show that the node is no longer attached to its parent
                    and needs to be reattaced if the node is reused *)
     this.susp <- false;
     this.next.Clear ();
-    List.iter (fun (p:SeqControlTree) -> p.setKill ()) this.children;
     this.children <- [];
-    this.instance <- this.instance + 1
+    this.instance <- this.instance + 1;
+    List.iter (fun (p:ThreadControlTree) -> p.setKill ()) this.children;
 
 and SeqClockDomain(S:#SeqDataStruct, parent) =
   member val cd_current = S.mk_current ()
   member val cd_eoi = ref false
   member val cd_weoi = S.mk_waiting_list ()
   member val cd_next_instant = S.mk_waiting_list ()
-  member val cd_wake_up = ([]:#WaitingList list) with get, set
+  member val cd_wake_up = new ConcurrentStack<WaitingList> ()
   member val cd_clock = Event.init_clock ()
-  member val cd_top = new SeqControlTree(S, Susp) with get, set
+  member val cd_top = new ThreadControlTree(S, Susp) with get, set
   member val cd_parent = parent
   member val cd_counter = 0 with get, set 
 
@@ -121,15 +112,13 @@ and SeqClockDomain(S:#SeqDataStruct, parent) =
   member this.control_tree = this.cd_top
   member this.clock = this
 
-  interface ClockDomain<clock, SeqControlTree> with
+  interface ClockDomain<clock, ThreadControlTree> with
     member this.is_eoi () = this.is_eoi ()
     member this.control_tree = this.control_tree
     member this.clock = this.clock
 
 and clock = SeqClockDomain
 and region = clock
-
-type SClockDomain = ClockDomain<clock, SeqControlTree>
 
 let unit_value = ()
 
@@ -150,18 +139,22 @@ let rec save_clock_state (cd:SeqClockDomain) =
   in
     (cd, Event.get cd.cd_clock)::l
 
-let start_ctrl cd (ctrl:SeqControlTree) (new_ctrl:SeqControlTree) =
+let start_ctrl cd (ctrl:ThreadControlTree) (new_ctrl:ThreadControlTree) =
   new_ctrl.last_activation <- save_clock_state cd;
-  if new_ctrl.alive then
-    ctrl.children <- new_ctrl :: ctrl.children
-  else (* reset new_ctrl *)
+  if new_ctrl.alive then (
+    Monitor.Enter ctrl;
+    ctrl.children <- new_ctrl :: ctrl.children;
+    Monitor.Exit ctrl
+  ) else (* reset new_ctrl *)
     (new_ctrl.alive <- true;
      new_ctrl.susp <- false;
      new_ctrl.next.Clear ())
 
-let end_ctrl (new_ctrl:SeqControlTree) f_k x =
+let end_ctrl (new_ctrl:ThreadControlTree) f_k x =
+  Monitor.Enter new_ctrl;
   new_ctrl.setKill ();
   new_ctrl.alive <- false;
+  Monitor.Exit new_ctrl;
   f_k x
 
 
@@ -169,7 +162,7 @@ let end_ctrl (new_ctrl:SeqControlTree) f_k x =
 (* et deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
 let eval_control_and_next_to_current cd =
-  let rec eval (pere:SeqControlTree) (p:SeqControlTree) active =
+  let rec eval (pere:ThreadControlTree) (p:ThreadControlTree) active =
     if p.alive then
       match p.kind with
       | Clock_domain _ -> true
@@ -235,7 +228,7 @@ let eval_control_and_next_to_current cd =
 
 (* deplacer dans la liste current les processus qui sont dans  *)
 (* les listes next *)
-let rec next_to_current (cd:SeqClockDomain) (p:SeqControlTree) =
+let rec next_to_current (cd:SeqClockDomain) (p:ThreadControlTree) =
   if p.alive && not p.susp then
     (cd.cd_current.AddNext p.next;
      cd.cd_current.AddNext p.next_control;
@@ -247,8 +240,8 @@ let rec next_to_current (cd:SeqClockDomain) (p:SeqControlTree) =
     We can keep the last condition (if it was true for the eoi of the fast clock,
     it is also true for the eoi of the slow clock), but we have to make sure
     to fire the handler only once. *)
-let eoi_control (ctrl:SeqControlTree) =
-  let rec _eoi_control (pere:SeqControlTree) (ctrl:SeqControlTree) =
+let eoi_control (ctrl:ThreadControlTree) =
+  let rec _eoi_control (pere:ThreadControlTree) (ctrl:ThreadControlTree) =
     if ctrl.alive then (
       ctrl.cond_v <- ctrl.cond ();
       (match ctrl.kind with
@@ -263,11 +256,11 @@ let eoi_control (ctrl:SeqControlTree) =
   in
     List.iter (_eoi_control ctrl) ctrl.children
 
-let wake_up_ctrl (new_ctrl:SeqControlTree) cd =
+let wake_up_ctrl (new_ctrl:ThreadControlTree) cd =
+  Monitor.Enter new_ctrl;
   new_ctrl.susp <- false;
-  next_to_current cd new_ctrl
-
-
+  next_to_current cd new_ctrl;
+  Monitor.Exit new_ctrl
 
 
 (* let rec top_clock cd = match cd.cd_parent with
@@ -280,34 +273,34 @@ let top_clock () = match !top_clock_ref with
 let add_weoi (cd:SeqClockDomain) p =
   cd.cd_weoi.Add p
 let add_weoi_waiting_list (cd:SeqClockDomain) w =
-  cd.cd_wake_up <- w :: cd.cd_wake_up
+  cd.cd_wake_up.Push w
 
 (* debloquer les processus en attent d'un evt *)
 let wake_up (ck:SeqClockDomain) w =
   ck.cd_current.AddWaitingList w
 
 let wake_up_all (ck:SeqClockDomain) =
-  List.iter ck.cd_current.AddWaitingList ck.cd_wake_up;
-  ck.cd_wake_up <- []
+  for w in ck.cd_wake_up do ck.cd_current.AddWaitingList w done;
+  ck.cd_wake_up.Clear ()
 
 (* ------------------------------------------------------------------------ *)
 
-type SeqEvent<'a, 'b>(S:SeqDataStruct, ck:clock, r, kind, def, combine:'a -> 'b -> 'b) =
+type ThreadEvent<'a, 'b>(S:SeqDataStruct, ck:clock, r, kind, def, combine:'a -> 'b -> 'b) =
   member this.n = Event.create ck.cd_clock kind def combine
   member this.clock = ck
   member this.wa = S.mk_waiting_list ()
   member this.wp = S.mk_waiting_list ()
 
+  (* Called during eoi. No locks *)
   member this.status only_at_eoi =
     Event.status this.n && (not only_at_eoi || !(this.clock.cd_eoi))
-
   member this.value with get () =
       if Event.status this.n then
         Event.value this.n
       else
         raise Types.RML
 
-    (*member this.one with get () = Event.one this.n*)
+  (* no locks because there is no writers during the instant *)
   member this.pre_status with get () = Event.pre_status this.n
   member this.pre_value with get () = Event.pre_value this.n
   member this.last with get () = Event.last this.n
@@ -315,9 +308,11 @@ type SeqEvent<'a, 'b>(S:SeqDataStruct, ck:clock, r, kind, def, combine:'a -> 'b 
   member this.one () = Event.one this.n
         
   member this.emit v =
-      Event.emit this.n v;
-      this.clock.cd_current.AddWaitingList this.wa;
-      this.clock.cd_current.AddWaitingList this.wp
+    Monitor.Enter this;
+    Event.emit this.n v;
+    this.clock.cd_current.AddWaitingList this.wa;
+    this.clock.cd_current.AddWaitingList this.wp;
+    Monitor.Exit this
 
   interface REvent<'a, 'b, clock> with
     member this.status only_at_eoi = this.status only_at_eoi
@@ -330,7 +325,7 @@ type SeqEvent<'a, 'b>(S:SeqDataStruct, ck:clock, r, kind, def, combine:'a -> 'b 
     member this.clock = this.clock
     member this.emit v = this.emit v
 
-type SeqEventCfg(k) =
+type ThreadEventCfg(k) =
   member this.kind = k
   member this.cfg_events long_wait = 
     match this.kind with
@@ -348,18 +343,18 @@ type SeqEventCfg(k) =
 and event_cfg =
   | Cevent of (bool -> bool) * SeqClockDomain * WaitingList * WaitingList
   (* status, cd, wa, wp*)
-  | Cand of SeqEventCfg * SeqEventCfg
-  | Cor of SeqEventCfg * SeqEventCfg    
+  | Cand of ThreadEventCfg * ThreadEventCfg
+  | Cor of ThreadEventCfg * ThreadEventCfg    
 
 
 (* ------------------------------------------------------------------------ *)
 
-type SeqRuntime(D:#SeqDataStruct) =
+type ThreadRuntime(D:#SeqDataStruct) =
 
      (** [on_event_or_next evt f_w cd ctrl f_next] executes 'f_w ()' if
       evt is emitted before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
-  let _on_event_or_next (evt:SeqEvent<'a, 'b>) f_w (cd:SeqClockDomain) (ctrl:SeqControlTree) f_next =
+  let on_event_or_next (evt:ThreadEvent<'a, 'b>) f_w (cd:SeqClockDomain) (ctrl:ThreadControlTree) f_next =
       let act _ =
         if cd.is_eoi () then
           (*eoi was reached, launch fallback*)
@@ -368,20 +363,20 @@ type SeqRuntime(D:#SeqDataStruct) =
           (* signal activated *)
           f_w ()
       in
-      evt.wp.Add act;
-      add_weoi_waiting_list cd evt.wp        
-
-  let on_event_or_next (evt:SeqEvent<'a, 'b>) f_w cd ctrl f_next =
+      Monitor.Enter evt;
       if Event.status evt.n then
+        Monitor.Exit evt; 
         f_w ()
       else
-        _on_event_or_next evt f_w cd ctrl f_next
+        evt.wp.Add act;
+        Monitor.Exit evt;
+        add_weoi_waiting_list cd evt.wp        
 
     (** [on_event_cfg_or_next evt_cfg f_w v_w cd ctrl f_next] executes 'f_w ()' if
       evt_cfg is true before the end of instant of cd.
       Otherwise, executes 'f_next ()' during the next instant. *)
-  let on_event_cfg_or_next (evt_cfg:REventCfg) f_w (cd:SeqClockDomain) (ctrl:SeqControlTree) f_next =
-      let evt_cfg = evt_cfg :?> SeqEventCfg in
+  let on_event_cfg_or_next (evt_cfg:REventCfg) f_w (cd:SeqClockDomain) (ctrl:ThreadControlTree) f_next =
+      let evt_cfg = evt_cfg :?> ThreadEventCfg in
       if evt_cfg.cfg_status false then
         f_w ()
       else
@@ -400,7 +395,7 @@ type SeqRuntime(D:#SeqDataStruct) =
         List.iter
           (fun (w:#WaitingList,_) -> w.Add try_fire; add_weoi_waiting_list cd w) w_list
 
-  let has_been_active (ctrl:SeqControlTree) (sig_cd:SeqClockDomain) =
+  let has_been_active (ctrl:ThreadControlTree) (sig_cd:SeqClockDomain) =
       let rec check_last_activation l = match l with
         | [] -> false
         | (cd, ck)::l ->
@@ -409,56 +404,61 @@ type SeqRuntime(D:#SeqDataStruct) =
             ) else
               check_last_activation l
       in
-        check_last_activation ctrl.last_activation
+      check_last_activation ctrl.last_activation
 
     (** [on_event evt ctrl f] executes 'f ()' if evt is emitted and
         ctrl is active in the same step.
         It waits for the next activation of w otherwise,
         or if the call raises Wait_again *)
-  let _on_event (w:#WaitingList) (sig_cd:SeqClockDomain) (ctrl:SeqControlTree) f =
+  let on_event (evt:ThreadEvent<'a, 'b>) (ctrl:ThreadControlTree) f =
       let instance = ctrl.instance in
       let rec try_launch () =
         try 
           f ()
         with
-        | Wait_again -> sig_cd.cd_weoi.Add (fun () -> w.Add self)
+        | Wait_again -> evt.clock.cd_weoi.Add (fun () -> evt.wa.Add self)
       and self _ =
+        Monitor.Enter ctrl;
         if ctrl.instance = instance then (
-          if has_been_active ctrl sig_cd then
+          if has_been_active ctrl evt.clock then
             (*ctrl is activated, run continuation*)
+            Monitor.Exit ctrl;
             try_launch ()
           else ((*ctrl is not active, wait end of instant*)
             let is_fired = ref false in
             ctrl.next_control.Add (ctrl_await is_fired);
-            add_weoi sig_cd (eoi_await is_fired)
+            add_weoi evt.clock (eoi_await is_fired);
+            Monitor.Exit ctrl
           )
-        )
+        ) else
+          Monitor.Exit ctrl
       and eoi_await is_fired _ =
         if not !is_fired then
             (*ctrl was not activated, await the signal again *)
           (is_fired := true;
-           w.Add self)
+           evt.wa.Add self)
       and ctrl_await is_fired _ =
         if not !is_fired then
           (* ctrl was activated, signal is present*)
           (is_fired := true; try_launch ())
       in
-      w.Add self
-      
-  let on_event (evt:SeqEvent<'a, 'b>) ctrl f =
+      Monitor.Enter evt;
       if Event.status evt.n then
         (try
+           Monitor.Exit evt;
            f ()
          with
-           | Wait_again -> _on_event evt.wa evt.clock ctrl f)
+           | Wait_again -> evt.wa.Add self)
       else
-        _on_event evt.wa evt.clock ctrl f
+        evt.wa.Add self;
+        Monitor.Exit evt
 
     (** [on_event_cfg evt_cfg ctrl f ()] executes 'f ()' if evt_cfg is true and
         ctrl is active in the same step.
         It waits for the next activation of evt_cfg otherwise,
         or if the call raises Wait_again *)
-  let on_event_cfg (evt_cfg:SeqEventCfg) ctrl f =
+  let on_event_cfg (evt_cfg:ThreadEventCfg) ctrl f = () (* TODO *)
+(*
       let wait_event_cfg () =
         let is_fired = ref false in
         let try_fire _ =
@@ -479,11 +479,62 @@ type SeqRuntime(D:#SeqDataStruct) =
            | Wait_again -> wait_event_cfg ())
       else
         wait_event_cfg ()
+*)
+
+  let current_step = ref true
+  let current_event = new AutoResetEvent(false)
+
+  let done_threads1 = new CountdownEvent(!Runtime_options.nb_threads)
+  let done_threads2 = new CountdownEvent(!Runtime_options.nb_threads)
+  let current_done_threads () = 
+      if !current_step then done_threads1 else done_threads2
+
+  let next_step1 = new ManualResetEvent false
+  let next_step2 = new ManualResetEvent false
+  let current_next_step () = 
+      if !current_step then next_step1 else next_step2
 
   let rec schedule (cd:SeqClockDomain) =
       match cd.cd_current.Take () with
       | Some f -> f (); schedule cd
       | None -> ()
+
+  let rec do_one_step cd (done_threads:CountdownEvent) = 
+    schedule cd; 
+    let _ = lock done_threads (fun () -> done_threads.Signal()) in 
+    (*wait for the current list to be filled or the end of step *)
+    let _ = WaitHandle.WaitAny (([|current_event; done_threads.WaitHandle|]:WaitHandle[]), 20) in
+    Monitor.Enter done_threads;
+    if not done_threads.IsSet then (*back to work*)
+      done_threads.AddCount();
+      Monitor.Exit done_threads;
+      do_one_step cd done_threads
+    else (*end of step*)
+      Monitor.Exit done_threads
+
+  let thread_fun i =
+    let cd = get_top_clock_domain () in
+    let ev = ref next_step1 in
+    while true do
+      (*attend le debut de l'instant suivant*)
+      (!ev).WaitOne ();
+      ev := current_next_step ();
+      do_one_step cd (current_done_threads ())
+    done
+
+  let exec_sched (cd:SeqClockDomain) = 
+      let ev = 
+        if !current_step then 
+          (next_step2.Reset (); next_step1) 
+        else 
+          (next_step1.Reset (); next_step2) 
+      in
+      let done_threads = if !current_step then done_threads2 else done_threads1 in
+      done_threads.Reset ();
+      current_step := not !current_step;
+      ev.Set ();
+      do_one_step cd done_threads
+
 
   let eoi (cd:SeqClockDomain) =
       cd.cd_eoi := true;
@@ -494,108 +545,52 @@ type SeqRuntime(D:#SeqDataStruct) =
 
   let next_instant (cd:SeqClockDomain) =
       Event.next cd.cd_clock;
-      (* next instant of child clock domains *)
-      wake_up cd cd.cd_next_instant;
-      schedule cd;
       (* next instant of this clock domain *)
       eval_control_and_next_to_current cd;
       cd.cd_eoi := false
 
-  let rec has_next (ctrl:SeqControlTree) =
-      if not ctrl.alive then
-        false
-      else
-        match ctrl.kind with
-          | Clock_domain _ -> has_next_children ctrl
-          | Kill _ | Kill_handler _ ->
-            ctrl.cond () || has_next_children ctrl
-          | Susp ->
-            let active = (ctrl.susp && ctrl.cond ()) || (not ctrl.susp && not (ctrl.cond ())) in
-              active && has_next_children ctrl
-          | When ->
-            not ctrl.susp && has_next_children ctrl
-    and has_next_children ctrl =
-      (not ctrl.next.IsEmpty) || List.exists has_next ctrl.children
-
-  let macro_step_done (cd:SeqClockDomain) =
-      not (has_next cd.cd_top)
-
-  let step_clock_domain (ctrl:SeqControlTree) new_ctrl (cd:SeqClockDomain) (new_cd:SeqClockDomain) period =
-      let next_instant_clock_domain _ = next_instant new_cd in
-      let rec f_cd () =
-        cd.cd_counter <- cd.cd_counter + 1;
-        schedule new_cd;
-        eoi new_cd;
-        let period_finished = match period with
-          | None -> false
-          | Some p -> cd.cd_counter >= p
-        in
-        if period_finished || macro_step_done new_cd then (
-          cd.cd_counter <- 0;
-          cd.cd_next_instant.Add next_instant_clock_domain;
-          ctrl.next_control.Add f_cd;
-        ) else (
-          next_instant new_cd;
-          (* execute again in the same step but yield for now*)
-          cd.cd_current.Add f_cd
-        )
-      in
-      f_cd
-
-  let end_clock_domain new_ctrl f_k x =
-      end_ctrl new_ctrl f_k x
-
   member this.new_evt _ cd r kind _default combine reset k =
-      let evt = new SeqEvent<_,_>(D, cd, cd, kind, _default, combine) in
-      let k =
-      (* create a callback to reset the signal at each eoi of the reset *)
-        match reset with
-        | None -> k
-        | Some rck ->
-          fun ev _ ->
-            let rec reset_evt () =
-              Event.reset evt.n;
-              add_weoi rck reset_evt
-            in
-            add_weoi rck reset_evt;
-            k ev ()
-      in
+      let evt = new ThreadEvent<_,_>(D, cd, cd, kind, _default, combine) in
       k (evt :> REvent<'a, 'b, clock>)
   member this.new_evt_global kind _default combine =
       let cd = get_top_clock_domain () in
-      new SeqEvent<_,_>(D, cd, cd, kind, _default, combine) :> REvent<'a, 'b, clock>
+      new ThreadEvent<_,_>(D, cd, cd, kind, _default, combine) :> REvent<'a, 'b, clock>
   
   member this.cfg_present (evt:REvent<'a,'b,clock>) =
-      let evt = evt :?> SeqEvent<'a, 'b> in
-      new SeqEventCfg (Cevent ((fun eoi -> evt.status eoi), evt.clock, evt.wa, evt.wp)) :> REventCfg
+      let evt = evt :?> ThreadEvent<'a, 'b> in
+      new ThreadEventCfg (Cevent ((fun eoi -> evt.status eoi), evt.clock, evt.wa, evt.wp)) :> REventCfg
   member this.cfg_or (ev1:REventCfg) (ev2:REventCfg) =
-      new SeqEventCfg (Cor (ev1 :?> SeqEventCfg, ev2 :?> SeqEventCfg)) :> REventCfg
+      new ThreadEventCfg (Cor (ev1 :?> ThreadEventCfg, ev2 :?> ThreadEventCfg)) :> REventCfg
   member this.cfg_and (ev1:REventCfg) (ev2:REventCfg) =
-      new SeqEventCfg (Cand (ev1 :?> SeqEventCfg, ev2 :?> SeqEventCfg)) :> REventCfg
+      new ThreadEventCfg (Cand (ev1 :?> ThreadEventCfg, ev2 :?> ThreadEventCfg)) :> REventCfg
 
 
   member this.new_join_point nb = 
-    new JoinRef(nb) :> Join  
+    new JoinThread(nb) :> Join  
 
 
   member this.mk_clock_domain parent =
     let cd = new SeqClockDomain(D, parent) in
-    cd.cd_top <- new SeqControlTree (D, Clock_domain cd);
+    cd.cd_top <- new ThreadControlTree (D, Clock_domain cd);
     cd.cd_top.last_activation <- save_clock_state cd;
     cd
 
-  member this.finalize_top_clock_domain _ = ()
+  member val thread_list = (Array.empty:Thread array) with get, set
+  member this.finalize_top_clock_domain _ =
+    Array.iter (fun (t:Thread) -> t.Abort ()) this.thread_list
   member this.init () =
       match !top_clock_ref with
       | None ->
         (* create top clock domain *)
         let cd = this.mk_clock_domain None in
-        top_clock_ref := Some cd
+        top_clock_ref := Some cd;
+        this.thread_list <- Array.init (!Runtime_options.nb_threads-1) (fun _ -> new Thread(ThreadStart(thread_fun)));
+        Array.iter (fun (t:Thread) -> t.Start()) this.thread_list
       | Some _ -> () (* init already done *)
 
   member this.on_current_instant (cd:SeqClockDomain) f = cd.cd_current.Add f
   member this.on_current_instant_list (cd:SeqClockDomain) fl = cd.cd_current.AddList fl
-  member this.on_next_instant kind (ctrl:SeqControlTree) f =
+  member this.on_next_instant kind (ctrl:ThreadControlTree) f =
       match kind with
         | Strong -> ctrl.next.Add f
         | Weak -> ctrl.next_control.Add f
@@ -610,13 +605,13 @@ type SeqRuntime(D:#SeqDataStruct) =
 
  
     (* Control structures *)
-  member this.create_control (kind:control_type<clock>) body f_k (ctrl:SeqControlTree) cd =
-      let new_ctrl = new SeqControlTree(D, kind) in
+  member this.create_control (kind:control_type<clock>) body f_k (ctrl:ThreadControlTree) cd =
+      let new_ctrl = new ThreadControlTree(D, kind) in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       match kind with
         | When ->
             fun (evt:REvent<'a,'b,clock>) other_cond ->
-              let evt = evt :?> SeqEvent<'a, 'b> in 
+              let evt = evt :?> ThreadEvent<'a, 'b> in 
               let rec when_act _ =
                 wake_up_ctrl new_ctrl cd;
                 this.on_next_instant Strong ctrl f_when
@@ -631,7 +626,7 @@ type SeqRuntime(D:#SeqDataStruct) =
                 f_when ()
         | _ ->
             fun (evt:REvent<'a,'b,clock>) other_cond ->
-              let evt = evt :?> SeqEvent<'a, 'b> in 
+              let evt = evt :?> ThreadEvent<'a, 'b> in 
               new_ctrl.cond <-
                 (fun () -> evt.status true && other_cond evt.value);
               fun () ->
@@ -639,33 +634,27 @@ type SeqRuntime(D:#SeqDataStruct) =
                 f ()
 
   member this.create_control_evt_conf kind body f_k ctrl cd =
-      let new_ctrl = new SeqControlTree (D, kind) in
+      let new_ctrl = new ThreadControlTree (D, kind) in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
-      fun (evt_cfg:#REventCfg) ->
+      fun (evt_cfg:REventCfg) ->
         new_ctrl.cond <- (fun () -> evt_cfg.cfg_status true);
         fun () ->
           start_ctrl cd ctrl new_ctrl;
           f ()
 
-  member this.new_clock_domain (cd:SClockDomain) ctrl p _ period f_k =
-      let cd = cd :?> SeqClockDomain in
-      let new_cd = this.mk_clock_domain (Some cd) in
-      let new_ctrl = new_cd.control_tree in
-      let f = p new_cd new_ctrl (end_clock_domain new_ctrl f_k) in
-      fun _ ->
-        this.on_current_instant new_cd f;
-        start_ctrl new_cd ctrl new_ctrl;
-        step_clock_domain ctrl new_ctrl cd new_cd period unit_value
+  member this.new_clock_domain cd ctrl p _ period f_k =
+    printf "Unsupported construct\n"; 
+    raise Types.RML
 
     (* the react function *)
   member this.react cd =
-      schedule cd;
+      exec_sched cd;
       eoi cd;
       next_instant cd
 
 
-  interface Runtime<clock, SeqControlTree> with        
-    member this.create_control (kind:control_type<clock>) body f_k ctrl cd = 
+  interface Runtime<clock, ThreadControlTree> with        
+    member this.create_control (kind:control_type<clock>) body f_k ctrl (cd:ClockDomain<clock, ThreadControlTree>) = 
       this.create_control kind body f_k ctrl (cd :?> SeqClockDomain)
     member this.create_control_evt_conf kind body f_k ctrl cd = 
       this.create_control_evt_conf kind body f_k ctrl (cd :?> SeqClockDomain) 
@@ -679,13 +668,13 @@ type SeqRuntime(D:#SeqDataStruct) =
       this.on_eoi cd f
 
     member this.on_event_or_next (evt:REvent<'a,'b,clock>) f_w cd ctrl f_next =
-      on_event_or_next (evt :?> SeqEvent<'a, 'b>) f_w (cd :?> SeqClockDomain) ctrl f_next
+      on_event_or_next (evt :?> ThreadEvent<'a, 'b>) f_w (cd :?> SeqClockDomain) ctrl f_next
     member this.on_event_cfg_or_next evt_cfg f_w cd ctrl f_next =
-      on_event_cfg_or_next (evt_cfg :?> SeqEventCfg) f_w (cd :?> SeqClockDomain) ctrl f_next
+      on_event_cfg_or_next (evt_cfg :?> ThreadEventCfg) f_w (cd :?> SeqClockDomain) ctrl f_next
     member this.on_event (evt:REvent<'a,'b,clock>) ctrl f =
-      on_event (evt :?> SeqEvent<'a, 'b>) ctrl f
+      on_event (evt :?> ThreadEvent<'a, 'b>) ctrl f
     member this.on_event_cfg evt_cfg ctrl f =
-      on_event_cfg (evt_cfg :?> SeqEventCfg) ctrl f
+      on_event_cfg (evt_cfg :?> ThreadEventCfg) ctrl f
     
     member this.new_clock_domain cd ctrl p sch period f_k = 
       this.new_clock_domain (cd :?> SeqClockDomain) ctrl p sch period f_k
@@ -708,4 +697,5 @@ type SeqRuntime(D:#SeqDataStruct) =
 
     member this.new_join_point nb = this.new_join_point nb 
 
-let R = new SeqRuntime(new ListStruct ()) :> Runtime<_,_>
+let R = new ThreadRuntime(new ListStruct ()) :> Runtime<_,_>
+

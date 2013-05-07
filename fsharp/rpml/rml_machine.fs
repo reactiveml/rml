@@ -45,6 +45,7 @@ type Machine<'ck, 'ctrl>(R:Runtime<'ck, 'ctrl>) =
         !result
       in
       let finalize () =
+        R.finalize_top_clock_domain cd;
         if !Runtime_options.bench_mode then
           Printf.printf "%d ms@." timer.ElapsedMilliseconds
       in
@@ -73,3 +74,7 @@ type Machine<'ck, 'ctrl>(R:Runtime<'ck, 'ctrl>) =
 
 let LcoSeq = new Lco.Interpreter<_,_>(SeqRuntime.R)
 let SeqRuntime = SeqRuntime.R :> Runtime<_,_>
+
+let LcoRmlThread = new Lco.Interpreter<_,_>(RmlThreadRuntime.R)
+let RmlThreadRuntime = RmlThreadRuntime.R :> Runtime<_,_>
+
