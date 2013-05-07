@@ -1,24 +1,24 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="../examples/fsharp/boids/boids.fs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="rpml/rml_thread_runtime.fs">
     <Files>
-      <File FileName="rpml/seq_runtime.fs" Line="328" Column="33" />
-      <File FileName="rpml/rml_machine.fs" Line="31" Column="11" />
-      <File FileName="rpml/runtime.fs" Line="43" Column="34" />
-      <File FileName="rpml/lco_ctrl_tree_n.fs" Line="65" Column="45" />
-      <File FileName="../examples/fsharp/simple/simple.fs" Line="4" Column="32" />
-      <File FileName="../examples/fsharp/planets/planets.fs" Line="6" Column="15" />
-      <File FileName="rpml/sig_env.fs" Line="63" Column="7" />
-      <File FileName="../examples/fsharp/boids/boids.fs" Line="4" Column="3" />
+      <File FileName="rpml/seq_runtime.fs" Line="1" Column="1" />
+      <File FileName="rpml/rml_machine.fs" Line="77" Column="17" />
+      <File FileName="rpml/runtime.fs" Line="1" Column="1" />
+      <File FileName="rpml/lco_ctrl_tree_n.fs" Line="162" Column="54" />
+      <File FileName="rpml/rml_thread_runtime.fs" Line="44" Column="1" />
+      <File FileName="rpml/sig_env.fs" Line="1" Column="1" />
+      <File FileName="rpml/runtime_options.fs" Line="42" Column="45" />
+      <File FileName="../examples/fsharp/simple/simple.fs" Line="4" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="boids" expanded="True">
-            <Node name="boids.fs" selected="True" />
-          </Node>
+          <Node name="boids" expanded="True" />
           <Node name="planets" expanded="True" />
-          <Node name="rpmllib" expanded="True" />
+          <Node name="rpmllib" expanded="True">
+            <Node name="rml_thread_runtime.fs" selected="True" />
+          </Node>
           <Node name="simple" expanded="True" />
         </State>
       </Pad>
@@ -26,7 +26,9 @@
         <State expanded="True" selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
-        <State />
+        <State>
+          <Value>RmlThreadRuntime.tmp</Value>
+        </State>
       </Pad>
       <Pad Id="ConnectionManagerPad">
         <State selected="True" />
@@ -34,7 +36,9 @@
     </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="/Users/ccpasteur/Dropbox/Sauvegardes/git/rml/fsharp/rpml/rml_thread_runtime.fs" line="44" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

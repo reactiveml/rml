@@ -1,78 +1,35 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "rpmllib", "rpml\rpmllib.fsproj", "{5CB99DB9-128A-4958-A272-5BE02E2AED05}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "rpmllib", "rpml\rpmllib.fsproj", "{88B719E5-519B-4EB9-8589-2DB12AC89D56}"
 EndProject
-Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "simple", "..\examples\fsharp\simple\simple.fsproj", "{78BAC15B-E611-4691-8885-83D6D9B1F9FE}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "simple", "..\examples\fsharp\simple\simple.fsproj", "{78BAC15B-E611-4691-8885-83D6D9B1F9FE}"
 EndProject
-Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "planets", "..\examples\fsharp\planets\planets.fsproj", "{9777C021-DB73-49ED-9D6F-AFA870819067}"
-EndProject
-Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "boids", "..\examples\fsharp\boids\boids.fsproj", "{FCCE2C61-A39D-402A-A448-546DDB3F5146}"
-EndProject
-Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "FSharp.PowerPack.Compatibility", "FSharp.PowerPack.Compatibility\FSharp.PowerPack.Compatibility.fsproj", "{6FC3B299-23CB-4098-998D-06C014431807}"
-EndProject
-Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "FSharp.PowerPack", "FSharp.PowerPack\FSharp.PowerPack.fsproj", "{649FA588-F02E-457C-9FCF-87E46407481F}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "planets", "..\examples\fsharp\planets\planets.fsproj", "{9777C021-DB73-49ED-9D6F-AFA870819067}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
-		Debug|x64 = Debug|x64
 		Release|Any CPU = Release|Any CPU
-		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|x64.ActiveCfg = Release|Any CPU
-		{5CB99DB9-128A-4958-A272-5BE02E2AED05}.Release|x64.Build.0 = Release|Any CPU
-		{649FA588-F02E-457C-9FCF-87E46407481F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{649FA588-F02E-457C-9FCF-87E46407481F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{649FA588-F02E-457C-9FCF-87E46407481F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{649FA588-F02E-457C-9FCF-87E46407481F}.Debug|x64.Build.0 = Debug|Any CPU
-		{649FA588-F02E-457C-9FCF-87E46407481F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{649FA588-F02E-457C-9FCF-87E46407481F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{649FA588-F02E-457C-9FCF-87E46407481F}.Release|x64.ActiveCfg = Release|Any CPU
-		{649FA588-F02E-457C-9FCF-87E46407481F}.Release|x64.Build.0 = Release|Any CPU
-		{6FC3B299-23CB-4098-998D-06C014431807}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6FC3B299-23CB-4098-998D-06C014431807}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6FC3B299-23CB-4098-998D-06C014431807}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{6FC3B299-23CB-4098-998D-06C014431807}.Debug|x64.Build.0 = Debug|Any CPU
-		{6FC3B299-23CB-4098-998D-06C014431807}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6FC3B299-23CB-4098-998D-06C014431807}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6FC3B299-23CB-4098-998D-06C014431807}.Release|x64.ActiveCfg = Release|Any CPU
-		{6FC3B299-23CB-4098-998D-06C014431807}.Release|x64.Build.0 = Release|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Release|Any CPU.Build.0 = Release|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|x64.Build.0 = Debug|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Release|x64.ActiveCfg = Release|Any CPU
-		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Release|x64.Build.0 = Release|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9777C021-DB73-49ED-9D6F-AFA870819067}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{9777C021-DB73-49ED-9D6F-AFA870819067}.Debug|x64.Build.0 = Debug|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|x64.ActiveCfg = Release|Any CPU
-		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|x64.Build.0 = Release|Any CPU
-		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|Any CPU.Build.0 = Debug|x64
-		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|x64.ActiveCfg = Debug|x64
-		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|x64.Build.0 = Debug|x64
-		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|Any CPU.ActiveCfg = Release|x64
-		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|Any CPU.Build.0 = Release|x64
-		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|x64.ActiveCfg = Release|x64
-		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|x64.Build.0 = Release|x64
-	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = ..\examples\fsharp\boids\boids.fsproj
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
