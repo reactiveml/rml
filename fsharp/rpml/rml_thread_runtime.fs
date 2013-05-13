@@ -119,7 +119,7 @@ and SeqClockDomain(S:#SeqDataStruct, parent) =
     member this.is_eoi () = this.is_eoi ()
     member this.control_tree = this.control_tree
     member this.clock = this.clock
-
+    
 and clock = SeqClockDomain
 and region = clock
 
@@ -541,7 +541,7 @@ type ThreadRuntime(D:#SeqDataStruct) =
           (ensure (next_step1.Reset ()); next_step2) 
       in
       let done_threads = if !current_step then done_threads2 else done_threads1 in
-      done_threads.Reset ();
+      done_threads.Reset !Runtime_options.nb_threads;
       current_step := not !current_step;
       ensure (ev.Set ());
       do_one_step cd done_threads
