@@ -53,6 +53,7 @@
     <Compile Include="runtime.fs" />
     <Compile Include="seq_runtime.fs" />
     <Compile Include="rml_thread_runtime.fs" />
+    <Compile Include="thread_runtime.fs" />
     <Compile Include="lco_ctrl_tree_n.fs" />
     <Compile Include="rmlarg.fs" />
     <Compile Include="rml_machine.fs" />
