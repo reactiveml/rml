@@ -73,8 +73,10 @@ type Machine<'ck, 'ctrl>(R:Runtime<'ck, 'ctrl>) =
             exit 2
 
 let LcoSeq = new Lco.Interpreter<_,_>(SeqRuntime.R)
-let SeqRuntime = SeqRuntime.R :> Runtime<_,_>
+let SeqMachine = Machine<_,_>(SeqRuntime.R :> Runtime<_,_>)
 
 let LcoRmlThread = new Lco.Interpreter<_,_>(RmlThreadRuntime.R)
-let RmlThreadRuntime = RmlThreadRuntime.R :> Runtime<_,_>
+let RmlThreadMachine = Machine<_,_>(RmlThreadRuntime.R :> Runtime<_,_>)
 
+let LcoThread = new Lco.Interpreter<_,_>(ThreadRuntime.R)
+let ThreadMachine = Machine<_,_>(ThreadRuntime.R :> Runtime<_,_>)

@@ -19,16 +19,9 @@ type JoinThread(nb) =
 type ThreadNext() =
   inherit ConcurrentStack<unit Step.t>()
   member this.Add p = this.Push p
-  member this.AddNext (n:Next) =
-    let n = n :?> ThreadNext in 
+  member this.AddNext (n:ThreadNext) =
     this.PushRange (n.ToArray ());
     n.Clear ()
-
-  interface Next with
-    member this.Add p = this.Add p
-    member this.Clear () = this.Clear ()
-    member this.AddNext n1 = this.AddNext n1
-    member this.IsEmpty = this.IsEmpty
 
 type ThreadWaitingList() =
   inherit ConcurrentStack<unit Step.t>()
@@ -37,11 +30,6 @@ type ThreadWaitingList() =
     let a = this.ToArray () in
     this.Clear ();
     List.ofArray a
- 
-  interface WaitingList with       
-    member this.Add p = this.Add p
-    member this.TakeAll () = this.TakeAll ()
-    member this.Length = this.Count
 
 let tmp = new ThreadLocal<unit Step.t ref> (fun () -> ref (fun () -> ()))  
 
@@ -49,10 +37,9 @@ type ThreadCurrent() =
   inherit ConcurrentBag<unit Step.t>()
   member this.AddList pl =
     List.iter this.Add pl
-  member this.AddWaitingList (w:WaitingList) =
+  member this.AddWaitingList (w:ThreadWaitingList) =
     this.AddList (w.TakeAll ())
-  member this.AddNext (n:Next) =
-    let n = n :?> ThreadNext in 
+  member this.AddNext (n:ThreadNext) =
     for p in n do this.Add p done;
     n.Clear ()
   member this.Take () =
@@ -61,35 +48,19 @@ type ThreadCurrent() =
     else
       None
 
-  interface Current with
-    member this.Add p = this.Add p
-    member this.AddList pl = this.AddList pl
-    member this.AddWaitingList w = this.AddWaitingList w
-    member this.AddNext next = this.AddNext next
-    member this.Length = this.Count
-    member this.Take () = this.Take ()
-         
-                                                                                 
-type ListStruct() =
-  interface SeqDataStruct with
-    member this.mk_current () = new ThreadCurrent () :> Current
-    member this.mk_waiting_list () = new ThreadWaitingList () :> WaitingList
-    member this.mk_next () = new ThreadNext () :> Next
-
-
-type ThreadControlTree(D:SeqDataStruct, kind, cond) =
+type ThreadControlTree(kind, cond) =
   member val alive = true with get, set
   member val kind = kind
   member val susp = false with get, set
   member val children = ([]:ThreadControlTree list) with get, set
   member val cond = cond with get, set
   member val cond_v = false with get, set
-  member val next = D.mk_next ();
-  member val next_control = D.mk_next ()
+  member val next = new ThreadNext ()
+  member val next_control = new ThreadNext ()
   member val last_activation = [] with get, set
   member val instance = 0 with get, set
-  new (D:SeqDataStruct, kind) =
-    ThreadControlTree(D, kind, fun () -> false)
+  new (kind) =
+    ThreadControlTree(kind, fun () -> false)
   member this.setKill () =
     this.alive <- true; (* set to true, to show that the node is no longer attached to its parent
                    and needs to be reattaced if the node is reused *)
@@ -99,15 +70,15 @@ type ThreadControlTree(D:SeqDataStruct, kind, cond) =
     this.instance <- this.instance + 1;
     List.iter (fun (p:ThreadControlTree) -> p.setKill ()) this.children;
 
-and SeqClockDomain(S:#SeqDataStruct, parent) =
-  member val cd_current = S.mk_current ()
+and SeqClockDomain(parent) =
+  member val cd_current = new ThreadCurrent ()
   member val cd_current_event = new AutoResetEvent(false)
   member val cd_eoi = ref false
-  member val cd_weoi = S.mk_waiting_list ()
-  member val cd_next_instant = S.mk_waiting_list ()
-  member val cd_wake_up = new ConcurrentStack<WaitingList> ()
+  member val cd_weoi = new ThreadWaitingList ()
+  member val cd_next_instant = new ThreadWaitingList ()
+  member val cd_wake_up = new ConcurrentStack<ThreadWaitingList> ()
   member val cd_clock = Event.init_clock ()
-  member val cd_top = new ThreadControlTree(S, Susp) with get, set
+  member val cd_top = new ThreadControlTree(Susp) with get, set
   member val cd_parent = parent
   member val cd_counter = 0 with get, set 
 
@@ -290,11 +261,11 @@ let wake_up_all (ck:SeqClockDomain) =
 
 (* ------------------------------------------------------------------------ *)
 
-type ThreadEvent<'a, 'b>(S:SeqDataStruct, ck:clock, r, kind, def, combine:'a -> 'b -> 'b) =
+type ThreadEvent<'a, 'b>(ck:clock, r, kind, def, combine:'a -> 'b -> 'b) =
   member val n = Event.create ck.cd_clock kind def combine
   member val clock = ck
-  member val wa = S.mk_waiting_list ()
-  member val wp = S.mk_waiting_list ()
+  member val wa = new ThreadWaitingList ()
+  member val wp = new ThreadWaitingList ()
 
   (* Called during eoi. No locks *)
   member this.status only_at_eoi =
@@ -347,7 +318,7 @@ type ThreadEventCfg(k) =
     member this.cfg_status only_at_eoi = this.cfg_status only_at_eoi 
 
 and event_cfg =
-  | Cevent of (bool -> bool) * SeqClockDomain * WaitingList * WaitingList
+  | Cevent of (bool -> bool) * SeqClockDomain * ThreadWaitingList * ThreadWaitingList
   (* status, cd, wa, wp*)
   | Cand of ThreadEventCfg * ThreadEventCfg
   | Cor of ThreadEventCfg * ThreadEventCfg    
@@ -355,7 +326,7 @@ and event_cfg =
 
 (* ------------------------------------------------------------------------ *)
 
-type ThreadRuntime(D:#SeqDataStruct) =
+type ThreadRuntime() =
 
      (** [on_event_or_next evt f_w cd ctrl f_next] executes 'f_w ()' if
       evt is emitted before the end of instant of cd.
@@ -399,7 +370,7 @@ type ThreadRuntime(D:#SeqDataStruct) =
         in
         let w_list = evt_cfg.cfg_events false in
         List.iter
-          (fun (w:#WaitingList,_) -> w.Add try_fire; add_weoi_waiting_list cd w) w_list
+          (fun (w:ThreadWaitingList,_) -> w.Add try_fire; add_weoi_waiting_list cd w) w_list
 
   let has_been_active (ctrl:ThreadControlTree) (sig_cd:SeqClockDomain) =
       let rec check_last_activation l = match l with
@@ -416,7 +387,7 @@ type ThreadRuntime(D:#SeqDataStruct) =
         ctrl is active in the same step.
         It waits for the next activation of w otherwise,
         or if the call raises Wait_again *)
-  let on_event (evt:ThreadEvent<'a, 'b>) (ctrl:ThreadControlTree) f =
+  let on_event (evt:ThreadEvent<'a, 'b>) (ctrl:ThreadControlTree) _ f =
       let instance = ctrl.instance in
       let rec try_launch () =
         try 
@@ -561,11 +532,11 @@ type ThreadRuntime(D:#SeqDataStruct) =
       cd.cd_eoi := false
 
   member this.new_evt _ cd r kind _default combine reset k =
-      let evt = new ThreadEvent<_,_>(D, cd, cd, kind, _default, combine) in
+      let evt = new ThreadEvent<_,_>(cd, cd, kind, _default, combine) in
       k (evt :> REvent<'a, 'b, clock>)
   member this.new_evt_global kind _default combine =
       let cd = get_top_clock_domain () in
-      new ThreadEvent<_,_>(D, cd, cd, kind, _default, combine) :> REvent<'a, 'b, clock>
+      new ThreadEvent<_,_>(cd, cd, kind, _default, combine) :> REvent<'a, 'b, clock>
   
   member this.cfg_present (evt:REvent<'a,'b,clock>) =
       let evt = evt :?> ThreadEvent<'a, 'b> in
@@ -581,8 +552,8 @@ type ThreadRuntime(D:#SeqDataStruct) =
 
 
   member this.mk_clock_domain parent =
-    let cd = new SeqClockDomain(D, parent) in
-    cd.cd_top <- new ThreadControlTree (D, Clock_domain cd);
+    let cd = new SeqClockDomain(parent) in
+    cd.cd_top <- new ThreadControlTree (Clock_domain cd);
     cd.cd_top.last_activation <- save_clock_state cd;
     cd
 
@@ -621,7 +592,7 @@ type ThreadRuntime(D:#SeqDataStruct) =
  
     (* Control structures *)
   member this.create_control (kind:control_type<clock>) body f_k (ctrl:ThreadControlTree) cd =
-      let new_ctrl = new ThreadControlTree(D, kind) in
+      let new_ctrl = new ThreadControlTree(kind) in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       match kind with
         | When ->
@@ -631,7 +602,7 @@ type ThreadRuntime(D:#SeqDataStruct) =
                 wake_up_ctrl new_ctrl cd;
                 this.on_next_instant Strong ctrl f_when
               and f_when _ =
-                on_event evt ctrl when_act
+                on_event evt ctrl cd when_act
               in
               new_ctrl.cond <- (fun () -> evt.status false);
               fun () ->
@@ -649,7 +620,7 @@ type ThreadRuntime(D:#SeqDataStruct) =
                 f ()
 
   member this.create_control_evt_conf kind body f_k ctrl cd =
-      let new_ctrl = new ThreadControlTree (D, kind) in
+      let new_ctrl = new ThreadControlTree (kind) in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       fun (evt_cfg:REventCfg) ->
         new_ctrl.cond <- (fun () -> evt_cfg.cfg_status true);
@@ -686,8 +657,8 @@ type ThreadRuntime(D:#SeqDataStruct) =
       on_event_or_next (evt :?> ThreadEvent<'a, 'b>) f_w (cd :?> SeqClockDomain) ctrl f_next
     member this.on_event_cfg_or_next evt_cfg f_w cd ctrl f_next =
       on_event_cfg_or_next (evt_cfg :?> ThreadEventCfg) f_w (cd :?> SeqClockDomain) ctrl f_next
-    member this.on_event (evt:REvent<'a,'b,clock>) ctrl f =
-      on_event (evt :?> ThreadEvent<'a, 'b>) ctrl f
+    member this.on_event (evt:REvent<'a,'b,clock>) ctrl cd f =
+      on_event (evt :?> ThreadEvent<'a, 'b>) ctrl cd f
     member this.on_event_cfg evt_cfg ctrl f =
       on_event_cfg (evt_cfg :?> ThreadEventCfg) ctrl f
     
@@ -712,5 +683,5 @@ type ThreadRuntime(D:#SeqDataStruct) =
 
     member this.new_join_point nb = this.new_join_point nb 
 
-let R = new ThreadRuntime(new ListStruct ()) :> Runtime<_,_>
+let R = new ThreadRuntime() :> Runtime<_,_>
 

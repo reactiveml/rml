@@ -100,7 +100,7 @@ type Runtime<'ck, 'ctrl> =
       ctrl is active in the same step.
       It waits for the next activation of w otherwise,
       or if the call raises Wait_again *)
-  abstract member on_event : REvent<'a, 'b, 'ck> -> 'ctrl -> unit Step.t -> unit
+  abstract member on_event : REvent<'a, 'b, 'ck> -> 'ctrl -> ClockDomain<'ck, 'ctrl> -> unit Step.t -> unit
   (** [on_event_cfg evt_cfg ctrl f] executes 'f ()' if evt_cfg is true and
       ctrl is active in the same step.
       It waits for the next activation of evt_cfg otherwise,

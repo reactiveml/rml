@@ -22,14 +22,14 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
       | CkLocal -> (* should be rejected by compiler *)
           raise Types.RML
 
-    let rec on_event_at_eoi evt ctrl f =
+    let rec on_event_at_eoi evt ctrl cd f =
       let eoi_work _ =
         try
           f ()
         with
-          | Wait_again -> on_event_at_eoi evt ctrl f
+          | Wait_again -> on_event_at_eoi evt ctrl cd f
       in
-      R.on_event evt ctrl (fun () -> R.on_eoi evt.clock eoi_work)
+      R.on_event evt ctrl cd (fun () -> R.on_eoi evt.clock eoi_work)
 
     let on_event_cfg_at_eoi evt_cfg ctrl f = ()
 
@@ -138,7 +138,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
 
     member this.rml_await_immediate' evt =
       fun f_k ctrl jp cd _ ->
-        R.on_event evt ctrl f_k
+        R.on_event evt ctrl cd f_k
 
     member this.rml_await_immediate expr_evt =
       fun f_k ctrl jp cd _ ->
@@ -180,7 +180,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
           let x = evt.one () in
           p x f_k ctrl jp cd unit_value
         in
-        R.on_event evt ctrl f
+        R.on_event evt ctrl cd f
 
     member this.rml_await_immediate_one expr_evt p =
        fun f_k ctrl jp cd _ ->
@@ -200,7 +200,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
            else
              raise Wait_again
          in
-         on_event_at_eoi evt ctrl await_eoi
+         on_event_at_eoi evt ctrl cd await_eoi
 
     member this.rml_await_all_match expr_evt matching p =
       fun f_k ctrl jp cd _ ->
@@ -214,7 +214,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
     member this.rml_await' evt =
       fun f_k ctrl jp cd _ ->
         let await_eoi _ = R.on_next_instant Strong ctrl f_k in
-        on_event_at_eoi evt ctrl await_eoi
+        on_event_at_eoi evt ctrl cd await_eoi
 
     member this.rml_await expr_evt =
       fun f_k ctrl jp cd _ ->
@@ -235,7 +235,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
            let v = evt.one () in
            R.on_next_instant Strong ctrl (p v f_k ctrl jp cd)
          in
-         on_event_at_eoi evt ctrl await_eoi
+         on_event_at_eoi evt ctrl cd await_eoi
 
     member this.rml_await_one expr_evt p =
       fun f_k ctrl jp cd _ ->
