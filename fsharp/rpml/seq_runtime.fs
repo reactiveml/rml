@@ -523,15 +523,15 @@ type SeqRuntime(D:#SeqDataStruct) =
   let step_clock_domain (ctrl:SeqControlTree) new_ctrl (cd:SeqClockDomain) (new_cd:SeqClockDomain) period =
       let next_instant_clock_domain _ = next_instant new_cd in
       let rec f_cd () =
-        cd.cd_counter <- cd.cd_counter + 1;
+        new_cd.cd_counter <- new_cd.cd_counter + 1;
         schedule new_cd;
         eoi new_cd;
         let period_finished = match period with
           | None -> false
-          | Some p -> cd.cd_counter >= p
+          | Some p -> new_cd.cd_counter >= p
         in
         if period_finished || macro_step_done new_cd then (
-          cd.cd_counter <- 0;
+          new_cd.cd_counter <- 0;
           cd.cd_next_instant.Add next_instant_clock_domain;
           ctrl.next_control.Add f_cd;
         ) else (

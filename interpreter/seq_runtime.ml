@@ -591,15 +591,15 @@ struct
     let step_clock_domain ctrl new_ctrl cd new_cd period =
       let next_instant_clock_domain _ = next_instant new_cd in
       let rec f_cd () =
-        cd.cd_counter <- cd.cd_counter + 1;
+        new_cd.cd_counter <- new_cd.cd_counter + 1;
         schedule new_cd;
         eoi new_cd;
         let period_finished = match period with
           | None -> false
-          | Some p -> cd.cd_counter >= p
+          | Some p -> new_cd.cd_counter >= p
         in
         if period_finished || macro_step_done new_cd then (
-          cd.cd_counter <- 0;
+          new_cd.cd_counter <- 0;
           D.add_waiting next_instant_clock_domain cd.cd_next_instant;
           D.add_next f_cd ctrl.next_control;
         ) else (
