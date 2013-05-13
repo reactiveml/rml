@@ -201,12 +201,17 @@ let set_runtime s =
 
     | "Fsharp_Lco" ->
         set_interpreter_module "LcoSeq";
-        set_machine_module "Machine.Machine<_,_>(Machine.SeqRuntime)";
+        set_machine_module "SeqMachine";
+        set_translation Lco_fsharp
+
+    | "Fsharp_LcoThread" ->
+        set_interpreter_module "LcoThread";
+        set_machine_module "ThreadMachine";
         set_translation Lco_fsharp
 
     | "Fsharp_LcoRmlThread" ->
         set_interpreter_module "LcoRmlThread";
-        set_machine_module "Machine.Machine<_,_>(Machine.RmlThreadRuntime)";
+        set_machine_module "RmlThreadMachine";
         set_translation Lco_fsharp
 
     | _ -> raise (Arg.Bad ("Invalid runtime:" ^ s))

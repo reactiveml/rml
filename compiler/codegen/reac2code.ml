@@ -84,6 +84,14 @@ let compile_impl info_chan filename module_name intermediate_code =
         let obj_name = filename ^ ".ml" in
         let fs_name = filename ^ ".fs" in
         let out_chan = open_out obj_name in
+        output_string out_chan
+          ("(* THIS FILE IS GENERATED. *)\n"^
+              "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
+              "*)\n\n");
+        (* selection of the interpreter *)
+        output_string out_chan "open Caml_compat\n";
+        output_string out_chan ("let Interpreter = Machine."^ !interpreter_module ^"\n");
+        output_string out_chan ("let Machine = Machine."^ !machine_module ^"\n");
         (* the implementation *)
         compile_implementation_back_end info_chan out_chan module_name intermediate_code;
         (* main process *)
@@ -92,22 +100,8 @@ let compile_impl info_chan filename module_name intermediate_code =
         close_out out_chan;
 
         (* Format output for F# *)
-        let cmd = "camlp4o "^obj_name^" -o "^obj_name in
+        let cmd = "camlp4o "^obj_name^" -o "^fs_name in
         ignore (Sys.command cmd);
-
-        (* Prepend the beginning of the pile after Camlp4 because it is not valid OCaml *)
-        let out_chan = open_out fs_name in
-        output_string out_chan
-          ("(* THIS FILE IS GENERATED. *)\n"^
-              "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
-              "*)\n\n");
-        (* selection of the interpreter *)
-        output_string out_chan "open Caml_compat\n";
-        output_string out_chan ("let Interpreter = Machine."^ !interpreter_module ^"\n");
-        output_string out_chan ("let Machine = "^ !machine_module ^"\n");
-        (* copy the rest of the file *)
-        Compiler_utils.output_file out_chan obj_name;
-        close_out out_chan;
         Sys.remove obj_name
 
     | Rml_print | Rpml2Rml ->
