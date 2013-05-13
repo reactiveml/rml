@@ -7,24 +7,58 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "simple", "..\examples\fshar
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "planets", "..\examples\fsharp\planets\planets.fsproj", "{9777C021-DB73-49ED-9D6F-AFA870819067}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "boids", "..\examples\fsharp\boids\boids.fsproj", "{FCCE2C61-A39D-402A-A448-546DDB3F5146}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|x64 = Debug|x64
 		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{88B719E5-519B-4EB9-8589-2DB12AC89D56}.Release|x64.ActiveCfg = Release|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{78BAC15B-E611-4691-8885-83D6D9B1F9FE}.Release|x64.ActiveCfg = Release|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9777C021-DB73-49ED-9D6F-AFA870819067}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{9777C021-DB73-49ED-9D6F-AFA870819067}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{9777C021-DB73-49ED-9D6F-AFA870819067}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{9777C021-DB73-49ED-9D6F-AFA870819067}.Release|x64.ActiveCfg = Release|Any CPU
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|x64.ActiveCfg = Debug|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Debug|x64.Build.0 = Debug|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|Any CPU.ActiveCfg = Release|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|Mixed Platforms.Build.0 = Release|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|x64.ActiveCfg = Release|x64
+		{FCCE2C61-A39D-402A-A448-546DDB3F5146}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,119 +1,119 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <FSharpPowerPackSourcesRoot>..</FSharpPowerPackSourcesRoot>
-    <SccProjectName>SAK</SccProjectName>
-    <SccProvider>SAK</SccProvider>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccLocalPath>SAK</SccLocalPath>
-    <ProductVersion>10.0.0</ProductVersion>
-  </PropertyGroup>
-  <Import Project="$(FSharpPowerPackSourcesRoot)\FSharpPowerPackSource.Settings.targets" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{649FA588-F02E-457C-9FCF-87E46407481F}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AssemblyName>FSharp.PowerPack</AssemblyName>
-    <TreatWarningsAsErrors>
-    </TreatWarningsAsErrors>
-    <DocumentationFile>FSharp.PowerPack.xml</DocumentationFile>
-    <NoWarn>$(NoWarn);9;44;60;35;42;62;86;47;40;51</NoWarn>
-  </PropertyGroup>
-  <!-- These dummy entries are needed for F# Beta2 -->
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>bin\Debug</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>bin\Release</OutputPath>
-    <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
-    <DocumentationFile>bin\Release\FSharp.PowerPack.XML</DocumentationFile>
-    <Tailcalls>true</Tailcalls>
-    <DefineConstants />
-  </PropertyGroup>
-  <Import Project="$(FSharpPowerPackSourcesRoot)\FSharpPowerPackSource.targets" />
-  <ItemGroup>
-    <Compile Include="assemblyinfo.fs" />
-    <Compile Include="StructuredFormat.fsi" />
-    <Compile Include="StructuredFormat.fs" />
-    <Compile Include="math\q.fsi">
-      <Link>q.fsi</Link>
-    </Compile>
-    <Compile Include="math\q.fs">
-      <Link>q.fs</Link>
-    </Compile>
-    <Compile Include="ResizeArray.fsi" />
-    <Compile Include="ResizeArray.fs" />
-    <Compile Include="HashMultiMap.fsi" />
-    <Compile Include="HashMultiMap.fs" />
-    <Compile Include="AsyncOperations.fsi" />
-    <Compile Include="AsyncOperations.fs" />
-    <Compile Include="AsyncWorker.fsi" />
-    <Compile Include="AsyncWorker.fs" />
-    <Compile Include="AsyncStreamReader.fsi" />
-    <Compile Include="AsyncStreamReader.fs" />
-    <Compile Include="HashSet.fsi" />
-    <Compile Include="HashSet.fs" />
-    <Compile Include="TaggedCollections.fsi" />
-    <Compile Include="TaggedCollections.fs" />
-    <Compile Include="TaggedHash.fsi" />
-    <Compile Include="TaggedHash.fs" />
-    <Compile Include="Measure.fsi" />
-    <Compile Include="Measure.fs" />
-    <Compile Include="PhysicalConstants.fs" />
-    <Compile Include="Lazy.fsi" />
-    <Compile Include="Lazy.fs" />
-    <Compile Include="Permutation.fsi" />
-    <Compile Include="Permutation.fs" />
-    <Compile Include="math\INumeric.fsi">
-      <Link>INumeric.fsi</Link>
-    </Compile>
-    <Compile Include="math\INumeric.fs">
-      <Link>INumeric.fs</Link>
-    </Compile>
-    <Compile Include="math\complex.fsi">
-      <Link>complex.fsi</Link>
-    </Compile>
-    <Compile Include="math\complex.fs">
-      <Link>complex.fs</Link>
-    </Compile>
-    <Compile Include="math\associations.fsi">
-      <Link>associations.fsi</Link>
-    </Compile>
-    <Compile Include="math\associations.fs">
-      <Link>associations.fs</Link>
-    </Compile>
-    <Compile Include="math\matrix.fsi">
-      <Link>matrix.fsi</Link>
-    </Compile>
-    <Compile Include="math\matrix.fs">
-      <Link>matrix.fs</Link>
-    </Compile>
-    <Compile Include="NativeArray.fsi" />
-    <Compile Include="NativeArray.fs" />
-    <Compile Include="math\NativeArrayExtensions.fsi">
-      <Link>NativeArrayExtensions.fsi</Link>
-    </Compile>
-    <Compile Include="math\NativeArrayExtensions.fs">
-      <Link>NativeArrayExtensions.fs</Link>
-    </Compile>
-    <Compile Include="Lexing.fsi" />
-    <Compile Include="Lexing.fs" />
-    <Compile Include="Parsing.fsi" />
-    <Compile Include="Parsing.fs" />
-    <Compile Include="Arg.fsi" />
-    <Compile Include="Arg.fs" />
-    <Compile Include="LazyList.fsi" />
-    <Compile Include="LazyList.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Condition="'$(TargetFramework)' == 'Silverlight'" Include="System.Net" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
-  <Import Condition="'$(TargetFramework)'=='Silverlight'" Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.Common.targets" />
-</Project>
+
+<!-- saved from url=(0091)https://raw.github.com/fsharp/powerpack/master/src/FSharp.PowerPack/FSharp.PowerPack.fsproj -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"&gt;
+  &lt;PropertyGroup&gt;
+    &lt;FSharpPowerPackSourcesRoot&gt;..&lt;/FSharpPowerPackSourcesRoot&gt;
+    &lt;SccProjectName&gt;SAK&lt;/SccProjectName&gt;
+    &lt;SccProvider&gt;SAK&lt;/SccProvider&gt;
+    &lt;SccAuxPath&gt;SAK&lt;/SccAuxPath&gt;
+    &lt;SccLocalPath&gt;SAK&lt;/SccLocalPath&gt;
+  &lt;/PropertyGroup&gt;
+  &lt;Import Project="$(FSharpPowerPackSourcesRoot)\FSharpPowerPackSource.Settings.targets" /&gt;
+  &lt;PropertyGroup&gt;
+    &lt;Configuration Condition=" '$(Configuration)' == '' "&gt;Debug&lt;/Configuration&gt;
+    &lt;Platform Condition=" '$(Platform)' == '' "&gt;AnyCPU&lt;/Platform&gt;
+    &lt;SchemaVersion&gt;2.0&lt;/SchemaVersion&gt;
+    &lt;ProjectGuid&gt;{649FA588-F02E-457C-9FCF-87E46407481F}&lt;/ProjectGuid&gt;
+    &lt;OutputType&gt;Library&lt;/OutputType&gt;
+    &lt;AssemblyName&gt;FSharp.PowerPack&lt;/AssemblyName&gt;
+    &lt;TargetFrameworkVersion&gt;v4.0&lt;/TargetFrameworkVersion&gt;
+    &lt;TreatWarningsAsErrors&gt;
+    &lt;/TreatWarningsAsErrors&gt;
+    &lt;DocumentationFile&gt;FSharp.PowerPack.xml&lt;/DocumentationFile&gt;
+    &lt;NoWarn&gt;$(NoWarn);9;44;60;35;42;62;86;47;40;51&lt;/NoWarn&gt;
+  &lt;/PropertyGroup&gt;
+  &lt;!-- These dummy entries are needed for F# Beta2 --&gt;
+  &lt;PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "&gt;
+  &lt;/PropertyGroup&gt;
+  &lt;PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' "&gt;
+  &lt;/PropertyGroup&gt;
+  &lt;Import Project="$(FSharpPowerPackSourcesRoot)\FSharpPowerPackSource.targets" /&gt;
+  &lt;ItemGroup&gt;
+    &lt;Compile Include="..\assemblyinfo.Common.fs"&gt;
+      &lt;Link&gt;assemblyinfo.Common.fs&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="AssemblyInfo.fs" /&gt;
+    &lt;Compile Include="StructuredFormat.fsi" /&gt;
+    &lt;Compile Include="StructuredFormat.fs" /&gt;
+    &lt;Compile Include="math\q.fsi"&gt;
+      &lt;Link&gt;q.fsi&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="math\q.fs"&gt;
+      &lt;Link&gt;q.fs&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="ResizeArray.fsi" /&gt;
+    &lt;Compile Include="ResizeArray.fs" /&gt;
+    &lt;Compile Include="HashMultiMap.fsi" /&gt;
+    &lt;Compile Include="HashMultiMap.fs" /&gt;
+    &lt;Compile Include="AsyncOperations.fsi" /&gt;
+    &lt;Compile Include="AsyncOperations.fs" /&gt;
+    &lt;Compile Include="AsyncWorker.fsi" /&gt;
+    &lt;Compile Include="AsyncWorker.fs" /&gt;
+    &lt;Compile Include="AsyncStreamReader.fsi" /&gt;
+    &lt;Compile Include="AsyncStreamReader.fs" /&gt;
+    &lt;Compile Include="HashSet.fsi" /&gt;
+    &lt;Compile Include="HashSet.fs" /&gt;
+    &lt;Compile Include="TaggedCollections.fsi" /&gt;
+    &lt;Compile Include="TaggedCollections.fs" /&gt;
+    &lt;Compile Include="TaggedHash.fsi" /&gt;
+    &lt;Compile Include="TaggedHash.fs" /&gt;
+    &lt;Compile Include="Measure.fsi" /&gt;
+    &lt;Compile Include="Measure.fs" /&gt;
+    &lt;Compile Include="SI.fs" /&gt;
+    &lt;Compile Include="PhysicalConstants.fs" /&gt;
+    &lt;Compile Include="Lazy.fsi" /&gt;
+    &lt;Compile Include="Lazy.fs" /&gt;
+    &lt;Compile Include="Permutation.fsi" /&gt;
+    &lt;Compile Include="Permutation.fs" /&gt;
+    &lt;Compile Include="math\INumeric.fsi"&gt;
+      &lt;Link&gt;INumeric.fsi&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="math\INumeric.fs"&gt;
+      &lt;Link&gt;INumeric.fs&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="math\complex.fsi"&gt;
+      &lt;Link&gt;complex.fsi&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="math\complex.fs"&gt;
+      &lt;Link&gt;complex.fs&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="math\associations.fsi"&gt;
+      &lt;Link&gt;associations.fsi&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="math\associations.fs"&gt;
+      &lt;Link&gt;associations.fs&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="math\matrix.fsi"&gt;
+      &lt;Link&gt;matrix.fsi&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="math\matrix.fs"&gt;
+      &lt;Link&gt;matrix.fs&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="NativeArray.fsi" /&gt;
+    &lt;Compile Include="NativeArray.fs" /&gt;
+    &lt;Compile Include="math\NativeArrayExtensions.fsi"&gt;
+      &lt;Link&gt;NativeArrayExtensions.fsi&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="math\NativeArrayExtensions.fs"&gt;
+      &lt;Link&gt;NativeArrayExtensions.fs&lt;/Link&gt;
+    &lt;/Compile&gt;
+    &lt;Compile Include="Lexing.fsi" /&gt;
+    &lt;Compile Include="Lexing.fs" /&gt;
+    &lt;Compile Include="Parsing.fsi" /&gt;
+    &lt;Compile Include="Parsing.fs" /&gt;
+    &lt;Compile Include="Arg.fsi" /&gt;
+    &lt;Compile Include="Arg.fs" /&gt;
+    &lt;Compile Include="LazyList.fsi" /&gt;
+    &lt;Compile Include="LazyList.fs" /&gt;
+  &lt;/ItemGroup&gt;
+  &lt;ItemGroup&gt;
+    &lt;Reference Include="mscorlib" /&gt;
+    &lt;Reference Include="System" /&gt;
+    &lt;Reference Include="System.Numerics" Condition="'$(TargetFrameworkVersion)' == 'v4.0'" /&gt;
+    &lt;Reference Condition="'$(TargetFramework)' == 'Silverlight'" Include="System.Net" /&gt;    
+  &lt;/ItemGroup&gt;
+  &lt;Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" /&gt;
+  &lt;Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition="Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" /&gt;
+  &lt;Import Condition="'$(TargetFramework)'=='Silverlight'" Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.Common.targets"/&gt;
+&lt;/Project&gt;</pre></body></html>

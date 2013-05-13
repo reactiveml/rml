@@ -6,6 +6,8 @@ open System.Collections.Concurrent
 open Types
 open Runtime
 
+let ensure b = if not b then raise Types.RML
+
 type JoinThread(nb) =
   let j = ref nb
   interface Join with
@@ -279,7 +281,7 @@ let add_weoi_waiting_list (cd:SeqClockDomain) w =
 (* debloquer les processus en attent d'un evt *)
 let wake_up (ck:SeqClockDomain) w =
   ck.cd_current.AddWaitingList w;
-  assert (ck.cd_current_event.Set ())
+  ensure (ck.cd_current_event.Set ())
 
 let wake_up_all (ck:SeqClockDomain) =
   for w in ck.cd_wake_up do ck.cd_current.AddWaitingList w done
@@ -315,7 +317,7 @@ type ThreadEvent<'a, 'b>(S:SeqDataStruct, ck:clock, r, kind, def, combine:'a -> 
     Event.emit this.n v;
     this.clock.cd_current.AddWaitingList this.wa;
     this.clock.cd_current.AddWaitingList this.wp;
-    assert (this.clock.cd_current_event.Set ())
+    ensure (this.clock.cd_current_event.Set ())
     Monitor.Exit this
 
   interface REvent<'a, 'b, clock> with
@@ -504,10 +506,13 @@ type ThreadRuntime(D:#SeqDataStruct) =
 
   let rec do_one_step cd (done_threads:CountdownEvent) = 
     schedule cd; 
-    let _ = lock done_threads (fun () -> done_threads.Signal()) in 
     (*wait for the current list to be filled or the end of step *)
-    let _ = WaitHandle.WaitAny (([|cd.cd_current_event; done_threads.WaitHandle|]:WaitHandle[]), 20) in
-    Monitor.Enter done_threads;
+    Monitor.Enter done_threads
+    if not (done_threads.Signal()) then
+      Monitor.Exit done_threads
+      ignore (WaitHandle.WaitAny (([|cd.cd_current_event; done_threads.WaitHandle|]:WaitHandle[]), 50))
+      Monitor.Enter done_threads
+    
     if not done_threads.IsSet then (*back to work*)
       done_threads.AddCount();
       Monitor.Exit done_threads;
@@ -521,7 +526,7 @@ type ThreadRuntime(D:#SeqDataStruct) =
       let ev = ref next_step1 in
       while true do
         (*attend le debut de l'instant suivant*)
-        assert ((!ev).WaitOne ());
+        ensure ((!ev).WaitOne ());
         ev := current_next_step ();
         do_one_step cd (current_done_threads ())
       done
@@ -531,14 +536,14 @@ type ThreadRuntime(D:#SeqDataStruct) =
   let exec_sched (cd:SeqClockDomain) = 
       let ev = 
         if !current_step then 
-          (assert (next_step2.Reset ()); next_step1) 
+          (ensure (next_step2.Reset ()); next_step1) 
         else 
-          (assert (next_step1.Reset ()); next_step2) 
+          (ensure (next_step1.Reset ()); next_step2) 
       in
       let done_threads = if !current_step then done_threads2 else done_threads1 in
       done_threads.Reset ();
       current_step := not !current_step;
-      assert (ev.Set ());
+      ensure (ev.Set ());
       do_one_step cd done_threads
 
 
@@ -596,10 +601,10 @@ type ThreadRuntime(D:#SeqDataStruct) =
 
   member this.on_current_instant (cd:SeqClockDomain) f = 
     cd.cd_current.Add f
-    assert (cd.cd_current_event.Set ())
+    ensure (cd.cd_current_event.Set ())
   member this.on_current_instant_list (cd:SeqClockDomain) fl = 
     cd.cd_current.AddList fl
-    assert (cd.cd_current_event.Set ())
+    ensure (cd.cd_current_event.Set ())
   member this.on_next_instant kind (ctrl:ThreadControlTree) f =
       match kind with
         | Strong -> ctrl.next.Add f
