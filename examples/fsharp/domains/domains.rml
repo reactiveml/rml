@@ -1,0 +1,17 @@
+let do_stuff i =
+  let x = ref i in
+  for i=1 to 19324 do
+    x := !x * 435 + 4223
+  done
+
+let process main =
+  for i=1 to 8 dopar
+    domain ck do
+      for j=0 to 10 do
+        do_stuff j;
+        print_endline (string_of_int i^":"^string_of_int j);
+        pause ck
+      done
+    done
+  done
+
