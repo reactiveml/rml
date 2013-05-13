@@ -448,6 +448,7 @@ type ThreadRuntime() =
       in
       Monitor.Enter evt;
       if Event.status evt.n then
+        Monitor.Exit evt
         add_to_current cd try_launch
       else
         evt.wa.Add self;
@@ -669,7 +670,7 @@ type ThreadRuntime() =
 
 
   member this.mk_clock_domain parent ctrl period =
-    let cd = new SeqClockDomain(parent, None, period) in
+    let cd = new SeqClockDomain(parent, ctrl, period) in
     cd.cd_top <- new ThreadControlTree (Clock_domain cd);
     cd.cd_top.last_activation <- save_clock_state cd;
     cd
