@@ -984,7 +984,8 @@ let rec occur_check level index ck =
           carrier_occur_check level index act_car;
           effect_row_occur_check level index eff;
           react_occur_check level index r
-      | Clock_forall sch -> (*TODO*) ()
+      | Clock_forall { cs_desc = ck1 } ->
+          occur_check level index ck1
   in
   (*Printf.eprintf "Occur_check : level:%d   index:%a   ck:%a\n"  level  Clocks_printer.output index  Clocks_printer.output ck;*)
   check ck
@@ -1328,10 +1329,14 @@ let rec unify expected_ck actual_ck =
   else
     let expected_ck = clock_repr expected_ck in
     let actual_ck = clock_repr actual_ck in
-   (*Printf.eprintf "   After repr:'%a' and %a\n" Clocks_printer.output expected_ck  Clocks_printer.output actual_ck;*)
+    (*Printf.eprintf "   After repr:'%a' and %a\n" Clocks_printer.output expected_ck  Clocks_printer.output actual_ck; *)
     if expected_ck == actual_ck then ()
     else
       match expected_ck.desc, actual_ck.desc with
+        | Clock_forall { cs_vars = []; cs_desc = expected_ck }, _ ->
+            unify expected_ck actual_ck
+        | _, Clock_forall { cs_vars = []; cs_desc = actual_ck } ->
+            unify expected_ck actual_ck
         | Clock_var, _ ->
             occur_check expected_ck.level expected_ck.index actual_ck;
             expected_ck.desc <- Clock_link actual_ck
@@ -1355,10 +1360,6 @@ let rec unify expected_ck actual_ck =
             carrier_unify c1 c2;
             effect_row_unify eff1 eff2;
             react_unify r1 r2
-        | Clock_forall { cs_vars = []; cs_desc = expected_ck }, _ ->
-            unify expected_ck actual_ck
-        | _, Clock_forall { cs_vars = []; cs_desc = actual_ck } ->
-            unify expected_ck actual_ck
         | Clock_forall sch1, Clock_forall sch2 ->
             unify_schema sch1 sch2
         | _ ->
