@@ -84,9 +84,11 @@ let current_module = ref ""
 
 (** Prints a global name *)
 let print_global ({ gi = {qual=q; id=n} } as gl) =
-  if gl.gi = Initialization.event_ident then
-    print_string "Interpreter.event"
-  else if gl.gi = Initialization.clock_ident then
+  if gl.gi = Initialization.event_ident then (
+    (match !Compiler_options.translation with
+    | Compiler_options.Lco_fsharp -> print_string "Runtime.REvent"
+    | _ -> print_string "Interpreter.event")
+  ) else if gl.gi = Initialization.clock_ident then
     print_string "Interpreter.clock_expr"
   else if q = pervasives_module then
     (* special case for values imported from the standard library *)
