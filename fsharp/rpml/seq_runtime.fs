@@ -121,15 +121,19 @@ and SeqClockDomain(S:#SeqDataStruct, parent) =
   member this.control_tree = this.cd_top
   member this.clock = this
 
-  interface ClockDomain<clock, SeqControlTree> with
+  interface ClockDomain<SeqControlTree> with
     member this.is_eoi () = this.is_eoi ()
     member this.control_tree = this.control_tree
-    member this.clock = this.clock
+    member this.clock = this.clock :> Clock
+  interface Clock with
+    member this.dummy = ()
+  interface Region with
+    member this.dummy = ()
 
 and clock = SeqClockDomain
 and region = clock
 
-type SClockDomain = ClockDomain<clock, SeqControlTree>
+type SClockDomain = ClockDomain<SeqControlTree>
 
 let unit_value = ()
 
@@ -319,7 +323,7 @@ type SeqEvent<'a, 'b>(S:SeqDataStruct, ck:clock, r, kind, def, combine:'a -> 'b 
       this.clock.cd_current.AddWaitingList this.wa;
       this.clock.cd_current.AddWaitingList this.wp
 
-  interface REvent<'a, 'b, clock> with
+  interface REvent<'a, 'b> with
     member this.status only_at_eoi = this.status only_at_eoi
     member this.value = this.value
     member this.pre_status = this.pre_status
@@ -327,7 +331,7 @@ type SeqEvent<'a, 'b>(S:SeqDataStruct, ck:clock, r, kind, def, combine:'a -> 'b 
     member this.last = this.last
     member this.one () = this.one ()      
     member this._default = this._default
-    member this.clock = this.clock
+    member this.clock = this.clock :> Clock
     member this.emit v = this.emit v
 
 type SeqEventCfg(k) =
@@ -544,13 +548,14 @@ type SeqRuntime(D:#SeqDataStruct) =
   let end_clock_domain new_ctrl f_k x =
       end_ctrl new_ctrl f_k x
 
-  member this.new_evt _ cd r kind _default combine reset k =
+  member this.new_evt _ cd r kind _default combine (reset : Clock option) k =
       let evt = new SeqEvent<_,_>(D, cd, cd, kind, _default, combine) in
       let k =
       (* create a callback to reset the signal at each eoi of the reset *)
         match reset with
         | None -> k
         | Some rck ->
+          let rck = rck :?> SeqClockDomain in
           fun ev _ ->
             let rec reset_evt () =
               Event.reset evt.n;
@@ -559,12 +564,12 @@ type SeqRuntime(D:#SeqDataStruct) =
             add_weoi rck reset_evt;
             k ev ()
       in
-      k (evt :> REvent<'a, 'b, clock>)
+      k (evt :> REvent<'a, 'b>)
   member this.new_evt_global kind _default combine =
       let cd = get_top_clock_domain () in
-      new SeqEvent<_,_>(D, cd, cd, kind, _default, combine) :> REvent<'a, 'b, clock>
+      new SeqEvent<_,_>(D, cd, cd, kind, _default, combine) :> REvent<'a, 'b>
   
-  member this.cfg_present (evt:REvent<'a,'b,clock>) =
+  member this.cfg_present (evt:REvent<'a,'b>) =
       let evt = evt :?> SeqEvent<'a, 'b> in
       new SeqEventCfg (Cevent ((fun eoi -> evt.status eoi), evt.clock, evt.wa, evt.wp)) :> REventCfg
   member this.cfg_or (ev1:REventCfg) (ev2:REventCfg) =
@@ -609,12 +614,12 @@ type SeqRuntime(D:#SeqDataStruct) =
 
  
     (* Control structures *)
-  member this.create_control (kind:control_type<clock>) body f_k (ctrl:SeqControlTree) cd =
+  member this.create_control (kind:control_type) body f_k (ctrl:SeqControlTree) cd =
       let new_ctrl = new SeqControlTree(D, kind) in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       match kind with
         | When ->
-            fun (evt:REvent<'a,'b,clock>) other_cond ->
+            fun (evt:REvent<'a,'b>) other_cond ->
               let evt = evt :?> SeqEvent<'a, 'b> in 
               let rec when_act _ =
                 wake_up_ctrl new_ctrl cd;
@@ -629,7 +634,7 @@ type SeqRuntime(D:#SeqDataStruct) =
                 this.on_next_instant Strong new_ctrl f;
                 f_when ()
         | _ ->
-            fun (evt:REvent<'a,'b,clock>) other_cond ->
+            fun (evt:REvent<'a,'b>) other_cond ->
               let evt = evt :?> SeqEvent<'a, 'b> in 
               new_ctrl.cond <-
                 (fun () -> evt.status true && other_cond evt.value);
@@ -663,8 +668,8 @@ type SeqRuntime(D:#SeqDataStruct) =
       next_instant cd
 
 
-  interface Runtime<clock, SeqControlTree> with        
-    member this.create_control (kind:control_type<clock>) body f_k ctrl cd = 
+  interface Runtime<SeqControlTree> with        
+    member this.create_control (kind:control_type) body f_k ctrl cd = 
       this.create_control kind body f_k ctrl (cd :?> SeqClockDomain)
     member this.create_control_evt_conf kind body f_k ctrl cd = 
       this.create_control_evt_conf kind body f_k ctrl (cd :?> SeqClockDomain) 
@@ -674,14 +679,14 @@ type SeqRuntime(D:#SeqDataStruct) =
     member this.on_current_instant_list cd fl = 
       this.on_current_instant_list (cd :?> SeqClockDomain) fl
     member this.on_next_instant kind ctrl f = this.on_next_instant kind ctrl f 
-    member this.on_eoi (cd:clock) f = 
-      this.on_eoi cd f
+    member this.on_eoi (cd:Clock) f = 
+      this.on_eoi (cd :?> SeqClockDomain) f
 
-    member this.on_event_or_next (evt:REvent<'a,'b,clock>) f_w cd ctrl f_next =
+    member this.on_event_or_next (evt:REvent<'a,'b>) f_w cd ctrl f_next =
       on_event_or_next (evt :?> SeqEvent<'a, 'b>) f_w (cd :?> SeqClockDomain) ctrl f_next
     member this.on_event_cfg_or_next evt_cfg f_w cd ctrl f_next =
       on_event_cfg_or_next (evt_cfg :?> SeqEventCfg) f_w (cd :?> SeqClockDomain) ctrl f_next
-    member this.on_event (evt:REvent<'a,'b,clock>) ctrl cd f =
+    member this.on_event (evt:REvent<'a,'b>) ctrl cd f =
       on_event (evt :?> SeqEvent<'a, 'b>) ctrl cd f
     member this.on_event_cfg evt_cfg ctrl f =
       on_event_cfg (evt_cfg :?> SeqEventCfg) ctrl f
@@ -692,19 +697,19 @@ type SeqRuntime(D:#SeqDataStruct) =
       this.react (cd :?> SeqClockDomain)
     
     member this.init () = this.init ()
-    member this.get_top_clock_domain () = get_top_clock_domain () :> ClockDomain<_,_>
-    member this.top_clock () = top_clock () 
+    member this.get_top_clock_domain () = get_top_clock_domain () :> ClockDomain<_>
+    member this.top_clock () = top_clock () :> Clock
     member this.finalize_top_clock_domain cd = 
       this.finalize_top_clock_domain (cd :?> SeqClockDomain)
 
     member this.new_evt_global kind _default combine = this.new_evt_global kind _default combine
     member this.new_evt cd ck r kind _default combine reset k = 
-      this.new_evt (cd :?> SeqClockDomain) ck r kind _default combine reset k
+      this.new_evt (cd :?> SeqClockDomain) (ck :?> SeqClockDomain) (r :?> SeqClockDomain) kind _default combine reset k
     member this.cfg_present evt = this.cfg_present evt
     member this.cfg_or cfg1 cfg2 = this.cfg_or cfg1 cfg2
     member this.cfg_and cfg1 cfg2 = this.cfg_and cfg1 cfg2
-    member this.region_of_clock cd = cd
+    member this.region_of_clock (cd:Clock) = ((cd :?> SeqClockDomain) :> Region)
 
     member this.new_join_point nb = this.new_join_point nb 
 
-let R = new SeqRuntime(new ListStruct ()) :> Runtime<_,_>
+let R = new SeqRuntime(new ListStruct ()) :> Runtime<_>

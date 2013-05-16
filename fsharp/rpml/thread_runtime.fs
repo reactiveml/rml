@@ -92,10 +92,14 @@ and SeqClockDomain(parent,ctrl:ThreadControlTree option,period:int option) =
   member this.control_tree = this.cd_top
   member this.clock = this
 
-  interface ClockDomain<clock, ThreadControlTree> with
+  interface ClockDomain<ThreadControlTree> with
     member this.is_eoi () = this.is_eoi ()
     member this.control_tree = this.control_tree
-    member this.clock = this.clock
+    member this.clock = this.clock :> Clock
+  interface Clock with
+    member this.dummy = ()
+  interface Region with
+    member this.dummy = ()
     
 and clock = SeqClockDomain
 and region = clock
@@ -108,7 +112,7 @@ let add_to_current (cd:SeqClockDomain) f =
     cd.cd_current.Add f
   Monitor.Exit cd
 
-type SClockDomain = ClockDomain<clock, ThreadControlTree>
+type SClockDomain = ClockDomain<ThreadControlTree>
 
 let tmp = new ThreadLocal<unit Step.t ref> (fun () -> ref (fun () -> ()))  
 type CDBag() =
@@ -317,7 +321,7 @@ type ThreadEvent<'a, 'b>(ck:clock, r, kind, def, combine:'a -> 'b -> 'b) =
     this.clock.cd_current.AddWaitingList this.wp;
     Monitor.Exit this
 
-  interface REvent<'a, 'b, clock> with
+  interface REvent<'a, 'b> with
     member this.status only_at_eoi = this.status only_at_eoi
     member this.value = this.value
     member this.pre_status = this.pre_status
@@ -325,7 +329,7 @@ type ThreadEvent<'a, 'b>(ck:clock, r, kind, def, combine:'a -> 'b -> 'b) =
     member this.last = this.last
     member this.one () = this.one ()      
     member this._default = this._default
-    member this.clock = this.clock
+    member this.clock = this.clock :> Clock
     member this.emit v = this.emit v
 
 type ThreadEventCfg(k) =
@@ -651,12 +655,12 @@ type ThreadRuntime() =
 
   member this.new_evt _ cd r kind _default combine reset k =
       let evt = new ThreadEvent<_,_>(cd, cd, kind, _default, combine) in
-      k (evt :> REvent<'a, 'b, clock>)
+      k (evt :> REvent<'a, 'b>)
   member this.new_evt_global kind _default combine =
       let cd = get_top_clock_domain () in
-      new ThreadEvent<_,_>(cd, cd, kind, _default, combine) :> REvent<'a, 'b, clock>
+      new ThreadEvent<_,_>(cd, cd, kind, _default, combine) :> REvent<'a, 'b>
   
-  member this.cfg_present (evt:REvent<'a,'b,clock>) =
+  member this.cfg_present (evt:REvent<'a,'b>) =
       let evt = evt :?> ThreadEvent<'a, 'b> in
       new ThreadEventCfg (Cevent ((fun eoi -> evt.status eoi), evt.clock, evt.wa, evt.wp)) :> REventCfg
   member this.cfg_or (ev1:REventCfg) (ev2:REventCfg) =
@@ -707,12 +711,12 @@ type ThreadRuntime() =
 
  
     (* Control structures *)
-  member this.create_control (kind:control_type<clock>) body f_k (ctrl:ThreadControlTree) cd =
+  member this.create_control (kind:control_type) body f_k (ctrl:ThreadControlTree) cd =
       let new_ctrl = new ThreadControlTree(kind) in
       let f = body (end_ctrl new_ctrl f_k) new_ctrl in
       match kind with
         | When ->
-            fun (evt:REvent<'a,'b,clock>) other_cond ->
+            fun (evt:REvent<'a,'b>) other_cond ->
               let evt = evt :?> ThreadEvent<'a, 'b> in 
               let rec when_act _ =
                 wake_up_ctrl new_ctrl cd;
@@ -727,7 +731,7 @@ type ThreadRuntime() =
                 this.on_next_instant Strong new_ctrl f;
                 f_when ()
         | _ ->
-            fun (evt:REvent<'a,'b,clock>) other_cond ->
+            fun (evt:REvent<'a,'b>) other_cond ->
               let evt = evt :?> ThreadEvent<'a, 'b> in 
               new_ctrl.cond <-
                 (fun () -> evt.status true && other_cond evt.value);
@@ -758,8 +762,8 @@ type ThreadRuntime() =
   member this.react cd =
       exec_sched cd
 
-  interface Runtime<clock, ThreadControlTree> with        
-    member this.create_control (kind:control_type<clock>) body f_k ctrl (cd:ClockDomain<clock, ThreadControlTree>) = 
+  interface Runtime<ThreadControlTree> with        
+    member this.create_control (kind:control_type) body f_k ctrl (cd:ClockDomain<ThreadControlTree>) = 
       this.create_control kind body f_k ctrl (cd :?> SeqClockDomain)
     member this.create_control_evt_conf kind body f_k ctrl cd = 
       this.create_control_evt_conf kind body f_k ctrl (cd :?> SeqClockDomain) 
@@ -769,14 +773,14 @@ type ThreadRuntime() =
     member this.on_current_instant_list cd fl = 
       this.on_current_instant_list (cd :?> SeqClockDomain) fl
     member this.on_next_instant kind ctrl f = this.on_next_instant kind ctrl f 
-    member this.on_eoi (cd:clock) f = 
-      this.on_eoi cd f
+    member this.on_eoi (cd:Clock) f = 
+      this.on_eoi (cd :?> SeqClockDomain) f
 
-    member this.on_event_or_next (evt:REvent<'a,'b,clock>) f_w cd ctrl f_next =
+    member this.on_event_or_next (evt:REvent<'a,'b>) f_w cd ctrl f_next =
       on_event_or_next (evt :?> ThreadEvent<'a, 'b>) f_w (cd :?> SeqClockDomain) ctrl f_next
     member this.on_event_cfg_or_next evt_cfg f_w cd ctrl f_next =
       on_event_cfg_or_next (evt_cfg :?> ThreadEventCfg) f_w (cd :?> SeqClockDomain) ctrl f_next
-    member this.on_event (evt:REvent<'a,'b,clock>) ctrl cd f =
+    member this.on_event (evt:REvent<'a,'b>) ctrl cd f =
       on_event (evt :?> ThreadEvent<'a, 'b>) ctrl cd f
     member this.on_event_cfg evt_cfg ctrl f =
       on_event_cfg (evt_cfg :?> ThreadEventCfg) ctrl f
@@ -787,20 +791,20 @@ type ThreadRuntime() =
       this.react (cd :?> SeqClockDomain)
     
     member this.init () = this.init ()
-    member this.get_top_clock_domain () = get_top_clock_domain () :> ClockDomain<_,_>
-    member this.top_clock () = top_clock () 
+    member this.get_top_clock_domain () = get_top_clock_domain () :> ClockDomain<_>
+    member this.top_clock () = top_clock () :> Clock
     member this.finalize_top_clock_domain cd = 
       this.finalize_top_clock_domain (cd :?> SeqClockDomain)
 
     member this.new_evt_global kind _default combine = this.new_evt_global kind _default combine
     member this.new_evt cd ck r kind _default combine reset k = 
-      this.new_evt (cd :?> SeqClockDomain) ck r kind _default combine reset k
+      this.new_evt (cd :?> SeqClockDomain) (ck :?> SeqClockDomain) (r :?> SeqClockDomain) kind _default combine reset k
     member this.cfg_present evt = this.cfg_present evt
     member this.cfg_or cfg1 cfg2 = this.cfg_or cfg1 cfg2
     member this.cfg_and cfg1 cfg2 = this.cfg_and cfg1 cfg2
-    member this.region_of_clock cd = cd
+    member this.region_of_clock cd = (cd :?> SeqClockDomain) :> Region
 
     member this.new_join_point nb = this.new_join_point nb 
 
-let R = new ThreadRuntime() :> Runtime<_,_>
+let R = new ThreadRuntime() :> Runtime<_>
 

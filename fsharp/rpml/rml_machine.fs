@@ -33,7 +33,7 @@ let exec_n n react finalize =
   in
   exec n
 
-type Machine<'ck, 'ctrl>(R:Runtime<'ck, 'ctrl>) =
+type Machine<'ctrl>(R:Runtime<'ctrl>) =
     member this.make_react_finalize rml_make p =
       let timer = Stopwatch.StartNew () in
       let result = ref None in
@@ -72,11 +72,11 @@ type Machine<'ck, 'ctrl>(R:Runtime<'ck, 'ctrl>) =
             finalize ();
             exit 2
 
-let LcoSeq = new Lco.Interpreter<_,_>(SeqRuntime.R)
-let SeqMachine = Machine<_,_>(SeqRuntime.R :> Runtime<_,_>)
+let LcoSeq = new Lco.Interpreter<_>(SeqRuntime.R)
+let SeqMachine = Machine<_>(SeqRuntime.R :> Runtime<_>)
 
-let LcoRmlThread = new Lco.Interpreter<_,_>(RmlThreadRuntime.R)
-let RmlThreadMachine = Machine<_,_>(RmlThreadRuntime.R :> Runtime<_,_>)
+let LcoRmlThread = new Lco.Interpreter<_>(RmlThreadRuntime.R)
+let RmlThreadMachine = Machine<_>(RmlThreadRuntime.R :> Runtime<_>)
 
-let LcoThread = new Lco.Interpreter<_,_>(ThreadRuntime.R)
-let ThreadMachine = Machine<_,_>(ThreadRuntime.R :> Runtime<_,_>)
+let LcoThread = new Lco.Interpreter<_>(ThreadRuntime.R)
+let ThreadMachine = Machine<_>(ThreadRuntime.R :> Runtime<_>)

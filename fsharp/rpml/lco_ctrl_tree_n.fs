@@ -9,9 +9,9 @@ let default_combine x y = x :: y
 let default_default = []
 let true_cond _ = true
 
-type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
+type Interpreter<'ctrl>(R:Runtime<'ctrl>) =
 
-    let eval_clock_expr (current_cd:#ClockDomain<_,_>) ce = match ce with
+    let eval_clock_expr (current_cd:ClockDomain<_>) ce = match ce with
       | CkLocal -> current_cd.clock
       | CkTop -> R.top_clock ()
       | CkExpr e -> e
@@ -34,13 +34,13 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
     let on_event_cfg_at_eoi evt_cfg ctrl f = ()
 
     (* ------------------------------------------------------------------------ *)
-    member this.rml_pre_status (evt:#REvent<_, _, _>) = evt.pre_status
+    member this.rml_pre_status (evt:#REvent<_, _>) = evt.pre_status
 
-    member this.rml_pre_value (evt:#REvent<_, _, _>) = evt.pre_value
+    member this.rml_pre_value (evt:#REvent<_, _>) = evt.pre_value
 
-    member this.rml_last (evt:#REvent<_, _, _>) = evt.last
+    member this.rml_last (evt:#REvent<_, _>) = evt.last
 
-    member this.rml_default (evt:#REvent<_, _, _>) = evt._default
+    member this.rml_default (evt:#REvent<_, _>) = evt._default
 
     (* ------------------------------------------------------------------------ *)
 
@@ -66,7 +66,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
     (* nothing                            *)
     (**************************************)
     member this.rml_nothing =
-      fun (f_k:unit Step.t) (ctrl:'ctrl) (jp: Join option) (cd:ClockDomain<'ck,'ctrl>) () ->
+      fun (f_k:unit Step.t) (ctrl:'ctrl) (jp: Join option) (cd:ClockDomain<'ctrl>) () ->
         f_k unit_value
 
     (**************************************)
@@ -113,7 +113,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
     (**************************************)
     (* emit                               *)
     (**************************************)
-    member this.rml_emit_val' (evt:REvent<_,_,_>) e =
+    member this.rml_emit_val' (evt:REvent<_,_>) e =
       fun f_k ctrl jp cd _ ->
         evt.emit (e());
         f_k unit_value
@@ -126,7 +126,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
     member this.rml_emit expr_evt = this.rml_emit_val expr_evt (fun() -> ())
     member this.rml_emit' evt = this.rml_emit_val' evt (fun() -> ())
 
-    member this.rml_expr_emit_val (evt:REvent<_,_,_>) v =
+    member this.rml_expr_emit_val (evt:REvent<_,_>) v =
       evt.emit v
 
     member this.rml_expr_emit evt =
@@ -156,7 +156,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
     (**************************************)
     (* get                                *)
     (**************************************)
-    member this.rml_get' (evt:REvent<_,_,_>) p =
+    member this.rml_get' (evt:REvent<_,_>) p =
       fun f_k ctrl jp cd _ ->
         let f_get _ =
           let x = if evt.status false then evt.value else evt._default in
@@ -174,7 +174,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
     (**************************************)
 
 
-    member this.rml_await_immediate_one' (evt:REvent<_,_,_>) p =
+    member this.rml_await_immediate_one' (evt:REvent<_,_>) p =
       fun f_k ctrl jp cd _ ->
         let f _ =
           let x = evt.one () in
@@ -191,7 +191,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
     (* await_all_match                    *)
     (**************************************)
 
-    member this.rml_await_all_match' (evt:REvent<_,_,_>) matching p =
+    member this.rml_await_all_match' (evt:REvent<_,_>) matching p =
        fun f_k ctrl jp cd _ ->
          let await_eoi _ =
            let v = evt.value in
@@ -229,7 +229,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
         let evt = expr_evt () in
         this.rml_await_all_match' evt (fun _ -> true) p f_k ctrl jp cd unit_value
 
-    member this.rml_await_one' (evt:REvent<_,_,_>) p =
+    member this.rml_await_one' (evt:REvent<_,_>) p =
        fun f_k ctrl jp cd _ ->
          let await_eoi _ =
            let v = evt.one () in
@@ -618,7 +618,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
 
     member this.rml_until_handler_local expr_evt matching_opt p p_handler =
       fun f_k ctrl jp cd ->
-        let evt = ref (Obj.magic() : REvent<_,_,_>) in
+        let evt = ref (Obj.magic() : REvent<_,_>) in
         let handler _ =
           let x = (!evt).value in
           p_handler x f_k ctrl jp cd
@@ -634,7 +634,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
           evt := expr_evt ();
           f !evt cond ()
 
-    member this.rml_until_handler_local' (evt:REvent<_,_,_>) matching_opt p p_handler =
+    member this.rml_until_handler_local' (evt:REvent<_,_>) matching_opt p p_handler =
       fun f_k ctrl jp cd ->
         let handler _ =
           let x = evt.value in
@@ -725,14 +725,14 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
         R.new_clock_domain cd ctrl
           (fun cd ctrl f_k -> p (CkExpr cd.clock) f_k ctrl None cd) sch period f_k
 
-    member this.rml_top_clock = (CkTop:'ck clock)
-    member this.rml_base_clock = (CkLocal:'ck clock)
+    member this.rml_top_clock = (CkTop:Clock clock)
+    member this.rml_base_clock = (CkLocal:Clock clock)
 
     (**************************************)
     (* rml_make                           *)
     (**************************************)
 
-    member this.rml_make (cd:#ClockDomain<_,_>) result p =
+    member this.rml_make (cd:#ClockDomain<_>) result p =
      (* Function to create the last continuation of a toplevel process *)
       let jp, join_end =
         let term_cpt = R.new_join_point 0 in
@@ -746,7 +746,7 @@ type Interpreter<'ck,'ctrl>(R:Runtime<'ck, 'ctrl>) =
       in
       p () (join_end()) cd.control_tree jp cd
 
-    member this.rml_make_n (cd:#ClockDomain<_,_>) result pl =
+    member this.rml_make_n (cd:#ClockDomain<_>) result pl =
       let jp, join_end =
         let term_cpt = R.new_join_point 0 in
         Some term_cpt,
