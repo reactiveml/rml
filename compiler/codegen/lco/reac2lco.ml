@@ -29,6 +29,7 @@ open Asttypes
 open Reac
 open Lco_ast
 open Global
+open Global_ident
 open Misc
 
 
@@ -83,6 +84,14 @@ let make_unit () =
 
 let make_nothing () =
   make_proc Coproc_nothing Location.none
+
+let make_constr q s e =
+  make_expr
+    (Coexpr_construct
+       (Global.only_ident { qual = q;
+                            id = Ident.create Ident.gen_constr s Ident.Constr },
+       e))
+    Location.none
 
 (* Translation of type expressions *)
 let rec translate_te typ =
@@ -678,6 +687,9 @@ and translate_proc_let =
                    :: expr_list)
                  (Array.to_list id_array) patt_expr_list [])
           in
+          let raise_global =
+            Modules.find_value_desc (Initialization.pervasives_val "raise")
+          in
           let let_match =
             Coproc_def
               ((make_patt
@@ -729,10 +741,10 @@ and translate_proc_let =
                                 id_array []))
                           Location.none);
                        (make_patt (Copatt_any) Location.none,
-                        make_expr (Coexpr_assert
-                                     (make_expr (Coexpr_constant
-                                                   (Const_bool false))
-                                        Location.none))
+                        make_expr (Coexpr_apply
+                                     (make_expr (Coexpr_global raise_global)
+                                         Location.none,
+                                     [make_constr "Types" "RML" None]))
                           Location.none)]))
                   Location.none),
                translate_proc proc)
