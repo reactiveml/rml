@@ -8,13 +8,13 @@ open Runtime
 
 let ensure b = if not b then raise Types.RML
 
-type JoinThread(nb) =
-  let j = ref nb
+type JoinRef(nb) =
+  let mutable j = nb
   interface Join with
     member this.incr nb =
-      ignore (Interlocked.Add (j, nb))
+      j <- j + nb
     member this.decr () =
-      (Interlocked.Decrement j) = 0
+      j <- j - 1; j = 0  
 
 type ThreadNext() =
   inherit ConcurrentStack<unit Step.t>()
@@ -48,6 +48,8 @@ type SeqCurrent() =
   member this.Take () = match c with
       | f :: l -> c <- l; Some f
       | [] -> None   
+  member this.IsEmpty with get () =
+    match c with [] -> true | _ -> false
 
 type ThreadControlTree(kind, cond) =
   member val alive = true with get, set
@@ -104,13 +106,26 @@ and SeqClockDomain(parent,ctrl:ThreadControlTree option,period:int option) =
 and clock = SeqClockDomain
 and region = clock
 
+let local_cd = new ThreadLocal<SeqClockDomain>()
+
 let add_to_current (cd:SeqClockDomain) f =
-  Monitor.Enter cd
-  if cd.cd_sleeping then
-    cd.cd_current_other.Add f
-  else
+  if LanguagePrimitives.PhysicalEquality cd local_cd.Value then
     cd.cd_current.Add f
-  Monitor.Exit cd
+  else
+    cd.cd_current_other.Add f
+
+let add_to_current_list (cd:SeqClockDomain) fl =
+  if LanguagePrimitives.PhysicalEquality cd local_cd.Value then
+    cd.cd_current.AddList fl
+  else
+    List.iter cd.cd_current_other.Add fl
+
+let add_wl_to_current (cd:SeqClockDomain) (w:ThreadWaitingList) =
+  if LanguagePrimitives.PhysicalEquality cd local_cd.Value then
+    cd.cd_current.AddWaitingList w
+  else
+    for p in w do cd.cd_current_other.Add p done
+    w.Clear ()
 
 type SClockDomain = ClockDomain<ThreadControlTree>
 
@@ -315,11 +330,11 @@ type ThreadEvent<'a, 'b>(ck:clock, r, kind, def, combine:'a -> 'b -> 'b) =
   member this.one () = Event.one this.n
         
   member this.emit v =
-    Monitor.Enter this;
+    Monitor.Enter this.n
     Event.emit this.n v;
-    this.clock.cd_current.AddWaitingList this.wa;
-    this.clock.cd_current.AddWaitingList this.wp;
-    Monitor.Exit this
+    add_wl_to_current this.clock this.wa;
+    add_wl_to_current this.clock this.wp;
+    Monitor.Exit this.n
 
   interface REvent<'a, 'b> with
     member this.status only_at_eoi = this.status only_at_eoi
@@ -370,13 +385,13 @@ type ThreadRuntime() =
           (* signal activated *)
           add_to_current cd f_w 
       in
-      Monitor.Enter evt;
+      Monitor.Enter evt.n;
       if Event.status evt.n then
-        Monitor.Exit evt; 
+        Monitor.Exit evt.n; 
         f_w ()
       else
         evt.wp.Add act;
-        Monitor.Exit evt;
+        Monitor.Exit evt.n;
         add_weoi_waiting_list cd evt.wp        
 
     (** [on_event_cfg_or_next evt_cfg f_w v_w cd ctrl f_next] executes 'f_w ()' if
@@ -450,13 +465,13 @@ type ThreadRuntime() =
           (* ctrl was activated, signal is present*)
           (is_fired := true; add_to_current cd try_launch)
       in
-      Monitor.Enter evt;
+      Monitor.Enter evt.n;
       if Event.status evt.n then
-        Monitor.Exit evt
+        Monitor.Exit evt.n
         add_to_current cd try_launch
       else
         evt.wa.Add self;
-        Monitor.Exit evt
+        Monitor.Exit evt.n
 
     (** [on_event_cfg evt_cfg ctrl f ()] executes 'f ()' if evt_cfg is true and
         ctrl is active in the same step.
@@ -487,11 +502,14 @@ type ThreadRuntime() =
 *)
 
   let rec schedule (cd:SeqClockDomain) =
+      local_cd.Value <- cd
       match cd.cd_current.Take () with
       | Some f -> f (); schedule cd
       | None -> ()
 
   let eoi (cd:SeqClockDomain) =
+      assert (not cd.cd_sleeping)
+      assert cd.cd_current_other.IsEmpty
       cd.cd_eoi := true;
       eoi_control cd.cd_top;
       wake_up cd cd.cd_weoi;
@@ -499,11 +517,15 @@ type ThreadRuntime() =
       schedule cd
 
   let next_instant (cd:SeqClockDomain) =
+      assert (not cd.cd_sleeping)
+      assert cd.cd_current_other.IsEmpty
       Event.next cd.cd_clock;
+      (* next instant of child clock domains *)
+      wake_up cd cd.cd_next_instant;
+      schedule cd;
       (* next instant of this clock domain *)
       eval_control_and_next_to_current cd;
       cd.cd_eoi := false
-      cd.cd_sleeping <- false
 
   let rec has_next (ctrl:ThreadControlTree) =
       if not ctrl.alive then
@@ -529,14 +551,22 @@ type ThreadRuntime() =
     schedule_clock_domain new_cd ()
 
   and schedule_clock_domain (new_cd:SeqClockDomain) () =
-    schedule new_cd;
+    schedule new_cd
     Monitor.Enter new_cd
-    if !new_cd.cd_children = 0 then
+    _schedule_clock_domain new_cd
+ 
+  and _schedule_clock_domain new_cd =
+    if not new_cd.cd_current_other.IsEmpty then
+      new_cd.cd_current.AddNext new_cd.cd_current_other
+      Monitor.Exit new_cd
+      schedule_clock_domain new_cd ()
+    elif !new_cd.cd_children = 0 then
       Monitor.Exit new_cd
       end_step_clock_domain new_cd ()
     else
       new_cd.cd_sleeping <- true
       Monitor.Exit new_cd
+
 
   and end_step_clock_domain (new_cd:SeqClockDomain) () =
     match new_cd.cd_parent with
@@ -566,16 +596,8 @@ type ThreadRuntime() =
   and wake_up_clock_domain (cd:SeqClockDomain) () =
     Monitor.Enter cd
     if cd.cd_sleeping then
-      if not cd.cd_current_other.IsEmpty then
-        cd.cd_current.AddNext cd.cd_current_other
-        cd.cd_sleeping <- false
-        Monitor.Exit cd
-        schedule_clock_domain cd ()
-      elif !cd.cd_children = 0 then
-        Monitor.Exit cd
-        end_step_clock_domain cd ()
-      else
-        Monitor.Exit cd
+      cd.cd_sleeping <- false
+      _schedule_clock_domain cd
     else
       Monitor.Exit cd
 
@@ -639,7 +661,10 @@ type ThreadRuntime() =
     with | :? ThreadInterruptedException -> ()
 
 
-  let exec_sched cd = 
+  let exec_sched (cd:SClockDomain) =
+      let cd = cd :?> SeqClockDomain in 
+      (*if cd.cd_counter > 10 && cd.cd_current.Length < 5 then
+        raise Types.RML*)
       let ev = 
         if !current_step then 
           (ensure (next_step2.Reset ()); next_step1) 
@@ -670,7 +695,7 @@ type ThreadRuntime() =
 
 
   member this.new_join_point nb = 
-    new JoinThread(nb) :> Join  
+    new JoinRef(nb) :> Join  
 
 
   member this.mk_clock_domain parent ctrl period =
@@ -687,15 +712,16 @@ type ThreadRuntime() =
       | None ->
         (* create top clock domain *)
         let cd = this.mk_clock_domain None None None in
+        local_cd.Value <- cd
         top_clock_ref := Some cd;
         this.thread_list <- Array.init (!Runtime_options.nb_threads-1) (fun _ -> new Thread(ThreadStart(thread_fun)));
         Array.iter (fun (t:Thread) -> t.Start()) this.thread_list
       | Some _ -> () (* init already done *)
 
   member this.on_current_instant (cd:SeqClockDomain) f = 
-    cd.cd_current.Add f
+    add_to_current cd f
   member this.on_current_instant_list (cd:SeqClockDomain) fl = 
-    cd.cd_current.AddList fl
+    add_to_current_list cd fl
   member this.on_next_instant kind (ctrl:ThreadControlTree) f =
       match kind with
         | Strong -> ctrl.next.Add f
