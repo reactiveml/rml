@@ -9,10 +9,15 @@ module Pervasives =
   let (or) = (||)
 
 module Random = 
-  let seed = new Random(0)
-  let self_init () = ()
+  let seed = ref (new Random())
+  let self_init () = seed := new Random ()
+  let init i = seed := new Random(i)
   let float f =
-    seed.NextDouble() * f
+    (!seed).NextDouble() * f
+
+module Array =
+  let make_matrix dimx dimy v =
+    Array.init dimx (fun _ -> Array.make dimy v)
 
 let time f =
   let s = new System.Diagnostics.Stopwatch ()
