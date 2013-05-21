@@ -1,0 +1,121 @@
+open Rmlarg
+
+let e_0 = 10.0
+let e_min = 1.0
+
+let max_power = 0.5
+let on_power = 0.1
+let send_power = 0.4
+let packet_send_time = 3
+
+(* If l = [x0; ...; xn], runs p x0; p x1; ...; p xn *)
+let rec process iter p l = match l with
+| [] -> ()
+| x::l -> run p x; run iter p l
+
+(* Returns [p 0; ...; p n]*)
+let process init p n =
+  let rec process aux i = match i with
+  | i when i = n -> []
+  | _ ->
+      let x = run p i
+      and l = run aux (i+1) in
+      x::l
+  in
+  run aux 0
+
+let process node me neighbors =
+  signal dead in
+  signal energy default e_0 gather (fun x _ -> x) in
+  let process send msg n = emit n msg in
+  let process forward_msg msg =
+    if msg>1 then run iter (send (msg-1)) neighbors
+  in
+  do
+    loop
+      await me(msgs) in run iter forward_msg msgs
+    end
+    ||
+    loop
+      if last energy < e_min
+      then emit dead
+      else emit energy (last energy -. max_power);
+      pause
+    end
+  until dead done
+
+let process node_with_energy me neighbors =
+  domain us by 1000 do
+    signal dead in
+    signal energy default e_0 gather (fun x _ -> x) in
+    signal power default on_power gather (+.) in
+    signal radio_in default (0, me) gather (fun x _ -> x) in
+    signal radio_ack in
+    (* software *)
+    let process send msg n =
+      emit radio_in (msg, n); await immediate radio_ack
+    in
+    let process forward_msg msg =
+      if msg>1 then run iter (send (msg-1)) neighbors
+    in
+    do
+      loop
+        await me(msgs) in
+        run iter forward_msg msgs
+      end
+      ||
+      (* radio *)
+      loop
+        await radio_in (msg, n) in
+        for i=1 to packet_send_time do
+          emit power send_power; pause us
+        done;
+        emit n msg;
+        emit radio_ack
+      end
+      ||
+      (* power *)
+      loop
+        if last energy < e_min
+        then emit dead
+        else emit energy (last energy -. (last power /. 1000.0));
+        pause us
+       end
+    until dead done
+  done
+
+let nb_agents = ref 3
+let set_nb_agents i = nb_agents := i
+let init_ttl = ref 5
+let set_init_ttl i = init_ttl := i
+let msg_freq = ref 10000
+let set_msg_freq i = msg_freq := i
+let no_simulate_power = ref false
+
+let args =
+  ["-nb-agents", Int set_nb_agents, "Number of agents";
+   "-ttl", Int set_init_ttl, "TTL of messages";
+   "-msg-period", Int set_msg_freq, "Message period";
+   "-no-power", Set no_simulate_power, "Approximate power consumption"
+ ]
+
+let process main =
+  Rmlarg.parse args ignore "Usage: ";
+  let process mk_signal i = signal s in s in
+  let agents = run init mk_signal !nb_agents in
+  let rec process run_nodes l neighbors = match l with
+  | [] -> ()
+  | n::l ->
+      (if !no_simulate_power then
+        run node n neighbors
+      else
+        run node_with_energy n neighbors)
+      ||
+      run run_nodes l [n]
+  in
+  run run_nodes agents (List.tl agents)
+  ||
+  loop
+    emit (List.hd agents) !init_ttl;
+    for i=1 to !msg_freq do pause done
+  end
