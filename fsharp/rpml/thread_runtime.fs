@@ -109,19 +109,19 @@ and region = clock
 let local_cd = new ThreadLocal<SeqClockDomain>()
 
 let add_to_current (cd:SeqClockDomain) f =
-  if LanguagePrimitives.PhysicalEquality cd local_cd.Value then
+  if LanguagePrimitives.PhysicalEquality cd local_cd.Value || !cd.cd_eoi then
     cd.cd_current.Add f
   else
     cd.cd_current_other.Add f
 
 let add_to_current_list (cd:SeqClockDomain) fl =
-  if LanguagePrimitives.PhysicalEquality cd local_cd.Value then
+  if LanguagePrimitives.PhysicalEquality cd local_cd.Value || !cd.cd_eoi then
     cd.cd_current.AddList fl
   else
     List.iter cd.cd_current_other.Add fl
 
 let add_wl_to_current (cd:SeqClockDomain) (w:ThreadWaitingList) =
-  if LanguagePrimitives.PhysicalEquality cd local_cd.Value then
+  if LanguagePrimitives.PhysicalEquality cd local_cd.Value || !cd.cd_eoi then
     cd.cd_current.AddWaitingList w
   else
     for p in w do cd.cd_current_other.Add p done
@@ -432,8 +432,7 @@ type ThreadRuntime() =
         ctrl is active in the same step.
         It waits for the next activation of w otherwise,
         or if the call raises Wait_again *)
-  let on_event (evt:ThreadEvent<'a, 'b>) (ctrl:ThreadControlTree) (cd:SClockDomain) f =
-      let cd = cd :?> SeqClockDomain in
+  let on_event (evt:ThreadEvent<'a, 'b>) (ctrl:ThreadControlTree) f =
       let instance = ctrl.instance in
       let rec try_launch () =
         try 
@@ -446,7 +445,7 @@ type ThreadRuntime() =
           if has_been_active ctrl evt.clock then
             (*ctrl is activated, run continuation*)
             Monitor.Exit ctrl;
-            add_to_current cd try_launch
+            add_to_current evt.clock try_launch
           else ((*ctrl is not active, wait end of instant*)
             let is_fired = ref false in
             ctrl.next_control.Add (ctrl_await is_fired);
@@ -463,12 +462,12 @@ type ThreadRuntime() =
       and ctrl_await is_fired _ =
         if not !is_fired then
           (* ctrl was activated, signal is present*)
-          (is_fired := true; add_to_current cd try_launch)
+          (is_fired := true; add_to_current evt.clock try_launch)
       in
       Monitor.Enter evt.n;
       if Event.status evt.n then
         Monitor.Exit evt.n
-        add_to_current cd try_launch
+        add_to_current evt.clock try_launch
       else
         evt.wa.Add self;
         Monitor.Exit evt.n
@@ -508,7 +507,6 @@ type ThreadRuntime() =
       | None -> ()
 
   let eoi (cd:SeqClockDomain) =
-      assert (not cd.cd_sleeping)
       assert cd.cd_current_other.IsEmpty
       cd.cd_eoi := true;
       eoi_control cd.cd_top;
@@ -517,8 +515,6 @@ type ThreadRuntime() =
       schedule cd
 
   let next_instant (cd:SeqClockDomain) =
-      assert (not cd.cd_sleeping)
-      assert cd.cd_current_other.IsEmpty
       Event.next cd.cd_clock;
       (* next instant of child clock domains *)
       wake_up cd cd.cd_next_instant;
@@ -574,6 +570,7 @@ type ThreadRuntime() =
         eoi new_cd;
         next_instant new_cd
     | Some cd ->
+      if new_cd.cd_top.alive then
         eoi new_cd;
         let period_finished = 
           match new_cd.cd_period with
@@ -663,8 +660,6 @@ type ThreadRuntime() =
 
   let exec_sched (cd:SClockDomain) =
       let cd = cd :?> SeqClockDomain in 
-      (*if cd.cd_counter > 10 && cd.cd_current.Length < 5 then
-        raise Types.RML*)
       let ev = 
         if !current_step then 
           (ensure (next_step2.Reset ()); next_step1) 
@@ -748,7 +743,7 @@ type ThreadRuntime() =
                 wake_up_ctrl new_ctrl cd;
                 this.on_next_instant Strong ctrl f_when
               and f_when _ =
-                on_event evt ctrl cd when_act
+                on_event evt ctrl when_act
               in
               new_ctrl.cond <- (fun () -> evt.status false);
               fun () ->
@@ -806,8 +801,8 @@ type ThreadRuntime() =
       on_event_or_next (evt :?> ThreadEvent<'a, 'b>) f_w (cd :?> SeqClockDomain) ctrl f_next
     member this.on_event_cfg_or_next evt_cfg f_w cd ctrl f_next =
       on_event_cfg_or_next (evt_cfg :?> ThreadEventCfg) f_w (cd :?> SeqClockDomain) ctrl f_next
-    member this.on_event (evt:REvent<'a,'b>) ctrl cd f =
-      on_event (evt :?> ThreadEvent<'a, 'b>) ctrl cd f
+    member this.on_event (evt:REvent<'a,'b>) ctrl f =
+      on_event (evt :?> ThreadEvent<'a, 'b>) ctrl f
     member this.on_event_cfg evt_cfg ctrl f =
       on_event_cfg (evt_cfg :?> ThreadEventCfg) ctrl f
     

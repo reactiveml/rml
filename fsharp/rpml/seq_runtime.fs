@@ -449,7 +449,7 @@ type SeqRuntime(D:#SeqDataStruct) =
       in
       w.Add self
       
-  let on_event (evt:SeqEvent<'a, 'b>) ctrl cd f =
+  let on_event (evt:SeqEvent<'a, 'b>) ctrl f =
       if Event.status evt.n then
         (try
            f ()
@@ -528,20 +528,21 @@ type SeqRuntime(D:#SeqDataStruct) =
       let rec f_cd () =
         new_cd.cd_counter <- new_cd.cd_counter + 1;
         schedule new_cd;
-        eoi new_cd;
-        let period_finished = match period with
-          | None -> false
-          | Some p -> new_cd.cd_counter >= p
-        in
-        if period_finished || macro_step_done new_cd then (
-          new_cd.cd_counter <- 0;
-          cd.cd_next_instant.Add (fun () -> next_instant new_cd);
-          ctrl.next_control.Add f_cd;
-        ) else (
-          next_instant new_cd;
-          (* execute again in the same step but yield for now*)
-          cd.cd_current.Add f_cd
-        )
+        if new_cd.cd_top.alive then
+          eoi new_cd;
+          let period_finished = match period with
+            | None -> false
+            | Some p -> new_cd.cd_counter >= p
+          in
+          if period_finished || macro_step_done new_cd then (
+            new_cd.cd_counter <- 0;
+            cd.cd_next_instant.Add (fun () -> next_instant new_cd);
+            ctrl.next_control.Add f_cd;
+          ) else (
+            next_instant new_cd;
+            (* execute again in the same step but yield for now*)
+            cd.cd_current.Add f_cd
+          )
       in
       f_cd
 
@@ -625,7 +626,7 @@ type SeqRuntime(D:#SeqDataStruct) =
                 wake_up_ctrl new_ctrl cd;
                 this.on_next_instant Strong ctrl f_when
               and f_when _ =
-                on_event evt ctrl cd when_act
+                on_event evt ctrl when_act
               in
               new_ctrl.cond <- (fun () -> evt.status false);
               fun () ->
@@ -686,8 +687,8 @@ type SeqRuntime(D:#SeqDataStruct) =
       on_event_or_next (evt :?> SeqEvent<'a, 'b>) f_w (cd :?> SeqClockDomain) ctrl f_next
     member this.on_event_cfg_or_next evt_cfg f_w cd ctrl f_next =
       on_event_cfg_or_next (evt_cfg :?> SeqEventCfg) f_w (cd :?> SeqClockDomain) ctrl f_next
-    member this.on_event (evt:REvent<'a,'b>) ctrl cd f =
-      on_event (evt :?> SeqEvent<'a, 'b>) ctrl cd f
+    member this.on_event (evt:REvent<'a,'b>) ctrl f =
+      on_event (evt :?> SeqEvent<'a, 'b>) ctrl f
     member this.on_event_cfg evt_cfg ctrl f =
       on_event_cfg (evt_cfg :?> SeqEventCfg) ctrl f
     

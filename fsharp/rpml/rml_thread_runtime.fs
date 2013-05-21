@@ -391,7 +391,7 @@ type ThreadRuntime() =
         ctrl is active in the same step.
         It waits for the next activation of w otherwise,
         or if the call raises Wait_again *)
-  let on_event (evt:ThreadEvent<'a, 'b>) (ctrl:ThreadControlTree) _ f =
+  let on_event (evt:ThreadEvent<'a, 'b>) (ctrl:ThreadControlTree) f =
       let instance = ctrl.instance in
       let rec try_launch () =
         try 
@@ -606,7 +606,7 @@ type ThreadRuntime() =
                 wake_up_ctrl new_ctrl cd;
                 this.on_next_instant Strong ctrl f_when
               and f_when _ =
-                on_event evt ctrl cd when_act
+                on_event evt ctrl when_act
               in
               new_ctrl.cond <- (fun () -> evt.status false);
               fun () ->
@@ -661,8 +661,8 @@ type ThreadRuntime() =
       on_event_or_next (evt :?> ThreadEvent<'a, 'b>) f_w (cd :?> SeqClockDomain) ctrl f_next
     member this.on_event_cfg_or_next evt_cfg f_w cd ctrl f_next =
       on_event_cfg_or_next (evt_cfg :?> ThreadEventCfg) f_w (cd :?> SeqClockDomain) ctrl f_next
-    member this.on_event (evt:REvent<'a,'b>) ctrl cd f =
-      on_event (evt :?> ThreadEvent<'a, 'b>) ctrl cd f
+    member this.on_event (evt:REvent<'a,'b>) ctrl f =
+      on_event (evt :?> ThreadEvent<'a, 'b>) ctrl f
     member this.on_event_cfg evt_cfg ctrl f =
       on_event_cfg (evt_cfg :?> ThreadEventCfg) ctrl f
     
