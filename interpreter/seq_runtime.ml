@@ -593,19 +593,21 @@ struct
       let rec f_cd () =
         new_cd.cd_counter <- new_cd.cd_counter + 1;
         schedule new_cd;
-        eoi new_cd;
-        let period_finished = match period with
-          | None -> false
-          | Some p -> new_cd.cd_counter >= p
-        in
-        if period_finished || macro_step_done new_cd then (
-          new_cd.cd_counter <- 0;
-          D.add_waiting next_instant_clock_domain cd.cd_next_instant;
-          D.add_next f_cd ctrl.next_control;
-        ) else (
-          next_instant new_cd;
-          (* execute again in the same step but yield for now*)
-          D.add_current f_cd cd.cd_current
+        if new_cd.cd_top.alive then (
+          eoi new_cd;
+          let period_finished = match period with
+            | None -> false
+            | Some p -> new_cd.cd_counter >= p
+          in
+          if period_finished || macro_step_done new_cd then (
+            new_cd.cd_counter <- 0;
+            D.add_waiting next_instant_clock_domain cd.cd_next_instant;
+            D.add_next f_cd ctrl.next_control;
+          ) else (
+            next_instant new_cd;
+            (* execute again in the same step but yield for now*)
+            D.add_current f_cd cd.cd_current
+          )
         )
       in
       f_cd
