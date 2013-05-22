@@ -69,7 +69,12 @@ let rec translate_te env typ =
         Tproduct (List.map (translate_te env) typ_list)
 
     | Ptype_constr (cstr, pe_list) ->
-        let gcstr = Modules.pfind_type_desc cstr.pident_id in
+        let gcstr =
+          try
+            Modules.pfind_type_desc cstr.pident_id
+          with
+            | Modules.Desc_not_found -> unbound_type_err cstr.pident_id typ.pte_loc
+        in
         Tconstr (gcstr, List.map (translate_pe env) pe_list)
 
     | Ptype_process (t,k,act,eer) ->
