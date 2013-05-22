@@ -93,6 +93,10 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
   else if q = pervasives_module then
     (* special case for values imported from the standard library *)
     print_pervasives (Ident.name n)
+  else if q = rml_pervasives_module then
+    (match Ident.name n with
+      | "clock_of" -> print_string "Interpreter.rml_clock"
+      | n -> print_name n)
   else if q = !current_module then
     print_name (Ident.name n)
   else

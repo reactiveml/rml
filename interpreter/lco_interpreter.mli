@@ -53,7 +53,7 @@ module type S =
     val rml_pre_value: ('a, 'b) R.event -> 'b
     val rml_last: ('a, 'b) R.event -> 'b
     val rml_default: ('a, 'b) R.event -> 'b
-    val rml_last_mem : 'a memory -> 'a
+    val rml_clock : ('a, 'b) R.event -> clock_expr
 
     val rml_expr_emit: (unit, 'b) R.event -> unit
     val rml_expr_emit_val: ('a, 'b) R.event -> 'a -> unit

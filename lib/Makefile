@@ -2,7 +2,7 @@ include ../config
 
 STDLIB_INTERFACE=pervasives.rmli random.rmli list.rmli rmltest.mli \
 		 rmlarg.rmli graphics.rmli unix.rmli array.rmli \
-		 lexing.rmli string.rmli sys.rmli
+		 lexing.rmli string.rmli sys.rmli rml_pervasives.rmli
 STDLIB_OBJ_TMP=$(STDLIB_INTERFACE:%.rmli=%.rzi)
 STDLIB_OBJ=$(STDLIB_OBJ_TMP:%.mli=%.rzi)
 
@@ -16,10 +16,14 @@ STDLIB_OBJ=$(STDLIB_OBJ_TMP:%.mli=%.rzi)
 .PHONY: all install clean
 
 all: $(STDLIB_OBJ)
+	(cd row; $(MAKE))
 
 install: all
 	$(INSTALL) -d $(INSTALL_LIBDIR)
 	$(INSTALL) $(STDLIB_OBJ) $(STDLIB_INTERFACE) $(INSTALL_LIBDIR)
+	(cd row; $(MAKE) install)
 
 clean:
 	rm -f *.rzi
+	(cd row; $(MAKE) clean)
+

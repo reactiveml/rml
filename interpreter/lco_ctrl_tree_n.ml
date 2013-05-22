@@ -93,6 +93,8 @@ module Rml_interpreter =
 
     let rml_last_mem evt = R.Event.last evt
 
+    let rml_clock evt = CkExpr (R.Event.clock evt)
+
 (* ------------------------------------------------------------------------ *)
 
     let default_combine x y = x :: y

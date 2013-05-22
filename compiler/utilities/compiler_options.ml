@@ -21,6 +21,7 @@ include Version
 
 (* standard module *)
 let pervasives_module = "Pervasives"
+let rml_pervasives_module = "Rml_pervasives"
 let interpreter_module = ref "Rml_machine"
 let interpreter_impl = ref "Lco_ctrl_tree_seq_interpreter"
 let machine_module = ref "Rml_machine.Machine"
@@ -118,7 +119,7 @@ let locate_stdlib () =
 
 (* standard pervasives module *)
 let set_init_pervasives () =
-  default_used_modules := [pervasives_module]
+  default_used_modules := [pervasives_module; rml_pervasives_module]
 
 let set_no_pervasives () =
   default_used_modules := []

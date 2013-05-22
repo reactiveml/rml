@@ -42,6 +42,8 @@ type Interpreter<'ctrl>(R:Runtime<'ctrl>) =
 
     member this.rml_default (evt:#REvent<_, _>) = evt._default
 
+    member this.rml_clock (evt:#REvent<_, _>) = CkExpr evt.clock
+
     (* ------------------------------------------------------------------------ *)
 
     member this.rml_global_signal_combine k _default combine =

@@ -1,29 +1,3 @@
-(* Standard ReactiveML *)
+(* ReactiveML standard library *)
 
-val pre_status : ('a, 'b) event{'ck|} =>{'ck} bool
-
-val pre_value : ('a, 'b) event{'ck|} =>{'ck} 'b
-
-val last_value : ('a, 'b) event{'ck|} =>{'ck} 'b
-
-val default_value : ('a, 'b) event{'ck|} =>{'ck} 'b
-
-val emit_ : ('a, 'b) event{'ck|} =>{'ck} unit
-
-val emit_value : ('a, 'b) event{'ck|} -> 'a =>{'ck} unit
-
-(* Clocks *)
-
-(*val pauseclock : {'ck} =>{'ck} unit*)
-
-val signal_clock : ('a, 'b) event{'ck|} -> {'ck}
-
-(* Memories *)
-
-val last_mem : 'a memory{'ck|} =>{'ck} 'a
-
-val update_mem : 'a memory{'ck|} -> ('a -> 'a) =>{'ck} unit
-
-val set_mem : 'a memory{'ck|} -> 'a =>{'ck} unit
-
-val memory_clock : 'a memory{'ck|} -> {'ck}
+val clock_of : ('a, 'b) event{'ck|} -> ['ck]
