@@ -1,0 +1,3 @@
+(* ReactiveML standard library *)
+
+val clock_of : ('a, 'b) event{|'ck|} -> ['ck]

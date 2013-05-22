@@ -101,12 +101,21 @@ let add_to_compile file =
   to_compile := file :: !to_compile
 
 (* standard libraries and includes *)
+let stdlib = ref None
 let set_init_stdlib () =
-  let standard_lib = try Sys.getenv "RMLLIB" with Not_found -> standard_lib in
-  load_path := [standard_lib]
+  let standard_lib =
+    match !stdlib with
+      | None ->
+        (try
+           Sys.getenv "RMLLIB"
+         with
+           | Not_found -> if !use_row_clocking then standard_lib^"/row" else standard_lib)
+      | Some stdlib -> stdlib
+  in
+  load_path := !load_path@[standard_lib]
 
 let set_stdlib p =
-  load_path := [p]
+  stdlib := Some p
 and add_include d =
   load_path := d :: !load_path;;
 

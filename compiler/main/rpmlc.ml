@@ -58,9 +58,9 @@ let compile file =
 
 let main () =
   try
-    set_init_stdlib ();
     set_init_pervasives ();
     parse_cli ();
+    set_init_stdlib ();
     List.iter compile !to_compile
   with x ->
     Errors.report_error Format.err_formatter x;

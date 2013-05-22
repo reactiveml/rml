@@ -1,0 +1,25 @@
+include ../../config
+
+STDLIB_INTERFACE=pervasives.rmli random.rmli list.rmli rmltest.mli \
+		 rmlarg.rmli graphics.rmli unix.rmli array.rmli \
+		 lexing.rmli string.rmli sys.rmli rml_pervasives.rmli
+STDLIB_OBJ_TMP=$(STDLIB_INTERFACE:%.rmli=%.rzi)
+STDLIB_OBJ=$(STDLIB_OBJ_TMP:%.mli=%.rzi)
+
+.SUFFIXES: .rmli .mli .rzi
+
+.rmli.rzi:
+	../../compiler/$(COMPILER).$(TARGET) -c -row-clocking $<
+.mli.rzi:
+	../../compiler/$(COMPILER).$(TARGET) -c -row-clocking $<
+
+.PHONY: all install clean
+
+all: $(STDLIB_OBJ)
+
+install: all
+	$(INSTALL) -d $(INSTALL_LIBDIR)
+	$(INSTALL) $(STDLIB_OBJ) $(STDLIB_INTERFACE) $(INSTALL_LIBDIR)
+
+clean:
+	rm -f *.rzi
