@@ -627,7 +627,7 @@ struct
         if p.alive then
           match p.kind with
             | Clock_domain ck -> true
-            | Kill f_k ->
+            | Kill (_, f_k) ->
               if p.cond_v
               then
                 (D.add_next f_k pere.next;
@@ -638,7 +638,7 @@ struct
                  if active then next_to_current cd p
                  else next_to_father pere p;
                  true)
-          | Kill_handler handler ->
+          | Kill_handler (_, handler) ->
               if p.cond_v
               then
                 false
@@ -779,7 +779,7 @@ struct
             | _ ->
                 ctrl.cond_v <- ctrl.cond ();
                 (match ctrl.kind with
-                  | Kill_handler handler ->
+                  | Kill_handler (_, handler) ->
                       if ctrl.cond_v then (
                         D.add_next (handler()) pere.next;
                         set_kill ctrl

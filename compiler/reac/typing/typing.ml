@@ -170,9 +170,9 @@ let rec is_nonexpansive expr =
       is_nonexpansive_conf e
   | Eawait_val (_, _, s, _, e) ->
       is_nonexpansive s && is_nonexpansive e
-  | Euntil (c, e, None) ->
+  | Euntil (c, e, None, _) ->
       is_nonexpansive_conf c && is_nonexpansive e
-  | Euntil (c, e, Some (_, e')) ->
+  | Euntil (c, e, Some (_, e'), _) ->
       is_nonexpansive_conf c && is_nonexpansive e && is_nonexpansive e'
   | Ewhen (c, e) ->
       is_nonexpansive_conf c && is_nonexpansive e
@@ -735,7 +735,7 @@ let rec type_of_expression env expr =
           ty_e (process ty { proc_static = None; });
         ty
 
-    | Euntil (s,p,patt_proc_opt) ->
+    | Euntil (s,p,patt_proc_opt, _) ->
         begin match patt_proc_opt with
         | None ->
             type_of_event_config env s;

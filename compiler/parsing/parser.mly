@@ -87,17 +87,17 @@ let mkeer_of_ee ee =
 let mkcer_of_ce ce =
   mkcer (Pcar_row_one ce)
 
-let rec mkexpr_until body sig_patt_expr_opt_list =
+let rec mkexpr_until body sig_patt_expr_opt_list pause_kind =
   match sig_patt_expr_opt_list with
   | [] -> raise Parse_error
   | [(s, patt_expr_opt)] ->
       mkexpr (Pexpr_until (s,
 			   body,
-			   (patt_expr_opt)))
+			   (patt_expr_opt), pause_kind))
   | (s, patt_expr_opt) :: list ->
       mkexpr (Pexpr_until (s,
-			   mkexpr_until body list,
-			   (patt_expr_opt)))
+			   mkexpr_until body list pause_kind,
+			   (patt_expr_opt), pause_kind))
 
 let reloc_patt x = { x with ppatt_loc = symbol_rloc () };;
 let reloc_expr x = { x with pexpr_loc = symbol_rloc () };;
@@ -616,8 +616,8 @@ expr:
       { mkexpr(Pexpr_emit_val($2, $3)) }
   | signal_kind signal_comma_list opt_at_expr opt_default_gather opt_reset IN par_expr
       { mkexpr(Pexpr_signal($1, List.rev $2, $3, $4, $5, $7)) }
-  | DO par_expr UNTIL opt_bar until_cases DONE
-      { mkexpr_until $2 (List.rev $5) }
+  | DO par_expr UNTIL pause_kind opt_bar until_cases DONE
+      { mkexpr_until $2 (List.rev $6) $4 }
   | DO par_expr WHEN simple_expr DONE
       { mkexpr(Pexpr_when($4, $2)) }
   | CONTROL par_expr WITH simple_expr DONE
@@ -663,10 +663,8 @@ expr:
       { mkexpr (Pexpr_newclock (mksimple $2 2, $3, None, $5)) }
   | DOMAIN LIDENT opt_by opt_schedule DO par_expr DONE
       { mkexpr (Pexpr_newclock (mksimple $2 2, $4, $3, $6)) }
-  | PAUSE clock_expr
-      { mkexpr (Pexpr_pause ($2, Strong)) }
-  | WEAK PAUSE clock_expr
-      { mkexpr (Pexpr_pause ($3, Weak)) }
+  | pause_kind PAUSE clock_expr
+      { mkexpr (Pexpr_pause ($3, $1)) }
 ;
 simple_expr:
     val_longident
@@ -766,6 +764,10 @@ simple_expr_list:
 clock_expr:
     /* empty */ { mkexpr Pexpr_base }
   | simple_expr { $1 }
+;
+pause_kind:
+| /*empty*/ { Strong }
+| WEAK { Weak }
 ;
 opt_schedule:
    /* empty */ { None}

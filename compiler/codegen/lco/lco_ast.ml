@@ -98,7 +98,7 @@ and process_desc =
   | Coproc_def_dyn of (pattern * process) * process
   | Coproc_def_and_dyn of (pattern * process) list * process
   | Coproc_run of expression
-  | Coproc_until of event_config * process * (pattern * process) option
+  | Coproc_until of event_config * process * (pattern * process) option * pause_kind
   | Coproc_when of event_config * process
   | Coproc_control of event_config * (pattern * expression) option * process
   | Coproc_get of expression * pattern * process

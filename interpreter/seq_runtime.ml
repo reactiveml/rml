@@ -110,109 +110,6 @@ struct
       new_ctrl.alive <- false;
       f_k x
 
-
-(* calculer le nouvel etat de l'arbre de control *)
-(* et deplacer dans la liste current les processus qui sont dans  *)
-(* les listes next *)
-    let eval_control_and_next_to_current cd =
-      let rec eval pere p active =
-        if p.alive then
-          match p.kind with
-            | Clock_domain _ -> true
-            | Kill f_k ->
-              if p.cond_v
-              then
-                (D.add_next f_k pere.next;
-                 set_kill p;
-                 false)
-              else
-                (p.children <- eval_children p p.children active;
-                 if active then next_to_current cd p
-                 else next_to_father pere p;
-                 true)
-          | Kill_handler handler ->
-              if p.cond_v
-              then
-                false
-              else
-                (p.children <- eval_children p p.children active;
-                 if active then next_to_current cd p
-                 else next_to_father pere p;
-                 true)
-          | Susp ->
-              let pre_susp = p.susp in
-              if p.cond_v then p.susp <- not pre_susp;
-              let active = active && not p.susp in
-              if pre_susp
-              then
-                (if active then next_to_current cd p;
-                 true)
-              else
-                (p.children <- eval_children p p.children active;
-                 if active then next_to_current cd p
-                 else if not p.susp then next_to_father pere p;
-                 true)
-          | When ->
-              if p.susp
-              then true
-              else
-                (p.susp <- true;
-                 p.children <- eval_children p p.children false;
-                 true)
-        else
-          (set_kill p;
-           false)
-
-      and eval_children p nodes active =
-        List.filter (fun node -> eval p node active) nodes
-
-      and next_to_current ck node =
-        node.last_activation <- save_clock_state ck;
-        D.add_current_next node.next ck.cd_current;
-        D.add_current_next node.next_control ck.cd_current;
-      and next_to_father pere node = ()
-       (* D.add_next_next node.next pere.next;
-        D.add_next_next node.next_control pere.next_control
-        *)
-        (* TODO: ne marche plus si on veut que last_activation soit correct *)
-      in
-        cd.cd_top.children <- eval_children cd.cd_top cd.cd_top.children true;
-        next_to_current cd cd.cd_top
-
-(* deplacer dans la liste current les processus qui sont dans  *)
-(* les listes next *)
-    let rec next_to_current cd p =
-      if p.alive && not p.susp then
-        (D.add_current_next p.next cd.cd_current;
-         D.add_current_next p.next_control cd.cd_current;
-         p.last_activation <- save_clock_state cd;
-         List.iter (next_to_current cd) p.children)
-
-    (** Evaluates the condition of control nodes. This can be called several
-        times for a same control node, when doing the eoi of several clocks.
-        We can keep the last condition (if it was true for the eoi of the fast clock,
-        it is also true for the eoi of the slow clock), but we have to make sure
-        to fire the handler only once. *)
-    let eoi_control ctrl =
-      let rec _eoi_control pere ctrl =
-        if ctrl.alive then (
-          ctrl.cond_v <- ctrl.cond ();
-          (match ctrl.kind with
-            | Kill_handler handler ->
-                if ctrl.cond_v then (
-                  D.add_next (handler()) pere.next;
-                  set_kill ctrl
-                )
-            | _ -> ());
-          List.iter (_eoi_control ctrl) ctrl.children;
-        )
-      in
-        List.iter (_eoi_control ctrl) ctrl.children
-
-    let wake_up_ctrl new_ctrl cd =
-      new_ctrl.susp <- false;
-      next_to_current cd new_ctrl
-
     let mk_clock_domain parent =
       let cd = { cd_current = D.mk_current ();
         cd_eoi = ref false;
@@ -510,6 +407,108 @@ struct
          let w_list = Event.cfg_events evt_cfg true in
          List.iter (fun (w,sig_cd) -> _on_event_at_eoi sig_cd ctrl w f) w_list
 *)
+
+(* calculer le nouvel etat de l'arbre de control *)
+(* et deplacer dans la liste current les processus qui sont dans  *)
+(* les listes next *)
+    let eval_control_and_next_to_current cd =
+      let rec eval pere p active =
+        if p.alive then
+          match p.kind with
+            | Clock_domain _ -> true
+            | Kill (pause_kind, f_k) ->
+              if p.cond_v
+              then
+                (on_next_instant ~kind:pause_kind pere f_k;
+                 set_kill p;
+                 false)
+              else
+                (p.children <- eval_children p p.children active;
+                 if active then next_to_current cd p
+                 else next_to_father pere p;
+                 true)
+          | Kill_handler (_, handler) ->
+              if p.cond_v
+              then
+                false
+              else
+                (p.children <- eval_children p p.children active;
+                 if active then next_to_current cd p
+                 else next_to_father pere p;
+                 true)
+          | Susp ->
+              let pre_susp = p.susp in
+              if p.cond_v then p.susp <- not pre_susp;
+              let active = active && not p.susp in
+              if pre_susp
+              then
+                (if active then next_to_current cd p;
+                 true)
+              else
+                (p.children <- eval_children p p.children active;
+                 if active then next_to_current cd p
+                 else if not p.susp then next_to_father pere p;
+                 true)
+          | When ->
+              if p.susp
+              then true
+              else
+                (p.susp <- true;
+                 p.children <- eval_children p p.children false;
+                 true)
+        else
+          (set_kill p;
+           false)
+
+      and eval_children p nodes active =
+        List.filter (fun node -> eval p node active) nodes
+
+      and next_to_current ck node =
+        node.last_activation <- save_clock_state ck;
+        D.add_current_next node.next ck.cd_current;
+        D.add_current_next node.next_control ck.cd_current;
+      and next_to_father pere node = ()
+       (* D.add_next_next node.next pere.next;
+        D.add_next_next node.next_control pere.next_control
+        *)
+        (* TODO: ne marche plus si on veut que last_activation soit correct *)
+      in
+        cd.cd_top.children <- eval_children cd.cd_top cd.cd_top.children true;
+        next_to_current cd cd.cd_top
+
+(* deplacer dans la liste current les processus qui sont dans  *)
+(* les listes next *)
+    let rec next_to_current cd p =
+      if p.alive && not p.susp then
+        (D.add_current_next p.next cd.cd_current;
+         D.add_current_next p.next_control cd.cd_current;
+         p.last_activation <- save_clock_state cd;
+         List.iter (next_to_current cd) p.children)
+
+    (** Evaluates the condition of control nodes. This can be called several
+        times for a same control node, when doing the eoi of several clocks.
+        We can keep the last condition (if it was true for the eoi of the fast clock,
+        it is also true for the eoi of the slow clock), but we have to make sure
+        to fire the handler only once. *)
+    let eoi_control ctrl =
+      let rec _eoi_control pere ctrl =
+        if ctrl.alive then (
+          ctrl.cond_v <- ctrl.cond ();
+          (match ctrl.kind with
+            | Kill_handler (pause_kind, handler) ->
+                if ctrl.cond_v then (
+                  on_next_instant ~kind:pause_kind pere (handler());
+                  set_kill ctrl
+                )
+            | _ -> ());
+          List.iter (_eoi_control ctrl) ctrl.children;
+        )
+      in
+        List.iter (_eoi_control ctrl) ctrl.children
+
+    let wake_up_ctrl new_ctrl cd =
+      new_ctrl.susp <- false;
+      next_to_current cd new_ctrl
 
     (* Control structures *)
     let create_control kind body f_k ctrl cd =

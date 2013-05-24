@@ -94,7 +94,7 @@ and expression_desc =
         * (expression * expression) option (* gather, default *)
         * expression option (* reset *) * expression
   | Erun of expression
-  | Euntil of event_config * expression * (pattern * expression) option
+  | Euntil of event_config * expression * (pattern * expression) option * pause_kind
   | Ewhen of event_config * expression
   | Econtrol of event_config * (pattern * expression) option * expression
   | Eget of expression * pattern * expression

@@ -129,13 +129,13 @@ let expression_desc funs act_ck ed = match ed with
     until s.s_await done;
     run (await_step act_ck)
   *)
-  | Euntil(conf, e, None) ->
+  | Euntil(conf, e, None, Strong) ->
       let conf = tr_conf (make_label "s_await") conf in
       let e, acc = Reac_mapfold.expression_it funs act_ck e in
       let await_ck =
         make_expr (Erun (make_expr (Eapply (make_instruction "await_step", [act_ck]))))
       in
-      Eseq [make_expr (Euntil (conf, e, None)); await_ck], act_ck
+      Eseq [make_expr (Euntil (conf, e, None, Strong)); await_ck], act_ck
 
   (*
     do p when s

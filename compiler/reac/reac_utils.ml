@@ -315,10 +315,10 @@ let expr_free_vars e =
     | Erun e ->
         expr_free_vars vars e
 
-    | Euntil (config, e, None) ->
+    | Euntil (config, e, None, _) ->
         config_free_vars vars config;
         expr_free_vars vars e
-    | Euntil (config, e, Some(p,e1)) ->
+    | Euntil (config, e, Some(p,e1), _) ->
         config_free_vars vars config;
         expr_free_vars vars e;
         let vars' = (vars_of_patt p) @ vars in

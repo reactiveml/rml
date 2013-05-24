@@ -125,17 +125,17 @@ module type S =
 (*    val rml_def_and_dyn: expr array -> (value array -> expr) -> expr *)
     val rml_match: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
     val rml_run: (unit -> 'a process) -> 'a expr
-    val rml_until': ('a, 'b) R.event -> unit expr -> unit expr
-    val rml_until: (unit -> ('a, 'b) R.event) -> unit expr -> unit expr
-    val rml_until_conf: event_cfg_gen -> unit expr -> unit expr
+    val rml_until': Types.pause_kind -> ('a, 'b) R.event -> unit expr -> unit expr
+    val rml_until: Types.pause_kind -> (unit -> ('a, 'b) R.event) -> unit expr -> unit expr
+    val rml_until_conf: Types.pause_kind -> event_cfg_gen -> unit expr -> unit expr
     val rml_until_handler':
-        ('a, 'b) R.event -> 'c expr -> ('b -> 'c expr) -> 'c expr
+        Types.pause_kind -> ('a, 'b) R.event -> 'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_until_handler:
-        (unit -> ('a, 'b) R.event) -> 'c expr -> ('b -> 'c expr) -> 'c expr
+        Types.pause_kind -> (unit -> ('a, 'b) R.event) -> 'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_until_handler_match':
-        ('a, 'b) R.event -> ('b -> bool) -> 'c expr -> ('b -> 'c expr) -> 'c expr
+        Types.pause_kind -> ('a, 'b) R.event -> ('b -> bool) -> 'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_until_handler_match:
-        (unit -> ('a, 'b) R.event) -> ('b -> bool) ->
+        Types.pause_kind -> (unit -> ('a, 'b) R.event) -> ('b -> bool) ->
           'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_control': ('a, 'b) R.event -> 'c expr -> 'c expr
     val rml_control: (unit -> ('a, 'b) R.event) -> 'c expr -> 'c expr

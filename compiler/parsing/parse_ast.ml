@@ -85,7 +85,7 @@ and expression_desc =
   | Pexpr_process of expression
   | Pexpr_run of expression
   | Pexpr_until of
-      event_config * expression * (pattern * expression) option
+      event_config * expression * (pattern * expression) option * pause_kind
   (* signal        * body       * handler *)
   | Pexpr_when of event_config * expression
   | Pexpr_control of event_config * (pattern * expression) option * expression

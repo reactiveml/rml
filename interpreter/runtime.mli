@@ -38,8 +38,8 @@ end
 
 type ('step, 'clock) control_type =
     | Clock_domain of 'clock
-    | Kill of 'step
-    | Kill_handler of (unit -> 'step)
+    | Kill of Types.pause_kind * 'step
+    | Kill_handler of Types.pause_kind * (unit -> 'step)
     | Susp
     | When
 

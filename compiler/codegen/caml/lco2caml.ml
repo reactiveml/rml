@@ -35,6 +35,10 @@ open Misc
 
 let unit_value = make_expr (Cexpr_constant Const_unit) Location.none
 
+let translate_pause_kind k = match k with
+| Strong -> make_constr "Types" "Strong" None
+| Weak -> make_constr "Types" "Weak" None
+
 (* Translation of type expressions *)
 let rec translate_te typ =
   let ctyp =
@@ -474,33 +478,36 @@ and translate_proc e =
           (make_instruction "rml_run",
            [embed_ml expr;])
 
-    | Coproc_until ({coconf_desc = Coconf_present s}, k, None) ->
+    | Coproc_until ({coconf_desc = Coconf_present s}, k, None, pause_kind) ->
         if Lco_misc.is_value s then
           Cexpr_apply
             (make_instruction "rml_until'",
-             [translate_ml s;
+             [translate_pause_kind pause_kind;
+              translate_ml s;
               translate_proc k])
         else
           Cexpr_apply
             (make_instruction "rml_until",
-             [embed_ml s;
+             [translate_pause_kind pause_kind; embed_ml s;
               translate_proc k])
-    | Coproc_until (s, k, None) ->
+    | Coproc_until (s, k, None, pause_kind) ->
         Cexpr_apply
           (make_instruction "rml_until_conf",
-           [translate_conf s;
+           [translate_pause_kind pause_kind;
+            translate_pause_kind pause_kind; translate_conf s;
             translate_proc k])
 
 (************)
     | Coproc_until ({coconf_desc = Coconf_present s}, k,
-                    Some(patt, {coproc_desc = Coproc_when_match(e1,kh)})) ->
+                    Some(patt, {coproc_desc = Coproc_when_match(e1,kh)}), pause_kind) ->
         let cpatt = translate_pattern patt in
         Cexpr_apply
           (make_instruction
              (if Lco_misc.is_value s then "rml_until_handler_match'"
              else "rml_until_handler_match"),
            if Caml_misc.partial_match cpatt then
-             [if Lco_misc.is_value s then translate_ml s else embed_ml s;
+             [translate_pause_kind pause_kind;
+              if Lco_misc.is_value s then translate_ml s else embed_ml s;
               make_expr
                 (Cexpr_function
                    [cpatt, translate_ml e1;
@@ -515,7 +522,8 @@ and translate_proc e =
                     (make_patt Cpatt_any Location.none, make_raise_RML())])
                 Location.none;]
            else
-             [if Lco_misc.is_value s then translate_ml s else embed_ml s;
+             [translate_pause_kind pause_kind;
+              if Lco_misc.is_value s then translate_ml s else embed_ml s;
               make_expr
                 (Cexpr_function [cpatt, translate_ml e1])
                 Location.none;
@@ -525,14 +533,15 @@ and translate_proc e =
     | Coproc_until
         ({coconf_desc = Coconf_present s}, k,
          Some(patt, ({coproc_desc = Coproc_compute
-                       { coexpr_desc = Coexpr_when_match(e1,e2); }} as kh))) ->
+                       { coexpr_desc = Coexpr_when_match(e1,e2); }} as kh)), pause_kind) ->
         let cpatt = translate_pattern patt in
         Cexpr_apply
           (make_instruction
              (if Lco_misc.is_value s then "rml_until_handler_match'"
              else "rml_until_handler_match"),
            if Caml_misc.partial_match cpatt then
-           [if Lco_misc.is_value s then translate_ml s else embed_ml s;
+           [translate_pause_kind pause_kind;
+            if Lco_misc.is_value s then translate_ml s else embed_ml s;
             make_expr
               (Cexpr_function
                  [cpatt, translate_ml e1;
@@ -548,7 +557,8 @@ and translate_proc e =
                   (make_patt Cpatt_any Location.none, make_raise_RML())])
               Location.none;]
          else
-           [if Lco_misc.is_value s then translate_ml s else embed_ml s;
+           [translate_pause_kind pause_kind;
+            if Lco_misc.is_value s then translate_ml s else embed_ml s;
             make_expr (Cexpr_function [cpatt, translate_ml e1;]) Location.none;
             translate_proc k;
             make_expr
@@ -558,14 +568,15 @@ and translate_proc e =
                   ])
               Location.none;])
 (************)
-    | Coproc_until ({coconf_desc = Coconf_present s}, k, Some(patt, kh)) ->
+    | Coproc_until ({coconf_desc = Coconf_present s}, k, Some(patt, kh), pause_kind) ->
         let cpatt = translate_pattern patt in
         if Caml_misc.partial_match cpatt then
           Cexpr_apply
             (make_instruction
                (if Lco_misc.is_value s then "rml_until_handler_match'"
                else "rml_until_handler_match"),
-             [if Lco_misc.is_value s then translate_ml s else embed_ml s;
+             [translate_pause_kind pause_kind;
+              if Lco_misc.is_value s then translate_ml s else embed_ml s;
               make_expr
                 (Cexpr_function
                    [cpatt,
@@ -586,7 +597,8 @@ and translate_proc e =
             (make_instruction
                (if Lco_misc.is_value s then "rml_until_handler'"
                else "rml_until_handler"),
-             [if Lco_misc.is_value s then translate_ml s else embed_ml s;
+             [translate_pause_kind pause_kind;
+              if Lco_misc.is_value s then translate_ml s else embed_ml s;
               translate_proc k;
               make_expr
                 (Cexpr_function [cpatt, translate_proc kh])

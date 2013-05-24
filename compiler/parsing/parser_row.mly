@@ -88,11 +88,11 @@ let rec mkexpr_until body sig_patt_expr_opt_list =
   | [(s, patt_expr_opt)] ->
       mkexpr (Pexpr_until (s,
 			   body,
-			   (patt_expr_opt)))
+			   (patt_expr_opt), Strong))
   | (s, patt_expr_opt) :: list ->
       mkexpr (Pexpr_until (s,
 			   mkexpr_until body list,
-			   (patt_expr_opt)))
+			   (patt_expr_opt), Strong))
 
 let reloc_patt x = { x with ppatt_loc = symbol_rloc () };;
 let reloc_expr x = { x with pexpr_loc = symbol_rloc () };;

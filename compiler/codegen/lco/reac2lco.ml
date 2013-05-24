@@ -470,13 +470,13 @@ and translate_proc p =
         | Erun (expr) ->
             Coproc_run (translate_ml expr)
 
-        | Euntil (s, proc, patt_proc_opt) ->
+        | Euntil (s, proc, patt_proc_opt, pause_kind) ->
             Coproc_until (translate_conf s,
                           translate_proc proc,
                           opt_map
                             (fun (patt, proc) ->
                               translate_pattern patt, translate_proc proc)
-                            patt_proc_opt)
+                            patt_proc_opt, pause_kind)
 
         | Ewhen (s, proc) ->
             Coproc_when (translate_conf s, translate_proc proc)

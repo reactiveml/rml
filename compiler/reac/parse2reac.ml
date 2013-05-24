@@ -548,12 +548,12 @@ let rec translate env e =
     | Pexpr_run (expr) ->
         Erun (translate env expr)
 
-    | Pexpr_until (s, expr, patt_expr_opt) ->
+    | Pexpr_until (s, expr, patt_expr_opt, pause_kind) ->
         Euntil (translate_conf env s,
                      translate env expr,
                      opt_map
                        (translate_patt_expr env)
-                       patt_expr_opt)
+                       patt_expr_opt, pause_kind)
 
     | Pexpr_when (s, expr) ->
         Ewhen (translate_conf env s,

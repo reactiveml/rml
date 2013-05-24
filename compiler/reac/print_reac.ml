@@ -301,23 +301,25 @@ let rec print pri e =
       print_string "run";
       print_space ();
       print (pri_e - 1) e1
-  | Euntil (conf, e1, None) ->
+  | Euntil (conf, e1, None, k) ->
       close_box ();
       open_box 0;
       print_string "do";
       print_space ();
       print pri_e e1;
       print_space ();
+      if k = Weak then (print_string "weak"; print_space ());
       print_string "until ";
       print_event_config conf;
       print_string " done"
-  | Euntil (conf, e1, Some (p, e2)) ->
+  | Euntil (conf, e1, Some (p, e2), k) ->
       close_box ();
       open_box 0;
       print_string "do";
       print_space ();
       print pri_e e1;
       print_space ();
+      if k = Weak then (print_string "weak"; print_space ());
       print_string "until ";
       print_signal_patt_expr (fun () -> print_string "->") p e2;
       print_string " done"

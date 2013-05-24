@@ -183,9 +183,9 @@ let rec is_nonexpansive expr =
       is_nonexpansive_conf e
   | Eawait_val (_, _, s, _, e) ->
       is_nonexpansive s && is_nonexpansive e
-  | Euntil (c, e, None) ->
+  | Euntil (c, e, None, _) ->
       is_nonexpansive_conf c && is_nonexpansive e
-  | Euntil (c, e, Some (_, e')) ->
+  | Euntil (c, e, Some (_, e'), _) ->
       is_nonexpansive_conf c && is_nonexpansive e && is_nonexpansive e'
   | Ewhen (c, e) ->
       is_nonexpansive_conf c && is_nonexpansive e
@@ -970,7 +970,7 @@ let rec schema_of_expression env expr =
         expr.e_react <- !current_react;
         ty
 
-    | Euntil (s,p,patt_proc_opt) ->
+    | Euntil (s,p,patt_proc_opt,k) ->
         begin match patt_proc_opt with
         | None ->
             ignore (type_of_event_config env s);
@@ -1000,7 +1000,12 @@ let rec schema_of_expression env expr =
                     let r = type_react_expect new_env proc ty_body in
                     cont_react := r)
                   patt_proc_opt;
-                set_current_react (react_or r_body (react_seq (react_carrier ty_ck) !cont_react));
+                let rc =
+                  match k with
+                    | Strong -> ty_ck
+                    | Weak -> carrier_closed_row topck_carrier
+                in
+                set_current_react (react_or r_body (react_seq (react_carrier rc) !cont_react));
                 ty_body
             | _ ->
                 non_event_err2 s

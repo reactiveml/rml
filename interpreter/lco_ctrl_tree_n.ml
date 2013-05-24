@@ -647,23 +647,23 @@ let rml_loop p =
 
     let true_cond _ = true
 
-    let rml_until expr_evt p =
+    let rml_until pause_kind expr_evt p =
       fun f_k ctrl jp cd ->
         let body f_k new_ctrl = p f_k new_ctrl None cd in
-        let f = create_control (Kill f_k) body f_k ctrl cd in
+        let f = create_control (Kill (pause_kind, f_k)) body f_k ctrl cd in
         fun () ->
           let evt = expr_evt () in
           f evt true_cond ()
 
-    let rml_until' evt p =
+    let rml_until' pause_kind evt p =
       fun f_k ctrl jp cd ->
         let body f_k new_ctrl = p f_k new_ctrl None cd in
-        create_control (Kill f_k) body f_k ctrl cd evt true_cond
+        create_control (Kill (pause_kind, f_k)) body f_k ctrl cd evt true_cond
 
-    let rml_until_conf expr_cfg p =
+    let rml_until_conf pause_kind expr_cfg p =
       fun f_k ctrl jp cd ->
         let body f_k new_ctrl = p f_k new_ctrl None cd in
-        let f = create_control_evt_conf (Kill f_k) body f_k ctrl cd in
+        let f = create_control_evt_conf (Kill (pause_kind, f_k)) body f_k ctrl cd in
         fun () ->
           let evt_cfg = expr_cfg () in
           f evt_cfg ()
@@ -672,7 +672,7 @@ let rml_loop p =
 (* until handler                      *)
 (**************************************)
 
-    let rml_until_handler_local expr_evt matching_opt p p_handler =
+    let rml_until_handler_local pause_kind expr_evt matching_opt p p_handler =
       fun f_k ctrl jp cd ->
         let evt = ref (Obj.magic() : ('a, 'b) event) in
         let handler _ =
@@ -680,7 +680,7 @@ let rml_loop p =
           p_handler x f_k ctrl jp cd
         in
         let body f_k new_ctrl = p f_k new_ctrl None cd in
-        let f = create_control (Kill_handler handler) body f_k ctrl cd in
+        let f = create_control (Kill_handler (pause_kind, handler)) body f_k ctrl cd in
         let cond =
           match matching_opt with
             | None -> true_cond
@@ -690,14 +690,14 @@ let rml_loop p =
           evt := expr_evt ();
           f !evt cond ()
 
-    let rml_until_handler_local' evt matching_opt p p_handler =
+    let rml_until_handler_local' pause_kind evt matching_opt p p_handler =
       fun f_k ctrl jp cd ->
         let handler _ =
           let x = R.Event.value evt in
           p_handler x f_k ctrl jp cd
         in
         let body f_k new_ctrl = p f_k new_ctrl None cd in
-        let f = create_control (Kill_handler handler) body f_k ctrl cd in
+        let f = create_control (Kill_handler (pause_kind, handler)) body f_k ctrl cd in
         let cond =
           match matching_opt with
             | None -> true_cond
@@ -705,17 +705,17 @@ let rml_loop p =
         in
         f evt cond
 
-    let rml_until_handler expr_evt p p_handler =
-      rml_until_handler_local expr_evt None p p_handler
+    let rml_until_handler pause_kind expr_evt p p_handler =
+      rml_until_handler_local pause_kind expr_evt None p p_handler
 
-    let rml_until_handler' evt p p_handler =
-      rml_until_handler_local' evt None p p_handler
+    let rml_until_handler' pause_kind evt p p_handler =
+      rml_until_handler_local' pause_kind evt None p p_handler
 
-    let rml_until_handler_match expr_evt matching p p_handler =
-      rml_until_handler_local expr_evt (Some matching) p p_handler
+    let rml_until_handler_match pause_kind expr_evt matching p p_handler =
+      rml_until_handler_local pause_kind expr_evt (Some matching) p p_handler
 
-    let rml_until_handler_match' evt matching p p_handler =
-      rml_until_handler_local' evt (Some matching) p p_handler
+    let rml_until_handler_match' pause_kind evt matching p p_handler =
+      rml_until_handler_local' pause_kind evt (Some matching) p p_handler
 
 
 (**************************************)

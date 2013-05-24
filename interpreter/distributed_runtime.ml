@@ -98,8 +98,8 @@ struct
         | When
 
     let control_of_runtime_control k = match k with
-      | Runtime.Kill h -> Kill h
-      | Runtime.Kill_handler h -> Kill_handler h
+      | Runtime.Kill (_, h) -> Kill h
+      | Runtime.Kill_handler (_, h) -> Kill_handler h
       | Runtime.Susp -> Susp
       | Runtime.When -> When
       | _ -> assert false

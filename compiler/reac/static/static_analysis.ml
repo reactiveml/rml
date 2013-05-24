@@ -461,7 +461,7 @@ let rec static_expr ctx e =
         (* Dynamic Dontknow *)
         else expr_wrong_static_err e
 
-    | Euntil (s, p, p_e_opt) ->
+    | Euntil (s, p, p_e_opt, _) ->
         if ctx = Process
         then
           (static_conf s;

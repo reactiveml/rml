@@ -187,11 +187,11 @@ and expression_desc funs acc ed = match ed with
   | Erun e ->
     let e, acc = expression_it funs acc e in
     Erun e, acc
-  | Euntil (evc, e, p_e_opt) ->
+  | Euntil (evc, e, p_e_opt, k) ->
     let evc, acc = event_config_it funs acc evc in
     let e, acc = expression_it funs acc e in
     let p_e_opt, acc = optional_wacc (pattern_expression_it funs) acc p_e_opt in
-    Euntil (evc, e, p_e_opt), acc
+    Euntil (evc, e, p_e_opt, k), acc
   | Ewhen (evc, e) ->
     let evc, acc = event_config_it funs acc evc in
     let e, acc = expression_it funs acc e in
