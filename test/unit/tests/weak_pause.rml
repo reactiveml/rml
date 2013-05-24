@@ -9,11 +9,30 @@ let process weak_pause act =
     end
     ||
     loop
-      pause ck; pause topck;
+      pause ck; pause global_ck;
+    end
+  done
+
+(* [S (O 1, O 2), S (O 3, O 4)]  *)
+let process weak_until act =
+  let cpt = ref 0 in
+  domain ck do
+    signal s in
+    loop
+      emit s
+      ||
+      do
+        loop incr cpt; act !cpt; weak pause ck end
+      until weak s done
+    end
+    ||
+    loop
+      pause ck; pause global_ck
     end
   done
 
 open Rmltest
 
 let test =
-  [  (weak_pause, "weak_pause",  [S(O 1, O 2); S(O 3, O 4)])]
+  [  (weak_pause, "weak_pause",  [S(O 1, O 2); S(O 3, O 4)]);
+     (weak_until, "weak_until", [S (O 1, O 2); S (O 3, O 4)]) ]

@@ -574,8 +574,8 @@ struct
       else
         match ctrl.kind with
           | Clock_domain _ -> has_next_children ctrl
-          | Kill _ | Kill_handler _ ->
-            ctrl.cond () || has_next_children ctrl
+          | Kill (pause_kind, _) | Kill_handler (pause_kind, _) ->
+            (pause_kind = Strong && ctrl.cond ()) || has_next_children ctrl
           | Susp ->
             let active = (ctrl.susp && ctrl.cond ()) || (not ctrl.susp && not (ctrl.cond ())) in
               active && has_next_children ctrl

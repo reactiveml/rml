@@ -154,7 +154,7 @@ let rec add_expr bv exp =
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
   | Pexpr_run(e1) -> add_expr bv e1
-  | Pexpr_until(cfg, e1, ope) ->
+  | Pexpr_until(cfg, e1, ope, _) ->
       add_expr bv cfg;
       add_expr bv e1;
       Misc.opt_iter (fun (p,e) -> add_pattern bv p; add_expr bv e) ope
