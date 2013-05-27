@@ -700,7 +700,7 @@ let translate_type_declaration l =
                                         ty_info = Some {constr_abbr = Constr_notabbrev};
                                         ck_info = None; };
                         type_kind = Type_abstract;
-                        type_arity = List.length param; }
+                        type_arity = List.length (filter_types param); }
         in
         let ck_info = { clock_constr = { gi = gl.gi;
                                          ty_info = None;
