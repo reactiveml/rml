@@ -46,8 +46,7 @@ let read_depends file =
     else (
       let i = String.index l ':' in
       let names = split_string (String.sub l (i+1) (String.length l - i - 1)) ' ' in
-      List.map (fun s -> [Pathname.basename
-                             (Pathname.update_extension "rzi" (Pathname.mk s))]) names
+      List.map (fun s -> [Pathname.basename (Pathname.mk s)]) names
     )
   with
     | _ -> []
@@ -121,16 +120,6 @@ let link_rml extension env _build =
 
 let init () =
 
-      rule "rmldep: rml -> rmldepends"
-        ~prod:"%.rmldepends"
-        ~dep:"%.rml"
-      begin fun env _build ->
-        let file = env "%.rml" in
-        let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
-               @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
-      end;
-
       rule "rmldep: mli -> rmldepends"
         ~prod:"%.rmldepends"
         ~dep:"%.mli"
@@ -146,6 +135,16 @@ let init () =
         ~dep:"%.rmli"
       begin fun env _build ->
         let file = env "%.rmli" in
+        let includes = mk_includes (Pathname.dirname file) in
+        Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
+               @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
+      end;
+
+      rule "rmldep: rml -> rmldepends"
+        ~prod:"%.rmldepends"
+        ~dep:"%.rml"
+      begin fun env _build ->
+        let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
                @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
@@ -177,6 +176,24 @@ let init () =
         let file = env "%.rmli" in
         let includes = mk_includes (Pathname.dirname file) in
         Cmd(S ([rmlc] @ [A "-c"] @ includes @ [P file]))
+      end;
+
+      rule "rml: rml & rzi -> ml"
+        ~prod:"%.ml"
+        ~deps:["%.rmli"; "%.rml"; "%.rmldepends"; "%.rzi"]
+      begin fun env _build ->
+        let dep_file = env "%.rmldepends" in
+        let depends = read_depends dep_file in
+        if depends <> [] then
+          List.iter Outcome.ignore_good (_build depends);
+
+        declare_rmllib () ;
+        let gen_file = env "%.ml" in
+        tag_file gen_file ["use_rmllib"];
+
+        let file = env "%.rml" in
+        let includes = mk_includes (Pathname.dirname file) in
+        Cmd(S ([rmlc]@includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
       rule "rml: rml -> ml, rzi"

@@ -245,7 +245,11 @@ let compile_implementation module_name filename =
   and module_name = String.capitalize (Filename.basename filename)  in
 
   let ic = open_in source_name in
-  let itf = Some (open_out_bin obj_interf_name) in
+  let itf =
+    if Sys.file_exists (filename^".rmli")
+    then None
+    else Some (open_out_bin obj_interf_name)
+  in
   let info_fmt = !Misc.std_fmt in
 
   try

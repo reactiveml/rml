@@ -111,17 +111,15 @@ let find_dependency modname (byt_deps, opt_deps) =
     let basename = Filename.chop_extension filename in
     let optname =
       if List.exists (fun ext -> Sys.file_exists (basename ^ ext)) !ml_synonyms
-      then basename ^ ".cmx"
-      else basename ^ ".cmi" in
-    ((basename ^ ".cmi") :: byt_deps, optname :: opt_deps)
+      then basename ^ ".ml"
+      else basename ^ ".rzi" in
+    ((basename ^ ".rzi") :: byt_deps, optname :: opt_deps)
   with Not_found ->
   try
     let candidates = List.map ((^) modname) !ml_synonyms in
     let filename = find_file_in_list candidates in
     let basename = Filename.chop_extension filename in
-    let bytename =
-      basename ^ (if !native_only then ".cmx" else ".cmo") in
-    (bytename :: byt_deps, (basename ^ ".cmx") :: opt_deps)
+    ( (basename^".ml") :: byt_deps, (basename ^ ".ml") :: opt_deps)
   with Not_found ->
     (byt_deps, opt_deps)
 
@@ -232,13 +230,12 @@ let ml_file_dependencies source_file =
       let basename = Filename.chop_extension source_file in
       let init_deps =
         if List.exists (fun ext -> Sys.file_exists (basename ^ ext)) !mli_synonyms
-        then let cmi_name = basename ^ ".cmi" in ([cmi_name], [cmi_name])
+        then let cmi_name = basename ^ ".rzi" in ([cmi_name], [cmi_name])
         else ([], []) in
       let (byt_deps, opt_deps) =
         Depend.StringSet.fold find_dependency
                               !Depend.free_structure_names init_deps in
-      print_dependencies (basename ^ ".cmo") byt_deps;
-      print_dependencies (basename ^ ".cmx") opt_deps
+      print_dependencies (basename ^ ".ml") byt_deps
     end;
     close_in ic; remove_preprocessed input_file
   with x ->
@@ -258,7 +255,7 @@ let mli_file_dependencies source_file =
       let (byt_deps, opt_deps) =
         Depend.StringSet.fold find_dependency
                               !Depend.free_structure_names ([], []) in
-      print_dependencies (basename ^ ".cmi") byt_deps
+      print_dependencies (basename ^ ".rzi") byt_deps
     end;
     close_in ic; remove_preprocessed input_file
   with x ->
