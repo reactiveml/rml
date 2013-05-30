@@ -343,8 +343,6 @@ let print_list_of_type_declarations ff global_list =
       pp_print_string ff "\n";;
 
 (* the main printing functions *)
-(* let () = Format.pp_set_max_boxes ff max_int *) (* XXX TODO XXX *)
-(* let () = Format.pp_set_margin ff max_int *) (* XXX TODO XXX *)
 
 let output ff ty =
   print ff ty;
