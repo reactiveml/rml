@@ -1294,6 +1294,7 @@ let rec find_effect_row_var eff =
       let eff2 = effect_row_repr eff2 in
       (match eff2.desc with
         | Effect_row_var | Effect_row_empty -> eff2, eff1
+        | Effect_row_rec eff1 -> find_effect_row_var eff1
         | _ ->
             let var, eff2 = find_effect_row_var eff2 in
             var, eff_row eff1 eff2)
