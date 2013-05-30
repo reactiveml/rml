@@ -1,0 +1,12 @@
+(* 30/05/2013 *)
+(* Problème d'affichage en cas d'erreur de type avec l'option -dtypes *)
+(* $ rmlc -dtypes bug53.rml
+   File "bug53.rml", line 8, characters 14-18:
+   This expression has type bool,
+   but is used with type int.
+   'a -> 'a'a'a'_aintint -> int -> boolbool
+*)
+
+let f x = x
+
+let err = 1 = true
