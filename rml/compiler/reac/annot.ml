@@ -50,7 +50,6 @@
   interesting in case of errors.
 *)
 
-open Format;;
 open Lexing;;
 open Location;;
 open Reac_ast;;
@@ -98,7 +97,7 @@ end) =
 
 
     let print_position pp pos =
-      fprintf pp "%S %d %d %d"
+      Format.fprintf pp "%S %d %d %d"
 	pos.pos_fname pos.pos_lnum pos.pos_bol pos.pos_cnum
 
 
@@ -134,16 +133,16 @@ let rec printtyp_reset_maybe loc =
       | Ti_expr {expr_loc = loc;} ->
 	  let typ = T.get_type ti in
 	  print_position pp loc.loc_start;
-	  fprintf pp " ";
+	  Format.fprintf pp " ";
 	  print_position pp loc.loc_end;
-	  fprintf pp "@.type(@.  ";
+	  Format.fprintf pp "@.type(@.  ";
 (*
       printtyp_reset_maybe loc;
       Printtyp.mark_loops typ;
       Printtyp.type_expr pp typ;
 *)
 	  T.output oc typ;
-	  fprintf pp "@.)@."
+	  Format.fprintf pp "@.)@."
 
 
     let get_info () =
@@ -156,7 +155,7 @@ let rec printtyp_reset_maybe loc =
       if !Misc.save_types then begin
 	let info = get_info () in
 	let oc = open_out filename in
-	let pp = formatter_of_out_channel oc in
+	let pp = Format.formatter_of_out_channel oc in
 	sort_filter_phrases ();
 	List.iter (print_info oc pp) info;
 	phrases := [];
@@ -178,10 +177,9 @@ module Stypes =
 
 (*     let output = Types_printer.output *)
     let output oc ty =
-      set_formatter_out_channel oc;
-      print_string "  ";
-      Types_printer.print ty;
-      print_flush ()
+      let pp = Format.formatter_of_out_channel oc in
+      Format.fprintf pp "  %a@?"
+        Types_printer.print ty
 
   end)
 

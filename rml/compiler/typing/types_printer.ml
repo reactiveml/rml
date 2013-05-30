@@ -39,17 +39,15 @@ open Modules
 open Global_ident
 open Global
 
-let default_formatter = ref std_formatter
-
 (* the long name of an ident is printed *)
 (* if it is different from the current module *)
 (* or if it is from the standard module *)
-let print_qualified_ident q =
+let print_qualified_ident ff q =
   if (compiled_module_name () <> q.qual) &
     (pervasives_module <> q.qual) &
     (!interpreter_module <> q.qual)
-  then begin pp_print_string !default_formatter q.qual;pp_print_string !default_formatter "." end;
-  pp_print_string !default_formatter (Ident.name q.id)
+  then begin pp_print_string ff q.qual;pp_print_string ff "." end;
+  pp_print_string ff (Ident.name q.id)
 
 (* type variables are printed 'a, 'b,... *)
 let type_name = new name_assoc_table int_to_alpha
@@ -147,244 +145,240 @@ let print_reactivity ff k =
   print_reactivity ff (*(find_root k)*) k
 
 
-let rec print priority ty =
-  pp_open_box !default_formatter 0;
+let rec print ff priority ty =
+  pp_open_box ff 0;
   begin match ty.type_desc with
     Type_var ->
-      pp_print_string !default_formatter "'";
-      if ty.type_level <> generic then pp_print_string !default_formatter "_";
-      pp_print_string !default_formatter (type_name#name ty.type_index)
+      pp_print_string ff "'";
+      if ty.type_level <> generic then pp_print_string ff "_";
+      pp_print_string ff (type_name#name ty.type_index)
   | Type_arrow(ty1, ty2) ->
-      if priority >= 1 then pp_print_string !default_formatter "(";
-      print 1 ty1;
-      pp_print_space !default_formatter ();
-      pp_print_string !default_formatter "->";
-      pp_print_space !default_formatter ();
-      print 0 ty2;
-      if priority >= 1 then pp_print_string !default_formatter ")"
+      if priority >= 1 then pp_print_string ff "(";
+      print ff 1 ty1;
+      pp_print_space ff ();
+      pp_print_string ff "->";
+      pp_print_space ff ();
+      print ff 0 ty2;
+      if priority >= 1 then pp_print_string ff ")"
   | Type_product(ty_list) ->
-      if priority >= 2 then pp_print_string !default_formatter "(";
-      print_list 2 " * " ty_list;
-      if priority >= 2 then pp_print_string !default_formatter ")"
+      if priority >= 2 then pp_print_string ff "(";
+      print_list ff 2 " * " ty_list;
+      if priority >= 2 then pp_print_string ff ")"
   | Type_constr(name,ty_list) ->
       let n = List.length ty_list in
-      if n > 1 then pp_print_string !default_formatter "(";
-      print_list 2 ", " ty_list;
-      if n > 1 then pp_print_string !default_formatter ")";
-      if ty_list <> [] then pp_print_space !default_formatter ();
-      print_qualified_ident name.gi
+      if n > 1 then pp_print_string ff "(";
+      print_list ff 2 ", " ty_list;
+      if n > 1 then pp_print_string ff ")";
+      if ty_list <> [] then pp_print_space ff ();
+      print_qualified_ident ff name.gi
   | Type_link(link) ->
-      print priority link
+      print ff priority link
   | Type_process(ty, proc_info) ->
-      print 2 ty;
-      pp_print_space !default_formatter ();
-      pp_print_string !default_formatter "process";
-      print_proc_info proc_info
+      print ff 2 ty;
+      pp_print_space ff ();
+      pp_print_string ff "process";
+      print_proc_info ff proc_info
   end;
-  pp_close_box !default_formatter ()
+  pp_close_box ff ()
 
-and print_proc_info pi =
+and print_proc_info ff pi =
 (*   begin match pi.proc_static with *)
 (*   | None | Some(Def_static.Dontknow) -> () *)
-(*   | Some(Def_static.Instantaneous) -> pp_print_string !default_formatter "-" *)
-(*   | Some(Def_static.Noninstantaneous) -> pp_print_string !default_formatter "+" *)
+(*   | Some(Def_static.Instantaneous) -> pp_print_string ff "-" *)
+(*   | Some(Def_static.Noninstantaneous) -> pp_print_string ff "+" *)
 (*   end *)
   if !Misc.dreactivity then
-    fprintf !default_formatter "[%a]" print_reactivity pi.proc_react
+    fprintf ff "[%a]" print_reactivity pi.proc_react
 
-and print_list priority sep l =
+and print_list ff priority sep l =
   let rec printrec l =
     match l with
       [] -> ()
     | [ty] ->
-	print priority ty
+	print ff priority ty
     | ty::rest ->
-	print priority ty;
-	pp_print_space !default_formatter ();
-	pp_print_string !default_formatter sep;
-	pp_print_space !default_formatter ();
+	print ff priority ty;
+	pp_print_space ff ();
+	pp_print_string ff sep;
+	pp_print_space ff ();
 	printrec rest in
   printrec l
 
-let print ty =
+let print ff ty =
   type_name#reset;
   react_name#reset;
-  print 0 ty;
-  pp_print_flush !default_formatter ()
-let print_scheme { ts_desc = ty } = print ty
+  print ff 0 ty;
+  pp_print_flush ff ()
+let print_scheme ff { ts_desc = ty } = print ff ty
 
-let print_value_type_declaration global =
+let print_value_type_declaration ff global =
   let prefix = "val" in
   let name = little_name_of_global global in
-  pp_open_box !default_formatter 2;
-  pp_print_string !default_formatter prefix;
-  pp_print_space !default_formatter ();
+  pp_open_box ff 2;
+  pp_print_string ff prefix;
+  pp_print_space ff ();
   if is_an_infix_or_prefix_operator name
-  then begin pp_print_string !default_formatter "( "; pp_print_string !default_formatter name; pp_print_string !default_formatter " )" end
-  else pp_print_string !default_formatter name;
-  pp_print_space !default_formatter ();
-  pp_print_string !default_formatter ":";
-  pp_print_space !default_formatter ();
-  print_scheme (type_of_global global);
-  pp_print_string !default_formatter "\n";
-  pp_close_box !default_formatter ();
-  pp_print_flush !default_formatter ()
+  then begin pp_print_string ff "( "; pp_print_string ff name; pp_print_string ff " )" end
+  else pp_print_string ff name;
+  pp_print_space ff ();
+  pp_print_string ff ":";
+  pp_print_space ff ();
+  print_scheme ff (type_of_global global);
+  pp_print_string ff "\n";
+  pp_close_box ff ();
+  pp_print_flush ff ()
 
 (* printing type declarations *)
-let print_type_name tc ta =
+let print_type_name ff tc ta =
   let print_one_type_variable i =
-    pp_print_string !default_formatter "'";
-    pp_print_string !default_formatter (int_to_alpha i) in
+    pp_print_string ff "'";
+    pp_print_string ff (int_to_alpha i) in
   let rec printrec n =
     if n >= ta then ()
     else if n = ta - 1 then print_one_type_variable n
     else begin
       print_one_type_variable n;
-      pp_print_string !default_formatter ",";
+      pp_print_string ff ",";
       printrec (n+1)
     end in
   if ta = 0 then () else if ta = 1
   then
     begin
       print_one_type_variable 0;
-      pp_print_space !default_formatter ()
+      pp_print_space ff ()
     end
   else begin
-    pp_print_string !default_formatter "(";
+    pp_print_string ff "(";
     printrec 0;
-    pp_print_string !default_formatter ")";
-    pp_print_space !default_formatter ()
+    pp_print_string ff ")";
+    pp_print_space ff ()
   end;
-  pp_print_string !default_formatter (Ident.name tc.id)
+  pp_print_string ff (Ident.name tc.id)
 
 (* prints one variant *)
-let print_one_variant global =
-  pp_print_space !default_formatter ();
-  pp_print_string !default_formatter "|";
-  pp_open_box !default_formatter 3;
-  pp_print_space !default_formatter ();
-  pp_print_string !default_formatter (little_name_of_global global);
+let print_one_variant ff global =
+  pp_print_space ff ();
+  pp_print_string ff "|";
+  pp_open_box ff 3;
+  pp_print_space ff ();
+  pp_print_string ff (little_name_of_global global);
   (* prints the rest if the arity is not null *)
   begin
     match type_of_constr_arg global with
     | None -> ()
     | Some typ ->
-	pp_print_space !default_formatter ();
-	pp_print_string !default_formatter "of";
-	pp_print_space !default_formatter ();
-	print typ
+	pp_print_space ff ();
+	pp_print_string ff "of";
+	pp_print_space ff ();
+	print ff typ
   end;
-  pp_close_box !default_formatter ()
+  pp_close_box ff ()
 
 (* prints one label *)
-let print_one_label global =
-  pp_print_space !default_formatter ();
-  pp_open_box !default_formatter 2;
-  pp_print_string !default_formatter (little_name_of_global global);
-  pp_print_string !default_formatter ":";
-  pp_print_space !default_formatter ();
-  print (type_of_label_res global);
-  pp_close_box !default_formatter ()
+let print_one_label ff global =
+  pp_print_space ff ();
+  pp_open_box ff 2;
+  pp_print_string ff (little_name_of_global global);
+  pp_print_string ff ":";
+  pp_print_space ff ();
+  print ff (type_of_label_res global);
+  pp_close_box ff ()
 
-let rec print_label_list = function
+let rec print_label_list ff = function
     [] -> ()
   | h::t ->
-      print_one_label h;
+      print_one_label ff h;
       if t <> [] then
 	begin
-	  pp_print_string !default_formatter "; ";
-	  print_label_list t
+	  pp_print_string ff "; ";
+	  print_label_list ff t
 	end
 
-let print_type_declaration gl =
+let print_type_declaration ff gl =
   let q = Global.gi gl in
   let { type_kind = td;
 	type_arity = ta; } = Global.info gl in
-  pp_open_box !default_formatter 2;
-  print_type_name q ta;
+  pp_open_box ff 2;
+  print_type_name ff q ta;
   begin match td with
   | Type_abstract -> ()
   | Type_variant global_list ->
-      pp_print_string !default_formatter " =";
-      pp_open_hvbox !default_formatter 0;
-      List.iter print_one_variant global_list;
-      pp_close_box !default_formatter ()
+      pp_print_string ff " =";
+      pp_open_hvbox ff 0;
+      List.iter (print_one_variant ff) global_list;
+      pp_close_box ff ()
   | Type_record global_list ->
-      pp_print_string !default_formatter " =";
-      pp_print_space !default_formatter ();
-      pp_print_string !default_formatter "{";
-      pp_open_hvbox !default_formatter 1;
-      print_label_list global_list;
-      pp_close_box !default_formatter ();
-      pp_print_space !default_formatter ();
-      pp_print_string !default_formatter "}"
+      pp_print_string ff " =";
+      pp_print_space ff ();
+      pp_print_string ff "{";
+      pp_open_hvbox ff 1;
+      print_label_list ff global_list;
+      pp_close_box ff ();
+      pp_print_space ff ();
+      pp_print_string ff "}"
   | Type_rebind te ->
-      pp_print_string !default_formatter " =";
-      pp_print_space !default_formatter ();
-      print te
+      pp_print_string ff " =";
+      pp_print_space ff ();
+      print ff te
   end;
-  pp_close_box !default_formatter ()
+  pp_close_box ff ()
 
-let print_list_of_type_declarations global_list =
+let print_list_of_type_declarations ff global_list =
   let rec printrec global_list =
     match global_list with
       [] -> ()
-    | [global] -> print_type_declaration global
+    | [global] -> print_type_declaration ff global
     | global :: global_list ->
-	print_type_declaration global;
-	pp_print_space !default_formatter ();
-	pp_print_string !default_formatter "and ";
+	print_type_declaration ff global;
+	pp_print_space ff ();
+	pp_print_string ff "and ";
 	printrec global_list in
   match global_list with
     [] -> ()
   | global_list ->
-      pp_open_vbox !default_formatter 0;
-      pp_print_string !default_formatter "type ";
+      pp_open_vbox ff 0;
+      pp_print_string ff "type ";
       printrec global_list;
-      pp_close_box !default_formatter ();
-      pp_print_string !default_formatter "\n";;
+      pp_close_box ff ();
+      pp_print_string ff "\n";;
 
 (* the main printing functions *)
-let () = Format.pp_set_max_boxes !default_formatter max_int
-let () = Format.pp_set_margin !default_formatter max_int
+(* let () = Format.pp_set_max_boxes ff max_int *) (* XXX TODO XXX *)
+(* let () = Format.pp_set_margin ff max_int *) (* XXX TODO XXX *)
 
-let output fmt ty =
-  default_formatter := fmt;
-  print ty;
-  pp_print_flush !default_formatter ()
+let output ff ty =
+  print ff ty;
+  pp_print_flush ff ()
 
-let output_value_type_declaration fmt global_list =
-  default_formatter := fmt;
-  pp_open_box !default_formatter 0;
-  List.iter print_value_type_declaration global_list;
-  pp_close_box !default_formatter ()
+let output_value_type_declaration ff global_list =
+  pp_open_box ff 0;
+  List.iter (print_value_type_declaration ff) global_list;
+  pp_close_box ff ()
 
-let output_type_declaration fmt global_list =
-  default_formatter := fmt;
-  pp_open_box !default_formatter 0;
-  print_list_of_type_declarations global_list;
-  pp_close_box !default_formatter ();
-  pp_print_flush !default_formatter ()
+let output_type_declaration ff global_list =
+  pp_open_box ff 0;
+  print_list_of_type_declarations ff global_list;
+  pp_close_box ff ();
+  pp_print_flush ff ()
 
-let output_exception_declaration fmt gl =
-  default_formatter := fmt;
-  pp_open_box !default_formatter 0;
-  pp_print_string !default_formatter "exception ";
-  pp_print_space !default_formatter ();
-  pp_print_string !default_formatter (little_name_of_global gl);
+let output_exception_declaration ff gl =
+  pp_open_box ff 0;
+  pp_print_string ff "exception ";
+  pp_print_space ff ();
+  pp_print_string ff (little_name_of_global gl);
   (* prints the rest if the arity is not null *)
   begin
     match type_of_constr_arg gl with
     | None -> ()
     | Some typ ->
-	pp_print_space !default_formatter ();
-	pp_print_string !default_formatter "of";
-	pp_print_space !default_formatter ();
-	print typ
+	pp_print_space ff ();
+	pp_print_string ff "of";
+	pp_print_space ff ();
+	print ff typ
   end;
-  pp_close_box !default_formatter ();
-  pp_print_string !default_formatter "\n";
-  pp_print_flush !default_formatter ()
+  pp_close_box ff ();
+  pp_print_string ff "\n";
+  pp_print_flush ff ()
 
 (* Utils *)
 let print_to_string  f x =
