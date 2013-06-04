@@ -1,6 +1,10 @@
 Warning: incompatible changes with previous versions are marked with "*".
 
 
+ReactiveML 1.08.06 (XXXX-XX-XX):
+--------------------------------
+
+
 ReactiveML 1.08.05 (2013-06-04):
 --------------------------------
  - rmlc: new implementation of the reactivity analysis.
