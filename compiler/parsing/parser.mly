@@ -317,6 +317,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token PROCESS             /* "process" */
 %token QUESTION            /* "?" */
 %token QUESTIONQUESTION    /* "??" */
+%token QUIET               /* "quiet" */
 %token QUOTE               /* "'" */
 %token RBRACE              /* "}" */
 %token RBRACKET            /* "]" */
@@ -347,7 +348,6 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token UNTIL               /* "until" */
 %token VAL                 /* "val" */
 %token VIRTUAL             /* "virtual" */
-%token WEAK                /* "weak" */
 %token WHEN                /* "when" */
 %token WHILE               /* "while" */
 %token WITH                /* "with" */
@@ -417,7 +417,7 @@ The precedences must be listed from low to high.
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
           NEW NATIVEINT PREFIXOP STRING TRUE UIDENT NOTHING PAUSE LOOP
-          TOPCK GLOBAL_CK LOCAL_CK WEAK
+          TOPCK GLOBAL_CK LOCAL_CK QUIET
 
 
 /* Entry points */
@@ -767,7 +767,7 @@ clock_expr:
 ;
 pause_kind:
 | /*empty*/ { Strong }
-| WEAK { Weak }
+| QUIET { Weak }
 ;
 opt_schedule:
    /* empty */ { None}
