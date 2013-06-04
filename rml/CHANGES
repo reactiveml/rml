@@ -1,9 +1,16 @@
 Warning: incompatible changes with previous versions are marked with "*".
 
 
-ReactiveML 1.08.05 (XXXX-XX-XX):
+ReactiveML 1.08.05 (2013-06-04):
 --------------------------------
-
+ - rmlc: new implementation of the reactivity analysis.
+ - rmlc: providing the compiler as a library.
+ - rmlc: bug fixes.
+ - rmltop: new option -I.
+ - rmltop: bug fixes.
+ - rmllib: bug fixes.
+ - rmlbuild: handling of rmli files.
+ * rmldep: targets are ml and rzi files instead of cmo and cmi.
 
 
 ReactiveML 1.08.04 (2013-02-03):
