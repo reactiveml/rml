@@ -1,25 +1,21 @@
+include config
+
+ifeq ($(ENABLE_MPI), yes)
+SUBDIRS = compiler tools mpi lib interpreter
+else
+SUBDIRS = compiler tools lib interpreter
+endif
+
 .PHONY: all clean install
 
 all:
-	(cd compiler/; $(MAKE))
-	(cd tools/; $(MAKE))
-	(cd lib; $(MAKE))
-	(cd mpi; $(MAKE))
-	(cd interpreter; $(MAKE))
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE)); done
 
 install:
-	(cd compiler/; $(MAKE) install)
-	(cd tools/; $(MAKE) install)
-	(cd lib; $(MAKE) install)
-	(cd mpi; $(MAKE) instal)
-	(cd interpreter; $(MAKE) install)
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) install); done
 
 clean:
-	(cd compiler/; $(MAKE) clean)
-	(cd tools/; $(MAKE) clean)
-	(cd lib; $(MAKE) clean)
-	(cd mpi; $(MAKE) clean)
-	(cd interpreter; $(MAKE) clean)
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) clean); done
 
 distclean:clean
 	rm -rf config.status config.log autom4te.cache/

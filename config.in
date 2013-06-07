@@ -24,6 +24,7 @@ MLMPI_LIBDIR=@mlmpi_libdir@
 
 TARGET=byte
 
+ENABLE_MPI=@enable_mpi@
 MPICC=@MPICC@
 CFLAGS=-O2 -Wall
 RELEASE_MODE=@enable_release@
