@@ -1285,7 +1285,9 @@ let rec find_carrier_row_var c =
         | _ ->
             let var, cr2 = find_carrier_row_var cr2 in
             var, carrier_row cr1 cr2)
-  | _ -> raise Unify
+  | _ ->
+    Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_carrier_row c;
+    raise Unify
 
 let rec find_effect_row_var eff =
   let eff = effect_row_repr eff in
@@ -1307,6 +1309,12 @@ let rec first_effect_of_row eff = match eff.desc with
 | Effect_row_one eff -> eff
 | Effect_row (_, eff2) -> first_effect_of_row eff2
 | Effect_row_rec eff1 | Effect_row_link eff1 -> first_effect_of_row eff1
+
+let rec first_carrier_of_row cr = match cr.desc with
+| Carrier_row_var | Carrier_row_empty -> raise Unify
+| Carrier_row_one cr -> cr
+| Carrier_row (_, cr2) -> first_carrier_of_row cr2
+| Carrier_row_link cr1 -> first_carrier_of_row cr1
 
 (* the row variable is the first variable in the + *)
 let rec find_react_row_var rl = match rl with
@@ -1429,14 +1437,14 @@ and carrier_row_unify expected_cr actual_cr =
             let var1, c1 = find_carrier_row_var expected_cr in
             let var2, c2 = find_carrier_row_var actual_cr in
             (match var1.desc, var2.desc with
-              | _, _ when var1 == var2 -> carrier_row_unify c1 c2
+              | _, _ when var1.index = var2.index -> (*carrier_row_unify c1 c2*) ()
               | Carrier_row_empty, Carrier_row_empty -> carrier_row_unify c1 c2
               | Carrier_row_empty, _ ->
                   carrier_row_unify var2 carrier_row_empty;
-                  carrier_row_unify expected_cr c2
+                  unify_carrier_row_carrier (first_carrier_of_row c1) c2
               | _, Carrier_row_empty ->
                   carrier_row_unify var1 carrier_row_empty;
-                  carrier_row_unify c1 actual_cr
+                  unify_carrier_row_carrier (first_carrier_of_row c2) c1
               | _ , _ ->
                   let var = new_carrier_row_var () in
                   let new_c1 = carrier_row c1 var in
@@ -1444,20 +1452,22 @@ and carrier_row_unify expected_cr actual_cr =
                   carrier_row_unify var1 new_c2;
                   carrier_row_unify var2 new_c1
             )
-        (* this cases are used when unifying a closed row with on open row.
-           Here we unify a row without a var or empty with a single carrier,
-           by unifying all carriers in the row with the one carrier *)
-        | Carrier_row (cr1, cr2), Carrier_row_one _ ->
-            carrier_row_unify cr1 actual_cr;
-            carrier_row_unify cr2 actual_cr
-        | Carrier_row_one _, Carrier_row (cr1, cr2) ->
-            carrier_row_unify expected_cr cr1;
-            carrier_row_unify expected_cr cr2
-        | Carrier_row_empty, Carrier_row_one _ -> ()
-        | Carrier_row_one _, Carrier_row_empty -> ()
         | _, _ ->
           Printf.eprintf "Failed to unify carrier rows '%a' and '%a'\n"  Clocks_printer.output_carrier_row expected_cr  Clocks_printer.output_carrier_row actual_cr;
           raise Unify
+
+(* Unifies all the elements in the effect row actual_eff with the effect expected_eff *)
+and unify_carrier_row_carrier expected_cr actual_cr =
+  (*Printf.eprintf "Unify effect %a and effect row %a\n" Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect_row actual_eff;*)
+  match actual_cr.desc with
+    | Carrier_row_var -> actual_cr.desc <- Carrier_row (carrier_row_one expected_cr, carrier_row_empty)
+    | Carrier_row_empty -> ()
+    | Carrier_row (cr1, cr2) ->
+      unify_carrier_row_carrier expected_cr cr1;
+      unify_carrier_row_carrier expected_cr cr2
+    | Carrier_row_one actual_cr -> carrier_unify expected_cr actual_cr
+    | Carrier_row_link cr1 -> unify_carrier_row_carrier expected_cr cr1
+
 
 and effect_unify expected_eff actual_eff =
   (* Printf.eprintf "Unify effects '%a' and %a\n" Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff; *)
