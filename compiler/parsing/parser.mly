@@ -616,8 +616,8 @@ expr:
       { mkexpr(Pexpr_emit_val($2, $3)) }
   | signal_kind signal_comma_list opt_at_expr opt_default_gather opt_reset IN par_expr
       { mkexpr(Pexpr_signal($1, List.rev $2, $3, $4, $5, $7)) }
-  | DO par_expr UNTIL pause_kind opt_bar until_cases DONE
-      { mkexpr_until $2 (List.rev $6) $4 }
+  | DO par_expr pause_kind UNTIL opt_bar until_cases DONE
+      { mkexpr_until $2 (List.rev $6) $3 }
   | DO par_expr WHEN simple_expr DONE
       { mkexpr(Pexpr_when($4, $2)) }
   | CONTROL par_expr WITH simple_expr DONE
