@@ -1,0 +1,95 @@
+open Planets_utils
+
+let rec process reset_every s p v =
+  do
+    run p v
+  until s(v) -> run reset_every s p v done
+
+let error_threshold = 1e-14
+let time_step = 0.5
+
+let process compute_a env x w =
+  emit env (force (x, w));
+  await env(f) in
+  f x
+
+let process compute_bogacki_shampine dt env x_t v_t w =
+  (* step 1 *)
+  let k1_v = run compute_a env x_t w in
+  let k1_p = v_t in
+  (* step 2 *)
+  let k2_p = v_t ++. ((dt /. 2.0) **. k1_v) in
+  let x_2 = x_t ++. ((dt /. 2.0) **. k1_p) in
+  let k2_v = run compute_a env x_2 w in
+  (* step 3 *)
+  let k3_p = v_t ++. ((0.75 *. dt) **. k2_v) in
+  let x_3 = x_t ++. ((0.75 *. dt) **. k2_p) in
+  let k3_v = run compute_a env x_3 w in
+  (* final result *)
+  let v_tp =
+    v_t ++. ((dt /. 9.0) **. ((2.0 **. k1_v) ++. ((3.0 **. k2_v) ++. (4.0 **. k3_v))))
+  in
+  let x_tp =
+    x_t ++. ((dt /. 9.0) **. ((2.0 **. k1_p) ++. ((3.0 **. k2_p) ++. (4.0 **. k3_p))))
+  in
+  (*error computation*)
+  (* step 3 *)
+  let k4_v = run compute_a env x_tp w in
+  (* second final value *)
+  let v_s =
+    v_t ++. ((dt /. 24.0) **. ((7.0 **. k1_v) ++. ((6.0 **. k2_v) ++.
+                              ((8.0 **. k3_v) ++. (3.0 **. k4_v)))))
+  in
+  let e = vector_error v_tp v_s in
+  x_tp, v_tp, e
+
+
+let rec process body env sp (do_step, error, commit) (x_t, v_t, w) =
+  let rec process try_step compute =
+    let x_tp, v_tp, e = run compute env x_t v_t w in
+    emit error e;
+    await commit;
+    x_tp, v_tp
+  in
+  await do_step(compute) in
+  let x_tp, v_tp = run reset_every do_step try_step compute in
+  draw_body sp x_t x_tp w;
+  pause topck;
+  run body env sp (do_step, error, commit) (x_tp, v_tp, w)
+
+let process error_checker (do_step, error, commit) =
+  let rec process try_step s =
+    emit do_step(compute_bogacki_shampine s);
+    await error(e) in
+    if e > error_threshold then (
+      print_endline ("Error found; trying with step : "^string_of_float (s /. 2.0));
+      run try_step (s /. 2.0);
+      run try_step (s /. 2.0)
+    ) else
+      emit commit
+  in
+  loop
+    run try_step time_step;
+    pause topck
+  end
+
+let process main =
+  let window_p, vp = init_gui () in
+  run window_p
+  ||
+  domain adapt_ck do
+    signal error default 0.0 gather max in
+    signal commit in
+    domain computation_ck do
+      signal do_step clock adapt_ck
+          default compute_bogacki_shampine 0.0 gather (fun x _ -> x) in
+      signal env default (fun _ -> zero_vector) gather add_force in
+      run error_checker (do_step, error, commit)
+      ||
+      for i = 1 to 5 dopar
+        run body env (planet_sprite vp) (do_step, error, commit) (random_planet ())
+      done
+      ||
+      run body env (sun_sprite vp) (do_step, error, commit) (sun ())
+    done
+  done

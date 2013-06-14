@@ -1,0 +1,50 @@
+open Mlsdl
+
+let rec iter f l = match l with
+| [] -> ()
+| x::l -> f x; iter f l
+
+(* window process *)
+let window wd w h color =
+  create_window wd;
+  let w = create_world w h color in
+  let process p =
+    loop
+      process_events ();
+      update None;
+      pause
+    end
+  in
+  w, p
+
+let process keyboard ck =
+  signal keys clock ck in
+  let process key_listener =
+    loop
+      iter (fun k -> emit keys k) (flush_key_events ());
+      pause
+    end
+  in
+  keys, key_listener
+
+let process mouse ck =
+  signal mouse clock ck in
+  let process mouse_listener =
+    loop
+      iter (fun k -> emit mouse k) (flush_mouse_events ());
+      pause
+    end
+  in
+  mouse, mouse_listener
+
+let process sprite sp ck =
+  signal pos clock ck default (sprite_pos sp) gather (fun x _ -> x) in
+  let process p =
+    draw_sprite sp;
+    loop
+      await pos(p) in
+      set_sprite_pos sp p.p_x p.p_y;
+      draw_sprite sp
+    end
+  in
+  pos, p

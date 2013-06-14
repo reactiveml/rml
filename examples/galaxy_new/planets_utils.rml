@@ -1,0 +1,113 @@
+type vector = { v_x : float; v_y : float; v_z : float }
+
+let mk_vector x y z =
+  { v_x = x; v_y = y; v_z = z }
+
+let zero_vector = mk_vector 0.0 0.0 0.0
+
+let dist2 v1 v2 =
+  (v2.v_x -. v1.v_x) *. (v2.v_x -. v1.v_x)
+    +. (v2.v_y -. v1.v_y) *. (v2.v_y -. v1.v_y)
+    +. (v2.v_z -. v1.v_z) *. (v2.v_z -. v1.v_z)
+
+let unit_vector v1 v2 =
+  let d2 = dist2 v1 v2 in
+  let d = sqrt d2 in
+  { v_x = (v2.v_x -. v1.v_x) /. d;
+    v_y = (v2.v_y -. v1.v_y) /. d;
+    v_z = (v2.v_z -. v1.v_z) /. d }
+
+let normal_unit_vector v1 v2 =
+  let d2 = dist2 v1 v2 in
+  let d = sqrt d2 in
+  { v_x = -. (v2.v_y -. v1.v_y) /. d;
+    v_y = (v2.v_x -. v1.v_x) /. d;
+    v_z = (v2.v_z -. v1.v_z) /. d }
+
+let (++.) v1 v2 =
+  { v_x = v1.v_x +. v2.v_x;
+    v_y = v1.v_y +. v2.v_y;
+    v_z = v1.v_z +. v2.v_z }
+
+let ( **. ) a v =
+  { v_x = a *. v.v_x;
+    v_y = a *. v.v_y;
+    v_z = a *. v.v_z;  }
+
+let norm2 v =
+  v.v_x *. v.v_x +. v.v_y *. v.v_y +. v.v_z *. v.v_z
+
+let vector_error v1 v2 =
+  (dist2 v1 v2) /. (norm2 v1)
+
+let center_float r =
+  { v_x = r.Mlsdl.r_x +. (r.Mlsdl.r_w /. 2.0);
+    v_y = r.Mlsdl.r_y +. (r.Mlsdl.r_h /. 2.0);
+    v_z = 0.0 }
+
+let g = 3.0
+let sun_weight = 8000.0
+
+let w = 800
+let h = 800
+
+let force (pos2, w2) pos1 =
+  let d2 = dist2 pos1 pos2 in
+  if (d2 <> 0.0) then
+    let f12 = (g *. w2) /. d2 in
+    f12 **. (unit_vector pos1 pos2)
+  else
+    zero_vector
+
+let add_force f_new f pos =
+  (f_new pos) ++. (f pos)
+
+let random_float min max =
+  min +. Random.float (max -. min)
+
+let random_vector min max =
+  mk_vector (random_float min max) (random_float min max) 0.0
+
+let random_pos_planet c_x c_y dmin dmax =
+  let rand_away z d =
+    if Random.bool () then z +. d else z -. d
+  in
+  let d = random_float dmin dmax in
+  let x = random_float (c_x -. d) (c_x +. d) in
+  let dy = sqrt ( (d *. d) -. ((x -. c_x) *. (x -. c_x)) ) in
+  let y = rand_away c_y dy in
+  mk_vector x y 0.0
+
+let center = mk_vector (float_of_int (w/2)) (float_of_int (h/2)) 0.0
+
+let random_planet () =
+  let x_0 = random_pos_planet center.v_x center.v_y 150.0 300.0 in
+  let v_0 = (10.0 **. (normal_unit_vector x_0 center)) in
+  let w = 0.01 in
+  (x_0, v_0, w)
+
+let sun () =
+  let x_0 =
+    mk_vector ((float_of_int w) /. 2.0) ((float_of_int h) /. 2.0) 0.0
+  in
+  let v_0 = mk_vector 0.0 0.0 0.0 in
+  (x_0, v_0, sun_weight)
+
+(* GUI *)
+let init_gui () =
+  let vp_rect = Mlsdl.mk_rect 0.0 0.0 (float_of_int w) (float_of_int h) in
+  let sc_rect = Mlsdl.mk_rect 0 0 w h in
+  let center = center_float vp_rect in
+  let _, window_p = Rmlsdl.window (Mlsdl.Window (w, h)) w h Mlsdl.Black in
+  let vp = Mlsdl.create_float_viewport vp_rect sc_rect in
+  window_p, vp
+
+let planet_sprite vp =
+  Mlsdl.create_sprite_from_file vp Mlsdl.null_float_pos "earth.png"
+
+let sun_sprite vp =
+  Mlsdl.create_sprite_from_file vp Mlsdl.null_float_pos "sun.png"
+
+let draw_body sp x_t v_t w =
+  Mlsdl.set_sprite_pos sp x_t.v_x x_t.v_y;
+  Mlsdl.draw_sprite sp

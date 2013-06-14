@@ -1,0 +1,129 @@
+open Planets_utils
+
+type imethod = Pause | Euler | EulerSemi | Heun | RK4
+
+let dt = 0.1
+signal current_imethod default EulerSemi gather (fun x _ -> x)
+
+let process compute_a env x w =
+  emit env (force (x, w));
+  await env(f) in
+  f x
+
+let process compute_pause env x_t v_t w =
+  (x_t, v_t)
+
+let process compute_euler env x_t v_t w  =
+  let a_t = run compute_a env x_t w in
+
+  let v_tp = v_t ++. (dt **. a_t) in
+  let x_tp = x_t ++. (dt **. v_t) in
+  (x_tp, v_tp)
+
+let process compute_euler_semi_implicit env x_t v_t w =
+  let a_t = run compute_a env x_t w in
+
+  let v_tp = v_t ++. (dt **. a_t) in
+  let x_tp = x_t ++. (dt **. v_tp) in
+  (x_tp, v_tp)
+
+let process compute_heun env x_t v_t w =
+  let a_t = run compute_a env x_t w in
+
+  let v_int = v_t ++. (dt **. a_t) in
+  let x_int = x_t ++. (dt **. v_t) in
+  let a_int = run compute_a env x_int w in
+
+  let v_tp = v_t ++. ((dt /. 2.0) **. (a_t ++. a_int)) in
+  let x_tp = x_t ++. ((dt /. 2.0) **. (v_t ++. v_int)) in
+  (x_tp, v_tp)
+
+let process compute_rk4 env x_t v_t w =
+  (* step 1 *)
+  let k1_v = run compute_a env x_t w in
+  let k1_p = v_t in
+  (* step 2 *)
+  let k2_p = v_t ++. ((dt /. 2.0) **. k1_v) in
+  let x_2 = x_t ++. ((dt /. 2.0) **. k1_p) in
+  let k2_v = run compute_a env x_2 w in
+  (* step 2 *)
+  let k3_p = v_t ++. ((dt /. 2.0) **. k2_v) in
+  let x_3 = x_t ++. ((dt /. 2.0) **. k2_p) in
+  let k3_v = run compute_a env x_3 w in
+  (* step 4 *)
+  let k4_p = v_t ++. (dt **. k3_v) in
+  let x_4 = x_t ++. (dt **. k3_p) in
+  let k4_v = run compute_a env x_4 w in
+  (* final result *)
+  let v_tp =
+    v_t ++. ((dt /. 6.0) **.
+               (k1_v ++. ((2.0 **. k2_v) ++.
+                            ((2.0 **.k3_v) ++. k4_v))))
+  in
+  let x_tp =
+    x_t ++. ((dt /. 6.0) **.
+               (k1_p ++. ((2.0 **. k2_p) ++.
+                          ((2.0 **. k3_p) ++. k4_p))))
+  in
+  (x_tp, v_tp)
+
+let process compute env x_t v_t w =
+  match last current_imethod with
+  | Pause -> run compute_pause env x_t v_t w
+  | Euler -> run compute_euler env x_t v_t w
+  | EulerSemi -> run compute_euler_semi_implicit env x_t v_t w
+  | Heun -> run compute_heun env x_t v_t w
+  | RK4 -> run compute_rk4 env x_t v_t w
+
+let rec process body env sp (x_t, v_t, w) =
+  let x_tp, v_tp = run compute env x_t v_t w in
+  draw_body sp x_t v_t w;
+  pause global_ck;
+  run body env sp (x_tp, v_tp, w)
+
+let process print_method =
+  loop
+    let s = match last current_imethod with
+    | Pause -> "Pause"
+    | Euler -> "Euler"
+    | EulerSemi -> "Euler semi-implicit"
+    | Heun -> "Heun"
+    | RK4 -> "Runge-Kutta 4th order"
+    in
+    Mlsdl.draw_info_box s;
+    pause global_ck
+  end
+
+let process switch_method keys =
+  loop
+    await keys(k::_) in
+    let imethod =
+      match k with
+      | "p" -> Pause
+      | "e" -> Euler
+      | "s" -> EulerSemi
+      | "h" -> Heun
+      | "r" -> RK4
+      | _ -> last current_imethod
+    in
+    emit current_imethod imethod;
+    pause global_ck
+  end
+
+let process main =
+  let window_p, vp = init_gui () in
+  run window_p
+  ||
+  domain computation_ck do
+    signal env default (fun _ -> zero_vector) gather add_force in
+    for i = 1 to 40 dopar
+      run body env (planet_sprite vp) (random_planet ())
+    done
+    ||
+    run body env (sun_sprite vp) (sun ())
+  done
+  ||
+  run print_method
+  ||
+  let keys, key_p = run Rmlsdl.keyboard topck in
+  run key_p || run switch_method keys

@@ -1,0 +1,4 @@
+<*.rml>:row_clocking, use_rmlsdl
+<*.ml>:use_rmlsdl
+<*.byte>:use_rmlsdl,package(sdl),package(sdl.sdlttf),package(sdl.sdlgfx),package(sdl.sdlimage)
+<*.native>:use_rmlsdl,package(sdl),package(sdl.sdlttf),package(sdl.sdlgfx),package(sdl.sdlimage)

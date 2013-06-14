@@ -1,0 +1,4 @@
+<*.rml>:row_clocking
+<*.ml>:package(sdl)
+<*.mli>:package(sdl)
+<*.cma>:custom,package(sdl)
