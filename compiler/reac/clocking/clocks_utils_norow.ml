@@ -84,3 +84,10 @@ let remove_ck_from_react ck r =
   let r_copy = copy_subst_react [] r in
   cleanup ();
   fst (Clock_mapfold.react_effect_it funs () r_copy)
+
+let unify_carrier_lists l1 l2 =
+  let rec unify_list c1 l = match l with
+    | [] -> ()
+    | c2::l -> carrier_unify c1 c2; unify_list c1 l
+  in
+  List.iter (fun c1 -> unify_list c1 l2) l1

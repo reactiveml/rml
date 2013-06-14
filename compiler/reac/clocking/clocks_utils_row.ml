@@ -183,3 +183,11 @@ let remove_ck_from_react, remove_ck_from_effect =
     fst (Clock_mapfold.effect_it funs ck eff_copy)
   in
   remove_ck_from_react, remove_ck_from_effect
+
+
+let unify_carrier_row_lists l1 l2 =
+  let rec unify_list c1 l = match l with
+    | [] -> ()
+    | c2::l -> carrier_row_unify c1 c2; unify_list c1 l
+  in
+  List.iter (fun c1 -> unify_list c1 l2) l1

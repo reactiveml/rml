@@ -1078,7 +1078,7 @@ let rec schema_of_expression env expr =
         ty
 
     | Eawait (imm,s) ->
-        let sck =
+        let sck::_ =
           try
             type_of_event_config ~force_activation_ck:(imm = Immediate) env s
           with
@@ -1185,17 +1185,18 @@ and type_of_event_config ?(force_activation_ck=false) env conf =
           else
             non_event_err s
       in
-      sck
+      [sck]
 
-  (* TODO: renvoyer la liste des horloges *)
-  | Cand (c1,c2) -> assert false
-      (*type_of_event_config env c1;
-      type_of_event_config env c2*)
+  | Cand (c1,c2) ->
+      let l1 = type_of_event_config env c1 in
+      let l2 = type_of_event_config env c2 in
+      unify_carrier_row_lists l1 l2;
+      l1@l2
 
-  | Cor (c1,c2) -> assert false
-      (*
-      type_of_event_config env c1;
-      type_of_event_config env c2*)
+  | Cor (c1,c2) ->
+      let l1 = type_of_event_config env c1 in
+      let l2 = type_of_event_config env c2 in
+      l1@l2
 
 and type_clock_expr env ce =
   let ty_ce = clock_of_expression env ce in
