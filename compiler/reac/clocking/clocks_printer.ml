@@ -158,7 +158,7 @@ let rec print priority ty =
           print_string "|";
         print_effect_row_safe priority eff;
         print_string "}";
-        if not !Compiler_options.no_reactivity then (
+        if not !Compiler_options.no_reactivity && !Compiler_options.show_reactivity then (
           print_string "[";
           print_reactivity priority r;
           print_string "]"
@@ -425,7 +425,7 @@ let print_clock_name tc arity =
     print_n_variables names.k_effect_row arity.k_effect_row;
     print_string "}"
   );
-  if arity.k_react > 0 then (
+  if arity.k_react > 0 && !Compiler_options.show_reactivity then (
     print_string "[";
     print_n_variables names.k_react arity.k_react;
     print_string "]"

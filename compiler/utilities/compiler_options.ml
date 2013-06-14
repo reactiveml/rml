@@ -91,6 +91,7 @@ let const_optimization = ref true
 
 let no_clocking = ref false
 let no_reactivity = ref false
+let show_reactivity = ref false
 let no_clock_effects = ref false
 let use_row_clocking = ref false
 
@@ -269,6 +270,7 @@ and doc_interactive = "Read programs on stdin and output on stdout"
 and doc_no_clocking = "Don't check clocks"
 and doc_row_clocking = "Use clocking with rows (experimental)"
 and doc_no_reactivity = "Do not check for reactivity"
+and doc_show_reactivity = "Display reactivity effects"
 and doc_runtime =
 (*"<interpreter> select the runtime according to <interpreter>:\n"*)
    "(undocumented)\n" ^
@@ -317,6 +319,7 @@ let parse_cli () =
         "-no-clocking", Arg.Set no_clocking, doc_no_clocking;
         "-row-clocking", Arg.Set use_row_clocking, doc_row_clocking;
         "-no-reactivity", Arg.Set no_reactivity, doc_no_reactivity;
+        "-dreactivity", Arg.Set show_reactivity, doc_show_reactivity;
         "-dparse", Arg.Unit set_dparse, doc_dparse;
         "-dtime", Arg.Unit set_dtime, doc_dtime;
         "-dwarn_error", Arg.Set warning_are_errors, doc_warning_are_errors;

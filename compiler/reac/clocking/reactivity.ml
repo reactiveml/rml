@@ -8,35 +8,55 @@ open Clocks_utils_row
 exception Bad_recursion
 
 let instantaneous_loop_err e r =
-  Printf.eprintf
-    "%aWarning: This expression may be an instantaneous loop\n\
-    (effect: %a).\n"
-    Location.print_oc e.e_loc
-    Clocks_printer.output_react r;
+  if !Compiler_options.show_reactivity then
+    Printf.eprintf
+      "%aWarning: This expression may be an instantaneous loop\n\
+         (effect: %a).\n"
+      Location.print_oc e.e_loc
+      Clocks_printer.output_react r
+  else
+    Printf.eprintf
+      "%aWarning: This expression may be an instantaneous loop.\n"
+      Location.print_oc e.e_loc;
   if !Compiler_options.warning_are_errors then raise Error
 
 let instantaneous_rec_err e ck =
-  Printf.eprintf
-    "%aWarning: This definition may produce an instantaneous recursion\n\
-    (clock: %a).\n"
-    Location.print_oc e.e_loc
-    Clocks_printer.output ck;
+  if !Compiler_options.show_reactivity then
+    Printf.eprintf
+      "%aWarning: This definition may produce an instantaneous recursion\n\
+         (clock: %a).\n"
+      Location.print_oc e.e_loc
+      Clocks_printer.output ck
+  else
+    Printf.eprintf
+      "%aWarning: This definition may produce an instantaneous recursion.\n"
+      Location.print_oc e.e_loc;
   if !Compiler_options.warning_are_errors then raise Error
 
 let instantaneous_run_err e r =
-  Printf.eprintf
-    "%aWarning: This expression may produce an instantaneous recursion\n\
-    (effect: %a).\n"
-    Location.print_oc e.e_loc
-    Clocks_printer.output_react r;
+  if !Compiler_options.show_reactivity then
+    Printf.eprintf
+      "%aWarning: This expression may produce an instantaneous recursion\n\
+         (effect: %a).\n"
+      Location.print_oc e.e_loc
+      Clocks_printer.output_react r
+  else
+    Printf.eprintf
+      "%aWarning: This expression may produce an instantaneous recursion.\n"
+      Location.print_oc e.e_loc;
   if !Compiler_options.warning_are_errors then raise Error
 
 let nonreactive_domain_err e r =
-  Printf.eprintf
-    "%aWarning: This reactive domain may not be reactive\n\
-    (effect: %a).\n"
-    Location.print_oc e.e_loc
-    Clocks_printer.output_react r;
+  if !Compiler_options.show_reactivity then
+    Printf.eprintf
+      "%aWarning: This reactive domain may not be reactive\n\
+         (effect: %a).\n"
+      Location.print_oc e.e_loc
+      Clocks_printer.output_react r
+  else
+    Printf.eprintf
+      "%aWarning: This reactive domain may not be reactive.\n"
+      Location.print_oc e.e_loc;
   if !Compiler_options.warning_are_errors then raise Error
 
 
