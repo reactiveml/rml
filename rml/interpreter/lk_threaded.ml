@@ -984,6 +984,23 @@ module Lk_interpreter: Lk_interpreter.S =
       in
       rml_await_immediate_one_v evt pause_p ctrl ()
 
+    let rml_await_one_match expr_evt matching p =
+      rml_await_all_match expr_evt
+        (fun x -> List.exists matching x)
+        (fun l ->
+          try
+            let v = List.find matching l in
+            p v
+          with Not_found -> raise RML)
+
+    let rml_await_one_match_v evt matching p =
+      rml_await_all_match_v evt
+        (fun x -> List.exists matching x)
+        (fun l ->
+          try
+            let v = List.find matching l in
+            p v
+          with Not_found -> raise RML)
 
 (* ------------------------------------------------------------------------ *)
     exception End

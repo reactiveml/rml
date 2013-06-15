@@ -1058,7 +1058,6 @@ and translate_proc e =
 	let cpatt = translate_pattern patt in
 	begin match Caml_misc.partial_match cpatt, k.kproc_desc with
 	| partial_match, Kproc_when_match (e1, _) ->
-	    if flag2 = One then not_yet_implemented "await_one_match";
 	    Cexpr_apply
 	      (make_instruction ("rml_await"^im^kind^"_match"),
 	       [embed_ml s;
@@ -1086,7 +1085,6 @@ and translate_proc e =
   (*  | partial_match,
 	      Kproc_compute ({ kexpr_desc = Kexpr_when_match (e1, e2) }, _) -> *)
 	| true, _ ->
-	    if flag2 = One then not_yet_implemented "await_one_match";
 	    Cexpr_apply
 	      (make_instruction ("rml_await"^im^kind^"_match"),
 	       [embed_ml s;

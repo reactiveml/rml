@@ -87,6 +87,11 @@ module type S =
 	('a , 'a list) event -> ('a -> 'c expr) -> 'c expr
     val rml_await_immediate_one:
 	(unit -> ('a , 'a list) event) -> ('a -> 'c expr) -> 'c expr
+    val rml_await_one_match':
+	('a, 'b list) event -> ('b -> bool) -> ('b -> 'c expr) -> 'c expr
+    val rml_await_one_match:
+	(unit -> ('a, 'b list) event) ->
+          ('b -> bool) -> ('b -> 'c expr) -> 'c expr
     val rml_present': ('a, 'b) event -> 'c expr -> 'c expr -> 'c expr
     val rml_present: (unit -> ('a, 'b) event) -> 'c expr -> 'c expr -> 'c expr
     val rml_present_conf: event_cfg -> 'a expr -> 'a expr -> 'a expr

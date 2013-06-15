@@ -1360,6 +1360,24 @@ let rml_loop p =
       fun f_k ctrl jp ->
 	rml_await_immediate_one' evt pause_p f_k ctrl jp
 
+    let rml_await_one_match expr_evt matching p =
+      rml_await_all_match expr_evt
+        (fun x -> List.exists matching x)
+        (fun l ->
+          try
+            let v = List.find matching l in
+            p v
+          with Not_found -> raise RML)
+
+    let rml_await_one_match' evt matching p =
+      rml_await_all_match' evt
+        (fun x -> List.exists matching x)
+        (fun l ->
+          try
+            let v = List.find matching l in
+            p v
+          with Not_found -> raise RML)
+
     let rml_await_conf expr_cfg =
       fun f_k ctrl jp ->
 	rml_await_immediate_conf expr_cfg (rml_pause f_k ctrl jp) ctrl None

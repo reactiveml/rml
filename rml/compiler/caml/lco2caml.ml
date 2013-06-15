@@ -750,7 +750,6 @@ and translate_proc e =
 	let cpatt = translate_pattern patt in
 	begin match Caml_misc.partial_match cpatt, k.coproc_desc with
 	| partial_match, Coproc_when_match (e1, k) ->
-	    if flag2 = One then not_yet_implemented "await_one_match";
 	    let matching =
 	      make_expr
 		(Cexpr_function
@@ -781,7 +780,6 @@ and translate_proc e =
 	| partial_match,
 	    Coproc_compute { coexpr_desc = Coexpr_when_match (e1, e2); }
 	  ->
-	    if flag2 = One then not_yet_implemented "await_one_match";
 	    let matching =
 	      make_expr
 		(Cexpr_function
@@ -812,7 +810,6 @@ and translate_proc e =
 			[]))
 		  Location.none])
 	| true, _ ->
-	    if flag2 = One then not_yet_implemented "await_one_match";
 	    let matching =
 	      make_expr
 		(Cexpr_function

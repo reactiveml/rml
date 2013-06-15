@@ -114,6 +114,13 @@ module type S =
         ('a, 'b) event -> ('b -> bool) -> ('b -> unit step) ->
 	  control_tree -> 'c step
 
+      val rml_await_one_match:
+        (unit -> ('a, 'b list) event) -> ('b -> bool) -> ('b -> unit step) ->
+	  control_tree -> 'c step
+      val rml_await_one_match_v:
+        ('a, 'b list) event -> ('b -> bool) -> ('b -> unit step) ->
+	  control_tree -> 'c step
+
       val rml_present:
 	  control_tree -> (unit -> ('a, 'b) event) ->
 	    unit step -> unit step -> 'c step
