@@ -1211,8 +1211,9 @@ let skolem_check skolems ck =
 let make_fresh_skolem_subst vars =
   let fresh_skolem (m, skolems) car = match car.desc with
     | Carrier_var _ ->
-        let sk = carrier_skolem generic_prefix_name names#name in
-        (car.index, sk)::m, sk.index::skolems
+        let idx = names#name in
+        let sk = carrier_skolem generic_prefix_name idx in
+        (car.index, sk)::m, idx::skolems
     | _ -> assert false
   in
   List.fold_left fresh_skolem ([], []) vars
@@ -1377,16 +1378,20 @@ let rec unify expected_ck actual_ck =
 
 (* TODO: on doit mettre les quantifieurs dans leur ordre d'apparition. Ensuite, on instancie les parametres des deux schemas par les memes skolems frais, on les unifie puis on verifie que les skolems n'ont pas echappe dans l'environnement en verifiant sils apparaissent dans le type des schemas de depart. *)
 and unify_schema expected_sch actual_sch =
-  Printf.eprintf "expected_sch: %a\nactual_sch: %a\n" Clocks_printer.output expected_sch.cs_desc  Clocks_printer.output actual_sch.cs_desc;
+  (*Printf.eprintf "expected_sch: %a\nactual_sch: %a\n" Clocks_printer.output expected_sch.cs_desc  Clocks_printer.output actual_sch.cs_desc;*)
   (* il faut mettre des skolems pour les rows de carrier aussi *)
   let carrier_vars = (kind_sum_split expected_sch.cs_vars).k_carrier in
   let m, skolems = make_fresh_skolem_subst carrier_vars in
   let expected_ty = copy_subst_clock m expected_sch.cs_desc in
   let actual_ty = instance actual_sch in
-  Printf.eprintf "expected_ty: %a\nactual_ty: %a\n" Clocks_printer.output expected_ty  Clocks_printer.output actual_ty;
-  unify expected_ty actual_ty;
-  Printf.eprintf "after expected_ty: %a\nafter actual_ty: %a\n" Clocks_printer.output expected_ty  Clocks_printer.output actual_ty;
-  skolem_check skolems actual_sch.cs_desc
+  try
+    (*Printf.eprintf "expected_ty: %a\nactual_ty: %a\n" Clocks_printer.output expected_ty  Clocks_printer.output actual_ty;*)
+    unify expected_ty actual_ty;
+    (*Printf.eprintf "after expected_ty: %a\nafter actual_ty: %a\n" Clocks_printer.output expected_ty  Clocks_printer.output actual_ty;*)
+    skolem_check skolems actual_sch.cs_desc;
+    skolem_check skolems expected_sch.cs_desc;
+  with
+    | Escape _ -> raise Unify
 
 and unify_list ck_l1 ck_l2 =
   try
