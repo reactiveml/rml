@@ -251,7 +251,7 @@ let rec make_dummy t =
 	  else if type_desc = Initialization.type_desc_array then
 	    Cexpr_array []
 
-	  else if type_desc = Initialization.type_desc_event then
+	  else if type_desc.gi = Initialization.event_ident then
 	    Cexpr_constraint (make_magic_expr(), ctype_expr_of_type_expr t)
 
 	  else if type_desc = Initialization.type_desc_list then

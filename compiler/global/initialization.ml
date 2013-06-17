@@ -139,13 +139,13 @@ let clock_array = Clocks_utils.constr_notabbrev array_ident [Kclock (Clocks_util
 (* event *)
 (* let event_ident = interpreter_type "event" *)
 let event_ident = pervasives_type "event"
-let event_arity =
+let event_arity () =
   if !Compiler_options.use_row_clocking then
     { zero_arity with k_clock = 2; k_carrier_row = 1 }
   else
     { zero_arity with k_clock = 2; k_carrier = 1 }
 
-let type_desc_event =
+let type_desc_event () =
   { gi = event_ident;
     ty_info = Some { type_constr = { gi = event_ident;
 				                             ty_info = Some{ constr_abbr=Constr_notabbrev};
@@ -156,12 +156,12 @@ let type_desc_event =
                                      ty_info = None;
 				                             ck_info = Some{ Clocks.constr_abbr = Clocks.Constr_notabbrev} };
 		                 clock_kind = Clock_abstract;
-                     clock_def_arity = event_arity;
-		                 clock_arity = event_arity; } }
+                     clock_def_arity = event_arity ();
+		                 clock_arity = event_arity (); } }
 
 let type_event = Types_utils.constr_notabbrev event_ident [Types_utils.new_generic_var();
 						     Types_utils.new_generic_var(); ]
-let clock_event =
+let clock_event () =
   if !Compiler_options.use_row_clocking then
     Clocks_utils.constr_notabbrev event_ident
       [Kclock (Clocks_utils.new_generic_clock_var());
@@ -338,7 +338,6 @@ let list_of_type_desc =
     type_desc_array;
     type_desc_list;
     type_desc_option;
-    type_desc_event;
     type_desc_clock;
 ]
 
@@ -350,6 +349,7 @@ let list_of_constr_desc =
 
 
 let load_initial_modules () =
+  let list_of_type_desc = (type_desc_event ())::list_of_type_desc in
   List.iter Modules.add_type list_of_type_desc;
   List.iter Modules.add_constr list_of_constr_desc
 
