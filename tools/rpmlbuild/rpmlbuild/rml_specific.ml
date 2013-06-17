@@ -134,7 +134,7 @@ let init () =
 
         let file = env "%.mli" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc] @ includes @ [P file]))
+        Cmd(S ([rmlc] @ includes @ [T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
       rule "rml: rmli -> rzi"
