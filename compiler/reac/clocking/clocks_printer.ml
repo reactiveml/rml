@@ -358,9 +358,12 @@ and print_effect_row_safe_list priority sep l  = _print_list print_effect_row_sa
 and print_react_list priority sep l = _print_list print_react priority sep l
 and print_reactivity_list priority sep l = _print_list print_reactivity priority sep l
 
-and print_param priority =
-  kind_fold ~clock:print ~carrier:print_carrier ~carrier_row:print_carrier_row
-    ~effect:print_effect ~effect_row:print_effect_row ~react:print_reactivity
+and print_param priority p =
+  let print =
+    mk_kind_prod ~clock:print ~carrier:print_carrier ~carrier_row:print_carrier_row
+      ~effect:print_effect ~effect_row:print_effect_row ~react:print_reactivity
+  in
+  ignore (kind_fold print priority p)
 
 let print ty =
   names.k_clock#reset;
@@ -555,6 +558,12 @@ let output_react oc r =
   set_formatter_out_channel oc;
 (*   print_string "  "; *)
   print_reactivity 0 r;
+  print_flush ()
+
+let output_param oc p =
+  set_formatter_out_channel oc;
+(*   print_string "  "; *)
+  print_param 0 p;
   print_flush ()
 
 let output_value_declaration oc global_list =

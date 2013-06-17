@@ -162,6 +162,16 @@ let unify_var loc expected_ty actual_ty =
 (* Typing environment *)
 module Env = Symbol_table.Make (Ident)
 
+(* checks that every type is defined *)
+(* and used with the correct arity *)
+let check_clock_constr_defined loc gl arity =
+  let name = gl.gi in
+  let ty_desc = Global.ck_info gl in
+  let arity' = ty_desc.clock_arity in
+  if arity' <> arity
+  then clock_constr_arity_err name arity arity' loc;
+  ty_desc.clock_constr
+
 (* find the type of the constructor C *)
 let get_clock_of_constructor c loc =
   constr_instance (Global.ck_info c)
@@ -313,8 +323,8 @@ let clock_of_type_expression ty_vars env typexp =
         product (List.map (clock_of_te ty_vars) l)
 
     | Tconstr (s, p_list) ->
-        let ck_desc = Global.ck_info s in
-        constr ck_desc.clock_constr (List.map (param_of_pe ty_vars) p_list)
+        let name = check_clock_constr_defined typexp.te_loc s (list_arity p_list) in
+        constr name (List.map (param_of_pe ty_vars) p_list)
 
     | Tprocess (te,_, ce, ee) ->
         process (clock_of_te ty_vars te) (carrier_of_ce ty_vars ce)

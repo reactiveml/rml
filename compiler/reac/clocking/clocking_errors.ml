@@ -30,6 +30,7 @@
 
 (* Printing of error messages during typing *)
 
+open Asttypes
 open Misc
 open Clocks
 open Clocks_utils
@@ -259,6 +260,22 @@ let clock_constr_arity_err gr arit' arit loc =
     Global_ident.print_oc gr
     arit'
     arit;
+  raise Error
+
+let print_arity ff ar =
+  Printf.fprintf ff "(%d, %d, %d, %d, %d, %d)"
+    ar.k_clock ar.k_carrier ar.k_carrier_row
+    ar.k_effect ar.k_effect_row ar.k_react
+
+let clock_constr_arity_err gr
+    found_arity exp_arity loc =
+  Printf.eprintf
+    "%aThe constructor %a expects %a type variables, \
+     but was given %a type variables.\n"
+    Location.print_oc loc
+    Global_ident.print_oc gr
+    print_arity exp_arity
+    print_arity found_arity;
   raise Error
 
 (* bound several times *)
