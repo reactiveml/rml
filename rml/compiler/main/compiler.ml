@@ -425,7 +425,7 @@ let compile_interface parse module_name filename filename_end =
   let source_name = filename ^ filename_end
   and obj_interf_name = filename ^ ".rzi"
   and obj_name = filename ^ ".mli"
-  and module_name = String.capitalize filename  in
+  and module_name = String.capitalize (Filename.basename filename)  in
 
   let ic = open_in source_name in
   let itf = open_out_bin obj_interf_name in
