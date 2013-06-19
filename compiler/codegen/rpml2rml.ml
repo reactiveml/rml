@@ -13,8 +13,8 @@ let make_domain_var s =
   Global.only_ident { qual = "Domain";
                       id = Ident.create Ident.gen_var s Ident.Internal }
 
-let topck = make_expr (Eglobal (make_domain_var "topck"))
-let topck_domain = make_expr (Eglobal (make_domain_var "topck_domain"))
+let topck = make_expr (Eglobal (make_domain_var "gck"))
+let topck_domain = make_expr (Eglobal (make_domain_var "gck_domain"))
 let unit_expr = make_expr (Econstant Const_unit)
 
 let make_instruction s =
