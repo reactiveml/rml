@@ -58,7 +58,7 @@ let import_depends build dep_file file =
       Ocaml_utils.expand_module include_dirs module_name ["rzi"]
     end names
   in
-  ignore (List.map Outcome.good (build files_alternatives))
+  ignore (build files_alternatives)
 
 let read_rmlsim_lines inc =
   let rec read_rmlsim_line inc cmds =
