@@ -57,7 +57,7 @@ let import_depends build dep_file file =
       Ocaml_utils.expand_module include_dirs module_name ["rzi"]
     end names
   in
-  let files = List.map Outcome.good (build files_alternatives) in
+  let files = (build files_alternatives) in
   ()
 
 let mk_includes dir =
