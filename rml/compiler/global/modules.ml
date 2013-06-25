@@ -72,23 +72,19 @@ let read_module basename filename =
     raise Error
 
 
-let use_extended_interfaces = ref false
-
 let load_module modname =
   let name = String.uncapitalize modname in
   let rzi = find_in_path (name ^ ".rzi") in
   match rzi with
   | Some rzi ->
-      let extname = rzi ^ "x" in
-      read_module name
-        (if !use_extended_interfaces && Sys.file_exists extname
-         then extname else rzi)
+      read_module name rzi
   | None ->
       try
         let md = List.assoc name Rzi.known_modules in
         (Marshal.from_string md 0 : module0)
       with Not_found ->
-        Format.fprintf !err_fmt "Cannot find the compiled interface file %s.rzi.\n" name;
+        Format.fprintf !err_fmt
+          "Cannot find the compiled interface file %s.rzi.\n" name;
         raise Error
 
 (* To find an interface by its name *)
