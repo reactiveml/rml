@@ -58,7 +58,7 @@ module Optimization_timer = Timer (struct let name = "Optimization" end)
 
 
 (* front-end *)
-let compile_implementation_front_end info_fmt itf impl_list =
+let compile_implementation_front_end info_fmt filename itf impl_list =
   let rml_table = ref [] in
   let compile_one_phrase impl =
 
@@ -135,23 +135,24 @@ let compile_implementation_front_end info_fmt itf impl_list =
 
   (* XXX A FAIRE XXX : verifier s'il y a un .rmli (ou un .mli) pour verifier *)
   (* la coherence et voir s'il faut ecrir l'insterface.                      *)
-(*
   if Sys.file_exists (filename ^ ".rmli")
-  ||  Sys.file_exists (filename ^ ".mli")
+  (* ||  Sys.file_exists (filename ^ ".mli") *)
   then begin
     if not (Sys.file_exists (filename ^ ".rzi")) then begin
-      raise(Error(Location.in_file mlifile, Interface_not_compiled mlifile))
+      no_compile_itf filename
     end else begin
+      (*
       let dclsig = Env.read_signature modulename cmifile in
       Includemod.compunit "(obtained by packing)" sg mlifile dclsig
+       *)
+      ()
     end
   end else begin
-*)
+
     (* write interface *)
     Misc.opt_iter Modules.write_compiled_interface itf;
-(*
   end;
-*)
+
   (* we return the rml code *)
   List.rev !rml_table
 
@@ -273,8 +274,9 @@ let compile_implementation module_name filename =
     External_timer.time();
 
     (* front-end *)
-    let intermediate_code = compile_implementation_front_end info_fmt itf
-	decl_list in
+    let intermediate_code =
+      compile_implementation_front_end info_fmt filename itf decl_list
+    in
     Misc.opt_iter close_out itf;
 
     if Sys.file_exists (filename ^ ".rmli")

@@ -74,3 +74,8 @@ let bad_type_main main main_ty =
 (*   Types_printer.output main_ty.Def_types.value_typ.Def_types.ts_desc; *)
   raise Misc.Error
 
+let no_compile_itf filename =
+  eprintf "Error: Could not find the .rzi file for interface %s.rmli."
+    filename;
+  raise Misc.Error
+
