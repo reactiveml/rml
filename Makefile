@@ -18,4 +18,4 @@ clean:
 	for d in $(SUBDIRS); do (cd $$d; $(MAKE) clean); done
 
 distclean:clean
-	rm -rf config.status config.log autom4te.cache/
+	rm -rf config.status config.log autom4te.cache/ config rmlbuild.config
