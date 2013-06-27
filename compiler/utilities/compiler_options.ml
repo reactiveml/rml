@@ -23,7 +23,7 @@ include Version
 let pervasives_module = "Pervasives"
 let rml_pervasives_module = "Rml_pervasives"
 let interpreter_module = ref "Rml_machine"
-let interpreter_impl = ref "Lco_ctrl_tree_seq_interpreter"
+let interpreter_impl = ref "Rml_machine.Lco_ctrl_tree_seq_interpreter"
 let machine_module = ref "Rml_machine.Machine"
 
 (* List of file to compile *)
@@ -173,39 +173,27 @@ let unset_instantaneous_loop_warning () =
 let set_runtime s =
   match s with
     | "Lco" ->
-      set_interpreter_impl "Lco_ctrl_tree_seq_interpreter";
-      set_interpreter_module "Rml_machine";
-      set_machine_module "Rml_machine.Machine";
+      set_interpreter_impl "Rml_machine.Lco_ctrl_tree_seq_interpreter";
       set_translation Lco
 
    | "Lco_new" ->
-      set_interpreter_impl "Lco_ctrl_tree_seq_list_interpreter";
-      set_interpreter_module "Rml_machine";
-      set_machine_module "Rml_machine.Machine";
+      set_interpreter_impl "Rml_machine.Lco_ctrl_tree_seq_list_interpreter";
       set_translation Lco
 
     | "Lco_mpi" ->
-      set_interpreter_impl "Lco_ctrl_tree_mpi_interpreter";
-      set_interpreter_module "Rml_machine_mpi";
-      set_machine_module "Rml_machine_mpi.Machine";
+      set_interpreter_impl "Rml_machine_mpi.Lco_ctrl_tree_mpi_interpreter";
       set_translation Lco
 
     | "Lco_mpi_buffer" ->
-      set_interpreter_impl "Lco_ctrl_tree_mpi_buffer_interpreter";
-      set_interpreter_module "Rml_machine_mpi";
-      set_machine_module "Rml_machine_mpi.Machine";
+      set_interpreter_impl "Rml_machine_mpi.Lco_ctrl_tree_mpi_buffer_interpreter";
       set_translation Lco
 
    | "Lco_mpi_c" ->
-      set_interpreter_impl "Lco_ctrl_tree_mpi_c_interpreter";
-      set_interpreter_module "Rml_machine_mpi";
-      set_machine_module "Rml_machine_mpi.Machine";
+      set_interpreter_impl "Rml_machine_mpi.Lco_ctrl_tree_mpi_c_interpreter";
       set_translation Lco
 
     | "Lco_mpi_new" ->
-      set_interpreter_impl "Lco_ctrl_tree_mpi_new_interpreter";
-      set_interpreter_module "Rml_machine_mpi";
-      set_machine_module "Rml_machine_mpi.Machine";
+      set_interpreter_impl "Rml_machine_mpi.Lco_ctrl_tree_mpi_new_interpreter";
       set_translation Lco
 
     | "Rml_print" -> set_translation Rml_print

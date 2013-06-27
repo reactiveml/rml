@@ -227,7 +227,13 @@ struct
   include M(MyInterpreter)
 end
 
-module Lco_ctrl_tree_seq_interpreter =
-  Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqRuntime)
-module Lco_ctrl_tree_seq_list_interpreter =
-  Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqListRuntime)
+module Lco_ctrl_tree_seq_interpreter = struct
+  module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqRuntime)
+  module Machine = Machine(Interpreter)
+end
+
+module Lco_ctrl_tree_seq_list_interpreter = struct
+  module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqListRuntime)
+  module Machine = Machine(Interpreter)
+end
+
