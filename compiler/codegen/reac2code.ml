@@ -68,7 +68,7 @@ let compile_impl info_chan filename module_name intermediate_code =
               "*)\n\n");
         (* selection of the interpreter *)
         output_string out_chan ("module Interpreter = "^ !interpreter_module ^"."^ !interpreter_impl^"\n");
-        output_string out_chan ("module Machine = "^ !machine_module ^"(Interpreter)\n");
+        output_string out_chan ("module Machine = "^ !machine_module ^"(Interpreter);;\n");
 
         (* the implementation *)
         compile_implementation_back_end info_chan out_chan module_name intermediate_code;
