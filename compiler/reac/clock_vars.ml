@@ -242,15 +242,37 @@ let bind_annot_vars te =
         let pe_list, (bound_vars, new_vars) =
           mapfold (param_expression_it funs) (bound_vars, new_vars) pe_list
         in
-        let gcstr = Modules.pfind_type_desc cstr.pident_id in
         let found_arity = list_arity pe_list in
-        let ck_info = match gcstr.ck_info with None -> assert false | Some i -> i in
-        if found_arity <> ck_info.clock_def_arity then
-          constr_wrong_arity_err cstr.pident_id
-            found_arity ck_info.clock_def_arity te.pte_loc;
-        let new_vars_list = mk_new_vars found_arity ck_info.clock_arity in
-        let new_pe_list = List.map param_of_var new_vars_list in
-        Ptype_constr (cstr, pe_list @ new_pe_list), (bound_vars, new_vars_list@new_vars)
+        let gcstr = Modules.pfind_type_desc cstr.pident_id in
+        if gcstr.gi = Initialization.event_ident then (
+          if !Compiler_options.use_row_clocking then
+            begin
+              if found_arity.k_carrier_row = 0 then (
+                let var = mkfresh_car_row () in
+                let ted = Ptype_constr(cstr, pe_list @ [param_of_var var]) in
+                ted, (bound_vars, var::new_vars)
+              ) else
+                ted, (bound_vars, new_vars)
+            end
+          else
+            begin
+              if found_arity.k_carrier = 0 then (
+                let var = mkfresh_car () in
+                let ted = Ptype_constr(cstr, pe_list @ [param_of_var var]) in
+                ted, (bound_vars, var::new_vars)
+              ) else
+                ted, (bound_vars, new_vars)
+            end
+        ) else (
+          let ck_info = match gcstr.ck_info with None -> assert false | Some i -> i in
+          if found_arity <> ck_info.clock_def_arity then
+            constr_wrong_arity_err cstr.pident_id
+              found_arity ck_info.clock_def_arity te.pte_loc;
+          let new_vars_list = mk_new_vars found_arity ck_info.clock_arity in
+          let new_pe_list = List.map param_of_var new_vars_list in
+          Ptype_constr (cstr, pe_list @ new_pe_list), (bound_vars, new_vars_list@new_vars)
+        )
+
     | _ -> raise Global_mapfold.Fallback
   in
   let carrier_expression_desc funs (bound_vars, new_vars) ced = match ced with

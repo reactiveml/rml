@@ -44,7 +44,7 @@ open Compiler_utils
 (* [out_chan] is the channel where the generated code is emitted *)
 
 (* front-end *)
-let compile_implementation_front_end info_chan itf has_intf impl_list =
+let compile_implementation_front_end info_chan itf impl_list =
   let compile_one_phrase impl =
     (* producing rml code (and openning of modules) *)
     let rml_code = Parse2reac.translate_impl_item info_chan impl in
@@ -55,16 +55,15 @@ let compile_implementation_front_end info_chan itf has_intf impl_list =
 
     (* typing *)
     let rml_code = silent_pass "Typing" true (Typing.impl info_chan) rml_code in
-    if not has_intf then Typing.check_nongen_values rml_code;
 
     (* clocking *)
     let rml_code =
       if !Compiler_options.use_row_clocking then
         silent_pass "Clocking with rows" (not !Compiler_options.no_clocking)
-          (Clocking_row.impl info_chan has_intf) rml_code
+          (Clocking_row.impl info_chan) rml_code
       else
         silent_pass "Clocking" (not !Compiler_options.no_clocking)
-          (Clocking.impl info_chan has_intf) rml_code
+          (Clocking.impl info_chan) rml_code
     in
 
     let rml_code = silent_pass "Reactivity analysis" (not !Compiler_options.no_reactivity)
@@ -123,8 +122,18 @@ let compile_implementation module_name filename =
 
     let has_intf = Sys.file_exists (filename ^ ".rmli") || Sys.file_exists (filename ^ ".mli") in
     (* front-end *)
-    let intermediate_code = compile_implementation_front_end info_chan itf has_intf decl_list in
+    let intermediate_code = compile_implementation_front_end info_chan itf decl_list in
     close_out itf;
+
+    if not has_intf then (
+      List.iter (Typing.check_nongen_values) intermediate_code;
+      if not !Compiler_options.no_clocking then (
+        if !Compiler_options.use_row_clocking then
+          List.iter (Clocking_row.check_nongen_values) intermediate_code
+        else
+          List.iter (Clocking.check_nongen_values) intermediate_code
+      )
+    );
 
     (* back-end *)
     if not !no_link then

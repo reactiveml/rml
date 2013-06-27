@@ -1380,7 +1380,7 @@ let clock_of_type_declaration loc (type_gl, typ_params, type_decl) =
 
 (* Check that an implementation without interface does not export values
    with non-generalizable types.*)
-let check_nongen_values patt_expr_list =
+let check_nongen_values impl_item =
   let check_expr expr =
     let vars = kind_sum_split (free_clock_vars notgeneric expr.e_clock) in
     if vars.k_clock != [] or
@@ -1395,10 +1395,13 @@ let check_nongen_values patt_expr_list =
       (* TODO: remove row variables of reacts but only after typing the whole file
          Il faut compiler toutes les impl d'un coup au lieu d'une par une *)
   in
-  List.iter (fun (_,expr) -> check_expr expr) patt_expr_list
+  match impl_item.impl_desc with
+    | Ilet (_, patt_expr_list) ->
+        List.iter (fun (_,expr) -> check_expr expr) patt_expr_list
+    | _ -> ()
 
 (* Typing of implementation items *)
-let impl info_chan has_intf item =
+let impl info_chan item =
   (match item.impl_desc with
   | Iexpr (e) ->
       ignore (clock_of_expression Env.empty e)
@@ -1407,8 +1410,6 @@ let impl info_chan has_intf item =
       let global_env, local_env =
         type_let (flag = Recursive) Env.empty patt_expr_list
       in
-      if not has_intf then
-        check_nongen_values patt_expr_list;
       (* verbose mode *)
       if !print_type
       then Clocks_printer.output_value_declaration info_chan global_env
