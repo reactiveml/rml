@@ -78,7 +78,7 @@ let all_vars env current_id =
   in
   expand_id Env.empty current_id
 
-let new_vars found_ar ar =
+let mk_new_vars found_ar ar =
   let new_car_vars = do_n mkfresh_car (ar.k_carrier - found_ar.k_carrier) in
   let new_car_row_vars = do_n mkfresh_car_row (ar.k_carrier_row - found_ar.k_carrier_row) in
   let new_eff_vars = do_n mkfresh_effect (ar.k_effect - found_ar.k_effect) in
@@ -127,7 +127,7 @@ let find_new_vars decl_ids td =
               constr_wrong_arity_err cstr.pident_id
                 found_arity ck_info.clock_def_arity te.pte_loc;
             (* find added parameters *)
-            let new_vars_list = new_vars found_arity ck_info.clock_arity in
+            let new_vars_list = mk_new_vars found_arity ck_info.clock_arity in
             let new_pe = List.map param_of_var new_vars_list in
             let te = { te with pte_desc = Ptype_constr (cstr, pe_list@new_pe) } in
             te, (new_vars_list@vars_list, id_list)
@@ -238,6 +238,19 @@ let bind_annot_vars te =
         let bound_vars = List.fold_left var_of_param bound_vars params in
         let _, acc = type_expression_it funs (bound_vars, new_vars) te in
         ted, acc
+    | Ptype_constr (cstr, pe_list) ->
+        let pe_list, (bound_vars, new_vars) =
+          mapfold (param_expression_it funs) (bound_vars, new_vars) pe_list
+        in
+        let gcstr = Modules.pfind_type_desc cstr.pident_id in
+        let found_arity = list_arity pe_list in
+        let ck_info = match gcstr.ck_info with None -> assert false | Some i -> i in
+        if found_arity <> ck_info.clock_def_arity then
+          constr_wrong_arity_err cstr.pident_id
+            found_arity ck_info.clock_def_arity te.pte_loc;
+        let new_vars_list = mk_new_vars found_arity ck_info.clock_arity in
+        let new_pe_list = List.map param_of_var new_vars_list in
+        Ptype_constr (cstr, pe_list @ new_pe_list), (bound_vars, new_vars_list@new_vars)
     | _ -> raise Global_mapfold.Fallback
   in
   let carrier_expression_desc funs (bound_vars, new_vars) ced = match ced with
@@ -283,6 +296,6 @@ let bind_annot_vars te =
     effect_expression_desc = effect_expression_desc;
     effect_row_expression_desc = effect_row_expression_desc
   } in
-  let _, (_, params) = Parse_mapfold.type_expression_it funs ([], []) te in
+  let te, (_, params) = Parse_mapfold.type_expression_it funs ([], []) te in
   let params = List.map param_of_var params in
   mkte (Ptype_some (params, te))
