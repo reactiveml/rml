@@ -2,7 +2,7 @@ include ../../config
 
 STDLIB_INTERFACE=pervasives.rmli random.rmli list.rmli rmltest.mli \
 		 rmlarg.rmli graphics.rmli unix.rmli array.rmli \
-		 lexing.rmli string.rmli sys.rmli rml_pervasives.rmli
+		 lexing.rmli string.rmli sys.rmli rml_pervasives.rmli gc.rmli obj.rmli
 STDLIB_OBJ_TMP=$(STDLIB_INTERFACE:%.rmli=%.rzi)
 STDLIB_OBJ=$(STDLIB_OBJ_TMP:%.mli=%.rzi)
 

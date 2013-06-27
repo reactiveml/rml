@@ -1,0 +1,57 @@
+(* Warning: This file has been modified to be ReactiveML compatible. *)
+
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(*            Xavier Leroy, projet Cristal, INRIA Rocquencourt         *)
+(*                                                                     *)
+(*  Copyright 1996 Institut National de Recherche en Informatique et   *)
+(*  en Automatique.  All rights reserved.  This file is distributed    *)
+(*  under the terms of the GNU Library General Public License, with    *)
+(*  the special exception on linking described in file ../LICENSE.     *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: obj.rmli,v 1.1.1.1 2005/01/23 17:55:37 mandel Exp $ *)
+
+(** Operations on internal representations of values.
+
+   Not for the casual user.
+*)
+
+type t
+
+val repr : 'a -> t
+val obj : t -> 'a
+val magic : 'a -> 'b
+val is_block : t -> bool
+val is_int : t -> bool
+val tag : t -> int
+val set_tag : t -> int -> unit
+val size : t -> int
+val truncate : t -> int -> unit
+val field : t -> int -> t
+val set_field : t -> int -> t -> unit
+val new_block : int -> int -> t
+val dup : t -> t
+
+val lazy_tag : int
+val closure_tag : int
+val object_tag : int
+val infix_tag : int
+val forward_tag : int
+val no_scan_tag : int
+val abstract_tag : int
+val string_tag : int
+val double_tag : int
+val double_array_tag : int
+val custom_tag : int
+val final_tag : int  (* DEPRECATED *)
+
+(** The following two functions are deprecated.  Use module {!Marshal}
+    instead. *)
+
+val marshal : t -> string
+val unmarshal : string -> int -> t * int
+
