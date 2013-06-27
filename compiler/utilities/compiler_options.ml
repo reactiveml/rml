@@ -145,7 +145,8 @@ let show_version () =
   Printf.printf "%s\n" version
 
 let show_where () =
-  Printf.printf "%s\n" (locate_stdlib ())
+  Printf.printf "%s%s\n" (locate_stdlib ())
+    (if !use_row_clocking then "/row" else "")
 
 (* sets the simulation process *)
 let set_simulation_process n = simulation_process := n
