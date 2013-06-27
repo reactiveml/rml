@@ -91,6 +91,16 @@ let process g =
   signal s at topck default 0 gather (+) in
   f topck s
 
+$
+
+type t1 = { f : t1 list }
+and t2 = { l : t1 list }
+
+$
+
+type t1 = { f : (t1 process) list }
+and t2 = { l : t1 list }
+
 $$$bad
 ${
 (*
