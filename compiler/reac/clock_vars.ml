@@ -67,15 +67,16 @@ let param_of_var k = match k with
   | Kreact v -> assert false (*TODO*)
 
 let all_vars env current_id =
-  let rec expand_id force id =
-    if not force && id = current_id then
+  let rec expand_id visited id =
+    if Env.mem id visited then
       []
-    else
+    else (
       let vars_list, id_list = Env.find id env in
-      let other_vars = map1n (expand_id false) id_list in
+      let other_vars = map1n (expand_id (Env.add id () visited)) id_list in
       vars_list @ other_vars
+    )
   in
-  expand_id true current_id
+  expand_id Env.empty current_id
 
 let new_vars found_ar ar =
   let new_car_vars = do_n mkfresh_car (ar.k_carrier - found_ar.k_carrier) in

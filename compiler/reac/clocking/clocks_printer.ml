@@ -419,14 +419,24 @@ let print_clock_name tc arity =
   in
   print_n_variables names.k_clock arity.k_clock;
   print_string (Ident.name tc.id);
-  if arity.k_carrier > 0 || arity.k_carrier_row > 0 || arity.k_effect > 0 then (
-    print_string "{";
-    print_n_variables names.k_carrier arity.k_carrier;
-    print_string "|";
-    print_n_variables names.k_carrier_row arity.k_carrier_row;
-    print_string "|";
-    print_n_variables names.k_effect_row arity.k_effect_row;
-    print_string "}"
+  if !Compiler_options.use_row_clocking then (
+    if arity.k_carrier > 0 || arity.k_carrier_row > 0 || arity.k_effect_row > 0 then (
+      print_string "{";
+      print_n_variables names.k_carrier arity.k_carrier;
+      print_string "|";
+      print_n_variables names.k_carrier_row arity.k_carrier_row;
+      print_string "|";
+      print_n_variables names.k_effect_row arity.k_effect_row;
+      print_string "}"
+    )
+  ) else (
+    if arity.k_carrier > 0 || arity.k_effect > 0 then (
+      print_string "{";
+      print_n_variables names.k_carrier arity.k_carrier;
+      print_string "|";
+      print_n_variables names.k_effect arity.k_effect;
+      print_string "}"
+    )
   );
   if arity.k_react > 0 && !Compiler_options.show_reactivity then (
     print_string "[";
