@@ -32,9 +32,9 @@ struct
   let current_length c =
     List.length !c
 
-  let take_current c = match !c with
-    | f :: l -> c := l; Some f
-    | [] -> None
+  let rec exec_all_current c = match !c with
+    | f :: l -> c := l; f (); exec_all_current c
+    | [] -> ()
 
   let mk_waiting_list () = ref ([]:unit step list)
   let add_waiting p w =
@@ -83,11 +83,12 @@ struct
   let current_length c =
     List.fold_left (fun acc l -> (List.length l) + acc) 0 !c
 
-  let take_current c = match !c with
-    | [] -> None
-    | [f] :: tl -> c := tl; Some f
-    | (f::l) :: tl -> c := l::tl; Some f
+  let rec exec_all_current c = match !c with
+    | [] -> ()
+    | [f] :: tl -> c := tl; f (); exec_all_current c
+    | (f::l) :: tl -> c := l::tl; f (); exec_all_current c
     | _ -> assert false
+
 
   let mk_waiting_list () = ref ([]:(unit step) list)
   let add_waiting p w =
@@ -647,9 +648,7 @@ struct
 
 
     let rec schedule cd =
-      match D.take_current cd.cd_current with
-        | Some f -> f (); schedule cd
-        | None -> ()
+      D.exec_all_current cd.cd_current
 
     let eoi cd =
       cd.cd_eoi := true;

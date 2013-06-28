@@ -836,10 +836,7 @@ struct
 
     (* cd.cd_current_lock should be locked when calling schedule and is still locked
        when it returns.  *)
-    let rec schedule cd =
-      match D.take_current cd.cd_current with
-        | Some f -> f (); schedule cd
-        | None -> ()
+    let rec schedule cd = D.exec_all_current cd.cd_current
 
     let eoi cd =
       print_debug "Eoi of clock domain %a@." print_cd cd;

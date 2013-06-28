@@ -9,7 +9,7 @@ sig
 
   (* functions on the current data structure *)
   val mk_current : unit -> current
-  val take_current : current -> (unit step) option
+  val exec_all_current : current -> unit
   val add_current : unit step -> current -> unit
   val add_current_list : unit step list -> current -> unit
   (* Adds all elements of a waiting list or next to current and empty it. *)

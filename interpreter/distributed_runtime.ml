@@ -642,10 +642,7 @@ struct
       ELSE () END;
       not has_next
 
-    let rec schedule cd =
-      match D.take_current cd.cd_current with
-        | Some f -> f (); schedule cd
-        | None -> ()
+    let rec schedule cd = D.exec_all_current cd.cd_current
 
     let eoi site cd =
       IFDEF RML_DEBUG THEN
