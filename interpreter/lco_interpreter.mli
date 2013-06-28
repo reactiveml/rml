@@ -21,7 +21,7 @@
 (* file: lco_interpreter.mli *)
 (* author: Louis Mandel *)
 (* created: 2004-06-04  *)
-
+open Runtime
 
 module type LCO_RUNTIME =
   sig
@@ -30,7 +30,6 @@ module type LCO_RUNTIME =
     type clock_domain
     type ('a, 'b) event
     type event_cfg
-    type 'a step
 
     val react : clock_domain -> unit
     val on_current_instant : clock_domain -> unit step -> unit
@@ -46,8 +45,8 @@ module type S =
     and region_expr = clock_expr
     type 'a memory
 
-    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
-    val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
+    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit step
+    val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit step list
 
     val rml_pre_status: ('a, 'b) R.event -> bool
     val rml_pre_value: ('a, 'b) R.event -> 'b

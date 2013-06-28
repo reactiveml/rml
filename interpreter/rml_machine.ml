@@ -23,6 +23,7 @@
 (* file: rml_machine.ml *)
 
 open Runtime_options
+open Runtime
 
 module type MACHINE_INTERPRETER = sig
   type 'a process
@@ -165,7 +166,6 @@ module type INTERPRETER =
      (sig
        type clock_domain
        type ('a, 'b) event
-       type 'a step
 
        (* Initialize the backend. This function can be called several times during
           the execution of the program *)
@@ -175,8 +175,8 @@ module type INTERPRETER =
        val on_current_instant : clock_domain -> unit step -> unit
       end)
 
-    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
-    val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
+    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit step
+    val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit step list
   end
 
 module Machine = functor (I : INTERPRETER) ->
@@ -231,9 +231,3 @@ module Lco_ctrl_tree_seq_interpreter = struct
   module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqRuntime)
   module Machine = Machine(Interpreter)
 end
-
-module Lco_ctrl_tree_seq_list_interpreter = struct
-  module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqListRuntime)
-  module Machine = Machine(Interpreter)
-end
-

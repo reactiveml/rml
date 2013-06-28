@@ -1,11 +1,7 @@
 
-module type STEP =
-sig
-  type 'a t
-  (*val exec : unit t -> unit*)
-end
+type 'a step = 'a -> unit
 
-module type SEQ_DATA_STRUCT = functor (Step:STEP) ->
+module type SEQ_DATA_STRUCT =
 sig
   type next
   type current
@@ -13,9 +9,9 @@ sig
 
   (* functions on the current data structure *)
   val mk_current : unit -> current
-  val take_current : current -> (unit Step.t) option
-  val add_current : unit Step.t -> current -> unit
-  val add_current_list : unit Step.t list -> current -> unit
+  val take_current : current -> (unit step) option
+  val add_current : unit step -> current -> unit
+  val add_current_list : unit step list -> current -> unit
   (* Adds all elements of a waiting list or next to current and empty it. *)
   val add_current_waiting_list : waiting_list -> current -> unit
   val add_current_next : next -> current -> unit
@@ -25,16 +21,17 @@ sig
 
   (*functions on waiting list*)
   val mk_waiting_list : unit -> waiting_list
-  val add_waiting : unit Step.t -> waiting_list -> unit
-  val take_all : waiting_list -> unit Step.t list
+  val add_waiting : unit step -> waiting_list -> unit
+  val take_all : waiting_list -> unit step list
 
   (* functions on next lists *)
   val mk_next : unit -> next
-  val add_next : unit Step.t -> next -> unit
+  val add_next : unit step -> next -> unit
   val add_next_next : next -> next -> unit
   val clear_next : next -> unit
   val is_empty_next : next -> bool
 end
+
 
 type ('step, 'clock) control_type =
     | Clock_domain of 'clock
@@ -47,8 +44,6 @@ type ('step, 'clock) control_type =
 
 module type CONTROL_TREE_R =
 sig
-  type 'a step
-
   type control_tree
   and clock_domain
   and clock

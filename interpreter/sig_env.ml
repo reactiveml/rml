@@ -67,7 +67,7 @@ module type S =
    (* val remote_emit :  ('a, 'b) t -> 'a -> unit *)
   end
 
-module Record  (*: S*)  =
+module Record : S  =
   struct
     type clock = int ref
     type clock_index = int

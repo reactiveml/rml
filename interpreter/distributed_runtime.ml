@@ -6,21 +6,19 @@ let assert_some v = match v with
   | None -> assert false
   | Some v -> v
 
+module E = Sig_env.Record
+module D = Seq_runtime.ListListDataStruct
+
 module Make
-  (D: Runtime.SEQ_DATA_STRUCT)
-  (CF : functor (T : Communication.TAG_TYPE) -> Communication.S with type 'gid tag = 'gid T.t)
-  (CALL : functor (C: Communication.S) -> Callbacks.S with type msg = C.msg and type tag = C.gid C.tag)
-  (E: Sig_env.S) =
+  (CF : functor (T : Communication.TAG_TYPE) -> Communication.S
+   with type 'gid tag = 'gid T.t)
+  (CALL : functor (C: Communication.S) -> Callbacks.S
+   with type msg = C.msg and type tag = C.gid C.tag) =
 struct
-    module D = D(struct
-      type 'a t = 'a -> unit
-    end)
-
-
     module SiteMsgs = struct
       type 'gid t =
           | Mfinalize
-          | Mdummy
+          | Mfinalize_ack
           (* scheduling *)
           | Mnew_cd
           | Mstep (* do one global step of the clock domain *)
@@ -38,16 +36,16 @@ struct
           | Mcreate_signal
           | Msignal_created of 'gid
 
-      let dummy = Mdummy
+      let dummy = Mfinalize_ack
 
       let flush_after tag = match tag with
-         | Mfinalize | Mdummy | Mhas_next _ | Mvalue _ | Mnew_cd
+         | Mfinalize | Mfinalize_ack | Mhas_next _ | Mvalue _ | Mnew_cd
          | Mreq_signal _ | Msignal_created _ | Mcreate_signal -> true
          | _ -> false
 
       open Format
       let print print_gid ff m = match m with
-        | Mdummy -> fprintf ff "Mdummy"
+        | Mfinalize_ack -> fprintf ff "Mfinalize_ack"
         | Mfinalize -> fprintf ff "Mfinalize"
         | Mnew_cd -> fprintf ff "Mnew_cd"
         | Mstep -> fprintf ff "Mstep"
@@ -261,7 +259,7 @@ struct
         send, recv
 
       let broadcast_finalize, recv_finalize = mk_broadcast_set_recv Mfinalize
-      let send_dummy, recv_dummy = mk_send_recv Mdummy
+      let send_finalize_ack, recv_finalize_ack = mk_send_recv Mfinalize_ack
       let send_new_cd, recv_new_cd = mk_send_recv Mnew_cd
       let send_step, recv_step = mk_send_owner_recv Mstep
       let send_step_done, recv_step_done =
@@ -1272,7 +1270,7 @@ struct
     let receive_finalize_site site msg =
       (* stop sending messages, but keep receiving from others *)
       let main_site = Msgs.recv_finalize msg in
-      Msgs.send_dummy main_site ();
+      Msgs.send_finalize_ack main_site ();
       (* wait for all the other sites to be done sending *)
       let _ = Callbacks.recv_given_msg site.s_msg_queue Mfinalize in
       (* really terminate*)
@@ -1315,7 +1313,7 @@ struct
       if not (C.SiteSet.is_empty sites) then (
         Msgs.broadcast_finalize sites site.s_comm_site;
         (* wait for all sites to be done *)
-        Callbacks.recv_n_given_msg site.s_msg_queue Mdummy (C.SiteSet.cardinal sites);
+        Callbacks.recv_n_given_msg site.s_msg_queue Mfinalize_ack (C.SiteSet.cardinal sites);
         (* tell all sites to stop executing *)
         Msgs.broadcast_finalize sites site.s_comm_site
       ) else
@@ -1608,22 +1606,16 @@ end
 
 module MpiRuntime =
   Make
-    (Seq_runtime.ListDataStruct)
     (Mpi_communication.Make)
     (Callbacks.Make)
-    (Sig_env.Record)
 
 module MpiCRuntime =
   Make
-    (Seq_runtime.ListDataStruct)
     (Mpi_communication.Make)
     (Callbacks.MakeC)
-    (Sig_env.Record)
 
 module MpiBufferedRuntime =
   Make
-    (Seq_runtime.ListDataStruct)
     (Mpi_buffer_communication.Make)
     (Callbacks.Make)
-    (Sig_env.Record)
 

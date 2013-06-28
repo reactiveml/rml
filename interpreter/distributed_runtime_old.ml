@@ -2,17 +2,15 @@ open Runtime
 open Runtime_options
 open Types
 
+module E = Sig_env.Record
+module D = Seq_runtime.ListListDataStruct
+
 module Make
-  (D: Runtime.SEQ_DATA_STRUCT)
-  (CF : functor (T : Communication.TAG_TYPE) -> Communication.S with type 'gid tag = 'gid T.t)
-  (CALL : functor (C: Communication.S) -> Callbacks.S with type msg = C.msg and type tag = C.gid C.tag)
-  (E: Sig_env.S) =
+  (CF : functor (T : Communication.TAG_TYPE) -> Communication.S
+   with type 'gid tag = 'gid T.t)
+  (CALL : functor (C: Communication.S) -> Callbacks.S
+   with type msg = C.msg and type tag = C.gid C.tag) =
 struct
-    module D = D(struct
-      type 'a t = 'a -> unit
-    end)
-
-
     module SiteMsgs = struct
       type 'gid t =
           | Mfinalize
@@ -1471,22 +1469,16 @@ end
 
 module MpiRuntime =
   Make
-    (Seq_runtime.ListDataStruct)
     (Mpi_communication.Make)
     (Callbacks.Make)
-    (Sig_env.Record)
 
 module MpiCRuntime =
   Make
-    (Seq_runtime.ListDataStruct)
     (Mpi_communication.Make)
     (Callbacks.MakeC)
-    (Sig_env.Record)
 
 module MpiBufferedRuntime =
   Make
-    (Seq_runtime.ListDataStruct)
     (Mpi_buffer_communication.Make)
     (Callbacks.Make)
-    (Sig_env.Record)
 

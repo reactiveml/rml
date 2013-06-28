@@ -11,12 +11,111 @@ module JoinRef = struct
     decr j; !j = 0
 end
 
-module Make (D: Runtime.SEQ_DATA_STRUCT) (E: Sig_env.S) =
+module ListDataStruct : SEQ_DATA_STRUCT =
 struct
-    module D = D(struct
-      type 'a t = 'a -> unit
-    end)
+  type next = unit step list ref
+  type current = unit step list ref
+  type waiting_list = unit step list ref
 
+  let mk_current () = ref ([] : unit step list)
+  let add_current p c =
+    c := p :: !c
+  let add_current_list pl c =
+    c := List.rev_append pl !c
+  let add_current_waiting_list w c =
+    c := List.rev_append !w !c;
+    w := []
+  let add_current_next next c =
+    c := List.rev_append !next !c;
+    next := []
+
+  let current_length c =
+    List.length !c
+
+  let take_current c = match !c with
+    | f :: l -> c := l; Some f
+    | [] -> None
+
+  let mk_waiting_list () = ref ([]:unit step list)
+  let add_waiting p w =
+    w := p :: ! w
+  let take_all w =
+    let l = !w in
+    w := [];
+    l
+  let waiting_length w =
+    List.length !w
+
+  let mk_next () = ref ([]:unit step list)
+  let add_next p next =
+    next := p :: !next
+  let add_next_next n1 n2 =
+    n2 := List.rev_append !n1 !n2;
+    n1 := []
+  let clear_next next =
+    next := []
+  let is_empty_next next =
+    !next = []
+end
+
+module ListListDataStruct : SEQ_DATA_STRUCT =
+struct
+  type next = (unit step) list ref
+  type current = (unit step) list list ref
+  type waiting_list = (unit step) list ref
+
+  let mk_current () = ref ([] : (unit step) list list)
+  let add_current p c = match !c with
+    | [] -> c := [[p]]
+    | l::tl -> c := (p::l)::tl
+  let add_current_list pl c = match pl with
+    | [] -> ()
+    | _ -> c := pl::!c
+  let add_current_waiting_list w c =
+    match !w with
+      | [] -> ()
+      | l -> c := l::!c; w := []
+  let add_current_next next c =
+    match !next with
+      | [] -> ()
+      | l -> c := l::!c; next := []
+
+  let current_length c =
+    List.fold_left (fun acc l -> (List.length l) + acc) 0 !c
+
+  let take_current c = match !c with
+    | [] -> None
+    | [f] :: tl -> c := tl; Some f
+    | (f::l) :: tl -> c := l::tl; Some f
+    | _ -> assert false
+
+  let mk_waiting_list () = ref ([]:(unit step) list)
+  let add_waiting p w =
+    w := p :: ! w
+  let take_all w =
+    let l = !w in
+    w := [];
+    l
+  let waiting_length w =
+    List.length !w
+
+  let mk_next () = ref ([]:(unit step) list)
+  let add_next p next =
+    next := p :: !next
+  let add_next_next n1 n2 =
+    n2 := List.rev_append !n1 !n2;
+    n1 := []
+  let clear_next next =
+    next := []
+  let is_empty_next next =
+    !next = []
+end
+
+module D = ListListDataStruct
+module E = Sig_env.Record
+
+module SeqRuntime =
+struct
     type 'a step = 'a -> unit
 
     type control_tree =
@@ -633,112 +732,3 @@ struct
     let start_slave _ = ()
     let is_master _ = true
 end
-
-module ListDataStruct (S: Runtime.STEP) =
-struct
-  module Step = S
-
-  type next = unit Step.t list ref
-  type current = unit Step.t list ref
-  type waiting_list = unit Step.t list ref
-
-  let mk_current () = ref ([] : unit Step.t list)
-  let add_current p c =
-    c := p :: !c
-  let add_current_list pl c =
-    c := List.rev_append pl !c
-  let add_current_waiting_list w c =
-    c := List.rev_append !w !c;
-    w := []
-  let add_current_next next c =
-    c := List.rev_append !next !c;
-    next := []
-
-  let current_length c =
-    List.length !c
-
-  let take_current c = match !c with
-    | f :: l -> c := l; Some f
-    | [] -> None
-
-  let mk_waiting_list () = ref ([]:unit Step.t list)
-  let add_waiting p w =
-    w := p :: ! w
-  let take_all w =
-    let l = !w in
-    w := [];
-    l
-  let waiting_length w =
-    List.length !w
-
-  let mk_next () = ref ([]:unit Step.t list)
-  let add_next p next =
-    next := p :: !next
-  let add_next_next n1 n2 =
-    n2 := List.rev_append !n1 !n2;
-    n1 := []
-  let clear_next next =
-    next := []
-  let is_empty_next next =
-    !next = []
-end
-
-
-module ListListDataStruct (S: Runtime.STEP) =
-struct
-  module Step = S
-
-  type next = unit Step.t list ref
-  type current = unit Step.t list list ref
-  type waiting_list = unit Step.t list ref
-
-  let mk_current () = ref ([] : unit Step.t list list)
-  let add_current p c = match !c with
-    | [] -> c := [[p]]
-    | l::tl -> c := (p::l)::tl
-  let add_current_list pl c = match pl with
-    | [] -> ()
-    | _ -> c := pl::!c
-  let add_current_waiting_list w c =
-    match !w with
-      | [] -> ()
-      | l -> c := l::!c; w := []
-  let add_current_next next c =
-    match !next with
-      | [] -> ()
-      | l -> c := l::!c; next := []
-
-  let current_length c =
-    List.fold_left (fun acc l -> (List.length l) + acc) 0 !c
-
-  let take_current c = match !c with
-    | [] -> None
-    | [f] :: tl -> c := tl; Some f
-    | (f::l) :: tl -> c := l::tl; Some f
-    | _ -> assert false
-
-  let mk_waiting_list () = ref ([]:unit Step.t list)
-  let add_waiting p w =
-    w := p :: ! w
-  let take_all w =
-    let l = !w in
-    w := [];
-    l
-  let waiting_length w =
-    List.length !w
-
-  let mk_next () = ref ([]:unit Step.t list)
-  let add_next p next =
-    next := p :: !next
-  let add_next_next n1 n2 =
-    n2 := List.rev_append !n1 !n2;
-    n1 := []
-  let clear_next next =
-    next := []
-  let is_empty_next next =
-    !next = []
-end
-
-
-module SeqRuntime = Make(ListDataStruct)(Sig_env.Record)
-module SeqListRuntime = Make(ListListDataStruct)(Sig_env.Record)

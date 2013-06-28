@@ -1,5 +1,6 @@
 open Rml_machine
 open Runtime_options
+open Runtime
 
 module type INTERPRETER =
   sig
@@ -9,7 +10,6 @@ module type INTERPRETER =
     module R : (sig
       type clock_domain
       type ('a, 'b) event
-      type 'a step
 
       val init : unit -> unit
       val get_top_clock_domain : unit -> clock_domain
@@ -21,8 +21,8 @@ module type INTERPRETER =
       val start_slave : unit -> unit
     end)
 
-    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit R.step
-    val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit R.step list
+    val rml_make: R.clock_domain -> 'a option ref -> 'a process -> unit step
+    val rml_make_n: R.clock_domain -> 'a option ref -> 'a process list -> unit step list
   end
 
 module Machine (I : INTERPRETER) =

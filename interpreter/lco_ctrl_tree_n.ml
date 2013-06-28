@@ -41,10 +41,10 @@ open Runtime_options
 open Runtime
 
 module Rml_interpreter =
-  functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
+  functor (R : Runtime.CONTROL_TREE_R) ->
   struct
     type join_point = R.join_point option
-    and 'a expr = 'a R.step -> R.control_tree -> join_point -> R.clock_domain -> unit R.step
+    and 'a expr = 'a step -> R.control_tree -> join_point -> R.clock_domain -> unit step
     and 'a process = unit -> 'a expr
 
     type ('a, 'b) event = ('a, 'b) R.event
@@ -823,5 +823,4 @@ let rml_loop p =
    with the signature Lco_interpreter.S. It should not be used. *)
 module Fake =
   (Rml_interpreter :
-     (functor (R : Runtime.CONTROL_TREE_R with type 'a step = 'a -> unit) ->
-       Lco_interpreter.S))
+     (functor (R : Runtime.CONTROL_TREE_R) -> Lco_interpreter.S))

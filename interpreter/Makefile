@@ -1,6 +1,10 @@
 include ../config
 
+ifeq ($(ENABLE_MPI), yes)
 RPMLLIB=rpmllib.cma rpmllib_mpi.cma
+else
+RPMLLIB=rpmllib.cma
+endif
 
 ifeq ($(RELEASE_MODE), yes)
 OCAMLBUILD_OPTIONS= -use-ocamlfind
