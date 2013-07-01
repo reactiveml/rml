@@ -90,20 +90,16 @@ end
 
 module Lco_ctrl_tree_mpi_interpreter = struct
   module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Distributed_runtime_old.MpiRuntime)
-  module Machine = Machine(Interpreter)
 end
 
 module Lco_ctrl_tree_mpi_buffer_interpreter = struct
   module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Distributed_runtime_old.MpiBufferedRuntime)
-  module Machine = Machine(Interpreter)
 end
 
 module Lco_ctrl_tree_mpi_c_interpreter = struct
   module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Distributed_runtime_old.MpiCRuntime)
-  module Machine = Machine(Interpreter)
 end
 
 module Lco_ctrl_tree_mpi_new_interpreter = struct
   module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Distributed_runtime.MpiCRuntime)
-  module Machine = Machine(Interpreter)
 end

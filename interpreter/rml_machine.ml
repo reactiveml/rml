@@ -229,5 +229,4 @@ end
 
 module Lco_ctrl_tree_seq_interpreter = struct
   module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqRuntime)
-  module Machine = Machine(Interpreter)
 end
