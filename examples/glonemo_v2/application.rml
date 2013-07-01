@@ -51,7 +51,7 @@ let process application_interest self (cloud_x, cloud_y) =
 (**Process qui envoie un nouvel interet*)
 (**nodesConcernedList, la liste des noeuds cibles*)
 (**self est a priori sink*)
-let make_interest self (nodesConcernedList : node list) =
+let make_interest self (nodesConcernedList : node_id list) =
   let ir = {
     interest_id_req = get_id_int();
     concerned = nodesConcernedList;
@@ -59,17 +59,17 @@ let make_interest self (nodesConcernedList : node list) =
   in
   let p3 = {
     header3 = Interest_request ir;
-    packet_id3 = get_id3();
+    packet_id3 = self.node_get_id3();
     ack = false;
     len3 = 40;
     mac_ack =  false;
-    from3 = self;
+    from3 = self.node_id;
   }
   in
   emit self.application_to_routing (p3);
   let my_interest = {
     interest_id_n = ir.interest_id_req;
-    from_in = self;
+    from_in = self.node_id;
     for_me = false;
   } in
   self.node_network.interest_list <- my_interest :: self.node_network.interest_list;

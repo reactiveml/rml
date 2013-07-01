@@ -1,5 +1,7 @@
 Init.configure();;
 
+type node_id = int
+
 (**coordonnees d un point*)
 type coord = {
     x : float;
@@ -49,12 +51,12 @@ type action = Emit | Receive | Ignore
 
 type interest_req = {
     interest_id_req : int;
-    concerned : node list;
+    concerned : node_id list;
   }
 
 and interest_resp = {
     interest_id_resp : int;
-    next_node : node; (**noeud suivant sur le chemin du retour*)
+    next_node : node_id; (**noeud suivant sur le chemin du retour*)
   }
 
 and header3 =
@@ -65,19 +67,21 @@ and header3 =
 (**paquet de la couche reseau*)
 and packet3 = {
     header3 : header3;
-    packet_id3 : int;
+    packet_id3 : packet_id3;
     ack : bool;
     len3 : int;
     mac_ack : bool;
-    from3 : node;
+    from3 : node_id;
   }
+
+and packet_id3 = node_id * int
 
 (**informations concernant la periode de reveil des noeuds voisins*)
 and neighbors_information = {
-    mutable node_identifier : int; (**node_id du noeud considere*)
-    mutable next_wakeup : int; (**prochain reveil*)
-    mutable tw : int; (** periode de veille*)
-    mutable time_info : int; (** date de l'information*)
+    node_identifier : node_id; (**node_id du noeud considere*)
+    next_wakeup : int; (**prochain reveil*)
+    tw : int; (** periode de veille*)
+    time_info : int; (** date de l'information*)
   }
 
 
@@ -85,24 +89,27 @@ and neighbors_information = {
 (**il indique si le paquet est un ack ou un des donnes*)
 and header =
   | Data of packet3
-  | Ack of int
+  | Ack of packet_id3
 
 (**memorise par les noeuds*)
 and node_interest = {
     interest_id_n : int; (**id de l'interet*)
-    from_in : node;(**d'ou vient cet interet*)
+    from_in : node_id;(**d'ou vient cet interet*)
     for_me  : bool; (**suis-je (self) concerne par cet interest*)
   }
 
 
 (**paquet de la couche mac*)
 and packet2 = {
-    packet_id2 : int;
+    packet_id2 : packet_id2;
     header : header;
     len2 : int;
     ack2 : bool;
-    from2 : node;
+    from2 : node_id;
+    next_wakeup2 : int;
  }
+
+and packet_id2 = node_id * int
 
 (**Chaque noeud a un champ mac, reseau et resultat*)
 and mac = {
@@ -131,7 +138,7 @@ and resultats = {
 
 
 and node = {
-    node_id : int;
+    node_id : node_id;
     mutable node_energy : float;    (**energie en Joule*)
     node_pos : coord;               (**position*)
     mutable node_etat : state;      (**etat*)
@@ -147,6 +154,8 @@ and node = {
                                        (**de la couche application a la couche mac*)
     node_results : resultats;
     mutable node_pre_present_nuage : bool;
+    node_get_id2 : (unit -> packet_id2);
+    node_get_id3 : (unit -> packet_id3);
   }
 
 
@@ -239,6 +248,18 @@ let number_of_instants = !Init.number_of_instants
 (**Fonction qui cree un noeud en lui affectant un nouvel identifiant*)
 (**de l energie, et qui initialise tous les champs*)
 let make_node id pos=
+  let get_id2 =
+    let cpt = ref 0 in
+    fun () ->
+      incr cpt;
+      id, !cpt
+  in
+  let get_id3 =
+    let cpt3 = ref 0 in
+    fun () ->
+      incr cpt3;
+      id, !cpt3
+  in
   { node_id = id;
     node_energy = node_energy;
     node_pos = pos;
@@ -263,6 +284,8 @@ let make_node id pos=
     node_results = {time_received = -1;
 		    time_sent = -1};
     node_pre_present_nuage = false;
+    node_get_id2 = get_id2;
+    node_get_id3 = get_id3;
   }
 
 let sink_of_node self =
@@ -277,17 +300,6 @@ let random_pos() =
   { x = Random.float max_x;
     y = Random.float max_y; }
 
-let get_id2 =
-  let cpt = ref 0 in
-  fun () ->
-    incr cpt;
-    !cpt
-
-let get_id3 =
-  let cpt3 = ref 0 in
-  fun () ->
-    incr cpt3;
-    !cpt3
 
 let get_id_int =
   let cpt_i = ref 0 in
@@ -297,11 +309,12 @@ let get_id_int =
 
 (**Fonction qui transforme un paquet de type3 en paquet de type2*)
 let packet3_to_2 p3 self =
-  { packet_id2 = get_id2(); (**on assigne au paquet2 un nouvel id*)
+  { packet_id2 = self.node_get_id2(); (**on assigne au paquet2 un nouvel id*)
     header = Data p3;
     len2 = p3.len3;
     ack2 = p3.mac_ack;
-    from2 = self;
+    from2 = self.node_id;
+    next_wakeup2 = self.node_mac.my_next_wakeup;
   }
 
 (*
@@ -309,7 +322,7 @@ let packet3_to_2 p3 self =
 (**self est le noeud emetteur*)
 let make_packet self interest_or_not =
   { header3 = interest_or_not;
-    packet_id3 = get_id3();
+    packet_id3 = self.get_id3();
     ack = false; (**aquittement de la couche reseau*)
     len3 = 40;
     mac_ack = false; (**aquittement de la couche mac*)
@@ -320,11 +333,13 @@ let make_packet self interest_or_not =
 
 (**Processus qui compte le temps*)
 
-let time = ref 0
+signal time default 0 gather (fun x _ -> x)
 
 let process temps =
+  let cpt = ref 0 in
   loop
-    incr time;
+    incr cpt;
+    emit time !cpt;
     pause
   end
 

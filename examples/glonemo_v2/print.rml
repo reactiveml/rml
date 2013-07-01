@@ -36,7 +36,7 @@ let rec print_list l =
   match l with
   | [] -> ()
   | el :: tl ->
-      print_int (el.node_id);
+      print_int (el(* .node_id *));
       print_string(" ");
       print_list (tl)
 
@@ -114,7 +114,7 @@ let print_header3 header =
 	print_string(" interest_id:");
 	print_int(response.interest_id_resp);
 	print_string(" next_node:");
-	print_int(response.next_node.node_id);
+	print_int(response.next_node(* .node_id *));
        )
     | Not_interest ->
 	(print_string("Not_interest");)
@@ -133,7 +133,9 @@ let print_packet3 p3 =
   print_string("header3 = [");
   print_header3(p3.header3);
   print_string("] packet_id3=");
-  print_int(p3.packet_id3);
+  print_int(fst (p3.packet_id3));
+  print_string(",");
+  print_int(snd (p3.packet_id3));
   print_string(" p3.ack=");
   print_bool(p3.ack);
   print_string(" p3.len3=");
@@ -141,7 +143,7 @@ let print_packet3 p3 =
   print_string(" p3.mac_ack=");
   print_bool(p3.mac_ack);
   print_string(" p3.from3.node_id=");
-  print_int(p3.from3.node_id);
+  print_int(p3.from3(* .node_id *));
   print_newline();
 
 

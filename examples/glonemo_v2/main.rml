@@ -34,7 +34,8 @@ let which_nodes (node_tab : node array) =
   let f nod =
     ((nod.node_pos).x < 1000.0) && ((nod.node_pos).y > 0.0)
   in
-  List.filter f (Array.to_list (node_tab));;
+  List.map (fun n -> n.node_id)
+    (List.filter f (Array.to_list (node_tab)));;
 
 
 let nodes =
