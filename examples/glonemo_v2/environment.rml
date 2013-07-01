@@ -1,0 +1,52 @@
+open Definitions
+
+(*
+external.luc nuage_lucky
+  { Wind_x : float; Wind_y : float; } 
+  {x_nuage: float; y_nuage: float} = ["nuage.luc"]
+
+let process nuage (wx, wy) (x, y) =  
+  run (nuage_lucky Luc4ocaml.StepInside (wx, wy) (x, y))
+
+
+
+external.luc wind_lucky {} { Wind_x : float; Wind_y : float; } = 
+  ["wind.luc"]
+
+let process wind () (wx,wy) =  
+  run (wind_lucky Luc4ocaml.StepInside () (wx,wy))
+
+*)
+
+
+let process nuage (wind_x, wind_y) (x_nuage, y_nuage) =
+  loop
+    let x = pre ?x_nuage +. pre ?wind_x *. 0.00001 in
+    let y = pre ?y_nuage +. pre ?wind_y *. 0.00001 in
+    let x = max (min x (max_x +. 2.0 *. cloud_range)) (-2.0 *. cloud_range)in
+    let y = max (min y (max_y +. 2.0 *. cloud_range)) (-2.0 *. cloud_range)in
+    emit x_nuage x;
+    emit y_nuage y;
+    pause
+  end
+
+(* let process wind () (wind_x, wind_y) = *)
+(*   loop *)
+(*     emit wind_x 0.0; *)
+(*     emit wind_y 0.0; *)
+(*     pause *)
+(*   end *)
+
+let process wind () (wind_x, wind_y) =
+  let coef = 40120.0 in
+  loop
+    let dir_x = Random.float 1.0 -. 0.5 in
+    let dir_y = Random.float 1.0 -. 0.5 in
+    for t = 1 to Random.int 500 do
+      emit wind_x (dir_x *. coef);
+      emit wind_y (dir_y *. coef);
+      pause
+    done
+  end
+
+

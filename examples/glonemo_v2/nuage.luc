@@ -1,0 +1,35 @@
+inputs {
+    Wind_x : float ~init 0.0;
+    Wind_y : float ~init 0.0;
+}
+
+outputs {
+    x_nuage: float ~init 400.0 ~max 1000.0 ~min -100.0;
+    y_nuage: float ~init 300.0 ~max 1000.0 ~min -100.0;
+}
+
+locals { }
+
+nodes {
+  init : stable;
+}
+
+start_node { init }
+
+transitions {  
+   init -> init ~cond 
+
+      (if pre Wind_y >= 0.0 then ((y_nuage - pre y_nuage) >= 0.0) and 
+                                  (y_nuage - pre y_nuage) <= (0.00001 * (pre Wind_y))
+                            else ((y_nuage - pre y_nuage) <= 0.0 and 
+                                  (y_nuage - pre y_nuage) >= (0.00001 * (pre Wind_y))))
+
+      and
+      (if pre Wind_x >= 0.0 then ((x_nuage - pre x_nuage) <= (0.00001 * (pre Wind_x)) and 
+                                  (x_nuage - pre x_nuage) >= 0.0)
+                            else ((x_nuage - pre x_nuage) <= 0.0 and 
+                                  (x_nuage - pre x_nuage) >= (0.00001 * (pre Wind_x))))
+
+
+}
+ 

@@ -1,0 +1,123 @@
+open Moteur;;
+open Misc;;
+open Convenient;;
+
+(* les images de monstres *)
+let monstreChasse = misc_load "images/monstre_chasse.bmp" [];;
+
+let coord_to_pos {xi=x;yi=y} = {xi=x/20;yi=y/20};;
+let pos_to_coord {xi=x;yi=y} = {xi=x*20;yi=y*20};;
+
+(* Le processus qui gere un fantome *)
+let fposdep = {xi=11;yi=11};;
+
+let process sustain s =
+   loop
+     emit s (List.hd (last ?s));
+     pause;
+   end;;
+
+let process affichage_fantome text_fant fant_pos nb_inv bouge_fant affichage =
+    loop
+       (* Si le pacman est invincible, n'affiche pas la meme
+          image *)
+       let text_aff = if (List.hd (last ?nb_inv)) <= 0 then
+                            text_fant
+                      else
+                            monstreChasse in
+       await immediate bouge_fant;
+       (* On le fait bouger *)
+       let anc_pos = List.hd (last ?fant_pos) in
+       pause;
+       await immediate one fant_pos (pos) in
+       emit affichage [My_image(get_brique anc_pos, pos_to_coord anc_pos);
+                       My_image(text_aff, pos_to_coord pos)];
+       
+       pause;
+       await immediate bouge_fant;
+       pause;
+       await immediate one fant_pos (pos) in
+       (* Fait le clignoter quand le pacman n'est
+          presque plus invincible *)
+       let image = if (last ?nb_inv) > [1] && (last ?nb_inv) <= [10] then
+                        get_brique pos
+	           else
+		        text_aff in
+       (* *********************************** *)
+       emit affichage [My_image(image, pos_to_coord pos)];
+       pause;
+    end
+
+let process mouvement_fantome affichage fant_pos bouge_fant pacman_pos nb_inv =
+  let olddir = ref Dirhaut in
+  loop
+    do
+      run (sustain fant_pos);
+    until bouge_fant done;
+
+    
+    (* Calcul la nouvelle position en fonction de la position du joueur *)
+    let anc_pos = List.hd (last ?fant_pos) in
+    await immediate one pacman_pos (jp) in 
+    let (dir,npos) = calcul_suivant_monstre (anc_pos,jp)
+	                                    !olddir
+	                                    (if (List.hd (last ?nb_inv) <= 0)
+					             then 1 else 2)
+	                                    ((List.hd (last ?nb_inv)) = 0) in
+    olddir := dir;
+    emit fant_pos (npos);
+    pause;
+    (*********************************************)
+    do
+      run (sustain fant_pos);
+    until bouge_fant done;
+  end
+
+
+let process fantome_collision pacman_pos fant_pos nb_inv coll ihavelost mt = 
+  loop
+    (* Obtient les positions de l'instant courant et precedent, du
+       pacman et du fantome *)
+    await immediate one pacman_pos (pac_pos) in
+    await immediate one fant_pos (f_pos) in
+    let pre_pac_pos = List.hd (last ?pacman_pos) in
+    let pre_f_pos = List.hd (last ?fant_pos) in
+    (**************)
+  (* Si le pacman et le fantome d'entrecroise or
+     si le pacman se fait attraper par le fantome : *)
+    let collision =  (pre_pac_pos = f_pos &&
+                      pre_f_pos = pac_pos) or
+                      f_pos = pac_pos in
+    if collision then
+    (emit coll;
+     await immediate one nb_inv (nb) in
+     if nb > 0 then
+     (* Si le pacman est invincible : *)
+     (emit ihavelost;
+      emit mt; (* incremente le compteur *)
+     )
+    );
+    pause;
+  end
+
+
+let process fantome text_fant 
+    affichage bouge mt coll nb_inv new_pacman_pos pacman_pos =
+  signal fant_pos default [fposdep] gather fun x y -> [x] in
+  signal ihavelost in
+  run (fantome_collision pacman_pos fant_pos nb_inv coll ihavelost mt)
+  ||
+  loop
+    do
+      run (affichage_fantome text_fant fant_pos nb_inv bouge affichage)
+      ||
+      run (mouvement_fantome affichage fant_pos bouge pacman_pos nb_inv)
+    until ihavelost done;
+    (** Il faut l'effacer de sa derniere position **)
+    let f_pos = List.hd (last ?fant_pos) in
+    emit affichage [My_image(get_brique f_pos, pos_to_coord f_pos)];
+    emit fant_pos fposdep;
+    pause;
+  end;;
+
+    

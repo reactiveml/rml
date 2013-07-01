@@ -1,0 +1,105 @@
+open Moteur;;
+open Random;;
+open Calcul;;
+
+
+let carre x = x *. x;;
+
+let energie (vit,pos) = (* masse = 1 *)
+             (carre (norme vit)) /. 2. (* energie cinetique *)
+
+
+
+
+let process baballe pos vit c graph s_ener = 
+        let param = ref (vit,pos) in
+        loop
+           emit graph (!param,c);
+           await graph (l) in
+           let f = gere_colli l param in  (* Obtient les forces
+	                                     recut par le choc *)
+           emit s_ener (energie !param);
+           param := resteCadre (maj_pos !param  {x=0.;y=0.;z=0.}); 
+        end;;
+
+
+let process energie s_ener=
+    let avant = ref 0.0 in
+    loop
+        await s_ener (fl) in
+        if not (fl = !avant) then
+        (print_string "Energie du systeme : ";
+	 print_float fl;
+	 print_newline ();
+	);
+        avant := fl;
+        pause;
+    end;;
+    
+
+
+
+let randomvit () =
+                 {x= 20.0 -. (Random.float 5.0)  ; 
+                  y= -. 20. ;
+                  z= 0.};;
+
+let randompos n =
+                 {x= -. 100.0 +. (Random.float 200.0) ;
+                  y= 150.0 +. (float_of_int n) *. 30. ;
+                  z= 0.};;
+
+
+let rec process creer_balle n graph s_ener =
+     if n = 1 then
+          run (baballe (randompos n)
+                       (randomvit ()) (n mod 6) graph s_ener)
+     else
+     (    run (baballe (randompos n)
+                       (randomvit ()) (n mod 6) graph s_ener)
+
+         ||
+          run (creer_balle (n - 1) graph s_ener)
+     );;
+
+
+
+let col n posx posy= 
+     let rec aux n anc l =
+         if n = 0 then 
+                l
+         else
+           let nouv = {x=posx;y=anc.y +. 24.;z=0.} in 
+             aux (n-1) nouv (nouv::l) in
+      aux n {x=posx;y=posy -. (24. *. (float_of_int (n-1)) /. 2.) ;z=0.} [];;
+
+
+let rec process creer_nballe l graph s_ener =
+   if not(List.length l = 0) then
+   (run (baballe (List.hd l) {x=0.;y=0.;z=0.} ((Random.int 6) + 1) graph s_ener)
+    ||
+    run (creer_nballe (List.tl l) graph s_ener)
+   );;
+
+let rec process billard graph s_ener =
+     let ox = 0. in
+     let oy = 200. in
+        let  l = (col 1 ox oy) @
+                 (col 2 (ox +. 19.) oy) @
+                 (col 3 (ox +. 39.) oy) @
+                 (col 4 (ox +. 59.) oy) in
+        run (creer_nballe l graph s_ener)
+        ||
+        run (baballe {x= ox -. 100. ;y = oy +. 20. +. (Random.float 7.)  ;z=0.}
+                     {x= 40.;y=0.;z=0.} 2 graph s_ener);;
+         
+
+
+
+
+
+let process creer_scene  graph =
+  signal s_ener default 0.0 gather fun x y -> y +. x in (* energie du systeme *)
+  run (billard graph s_ener)
+  ||
+  run (energie s_ener);;

@@ -1,0 +1,130 @@
+open Misc;;
+open Unix;;
+
+
+type pos =
+    { xi : int;
+      yi : int; }
+      
+      
+type color = Graphics.color
+
+type objet_graphic =
+  | My_image of Misc.t  * pos
+  | My_texte of string  * Graphics.color * pos
+  | My_fill_rect of pos * pos * Graphics.color
+
+
+let get_mouse_pos() =
+  let status = Graphics.wait_next_event [Graphics.Poll] in
+(*  let max_x_2 = (Graphics.size_x()) / 2 in*)
+(*  let max_y_2 = (Graphics.size_y()) / 2 in*)
+  { xi = status.Graphics.mouse_x;
+    yi = status.Graphics.mouse_y }
+
+let get_key = Graphics.read_key
+
+let color_of_int = function
+  | 0 -> Graphics.rgb   0   0   0   (* noir *)
+  | 1 -> Graphics.rgb   0   0 192   (* blue *)
+  | 2 -> Graphics.rgb   0 204   0   (* green *)
+  | 3 -> Graphics.rgb 255 255 255   (* white *)
+  | 4 -> Graphics.rgb 150   0   0  (* bordeau *) 
+  | 5 -> Graphics.rgb 255  89  65  (*  (* rose orange *)  *)
+  | 6 -> Graphics.rgb 255 240   0   (* yellow *)
+  | _ -> Graphics.rgb 128 128   0;;
+
+
+
+
+
+
+let affiche_objet = function(* affiche un objet graphique *)
+  | My_image (t,p)         -> Misc.misc_draw_image t p.xi p.yi
+  | My_texte (s,c,p)       -> Graphics.moveto p.xi p.yi;
+                              Graphics.set_color c;
+                              Graphics.draw_string s;
+  | My_fill_rect (x1,x2,c) -> Graphics.set_color c; 
+                              Graphics.fill_rect x1.xi x1.yi x2.xi x2.yi;;
+
+
+let affiche_all l = 
+  List.iter (function l ->List.iter affiche_objet l) l;;
+
+
+(*  Graphics.clear_graph();;*)
+(*  Graphics.synchronize();;*)
+
+
+
+
+let draw_image t {xi=x;yi=y} = Misc.misc_draw_image t x y;;
+
+let draw_texte str col {xi=x;yi=y} = Graphics.moveto x y;
+                                     Graphics.set_color col;
+                                     Graphics.draw_string str;;
+
+let draw_rect {xi=x1;yi=y1} {xi=x2;yi=y2} col =
+         Graphics.set_color col; 
+	 Graphics.fill_rect x1 y1 x2 y2;;
+
+
+
+(******************************************************)
+let fenetre =
+(*----------------------------------------------------*)
+(*----------------------------------------------------*)
+(* machine read_click [new_planete]                   *)
+(*----------------------------------------------------*)
+  let rec process read_click button_p pos_p a_click a_move mouse_pos =
+    let button = Graphics.button_down() in 
+    let pos    = get_mouse_pos () in
+    (
+     if button_p then
+       if (not button) then
+         emit a_click pos
+       else 
+         emit a_move ((* coord_m pos_p*) pos) 
+     else
+       emit a_move {xi=0;yi=0};
+    );
+    emit mouse_pos (pos);
+    pause;
+    run (read_click button pos a_click a_move mouse_pos)
+  in
+  
+(*-----------------------------------------------------*)
+(* machine read_key [] emet un instant sur deux        *)
+(*-----------------------------------------------------*)
+  let process read_key key_push =
+    loop 
+      if Graphics.key_pressed() then
+         emit key_push (get_key ()) 
+      else 
+         nothing;
+      pause;
+    end
+  in
+(*-----------------------------------------------------*)
+(* machine read_key []                                 *)
+(*-----------------------------------------------------*)
+  fun taille_x taille_y a_click a_move key_push p ->
+    process
+      begin
+(*    let t = ref (gettimeofday ()) in*)
+(*----------------------------------------------------*)
+	Graphics.open_graph (" " ^ (string_of_int taille_x) ^ "x" ^
+                             (string_of_int taille_y));
+(*    Graphics.auto_synchronize false;*)
+	Graphics.set_line_width 4;
+	Graphics.set_color (color_of_int 0);
+	begin
+	  loop
+	    await p(all) in
+	    affiche_all all
+	  end
+	  ||
+	  run (read_key key_push)
+	end
+      end
+

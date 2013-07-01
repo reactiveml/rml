@@ -1,0 +1,16 @@
+* A voir
+  - [X] sink_of_node (utilisé dans la partie init du main)
+  - [X] make_interest (utilisé dans la partie init du main)
+	
+* Creation dynamique
+  - [ ] Changer le tableau nodes en une référence vers un tableau
+  - [ ] Faire un module Dynamic qui contient
+    - [ ] un processus new_nodes: int -> node array. Cette fonction
+          doit :
+	  - allouer un nouveau tableau de noeuds
+	  - refaire l'init du systeme
+	  - changer la valeur de nodes
+	  - executer les nouveau noeuds
+    - [ ] faire un processus add_nodes qui attend un signal pour créer
+      de nouveaux noeuds
+

@@ -1,0 +1,11 @@
+open Moteur;;
+open Balle;;
+open Random;;
+
+Random.self_init();;
+
+let process main =
+  signal graph in 
+  run (fenetre graph)
+  ||
+  run (creer_scene graph);;

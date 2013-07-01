@@ -1,0 +1,582 @@
+open Rml_Graphics;;
+open Icobj;;
+
+
+
+let pi = 3.14159
+
+
+
+(* icoatt getatt a_click getlist listico clavier *)
+
+(* Operations de base sur les comportements : *)
+
+let process parallelise p1 p2 signaux =
+              run (p1 signaux)
+              ||
+              run (p2 signaux)
+
+let process sequence p1 p2 signaux =
+              run (p1 signaux);
+              run (p2 signaux);;
+			    
+let process looping p signaux = 
+		    loop
+		      run (p signaux)
+		      ||
+		      pause
+		    end;;
+
+let process loopingn n p signaux = 
+                    for i = 1 to n do
+		      run (p signaux)
+		      ||
+		      pause
+                    done;;
+
+let process b_until proc sig_preempte signaux =
+		    do
+		      run (proc signaux);
+		    until sig_preempte done;;
+
+let process  b_control proc sig_control signaux = 
+		    control
+		      run (proc signaux);
+		    with sig_control done;;
+
+(* Comportements des directions *)
+
+
+let process pleftclone (getatt,icoatt,_,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  for i = 1 to 20
+  do
+    att.pos <- {xi=att.pos.xi - 5;yi=att.pos.yi};
+    pause;
+  done;;
+
+let process pleftnoclone (getatt,icoatt,a_click,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  let imleft = load_image "images/left.gif" [] in
+  att_set_image att imleft;
+  loop
+    await a_click;
+    for i = 1 to 20
+    do
+      att.pos <- {xi=att.pos.xi - 5;yi=att.pos.yi};
+      pause;
+    done;
+  end;;
+
+
+let process prightclone (getatt,icoatt,_,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  for i = 1 to 20
+  do
+    att.pos <- {xi=att.pos.xi + 5;yi=att.pos.yi};
+    pause;
+  done;;
+
+let process prightnoclone (getatt,icoatt,a_click,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  let imright = load_image "images/right.gif" [] in
+  att_set_image att imright;
+  loop
+    await a_click;
+    for i = 1 to 20
+    do
+      att.pos <- {xi=att.pos.xi + 5;yi=att.pos.yi};
+      pause;
+    done;
+  end;;
+
+
+let process pupclone (getatt,icoatt,_,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  for i = 1 to 20
+  do
+    att.pos <- {xi=att.pos.xi;yi=att.pos.yi + 5};
+    pause;
+  done;;
+
+let process pupnoclone (getatt,icoatt,a_click,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  let imright = load_image "images/up.gif" [] in
+  att_set_image att imright;
+  loop
+    await a_click;
+    for i = 1 to 20
+    do
+      att.pos <- {xi=att.pos.xi;yi=att.pos.yi + 5};
+      pause;
+    done
+  end;;
+
+
+let process pdownclone (getatt,icoatt,_,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  for i = 1 to 20
+  do
+    att.pos <- {xi=att.pos.xi;yi=att.pos.yi - 5};
+    pause;
+  done;;
+
+let process pdownnoclone (getatt,icoatt,a_click,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  let imright = load_image "images/down.gif" [] in
+  att_set_image att imright;
+  loop
+    await a_click;
+    for i = 1 to 20
+    do
+      att.pos <- {xi=att.pos.xi;yi=att.pos.yi - 5};
+      pause;
+    done;
+  end;;
+  
+
+
+
+
+(* Comportements du sinus : *)
+
+(* Fait le mouvement sin sur l'axe verticale *)
+let process psinclone (getatt,icoatt,_,_,_,_) =
+  let alpha = ref 0.0 in
+  emit getatt;
+  await immediate one icoatt (att) in
+  while !alpha < 2. *. pi do
+    att.pos <- {xi = att.pos.xi + (int_of_float (10. *.(sin !alpha)));
+                yi = att.pos.yi};
+    alpha := (!alpha +. ( 2. *.pi) /. 30.);
+    pause;
+  done ;;
+
+
+let process psinnoclone ((getatt,icoatt,a_click,_,_,_) as signaux ) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  att_set_texte att "Sinus";
+  loop
+     await a_click;
+     run (psinclone signaux)
+  end;;
+
+
+
+
+
+
+(* Fait le mouvement cos sur l'axe horizontale *)
+let process pcosclone (getatt,icoatt,_,_,_,_) =
+  let alpha = ref 0.0 in
+  emit getatt;
+  await immediate one icoatt (att) in
+  while !alpha < 2. *. pi do
+    att.pos <- {yi = att.pos.yi + (int_of_float (10. *.(cos !alpha)));
+                xi = att.pos.xi};
+    alpha := (!alpha +. ( 2. *. pi) /. 30.);
+    pause;
+  done ;;
+
+let process pcosnoclone  ((getatt,icoatt,a_click,_,_,_) as signaux ) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  att_set_texte att "Cosinus";
+  await immediate a_click; 
+  run (pcosclone signaux);;
+
+(* Bloque jusqu'a ce qu'un click de souris soit etabli *)
+let process awaitclick ((_,_,a_click,_,_,_) as signaux ) =
+        await immediate a_click;;
+
+
+
+
+
+(* Fait un map (execute les processus) sur une liste de processus *)
+let rec process list_map l outsig =
+   match l with
+   | [] -> emit outsig []
+   | e::r -> signal s in
+	     signal ss in
+             run (e s);
+	     await immediate one s (ne) in
+	     (run (list_map r ss);
+	      await immediate one ss (nl) in
+	      emit outsig (ne::nl)
+	     );;
+
+let rec process activate_l l att =
+   match l with
+   | [] -> ()
+   | e::r -> if not (e.attrib == att) then
+                   emit e.activate;
+             run (activate_l r att);;
+
+
+
+let process behav_nothing _ =
+   nothing;;
+   
+ 
+(* Le poubelle *)
+
+let ptrashclone = behav_nothing;;
+
+let get_other l att =
+   let rec aux = function
+       | [] -> []
+       | e::l -> if e.attrib == att then
+                        l
+                 else e::(aux l) in
+      aux l;;
+
+let process ptrashnoclone detruit (getatt,icoatt,a_click,_,getlist,listico) =
+  let imloop = load_image "images/recyclefull.gif" [] in
+  emit getatt;
+  await immediate one icoatt (att) in
+  att_set_image att imloop;
+  loop
+      pause;
+      await immediate a_click;
+      emit getlist;
+      await immediate one listico (l) in
+      let objs = get_other (geticobj_under l att) att in
+      emit detruit objs;
+  end;;
+
+
+(* L'attente d'activation *)
+
+let rec process pclonemouse (_,_,a_click,_,_,_) =
+  pause;
+  await immediate a_click;;
+
+
+   
+let process pmousenoclone (getatt,icoatt,_,_,_,_) =
+  let immouse = load_image "images/mouseClic.gif" [] in
+  emit getatt;
+  await immediate one icoatt (att) in
+  att_set_image att immouse;;
+
+
+(* Les processus des constructeurs : *)
+
+(* Comportements du loop : *)
+
+let process ploopclone _ =
+                 nothing;;
+
+let process ploopnoclone (getatt,icoatt,_,_,_,_) =
+  let imloop = load_image "images/loop.gif" [] in
+  emit getatt;
+  await immediate one icoatt (att) in
+  att_set_image att imloop;;
+
+
+(* Comportements du Builder : *)
+
+let process pbuilderclone _ =
+			nothing;;
+
+
+(* met en parallele les comportements des icobjs de la liste l
+   sauf celui qui correspond a att*)
+let rec process collect_behav l att inloop outsig =
+     match l with
+     | [] -> emit outsig behav_nothing
+     | e::r -> if e.attrib == att then
+                     run (collect_behav r att inloop outsig)
+               else
+	        (signal nsig,newbehav in
+		 run (collect_behav r att inloop nsig);
+		 run (e.getcloneable newbehav);
+		 await immediate one newbehav (behav) in
+		 await immediate one nsig (curbehav) in
+		 if (behav == behav_nothing or behav == pbuilderclone ) then
+		    emit outsig (curbehav)
+		 else
+		   (if behav == ploopclone then
+		    (inloop := not (!inloop);
+		     emit outsig (curbehav)
+		    )
+		    else
+		      emit outsig (parallelise curbehav behav)
+		   )
+		);;
+
+
+
+(* pour copier des comportements *)
+let process copy_behav att imdefault imbuilding imloop outbehav a_click getlist listico clavier =
+  let (+) a b = if a == behav_nothing then
+                   b
+                else
+                  if b == behav_nothing then
+	            a
+	          else
+                    sequence a b in
+  (**********)
+  let behavloop   = ref behav_nothing in
+  let behavfinal = ref behav_nothing in
+  let inloop = ref false in
+  (**********)
+  att_set_image att imdefault;
+  (*********) 
+  loop
+    pause;
+    await immediate a_click;
+    emit getlist;
+    await immediate one listico (l) in
+    let objs = geticobj_under l att in
+    (match List.length objs with
+     (* Quand y'en a qu'un seul en dessous alors
+        il faut verifier s'il faut creer un nouvel Icobj *)
+     | 1 -> if !behavloop == behav_nothing &&
+               !behavfinal == behav_nothing then
+                nothing
+            else
+            (if !inloop && not (!behavloop == behav_nothing) then
+	        behavfinal := !behavfinal + (looping !behavloop);
+	  (* remet l'image de depart puis cree l'icobj : *)
+	     att_set_image att imdefault;
+             signal newicobj in
+	     emit outbehav (!behavfinal);
+             behavloop := behav_nothing;
+	     behavfinal := behav_nothing;
+	     inloop := false
+            )
+     | _ -> signal behavadd in
+	    (* met les comportements en parallèle, puis met les
+	       à la suite du comportement déjà créé *)
+            run (collect_behav objs att inloop behavadd);
+            await immediate one behavadd (behavcollect) in
+	    if !inloop then
+	     (behavloop := !behavloop + behavcollect;
+	      att_set_image att imloop
+	     )
+	    else
+	     ( (* Prend en compte les comportements en boucle *)
+	      if not(!behavloop == behav_nothing) then
+              (behavfinal := !behavfinal + (looping !behavloop);
+	       behavloop := behav_nothing;
+	      );
+	      behavfinal := !behavfinal + behavcollect;
+	      if !behavfinal == behav_nothing then
+	        att_set_image att imdefault
+              else
+	        att_set_image att imbuilding;
+	     )
+   )
+   end
+   ||
+   (* si l'utilisateur appuie sur escape *)
+   loop
+     await immediate one clavier (c) in
+     if (int_of_char c) = 27 then
+     (behavloop  := behav_nothing;
+      behavfinal := behav_nothing;
+      att_set_image att imdefault;
+     );
+     pause;
+   end;;
+
+
+(* Les construcyteurs *)
+
+let rec process pbuildernoclone ajouticobj (getatt,icoatt,a_click,clavier,getlist,listico) =
+  signal new_behav in
+  let imdefault  = load_image "images/building.gif" [] and
+      imbuilding = load_image "images/buildingatwork.gif" [] and
+      imloop     = load_image "images/buildingatworkloop.gif" [] in
+  emit getatt;
+  await immediate one icoatt (att) in
+  run (copy_behav att imdefault imbuilding imloop new_behav a_click getlist listico clavier)
+  ||
+  loop
+    signal newicobj in 
+    await immediate one new_behav (nb) in
+    emit  ajouticobj  (true,(nb,true),behav_nothing,att.pos);
+    pause;
+  end;;
+
+
+
+let rec process puntilnoclone ajouticobj event name (getatt,icoatt,a_click,clavier,getlist,listico) =
+  signal new_behav in
+  let imdefault  = load_image "images/until.gif" [] and
+      imbuilding = load_image "images/untilatwork.gif" [] and
+      imloop     = load_image "images/untilatworkloop.gif" [] in
+  emit getatt;
+  await immediate one icoatt (att) in
+  att.txt <- name;
+  run (copy_behav att imdefault imbuilding imloop new_behav a_click getlist listico clavier)
+  ||
+  loop
+    signal newicobj in 
+    await immediate one new_behav (nb) in
+    let nb = b_until nb  event in
+    emit ajouticobj (true,(nb,true),behav_nothing,att.pos);
+    pause;
+  end;;
+
+
+let rec process pcontrolnoclone ajouticobj event name (getatt,icoatt,a_click,clavier,getlist,listico) =
+  signal new_behav in
+  let imdefault  = load_image "images/control.gif" [] and
+      imbuilding = load_image "images/controlatwork.gif" [] and
+      imloop     = load_image "images/controlatworkloop.gif" [] in
+  emit getatt;
+  await immediate one icoatt (att) in
+  att.txt <- name;
+  run (copy_behav att imdefault imbuilding imloop new_behav a_click getlist listico clavier)
+  ||
+  loop
+    signal newicobj in 
+    await immediate one new_behav (nb) in
+    let nb = b_control nb  event in
+    emit ajouticobj (true,(nb,true),behav_nothing,att.pos);
+    pause;
+  end;;
+
+
+
+
+(* Le textbox *)
+
+let ptextboxclone = behav_nothing;;
+
+let process ptextboxnoclone (getatt,icoatt,_,clavier,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  att_set_texte att "Textbox :";
+  loop
+      await immediate one clavier (c) in
+      if (int_of_char c) = 8 then
+       (let l = String.length att.txt in
+	if l != 0 then
+         att.txt <- String.sub att.txt 0 ((String.length att.txt) - 1);
+       )
+      else
+         att.txt <- att.txt ^ (Char.escaped c);
+      pause;
+  end;;
+		    
+
+
+
+
+(* Le emit et le await *)
+
+
+let process pgenerateclone evenmnt _ =
+    	emit evenmnt;;
+
+let process pgeneratenoclone evenmnt name (getatt,icoatt,a_click,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  let imgen = load_image "images/generate.gif" [] in
+  att.txt <- name;
+  att_set_image att imgen;
+  loop
+    pause;
+    await immediate a_click;
+    emit evenmnt;
+  end;;
+                 
+
+
+
+let process pawaitclone evenmnt _ =
+  pause;
+  await immediate evenmnt;;
+
+let process pawaitnoclone evenmnt name (getatt,icoatt,a_click,_,_,_) =
+  emit getatt;
+  await immediate one icoatt (att) in
+  let imaw= load_image "images/await.gif" [] in
+  att.txt <- name;
+  att_set_image att imaw;;
+                 
+
+
+
+
+(* Le ocnstructeur d'evenement *)
+let peventclone = behav_nothing;;
+
+let process peventnoclone ajouticobj (getatt,icoatt,a_click,clavier,getlist,listico) =
+  signal d,newicobj in
+  let index = ref 1 in
+  let imloop = load_image "images/hal.gif" [] in
+  emit getatt;
+  await immediate one icoatt (att) in
+  att_set_image att imloop;
+  loop
+    pause;
+    await immediate  a_click;
+    emit getlist;
+    await immediate one listico (l) in
+    let objs = get_other (geticobj_under l att) att in
+    begin match objs with
+    | [other] ->
+	(signal s in
+	run (other.getnocloneable s);
+	await immediate one s (b) in
+	if b == ptextboxnoclone && not (other.attrib.txt = "")  then 
+	  (signal s in
+          let name = other.attrib.txt ^ (string_of_int !index) in
+          att.txt <- name;
+	  pause;
+          await immediate a_click;
+	  att.txt <- "";
+	  index := !index + 1 ;
+          emit ajouticobj (true,
+			   (pbuilderclone,true),
+			   puntilnoclone ajouticobj s name,
+			   {xi=att.pos.xi;yi=att.pos.yi-40});
+        
+	  emit ajouticobj (true,
+			   (pgenerateclone s,false),
+			   pgeneratenoclone s name,
+			   {xi=att.pos.xi+60;yi=att.pos.yi-90});
+          
+	  emit ajouticobj (true,
+			   (pawaitclone s,false),
+			   pawaitnoclone  s name,
+			   {xi=att.pos.xi;yi=att.pos.yi-90});
+          
+          emit ajouticobj (true,
+			   (pbuilderclone,true),
+			   pcontrolnoclone ajouticobj s name,
+			   {xi=att.pos.xi+60;yi=att.pos.yi - 40});
+	  )
+	)
+    | _ -> ()
+    end
+  end;;
+
+
+(* Le stop *)
+
+
+let process pstopclone _ =
+		     pause;;
+
+let process pstopnoclone (getatt,icoatt,_,_,_,_) =
+  let imstop = load_image "images/stop.gif" [] in
+  emit getatt;
+  await immediate one icoatt (att) in
+  att_set_image att imstop;;
+
+  

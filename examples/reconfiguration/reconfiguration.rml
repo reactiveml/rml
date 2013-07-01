@@ -1,0 +1,39 @@
+type id = int
+;;
+
+(* ------------------------------------------------------------------------ *)
+(* Misc *)
+
+let process filter id s s_me = 
+  loop 
+    await s(ids) in 
+    if List.mem id ids then emit s_me 
+  end
+;;
+
+(* ------------------------------------------------------------------------ *)
+(* kill *)
+signal kill: (id, id list) event;;
+
+let process killable id p =
+  signal kill_me in
+  do
+    run p; emit kill_me
+    || 
+    run (filter id kill kill_me)
+  until kill_me done
+;;
+
+
+(* ------------------------------------------------------------------------ *)
+(* switch *)
+signal switch: (id, id list) event;;
+
+let process suspendable id p =
+  signal finished in
+  signal switch_me in
+  control run p with switch_me done; emit finished
+  ||
+  do run (filter id switch switch_me) until finished done
+
+

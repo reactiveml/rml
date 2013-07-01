@@ -1,0 +1,126 @@
+open Icobj;;
+open Behavior;;
+open Rml_Graphics;;
+
+let process create_builder x y newicobj =
+   emit newicobj (false,
+                  (pbuilderclone,false),
+                  (pbuildernoclone newicobj),
+                  {xi=x;yi=y});;
+
+
+
+let process create_event x y newicobj =
+   emit newicobj (false,
+                  (peventclone,false),
+                  (peventnoclone newicobj),
+                  {xi=x;yi=y});;
+
+
+
+let process create_until x y s name newicobj =
+   emit newicobj (false,
+                  (pbuilderclone,false),
+                  (puntilnoclone newicobj s name),
+                  {xi=x;yi=y});;
+
+let process create_generate x y s name newicobj =
+   emit newicobj (false,
+                  (pgenerateclone s,false),
+                  (pgeneratenoclone s name),
+                  {xi=x;yi=y});;
+
+let process create_await x y s name newicobj =
+   emit newicobj (false,
+                  (pgenerateclone s,false),
+                  (pgeneratenoclone s name),
+                  {xi=x;yi=y});;
+
+let process create_control x y s name newicobj =
+   emit newicobj (false,
+                  (pbuilderclone,false),
+                  (pcontrolnoclone s name),
+                  {xi=x;yi=y});;
+
+
+
+
+let process create_sin x y newicobj =
+   emit newicobj (false,
+                  (psinclone,false),
+                  psinnoclone,
+                  {xi=x;yi=y});;
+
+
+
+let process create_left x y newicobj =
+   emit newicobj (false,
+                  (pleftclone,false),
+                  pleftnoclone,
+                  {xi=x;yi=y});;
+
+
+
+let process create_right x y newicobj =
+   emit newicobj (false,
+                  (prightclone,false),
+                  prightnoclone,
+                  {xi=x;yi=y});;
+
+
+
+let process create_up x y newicobj =
+   emit newicobj (false,
+                  (pupclone,false),
+                  pupnoclone,
+                  {xi=x;yi=y});;
+
+
+
+let process create_down x y newicobj =
+   emit newicobj (false,
+                  (pdownclone,false),
+                  pdownnoclone,
+                  {xi=x;yi=y});;
+
+
+
+
+let process create_cos x y newicobj =
+   emit newicobj (false,
+                  (pcosclone,false),
+                  pcosnoclone,
+                  {xi=x;yi=y});;
+
+
+
+let process create_loop x y newicobj =
+   emit newicobj (false,
+                  (ploopclone,false),
+                  ploopnoclone,
+                  {xi=x;yi=y});;
+
+
+
+let process create_textbox x y newicobj =
+   emit newicobj (false,
+                  (ptextboxclone,false),
+                  ptextboxnoclone,
+                  {xi=x;yi=y});;
+
+
+
+let process create_stop x y newicobj =
+   emit newicobj (false,
+                  (pstopclone,false),
+                  pstopnoclone,
+                  {xi=x;yi=y});;
+
+
+
+let process create_trash x y newicobj delicobj =
+   emit newicobj (false,
+                  (ptrashclone,false),
+                  ptrashnoclone delicobj,
+                  {xi=x;yi=y});;
+

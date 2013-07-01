@@ -1,0 +1,347 @@
+Init.configure();;
+
+(**coordonnees d un point*)
+type coord = {
+    x : float;
+    y : float;
+  }
+
+(**Differents etats du noeud, a ces etats sont associees des consommations d energie*)
+(**les etats du type etat1_a_etat2 sont les phases de transition.*)
+type state =
+  | Veille
+  | Reveil
+  | Idle
+  | Idle_a_Transmet
+  | Veille_a_Transmet
+  | Idle_a_Recoit
+  | Transmet
+  | Transmet_a_Recoit
+  | Recoit
+  | Recoit_a_Transmet
+
+type cpustate =
+  | Off
+  | One 
+  | Two 
+  | Three (**etat On si pas de DVS*)
+
+type memorystate = (**Pour la description des états, voir l'article de Delaluz*)
+  | Active
+  | Standby
+  | Standby_to_Active
+  | Napping
+  | Napping_to_Active
+  | Powerdown
+  | Powerdown_to_Active
+  | Disabled
+  | Disabled_to_Active
+
+type flashstate =
+  | Off_flash
+  | Write
+  | Read
+  | Delete
+
+type activation = To_send | Preambule | Transmission_en_cours
+
+type action = Emit | Receive | Ignore
+
+type interest_req = {
+    interest_id_req : int;
+    concerned : node list;
+  }
+
+and interest_resp = {
+    interest_id_resp : int;
+    next_node : node; (**noeud suivant sur le chemin du retour*)
+  }
+
+and header3 =
+  | Interest_request of interest_req
+  | Interest_response of interest_resp
+  | Not_interest
+    
+(**paquet de la couche reseau*)
+and packet3 = {
+    header3 : header3;
+    packet_id3 : int;
+    ack : bool;
+    len3 : int;
+    mac_ack : bool;
+    from3 : node;
+  }
+
+(**informations concernant la periode de reveil des noeuds voisins*)
+and neighbors_information = {
+    mutable node_identifier : int; (**node_id du noeud considere*)
+    mutable next_wakeup : int; (**prochain reveil*)
+    mutable tw : int; (** periode de veille*)
+    mutable time_info : int; (** date de l'information*)
+  }
+
+
+(**header est contenu dans les paquets de type 2,*)
+(**il indique si le paquet est un ack ou un des donnes*)
+and header = 
+  | Data of packet3
+  | Ack of int
+
+(**memorise par les noeuds*)
+and node_interest = {
+    interest_id_n : int; (**id de l'interet*)
+    from_in : node;(**d'ou vient cet interet*)
+    for_me  : bool; (**suis-je (self) concerne par cet interest*)
+  }
+    
+
+(**paquet de la couche mac*)
+and packet2 = {
+    packet_id2 : int;
+    header : header;
+    len2 : int;
+    ack2 : bool;
+    from2 : node; 
+ }
+
+(**Chaque noeud a un champ mac, reseau et resultat*)
+and mac = {
+    mutable my_next_wakeup : int; (**prochain reveil prevu*)
+    mutable neighbors_info_list : neighbors_information list;  (** informations sur les reveils des voisins*)
+    mac_channel : (packet2, packet2 list) event; (**paquets sur le canal*)
+    activation : (activation, activation list) event; (**preambules sur le canal*)
+    mutable to_send2 : packet2 list;(**Liste des paquets à envoyer*)
+    emits_packet : (packet2, packet2 list) event (**paquets effectivement envoyes*)
+  }
+
+and reseau = {
+    received : (packet3, packet3 list) event; (**liste des paquets recus*)
+    first_received : (packet3, packet3 list) event; 
+    mutable treated : packet3 list; (**liste des paquets recus et renvoyés*)
+    mutable to_send3 : packet3 list; (**liste des paquets recus et a priori a renvoyer*)
+    (**Cette liste peut contenir des doublons, elle contient aussi les paquets*)
+    (**générés au noeud meme par la couche applicative*)
+    mutable interest_list : node_interest list; (**liste qui contient les interets en cours qui sont passes par ce noeud*)
+  }
+
+and resultats = {
+    mutable time_received : int; (**temps ou le paquet n°1 a ete recu *)
+    mutable time_sent : int; (**temps ou le paquet n°1 a ete renvoyé*)
+  }
+
+
+and node = {
+    node_id : int;
+    mutable node_energy : float;    (**energie en Joule*)
+    node_pos : coord;               (**position*)
+    mutable node_etat : state;      (**etat*)
+    mutable node_cpu : cpustate;    (**etat du cpu*)
+    mutable node_memory : memorystate; (**etat de la memoire DRAM*)
+    mutable node_flash : flashstate; (**etat de la flash*)
+    mutable node_neighbors : node list;(**liste des voisins*)
+    node_mac : mac;
+    node_network : reseau;
+    reseau_to_mac : (packet2, packet2 list) event;(**signal qui envoie les paquets*)
+                                            (**de la couche reseau a la couche mac*)
+    application_to_routing : (packet3, packet3 list) event;
+                                       (**de la couche application a la couche mac*)
+    node_results : resultats; 
+    mutable node_pre_present_nuage : bool;
+  }
+
+
+
+(**Consommations en Watt*)
+(**Micro controleur 14 mA*)
+(**led 4 mA*)
+ (**2.7 est la tension*)
+let conso_veille = !Init.conso_veille
+let conso_idle = !Init.conso_idle
+let conso_transmet = !Init.conso_transmet
+let conso_idle_a_transmet = !Init.conso_idle_a_transmet
+let conso_veille_a_transmet = !Init.conso_veille_a_transmet
+let conso_idle_a_recoit = !Init.conso_idle_a_recoit
+let conso_transmet_a_recoit = !Init.conso_transmet_a_recoit
+let conso_reveil = !Init.conso_reveil
+let conso_recoit = !Init.conso_recoit
+let conso_recoit_a_transmet = !Init.conso_recoit_a_transmet
+
+(**consommation du microcontroler*)
+let conso_cpu0 = !Init.conso_cpu0
+let conso_cpu1 = !Init.conso_cpu1
+let conso_cpu2 = !Init.conso_cpu2
+let conso_cpu3 = !Init.conso_cpu3
+
+
+(**conso de la memoire*)
+(**valeurs viennent de l'article de Delaluz DelaluzKVSI01*)
+let conso_active    = !Init.conso_active
+let conso_standby   = !Init.conso_standby
+let conso_napping   = !Init.conso_napping
+let conso_powerdown = !Init.conso_powerdown
+let conso_disabled  = !Init.conso_disabled
+
+(**conso de la flash*)
+(**valeurs viennent du rapport de stage de l ENS cachan*)
+let conso_off = !Init.conso_off
+let conso_read = !Init.conso_read
+let conso_write = !Init.conso_write
+let conso_delete = !Init.conso_delete
+
+(**un instant correspond à un dixième de milliseconde*)
+    (**temps d un instant en seconde*)
+
+let unite_temps = !Init.unite_temps
+
+let clock_drift = !Init.clock_drift
+
+let periode_veille = !Init.periode_veille
+let periode_ecoute = !Init.periode_ecoute
+let temps_reveil = !Init.temps_reveil
+let temps_idle_a_transmet = !Init.temps_idle_a_transmet
+let temps_idle_a_recoit = !Init.temps_idle_a_recoit
+let temps_veille_a_transmet = !Init.temps_veille_a_transmet (*Attention, cette transition n'existerait pas*)
+let temps_recoit_a_transmet = !Init.temps_recoit_a_transmet
+let temps_transmet_a_recoit = !Init.temps_transmet_a_recoit
+let pream_len = !Init.pream_len
+
+(*ces temps dependent des temps de transmission des paquets qui dependent de la
+bande passante*)
+let timeout_ack = !Init.timeout_ack (*temps maxi pendant lequel on attend l'ack*)
+let timeout_recevoir = !Init.timeout_recevoir  (*temps maxi pendant lequel on attend un paquet*)
+(*longueur du preambule+ un p tit chouilla*)
+let cw_max = !Init.cw_max (*temps maximal de back off*)
+
+(*nombre de noeuds*)
+let number_of_nodes = !Init.number_of_nodes
+
+(*taille de la simu*)
+let max_x = !Init.max_x
+let max_y = !Init.max_y
+
+(*voisinage*)
+(**rayon de couverture*)
+let coverage_range = !Init.coverage_range
+
+(**on eleve le rayon au carre*)
+let coverage_range2 = coverage_range *. coverage_range 
+
+(**rayon du nuage*)
+let cloud_range = !Init.cloud_range
+let cloud_range2 = cloud_range *. cloud_range
+
+let node_energy = !Init.node_energy
+
+let sink_energy = !Init.sink_energy
+
+let number_of_instants = !Init.number_of_instants
+
+(**Fonction qui cree un noeud en lui affectant un nouvel identifiant*)
+(**de l energie, et qui initialise tous les champs*)
+let make_node id pos=
+  { node_id = id;
+    node_energy = node_energy;
+    node_pos = pos;
+    node_etat = Veille;
+    node_cpu = Three; (**on part avec les cpu a fond comme s'il ne se reglait pas*)
+    node_memory = Active; (**idem*)
+    node_flash = Off_flash; (**idem*)
+    node_neighbors = [];
+    node_mac = { my_next_wakeup = Random.int periode_veille;
+                 neighbors_info_list = [];
+		 mac_channel = (signal s in s);
+                 activation = (signal s in s);
+                 to_send2 = [];
+		 emits_packet = (signal s in s)};
+    node_network = { received = (signal s in s);
+		     first_received = (signal s in s);
+		     treated = [];
+		     to_send3 = [];
+		     interest_list = []};
+    reseau_to_mac = (signal s in s);
+    application_to_routing = (signal s in s);
+    node_results = {time_received = -1;
+		    time_sent = -1};
+    node_pre_present_nuage = false;
+  }
+
+let sink_of_node self =
+  self.node_energy <- sink_energy;
+;;
+
+let distance2 pos1 pos2 = 
+  (pos2.x -. pos1.x) *. (pos2.x -. pos1.x) +. 
+    (pos2.y -. pos1.y) *. (pos2.y -. pos1.y) 
+
+let random_pos() =
+  { x = Random.float max_x;
+    y = Random.float max_y; }
+
+let get_id2 =
+  let cpt = ref 0 in
+  fun () -> 
+    incr cpt;
+    !cpt
+
+let get_id3 =
+  let cpt3 = ref 0 in
+  fun () -> 
+    incr cpt3;
+    !cpt3
+
+let get_id_int =
+  let cpt_i = ref 0 in
+  fun () ->
+    incr cpt_i;
+    !cpt_i
+
+(**Fonction qui transforme un paquet de type3 en paquet de type2*)
+let packet3_to_2 p3 self =
+  { packet_id2 = get_id2(); (**on assigne au paquet2 un nouvel id*)
+    header = Data p3;
+    len2 = p3.len3;
+    ack2 = p3.mac_ack;
+    from2 = self;
+  }
+
+(*
+(**Fonction qui cree un paquet de type 3*)
+(**self est le noeud emetteur*)
+let make_packet self interest_or_not =
+  { header3 = interest_or_not;
+    packet_id3 = get_id3();
+    ack = false; (**aquittement de la couche reseau*)
+    len3 = 40;
+    mac_ack = false; (**aquittement de la couche mac*)
+    from3 = self; (** noeud emetteur*)
+ }
+  
+*)
+
+(**Processus qui compte le temps*)
+
+let time = ref 0
+
+let process temps =
+  loop
+    incr time;
+    pause
+  end
+
+
+(*Decouverte du voisinage*)
+
+let is_neighbors n1 n2 = distance2 n1.node_pos n2.node_pos < coverage_range2 
+
+let compute_neighbors node_array =
+  for i=0 to Array.length node_array - 1 do
+    for j=i+1 to Array.length node_array - 1 do
+      let n1 = node_array.(i) in
+      let n2 = node_array.(j) in
+	if is_neighbors n1 n2 then 
+	  (n1.node_neighbors <- n2 :: n1.node_neighbors;
+	   n2.node_neighbors <- n1 :: n2.node_neighbors)
+    done
+  done
+
+

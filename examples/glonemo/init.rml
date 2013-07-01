@@ -1,0 +1,175 @@
+
+
+(**Consommations en Watt*)
+(**Micro controleur 14 mA*)
+(**led 4 mA*)
+ (**2.7 est la tension*)
+let conso_veille = ref ((0.0) *. 2.7)
+let conso_idle = ref ((0.037 ) *. 2.7)
+let conso_transmet = ref ((0.037 ) *. 2.7)
+let conso_idle_a_transmet = ref !conso_idle
+let conso_veille_a_transmet = ref !conso_transmet
+let conso_idle_a_recoit = ref !conso_idle
+let conso_transmet_a_recoit = ref !conso_transmet (*0.0600000*)
+let conso_reveil = ref !conso_idle
+let conso_recoit = ref !conso_idle
+let conso_recoit_a_transmet = ref !conso_transmet (*0.0600000*)
+
+(**consommation du microcontroler*)
+let conso_cpu0 = ref 0.0
+let conso_cpu1 = ref (1.1 *. 0.014)
+let conso_cpu2 = ref (2.2 *. 0.014)
+let conso_cpu3 = ref (3.3 *. 0.014)
+
+
+(**conso de la memoire*)
+(**valeurs viennent de l'article de Delaluz DelaluzKVSI01*)
+let conso_active    = ref (3.57  *. 10.0 ** (-9.0))
+let conso_standby   = ref (0.83  *. 10.0 ** (-9.0))
+let conso_napping   = ref (0.32  *. 10.0 ** (-9.0))
+let conso_powerdown = ref (0.005 *. 10.0 ** (-9.0))
+let conso_disabled  = ref 0.0
+
+(**conso de la flash*)
+(**valeurs viennent du rapport de stage de l ENS cachan*)
+let conso_off = ref 0.0
+let conso_read = ref 0.2
+let conso_write = ref 0.2
+let conso_delete = ref 0.2
+
+    (**temps d un instant en seconde*)
+
+let unite_temps = ref 0.01 (* s *)
+
+let clock_drift = ref 3
+
+let periode_veille = ref 100(*0*)
+let periode_ecoute = ref 2 (**128 µs pour detecter de l'energie sur le canal, selon MC13192*)
+let temps_reveil = ref 3
+let temps_idle_a_transmet = ref 1
+let temps_idle_a_recoit = ref 1
+let temps_veille_a_transmet = ref 4 (*Attention, cette transition n'existerait pas*)
+let temps_recoit_a_transmet = ref 1
+let temps_transmet_a_recoit = ref 1
+let pream_len = ref (!periode_veille + 2 * !periode_ecoute)
+
+(*ces temps dependent des temps de transmission des paquets qui dependent de la
+bande passante*)
+let timeout_ack = ref 20 (*temps maxi pendant lequel on attend l'ack*)
+let timeout_recevoir = ref (!pream_len + 5)  (*temps maxi pendant lequel on attend un paquet*)
+(*longueur du preambule+ un p tit chouilla*)
+let cw_max = ref 100 (*temps maximal de back off*)
+
+(*nombre de noeuds*)
+let number_of_nodes = ref 500
+
+(*taille de la simu*)
+let max_x = ref 900.0
+let max_y = ref 600.0
+
+(*voisinage*)
+(**rayon de couverture*)
+let coverage_range = ref 120.0
+
+
+(**rayon du nuage*)
+let cloud_range = ref 100.0
+
+let node_energy = ref 2.0
+
+let sink_energy = ref 5.0e50
+
+let number_of_instants = ref (-1)
+
+let with_graphics = ref true
+
+let with_cloud = ref true
+
+(* Set functions *)
+let option_set r v = r := Some v
+
+let set_option r v_opt =
+  match v_opt with
+  | None -> ()
+  | Some v -> r := v
+
+
+let set_size t =
+  set_option max_x t;
+  set_option max_y t
+
+
+let set_density d =
+  let surface = !max_x *. !max_y in
+  let range =
+      (sqrt(d *. surface /. (3.14 *. float_of_int(!number_of_nodes))))
+  in
+  coverage_range := range
+
+(**d c'est le nombre moyen de noeuds sous le nuage*)
+let set_cloud_range d =
+  let surface = !max_x *. !max_y in
+  let range =
+      (sqrt(d *. surface /. (3.14 *. float_of_int(!number_of_nodes))))
+  in
+  cloud_range := range
+
+
+(* Configuration function *)
+let configure () = 
+  let doc_N = "<nb> nombre d'instant de smulation"
+  and doc_n = "<nb> nombre de noeuds dans la topologie"
+  and doc_D = "<density> nb moyen de voisins"
+  and doc_t = "<longueur> longueur d'un cote"
+  and doc_range = "<r> rayon de couverture" 
+  and doc_nox = " sans mode graphique"
+  and doc_noc = " sans nuage"
+  and doc_seed = ""
+  and doc_cloud_d = "<density> nb moyen de noeud sous le nuage"
+  in
+
+  let var_N = ref None
+  and var_n = ref None
+  and var_D = ref None
+  and var_t = ref None
+  and var_range = ref None
+  and var_seed = ref (Some 4)
+  and var_cloud_d = ref None
+  in
+
+  let errmsg = "Options are:" in
+
+  Arg.parse
+    [ ("-N", Arg.Int (option_set var_N), doc_N);
+      ("-n", Arg.Int (option_set var_n), doc_n);
+      ("-t", Arg.Float (option_set var_t), doc_t);
+      ("-range", Arg.Float (option_set var_range), doc_range);
+      ("-D", Arg.Float (option_set var_D), doc_D);
+      ("-nox", Arg.Clear with_graphics, doc_nox); 
+      ("-noc", Arg.Clear with_cloud, doc_noc); 
+      ("-seed", Arg.Int (option_set var_seed), doc_seed);
+      ("-cloud_d", Arg.Float (option_set var_cloud_d), doc_cloud_d);
+    ]
+    (fun s -> raise (Invalid_argument s))
+    errmsg;
+
+  if (!var_D <> None) && (!var_range <> None) then 
+    failwith "-D and -range are not compatible";
+
+  set_option number_of_instants !var_N;
+  set_option number_of_nodes !var_n;
+  set_size !var_t;
+  set_option coverage_range !var_range;
+  begin match !var_D with
+  | None -> set_density 10.0
+  | Some d -> set_density d
+  end;
+  begin match !var_seed with
+  | None -> Random.self_init()
+  | Some seed -> Random.init seed
+  end;
+  begin match !var_cloud_d with
+  | None -> cloud_range := 2.0 *. !coverage_range
+  | Some d -> set_cloud_range d
+  end
+

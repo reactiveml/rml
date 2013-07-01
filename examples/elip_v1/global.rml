@@ -1,0 +1,125 @@
+open Position
+
+(* ---------------------------- *)
+(* Types                        *)
+(* ---------------------------- *)
+type routage_kind = LE | ELIP
+
+type node = 
+    { id: int;
+      mutable pos: position;
+      mutable date: int;
+      pos_tbl_le: Pos_tbl.t;
+      pos_tbl_elip: Pos_tbl.t;
+      mutable neighbors: node list;
+      mutable visited: bool }
+
+type packet_header =
+  | H_LE
+  | H_ELIP of position option
+
+type packet =
+    { mutable header: packet_header;
+      src_id: int;
+      dest_id: int;
+      mutable dest_pos: position;
+      mutable dest_pos_age: int;
+      (* to compute statistics *)
+      mutable route: node list;
+      mutable anchors: (node * node option * int * int) list; }
+
+
+(* ---------------------------- *)
+(* Global values                *)
+(* ---------------------------- *)
+signal draw: (node, node list)event default [] gather (fun x y -> x::y);;
+
+let () = Init.configure()
+
+let nb_instants = !Init.nb_instants
+
+(* simulation space *)
+let max_x = !Init.max_x
+let max_y = !Init.max_y
+
+let area_size_x = !Init.area_size_x
+let area_size_y = !Init.area_size_y
+
+let nb_area_x = 
+  if max_x mod area_size_x = 0 then 
+    max_x / area_size_x 
+  else 
+    (max_x / area_size_x) + 1
+let nb_area_y = 
+  if max_y mod area_size_y = 0 then 
+    max_y / area_size_y 
+  else 
+    (max_y / area_size_y) + 1
+
+
+let hello_array = 
+  Array.make_matrix nb_area_x nb_area_y 
+    ((Obj.magic()): (node, node list) event)
+
+
+(* nodes *)
+let nb_nodes = !Init.nb_nodes
+let coverage_range = !Init.coverage_range
+let coverage_range2 = coverage_range * coverage_range
+let speed = !Init.speed
+
+let main_node = ref 0
+
+(* packets *)
+let elip_proba = !Init.elip_proba
+let elip_forecast = !Init.elip_forecast
+
+let msg_proba = !Init.msg_proba
+let msg_len = !Init.msg_len
+
+(* Outputs *)
+let with_graphics = !Init.with_graphics
+
+(* ---------------------------- *)
+(* Misc                         *)
+(* ---------------------------- *) 
+(* Creation functions *)
+let get_new_id =
+  let cpt = ref (-1) in
+  fun () ->
+    incr cpt;
+    !cpt
+
+
+let make_node id pos =
+  {  id = id;
+     date = 0;
+     pos_tbl_le = Pos_tbl.make nb_nodes; 
+     pos_tbl_elip = Pos_tbl.make nb_nodes; 
+     neighbors = [];
+     pos = pos;
+     visited = false; }
+
+
+let make_packet header src_node dest =
+  let dest_pos, dest_pos_date = 
+    match header with
+    | H_LE -> Pos_tbl.get src_node.pos_tbl_le dest 
+    | H_ELIP _ -> Pos_tbl.get src_node.pos_tbl_elip dest
+  in
+  { header = header;
+    src_id = src_node.id;
+    dest_id = dest;
+    dest_pos = dest_pos;
+    dest_pos_age = abs (src_node.date - dest_pos_date);
+    route = [];
+    anchors = [];
+  }
+
+let make_le_packet =  make_packet H_LE 
+
+let make_elip_packet src_node dest =
+  if Random.float 100.0 < elip_proba then
+    make_packet (H_ELIP (Some src_node.pos)) src_node dest
+  else
+    make_packet (H_ELIP None) src_node dest

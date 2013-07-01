@@ -1,0 +1,26 @@
+open Main;;
+open Definitions;;
+
+#run main;;
+
+#suspend;;
+
+nodes.(42).node_energy ;;
+
+#step 100;;
+nodes.(42).node_energy ;;
+
+#resume;;
+
+
+(* ----------------- *)
+
+let process obs =
+  while (nodes.(3).node_energy > 0.5) do
+    pause
+  done;
+  #suspend
+;;
+
+#run obs;;
+

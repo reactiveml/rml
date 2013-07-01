@@ -1,0 +1,288 @@
+(************************************************************************)
+(*                                                                      *)
+(*                        Crible de Darwin                              *)
+(*                                                                      *)
+(*                                                                      *)
+(* Auteur : Louis Mandel                                                *)
+(* Date de création : 19/10/2010                                        *)
+(* Remarque : commande de Gérard Berry                                  *)
+(*                                                                      *)
+(************************************************************************)
+
+let nox = ref false
+let width = ref 800
+let height = ref 600
+let max_number = ref 200
+
+let configure () =
+  let doc_max_number = "<n> set the initial maximal number"
+  and doc_width = "<n> set the width"
+  and doc_height = "<n> set the height"
+  and doc_nox = "disable graphical output"
+  and errmsg = "Options are:"
+  in
+  Arg.parse
+    [ ("-n", Arg.Set_int max_number, doc_max_number);
+      ("-w", Arg.Set_int width, doc_width);
+      ("-h", Arg.Set_int height, doc_height);
+      ("-nox", Arg.Set nox, doc_nox);
+    ]
+    (fun s -> raise (Invalid_argument s))
+    errmsg
+
+let _ = configure ()
+
+let nox = !nox
+let width = !width
+let height = !height
+let max_number = !max_number
+let max_speed = 5
+let radius = 12.
+
+type coord = 
+    { x: float;
+      y: float; }
+      
+type number = 
+    { id: int;
+      pos: coord;
+      v: coord;
+      w: float;
+      r: float;
+      c: Graphics.color; 
+      kill: (unit, unit) event; }
+
+type wall = { left: float; right: float;
+	      bot: float; top: float }
+
+let wall = 
+  { left = 1.; right = float (width - 1); 
+    bot = 1.; top = float (height - 1); }
+
+
+let is_prime =
+  let primes = ref [] in
+  fun n ->
+    if List.exists (fun p -> n mod p = 0) !primes then false
+    else (primes := n :: !primes; true)
+
+let color_of_int n =
+  if is_prime n then Graphics.green
+  else Graphics.cyan
+
+(* let rec color_of_int n = *)
+(*   if n mod 13 = 0 then Graphics.magenta *)
+(*   else if n mod 11 = 0 then Graphics.cyan *)
+(*   else if n mod 7 = 0 then Graphics.yellow *)
+(*   else if n mod 5 = 0 then Graphics.blue *)
+(*   else if n mod 3 = 0 then Graphics.green *)
+(*   else if n mod 2 = 0 then Graphics.red *)
+(*   else color_of_int (n-1) *)
+
+let random_pos wall =
+  { x = Random.float (wall.right -. wall.left) +. wall.left;
+    y = Random.float (wall.top -. wall.bot) +. wall.bot; }
+
+let random_v () =
+  { x = float_of_int (Random.int (max_speed * 2) - max_speed) ;
+    y = float_of_int (Random.int (max_speed * 2) - max_speed) ; }
+
+let number_with_random_v n pos =
+  signal kill default () gather (fun () () -> ()) in
+  { id = n;
+    pos = pos;
+    v = random_v();
+    w = 1.;
+    r = radius;
+    c = color_of_int n; 
+    kill = kill;
+  }
+
+let number_at_random_pos n wall = 
+  number_with_random_v n (random_pos wall)
+
+let bounce me wall =
+  let x,dx =
+    if me.pos.x -. me.r <= wall.left then 
+      (wall.left +. me.r, -. me.v.x)
+    else if me.pos.x +. me.r >= wall.right then 
+      (wall.right -. me.r, -.me.v.x)
+    else 
+      (me.pos.x, me.v.x)
+  and y,dy =
+    if me.pos.y -. me.r <= wall.bot then 
+      (wall.bot +. me.r, -.me.v.y)
+    else if me.pos.y +. me.r >= wall.top then 
+      (wall.top -. me.r, -.me.v.y)
+    else 
+      (me.pos.y, me.v.y)
+  in
+  { id = me.id;
+    pos = {x = x +. dx; y = y +. dy}; 
+    v = {x = dx; y = dy};
+    w = me.w;
+    r = me.r;
+    c = me.c; 
+    kill = me.kill; }  
+
+let dot_product d1 d2 d3 d4 = (d1 *. d3) +. (d2 *. d4)
+
+let collide me other =
+  let x = me.pos.x
+  and y = me.pos.y
+  and sx = me.v.x
+  and sy = me.v.y in
+
+  let dx = other.pos.x -. x
+  and dy = other.pos.y -. y in
+
+  let max_dist = me.r +. other.r
+  and dist = sqrt ((dx *. dx) +. (dy *. dy)) in
+
+  if me.id = other.id or (dist > max_dist) then me
+  else
+    if me.id mod other.id = 0 then (emit me.kill; me)
+    else
+      let d3 = dot_product sx sy dx dy
+      and d4 = dot_product (other.v.x) (other.v.y) (-.dx) (-.dy) in
+      let d8 = (d3 +. d4)/. dist in
+      if (d8 < 0.0) or (d8 = 0.0) then me
+      else
+	let dsx = d8 *. (dx /. dist)
+	and dsy = d8 *. (dy /. dist) in
+	{ id = me.id;
+	  pos = {x = x -. dsx; y = y -. dsy; };
+	  v = {x = sx -. dsx; y = sy -. dsy; }; 
+	  w = me.w;
+	  r = me.r;
+	  c = me.c; 
+	  kill = me.kill; }
+	  
+let rec collisions me = function
+  | [] -> me
+  | other::t -> let me' = collide me other in collisions me' t
+
+let compute_pos me wall all = 
+  let me' = collisions me all in bounce me' wall
+
+(**************************************************************************)
+(* display                                                                *)
+(**************************************************************************)
+let _ = 
+  if nox then ()
+  else 
+    let w = string_of_int width in 
+    let h = string_of_int height in
+    Graphics.open_graph (" "^w^"x"^h);
+    Graphics.set_window_title "Darwin sieve";
+    Graphics.auto_synchronize false
+
+let draw_number p =
+  Graphics.set_color p.c;
+  Graphics.fill_circle
+    (int_of_float p.pos.x)
+    (int_of_float p.pos.y)
+    (int_of_float p.r);
+  Graphics.set_color Graphics.black;
+  Graphics.moveto 
+    (int_of_float (p.pos.x -. p.r /. 2.))
+    (int_of_float (p.pos.y -. p.r /. 2.));
+  Graphics.draw_string (string_of_int p.id)
+
+let draw wall all =
+  ignore (Graphics.key_pressed ());
+  Graphics.clear_graph();
+  Graphics.set_color Graphics.black;
+  Graphics.draw_rect 
+    (int_of_float wall.left) (int_of_float wall.bot) 
+    (int_of_float (wall.right -. wall.left)) 
+    (int_of_float (wall.top -. wall.bot));
+  List.iter draw_number all;
+  Graphics.synchronize()
+
+let get_mouse_pos() =
+  let status = Graphics.wait_next_event [Graphics.Poll] in
+  {x = float_of_int (status.Graphics.mouse_x);
+   y = float_of_int (status.Graphics.mouse_y);}
+
+let process read_click new_number =
+  let click = ref false in
+  let pre_click = ref false in
+  let pos = ref {x = 0.0; y = 0.0;} in
+  loop 
+    pause;
+    click := Graphics.button_down();
+    if !click && not !pre_click
+    then 
+      begin
+        pos := get_mouse_pos();
+        emit new_number (!pos)
+      end;
+    pre_click := !click;
+  end
+
+let process display wall env =
+  loop
+    draw wall (pre ?env); 
+    pause
+  end
+
+(**************************************************************************)
+(* number                                                                 *)
+(**************************************************************************)
+
+let process number p_init wall env =
+  let me = ref p_init in
+  let kill = p_init.kill in
+  do
+    loop
+      emit env !me;
+      pause;
+      me := compute_pos !me wall (pre ?env)
+    end
+  until kill done;
+  me := { id = !me.id;
+	  pos = !me.pos;
+	  v = !me.v;
+	  r = !me.r *. 1.5;
+	  w = !me.w;
+	  c = Graphics.red;
+	  kill = !me.kill; };
+  pause;
+  while (!me.r > 0.) do
+      emit env !me;
+      me := { id = !me.id;
+	      pos = !me.pos;
+	      v = !me.v;
+	      r = !me.r -. 0.5;
+	      w = !me.w;
+	      c = !me.c;
+	      kill = !me.kill; };
+    pause
+  done
+
+let rec process add new_number wall n env =
+  await new_number(pos) in
+  run (add new_number wall (n+1) env) 
+  || run (number (number_with_random_v n pos) wall env)
+
+
+(**************************************************************************)
+(* main                                                                   *)
+(**************************************************************************)
+
+let process main =
+  signal env in
+  signal new_number default { x=0.; y=0.; } gather (fun x y -> x) in
+  for i=2 to max_number dopar
+    run (number (number_at_random_pos i wall) wall env)
+  done
+  ||
+  if nox then ()
+  else begin
+    run (add new_number wall (max_number+1) env)
+    ||
+    run (display wall env)
+    ||
+    run (read_click new_number)
+  end

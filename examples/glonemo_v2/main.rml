@@ -1,0 +1,135 @@
+open Definitions
+open Print
+open Mac
+open Routing
+open Energy
+open Graphic
+open Application
+open Environment
+
+
+let process check_energy self kill_node =
+  loop
+    if self.node_energy <= 0.0 then emit kill_node;
+    pause
+  end
+
+let process mac_node self =
+  run (alternance self)
+  ||
+  run (attente self)
+  ||
+  run (mac_ctrl self)
+  ||
+  run (consume_energy self)
+
+
+let process network_node self =
+  run (receive_interest self)
+  ||
+  run (send_interest self)
+
+
+let which_nodes (node_tab : node array) =
+  let f nod = 
+    ((nod.node_pos).x < 1000.0) && ((nod.node_pos).y > 0.0)
+  in
+  List.filter f (Array.to_list (node_tab));;
+
+
+let nodes = 
+  ref (Array.init number_of_nodes (fun i -> make_node i (random_pos())))
+
+(*
+let init =
+  compute_neighbors nodes;
+  sink_of_node nodes.(1);
+  make_interest (nodes.(1)) (which_nodes nodes);;
+*)
+
+let process node state cloud_pos =
+  signal kill_node in
+  do
+    run (application_interest state cloud_pos)
+    ||
+    run (network_node state)
+    ||
+    run (mac_node state)
+    ||
+    run (check_energy state kill_node)
+  until kill_node done
+
+
+(************************************************************)
+(* Création dynamique *)
+let process new_nodes n cloud =
+  let old_nodes = !nodes in
+  let old_n = Array.length old_nodes in
+  let new_nodes = 
+    Array.init n (fun i -> make_node (old_n + i) (random_pos())) 
+  in
+  let all_nodes = Array.append old_nodes new_nodes in
+  nodes := all_nodes;
+  compute_neighbors all_nodes;
+  make_interest (!nodes.(1)) (which_nodes all_nodes);
+  if !Init.with_graphics then Graphic.update_title (Array.length all_nodes);
+  for i = 0 to Array.length new_nodes - 1 dopar
+    run (node new_nodes.(i) cloud)
+  done
+
+let rec process add_nodes add cloud =
+  await add (_) in
+  run (add_nodes add cloud)
+  ||
+  run (new_nodes 50 cloud)
+
+(************************************************************)
+(* Programme principale *)
+let process main =
+  signal cloud_x, cloud_y default 0.0 gather (+.) in
+  signal wind_x, wind_y default 0.0 gather (+.) in
+  signal kill_node in
+  signal kill_cloud in
+  signal add in
+  compute_neighbors !nodes;
+  sink_of_node !nodes.(1);
+  make_interest (!nodes.(1)) (which_nodes !nodes);
+  begin
+    emit cloud_x 400.0;
+    emit cloud_y 400.0;
+    if !Init.with_cloud then 
+      do
+	run (wind () (wind_x, wind_y))
+	||
+	run (nuage (wind_x, wind_y) (cloud_x, cloud_y))
+      until kill_cloud done
+    else ()
+  end
+  ||
+  for i = 0 to Array.length !nodes - 1 dopar
+    run (node !nodes.(i) ((cloud_x, cloud_y)))
+  done
+  ||
+  run (temps)
+  ||
+  if number_of_instants > 0 then
+    begin
+      let t_init = Unix.time () in
+      for i = 1 to number_of_instants do pause done;
+      let t_fin = Unix.time () in
+      Stat.end_stat t_init t_fin;
+      exit 0;
+    end
+  ||
+  if !Init.with_graphics then
+    begin
+      draw_init ();
+      loop
+	draw_all !nodes {x = pre ?cloud_x; y = pre ?cloud_y};
+	pause;
+      end
+      ||
+      run (fan_and_plane wind_x wind_y kill_cloud add)
+    end
+  ||
+  run (add_nodes add (cloud_x, cloud_y))

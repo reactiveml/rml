@@ -1,0 +1,7 @@
+val search_best_age :
+  Global.routage_kind ->
+  Global.node ->
+  int ->
+  int ->
+  Global.node list ->
+  (Global.node * (Position.position * int)) option * int * int * int

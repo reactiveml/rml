@@ -1,0 +1,25 @@
+open Cube;;
+open Moteur;;
+
+let rec process evenement_souris click graph=
+     await click (pos) in
+     (
+      let current_click = List.hd pos in
+      let cube = creer_cube 40. current_click (1,2,3,4,5,6) in
+      run (proc_cube cube graph)
+     )
+     ||
+     run (evenement_souris click graph);;
+
+
+let process main =
+    signal graph,click,clavier in
+      run (fenetre click clavier graph)
+      ||
+      run (evenement_souris click graph);;
+
+
+let _ = Random.self_init (())  ;; 
+
+
+(****************************************************************************)

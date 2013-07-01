@@ -1,0 +1,131 @@
+open Definitions
+
+(*******************************************)
+(*     Nouvelle Couche Routage            **)
+(*******************************************)
+
+(**process qui attend les paquets de type 3 de la couche applicative et *)
+(**qui les met dans la liste to_send3 *)
+let process attente_network self =
+  loop
+    await self.application_to_routing (p3) in
+    self.node_network.to_send3 <- List.rev_append p3 self.node_network.to_send3;
+  end
+
+
+(**Ce process attend les messages bien recus et les met dans la liste*)
+(**to_send3 des messages a envoyer*)
+let process receive_reseau self = 
+  loop 
+    await self.node_network.received (p3) in 
+    self.node_network.to_send3 <- List.rev_append p3 self.node_network.to_send3;
+  end
+
+(**processus reception qui regarde la list des paquets recu et*)
+(** decide suivant le type de paquet (reponse a un interet, requete ou autre ce *)
+(** qu'il faut faire. *)
+let process receive_interest self =
+  loop
+    await one self.node_network.received (p3) in
+    match p3.header3 with 
+    | Interest_request request ->
+	(**1 On teste si ne l'a pas deja recu**)
+	if List.exists 
+	    (fun x -> (x.interest_id_n) = (request.interest_id_req) )
+	    self.node_network.interest_list
+	then ()
+	else (**2 On l'ajoute avec la bonne adresse MAC*)
+	  (let new_interest = {
+	    interest_id_n = request.interest_id_req;
+	    from_in = p3.from3;
+	    for_me = (List.exists
+			(fun x -> x.node_id = self.node_id)
+			request.concerned);
+	  } in
+	  self.node_network.interest_list <- new_interest ::self.node_network.interest_list;
+	  (**3 On le forwarde*)
+	  let next_p3 = {
+	    header3 = p3.header3;
+	    packet_id3 = p3.packet_id3;
+	    ack = p3.ack;
+	    len3 = p3.len3;
+	    mac_ack = p3.mac_ack;
+	    from3 = self
+	  } in
+	  let p2 = packet3_to_2 next_p3 self in
+	  emit self.reseau_to_mac p2
+	  )
+    | Interest_response answer ->
+(** Test pour voir si je suis bien sur le chemin de cet interet*)
+	if (self.node_id = answer.next_node.node_id) then
+(**Dans ce cas, on a forcement dans nos table un interestID correspondant*)
+	  ( let correspondant_interest = List.find 
+	      (fun x -> x.interest_id_n = answer.interest_id_resp )
+	      self.node_network.interest_list in 
+(** Test pour voir si je suis le sink de cet interet*)
+	  if self.node_id = correspondant_interest.from_in.node_id then
+	    (**self est le sink*)
+(** Ici le sink a recu l'alarme!*)
+	    ()
+	  else
+	    let (ir : interest_resp) = {
+	      interest_id_resp = answer.interest_id_resp;
+	      next_node = correspondant_interest.from_in;
+	    }
+	    in
+	    let p3 = {
+	      header3 = Interest_response ir;
+	      packet_id3 = get_id3();
+	      ack = false; (**aquittement de la couche reseau*)
+	      len3 = 40;
+	      mac_ack = false; (**aquittement de la couche mac*)
+	      from3 = self; (** noeud emetteur*)
+	    }
+	    in
+	    let p2 = packet3_to_2 p3 self in
+	    emit self.reseau_to_mac p2
+	      (**2 on regarde qui est le suivant sur le chemin*)
+	      (**3 On forwarde la reponse*) )
+    | Not_interest -> ()
+  end
+
+
+
+
+let node_interest_to_interest_resp (my_inter : node_interest) = 
+  {
+   interest_id_resp = my_inter.interest_id_n;
+   next_node = my_inter.from_in;
+ }
+
+
+(**Fonction qui repond a un interet*)
+(**en entree un interet et le noeud et il envoie un message*)
+let response self (my_interest : node_interest) =
+  let ir = node_interest_to_interest_resp my_interest in
+  let p3 = {
+    header3 = Interest_response ir;
+    packet_id3 = get_id3();
+    ack = false;
+    len3 = 40;
+    mac_ack = false;
+    from3 = self;
+  }
+  in 
+  let p2 = packet3_to_2 p3 self in
+  emit self.reseau_to_mac p2
+
+
+(**process qui envoie un interet*)
+let process send_interest self = 
+  loop
+    await one self.application_to_routing(p3) in
+    match p3.header3 with
+    | Interest_request request ->
+	let p2 = packet3_to_2 p3 self in
+	emit self.reseau_to_mac p2
+	  (*pb ici puisqu'on ne teste pas si on l'a deja recu ou envoye*)
+(*nan mais la c est normal!*)
+    | Interest_response answer -> ()
+    | Not_interest -> ()
+  end

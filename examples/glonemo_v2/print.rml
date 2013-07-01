@@ -1,0 +1,180 @@
+open Definitions
+
+let print_etat n =
+  print_string
+    (match n.node_etat with
+    | Veille -> "Veille"
+    | Reveil -> "Reveil"
+    | Idle -> "Idle"
+    | Idle_a_Transmet -> "Idle_a_Transmet"
+    | Veille_a_Transmet -> "Veille_a_Transmet"
+    | Idle_a_Recoit -> "Idle_a_Recoit"
+    | Transmet -> "Transmet"
+    | Transmet_a_Recoit -> "Transmet_a_Recoit"
+    | Recoit -> "Recoit"
+    | Recoit_a_Transmet -> "Recoit_a_Transmet")
+
+let print_activation a =
+  print_string
+    (match a with 
+    | To_send -> "To_send"
+    | Preambule -> "Preambule"
+    | Transmission_en_cours -> "Transmission_en_cours"
+    )
+
+(**print d une liste d'activation, par exemple ordres*)
+let rec print_list_activation la = 
+  match la with
+  | [] -> ()
+  | el :: tl -> 
+      print_activation el;
+      print_string (" ");
+      print_list_activation (tl)
+
+(*print d une liste de voisins*)
+let rec print_list l =
+  match l with
+  | [] -> ()
+  | el :: tl -> 
+      print_int (el.node_id);
+      print_string(" ");
+      print_list (tl)
+
+
+let print_neighbors nodes =
+  for i = 0 to Array.length nodes - 1 do 
+    print_int(i);
+    print_string(" ");
+(*    print_list((nodes.(i)).node_neighbors); *)
+    List.iter (fun el -> print_int (el.node_id)) ((nodes.(i)).node_neighbors);
+    print_newline();
+  done;;
+
+
+let process print_node self = 
+  print_int (self.node_id);
+  print_string (" [ ");
+  List.iter 
+    (fun el -> 
+      print_int (el.node_id);
+      print_string "; ") 
+    self.node_neighbors;
+  print_string (" ] ");
+  print_newline();
+  loop
+    (*print_string ("Le noeud n°");*)
+    print_int (self.node_id);
+    print_string (" ");
+    print_int( List.length self.node_neighbors);
+    print_string (" ");
+    (*print_string ("a");*)
+    print_float(self.node_energy);
+    print_string (" ");
+    (*print_string("d energie, et est dans l'etat");*)
+    print_etat(self);
+    print_newline();
+    pause
+  end
+
+let process print_results self =
+  loop
+    for i = 1 to 1000 do pause; done;
+    print_int self.node_id;
+    print_string(" ");
+    print_int (List.length (self.node_neighbors));
+    print_string(" ");
+    print_int self.node_results.time_received;
+    print_string(" ");
+    print_int self.node_results.time_sent;
+    print_string(" ");
+    print_float (100.0 -. self.node_energy);
+    print_newline();
+  end
+
+let print_header3 header = 
+ print_string
+    (match header with
+    | Interest_request request -> "Interest_request"
+    | Interest_response response -> "Interest_response"
+    | Not_interest -> "Not_interest"
+    )
+
+let print_header3 header = 
+  match header with
+    | Interest_request request -> 
+	(print_string("Interest_request"); 
+	print_string(" interest_id:");
+	print_int(request.interest_id_req);
+	print_string(" list of the nodes concerned:[");
+	print_list(request.concerned);
+	print_string("]");
+	)
+    | Interest_response response -> (
+	print_string("Interest_response");
+	print_string(" interest_id:");
+	print_int(response.interest_id_resp); 
+	print_string(" next_node:");
+	print_int(response.next_node.node_id);
+       )
+    | Not_interest -> 
+	(print_string("Not_interest");)
+    
+
+
+
+let print_bool b =
+  print_string
+    (match b with
+    | true -> "True"
+    | false -> "false"
+    )
+    
+let print_packet3 p3 =
+  print_string("header3 = [");
+  print_header3(p3.header3);
+  print_string("] packet_id3=");
+  print_int(p3.packet_id3);
+  print_string(" p3.ack=");
+  print_bool(p3.ack);
+  print_string(" p3.len3=");
+  print_int(p3.len3);
+  print_string(" p3.mac_ack=");
+  print_bool(p3.mac_ack);
+  print_string(" p3.from3.node_id=");
+  print_int(p3.from3.node_id);
+  print_newline();
+
+
+(*
+print_int(self.node_id);
+print_string(" ");
+print_float(distance2 self.node_pos nuage_pos);
+print_string(" ");
+print_float(rayon_nuage_2);
+print_string(" ");
+print_string(string_of_bool ((distance2 self.node_pos nuage_pos) < rayon_nuage_2 ));
+print_string(" x_cloud = ");
+print_float(nuage_pos.x);
+print_string(" y_cloud = ");
+print_float(nuage_pos.y);
+print_newline();
+*)
+
+(**imprime la liste choix du noeud self*)
+(*  print_string "choix n";
+  print_int (self.node_id);
+  print_string " = [";
+  List.iter (fun ordre -> print_activation ordre; print_string ";") ordres;
+  print_string "]";
+  print_newline();*)
+
+
+(**ce code etait dans routing.rml l.63 a la reponse d'un interet-response*)
+(* print_string("mon_id="); *)
+(* print_int(self.node_id); *)
+(* print_string(" "); *)
+(* Print.print_packet3(p3); *)
+(* print_newline(); *)
+
+(**premier noeud mort*)
+

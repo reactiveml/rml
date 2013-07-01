@@ -1,0 +1,178 @@
+open Moteur;;
+open Random;;
+
+
+
+
+
+
+(* Permet au balles de rester dans le cadre *)
+
+let left = -300.;;
+let right = 295.;;
+let top = 445.;;
+let bottom = 0.;;
+
+
+let resteAxe min max coord vit size =
+      if (coord -. size) < min then
+(*         (print_string "En dehors du cadre min coord=";print_float coord;print_string " min=";print_float min;print_newline();*)
+           2. *. min -. coord +. 2. *. size  ,  -. vit
+(*         )*)
+      else
+          if (coord +. size) > max then
+(*             (print_string "En dehors du cadre max";print_newline();*)
+              2. *. max -. coord -. 2. *. size,  -. vit
+(*             )*)
+          else
+              coord,vit;;
+
+let resteCadre (myvit,mypos) =
+(*       print_coord mypos;print_newline ();*)
+       let (npy,nvy) = resteAxe bottom top   mypos.y myvit.y 5. in
+       let (npx,nvx) = resteAxe left   right mypos.x myvit.x 5. in
+
+       {x=nvx;y=nvy ;z=myvit.z},  
+       {x=npx;y=npy ;z= 0.};;
+ 
+
+
+
+
+(***********************************************)
+ (*********************************************)
+  (*******************************************)
+ (*********************************************)
+(***********************************************)
+
+let g = {x=0.;y= -.9.81;z=0.};;
+
+
+(*let l = 10.;;*)
+
+let dt = 0.01;;
+let usdt = 1. /. dt;;
+
+let vp = add_vect;;
+let vs = sous_vect;;
+let vm = mul_coef;;
+let vd = fun x y -> mul_coef x (1. /. y);;
+
+let integre anc valancsystem =
+(*           anc  +. (valancsystem *.  dt);;  (* integration par la methode des rectangles *) *)
+          (* Runge Butta d'ordre 4 : *)
+           let k1 = vm valancsystem dt in
+           let k2 = vm (vp valancsystem (vd k1 2.)) dt in
+           let k3 = vm (vp valancsystem (vd k2 2.)) dt in
+           let k4 = vm (vp valancsystem k3) dt in
+           vp anc (vd (vp k1 (vp (vm k2 2.) (vp (vm k3 2.) k4))) 6.) ;;
+(* calcul : anc + (k1 + 2*k2 + 2*k3 + k4 )/6    *)
+
+
+(* Les equations de Newton : *)
+
+let maj_pos (vit,pos) f =
+        let nvit = integre vit f in
+        let pos = integre pos nvit in 
+        nvit,pos;;
+
+
+(* Ce qui se produit lorsque deux balles rentre en collision : *)
+
+
+(* Choc elastique et collision sur les murs *)
+let gere_colli l param =
+
+(*
+ let choc_elas (myvit,mypos) (vit,pos) =
+        let cm = 1. /. ( 1. +. 1.) in
+        let sv  = myvit in
+        let sv_ = vit in
+        let v1sv  = vs sv sv_ in
+         let v1s2 = scalar v1sv v1sv and
+             dxv = vs pos mypos in
+         let vdpx = scalar v1sv dxv in
+             if vdpx > 0. then
+              (let vcpx = deter2d dxv v1sv and
+                   v1s = sqrt v1s2 in
+               let b =  vcpx /. (( 10. +. 10.) *. v1s) in 
+(*               let _ = print_string "b = ";print_float b;print_newline () in*)
+               let dt = (vdpx /. v1s2) -. ((10. +. 10.) *. ( 1. -. b *. b)) /. v1s in
+                   if (b *. b) < 1. && (dt >= 0.) && (dt < 1.) then 
+                   (      (*      let mypos = vp mypos (vm myvit dt) and *) let
+                                    cosphi = b *. b *. 2. -. 1. and
+                                    sinphi = 2. *. b *. (sqrt (1. -. b *.b)) in
+                                let dtheta = (atan2 v1sv.y v1sv.x) +. (atan2 sinphi cosphi) in
+                                    let sinphi = sin dtheta and
+                                        cosphi = cos dtheta and
+                                        mr   = 10. /. 10. in
+                                    let cmv  = vm (vp  (vm sv mr) sv_) cm and
+                                        v1cmv = {x=cm *. v1s *. cosphi;y=cm *. v1s *. sinphi;z=0.0} in
+                                        (
+                                          let mypos = vp mypos (vm (vp v1cmv cmv) ( 1.0 -. dt)) in
+                                          let myvit = vp v1cmv cmv in
+                                             param:= (myvit,mypos);
+                                        )
+                    )
+                    else
+                          ();
+
+              )
+             else
+               () in
+        List.iter (function x -> choc_elas !param (fst x)) l;
+        if (snd !param).y <= 0. then
+            (param := {x=(fst !param).x;y=abs_float (fst !param).y;z=(fst !param).z},snd !param;
+             vm g (-. 1.)
+            )
+        else
+             {x=0.0;y=0.0;z=0.0};;
+*)
+
+
+ let choc_elas =
+        (****************************************) (* Tranfert de vitesse *)
+	(let transfert_vit b1 b2 dir =
+                     let nb1 = vm dir (scalar dir b1) and
+                         nb2 = vm dir (scalar dir b2) in
+                     let tb1 = vs b1 nb1 in 
+                     (*    tb2 = vs b2 nb2 in *)
+                     if scalar (vs b1 b2) dir > 0. then
+                            vp tb1 (nb2)
+                     else
+                            b1 in 
+        (****************************************)
+         fun l myvit mypos ->
+         let detect_colli (f,myvit) ((vit,pos),_) =
+                                 let dist2 = distance pos mypos in
+                                 let dir = vect_norm mypos pos in
+                                 if not(dist2 <= 0.01) && dist2 < 400. then
+                                    (f,transfert_vit myvit vit dir)
+                                 else
+                                     (f,myvit) in
+         List.fold_left detect_colli ({x=0.;y=0.;z=0.},myvit) l
+        ) in
+
+ (**************************************************)
+  
+  let myvit,mypos = !param in
+  let (f,myvit) = (choc_elas l myvit mypos) in
+   if mypos.y <= 0. then
+        
+         (
+          param := {x=myvit.x;y= abs_float myvit.y;z=myvit.z},mypos;
+          f (* vp f (vm g (-.1.)) *)
+         )
+   else if mypos.y >= 400. then
+           (param := {x=myvit.x;y= -.abs_float myvit.y;z=myvit.z},mypos;f)
+        else
+        (param := myvit,mypos;
+         f
+        )  
+  
+   
+
+
+(*let boite (vit,pos) = if pos *)
+
+(*********************************************************)
