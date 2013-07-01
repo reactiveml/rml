@@ -87,28 +87,6 @@ let process sink me neighbors cloud_pos nodes draw =
   make_interest state (which_nodes nodes);
   run (node_body state cloud_pos draw)
 
-(************************************************************)
-(* Création dynamique *)
-(* let process new_nodes n cloud = *)
-(*   let old_nodes = !nodes in *)
-(*   let old_n = Array.length old_nodes in *)
-(*   let new_nodes = *)
-(*     Array.init n (fun i -> make_node (old_n + i) (random_pos())) *)
-(*   in *)
-(*   let all_nodes = Array.append old_nodes new_nodes in *)
-(*   nodes := all_nodes; *)
-(*   compute_neighbors all_nodes; *)
-(*   make_interest (!nodes.(1)) (which_nodes all_nodes); *)
-(*   if !Init.with_graphics then Graphic.update_title (Array.length all_nodes); *)
-(*   for i = 0 to Array.length new_nodes - 1 dopar *)
-(*     run (node new_nodes.(i) cloud) *)
-(*   done *)
-
-(* let rec process add_nodes add cloud = *)
-(*   await add (_) in *)
-(*   run (add_nodes add cloud) *)
-(*   || *)
-(*   run (new_nodes 50 cloud) *)
 
 (************************************************************)
 (* Programme principale *)
@@ -169,6 +147,4 @@ let process main =
         ||
         run (fan_and_plane wind_x wind_y kill_cloud add)
       end
-   (* || *)
-    (* run (add_nodes add (cloud_x, cloud_y)) *)
   end
