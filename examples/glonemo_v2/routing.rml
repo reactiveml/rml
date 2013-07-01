@@ -15,9 +15,9 @@ let process attente_network self =
 
 (**Ce process attend les messages bien recus et les met dans la liste*)
 (**to_send3 des messages a envoyer*)
-let process receive_reseau self = 
-  loop 
-    await self.node_network.received (p3) in 
+let process receive_reseau self =
+  loop
+    await self.node_network.received (p3) in
     self.node_network.to_send3 <- List.rev_append p3 self.node_network.to_send3;
   end
 
@@ -27,10 +27,10 @@ let process receive_reseau self =
 let process receive_interest self =
   loop
     await one self.node_network.received (p3) in
-    match p3.header3 with 
+    match p3.header3 with
     | Interest_request request ->
 	(**1 On teste si ne l'a pas deja recu**)
-	if List.exists 
+	if List.exists
 	    (fun x -> (x.interest_id_n) = (request.interest_id_req) )
 	    self.node_network.interest_list
 	then ()
@@ -59,9 +59,9 @@ let process receive_interest self =
 (** Test pour voir si je suis bien sur le chemin de cet interet*)
 	if (self.node_id = answer.next_node.node_id) then
 (**Dans ce cas, on a forcement dans nos table un interestID correspondant*)
-	  ( let correspondant_interest = List.find 
+	  ( let correspondant_interest = List.find
 	      (fun x -> x.interest_id_n = answer.interest_id_resp )
-	      self.node_network.interest_list in 
+	      self.node_network.interest_list in
 (** Test pour voir si je suis le sink de cet interet*)
 	  if self.node_id = correspondant_interest.from_in.node_id then
 	    (**self est le sink*)
@@ -92,7 +92,7 @@ let process receive_interest self =
 
 
 
-let node_interest_to_interest_resp (my_inter : node_interest) = 
+let node_interest_to_interest_resp (my_inter : node_interest) =
   {
    interest_id_resp = my_inter.interest_id_n;
    next_node = my_inter.from_in;
@@ -111,13 +111,13 @@ let response self (my_interest : node_interest) =
     mac_ack = false;
     from3 = self;
   }
-  in 
+  in
   let p2 = packet3_to_2 p3 self in
   emit self.reseau_to_mac p2
 
 
 (**process qui envoie un interet*)
-let process send_interest self = 
+let process send_interest self =
   loop
     await one self.application_to_routing(p3) in
     match p3.header3 with

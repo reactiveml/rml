@@ -1,7 +1,7 @@
 
 
 let process read_click click =
-  loop 
+  loop
     if Graphics.button_down() then emit click (Graphics.mouse_pos());
     pause
   end
@@ -11,4 +11,3 @@ let process read_key key =
     if Graphics.key_pressed() then emit key (Graphics.read_key());
     pause
   end
-

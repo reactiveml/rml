@@ -11,8 +11,8 @@ nodes {
 
 start_node { init }
 
-transitions {  
-   init -> init ~cond 
+transitions {
+   init -> init ~cond
 
 (*       (if ((Wind_y - pre Wind_y) >= 0.0) then *)
 (*             ((Wind_y - pre Wind_y) < 500000.0) *)

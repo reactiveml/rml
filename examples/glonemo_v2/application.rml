@@ -14,7 +14,7 @@ open Routing
 
 
 let present_nuage self nuage_pos =
-  (distance2 self.node_pos nuage_pos) < cloud_range2 
+  (distance2 self.node_pos nuage_pos) < cloud_range2
 ;;
 
 (**process qui decide s'il faut envoyer une alerte,*)
@@ -37,10 +37,10 @@ let process application_interest self (cloud_x, cloud_y) =
     (**test si on a au moins un interet qui nous concerne*)
     begin try
       let my_interest =
-	List.find (fun x -> x.for_me) self.node_network.interest_list 
+	List.find (fun x -> x.for_me) self.node_network.interest_list
       in
       (send_alerte self {x = pre ?cloud_x; y = pre ?cloud_y} my_interest);
-    with Not_found -> () 
+    with Not_found -> ()
     end;
     pause
   end
@@ -64,7 +64,7 @@ let make_interest self (nodesConcernedList : node list) =
     len3 = 40;
     mac_ack =  false;
     from3 = self;
-  } 
+  }
   in
   emit self.application_to_routing (p3);
   let my_interest = {

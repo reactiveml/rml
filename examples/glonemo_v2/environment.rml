@@ -2,18 +2,18 @@ open Definitions
 
 (*
 external.luc nuage_lucky
-  { Wind_x : float; Wind_y : float; } 
+  { Wind_x : float; Wind_y : float; }
   {x_nuage: float; y_nuage: float} = ["nuage.luc"]
 
-let process nuage (wx, wy) (x, y) =  
+let process nuage (wx, wy) (x, y) =
   run (nuage_lucky Luc4ocaml.StepInside (wx, wy) (x, y))
 
 
 
-external.luc wind_lucky {} { Wind_x : float; Wind_y : float; } = 
+external.luc wind_lucky {} { Wind_x : float; Wind_y : float; } =
   ["wind.luc"]
 
-let process wind () (wx,wy) =  
+let process wind () (wx,wy) =
   run (wind_lucky Luc4ocaml.StepInside () (wx,wy))
 
 *)
@@ -48,5 +48,3 @@ let process wind () (wind_x, wind_y) =
       pause
     done
   end
-
-

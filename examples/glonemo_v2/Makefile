@@ -17,7 +17,7 @@ LUC4OCAML_CMXA =
 
 # LIBPATH=-I `$(RMLC) -where` -I $(LUC4OCAML_DIR)
 # LUC4OCAML_CMA = luc4ocaml.cma
-# LUC4OCAML_CMXA = str.cmxa bdd.cmxa polka.cmxa luc4ocaml.cmxa 
+# LUC4OCAML_CMXA = str.cmxa bdd.cmxa polka.cmxa luc4ocaml.cmxa
 
 
 
@@ -25,7 +25,7 @@ RMLCFLAGS=
 OCAMLCFLAGS=
 OCAMLOPTFLAGS=
 
-#  Ne pas modifier apres (et pendant) cette ligne 
+#  Ne pas modifier apres (et pendant) cette ligne
 
 
 OBJS =	init.cmo \
@@ -73,11 +73,11 @@ graphic.rzi: graphic.rml rml_graphics.rml
 
 init.cmo: init.ml
 
-definitions.cmo: init.cmo definitions.ml 
+definitions.cmo: init.cmo definitions.ml
 
 environment.cmo: definitions.cmo environment.ml
 
-main.cmo: main.ml definitions.cmi environment.cmi print.cmi mac.cmi routing.cmi energy.cmi graphic.cmi 
+main.cmo: main.ml definitions.cmi environment.cmi print.cmi mac.cmi routing.cmi energy.cmi graphic.cmi
 
 print.cmo: print.ml definitions.cmi
 
@@ -92,7 +92,7 @@ energy.cmo: energy.ml definitions.cmi
 application.cmo: definitions.cmi routing.cmi application.ml
 
 
-definitions.cmx: definitions.ml 
+definitions.cmx: definitions.ml
 
 init.cmx: init.ml
 
@@ -126,7 +126,7 @@ $(EXEC): $(OBJS)
 		-o $(EXEC) $(LIBPATH) \
 		unix.cma graphics.cma rmllib.cma \
 		$(LUC4OCAML_CMA) \
-		$(OBJS) 
+		$(OBJS)
 
 
 $(EXECOPT): $(OBJSOPT)
@@ -134,7 +134,7 @@ $(EXECOPT): $(OBJSOPT)
 		$(LIBPATH) \
 		 unix.cmxa graphics.cmxa rmllib.cmxa\
 		$(LUC4OCAML_CMXA) \
-		$(OBJSOPT) 
+		$(OBJSOPT)
 
 
 glonemo.cma: $(OBJS)
@@ -145,7 +145,7 @@ glonemo.cma: $(OBJS)
 		-o glonemo.cma $(LIBPATH) \
 		graphics.cma \
 		$(LUC4OCAML_CMA) \
-		$(OBJS) 
+		$(OBJS)
 
 
 

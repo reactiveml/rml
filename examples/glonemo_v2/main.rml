@@ -31,13 +31,13 @@ let process network_node self =
 
 
 let which_nodes (node_tab : node array) =
-  let f nod = 
+  let f nod =
     ((nod.node_pos).x < 1000.0) && ((nod.node_pos).y > 0.0)
   in
   List.filter f (Array.to_list (node_tab));;
 
 
-let nodes = 
+let nodes =
   ref (Array.init number_of_nodes (fun i -> make_node i (random_pos())))
 
 (*
@@ -65,8 +65,8 @@ let process node state cloud_pos =
 let process new_nodes n cloud =
   let old_nodes = !nodes in
   let old_n = Array.length old_nodes in
-  let new_nodes = 
-    Array.init n (fun i -> make_node (old_n + i) (random_pos())) 
+  let new_nodes =
+    Array.init n (fun i -> make_node (old_n + i) (random_pos()))
   in
   let all_nodes = Array.append old_nodes new_nodes in
   nodes := all_nodes;
@@ -97,7 +97,7 @@ let process main =
   begin
     emit cloud_x 400.0;
     emit cloud_y 400.0;
-    if !Init.with_cloud then 
+    if !Init.with_cloud then
       do
 	run (wind () (wind_x, wind_y))
 	||

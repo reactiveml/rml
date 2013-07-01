@@ -16,20 +16,19 @@ nodes {
 
 start_node { init }
 
-transitions {  
-   init -> init ~cond 
+transitions {
+   init -> init ~cond
 
-      (if pre Wind_y >= 0.0 then ((y_nuage - pre y_nuage) >= 0.0) and 
+      (if pre Wind_y >= 0.0 then ((y_nuage - pre y_nuage) >= 0.0) and
                                   (y_nuage - pre y_nuage) <= (0.00001 * (pre Wind_y))
-                            else ((y_nuage - pre y_nuage) <= 0.0 and 
+                            else ((y_nuage - pre y_nuage) <= 0.0 and
                                   (y_nuage - pre y_nuage) >= (0.00001 * (pre Wind_y))))
 
       and
-      (if pre Wind_x >= 0.0 then ((x_nuage - pre x_nuage) <= (0.00001 * (pre Wind_x)) and 
+      (if pre Wind_x >= 0.0 then ((x_nuage - pre x_nuage) <= (0.00001 * (pre Wind_x)) and
                                   (x_nuage - pre x_nuage) >= 0.0)
-                            else ((x_nuage - pre x_nuage) <= 0.0 and 
+                            else ((x_nuage - pre x_nuage) <= 0.0 and
                                   (x_nuage - pre x_nuage) >= (0.00001 * (pre Wind_x))))
 
 
 }
- 

@@ -1,6 +1,6 @@
 open Definitions
 
-let process consume_energy self = 
+let process consume_energy self =
   loop
     (match self.node_etat with
     | Veille ->
