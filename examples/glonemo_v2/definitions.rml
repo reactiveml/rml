@@ -405,3 +405,7 @@ and info self =
     info_node_neighbors = self.node_neighbors;
     info_node_results = self.node_results;
     info_node_pre_present_nuage = self.node_pre_present_nuage; }
+
+
+let get_node n l =
+  List.find (fun x -> x.info_node_id = n) l

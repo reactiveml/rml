@@ -146,7 +146,7 @@ let print_packet3 p3 =
   print_bool(p3.mac_ack);
   print_string(" p3.from3.node_id=");
   print_int(p3.from3(* .node_id *));
-  print_newline();
+  print_newline()
 
 
 (*
@@ -181,3 +181,9 @@ print_newline();
 (* print_newline(); *)
 
 (**premier noeud mort*)
+
+let energy n =
+  print_int n.info_node_id;
+  print_string ": ";
+  print_float n.info_node_energy;
+  print_newline ()

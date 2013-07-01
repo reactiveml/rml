@@ -87,6 +87,7 @@ let process sink me neighbors cloud_pos nodes draw =
   make_interest state (which_nodes nodes);
   run (node_body state cloud_pos draw)
 
+signal nodes_info;;
 
 (************************************************************)
 (* Programme principale *)
@@ -96,12 +97,6 @@ let process main =
   signal kill_node in
   signal kill_cloud in
   signal add in
-  let draw =
-    if !Init.with_graphics then
-      signal s default [] gather (fun x y -> x::y) in s
-    else
-      signal s default [] gather (fun x y -> []) in s
-  in
   let neighbors = compute_neighbors !nodes in
   begin
     begin
@@ -117,12 +112,12 @@ let process main =
     end
     ||
     begin
-      run (node !nodes.(0) neighbors.(0) ((cloud_x, cloud_y)) draw)
+      run (node !nodes.(0) neighbors.(0) ((cloud_x, cloud_y)) nodes_info)
       ||
-      run (sink !nodes.(1) neighbors.(1) ((cloud_x, cloud_y)) !nodes draw)
+      run (sink !nodes.(1) neighbors.(1) ((cloud_x, cloud_y)) !nodes nodes_info)
       ||
       for i = 2 to Array.length !nodes - 1 dopar
-        run (node !nodes.(i) neighbors.(i) ((cloud_x, cloud_y)) draw)
+        run (node !nodes.(i) neighbors.(i) ((cloud_x, cloud_y)) nodes_info)
       done
     end
     ||
@@ -141,7 +136,7 @@ let process main =
       begin
         draw_init ();
         loop
-          await draw (all) in
+          await nodes_info (all) in
           draw_all all {x = pre ?cloud_x; y = pre ?cloud_y}
         end
         ||
