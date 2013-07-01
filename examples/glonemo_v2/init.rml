@@ -133,7 +133,7 @@ let configure () =
   and var_D = ref None
   and var_t = ref None
   and var_range = ref None
-  and var_seed = ref (Some 4)
+  and var_seed = ref (Some 27)
   and var_cloud_d = ref None
   in
 

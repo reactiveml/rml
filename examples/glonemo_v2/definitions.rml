@@ -145,7 +145,7 @@ and node = {
     mutable node_cpu : cpustate;    (**etat du cpu*)
     mutable node_memory : memorystate; (**etat de la memoire DRAM*)
     mutable node_flash : flashstate; (**etat de la flash*)
-    mutable node_neighbors : node list;(**liste des voisins*)
+    mutable node_neighbors : neighbor list;(**liste des voisins*)
     node_mac : mac;
     node_network : reseau;
     reseau_to_mac : (packet2, packet2 list) event;(**signal qui envoie les paquets*)
@@ -158,6 +158,26 @@ and node = {
     node_get_id3 : (unit -> packet_id3);
   }
 
+and neighbor = {
+    neighbor_id : node_id;
+    neighbor_pos : coord;
+    neighbor_mac_channel : (packet2, packet2 list) event;
+    neighbor_activation : (activation, activation list) event;
+  }
+
+
+and info_node = {
+    info_node_id : node_id;
+    info_node_energy : float;    (**energie en Joule*)
+    info_node_pos : coord;               (**position*)
+    info_node_etat : state;      (**etat*)
+    info_node_cpu : cpustate;    (**etat du cpu*)
+    info_node_memory : memorystate; (**etat de la memoire DRAM*)
+    info_node_flash : flashstate; (**etat de la flash*)
+    info_node_neighbors : neighbor list;(**liste des voisins*)
+    info_node_results : resultats;
+    info_node_pre_present_nuage : bool;
+  }
 
 
 (**Consommations en Watt*)
@@ -245,9 +265,16 @@ let sink_energy = !Init.sink_energy
 
 let number_of_instants = !Init.number_of_instants
 
+
+let make_neighbor id pos =
+  { neighbor_id = id;
+    neighbor_pos = pos;
+    neighbor_mac_channel = (signal s in s);
+    neighbor_activation = (signal s in s); }
+
 (**Fonction qui cree un noeud en lui affectant un nouvel identifiant*)
 (**de l energie, et qui initialise tous les champs*)
-let make_node id pos=
+let make_node id pos mac_channel activation neighbors =
   let get_id2 =
     let cpt = ref 0 in
     fun () ->
@@ -267,11 +294,11 @@ let make_node id pos=
     node_cpu = Three; (**on part avec les cpu a fond comme s'il ne se reglait pas*)
     node_memory = Active; (**idem*)
     node_flash = Off_flash; (**idem*)
-    node_neighbors = [];
+    node_neighbors = neighbors;
     node_mac = { my_next_wakeup = Random.int periode_veille;
                  neighbors_info_list = [];
-		 mac_channel = (signal s in s);
-                 activation = (signal s in s);
+		 mac_channel = mac_channel;
+                 activation = activation;
                  to_send2 = [];
 		 emits_packet = (signal s in s)};
     node_network = { received = (signal s in s);
@@ -346,15 +373,35 @@ let process temps =
 
 (*Decouverte du voisinage*)
 
-let is_neighbors n1 n2 = distance2 n1.node_pos n2.node_pos < coverage_range2
+let is_neighbors n1 n2 =
+  distance2 n1.neighbor_pos n2.neighbor_pos < coverage_range2
 
 let compute_neighbors node_array =
+  let neighbors = Array.make (Array.length node_array) [] in
   for i=0 to Array.length node_array - 1 do
     for j=i+1 to Array.length node_array - 1 do
       let n1 = node_array.(i) in
       let n2 = node_array.(j) in
-	if is_neighbors n1 n2 then
-	  (n1.node_neighbors <- n2 :: n1.node_neighbors;
-	   n2.node_neighbors <- n1 :: n2.node_neighbors)
+      assert (n1.neighbor_id = i);
+      assert (n2.neighbor_id = j);
+      if is_neighbors n1 n2 then
+	(neighbors.(i) <- n2 :: neighbors.(i);
+         neighbors.(j) <- n1 :: neighbors.(j))
     done
-  done
+  done;
+  neighbors
+
+
+(* Observation de l'état *)
+
+and info self =
+  { info_node_id = self.node_id;
+    info_node_energy = self.node_energy;
+    info_node_pos = self.node_pos;
+    info_node_etat = self.node_etat;
+    info_node_cpu = self.node_cpu;
+    info_node_memory = self.node_memory;
+    info_node_flash = self.node_flash;
+    info_node_neighbors = self.node_neighbors;
+    info_node_results = self.node_results;
+    info_node_pre_present_nuage = self.node_pre_present_nuage; }

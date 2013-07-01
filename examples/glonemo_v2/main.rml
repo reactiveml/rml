@@ -30,16 +30,16 @@ let process network_node self =
   run (send_interest self)
 
 
-let which_nodes (node_tab : node array) =
+let which_nodes (node_tab : neighbor array) =
   let f nod =
-    ((nod.node_pos).x < 1000.0) && ((nod.node_pos).y > 0.0)
+    ((nod.neighbor_pos).x < 1000.0) && ((nod.neighbor_pos).y > 0.0)
   in
-  List.map (fun n -> n.node_id)
+  List.map (fun n -> n.neighbor_id)
     (List.filter f (Array.to_list (node_tab)));;
 
 
 let nodes =
-  ref (Array.init number_of_nodes (fun i -> make_node i (random_pos())))
+  ref (Array.init number_of_nodes (fun i -> make_neighbor i (random_pos())))
 
 (*
 let init =
@@ -48,7 +48,7 @@ let init =
   make_interest (nodes.(1)) (which_nodes nodes);;
 *)
 
-let process node state cloud_pos =
+let process node_body state cloud_pos draw =
   signal kill_node in
   do
     run (application_interest state cloud_pos)
@@ -59,30 +59,56 @@ let process node state cloud_pos =
     ||
     run (check_energy state kill_node)
   until kill_node done
+  ||
+  if !Init.with_graphics then
+    loop
+      emit draw (info state);
+      pause
+    end
 
+
+let process node me neighbors cloud_pos draw =
+  let state =
+    make_node
+      me.neighbor_id me.neighbor_pos
+      me.neighbor_mac_channel me.neighbor_activation
+      neighbors
+  in
+  run (node_body state cloud_pos draw)
+
+let process sink me neighbors cloud_pos nodes draw =
+  let state =
+    make_node
+      me.neighbor_id me.neighbor_pos
+      me.neighbor_mac_channel me.neighbor_activation
+      neighbors
+  in
+  sink_of_node state;
+  make_interest state (which_nodes nodes);
+  run (node_body state cloud_pos draw)
 
 (************************************************************)
 (* Création dynamique *)
-let process new_nodes n cloud =
-  let old_nodes = !nodes in
-  let old_n = Array.length old_nodes in
-  let new_nodes =
-    Array.init n (fun i -> make_node (old_n + i) (random_pos()))
-  in
-  let all_nodes = Array.append old_nodes new_nodes in
-  nodes := all_nodes;
-  compute_neighbors all_nodes;
-  make_interest (!nodes.(1)) (which_nodes all_nodes);
-  if !Init.with_graphics then Graphic.update_title (Array.length all_nodes);
-  for i = 0 to Array.length new_nodes - 1 dopar
-    run (node new_nodes.(i) cloud)
-  done
+(* let process new_nodes n cloud = *)
+(*   let old_nodes = !nodes in *)
+(*   let old_n = Array.length old_nodes in *)
+(*   let new_nodes = *)
+(*     Array.init n (fun i -> make_node (old_n + i) (random_pos())) *)
+(*   in *)
+(*   let all_nodes = Array.append old_nodes new_nodes in *)
+(*   nodes := all_nodes; *)
+(*   compute_neighbors all_nodes; *)
+(*   make_interest (!nodes.(1)) (which_nodes all_nodes); *)
+(*   if !Init.with_graphics then Graphic.update_title (Array.length all_nodes); *)
+(*   for i = 0 to Array.length new_nodes - 1 dopar *)
+(*     run (node new_nodes.(i) cloud) *)
+(*   done *)
 
-let rec process add_nodes add cloud =
-  await add (_) in
-  run (add_nodes add cloud)
-  ||
-  run (new_nodes 50 cloud)
+(* let rec process add_nodes add cloud = *)
+(*   await add (_) in *)
+(*   run (add_nodes add cloud) *)
+(*   || *)
+(*   run (new_nodes 50 cloud) *)
 
 (************************************************************)
 (* Programme principale *)
@@ -92,45 +118,57 @@ let process main =
   signal kill_node in
   signal kill_cloud in
   signal add in
-  compute_neighbors !nodes;
-  sink_of_node !nodes.(1);
-  make_interest (!nodes.(1)) (which_nodes !nodes);
+  let draw =
+    if !Init.with_graphics then
+      signal s default [] gather (fun x y -> x::y) in s
+    else
+      signal s default [] gather (fun x y -> []) in s
+  in
+  let neighbors = compute_neighbors !nodes in
   begin
-    emit cloud_x 400.0;
-    emit cloud_y 400.0;
-    if !Init.with_cloud then
-      do
-	run (wind () (wind_x, wind_y))
-	||
-	run (nuage (wind_x, wind_y) (cloud_x, cloud_y))
-      until kill_cloud done
-    else ()
-  end
-  ||
-  for i = 0 to Array.length !nodes - 1 dopar
-    run (node !nodes.(i) ((cloud_x, cloud_y)))
-  done
-  ||
-  run (temps)
-  ||
-  if number_of_instants > 0 then
     begin
-      let t_init = Unix.time () in
-      for i = 1 to number_of_instants do pause done;
-      let t_fin = Unix.time () in
-      Stat.end_stat t_init t_fin;
-      exit 0;
+      emit cloud_x 400.0;
+      emit cloud_y 400.0;
+      if !Init.with_cloud then
+        do
+	  run (wind () (wind_x, wind_y))
+	  ||
+	  run (nuage (wind_x, wind_y) (cloud_x, cloud_y))
+        until kill_cloud done
+      else ()
     end
-  ||
-  if !Init.with_graphics then
+    ||
     begin
-      draw_init ();
-      loop
-	draw_all !nodes {x = pre ?cloud_x; y = pre ?cloud_y};
-	pause;
-      end
+      run (node !nodes.(0) neighbors.(0) ((cloud_x, cloud_y)) draw)
       ||
-      run (fan_and_plane wind_x wind_y kill_cloud add)
+      run (sink !nodes.(1) neighbors.(1) ((cloud_x, cloud_y)) !nodes draw)
+      ||
+      for i = 2 to Array.length !nodes - 1 dopar
+        run (node !nodes.(i) neighbors.(i) ((cloud_x, cloud_y)) draw)
+      done
     end
-  ||
-  run (add_nodes add (cloud_x, cloud_y))
+    ||
+    run (temps)
+    ||
+    if number_of_instants > 0 then
+      begin
+        let t_init = Unix.time () in
+        for i = 1 to number_of_instants do pause done;
+        let t_fin = Unix.time () in
+        Stat.end_stat t_init t_fin;
+        exit 0;
+      end
+    ||
+    if !Init.with_graphics then
+      begin
+        draw_init ();
+        loop
+          await draw (all) in
+          draw_all all {x = pre ?cloud_x; y = pre ?cloud_y}
+        end
+        ||
+        run (fan_and_plane wind_x wind_y kill_cloud add)
+      end
+   (* || *)
+    (* run (add_nodes add (cloud_x, cloud_y)) *)
+  end

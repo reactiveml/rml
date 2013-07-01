@@ -5,12 +5,12 @@ open Print
 
 let emit_neighbors self p =
   List.iter
-    (fun dest -> emit dest.node_mac.mac_channel p)
+    (fun dest -> emit dest.neighbor_mac_channel p)
     self.node_neighbors
 
 let emit_activation self (activ : Definitions.activation) =
   List.iter
-    (fun destination -> emit destination.node_mac.activation(activ))
+    (fun destination -> emit destination.neighbor_activation(activ))
     self.node_neighbors
 
 

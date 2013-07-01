@@ -46,7 +46,9 @@ let print_neighbors nodes =
     print_int(i);
     print_string(" ");
 (*    print_list((nodes.(i)).node_neighbors); *)
-    List.iter (fun el -> print_int (el.node_id)) ((nodes.(i)).node_neighbors);
+    List.iter
+      (fun el -> print_int (el.neighbor_id))
+      ((nodes.(i)).node_neighbors);
     print_newline();
   done;;
 
@@ -56,7 +58,7 @@ let process print_node self =
   print_string (" [ ");
   List.iter
     (fun el ->
-      print_int (el.node_id);
+      print_int (el.neighbor_id);
       print_string "; ")
     self.node_neighbors;
   print_string (" ] ");
