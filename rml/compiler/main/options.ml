@@ -37,6 +37,7 @@ let _ =
 	"-n", Arg.Int set_number_of_instant, doc_number_of_instant;
 	"-sampling", Arg.Float set_sampling, doc_sampling;
 	"-i", Arg.Unit set_verbose, doc_verbose;
+	"-annot", Arg.Unit set_save_types, doc_save_types;
 	"-dtypes", Arg.Unit set_save_types, doc_save_types;
 	"-no_reactivity_warning", Arg.Unit unset_reactivity_warning, doc_no_reactivity_warning;
 	"-dreactivity", Arg.Unit set_dreactivity, doc_dreactivity;
