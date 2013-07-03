@@ -182,18 +182,22 @@ let set_runtime s =
 
     | "Lco_mpi" ->
       set_interpreter_impl "Rml_machine_mpi.Lco_ctrl_tree_mpi_interpreter";
+      set_machine_module "Rml_machine_mpi.Machine";
       set_translation Lco
 
     | "Lco_mpi_buffer" ->
       set_interpreter_impl "Rml_machine_mpi.Lco_ctrl_tree_mpi_buffer_interpreter";
+      set_machine_module "Rml_machine_mpi.Machine";
       set_translation Lco
 
    | "Lco_mpi_c" ->
       set_interpreter_impl "Rml_machine_mpi.Lco_ctrl_tree_mpi_c_interpreter";
+      set_machine_module "Rml_machine_mpi.Machine";
       set_translation Lco
 
     | "Lco_mpi_new" ->
       set_interpreter_impl "Rml_machine_mpi.Lco_ctrl_tree_mpi_new_interpreter";
+      set_machine_module "Rml_machine_mpi.Machine";
       set_translation Lco
 
     | "Rml_print" -> set_translation Rml_print
