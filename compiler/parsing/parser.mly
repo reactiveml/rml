@@ -322,8 +322,8 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token RBRACE              /* "}" */
 %token RBRACKET            /* "]" */
 %token REC                 /* "rec" */
+%token REGION              /* "region" */
 %token RESET               /* "reset" */
-%token RESTRICT            /* "restrict" */
 %token RPAREN              /* "(" */
 %token RUN                 /* "run" */
 %token SCHEDULE            /* "schedule" */
@@ -1279,7 +1279,7 @@ at_or_clock:
 opt_at_expr:
     /* empty */       { mkexpr Pexpr_base, mkexpr Pexpr_base }
   | at_or_clock simple_expr { $2, $2 }
-  | at_or_clock simple_expr RESTRICT simple_expr { $2, $4 }
+  | at_or_clock simple_expr REGION simple_expr { $2, $4 }
 ;
 
 

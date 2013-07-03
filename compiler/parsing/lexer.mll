@@ -128,8 +128,8 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "process", PROCESS;
     "quiet", QUIET;
     "rec", REC;
+    "region", REGION;
     "reset", RESET;
-    "restrict", RESTRICT;
     "run", RUN;
     "schedule", SCHEDULE;
     "sig", SIG;
