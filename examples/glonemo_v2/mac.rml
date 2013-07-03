@@ -3,14 +3,18 @@ open Print
 
 (**La couche mac implementee ici est celle de coronis*)
 
+let rec iter f l = match l with
+| [] -> ()
+| x::l -> f x; iter f l
+
 let emit_neighbors self p =
-  List.iter
-    (fun dest -> emit dest.node_mac.mac_channel p)
+  iter
+    (fun dest -> emit dest.neighbor_mac_channel p)
     self.node_neighbors
 
 let emit_activation self (activ : Definitions.activation) =
-  List.iter
-    (fun destination -> emit destination.node_mac.activation(activ))
+  iter
+    (fun destination -> emit destination.neighbor_activation(activ))
     self.node_neighbors
 
 
@@ -18,8 +22,8 @@ let emit_activation self (activ : Definitions.activation) =
 (**fait autre chose*)
 
 let process alternance self =
-  let cpt = ref periode_veille 
-  and veille_moins_reveil = periode_veille - temps_reveil 
+  let cpt = ref periode_veille
+  and veille_moins_reveil = periode_veille - temps_reveil
   and veille_moins_reveil_moins_idle = periode_veille - temps_reveil - periode_ecoute in
   loop
     pause;
@@ -52,31 +56,32 @@ let process alternance self =
 
 
 
-let ack2 (p : packet2) self = 
-  { packet_id2 = get_id2(); 
+let ack2 (p : packet2) self =
+  { packet_id2 = self.node_get_id2();
     header = Ack p.packet_id2;(*identification  *)
     len2 = 100; (*taille d un acquitement mac*)
     ack2 = false;
-    from2 = self;
+    from2 = self.node_id;
+    next_wakeup2 = self.node_mac.my_next_wakeup;
   }
 
-let information emetteur self = 
-  let search_info el_info = (el_info.node_identifier = emetteur.node_id) in
+let information emetteur_id emetteur_next_wakeup self =
+  let search_info el_info = (el_info.node_identifier = emetteur_id) in
   let (old_info, other_info) = List.partition (search_info) (self.node_mac.neighbors_info_list) in
-  let new_info = {node_identifier = emetteur.node_id;
-		  next_wakeup = emetteur.node_mac.my_next_wakeup;
+  let new_info = {node_identifier = emetteur_id;
+		  next_wakeup = emetteur_next_wakeup;
 		  tw = periode_veille;
-		  time_info = !time;}
+		  time_info = last time;}
   in
   self.node_mac.neighbors_info_list <- new_info :: other_info
 
 
 let process recevoir_success self p =
   (**On note la periode de veille du noeud emetteur*)
-  information p.from2 self;
+  information p.from2 p.next_wakeup2 self;
   (**reception du message reussie, avertir la couche reseau*)
   match p.header with
-  | Data p3 -> 
+  | Data p3 ->
       emit self.node_network.received p3;
       if p.ack2 then (
 	self.node_etat <- Recoit_a_Transmet;
@@ -84,12 +89,12 @@ let process recevoir_success self p =
 	self.node_etat <- Transmet;
 	let p' = ack2 p self in
 	emit_neighbors self p';
-	for i = 1 to p'.len2 do 
+	for i = 1 to p'.len2 do
 	  (emit_activation self Transmission_en_cours);
-	  pause 
+	  pause
 	done;
        )
-      else 
+      else
 	()
   | Ack p2_id ->
       ()
@@ -102,10 +107,10 @@ let process recevoir_ack p' self p =
     ()
 *)
   ()
-    
-(*Fonct qui prend la liste ordre et qui renvoie vrai ou faux selon 
+
+(*Fonct qui prend la liste ordre et qui renvoie vrai ou faux selon
    s'il y a ou pas une collision*)
-      
+
 let is_collision ordres =
   let une_transmission = ref false in
   let rec g ordres =
@@ -119,23 +124,23 @@ let is_collision ordres =
 	   g tl)
     | To_send :: tl ->
 	g tl
-    | [] -> false 
+    | [] -> false
   in
   g ordres
- 
+
 
 let process recevoir self traitement =
   signal kill, kill_timeout in
-  do 
+  do
     begin
-      await self.node_mac.mac_channel(p_list) in 
-      do 
+      await self.node_mac.mac_channel(p_list) in
+      do
         begin match p_list with
 	| [p] ->
 	    for i=1 to p.len2 do pause done;
 	    emit kill(Some p);
 	    pause
-	| _ -> 
+	| _ ->
 	    emit kill(None);
 	    pause
 	end
@@ -156,7 +161,7 @@ let process recevoir self traitement =
     end
     ||
     do
-      for i=1 to timeout_recevoir do pause done; 
+      for i=1 to timeout_recevoir do pause done;
       emit kill_timeout;
       pause;
     until self.node_mac.mac_channel done
@@ -168,21 +173,21 @@ let process recevoir self traitement =
 let process emission self p =
   for i = 1 to (Random.int cw_max + 1) do pause done;
   let i = ref 1 in
-  let ok = ref true in 
+  let ok = ref true in
   while !i < periode_ecoute & !ok  do
     incr i;
     pause;
-    if pre self.node_mac.activation then 
+    if pre self.node_mac.activation then
       let ordres = pre ?self.node_mac.activation in
-      if List.exists 
-	  (fun x -> x = Preambule or x = Transmission_en_cours) 
-	  ordres 
+      if List.exists
+	  (fun x -> x = Preambule or x = Transmission_en_cours)
+	  ordres
       then ok := false
   done;
   if !ok then (
     for i = 1 to pream_len do
       (emit_activation self Preambule);
-      pause 
+      pause
     done;
     emit_neighbors self p;
 (*debut de la transmission*)
@@ -192,19 +197,19 @@ let process emission self p =
     done;
 (*fin de la transmission*)
     emit self.node_mac.emits_packet p;
-    self.node_results.time_sent <- !time;(*temps courant d'emission du message*)
+    self.node_results.time_sent <- last time;(*temps courant d'emission du message*)
     if p.ack2 = true then (
       self.node_etat <- Transmet_a_Recoit;
       for i=1 to temps_transmet_a_recoit do pause; done;
       self.node_etat <- Recoit;
-      signal kill default false gather (or) in 
+      signal kill default false gather (or) in
       do
-        run (recevoir self (recevoir_ack p)); 
-        emit kill(true); 
+        run (recevoir self (recevoir_ack p));
+        emit kill(true);
         pause
         ||
-        do 
-          for i=1 to timeout_ack do pause done; 
+        do
+          for i=1 to timeout_ack do pause done;
           emit kill(false);
           pause
         until self.node_mac.mac_channel done
@@ -232,10 +237,10 @@ let choix self ordres =
       else
 	Ignore
   | [] -> Ignore
-  | _ -> 
-      if List.exists 
+  | _ ->
+      if List.exists
 	  (fun x -> x = Preambule or x = Transmission_en_cours )
-	  ordres 
+	  ordres
       then
 	if self.node_etat = Idle then
 	  Receive
@@ -252,7 +257,7 @@ let process mac_ctrl self =
       begin
 	await self.node_mac.activation(ordres) in
 	match choix self ordres with
-	| Emit -> 
+	| Emit ->
 	    begin match self.node_etat with
 	    | Idle ->
 		self.node_etat <- Idle_a_Transmet;
@@ -262,12 +267,12 @@ let process mac_ctrl self =
 		self.node_etat <- Veille_a_Transmet;
 		for i = 1 to temps_veille_a_transmet do pause done;
 		self.node_etat <- Transmet;
-	    | _ -> 
+	    | _ ->
 		assert false
 	    end;
 	    self.node_etat <- Transmet;
 	    begin match self.node_mac.to_send2 with
-	      [] -> 
+	      [] ->
 		assert false
 	    | p::tl ->
 		self.node_mac.to_send2 <- tl;
@@ -285,16 +290,16 @@ let process mac_ctrl self =
       end
     else
       (pause;
-       let ordres = 
-	 if pre self.node_mac.activation then 
+       let ordres =
+	 if pre self.node_mac.activation then
            (*si le pre n'est pas re emis,*)
            (*on prend sa derniere valeur *)
-	   pre ?self.node_mac.activation 
+	   pre ?self.node_mac.activation
 	 else
 	   []
-       in 
+       in
        match choix self (To_send::ordres) with
-       | Emit -> 
+       | Emit ->
 	   self.node_etat <- Transmet;
 	   begin match self.node_mac.to_send2 with
 	     [] -> assert false

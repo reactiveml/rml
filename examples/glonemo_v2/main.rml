@@ -22,7 +22,16 @@ let process mac_node self =
   run (mac_ctrl self)
   ||
   run (consume_energy self)
-
+  ||
+  loop
+    await self.node_mac.mac_channel_local(l) in
+    iter (fun v -> emit self.node_mac.mac_channel v) l
+  end
+  ||
+  loop
+    await self.node_mac.activation_local(l) in
+    iter (fun v -> emit self.node_mac.activation v) l
+  end
 
 let process network_node self =
   run (receive_interest self)
@@ -30,15 +39,28 @@ let process network_node self =
   run (send_interest self)
 
 
-let which_nodes (node_tab : node array) =
-  let f nod = 
-    ((nod.node_pos).x < 1000.0) && ((nod.node_pos).y > 0.0)
+let which_nodes (node_tab : neighbor array) =
+  let f nod =
+    ((nod.neighbor_pos).x < 1000.0) && ((nod.neighbor_pos).y > 0.0)
   in
-  List.filter f (Array.to_list (node_tab));;
+  List.map (fun n -> n.neighbor_id)
+    (List.filter f (Array.to_list (node_tab)));;
 
+let process process_init nb p =
+  let x0 = run p 0 in
+  let a = Array.make nb x0 in
+  for i=1 to nb-1 do
+    let xi = run p i in
+    a.(i) <- xi
+  done;
+  a
 
-let nodes = 
-  ref (Array.init number_of_nodes (fun i -> make_node i (random_pos())))
+let rec process process_map p l = match l with
+| [] -> []
+| x::l ->
+    let v = run p x in
+    let l = run process_map p l in
+    v::l
 
 (*
 let init =
@@ -47,7 +69,7 @@ let init =
   make_interest (nodes.(1)) (which_nodes nodes);;
 *)
 
-let process node state cloud_pos =
+let process node_body state cloud_pos draw =
   signal kill_node in
   do
     run (application_interest state cloud_pos)
@@ -58,30 +80,71 @@ let process node state cloud_pos =
     ||
     run (check_energy state kill_node)
   until kill_node done
-
-
-(************************************************************)
-(* Création dynamique *)
-let process new_nodes n cloud =
-  let old_nodes = !nodes in
-  let old_n = Array.length old_nodes in
-  let new_nodes = 
-    Array.init n (fun i -> make_node (old_n + i) (random_pos())) 
-  in
-  let all_nodes = Array.append old_nodes new_nodes in
-  nodes := all_nodes;
-  compute_neighbors all_nodes;
-  make_interest (!nodes.(1)) (which_nodes all_nodes);
-  if !Init.with_graphics then Graphic.update_title (Array.length all_nodes);
-  for i = 0 to Array.length new_nodes - 1 dopar
-    run (node new_nodes.(i) cloud)
-  done
-
-let rec process add_nodes add cloud =
-  await add (_) in
-  run (add_nodes add cloud)
   ||
-  run (new_nodes 50 cloud)
+  if !Init.with_graphics then
+    loop
+      emit draw (info state);
+      pause
+    end
+
+
+let process node me me_local neighbors cloud_pos draw =
+  (* domain ck by 1 do *)
+    let state =
+      run make_node
+        me.neighbor_id me.neighbor_pos
+        me.neighbor_mac_channel me.neighbor_activation
+        me_local.neighbor_mac_channel me_local.neighbor_activation
+        neighbors
+    in
+    run (node_body state cloud_pos draw)
+  (* done *)
+
+let process sink me neighbors cloud_pos nodes draw =
+  signal activation_local, mac_channel_local in
+  let state =
+    run make_node
+      me.neighbor_id me.neighbor_pos
+      me.neighbor_mac_channel me.neighbor_activation
+      mac_channel_local activation_local
+      neighbors
+  in
+  sink_of_node state;
+  make_interest state (which_nodes nodes);
+  run (node_body state cloud_pos draw)
+
+signal nodes_info;;
+
+let x_split = 2
+let y_split = 2
+let nb_cores = x_split * y_split
+
+let block_number pos =
+  let i = int_of_float (pos.x *. (float_of_int x_split) /. max_x) in
+  let j = int_of_float (pos.y *. (float_of_int y_split) /. max_y) in
+  i + x_split * j
+
+let process make_local neighbor =
+  signal mac_channel, activation clock global_ck region local_ck in
+  { neighbor with neighbor_activation = activation; neighbor_mac_channel = mac_channel }
+
+let rec update_neighbors idx local_neighbors l = match l with
+| [] -> []
+| node_g::l ->
+    let res = update_neighbors idx local_neighbors l in
+    if block_number node_g.neighbor_pos = idx && node_g.neighbor_id > 1 then
+      (List.find (fun n -> n.neighbor_id = node_g.neighbor_id) local_neighbors)::res
+    else
+      node_g::l
+
+let create_groups nodes neighbors =
+  let n = Array.length neighbors in
+  let groups = Array.make nb_cores [] in
+  for i=2 to n-1 do
+    let idx = block_number (nodes.(i)).neighbor_pos in
+    groups.(idx) <- (nodes.(i), neighbors.(i)) :: groups.(idx);
+  done;
+  groups
 
 (************************************************************)
 (* Programme principale *)
@@ -91,45 +154,68 @@ let process main =
   signal kill_node in
   signal kill_cloud in
   signal add in
-  compute_neighbors !nodes;
-  sink_of_node !nodes.(1);
-  make_interest (!nodes.(1)) (which_nodes !nodes);
+  let a = run process_init number_of_nodes (proc i -> run make_neighbor i (random_pos())) in
+  let nodes = ref a in
+  let neighbors = compute_neighbors !nodes in
+  let groups = create_groups !nodes neighbors in
   begin
-    emit cloud_x 400.0;
-    emit cloud_y 400.0;
-    if !Init.with_cloud then 
-      do
-	run (wind () (wind_x, wind_y))
-	||
-	run (nuage (wind_x, wind_y) (cloud_x, cloud_y))
-      until kill_cloud done
-    else ()
-  end
-  ||
-  for i = 0 to Array.length !nodes - 1 dopar
-    run (node !nodes.(i) ((cloud_x, cloud_y)))
-  done
-  ||
-  run (temps)
-  ||
-  if number_of_instants > 0 then
     begin
-      let t_init = Unix.time () in
-      for i = 1 to number_of_instants do pause done;
-      let t_fin = Unix.time () in
-      Stat.end_stat t_init t_fin;
-      exit 0;
+      emit cloud_x 400.0;
+      emit cloud_y 400.0;
+      if !Init.with_cloud then
+        do
+	  run (wind () (wind_x, wind_y))
+	  ||
+	  run (nuage (wind_x, wind_y) (cloud_x, cloud_y))
+        until kill_cloud done
+      else ()
     end
-  ||
-  if !Init.with_graphics then
+    ||
     begin
-      draw_init ();
-      loop
-	draw_all !nodes {x = pre ?cloud_x; y = pre ?cloud_y};
-	pause;
-      end
+      let node0_local = run make_local !nodes.(0) in
+      run (node !nodes.(0) node0_local neighbors.(0) ((cloud_x, cloud_y)) nodes_info)
       ||
-      run (fan_and_plane wind_x wind_y kill_cloud add)
+      run (sink !nodes.(1) neighbors.(1) ((cloud_x, cloud_y)) !nodes nodes_info)
+      ||
+      (*
+      for i = 2 to Array.length !nodes - 1 dopar
+        run (node !nodes.(i) neighbors.(i) ((cloud_x, cloud_y)) nodes_info)
+      done*)
+      for j=0 to nb_cores-1 dopar
+        domain ck by 1 do
+          let local_neighbors = run process_map (proc (n, _) -> run make_local n) groups.(j) in
+          let rec process run_nodes g l = match (g, l) with
+          | [], [] -> ()
+          | (n_g, neighbors)::g, n_l::l ->
+              let neighbors = update_neighbors j local_neighbors neighbors in
+              run (node n_g n_l neighbors ((cloud_x, cloud_y)) nodes_info)
+              ||
+              run run_nodes g l
+          in
+          run run_nodes groups.(j) local_neighbors
+        done
+      done
     end
-  ||
-  run (add_nodes add (cloud_x, cloud_y))
+    ||
+    run (temps)
+    ||
+    if number_of_instants > 0 then
+      begin
+        let t_init = Unix.time () in
+        for i = 1 to number_of_instants do pause done;
+        let t_fin = Unix.time () in
+        Stat.end_stat t_init t_fin;
+        exit 0;
+      end
+    ||
+    if !Init.with_graphics then
+      begin
+        draw_init ();
+        loop
+          await nodes_info (all) in
+          draw_all all {x = pre ?cloud_x; y = pre ?cloud_y}
+        end
+        ||
+        run (fan_and_plane wind_x wind_y kill_cloud add)
+      end
+  end

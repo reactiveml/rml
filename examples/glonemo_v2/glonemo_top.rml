@@ -5,10 +5,11 @@ open Definitions;;
 
 #suspend;;
 
-nodes.(42).node_energy ;;
+Print.energy (get_node 42 (last ?nodes_info)) ;;
 
 #step 100;;
-!nodes.(42).node_energy ;;
+
+Print.energy (get_node 42 (last ?nodes_info)) ;;
 
 #resume;;
 
@@ -16,7 +17,7 @@ nodes.(42).node_energy ;;
 (* ----------------- *)
 
 let process obs =
-  while (!nodes.(42).node_energy > 2.5) do
+  while ((get_node 42 (last ?nodes_info)).info_node_energy > 2.5) do
     pause
   done;
   #suspend
@@ -24,4 +25,4 @@ let process obs =
 
 #run obs;;
 
-nodes.(42).node_energy ;;
+Print.energy (get_node 42 (last ?nodes_info)) ;;

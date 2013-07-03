@@ -16,17 +16,17 @@ let print_etat n =
 
 let print_activation a =
   print_string
-    (match a with 
+    (match a with
     | To_send -> "To_send"
     | Preambule -> "Preambule"
     | Transmission_en_cours -> "Transmission_en_cours"
     )
 
 (**print d une liste d'activation, par exemple ordres*)
-let rec print_list_activation la = 
+let rec print_list_activation la =
   match la with
   | [] -> ()
-  | el :: tl -> 
+  | el :: tl ->
       print_activation el;
       print_string (" ");
       print_list_activation (tl)
@@ -35,29 +35,31 @@ let rec print_list_activation la =
 let rec print_list l =
   match l with
   | [] -> ()
-  | el :: tl -> 
-      print_int (el.node_id);
+  | el :: tl ->
+      print_int (el(* .node_id *));
       print_string(" ");
       print_list (tl)
 
 
 let print_neighbors nodes =
-  for i = 0 to Array.length nodes - 1 do 
+  for i = 0 to Array.length nodes - 1 do
     print_int(i);
     print_string(" ");
 (*    print_list((nodes.(i)).node_neighbors); *)
-    List.iter (fun el -> print_int (el.node_id)) ((nodes.(i)).node_neighbors);
+    List.iter
+      (fun el -> print_int (el.neighbor_id))
+      ((nodes.(i)).node_neighbors);
     print_newline();
   done;;
 
 
-let process print_node self = 
+let process print_node self =
   print_int (self.node_id);
   print_string (" [ ");
-  List.iter 
-    (fun el -> 
-      print_int (el.node_id);
-      print_string "; ") 
+  List.iter
+    (fun el ->
+      print_int (el.neighbor_id);
+      print_string "; ")
     self.node_neighbors;
   print_string (" ] ");
   print_newline();
@@ -81,7 +83,7 @@ let process print_results self =
     for i = 1 to 1000 do pause; done;
     print_int self.node_id;
     print_string(" ");
-    print_int (List.length (self.node_neighbors));
+    print_int (List.length self.node_neighbors);
     print_string(" ");
     print_int self.node_results.time_received;
     print_string(" ");
@@ -91,7 +93,7 @@ let process print_results self =
     print_newline();
   end
 
-let print_header3 header = 
+let print_header3 header =
  print_string
     (match header with
     | Interest_request request -> "Interest_request"
@@ -99,10 +101,10 @@ let print_header3 header =
     | Not_interest -> "Not_interest"
     )
 
-let print_header3 header = 
+let print_header3 header =
   match header with
-    | Interest_request request -> 
-	(print_string("Interest_request"); 
+    | Interest_request request ->
+	(print_string("Interest_request");
 	print_string(" interest_id:");
 	print_int(request.interest_id_req);
 	print_string(" list of the nodes concerned:[");
@@ -112,13 +114,13 @@ let print_header3 header =
     | Interest_response response -> (
 	print_string("Interest_response");
 	print_string(" interest_id:");
-	print_int(response.interest_id_resp); 
+	print_int(response.interest_id_resp);
 	print_string(" next_node:");
-	print_int(response.next_node.node_id);
+	print_int(response.next_node(* .node_id *));
        )
-    | Not_interest -> 
+    | Not_interest ->
 	(print_string("Not_interest");)
-    
+
 
 
 
@@ -128,12 +130,14 @@ let print_bool b =
     | true -> "True"
     | false -> "false"
     )
-    
+
 let print_packet3 p3 =
   print_string("header3 = [");
   print_header3(p3.header3);
   print_string("] packet_id3=");
-  print_int(p3.packet_id3);
+  print_int(fst (p3.packet_id3));
+  print_string(",");
+  print_int(snd (p3.packet_id3));
   print_string(" p3.ack=");
   print_bool(p3.ack);
   print_string(" p3.len3=");
@@ -141,8 +145,8 @@ let print_packet3 p3 =
   print_string(" p3.mac_ack=");
   print_bool(p3.mac_ack);
   print_string(" p3.from3.node_id=");
-  print_int(p3.from3.node_id);
-  print_newline();
+  print_int(p3.from3(* .node_id *));
+  print_newline()
 
 
 (*
@@ -178,3 +182,8 @@ print_newline();
 
 (**premier noeud mort*)
 
+let energy n =
+  print_int n.info_node_id;
+  print_string ": ";
+  print_float n.info_node_energy;
+  print_newline ()

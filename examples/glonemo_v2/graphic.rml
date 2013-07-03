@@ -5,8 +5,8 @@ open Routing
 
 
 
-(* let darkgrey = rgb 85 85 85 *)
-let darkgrey = rgb 55 55 55
+let darkgrey = rgb 85 85 85
+(* let darkgrey = rgb 55 55 55 *)
 let darkred = rgb 128 0 0
 let darkgreen = rgb 0 128 0
 let darkblue = rgb 0 0 128
@@ -19,7 +19,7 @@ let orange = rgb 255 165 0
 
 
 let color_of_node self =
-  match self.node_etat with
+  match self.info_node_etat with
   | Veille -> black
   | Reveil -> yellow
   | Idle -> orange
@@ -30,18 +30,18 @@ let color_of_node self =
   | Transmet_a_Recoit -> darkyellow
   | Recoit -> green
   | Recoit_a_Transmet -> darkyellow
-  
+
 
 
 let rec closer tab_nodes click_pos node_fav =
   if Array.length tab_nodes = 0 then node_fav
-  else 
-    let node_fav_inter = 
-      if (distance2 node_fav.node_pos click_pos < 
-	  distance2 tab_nodes.(Array.length tab_nodes - 1).node_pos click_pos)
+  else
+    let node_fav_inter =
+      if (distance2 node_fav.info_node_pos click_pos <
+	  distance2 tab_nodes.(Array.length tab_nodes - 1).info_node_pos click_pos)
       then node_fav
       else tab_nodes.(Array.length tab_nodes - 1) in
-    closer (Array.sub tab_nodes 0 (Array.length tab_nodes - 1)) click_pos node_fav_inter 
+    closer (Array.sub tab_nodes 0 (Array.length tab_nodes - 1)) click_pos node_fav_inter
 
 
 let draw_clear_node self =
@@ -49,35 +49,35 @@ let draw_clear_node self =
   set_color white;
   List.iter
     (fun n ->
-      moveto 
-       (int_of_float n.node_pos.x) 
-	(int_of_float n.node_pos.y);
+      moveto
+       (int_of_float n.neighbor_pos.x)
+	(int_of_float n.neighbor_pos.y);
       lineto
-	(int_of_float self.node_pos.x) 
-	(int_of_float self.node_pos.y))
-    self.node_neighbors;
+	(int_of_float self.info_node_pos.x)
+	(int_of_float self.info_node_pos.y))
+    self.info_node_neighbors;
   set_color black;
   (fill_circle
-     (int_of_float (self.node_pos.x))
-     (int_of_float (self.node_pos.y))
+     (int_of_float (self.info_node_pos.x))
+     (int_of_float (self.info_node_pos.y))
      (10));
 ;;
 
 let draw_node self =
-  if self.node_id = 1 then begin
+  if self.info_node_id = 1 then begin
     set_color (color_of_node self);
     fill_poly
-      [|(int_of_float self.node_pos.x) - 10, (int_of_float self.node_pos.y) - 40;
-	(int_of_float self.node_pos.x) + 10, (int_of_float self.node_pos.y) - 40;
-	(int_of_float self.node_pos.x), (int_of_float self.node_pos.y); |]
+      [|(int_of_float self.info_node_pos.x) - 10, (int_of_float self.info_node_pos.y) - 40;
+	(int_of_float self.info_node_pos.x) + 10, (int_of_float self.info_node_pos.y) - 40;
+	(int_of_float self.info_node_pos.x), (int_of_float self.info_node_pos.y); |]
   end else
-    begin match self.node_energy with
+    begin match self.info_node_energy with
     | e when e > 0.0 ->
 	set_color (color_of_node self);
-	moveto 
-	  (int_of_float self.node_pos.x) 
-	  (int_of_float self.node_pos.y);
-	draw_string (string_of_int self.node_id)
+	moveto
+	  (int_of_float self.info_node_pos.x)
+	  (int_of_float self.info_node_pos.y);
+	draw_string (string_of_int self.info_node_id)
     | _ -> draw_clear_node self;
     end
 ;;
@@ -86,32 +86,33 @@ let draw_neighbors self =
   set_color darkgrey;
   List.iter
     (fun n ->
-      moveto 
-	(int_of_float n.node_pos.x) 
-	(int_of_float n.node_pos.y);
+      moveto
+	(int_of_float n.neighbor_pos.x)
+	(int_of_float n.neighbor_pos.y);
       lineto
-	(int_of_float self.node_pos.x) 
-        (int_of_float self.node_pos.y))
-   self.node_neighbors;
+	(int_of_float self.info_node_pos.x)
+        (int_of_float self.info_node_pos.y))
+   self.info_node_neighbors;
   set_color black;
 ;;
-   
+
 let draw_topologie nodes =
-   for i = 0 to Array.length nodes - 1 do
-   (draw_node nodes.(i));
-(*      (if (pre (nodes.(i)).node_network.first_received) then *)
+  List.iter draw_node (List.rev nodes)
+   (* for i = 0 to Array.length nodes - 1 do *)
+   (* (draw_node nodes.(i)); *)
+(*      (if (pre (nodes.(i)).info_node_network.first_received) then *)
 (*        (set_color black; *)
 (* 	draw_circle *)
-(* 	  (int_of_float (nodes.(i)).node_pos.x) *)
-(* 	  (int_of_float (nodes.(i)).node_pos.y) *)
+(* 	  (int_of_float (nodes.(i)).info_node_pos.x) *)
+(* 	  (int_of_float (nodes.(i)).info_node_pos.y) *)
 (* 	    15);); *)
-(*      (if (pre (nodes.(i)).node_mac.emits_packet) then  *)
+(*      (if (pre (nodes.(i)).info_node_mac.emits_packet) then  *)
 (*        (set_color blue; *)
 (* 	draw_circle *)
-(* 	  (int_of_float (nodes.(i)).node_pos.x) *)
-(* 	  (int_of_float (nodes.(i)).node_pos.y) *)
+(* 	  (int_of_float (nodes.(i)).info_node_pos.x) *)
+(* 	  (int_of_float (nodes.(i)).info_node_pos.y) *)
 (* 	  20);) *)
-  done
+  (* done *)
 (**decommenter la region ci-dessus pour que des cercles s'affichent*)
 (**a l'emission et a le reception d'un paquet*)
 
@@ -129,7 +130,7 @@ let draw_topologie nodes =
 (* 	y = float_of_int y; *)
 (*       } in *)
 (*       let sender = closer nodes click_pos  nodes.(0) in *)
-      
+
 (*       let nouveau_paquet = make_packet sender in *)
 (*       (emit sender.application_to_routing (nouveau_paquet); *)
 (*        print_string("packet_id3 = "); *)
@@ -137,7 +138,7 @@ let draw_topologie nodes =
 (*        print_newline()); *)
 (*       pause *)
 (*   end *)
-  
+
 
 
 (* let process draw_nuage pos_nuage =   *)
@@ -155,7 +156,7 @@ let draw_topologie nodes =
 (* ;;   *)
 
 (**Nouveau draw_nuage*)
-let draw_nuage pos_nuage =  
+let draw_nuage pos_nuage =
   (set_color red;
    fill_circle
      (int_of_float (pos_nuage.x))
@@ -178,7 +179,7 @@ let draw_nuage pos_nuage =
 (*  || *)
 (*    run (read_click nodes); *)
 (**Decommenter cette ligne pour que un click=un paquet*)
- 
+
 
 
 
@@ -192,16 +193,14 @@ let draw_init () =
 
 let draw_all nodes cloud_pos =
   clear_graph();
-  for i = 0 to Array.length nodes - 1 do
-    draw_neighbors nodes.(i);
-  done;
+  List.iter draw_neighbors nodes;
   draw_topologie nodes;
   if !Init.with_cloud then draw_nuage cloud_pos;
   synchronize();
 ;;
 
 
-let update_title n = 
+let update_title n =
   set_window_title ("Simulation Glonemo: "^(string_of_int n)^" nodes")
 
 (*----------------------------------------------------*)
@@ -232,12 +231,12 @@ let update_title n =
 (*       pause *)
 (*     end *)
 
-let process fan_and_plane wind_x wind_y kill_cloud add_nodes = 
+let process fan_and_plane wind_x wind_y kill_cloud add_nodes =
   signal key in
   let power_fan = 1000000.0 in
   run (Rml_graphics.read_key key)
     ||
-    loop 
+    loop
       await immediate one key(c) in
       begin
 	match c with
