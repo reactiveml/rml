@@ -124,7 +124,7 @@ let link_rml extension env _build =
   tag_file byte_file ["use_rmllib"; "use_unix"];
   tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
   List.iter Outcome.ignore_good (_build [[byte_file]]);
-  ln_s byte_file rml_byte_file
+  mv byte_file rml_byte_file
 ;;
 
 let init () =
@@ -224,7 +224,7 @@ let init () =
         (link_rml "native");;
 
       rule "rml: rmlsim -> p.native"
-        ~prod:"%.rml.native"
+        ~prod:"%.rml.p.native"
         ~dep:"%.rmlsim"
         (link_rml "p.native");;
 
