@@ -1,0 +1,10 @@
+(* 05/07/2013 *)
+(* Devrait afficher un warning pour l'analyse de reactivité. *)
+
+let process p =
+  loop
+    while false do pause done
+  end
+  ||
+  loop print_endline "coucou"; pause end
+;;
