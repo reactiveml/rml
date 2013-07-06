@@ -691,13 +691,19 @@ let rec type_of_expression env expr =
 
     | Rexpr_while (e1,e2) ->
 	type_expect_eps env e1 type_bool;
+        (* choix: on ne met pas de warning sur les boucles while *)
 	let k = type_statement env e2 in
-	type_unit, k (* on ne met pas de warning sur les boucles while *)
+	type_unit, react_epsilon ()
 
     | Rexpr_for(i,e1,e2,flag,e3) ->
 	type_expect_eps env e1 type_int;
 	type_expect_eps env e2 type_int;
 	let k = type_statement (Env.add i (forall [] [] type_int) env) e3 in
+        let k =
+          match Reac_misc.int_of_expr e1, Reac_misc.int_of_expr e2 with
+          | Some n1, Some n2 -> if n1 <= n2 then k else react_epsilon ()
+          | None, _ | _, None -> react_epsilon ()
+        in
 	type_unit, k
 
     | Rexpr_seq e_list ->

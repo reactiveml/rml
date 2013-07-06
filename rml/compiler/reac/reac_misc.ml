@@ -351,3 +351,8 @@ let expr_free_vars e =
   in
   expr_free_vars [] e;
   !fv
+
+let int_of_expr expr =
+  match expr.expr_desc with
+  | Rexpr_constant (Const_int n) -> Some n
+  | _ -> None
