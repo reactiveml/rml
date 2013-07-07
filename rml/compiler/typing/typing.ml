@@ -692,7 +692,7 @@ let rec type_of_expression env expr =
     | Rexpr_while (e1,e2) ->
 	type_expect_eps env e1 type_bool;
         (* choix: on ne met pas de warning sur les boucles while *)
-	let k = type_statement env e2 in
+	let _k = type_statement env e2 in
 	type_unit, react_epsilon ()
 
     | Rexpr_for(i,e1,e2,flag,e3) ->
