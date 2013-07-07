@@ -1,0 +1,7 @@
+(* 07/07/2013 *)
+(* Probleme d'affichage des warnings :
+   $ rmlc bug56.rml
+   File "bug56.rml", line 7, characters 8-9: XXX rien ! XXX
+*)
+
+let x = 1; 1
