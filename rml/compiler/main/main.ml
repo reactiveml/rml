@@ -59,7 +59,9 @@ let main () =
   try
     List.iter compile !to_compile
   with x ->
-    Errors.report_error Format.err_formatter x;
+    Errors.report_error !err_fmt x;
+    Format.pp_print_flush !std_fmt ();
+    Format.pp_print_flush !err_fmt ();
     exit 2
 ;;
 
@@ -67,6 +69,8 @@ Printexc.catch main ();
 (* this is strange, but is required to avoid a bug in ocaml 3.04 *)
 Format.set_formatter_out_channel stdout;
 if !interactive then Interactive.compile ();
-if !dtime then Diagnostic.print stderr;
+if !dtime then Diagnostic.print !err_fmt;
+Format.pp_print_flush !std_fmt ();
+Format.pp_print_flush !err_fmt ();
 exit 0;;
 

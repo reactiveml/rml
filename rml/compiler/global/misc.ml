@@ -113,9 +113,9 @@ let display_time =
     if !dtime then
       let current = Sys.time() in
       Printf.printf "%s\t%f\t%f\n"
-	s
-	(current -. !last)
-	current;
+        s
+        (current -. !last)
+        current;
       last := current
 *)
 
@@ -165,13 +165,13 @@ class name_assoc_table f =
     val mutable assoc_table: (int * string) list = []
     method name var =
       try
-	List.assq var assoc_table
+        List.assq var assoc_table
       with
-	not_found ->
-	  let n = f counter in
-	  counter <- counter + 1;
-	  assoc_table <- (var,n) :: assoc_table;
-	  n
+        not_found ->
+          let n = f counter in
+          counter <- counter + 1;
+          assoc_table <- (var,n) :: assoc_table;
+          n
     method reset =
       counter <- 0;
       assoc_table <- []
@@ -213,42 +213,43 @@ module Diagnostic =
 
     let round f = float(truncate(100.0 *. f)) /. 100.0
 
-    let print oc =
+    let print fmt =
       (* prints the diagnostic given by one entry *)
       let print_entry (name, time) =
-	let average = 100.0 *. !time /. !global_time in
-	print_tab ();
-	print_string name;
-	print_string ":";
-	print_tab ();
-	print_float (round !time);
-	print_string "s";
-	print_tab ();
-	print_float (round average);
-	print_string "%" in
+        let average = 100.0 *. !time /. !global_time in
+        pp_print_tab fmt ();
+        pp_print_string fmt name;
+        pp_print_string fmt ":";
+        pp_print_tab fmt ();
+        pp_print_float fmt (round !time);
+        pp_print_string fmt "s";
+        pp_print_tab fmt ();
+        pp_print_float fmt (round average);
+        pp_print_string fmt "%"
+      in
 
       (* prints a diagnostic of the execution *)
-      set_max_boxes max_int;
-      set_formatter_out_channel oc;
+      (* set_max_boxes max_int; *)
+      (* set_formatter_out_channel oc; *)
 
-      open_tbox ();
-      set_tab ();
-      print_tbreak 30 0;
-      set_tab ();
-      print_tbreak 30 0;
-      set_tab ();
-      print_string "\n";
-      print_string "====================================\
-                    ==============================\n";
-      print_string "        Summary of execution time\n";
+      pp_open_tbox fmt ();
+      pp_set_tab fmt ();
+      pp_print_tbreak fmt 30 0;
+      pp_set_tab fmt ();
+      pp_print_tbreak fmt 30 0;
+      pp_set_tab fmt ();
+      pp_print_string fmt "\n";
+      pp_print_string fmt "====================================\
+                           ==============================\n";
+      pp_print_string fmt "        Summary of execution time\n";
       List.iter print_entry (List.rev !diag_list);
-      print_string "\n";
+      pp_print_string fmt "\n";
       print_entry ("Total", global_time);
-      print_string "\n";
-      print_string "====================================\
-                    ==============================\n";
-      close_tbox ();
-      print_flush ()
+      pp_print_string fmt "\n";
+      pp_print_string fmt "====================================\
+                           ==============================\n";
+      pp_close_tbox fmt ();
+      pp_print_flush fmt ()
   end
 
 (* every step of the compiler takes its own timer *)
