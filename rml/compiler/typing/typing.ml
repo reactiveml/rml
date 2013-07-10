@@ -91,8 +91,7 @@ let filter_multi_event ty =
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
-  let unit_process = process type_unit { proc_static = None ;
-                                         proc_react = new_react_var(); } in
+  let unit_process = process type_unit { proc_react = new_react_var(); } in
   try
     unify unit_process ty;
     true
@@ -323,8 +322,7 @@ let type_of_type_expression typ_vars react_vars typexp =
 	constr name (List.map type_of ty_list)
 
     | Rtype_process (ty,k) ->
-	process (type_of ty) { proc_static = Some(Proc_def (ref k));
-                               proc_react = react_raw (react_epsilon())
+	process (type_of ty) { proc_react = react_raw (react_epsilon())
                                                       (get_react_var ()); }
   in
   type_of typexp
@@ -723,8 +721,7 @@ let rec type_of_expression env expr =
 	let ty, k = type_of_expression env e in
         pop_type_level ();
         let k = remove_local_react_var k in
-        process ty { proc_static = Some(Proc_def (ref Def_static.Dontknow));
-                     proc_react = react_raw k (new_react_var()); },
+        process ty { proc_react = react_raw k (new_react_var()); },
         react_epsilon()
 
     | Rexpr_pre (Status, s) ->
@@ -862,8 +859,7 @@ let rec type_of_expression env expr =
         (*   react_raw k (new_react_var ()) *)
         (* in *)
         unify_run e.expr_loc
-          (process ty { proc_static = None;
-                        proc_react = (* raw *) k })
+          (process ty { proc_react = (* raw *) k })
           ty_e;
         ty, react_run (* raw *) k
 

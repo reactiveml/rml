@@ -53,8 +53,7 @@ and type_expression_desc =
   | Type_process of type_expression * process_info
 
 and process_info =
-    { mutable proc_static: process_static option;
-      mutable proc_react: reactivity_effect; }
+    { mutable proc_react: reactivity_effect; }
 
 and process_static =
   | Proc_def of Def_static.instantaneous ref

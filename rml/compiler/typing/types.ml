@@ -198,8 +198,7 @@ let rec copy ty =
 	ty
 
 and copy_proc_info info =
-  { proc_static = info.proc_static;
-    proc_react = copy_react info.proc_react; }
+  { proc_react = copy_react info.proc_react; }
 
 
 (* instanciation *)
@@ -309,13 +308,6 @@ let rec unify expected_ty actual_ty =
 	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
 	    unify expected_ty (expand_abbrev params body args)
       | Type_process(ty1, pi1), Type_process(ty2, pi2) ->
-	  begin match pi1.proc_static, pi2.proc_static with
-	  | None, None -> ()
-	  | Some ps, None -> pi2.proc_static <- Some (Proc_link ps)
-	  | None, Some ps -> pi1.proc_static <- Some (Proc_link ps)
-	  | Some ps1, Some ps2 ->
-	      pi1.proc_static <- Some (Proc_unify (ps1, ps2))
-	  end;
           begin try
             unify_react_effect pi1.proc_react pi2.proc_react
           with React_Unify -> raise Unify (* ne devrait pas arriver *)

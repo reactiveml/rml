@@ -84,26 +84,6 @@ let rec get_type ty =
   | Def_types.Type_link (ty') -> get_type ty'
   | _ -> ty
 
-(* Extract the instantaneous status of a process *)
-let rec get_process_status =
-  let rec aux x =
-    match x with
-    | Def_types.Proc_def k -> !k
-    | Def_types.Proc_link y -> aux y
-    | Def_types.Proc_unify (x1, x2) ->
-	let k1 = aux x1 in
-	let k2 = aux x2 in
-	unify_instantaneous k1 k2
-  in
-  fun ty ->
-    match (get_type ty).Def_types.type_desc with
-    | Def_types.Type_process (_, pi) ->
-	begin match pi.Def_types.proc_static with
-	| None -> Dynamic Dontknow
-	| Some k -> Dynamic (aux k)
-	end
-    | _ -> assert false
-
 
 let static_expr_list static_expr combine filter ctx l =
   match l with
@@ -408,43 +388,12 @@ let rec static_expr ctx e =
 	else expr_wrong_static_err !Misc.err_fmt e
 
     | Rexpr_process (p) ->
-	let typ = static_expr Process p in
-	let k =
-	  match typ with
-	  | Static -> Instantaneous
-	  | Dynamic(k) -> k
-	in
-	begin match (get_type e.expr_type).Def_types.type_desc with
-	| Def_types.Type_process
-	    (t, { Def_types.proc_static = Some (Def_types.Proc_def r) }) ->
-	    r := k
-	| Def_types.Type_process
-	    (t, { Def_types.proc_static = Some
-		    (Def_types.Proc_unify
-		       (Def_types.Proc_def r1,
-			Def_types.Proc_def r2)) }) ->
-	    begin try
-	      r1 := unify_instantaneous !r2 k
-	    with
-	    | Unify_static (k1, k2) -> unify_err !Misc.err_fmt e k1 k2
-	    end
-	| _ ->
-	    (* XXX !!! TODO !!! XXX *)
-	    (* raise (Misc.Internal (e.expr_loc, "Static.static_expr")) *)
-	    ()
-	end;
+	let _typ = static_expr Process p in
 	Static
 
     | Rexpr_run (e1) ->
 	if static_expr ML e1 = Static
-	then
-	  try
-	    (* XXX !!! TODO !!! XXX *)
-            Dynamic Dontknow
-(*	    get_process_status e1.expr_type *)
-	  with
-	  | Unify_static (k1, k2) -> unify_err !Misc.err_fmt e1 k2 k1
-        (* Dynamic Dontknow *)
+	then Dynamic Dontknow
 	else expr_wrong_static_err !Misc.err_fmt e
 
     | Rexpr_until (s, p, p_e_opt) ->

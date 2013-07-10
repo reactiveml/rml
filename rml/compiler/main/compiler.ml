@@ -34,8 +34,8 @@ open Errors
 
 (* compiling a file. Two steps. *)
 (* - Front-end: - Parsing
-                - Typing
                 - Static analysis
+                - Typing
                 - emission of the intermediate rml code *)
 (* - Back-end: - generation of caml code for the whole file *)
 
@@ -85,15 +85,15 @@ let compile_implementation_front_end info_fmt filename itf impl_list =
     in
     Optimization_timer.time();
 
-    (* typing *)
-    Typing_timer.start();
-    Typing.type_impl_item info_fmt rml_code;
-    Typing_timer.time();
-
     (* static analysis *)
     Static_timer.start();
     Static.static rml_code;
     Static_timer.time();
+
+    (* typing *)
+    Typing_timer.start();
+    Typing.type_impl_item info_fmt rml_code;
+    Typing_timer.time();
 
     Optimization_timer.start();
     let rml_code =
