@@ -1,0 +1,42 @@
+<p>
+To observe the balls, we use a global signal named <code>draw</code> on
+which each ball will emit its state. All the emitted states are
+collected into a list.
+</p>
+<p><pre class="code">
+signal draw default [] gather (fun x y -> x :: y) ;;
+</pre></p>
+
+<p>
+The behavior of a ball bouncing into the limit of the box can be
+programmed as follows.
+</p>
+<p><pre class="code">
+let process move state =
+  loop
+    (* emit the position *)
+    emit draw state;
+
+    (* compute the new position *)
+    let pre_vx, pre_vy = last ?state.speed in
+    let pre_x, pre_y = last ?state.pos in
+    let vx =
+      if box.left < pre_x && pre_x < box.right then pre_vx
+      else -. pre_vx
+    in
+    let vy =
+      if box.bot < pre_y && pre_y < box.top then pre_vy
+      else -. pre_vy
+    in
+    let x, y = (pre_x +. vx, pre_y +. vy) in
+
+    (* update the state *)
+    emit state.speed (vx, vy);
+    emit state.pos (x, y);
+    pause
+  end
+</pre></p>
+<p>
+The process is an infinite loop that first emits the current state,
+then computes the new position and then finally updates the state.
+</p>

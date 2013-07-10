@@ -1,0 +1,33 @@
+<h3>Parallel composition</h3>
+
+<p>
+The notion of instant really becomes visible when parallel
+computations occur. The parallel execution of two expressions is
+denoted <code>e1 || e2</code> (boolean disjuction is denoted <code>e1
+or e2</code>). It guarantees that the two expressions are executed at
+each instant.
+</p>
+
+<p><pre class="code">
+#exec (   run (non_instantaneous_loop 10)
+       || run (non_instantaneous_loop 10) );;
+</pre></p>
+
+<p>
+Notice that each instance of the
+process <code>non_instantaneous_loop</code> prints one number per
+instant. In the following example, the
+function <code>instantaneous_loop</code> is executed in one instant
+(since it is not a process, <code>run</code> is not needed to apply
+it)
+</p>
+
+<p><pre class="code">
+#exec (   run (non_instantaneous_loop 10)
+       || instantaneous_loop 10 );;
+</pre></p>
+<p>
+Notice that when <code>instantaneous_loop</code> starts executing, it
+only stops after having printed the ten numbers (i.e., at
+termination), and not after each number.
+</p>

@@ -1,0 +1,23 @@
+<p>
+Another useful reconfiguration combinator is one that adds a new
+behavior to a running process. To do that, we define a
+process <code>extend</code> that executes a
+process <code>p_init</code> and awaits new processes to execute on a
+signal <code>add_behavior</code>. The initial
+process <code>p_init</code> and the added processes will share a
+common state <code>state</code>.
+</p>
+<p><pre class="code">
+let rec process extend p_init state add_behavior =
+  run (p_init state)
+  ||
+  await add_behavior (p) in
+  run (extend p state add_behavior)
+</pre></p>
+<p>
+In this process, <code>p_init</code> is executed and in parallel a
+process <code>p</code> is awaited on the
+signal <code>add_behavior</code>. When <code>p</code> is received, it
+is executed through a recursive call to <code>extend</code> so that
+it is still possible to add new behaviors.
+</p>

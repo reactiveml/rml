@@ -1,0 +1,191 @@
+body {
+  font-family: "DejaVu Sans",sans-serif;
+  padding: 10px;
+}
+
+#toplevel {
+    width: 550px;
+    height: 70px;
+}
+
+#sharp {
+    text-width: 5px;
+    font-size: 12px;
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+    font-style: italic;
+    margin-right: 5px;
+    float: left;
+    color: #fff;
+}
+
+#rmlconsole {
+    border: 0;
+    background: transparent;
+    padding-top: 0;
+    padding-bottom: 0;
+    resize: none;
+    outline: none;
+    font-size: 12px;
+    width: 520px;
+    color: white;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+}
+
+#graphics {
+    position: absolute;
+    display: none;
+    background-color: #fff;
+}
+
+#graphicstitle {
+    top: 0px;
+    width: 100%;
+    height: 20px;
+    border: 1px #000 solid;
+    background-color: #eee;
+}
+
+#canvas {
+    border: 1px #000 solid;
+}
+
+#toplevel-container {
+   padding: 10px;
+   height: 500px;
+   width: 600px;
+   overflow: auto;
+   overflow-x: hidden;
+   color: #fff;
+   background-color: black;
+   -moz-border-radius: 20px;
+   -webkit-border-radius: 20px;
+   -khtml-border-radius: 20px;
+   border-radius: 20px;
+}
+
+#maincontent {
+    vertical-align:top;
+    horizon
+}
+
+#sidebar {
+    float: left;
+    max-width: 500px;
+    text-align: center;
+}
+
+#tutorial {
+    text-align: justify;
+    display: inline-block;
+    max-width: 500px;
+    padding-right: 5px;
+}
+
+#info small {
+    font-size: 70%;
+}
+
+pre.code {
+    border: 1px #000 solid;
+    background-color: #ffff66;
+}
+
+#help {
+    display: inline-block;
+}
+
+#intro {
+    display: inline-block;
+    margin: 10px;
+    text-align: justify;
+    max-width: 500px;
+}
+
+#intro p {
+    margin: 0px;
+}
+
+#ocaml {
+   display: inline-block;
+}
+
+.footer {
+   clear: both;
+   background-color: #eee;
+   margin-top: 10px;
+   border-top: 1px #CCC solid;
+   padding-top: 10px;
+   padding-bottom: 10px;
+   text-align: center;
+}
+
+pre#output {
+    background: transparent;
+    color: #fff;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+table td {
+    font-size: 12px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+dl dt {
+   font-weight: normal;
+}
+
+.step {
+    font-weight: bold;
+    color: #808080;
+    font-size: 12px;
+}
+
+#buttons-left button {
+    float: left;
+    margin-top: 10px;
+    margin-right: 10px;
+    padding: 7px;
+}
+
+#buttons-right button {
+    float: right;
+    margin-top: 10px;
+    margin-right: 10px;
+    padding: 7px;
+}
+
+#buttons {
+    text-align: left;
+}
+
+.zebra-striped tbody tr:nth-child(odd) td,.zebra-striped tbody tr:nth-child(odd) th{background-color:#f9f9f9;}
+.zebra-striped tbody tr:hover td,.zebra-striped tbody tr:hover th{background-color:#f5f5f5;}
+table{width:100%;margin-bottom:18px;padding:0;font-size:13px;border-collapse:collapse;}table th,table td{padding:10px 10px 9px;line-height:18px;text-align:left;}
+table th{padding-top:9px;font-weight:bold;vertical-align:middle;}
+table td{vertical-align:top;border-top:1px solid #ddd;}
+table tbody th{border-top:1px solid #ddd;vertical-align:top;}
+
+a:focus {
+    outline:thin dotted;
+}
+
+a:hover, a:active {
+    outline:0;
+}
+
+a {
+    color: #0069d6;
+    text-decoration: none;
+    line-height: inherit;
+    font-weight: inherit;
+}
+
+a:hover {
+    color: #00438a;
+    text-decoration: underline;
+}

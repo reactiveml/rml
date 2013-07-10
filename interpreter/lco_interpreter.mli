@@ -41,7 +41,7 @@ module type S =
 
     type 'a expr
     and 'a process
-    and clock_expr = R.clock Types.clock
+    and clock_expr = R.clock Rml_types.clock
     and region_expr = clock_expr
     type 'a memory
 
@@ -57,8 +57,8 @@ module type S =
     val rml_expr_emit: (unit, 'b) R.event -> unit
     val rml_expr_emit_val: ('a, 'b) R.event -> 'a -> unit
 
-    val rml_global_signal: Types.signal_kind -> ('a, 'a list) R.event
-    val rml_global_signal_combine: Types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
+    val rml_global_signal: Rml_types.signal_kind -> ('a, 'a list) R.event
+    val rml_global_signal_combine: Rml_types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) R.event
 
     type event_cfg_gen = unit -> R.event_cfg
     val cfg_present': ('a,'b) R.event -> event_cfg_gen
@@ -113,10 +113,10 @@ module type S =
         (unit -> int) -> (unit -> int) -> bool -> (int -> 'a expr) ->
           unit expr
     val rml_signal:
-      Types.signal_kind -> clock_expr -> region_expr ->
+      Rml_types.signal_kind -> clock_expr -> region_expr ->
       clock_expr option -> (('a, 'a list) R.event -> 'b expr) -> 'b expr
     val rml_signal_combine:
-      Types.signal_kind -> clock_expr -> region_expr ->
+      Rml_types.signal_kind -> clock_expr -> region_expr ->
       (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
       clock_expr option -> (('a, 'b) R.event -> 'c expr) -> 'c expr
     val rml_def: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
@@ -124,17 +124,17 @@ module type S =
 (*    val rml_def_and_dyn: expr array -> (value array -> expr) -> expr *)
     val rml_match: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
     val rml_run: (unit -> 'a process) -> 'a expr
-    val rml_until': Types.pause_kind -> ('a, 'b) R.event -> unit expr -> unit expr
-    val rml_until: Types.pause_kind -> (unit -> ('a, 'b) R.event) -> unit expr -> unit expr
-    val rml_until_conf: Types.pause_kind -> event_cfg_gen -> unit expr -> unit expr
+    val rml_until': Rml_types.pause_kind -> ('a, 'b) R.event -> unit expr -> unit expr
+    val rml_until: Rml_types.pause_kind -> (unit -> ('a, 'b) R.event) -> unit expr -> unit expr
+    val rml_until_conf: Rml_types.pause_kind -> event_cfg_gen -> unit expr -> unit expr
     val rml_until_handler':
-        Types.pause_kind -> ('a, 'b) R.event -> 'c expr -> ('b -> 'c expr) -> 'c expr
+        Rml_types.pause_kind -> ('a, 'b) R.event -> 'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_until_handler:
-        Types.pause_kind -> (unit -> ('a, 'b) R.event) -> 'c expr -> ('b -> 'c expr) -> 'c expr
+        Rml_types.pause_kind -> (unit -> ('a, 'b) R.event) -> 'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_until_handler_match':
-        Types.pause_kind -> ('a, 'b) R.event -> ('b -> bool) -> 'c expr -> ('b -> 'c expr) -> 'c expr
+        Rml_types.pause_kind -> ('a, 'b) R.event -> ('b -> bool) -> 'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_until_handler_match:
-        Types.pause_kind -> (unit -> ('a, 'b) R.event) -> ('b -> bool) ->
+        Rml_types.pause_kind -> (unit -> ('a, 'b) R.event) -> ('b -> bool) ->
           'c expr -> ('b -> 'c expr) -> 'c expr
     val rml_control': ('a, 'b) R.event -> 'c expr -> 'c expr
     val rml_control: (unit -> ('a, 'b) R.event) -> 'c expr -> 'c expr

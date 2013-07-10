@@ -178,10 +178,9 @@ module Stypes =
 
 (*     let output = Types_printer.output *)
     let output oc ty =
-      set_formatter_out_channel oc;
-      print_string "  ";
-      Types_printer.print ty;
-      print_flush ()
+      let pp = Format.formatter_of_out_channel oc in
+      Format.fprintf pp "  %a@?"
+        Types_printer.print ty
 
   end)
 

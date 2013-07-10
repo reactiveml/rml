@@ -36,8 +36,8 @@ open Misc
 let unit_value = make_expr (Cexpr_constant Const_unit) Location.none
 
 let translate_pause_kind k = match k with
-| Strong -> make_constr "Types" "Strong" None
-| Weak -> make_constr "Types" "Weak" None
+| Strong -> make_constr "Rml_types" "Strong" None
+| Weak -> make_constr "Rml_types" "Weak" None
 
 (* Translation of type expressions *)
 let rec translate_te typ =
@@ -405,8 +405,8 @@ and translate_proc e =
           | Some e -> make_constr "Pervasives" "Some" (Some (translate_ml e))
        in
        let k = match k with
-         | Signal -> make_constr "Types" "Signal" None
-         | Memory -> make_constr "Types" "Memory" None
+         | Signal -> make_constr "Rml_types" "Signal" None
+         | Memory -> make_constr "Rml_types" "Memory" None
        in
        (match comb with
          | None ->
@@ -956,8 +956,8 @@ let translate_impl_item info_chan item =
     | Coimpl_signal l ->
        let translate_signal (k, (s, ty_opt), comb) =
          let k = match k with
-           | Signal -> make_constr "Types" "Signal" None
-           | Memory -> make_constr "Types" "Memory" None
+           | Signal -> make_constr "Rml_types" "Signal" None
+           | Memory -> make_constr "Rml_types" "Memory" None
          in
          let p = pattern_of_signal_global (s, ty_opt) in
          let e =

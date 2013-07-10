@@ -35,8 +35,8 @@ end
 
 type ('step, 'clock) control_type =
     | Clock_domain of 'clock
-    | Kill of Types.pause_kind * 'step
-    | Kill_handler of Types.pause_kind * (unit -> 'step)
+    | Kill of Rml_types.pause_kind * 'step
+    | Kill_handler of Rml_types.pause_kind * (unit -> 'step)
     | Susp
     | When
 
@@ -53,9 +53,9 @@ sig
   type event_cfg
   module Event :
     (sig
-      val new_evt_global: Types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+      val new_evt_global: Rml_types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
       val new_evt : clock_domain -> clock -> region ->
-        Types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> clock option ->
+        Rml_types.signal_kind -> 'b -> ('a -> 'b -> 'b) -> clock option ->
         (('a, 'b) event -> unit step) -> unit step
 
       val status: ?only_at_eoi:bool -> ('a, 'b) event -> bool
@@ -122,7 +122,7 @@ sig
       during the current step of [cd]. *)
   val on_current_instant_list : clock_domain -> unit step list -> unit
   (** [on_next_instant ctrl f] executes 'f ()' during the next activation of [ctrl]. *)
-  val on_next_instant : ?kind:Types.pause_kind -> control_tree -> unit step -> unit
+  val on_next_instant : ?kind:Rml_types.pause_kind -> control_tree -> unit step -> unit
   (** [on_eoi cd f v] executes 'f v' during the eoi of cd. *)
   val on_eoi : clock -> unit step -> unit
 

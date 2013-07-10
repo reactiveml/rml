@@ -1,0 +1,19 @@
+<p>
+Now we want to create a ball which is duplicated each time a
+signal <code>split</code> is emitted.
+</p>
+<p><pre class="code">
+signal split default () gather (fun () () -> ()) ;;
+</pre></p>
+
+<p>
+We first define a function which creates a new state from an existing one.
+</p>
+<p><pre class="code">
+let new_state' state =
+  signal pos default last ?state.pos gather fun x _ -> x in
+  signal speed default random_speed 2. gather fun x _ -> x in
+  let radius = max 1. (state.radius -. state.radius /. 5.) in
+  let color = color_of_int (Random.int 7) in
+  { pos = pos; speed = speed; radius = radius; color = color; }
+</pre></p>

@@ -1,0 +1,30 @@
+<p>
+Dynamic creation is achieved by combining recursion and parallel
+composition.
+</p>
+<p><pre class="code">
+let rec process ball state =
+  do run (move state)
+  until split ->
+    run (ball (new_state' state))
+    ||
+    run (ball (new_state' state))
+  done
+</pre></p>
+
+<p><pre class="code">
+#run (ball (new_state ())) ;;
+</pre></p>
+
+<p>
+Finally, each time we emit the <code>split</code> event, the ball is duplicated.
+</p>
+<p><pre class="code">
+emit split ;;
+</pre></p>
+<p><pre class="code">
+emit split ;;
+</pre></p>
+<p>
+Warning the JavaScript interpreter can stop if there is to many balls.
+</p>

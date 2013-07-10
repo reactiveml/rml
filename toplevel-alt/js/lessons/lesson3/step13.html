@@ -1,0 +1,21 @@
+<p>
+Of course, we can combine the previous operators. For example, we can
+define a process that can be extended and killed.
+</p>
+<p><pre class="code">
+#run
+  killable
+   (extend moving_point (new_state ()) add_behavior) ;;
+</pre></p>
+<p>
+Then we can reconfigure this process
+</p>
+<p><pre class="code">
+emit add_behavior up_down ;;
+</pre></p>
+<p>
+and kill it.
+</p>
+<p><pre class="code">
+emit to_kill 2 ;;
+</pre></p>

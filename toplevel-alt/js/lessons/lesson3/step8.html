@@ -1,0 +1,24 @@
+<p>
+Let's now see how we can change the behavior of a process. We define a
+process <code>replace</code> which takes as argument an initial
+behavior <code>p_init</code>, a state <code>state</code> and a
+signal <code>new_behavior</code> on which new behavior to replace the
+current behavior can be sent.
+</p>
+<p><pre class="code">
+let rec process replace p_init state new_behavior =
+  do
+    run (p_init state)
+  until new_behavior(p) ->
+    run (replace p state new_behavior)
+  done
+</pre></p>
+<p>
+The process <code>p_init</code> parameterized by <code>state</code> is
+executed under the control of the
+signal <code>new_behavior</code>. When <code>new_behavior</code> is
+emitted, <code>p_init</code> is stopped and we receive the process
+<code>p</code> carried on this signal. The new process <code>p</code>
+is executed through the recursive call to <code>replace</code>, which
+continues to allow changes to the behavior of the process.
+</p>

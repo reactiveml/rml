@@ -40,7 +40,7 @@ open Global
 open Global_ident
 open Reac
 open Misc
-open Annot
+open Annot_rml
 
 let unify_expr expr expected_ty actual_ty =
   try

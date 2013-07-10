@@ -25,5 +25,5 @@ let parse spec_list anon_fun usage =
     let spec_list = check_reserved_args spec_list in
     Arg.parse_argv Sys.argv (Runtime_options.rml_cli_options @ spec_list) anon_fun usage
   with
-    | Arg.Bad s -> Format.eprintf "%s@." s; raise Types.End_program
-    | Arg.Help s -> Format.eprintf "%s@." s; raise Types.End_program
+    | Arg.Bad s -> Format.eprintf "%s@." s; raise Rml_types.End_program
+    | Arg.Help s -> Format.eprintf "%s@." s; raise Rml_types.End_program

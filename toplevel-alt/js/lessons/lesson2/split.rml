@@ -1,0 +1,176 @@
+(* We first define the data structure which represents the bounds of a box.
+*)
+type box =
+    { left: float;
+      right: float;
+      top: float;
+      bot: float; }
+
+(* We create a box.
+*)
+let box =
+  { left = 0.; right = 400.;
+    bot = 0.; top = 400.; }
+
+(* We display the box.
+*)
+let () =
+  let g =
+    " " ^
+    (string_of_int (int_of_float (box.right -. box.left))) ^
+    "x" ^
+    (string_of_int (int_of_float (box.top -. box.bot)))
+  in
+  Graphics.open_graph g
+
+(* We now define the data structure which represents the state of a ball.
+*)
+type state =
+    { pos: (float * float, float * float) event;
+      speed: (float * float, float * float) event;
+      radius: float;
+      color: Graphics.color; }
+(* It is a record whose fields [pos], [speed], [radius] and [color]
+   represent respectively the position, velocity, radius and color of
+   a ball.
+
+   The type of the field [pos] is [(float * float, float * float) event].
+   It means that this is an event on which we can emit and receive a
+   tuple of floating numbers. It will represent the flow of positions.
+*)
+
+(* To observe the balls, we use a global signal named [draw] on which
+   each ball will emit its state. All the emitted states are collected
+   into a list.
+*)
+signal draw default [] gather (fun x y -> x :: y)
+
+(* The behavior of a ball bouncing into the limit of the box can be
+   programmed as follows.
+
+   It is an infinite loop that first emits the current state,
+   then computes the new position and finally updates its state.
+*)
+let process move state =
+  loop
+    (* emit the position *)
+    emit draw state;
+
+    (* compute the new position *)
+    let pre_vx, pre_vy = last ?state.speed in
+    let pre_x, pre_y = last ?state.pos in
+    let vx =
+      if box.left < pre_x && pre_x < box.right then pre_vx
+      else -. pre_vx
+    in
+    let vy =
+      if box.bot < pre_y && pre_y < box.top then pre_vy
+      else -. pre_vy
+    in
+    let x, y = (pre_x +. vx, pre_y +. vy) in
+
+    (* update the state *)
+    emit state.speed (vx, vy);
+    emit state.pos (x, y);
+    pause
+  end
+
+(* Let us now create a state. To do that, we have to define auxiliary
+   functions. The first one associates a color to and integer.
+*)
+let color_of_int n =
+  match n mod 7 with
+  | 0 -> Graphics.rgb 220 20 60
+  | 1 -> Graphics.blue
+  | 2 -> Graphics.rgb 34 139 34
+  | 3 -> Graphics.red
+  | 4 -> Graphics.rgb 150 150 150
+  | 5 -> Graphics.black
+  | 6 -> Graphics.magenta
+  | _ -> Graphics.black
+
+(* The second function creates a vector of norm [k].
+*)
+let random_speed k =
+  let alpha = Random.float 7. in
+  (k *. cos alpha, k *. sin alpha)
+
+(* Now, a function which creates a value of type [state] can be
+   defined as follows.
+
+   The default value of the signal [pos] is the center of the
+   box. The combination function keeps only one of the value emitted during
+   the instant.
+*)
+let new_state () =
+  signal pos
+    default ((box.right -. box.left) /. 2., (box.top -. box.bot) /. 2.)
+    gather (fun x _ -> x)
+  in
+  signal speed default random_speed 2. gather (fun x _ -> x) in
+  let color = color_of_int (Random.int 7) in
+  { pos = pos; speed = speed; radius = 25.; color = color; }
+
+
+(* To observe the position of the ball, we program a process which
+   displays the value of the [draw] signal.
+*)
+let process window =
+  loop
+    await draw (all) in
+    Graphics.clear_graph();
+    List.iter
+      (fun state ->
+        let x, y = last ?state.pos in
+        Graphics.set_color state.color;
+        Graphics.fill_circle
+          (int_of_float x) (int_of_float y)
+          (int_of_float state.radius))
+      all
+  end
+
+
+(* Now we want to create a ball which is duplicated each time a
+   signal [split] is emitted.
+*)
+signal split default () gather (fun () () -> ())
+
+(* We first define a function which creates a new state from another one.
+*)
+let new_state' state =
+  signal pos default last ?state.pos gather fun x _ -> x in
+  signal speed default random_speed 2. gather fun x _ -> x in
+  let radius = max 1. (state.radius -. state.radius /. 5.) in
+  let color = color_of_int (Random.int 7) in
+  { pos = pos; speed = speed; radius = radius; color = color; }
+
+(* Dynamic creation is achived by combining recursion and parallel
+   composition.
+*)
+let rec process ball state =
+  do run (move state)
+  until split ->
+    run (ball (new_state' state))
+    ||
+    run (ball (new_state' state))
+  done
+
+
+(* Main *)
+signal quit default () gather (fun () () -> ())
+
+let process main =
+  do
+    run window
+    ||
+    run (ball (new_state ()))
+  until quit ->
+    Graphics.close_graph ()
+  done
+;;
+
+#run main ;;
+
+(* You can type [emit split] to split the balls and
+   type [emit quit] to stop the simulation. *)
+() ;;

@@ -42,7 +42,7 @@ open Global
 open Global_ident
 open Reac
 open Misc
-open Annot
+open Annot_rml
 open Global_mapfold
 open Reac_mapfold
 
@@ -669,7 +669,9 @@ let rec schema_of_expression env expr =
               (* check that the label appears only once *)
               if List.mem label label_list
               then non_linear_record_err label.gi expr.e_loc;
-              schema_expect env label_expr ty_res;
+              (match ty_res.desc with
+                | Clock_forall _ -> schema_expect env label_expr ty_res
+                | _ -> type_expect env label_expr ty_res);
               unify_expr expr ty ty_arg;
               typing_record (label :: label_list) label_expr_list
         in
@@ -695,7 +697,9 @@ let rec schema_of_expression env expr =
               (* check that the label appears only once *)
               if List.mem label label_list
               then non_linear_record_err label.gi expr.e_loc;
-              schema_expect env label_expr ty_res;
+              (match ty_res.desc with
+                | Clock_forall _ -> schema_expect env label_expr ty_res
+                | _ -> type_expect env label_expr ty_res);
               unify_expr expr ty ty_arg;
               typing_record (label :: label_list) label_expr_list
         in

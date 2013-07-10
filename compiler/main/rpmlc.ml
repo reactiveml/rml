@@ -32,6 +32,7 @@ open Misc
 open Modules
 open Compiler
 open Compiler_options
+open Cli
 
 (* list of object files passed on the command line *)
 let object_files = ref []
@@ -58,8 +59,6 @@ let compile file =
 
 let main () =
   try
-    set_init_pervasives ();
-    parse_cli ();
     set_init_stdlib ();
     List.iter compile !to_compile
   with x ->

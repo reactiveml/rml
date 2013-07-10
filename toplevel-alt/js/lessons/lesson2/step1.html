@@ -1,0 +1,39 @@
+<p>
+In this lesson, we will program a ball which bounces against the edges
+of a box, and which is duplicated on every emission of a signal split
+<code>split</code>. Here is an example of what we aim to achieve:
+<a class="code-file">lessons/lesson2/split.rml</a>
+</p>
+
+<p>
+We first define the data structure to represent the bounds of a box.
+</p>
+
+<p><pre class="code">
+type box =
+    { left: float;
+      right: float;
+      top: float;
+      bot: float; }
+</pre></p>
+<p>
+We create a box.
+</p>
+<p><pre class="code">
+let box =
+  { left = 0.; right = 400.;
+    bot = 0.; top = 400.; }
+</pre></p>
+<p>
+We display the box.
+</p>
+<p><pre class="code">
+let () =
+  let g =
+    " " ^
+    (string_of_int (int_of_float (box.right -. box.left))) ^
+    "x" ^
+    (string_of_int (int_of_float (box.top -. box.bot)))
+  in
+  Graphics.open_graph g
+</pre></p>

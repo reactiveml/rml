@@ -1,0 +1,40 @@
+<p>
+To create a value of type <code>state</code>, we need some auxiliary
+functions.
+</p>
+<p>
+We define the function <code>+:</code> to add a pair of floats.
+</p>
+<p><pre class="code">
+let (+:) (x1, y1) (x2, y2) = (x1 +. x2, y1 +. y2)
+</pre></p>
+<p>
+We define a function <code>color_of_int</code> which converts an
+integer into a value of type <code>Graphics.color</code>.
+</p>
+<p><pre class="code">
+let color_of_int = function
+  | 0 -> Graphics.black
+  | 1 -> Graphics.magenta
+  | 2 -> Graphics.green
+  | 3 -> Graphics.red
+  | 4 -> Graphics.blue
+  | _ -> Graphics.black
+</pre></p>
+
+<p>
+We can now define a function which creates a new state.
+</p>
+<p><pre class="code">
+let new_state () =
+  signal pos default (0., 0.) gather (+:) in
+  signal vel default (0., 0.) gather (+:) in
+  emit pos (0., float (Graphics.size_y () / 2));
+  { color = (color_of_int (Random.int 5));
+    pos = pos;
+    vel = vel; }
+</pre></p>
+<p>
+The flow of positions is initialized on the left side of the graphical
+window by an emission on the <code>pos</code> signal.
+</p>

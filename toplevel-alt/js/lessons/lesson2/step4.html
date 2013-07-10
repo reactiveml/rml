@@ -1,0 +1,44 @@
+<p>
+Let us now create a state. To do that, we have to define auxiliary
+functions. The first one associates a color to an integer.
+</p>
+<p><pre class="code">
+let color_of_int n =
+  match n mod 7 with
+  | 0 -> Graphics.rgb 220 20 60
+  | 1 -> Graphics.blue
+  | 2 -> Graphics.rgb 34 139 34
+  | 3 -> Graphics.red
+  | 4 -> Graphics.rgb 150 150 150
+  | 5 -> Graphics.black
+  | 6 -> Graphics.magenta
+  | _ -> Graphics.black
+</pre></p>
+<p>
+The second function creates a vector of norm <code>k</code>.
+</p>
+<p><pre class="code">
+let random_speed k =
+  let alpha = Random.float 7. in
+  (k *. cos alpha, k *. sin alpha)
+</pre></p>
+
+<p>
+Now, a function which creates a value of type <code>state</code> can be
+defined as follows.
+</p>
+<p><pre class="code">
+let new_state () =
+  signal pos
+    default ((box.right -. box.left) /. 2., (box.top -. box.bot) /. 2.)
+    gather (fun x _ -> x)
+  in
+  signal speed default random_speed 2. gather (fun x _ -> x) in
+  let color = color_of_int (Random.int 7) in
+  { pos = pos; speed = speed; radius = 25.; color = color; }
+</pre></p>
+<p>
+The default value of the signal <code>pos</code> is the center of the
+box. The combination function only keeps one of the values emitted
+during an instant.
+</p>

@@ -1,5 +1,5 @@
 open Runtime
-open Types
+open Rml_types
 
 module JoinRef = struct
   type join_point = int ref
@@ -161,7 +161,7 @@ struct
     let top_clock_ref = ref None
     let get_top_clock_domain () =
       match !top_clock_ref with
-        | None -> raise Types.RML
+        | None -> raise Rml_types.RML
         | Some cd -> cd
 
 (**************************************)
@@ -242,7 +242,7 @@ struct
       | None -> cd
       | Some cd -> top_clock cd *)
     let top_clock () = match !top_clock_ref with
-      | None -> Format.eprintf "No top clock@."; raise Types.RML
+      | None -> Format.eprintf "No top clock@."; raise Rml_types.RML
       | Some ck -> ck
 
     let add_weoi cd p =
@@ -303,7 +303,7 @@ struct
           if E.status n then
             E.value n
           else
-            raise Types.RML
+            raise Rml_types.RML
 
         let one (n,_,_,_) = E.one n
         let pre_status (n,_,_,_) = E.pre_status n

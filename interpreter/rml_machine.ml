@@ -134,7 +134,7 @@ module M (I : MACHINE_INTERPRETER) =
       try
         react_fun react finalize
       with
-        | Types.End_program -> finalize (); exit 0
+        | Rml_types.End_program -> finalize (); exit 0
         | e ->
             Format.eprintf "Error: An exception occurred: %s.@.Aborting all processes@."
               (Printexc.to_string e);

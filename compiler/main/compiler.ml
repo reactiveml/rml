@@ -75,7 +75,7 @@ let compile_implementation_front_end info_chan itf impl_list =
     let rml_code = silent_pass "Static optimization"
       !static_optimization Dynamic2static.impl rml_code in
 
-    let rml_code = silent_pass "Print Annotations" true Annot.impl rml_code in
+    let rml_code = silent_pass "Print Annotations" true Annot_rml.impl rml_code in
 
     (* for option *)
     (*let rml_code = silent_pass "For optimization" !for_optimization For2loopn.impl rml_code in*)
@@ -86,7 +86,7 @@ let compile_implementation_front_end info_chan itf impl_list =
   (* compilation of the whole file *)
   let rml_table = List.map compile_one_phrase impl_list in
   (* write interface *)
-  Modules.write_compiled_interface itf;
+  Misc.opt_iter Modules.write_compiled_interface itf;
   (* we return the rml code *)
   rml_table
 
@@ -102,7 +102,7 @@ let compile_implementation module_name filename =
 
   let ic = open_in source_name in
   let itf = open_out_bin obj_interf_name in
-  let info_chan = stdout in
+  let info_chan = !Misc.std_fmt in
 
   try
     (* load predefined base types *)
@@ -122,7 +122,7 @@ let compile_implementation module_name filename =
 
     let has_intf = Sys.file_exists (filename ^ ".rmli") || Sys.file_exists (filename ^ ".mli") in
     (* front-end *)
-    let intermediate_code = compile_implementation_front_end info_chan itf decl_list in
+    let intermediate_code = compile_implementation_front_end info_chan (Some itf) decl_list in
     close_out itf;
 
     if not has_intf then (
@@ -140,14 +140,14 @@ let compile_implementation module_name filename =
       Reac2code.compile_impl info_chan filename module_name intermediate_code;
 
       (* write types annotation *)
-    Annot.Stypes.dump tannot_name;
-    Annot.Sstatic.dump sannot_name;
+    Annot_rml.Stypes.dump tannot_name;
+    Annot_rml.Sstatic.dump sannot_name;
 
     close_in ic;
   with
     x ->
-      Annot.Stypes.dump tannot_name;
-      Annot.Sstatic.dump sannot_name;
+      Annot_rml.Stypes.dump tannot_name;
+      Annot_rml.Sstatic.dump sannot_name;
       close_in ic;
       raise x
 
@@ -188,7 +188,7 @@ let compile_interface parse module_name filename filename_end =
 
   let ic = open_in source_name in
   let itf = open_out_bin obj_interf_name in
-  let info_chan = stdout in
+  let info_chan = !Misc.std_fmt in
 
   try
     (* load predefined base types *)

@@ -359,12 +359,12 @@ let repr_record =
 let get_eff er =
   match er.desc with
     | Effect_row_one eff -> eff
-    | _ -> Printf.eprintf "Unexpected effect row: %a\n" Clocks_printer.output_effect_row er; assert false
+    | _ -> Format.eprintf "Unexpected effect row: %a\n" Clocks_printer.output_effect_row er; assert false
 
 let get_car cr =
   match cr.desc with
     | Carrier_row_one car -> car
-    | _ -> Printf.eprintf "Unexpected carrier row: %a\n" Clocks_printer.output_carrier_row cr; assert false
+    | _ -> Format.eprintf "Unexpected carrier row: %a\n" Clocks_printer.output_carrier_row cr; assert false
 
 let subst_var_effect_row index subst er =
   let effect_row funs () er = match er.desc with
@@ -1287,7 +1287,7 @@ let rec find_carrier_row_var c =
             let var, cr2 = find_carrier_row_var cr2 in
             var, carrier_row cr1 cr2)
   | _ ->
-    Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_carrier_row c;
+    Format.eprintf "Cannot find row var in %a@." Clocks_printer.output_carrier_row c;
     raise Unify
 
 let rec find_effect_row_var eff =
@@ -1302,7 +1302,7 @@ let rec find_effect_row_var eff =
             let var, eff2 = find_effect_row_var eff2 in
             var, eff_row eff1 eff2)
   | _ ->
-    Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_effect_row eff;
+    Format.eprintf "Cannot find row var in %a@." Clocks_printer.output_effect_row eff;
     raise Unify
 
 let rec first_effect_of_row eff = match eff.desc with
@@ -1329,7 +1329,7 @@ let rec find_react_row_var rl = match rl with
             rl'@rl, var
         | _ ->
             let r' = make_generic (React_or (r::rl)) in
-            Printf.eprintf "Cannot find row var in %a\n" Clocks_printer.output_react r';
+            Format.eprintf "Cannot find row var in %a\n" Clocks_printer.output_react r';
             raise Unify)
 
 (* unification *)
@@ -1373,7 +1373,7 @@ let rec unify expected_ck actual_ck =
         | Clock_forall sch1, Clock_forall sch2 ->
             unify_schema sch1 sch2
         | _ ->
-             Printf.eprintf "Failed to unify '%a' and '%a'\n"  Clocks_printer.output expected_ck  Clocks_printer.output actual_ck;
+             Format.eprintf "Failed to unify '%a' and '%a'\n"  Clocks_printer.output expected_ck  Clocks_printer.output actual_ck;
             raise Unify
 
 (* TODO: on doit mettre les quantifieurs dans leur ordre d'apparition. Ensuite, on instancie les parametres des deux schemas par les memes skolems frais, on les unifie puis on verifie que les skolems n'ont pas echappe dans l'environnement en verifiant sils apparaissent dans le type des schemas de depart. *)
@@ -1416,7 +1416,7 @@ and carrier_unify expected_car actual_car =
             actual_car.desc <- Carrier_link expected_car
         | Carrier_skolem(_,i), Carrier_skolem(_, j) when i = j -> ()
         | _, _ ->
-          Printf.eprintf "Failed to unify carriers '%a' and '%a'\n"  Clocks_printer.output_carrier expected_car  Clocks_printer.output_carrier actual_car;
+          Format.eprintf "Failed to unify carriers '%a' and '%a'\n"  Clocks_printer.output_carrier expected_car  Clocks_printer.output_carrier actual_car;
           raise Unify
 
 and carrier_row_unify expected_cr actual_cr =
@@ -1458,7 +1458,7 @@ and carrier_row_unify expected_cr actual_cr =
                   carrier_row_unify var2 new_c1
             )
         | _, _ ->
-          Printf.eprintf "Failed to unify carrier rows '%a' and '%a'\n"  Clocks_printer.output_carrier_row expected_cr  Clocks_printer.output_carrier_row actual_cr;
+          Format.eprintf "Failed to unify carrier rows '%a' and '%a'\n"  Clocks_printer.output_carrier_row expected_cr  Clocks_printer.output_carrier_row actual_cr;
           raise Unify
 
 (* Unifies all the elements in the effect row actual_eff with the effect expected_eff *)
@@ -1518,7 +1518,7 @@ and effect_unify expected_eff actual_eff =
         | Effect_one expected_effr, Effect_empty when !Compiler_options.use_row_clocking ->
             unify_effect_row_effect actual_eff expected_effr
         | _ ->
-             Printf.eprintf "Failed to unify effects '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff;
+             Format.eprintf "Failed to unify effects '%a' and '%a'\n"  Clocks_printer.output_effect expected_eff  Clocks_printer.output_effect actual_eff;
             raise Unify
 
 and effect_row_unify expected_eff actual_eff =
@@ -1575,7 +1575,7 @@ and effect_row_unify expected_eff actual_eff =
                 effect_row_unify var2 new_e1
             )
         | _, _ ->
-          Printf.eprintf "Failed to unify effect rows '%a' and '%a'\n"  Clocks_printer.output_effect_row expected_eff  Clocks_printer.output_effect_row actual_eff;
+          Format.eprintf "Failed to unify effect rows '%a' and '%a'\n"  Clocks_printer.output_effect_row expected_eff  Clocks_printer.output_effect_row actual_eff;
           raise Unify
 
 (* Unifies all the elements in the effect row actual_eff with the effect expected_eff *)
@@ -1638,7 +1638,7 @@ and react_unify expected_r actual_r =
         (* only for unifying two instances of the same react *)
 
         | _ ->
-            Printf.eprintf "Failed to unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r;
+            Format.eprintf "Failed to unify reactivities '%a' and '%a'\n"  Clocks_printer.output_react expected_r  Clocks_printer.output_react actual_r;
             raise Unify
 
 and unify_param p1 p2 =

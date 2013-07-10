@@ -1,0 +1,34 @@
+<p>
+To avoid that multiple processes share the same
+reconfiguration signal, we can associate an id to each extensible process and
+dispatch the requests.
+</p>
+<p>
+The adding requests will be sent on the signal <code>to_add</code>
+with the id of the process to extend.
+</p>
+<p><pre class="code">
+signal to_add ;;
+</pre></p>
+<p>
+Each extensible process has its own <code>add_behavior</code> signal
+and filters the <code>to_add</code> signal to extract only those
+requests addressed to it.
+</p>
+<p><pre class="code">
+let process extensible p_init state =
+  let id = gen_id () in
+  print_endline ("{"^(string_of_int id)^"}");
+  signal add_behavior default (fun state -> process ())
+    gather
+     (fun p q state -> process (run (p state) || run (q state)))
+  in
+  run (extend p_init state add_behavior)
+  ||
+  loop
+    await to_add(reqs) in
+    List.iter
+     (fun (x, p) -> if x = id then emit add_behavior p)
+     reqs
+  end
+</pre></p>

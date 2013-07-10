@@ -1,6 +1,6 @@
 open Runtime
 open Runtime_options
-open Types
+open Rml_types
 
 let assert_some v = match v with
   | None -> assert false
@@ -513,7 +513,7 @@ struct
    (* let top_clock cd =
       Clock.top_clock cd.cd_clock *)
     let top_clock () = match !any_clock_ref with
-      | None -> IFDEF RML_DEBUG THEN print_debug "No top clock@." ELSE () END; raise Types.RML
+      | None -> IFDEF RML_DEBUG THEN print_debug "No top clock@." ELSE () END; raise Rml_types.RML
       | Some ck -> Clock.top_clock ck
     let mk_clock parent_ck =
       let ck = Clock.mk_clock parent_ck in
@@ -950,7 +950,7 @@ struct
             IFDEF RML_DEBUG THEN
               print_debug "Error: Reading the value of an absent signal %a@." C.print_gid ev.ev_gid
             ELSE () END;
-            raise Types.RML
+            raise Rml_types.RML
           )
 
         let one ev = lift_handle E.one ev
@@ -1139,7 +1139,7 @@ struct
             IFDEF RML_DEBUG THEN
               print_debug "Trying to create a remote signal inside an expression@.";
             ELSE () END;
-            raise Types.RML
+            raise Rml_types.RML
           )
 
 
@@ -1343,7 +1343,7 @@ struct
       match site.s_top_clock_domain with
         | None ->
             IFDEF RML_DEBUG THEN print_debug "No top clock domain@." ELSE () END;
-            raise Types.RML
+            raise Rml_types.RML
         | Some cd -> cd
 
 (* ------------------------------------------------------------------------ *)

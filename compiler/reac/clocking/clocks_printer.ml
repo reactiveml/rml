@@ -40,17 +40,17 @@ open Modules
 open Global_ident
 open Global
 
-let _print_list f priority sep l =
+let _print_list ff f priority sep l =
   let rec printrec l =
     match l with
       [] -> ()
     | [ty] ->
-	      f priority ty
+	      f ff priority ty
     | ty::rest ->
-	      f priority ty;
-	      print_space ();
-	      print_string sep;
-	      print_space ();
+	      f ff priority ty;
+	      pp_print_space ff ();
+	      pp_print_string ff sep;
+	      pp_print_space ff ();
 	      printrec rest
   in
   printrec l
@@ -58,12 +58,12 @@ let _print_list f priority sep l =
 (* the long name of an ident is printed *)
 (* if it is different from the current module *)
 (* or if it is from the standard module *)
-let print_qualified_ident q =
+let print_qualified_ident ff q =
   if (compiled_module_name () <> q.qual) &
     (pervasives_module <> q.qual) &
     (!interpreter_module <> q.qual)
-  then begin print_string q.qual;print_string "." end;
-  print_string (Ident.name q.id)
+  then begin pp_print_string ff q.qual;pp_print_string ff "." end;
+  pp_print_string ff (Ident.name q.id)
 
 (* type variables are printed 'a, 'b,... *)
 let names ={
@@ -79,529 +79,521 @@ let skolem_name = new name_assoc_table (fun i -> "c"^string_of_int i)
 let react_visited_list, react_visited = mk_visited ()
 let eff_visited_list, eff_visited = mk_visited ()
 
-let print_skolem_name (n, i) =
-  print_string "?";
-  print_string n
+let print_skolem_name ff (n, i) =
+  pp_print_string ff "?";
+  pp_print_string ff n
 
-let rec print priority ty =
-  open_box 0;
+let rec print ff priority ty =
+  pp_open_box ff 0;
   begin match ty.desc with
     | Clock_var ->
-        print_string "'";
-        if ty.level <> generic then print_string "_";
-        print_string (names.k_clock#name ty.index)
+        pp_print_string ff "'";
+        if ty.level <> generic then pp_print_string ff "_";
+        pp_print_string ff (names.k_clock#name ty.index)
     | Clock_depend cr ->
-        print_string "{";
-        print_carrier_row priority cr;
-        print_string "}"
+        pp_print_string ff "{";
+        print_carrier_row ff priority cr;
+        pp_print_string ff "}"
     | Clock_arrow(ty1, ty2, eff) ->
-        if priority >= 1 then print_string "(";
-        print 1 ty1;
-        print_space ();
-        print_string"=>{";
-        print_effect_row_safe priority eff;
-        print_string "}";
-        print_space ();
-        print 0 ty2;
-        if priority >= 1 then print_string ")"
+        if priority >= 1 then pp_print_string ff "(";
+        print ff 1 ty1;
+        pp_print_space ff ();
+        pp_print_string ff "=>{";
+        print_effect_row_safe ff priority eff;
+        pp_print_string ff "}";
+        pp_print_space ff ();
+        print ff 0 ty2;
+        if priority >= 1 then pp_print_string ff ")"
     | Clock_product(ty_list) ->
-        (*if priority >= 2 then*) print_string "(";
-        print_clock_list 2 "*" ty_list;
-        (*if priority >= 2 then*) print_string ")"
+        (*if priority >= 2 then*) pp_print_string ff "(";
+        print_clock_list ff 2 "*" ty_list;
+        (*if priority >= 2 then*) pp_print_string ff ")"
     | Clock_constr(name, p_list) ->
         let p_list = kind_sum_split p_list in
         let n = List.length p_list.k_clock in
-        if n > 1 then print_string "(";
-        print_clock_list 2 "," p_list.k_clock;
-        if n > 1 then print_string ")";
-        if p_list.k_clock <> [] then print_space ();
-        print_qualified_ident name.gi;
+        if n > 1 then pp_print_string ff "(";
+        print_clock_list ff 2 "," p_list.k_clock;
+        if n > 1 then pp_print_string ff ")";
+        if p_list.k_clock <> [] then pp_print_space ff ();
+        print_qualified_ident ff name.gi;
         if !Compiler_options.use_row_clocking then
           begin
             if p_list.k_carrier <> [] || p_list.k_carrier_row <> [] || p_list.k_effect_row <> [] then (
-              print_string "{";
-              print_carrier_list 2 "," p_list.k_carrier;
-              print_string "|";
-              print_carrier_row_list 2 "," p_list.k_carrier_row;
-              print_string "|";
-              print_effect_row_safe_list 2 "," p_list.k_effect_row;
-              print_string "}"
+              pp_print_string ff "{";
+              print_carrier_list ff 2 "," p_list.k_carrier;
+              pp_print_string ff "|";
+              print_carrier_row_list ff 2 "," p_list.k_carrier_row;
+              pp_print_string ff "|";
+              print_effect_row_safe_list ff 2 "," p_list.k_effect_row;
+              pp_print_string ff "}"
             );
           end
         else
           begin
             if p_list.k_carrier <> [] || p_list.k_effect <> [] then (
-              print_string "{";
-              print_carrier_list 2 "," p_list.k_carrier;
-              print_string "|";
-              print_effect_list 2 "," p_list.k_effect;
-              print_string "}"
+              pp_print_string ff "{";
+              print_carrier_list ff 2 "," p_list.k_carrier;
+              pp_print_string ff "|";
+              print_effect_list ff 2 "," p_list.k_effect;
+              pp_print_string ff "}"
             );
           end;
         if p_list.k_react <> [] then (
-          print_string "[";
-          print_reactivity_list 2 ", " p_list.k_react;
-          print_string "]"
+          pp_print_string ff "[";
+          print_reactivity_list ff 2 ", " p_list.k_react;
+          pp_print_string ff "]"
         )
        (* (match name.ck_info with
-          | Some { constr_abbr = Constr_abbrev(_, ck) } -> print_string " ----> "; print priority ck
+          | Some { constr_abbr = Constr_abbrev(_, ck) } -> pp_print_string ff " ----> "; print priority ck
           | _ -> ()) *)
     | Clock_link(link) ->
-        (*print_string "~>";*) print priority link
+        (*pp_print_string ff "~>";*) print ff priority link
     | Clock_process (ty, c, eff, r) ->
-        print 2 ty;
-        print_string " process {";
-        print_carrier priority c;
+        print ff 2 ty;
+        pp_print_string ff " process {";
+        print_carrier ff priority c;
         if !Compiler_options.use_row_clocking then
-          print_string "||"
+          pp_print_string ff "||"
         else
-          print_string "|";
-        print_effect_row_safe priority eff;
-        print_string "}";
+          pp_print_string ff "|";
+        print_effect_row_safe ff priority eff;
+        pp_print_string ff "}";
         if not !Compiler_options.no_reactivity && !Compiler_options.show_reactivity then (
-          print_string "[";
-          print_reactivity priority r;
-          print_string "]"
+          pp_print_string ff "[";
+          print_reactivity ff priority r;
+          pp_print_string ff "]"
         )
     | Clock_forall sch ->
-        print_scheme_full priority sch
+        print_scheme_full ff priority sch
   end;
-  close_box ()
+  pp_close_box ff ()
 
-and print_carrier priority car =
-  open_box 0;
+and print_carrier ff priority car =
+  pp_open_box ff 0;
   begin match car.desc with
     | Carrier_var(s) ->
       if !Compiler_options.use_row_clocking then
-        print_string "''"
+        pp_print_string ff "''"
       else
-        print_string "'";
-      if car.level <> generic then print_string "_";
-      print_string (names.k_carrier#name car.index)
+        pp_print_string ff "'";
+      if car.level <> generic then pp_print_string ff "_";
+      pp_print_string ff (names.k_carrier#name car.index)
     | Carrier_skolem(n, i) ->
-      print_skolem_name (n, i)
-    | Carrier_link(link) -> print_carrier priority link
+      print_skolem_name ff (n, i)
+    | Carrier_link(link) -> print_carrier ff priority link
   end;
-  close_box ()
+  pp_close_box ff ()
 
-and print_carrier_row priority cr =
-  open_box 0;
+and print_carrier_row ff priority cr =
+  pp_open_box ff 0;
   begin match cr.desc with
     | Carrier_row_var ->
-      print_string "'";
-      if cr.level <> generic then print_string "_";
-      print_string (names.k_carrier_row#name cr.index)
-    | Carrier_row_one car -> print_carrier priority car
+      pp_print_string ff "'";
+      if cr.level <> generic then pp_print_string ff "_";
+      pp_print_string ff (names.k_carrier_row#name cr.index)
+    | Carrier_row_one car -> print_carrier ff priority car
     | Carrier_row(c, { desc = Carrier_row_var }) ->
-      print_carrier_row priority c;
-      print_string ";.."
+      print_carrier_row ff priority c;
+      pp_print_string ff ";.."
     | Carrier_row(c, { desc = Carrier_row_empty }) ->
-      print_carrier_row priority c
+      print_carrier_row ff priority c
     | Carrier_row(c1, c2) ->
-      print_carrier_row priority c2;
-      print_string ";";
-      print_carrier_row priority c1
-    | Carrier_row_empty -> print_string "empty"
-    | Carrier_row_link(link) -> print_carrier_row priority link
+      print_carrier_row ff priority c2;
+      pp_print_string ff ";";
+      print_carrier_row ff priority c1
+    | Carrier_row_empty -> pp_print_string ff "empty"
+    | Carrier_row_link(link) -> print_carrier_row ff priority link
   end;
-  close_box ()
+  pp_close_box ff ()
 
-and print_effect priority eff =
-  open_box 0;
+and print_effect ff priority eff =
+  pp_open_box ff 0;
   begin match eff.desc with
     | Effect_var ->
-      print_string "''";
-      if eff.level <> generic then print_string "_";
-      print_string (names.k_effect#name eff.index)
-    | Effect_empty -> print_string "0"
+      pp_print_string ff "''";
+      if eff.level <> generic then pp_print_string ff "_";
+      pp_print_string ff (names.k_effect#name eff.index)
+    | Effect_empty -> pp_print_string ff "0"
     | Effect_sum (eff1, eff2) ->
-      print_effect priority eff1;
-      print_space ();
-      print_string "+";
-      print_space ();
-      print_effect priority eff2
+      print_effect ff priority eff1;
+      pp_print_space ff ();
+      pp_print_string ff "+";
+      pp_print_space ff ();
+      print_effect ff priority eff2
     | Effect_depend c ->
       if !Compiler_options.use_row_clocking then (
-        print_string "<";
-        print_carrier_row priority c;
-        print_string ">"
+        pp_print_string ff "<";
+        print_carrier_row ff priority c;
+        pp_print_string ff ">"
       ) else
-        print_carrier_row priority c
+        print_carrier_row ff priority c
     | Effect_one er ->
-      print_string "{";
-      print_effect_row priority er;
-      print_string "}"
-    | Effect_link(link) -> print_effect priority link
+      pp_print_string ff "{";
+      print_effect_row ff priority er;
+      pp_print_string ff "}"
+    | Effect_link(link) -> print_effect ff priority link
   end;
-  close_box ()
+  pp_close_box ff ()
 
-and print_effect_row priority eff =
-  open_box 0;
+and print_effect_row ff priority eff =
+  pp_open_box ff 0;
   begin match eff.desc with
     | Effect_row_var ->
-      print_string "'";
-      if eff.level <> generic then print_string "_";
-      print_string (names.k_effect_row#name eff.index)
-    | Effect_row_one car -> print_effect priority car
+      pp_print_string ff "'";
+      if eff.level <> generic then pp_print_string ff "_";
+      pp_print_string ff (names.k_effect_row#name eff.index)
+    | Effect_row_one car -> print_effect ff priority car
     | Effect_row(c, { desc = Effect_row_var }) ->
-      print_effect_row priority c;
-      print_string ";.."
+      print_effect_row ff priority c;
+      pp_print_string ff ";.."
   (*  | Effect_row(c, { desc = Effect_row_empty }) ->
       print_effect_row priority c *)
     | Effect_row(c1, c2) ->
-      print_effect_row priority c1;
-      print_string ";";
-      print_effect_row priority c2
+      print_effect_row ff priority c1;
+      pp_print_string ff ";";
+      print_effect_row ff priority c2
     | Effect_row_rec eff1 ->
       if not (eff_visited eff) then (
-        print_string "(rec '";
-        print_string (names.k_effect_row#name eff.index);
-        print_string ".";
-        print_effect_row priority eff1;
-        print_string ")"
+        pp_print_string ff "(rec '";
+        pp_print_string ff (names.k_effect_row#name eff.index);
+        pp_print_string ff ".";
+        print_effect_row ff priority eff1;
+        pp_print_string ff ")"
       ) else (
-        print_string "'";
-        print_string (names.k_effect_row#name eff.index);
+        pp_print_string ff "'";
+        pp_print_string ff (names.k_effect_row#name eff.index);
       )
-    | Effect_row_empty -> print_string "empty"
-    | Effect_row_link(link) -> print_effect_row priority link
+    | Effect_row_empty -> pp_print_string ff "empty"
+    | Effect_row_link(link) -> print_effect_row ff priority link
   end;
-  close_box ()
+  pp_close_box ff ()
 
-and print_effect_row_safe priority r =
+and print_effect_row_safe ff priority r =
   eff_visited_list := [];
-  print_effect_row priority r
+  print_effect_row ff priority r
 
-and print_react priority r =
-  open_box 0;
+and print_react ff priority r =
+  pp_open_box ff 0;
   begin match r.desc with
     | React_var ->
-        print_string "'";
-        if r.level <> generic then print_string "_";
-        print_string (names.k_react#name r.index)
-    | React_empty -> print_string "0"
+        pp_print_string ff "'";
+        if r.level <> generic then pp_print_string ff "_";
+        pp_print_string ff (names.k_react#name r.index)
+    | React_empty -> pp_print_string ff "0"
     | React_carrier c ->
-        print_string "{";
-        print_carrier_row priority c;
-        print_string "}"
+        pp_print_string ff "{";
+        print_carrier_row ff priority c;
+        pp_print_string ff "}"
     | React_seq rl ->
-        print_string "("; print_react_list 2 "; " rl; print_string ")"
+        pp_print_string ff "("; print_react_list ff 2 "; " rl; pp_print_string ff ")"
     | React_par rl ->
-        print_string "("; print_react_list 2 " || " rl; print_string ")"
+        pp_print_string ff "("; print_react_list ff 2 " || " rl; pp_print_string ff ")"
     | React_or rl ->
-        print_string "("; print_react_list 2 " + " rl; print_string ")"
+        pp_print_string ff "("; print_react_list ff 2 " + " rl; pp_print_string ff ")"
     | React_rec (b, r1) ->
         if not (react_visited r) then (
-          print_string "(";
+          pp_print_string ff "(";
           if b then
-            print_string "rec* "
+            pp_print_string ff "rec* "
           else
-            print_string "rec ";
-          print_string "'";
-          print_string (names.k_react#name r.index);
-          print_string ". ";
-          print_react priority r1;
-          print_string ")"
+            pp_print_string ff "rec ";
+          pp_print_string ff "'";
+          pp_print_string ff (names.k_react#name r.index);
+          pp_print_string ff ". ";
+          print_react ff priority r1;
+          pp_print_string ff ")"
         ) else (
-          print_string "'";
-          print_string (names.k_react#name r.index)
+          pp_print_string ff "'";
+          pp_print_string ff (names.k_react#name r.index)
         )
     | React_run r1 ->
-        print_string "(run ";
-        print_react priority r1;
-        print_string ")"
-    | React_link link -> print_react priority link
+        pp_print_string ff "(run ";
+        print_react ff priority r1;
+        pp_print_string ff ")"
+    | React_link link -> print_react ff priority link
   end;
-  close_box ()
+  pp_close_box ff ()
 
-and print_reactivity priority r =
+and print_reactivity ff priority r =
   react_visited_list := [];
-  print_react priority r
+  print_react ff priority r
 
-and print_scheme_full priority { cs_vars = vars; cs_desc = ty } =
+and print_scheme_full ff priority { cs_vars = vars; cs_desc = ty } =
   let vars = kind_sum_split vars in
-  print_string "(";
+  pp_print_string ff "(";
   if vars.k_clock <> [] then (
-    print_string "forall"; print_space ();
-    print_clock_list priority "," vars.k_clock;
-    print_string ". "
+    pp_print_string ff "forall"; pp_print_space ff ();
+    print_clock_list ff priority "," vars.k_clock;
+    pp_print_string ff ". "
   );
   if vars.k_carrier <> [] then (
-    print_string "forall"; print_space ();
-    print_carrier_list priority "," vars.k_carrier;
-    print_string ". "
+    pp_print_string ff "forall"; pp_print_space ff ();
+    print_carrier_list ff priority "," vars.k_carrier;
+    pp_print_string ff ". "
   );
   if vars.k_carrier_row <> [] then (
-    print_string "forall"; print_space ();
-    print_carrier_row_list priority "," vars.k_carrier_row;
-    print_string ". "
+    pp_print_string ff "forall"; pp_print_space ff ();
+    print_carrier_row_list ff priority "," vars.k_carrier_row;
+    pp_print_string ff ". "
   );
   if vars.k_effect <> [] then (
-    print_string "forall"; print_space ();
-    print_effect_list priority "," vars.k_effect;
-    print_string ". "
+    pp_print_string ff "forall"; pp_print_space ff ();
+    print_effect_list ff priority "," vars.k_effect;
+    pp_print_string ff ". "
   );
   if vars.k_effect_row <> [] then (
-    print_string "forall"; print_space ();
-    print_effect_row_list priority "," vars.k_effect_row;
-    print_string ". "
+    pp_print_string ff "forall"; pp_print_space ff ();
+    print_effect_row_list ff priority "," vars.k_effect_row;
+    pp_print_string ff ". "
   );
-  print priority ty;
-  print_string ")"
+  print ff priority ty;
+  pp_print_string ff ")"
 
-and print_clock_list priority sep l = _print_list print  priority sep l
-and print_carrier_list priority sep l = _print_list print_carrier priority sep l
-and print_carrier_row_list priority sep l = _print_list print_carrier_row priority sep l
-and print_effect_list priority sep l = _print_list print_effect priority sep l
-and print_effect_row_list priority sep l  = _print_list print_effect_row priority sep l
-and print_effect_row_safe_list priority sep l  = _print_list print_effect_row_safe priority sep l
-and print_react_list priority sep l = _print_list print_react priority sep l
-and print_reactivity_list priority sep l = _print_list print_reactivity priority sep l
+and print_clock_list ff priority sep l = _print_list ff print priority sep l
+and print_carrier_list ff priority sep l = _print_list ff print_carrier priority sep l
+and print_carrier_row_list ff priority sep l = _print_list ff print_carrier_row priority sep l
+and print_effect_list ff priority sep l = _print_list ff print_effect priority sep l
+and print_effect_row_list ff priority sep l  = _print_list ff print_effect_row priority sep l
+and print_effect_row_safe_list ff priority sep l  = _print_list ff print_effect_row_safe priority sep l
+and print_react_list ff priority sep l = _print_list ff print_react priority sep l
+and print_reactivity_list ff priority sep l = _print_list ff print_reactivity priority sep l
 
-and print_param priority p =
+and print_param ff priority p =
   let print =
-    mk_kind_prod ~clock:print ~carrier:print_carrier ~carrier_row:print_carrier_row
-      ~effect:print_effect ~effect_row:print_effect_row ~react:print_reactivity
+    mk_kind_prod ~clock:(print ff) ~carrier:(print_carrier ff) ~carrier_row:(print_carrier_row ff)
+      ~effect:(print_effect ff) ~effect_row:(print_effect_row ff) ~react:(print_reactivity ff)
   in
   ignore (kind_fold print priority p)
 
-let print ty =
+let print ff ty =
   names.k_clock#reset;
   names.k_carrier#reset;
   names.k_carrier_row#reset;
   names.k_effect#reset;
   names.k_effect_row#reset;
   names.k_react#reset;
-  print 0 ty
-let print_scheme { cs_desc = ty } =
-  print ty
+  print ff 0 ty
+let print_scheme ff { cs_desc = ty } =
+  print ff ty
 
-let print_value_clock_declaration global =
+let print_value_clock_declaration ff global =
   let prefix = "val" in
   let name = little_name_of_global global in
-  open_box 2;
-  print_string prefix;
-  print_space ();
+  pp_open_box ff 2;
+  pp_print_string ff prefix;
+  pp_print_space ff ();
   if is_an_infix_or_prefix_operator name
-  then begin print_string "( "; print_string name; print_string " )" end
-  else print_string name;
-  print_space ();
-  print_string "::";
-  print_space ();
-  print_scheme (clock_of_global global);
-  print_string "\n";
-  close_box ();
-  print_flush ()
+  then begin pp_print_string ff "( "; pp_print_string ff name; pp_print_string ff " )" end
+  else pp_print_string ff name;
+  pp_print_space ff ();
+  pp_print_string ff "::";
+  pp_print_space ff ();
+  print_scheme ff (clock_of_global global);
+  pp_print_string ff "\n";
+  pp_close_box ff ();
+  pp_print_flush ff ()
 
 (* printing type declarations *)
-let print_clock_name tc arity =
+let print_clock_name ff tc arity =
   let print_one_variable assoc i =
-    print_string "'";
-    print_string (assoc#name i)
+    pp_print_string ff "'";
+    pp_print_string ff (assoc#name i)
   in
   let print_n_variables assoc n =
     if n = 0 then
       ()
     else if n = 1 then (
       print_one_variable assoc 0;
-      print_space ()
+      pp_print_space ff ()
     ) else (
-      print_string "(";
+      pp_print_string ff "(";
       print_one_variable assoc 0;
       for i = 1 to n-1 do
-        print_string ",";
-        print_space ();
+        pp_print_string ff ",";
+        pp_print_space ff ();
         print_one_variable assoc i;
       done;
-      print_string ")";
-      print_space ()
+      pp_print_string ff ")";
+      pp_print_space ff ()
     )
   in
   print_n_variables names.k_clock arity.k_clock;
-  print_string (Ident.name tc.id);
+  pp_print_string ff (Ident.name tc.id);
   if !Compiler_options.use_row_clocking then (
     if arity.k_carrier > 0 || arity.k_carrier_row > 0 || arity.k_effect_row > 0 then (
-      print_string "{";
+      pp_print_string ff "{";
       print_n_variables names.k_carrier arity.k_carrier;
-      print_string "|";
+      pp_print_string ff "|";
       print_n_variables names.k_carrier_row arity.k_carrier_row;
-      print_string "|";
+      pp_print_string ff "|";
       print_n_variables names.k_effect_row arity.k_effect_row;
-      print_string "}"
+      pp_print_string ff "}"
     )
   ) else (
     if arity.k_carrier > 0 || arity.k_effect > 0 then (
-      print_string "{";
+      pp_print_string ff "{";
       print_n_variables names.k_carrier arity.k_carrier;
-      print_string "|";
+      pp_print_string ff "|";
       print_n_variables names.k_effect arity.k_effect;
-      print_string "}"
+      pp_print_string ff "}"
     )
   );
   if arity.k_react > 0 && !Compiler_options.show_reactivity then (
-    print_string "[";
+    pp_print_string ff "[";
     print_n_variables names.k_react arity.k_react;
-    print_string "]"
+    pp_print_string ff "]"
   )
 
 (* prints one variant *)
-let print_one_variant global =
-  print_space ();
-  print_string "|";
-  open_box 3;
-  print_space ();
-  print_string (little_name_of_global global);
+let print_one_variant ff global =
+  pp_print_space ff ();
+  pp_print_string ff "|";
+  pp_open_box ff 3;
+  pp_print_space ff ();
+  pp_print_string ff (little_name_of_global global);
   (* prints the rest if the arity is not null *)
   begin
     match clock_of_constr_arg global with
     | None -> ()
     | Some typ ->
-	print_space ();
-	print_string "of";
-	print_space ();
-	print typ
+	pp_print_space ff ();
+	pp_print_string ff "of";
+	pp_print_space ff ();
+	print ff typ
   end;
-  close_box ()
+  pp_close_box ff ()
 
 (* prints one label *)
-let print_one_label global =
-  print_space ();
-  open_box 2;
-  print_string (little_name_of_global global);
-  print_string ":";
-  print_space ();
-  print (clock_of_label_res global);
-  close_box ()
+let print_one_label ff global =
+  pp_print_space ff ();
+  pp_open_box ff 2;
+  pp_print_string ff (little_name_of_global global);
+  pp_print_string ff ":";
+  pp_print_space ff ();
+  print ff (clock_of_label_res global);
+  pp_close_box ff ()
 
-let rec print_label_list = function
+let rec print_label_list ff = function
     [] -> ()
   | h::t ->
-      print_one_label h;
+      print_one_label ff h;
       if t <> [] then
 	begin
-	  print_string "; ";
-	  print_label_list t
+	  pp_print_string ff "; ";
+	  print_label_list ff t
 	end
 
-let print_clock_declaration gl =
+let print_clock_declaration ff gl =
   let q = Global.gi gl in
   let { clock_kind = td;
 	      clock_arity = ta; } = Global.ck_info gl in
-  open_box 2;
-  print_clock_name q ta;
+  pp_open_box ff 2;
+  print_clock_name ff q ta;
   begin match td with
   | Clock_abstract -> ()
   | Clock_variant global_list ->
-      print_string " =";
-      open_hvbox 0;
-      List.iter print_one_variant global_list;
-      close_box ()
+      pp_print_string ff " =";
+      pp_open_hvbox ff 0;
+      List.iter (print_one_variant ff) global_list;
+      pp_close_box ff ()
   | Clock_record global_list ->
-      print_string " =";
-      print_space ();
-      print_string "{";
-      open_hvbox 1;
-      print_label_list global_list;
-      close_box ();
-      print_space ();
-      print_string "}"
+      pp_print_string ff " =";
+      pp_print_space ff ();
+      pp_print_string ff "{";
+      pp_open_hvbox ff 1;
+      print_label_list ff global_list;
+      pp_close_box ff ();
+      pp_print_space ff ();
+      pp_print_string ff "}"
   | Clock_rebind te ->
-      print_string " =";
-      print_space ();
-      print te
+      pp_print_string ff " =";
+      pp_print_space ff ();
+      print ff te
   end;
-  close_box ()
+  pp_close_box ff ()
 
-let print_list_of_clock_declarations global_list =
+let print_list_of_clock_declarations ff global_list =
   let rec printrec global_list =
     match global_list with
       [] -> ()
-    | [global] -> print_clock_declaration global
+    | [global] -> print_clock_declaration ff global
     | global :: global_list ->
-	print_clock_declaration global;
-	print_space ();
-	print_string "and ";
+	print_clock_declaration ff global;
+	pp_print_space ff ();
+	pp_print_string ff "and ";
 	printrec global_list in
   match global_list with
     [] -> ()
   | global_list ->
-      open_vbox 0;
-      print_string "type ";
+      pp_open_vbox ff 0;
+      pp_print_string ff "type ";
       printrec global_list;
-      close_box ();
-      print_string "\n";;
+      pp_close_box ff ();
+      pp_print_string ff "\n";;
 
-(* the main printing functions *)
-set_max_boxes max_int
+let output ff ty =
+  print ff ty;
+  pp_print_flush ff ()
 
-let output oc ty =
-  set_formatter_out_channel oc;
-(*   print_string "  "; *)
-  print ty;
-  print_flush ()
+let output_carrier ff c =
+  print_carrier ff 0 c;
+  pp_print_flush ff ()
 
-let output_carrier oc c =
-  set_formatter_out_channel oc;
-(*   print_string "  "; *)
-  print_carrier 0 c;
-  print_flush ()
+let output_carrier_row ff cr =
+  print_carrier_row ff 0 cr;
+  pp_print_flush ff ()
 
-let output_carrier_row oc cr =
-  set_formatter_out_channel oc;
-(*   print_string "  "; *)
-  print_carrier_row 0 cr;
-  print_flush ()
+let output_effect ff eff =
+  print_effect ff 0 eff;
+  pp_print_flush ff ()
 
-let output_effect oc eff =
-  set_formatter_out_channel oc;
-(*   print_string "  "; *)
-  print_effect 0 eff;
-  print_flush ()
+let output_effect_row ff effr =
+  print_effect_row ff 0 effr;
+  pp_print_flush ff ()
 
-let output_effect_row oc effr =
-  set_formatter_out_channel oc;
-(*   print_string "  "; *)
-  print_effect_row 0 effr;
-  print_flush ()
+let output_react ff r =
+  print_reactivity ff 0 r;
+  pp_print_flush ff
+ ()
 
-let output_react oc r =
-  set_formatter_out_channel oc;
-(*   print_string "  "; *)
-  print_reactivity 0 r;
-  print_flush ()
+let output_param ff p =
+  print_param ff 0 p;
+  pp_print_flush ff ()
 
-let output_param oc p =
-  set_formatter_out_channel oc;
-(*   print_string "  "; *)
-  print_param 0 p;
-  print_flush ()
+let output_value_declaration ff global_list =
+  pp_open_box ff 0;
+  List.iter (print_value_clock_declaration ff) global_list;
+  pp_close_box ff ()
 
-let output_value_declaration oc global_list =
-  set_formatter_out_channel oc;
-  List.iter print_value_clock_declaration global_list
+let output_type_declaration ff global_list =
+  pp_open_box ff 0;
+  print_list_of_clock_declarations ff global_list;
+  pp_close_box ff ();
+  pp_print_flush ff ()
 
-let output_type_declaration oc global_list =
-  set_formatter_out_channel oc;
-  print_list_of_clock_declarations global_list;
-  print_flush ()
-
-let output_exception_declaration oc gl =
-  set_formatter_out_channel oc;
-  open_box 0;
-  print_string "exception ";
-  print_space ();
-  print_string (little_name_of_global gl);
+let output_exception_declaration ff gl =
+  pp_open_box ff 0;
+  pp_print_string ff "exception ";
+  pp_print_space ff ();
+  pp_print_string ff (little_name_of_global gl);
   (* prints the rest if the arity is not null *)
   begin
     match clock_of_constr_arg gl with
     | None -> ()
     | Some typ ->
-	print_space ();
-	print_string "of";
-	print_space ();
-	print typ
+	pp_print_space ff ();
+	pp_print_string ff "of";
+	pp_print_space ff ();
+	print ff typ
   end;
-  close_box ();
-  print_string "\n";
-  print_flush ()
+  pp_close_box ff ();
+  pp_print_string ff "\n";
+  pp_print_flush ff ()
+
+(* Utils *)
+let print_to_string  f x =
+  ignore (Format.flush_str_formatter ());
+  f Format.str_formatter x;
+  Format.fprintf Format.str_formatter "@?";
+  Format.flush_str_formatter ()
 

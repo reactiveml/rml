@@ -1,0 +1,21 @@
+<p>
+The behavior of a moving point is the parallel composition of the
+three preceding processes.
+</p>
+<p><pre class="code">
+let process moving_point state =
+   run (compute_pos state)
+   ||
+   run (left_right state)
+   ||
+   run (draw state)
+</pre></p>
+<p><pre class="code">
+#run moving_point (new_state ());;
+</pre></p>
+
+<p>
+The created process cannot be removed since it never terminates. In
+the next step, we will see how to implement a simple process manager
+that can stop the execution of a process in a modular way.
+</p>

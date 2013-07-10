@@ -1,0 +1,32 @@
+<p>
+We can also combine the operators in another way. First we run an
+extensible process.
+</p>
+<p><pre class="code">
+#run extend moving_point (new_state ()) add_behavior ;;
+</pre></p>
+<p>
+and then we add a behavior which is killable.
+</p>
+<p><pre class="code">
+emit add_behavior
+  (fun state -> process (run (killable (up_down state)))) ;;
+</pre></p>
+<p>
+You can see that the behavior of two moving points have been modified
+because two processes are waiting on the
+signal <code>add_behavior</code>. The two processes execute a new
+killable behavior in parallel to their previous behavior and thus the
+id of two killable processes are printed into the terminal. We can now
+kill these processes.
+</p>
+<p><pre class="code">
+emit to_kill 3 ;;
+</pre></p>
+<p><pre class="code">
+emit to_kill 4 ;;
+</pre></p>
+<p>
+Note that the two moving points that were modified still exist
+because we only killed the added behaviors.
+</p>

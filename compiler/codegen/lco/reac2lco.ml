@@ -744,7 +744,7 @@ and translate_proc_let =
                         make_expr (Coexpr_apply
                                      (make_expr (Coexpr_global raise_global)
                                          Location.none,
-                                     [make_constr "Types" "RML" None]))
+                                     [make_constr "Rml_types" "RML" None]))
                           Location.none)]))
                   Location.none),
                translate_proc proc)

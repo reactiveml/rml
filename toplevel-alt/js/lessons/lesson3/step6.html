@@ -1,0 +1,40 @@
+<p>
+We first define a function generating a unique identifier for each
+process.
+</p>
+<p><pre class="code">
+let gen_id =
+  let cpt = ref 0 in fun () -> incr cpt; !cpt
+</pre></p>
+
+<p>
+We define a global signal <code>to_kill</code> on which we will send the
+id of the processes to kill.
+</p>
+<p><pre class="code">
+signal to_kill;;
+</pre></p>
+
+<p>
+We define a process <code>killable</code> such that <code>killable
+p</code> associates an id to the process <code>p</code> given as
+argument and executes it. When the id associated to <code>p</code> is
+emitted on <code>to_kill</code>, the execution of <code>p</code> is
+stopped.
+</p>
+<p><pre class="code">
+let process killable p =
+  let id = gen_id () in
+  print_endline ("["^(string_of_int id)^"]");
+  do run p
+  until to_kill(ids) when List.mem id ids done
+</pre></p>
+<p>
+The identifier <code>id</code> is generated then the
+process <code>p</code> is executed. If during the execution, the
+signal <code>to_kill</code> is emitted, the variable <code>ids</code>
+will be assigned the list of processes to kill, thanks to
+the <code>do/until/when</code> construct. If <code>id</code> belongs
+to this list (<code>List.mem id ids</code>) then the execution is
+stopped otherwise execution continues.
+</p>

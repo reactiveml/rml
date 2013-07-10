@@ -1,0 +1,42 @@
+<h3>OCaml code</h3>
+
+<p>ReactiveML is an extension of OCaml. Therefore, OCaml phrases are
+also ReactiveML phrases. For example, we can evaluate an expression
+(you can simply click on the code to load it in the terminal):</p>
+
+<p><pre class="code">1 + 2 ;;</pre></p>
+
+<!-- <p><pre class="code">[ "a" ; "b" ; "c" ] ;;</pre></p> -->
+
+<!-- <p><pre class="code">(fun x -> x + 1) 3 ;;</pre></p> -->
+
+<p>
+define a global value (note that the type infered by the compiler is
+printed first by the ReactiveML compiler and then by the OCaml
+compiler):
+</p>
+<p><pre class="code">let a = 1 ;;</pre></p>
+
+<!-- <p><pre class="code">let sqr x = x *. x ;;</pre></p> -->
+
+<p>
+define a type:
+</p>
+<p><pre class="code">type 'a tree =
+  | Leaf of 'a
+  | Node of 'a * 'a tree * 'a tree ;;</pre></p>
+
+<p>
+define a recursive function and apply it:
+</p>
+<p><pre class="code">let rec depth t =
+  match t with
+  | Leaf _ -> 1
+  | Node (_, t1, t2) -> 1 + max (depth t1) (depth t2) ;;</pre></p>
+
+<p><pre class="code">depth (Node (1, Node (2, Leaf 4, Leaf 5), Leaf 3)) ;;</pre></p>
+
+<p>
+Functions of the OCaml standard library are also available.
+</p>
+<p><pre class="code">List.rev [ "a" ; "b" ; "c" ] ;;</pre></p>

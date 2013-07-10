@@ -50,14 +50,14 @@ module Rml_interpreter =
     type ('a, 'b) event = ('a, 'b) R.event
     type 'a memory = ('a -> 'a, 'a) R.event
     type event_cfg_gen = unit -> R.event_cfg
-    type clock_expr = R.clock Types.clock
+    type clock_expr = R.clock Rml_types.clock
     type region_expr = clock_expr
 
     let unit_value = ()
     let dummy_step _ = ()
 
     open R
-    open Types
+    open Rml_types
 
     let eval_clock_expr current_cd ce = match ce with
       | CkLocal -> R.clock current_cd
@@ -69,7 +69,7 @@ module Rml_interpreter =
       | CkTop -> R.top_clock ()
       | CkLocal -> (* should be rejected by compiler *)
           print_debug "Error: Unexpected local clock@.";
-          raise Types.RML
+          raise Rml_types.RML
 
     let rec on_event_at_eoi evt ctrl f =
       let eoi_work _ =
@@ -770,7 +770,7 @@ let rml_loop p =
 
     let rml_when_conf expr_cfg =
       fun f_k ctrl ->
-        fun _ -> print_debug "Unimplemented when_conf@."; raise Types.RML
+        fun _ -> print_debug "Unimplemented when_conf@."; raise Rml_types.RML
 
 (**************************************)
 (* clock domain                       *)

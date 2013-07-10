@@ -1,0 +1,35 @@
+<h3>Logical time</h3>
+
+<p>ReactiveML is based on the synchronous model. In this model, time
+is a succession of instants. Any OCaml function is considered to be
+instantaneous.</p>
+
+<p><pre class="code">let instantaneous_loop n =
+  for i = 1 to n do
+    print_int i; print_newline ()
+  done ;;</pre></p>
+
+<p><pre class="code">instantaneous_loop 10;;</pre></p>
+
+<p>Functions that can be executed through several instants are called
+processes. The <code>pause</code> statement waits for the next instant.</p>
+
+<p><pre class="code">let process non_instantaneous_loop n =
+  for i = 1 to n do
+    print_int i; print_newline ();
+    pause
+  done ;;</pre></p>
+
+<p>
+To apply a process, we have to use the <code>run</code> keyword.  Such
+an expression that takes time has to be executed in the background of the
+terminal using the <code>#exec</code> directive:
+</p>
+<p><pre class="code">#exec (run (non_instantaneous_loop 10));;</pre></p>
+
+<p>
+Remark: You can use the "suspend" button (or the directive
+<code>#suspend;;</code>) to execute the program step by step. To
+return to the sampled mode you can use the "resume" button (or the
+directive <code>#resume;;</code>).
+</p>

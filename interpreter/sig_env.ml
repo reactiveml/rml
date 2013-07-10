@@ -33,7 +33,7 @@ end
 
 *)
 
-open Types
+open Rml_types
 
 module type S =
   sig

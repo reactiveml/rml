@@ -3,7 +3,7 @@ open Compiler_utils
 open Errors
 
 (* back-end *)
-let compile_implementation_back_end info_chan out_chan module_name rml_table =
+let compile_implementation_back_end_buf info_chan module_name rml_table =
   let lco_compile_one_phrase impl =
     (* translation into lco code *)
     let lco_code = Reac2lco.translate_impl_item info_chan impl in
@@ -20,7 +20,11 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
   let caml_table = List.map lco_compile_one_phrase rml_table in
 
   (* emit the caml code *)
-  List.iter (Print_caml_src.output_impl_decl out_chan module_name) caml_table
+  List.map (Print_caml_src.output_impl_decl_string module_name) caml_table
+
+let compile_implementation_back_end info_chan out_chan module_name rml_table =
+  let strings = compile_implementation_back_end_buf info_chan module_name rml_table in
+  List.iter (output_string out_chan) strings
 
 let compile_implementation_rml_back_end info_chan out_chan module_name rml_table =
   let compile_one_phrase impl = match !Compiler_options.translation with

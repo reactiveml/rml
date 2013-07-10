@@ -1,0 +1,114 @@
+(** Simple process management library.
+
+   @author Louis Mandel (louis@reactiveML.org)
+   @author Florence Plateau (florence@reactiveML.org)
+*)
+
+type ident
+(** The type of the processes identifiers. *)
+
+val ps: unit -> unit
+(** List the processes executed under the supervision of the manager
+    with its associated behavior:
+     - k: can be killed
+     - s: can be suspended and resumed
+     - x: can be extended
+     - r: can be reset
+     - c: can be replaced.
+*)
+
+
+val to_kill: (int , ident list) event
+(** Signal on which send killing requests. *)
+
+val killable: 'a process -> 'a option process
+(** [killable p] prints an id and executes a process [p] that can be
+    killed. If the process is killed before it normal termination, the
+    returned value is [None]. Otherwise, if [p] terminates with the
+    value [v], then [killable p] returns [Some v].
+*)
+
+
+val to_suspend_resume: (int , ident list) event
+(** Signal on which send suspension requests. *)
+
+val suspendable: 'a process -> 'a process
+(** [suspendable p] executes a process [p] that can be suspend and
+    resume by sanding its id on the signal [to_suspend_resume].
+*)
+
+
+val to_reset: (int , ident list) event
+(** Signal on which send reset requests. *)
+
+val resettable: 'a process -> 'a process
+(** [resettable p] executes [p] and restarts [p] when its id is sent
+    on the signal [to_reset].
+*)
+
+
+val to_replace: (int * unit process,  (ident * unit process) list) event
+(** Signal on which send reconfiguration requests. *)
+
+val replaceable: unit process -> unit process
+(** [replaceable p] executes [p] until a new process [p'] is sent on
+    [to_replace] associated the the process id. then [p'] is executed
+    until a new emission on [to_replace] occurs. When [p] terminates,
+    [replaceable p] is suspended until the emission of a
+    reconfiguration request.
+*)
+
+
+val to_add: (int * unit process,  (ident * unit process) list) event
+(** Signal on which send extension requests. *)
+
+val extensible: unit process -> unit process
+(** [extensible p] executes p. New processes emitted on [to_add]
+    associated to the id of [p] are executed in parallel with [p].
+    Even if [p] terminates, [extensible p] do not terminate.
+*)
+
+
+val replaceable_s:
+  (int * ('state -> unit process),
+   (int * ('state -> unit process)) list) event ->
+     ('state -> unit process) -> 'state -> unit process
+(** [replaceable_s] is similar to [replaceable] except that a state is
+    transmitted from the process which is executed and the one that
+    replaces it.
+
+   The first argument of [replaceable_s] is a signal on which
+   replacement requests have to be sent. It can be typically declared
+   as follows:
+   [ signal to_replace
+        default (fun state -> process ())
+        gather (fun p q state -> process (run (p state) || run (q state))) ]
+*)
+
+val extensible_s:
+  (int * ('state -> unit process),
+   (int * ('state -> unit process)) list) event ->
+     ('state -> unit process) -> 'state -> unit process
+(** [extensible_s] is similar to [extensible] except that a state is
+    shared between the initial process and the processes that are
+    added.
+
+   The first argument of [extensible_s] is a signal on which
+   extension requests have to be sent. It can be typically declared
+   as follows:
+   [ signal to_add
+        default (fun state -> process ())
+        gather (fun p q state -> process (run (p state) || run (q state))) ]
+*)
+
+val killable_suspendable: 'a process -> 'a option process
+(** Execute a process that can be both killed and suspended. If the
+    killing requests is emitted while the process is suspend, the
+    process is killed.
+*)
+
+val suspendable_killable: 'a process -> 'a option process
+(** Execute a process that can be both killed and suspended. If the
+    killing requests is emitted while the process is suspend, the
+    process is not killed.
+*)

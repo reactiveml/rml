@@ -1,0 +1,32 @@
+<p>
+To compute the position of the point, we integrate the velocity.
+</p>
+<p><pre class="code">
+let process compute_pos state =
+  loop
+    let p = last ?state.pos +: last ?state.vel in
+    emit state.pos p;
+    pause
+  end
+</pre></p>
+
+<p>
+So, to move a point from left to right, we define a process which
+maintains the velocity of a point at each instant.
+</p>
+<p><pre class="code">
+let process left_right state =
+  loop emit state.vel (2.0, 0.); pause end
+</pre></p>
+
+<p>
+To observe the position of a point, we define a
+process <code>draw</code> which emits the state of a point at each
+instant.
+</p>
+<p><pre class="code">
+let process draw state =
+  loop
+    emit to_draw state; pause
+  end
+</pre></p>

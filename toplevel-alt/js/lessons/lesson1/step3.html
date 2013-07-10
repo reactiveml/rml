@@ -1,0 +1,27 @@
+<h3>Communication</h3>
+
+<p>The communication between parallel processes is made through events
+that are broadcast instantaneously. Hence, an event is present
+during the instant where it is broadcast, otherwise it is
+absent.</p>
+
+<p>An event is declared with the <code>signal</code> construct.</p>
+
+<p><pre class="code">signal s;;</pre></p>
+
+<p>The construct <code>await s</code> waits the next instant where s is
+broadcast.</p>
+
+<p><pre class="code">let process p =
+  await s;
+  print_endline "Hello!" ;;</pre></p>
+
+<p><pre class="code">#run p;;</pre></p>
+
+<p>An event is broadcast using <code>emit</code>.</p>
+
+<p><pre class="code">emit s;;</pre></p>
+
+<p>
+Remark: <code>#run p</code> is a shortcut for <code>#exec (run p)</code>.
+</p>

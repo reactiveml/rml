@@ -42,6 +42,7 @@ struct
         let step = I.rml_make cd result p in
         I.R.on_current_instant cd step;
         let react () =
+          (*(Gc.print_stat stdout; print_newline(); print_newline ());*)
           I.R.react cd;
           !result
         in

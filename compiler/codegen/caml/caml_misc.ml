@@ -100,7 +100,7 @@ let make_raise_RML () =
 	  Location.none,
 	[make_expr
 	   (Cexpr_construct
-	      (Global.only_ident { qual = "Types";
+	      (Global.only_ident { qual = "Rml_types";
 			                       id = Ident.create Ident.gen_constr "RML" Ident.Internal },
 	      None))
 	   Location.none]))

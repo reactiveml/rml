@@ -1,9 +1,11 @@
 open Runtime
 open Runtime_options
-open Types
+open Rml_types
 
 module E = Sig_env.Record
 module D = Seq_runtime.ListListDataStruct
+
+let init_done = ref false
 
 module Make
   (CF : functor (T : Communication.TAG_TYPE) -> Communication.S
@@ -229,7 +231,7 @@ struct
     let get_top_clock_domain () =
       let site = get_site () in
       match site.s_top_clock_domain with
-        | None -> raise Types.RML
+        | None -> raise Rml_types.RML
         | Some cd -> cd
 
     let process_msgs () =
@@ -352,7 +354,7 @@ struct
             E.value n
           else (
             print_debug "Error: Reading the value of an absent signal %a@." C.print_gid ev.ev_gid;
-            raise Types.RML
+            raise Rml_types.RML
           )
 
         let one ev = lift_handle E.one ev
@@ -734,7 +736,7 @@ struct
    (* let top_clock cd =
       Clock.top_clock cd.cd_clock *)
     let top_clock () = match !any_clock_ref with
-      | None -> print_debug "Error: No top clock@."; raise Types.RML
+      | None -> print_debug "Error: No top clock@."; raise Rml_types.RML
       | Some ck -> Clock.top_clock ck
     let mk_clock parent_ck =
       let ck = Clock.mk_clock parent_ck in
@@ -1216,9 +1218,10 @@ struct
         Thread.delay 0.050;
       terminate_site site
 
-    let init_done = ref false
     let init () =
+      Format.eprintf "Doing init before@.";
       if not !init_done then (
+        Format.eprintf "Doing init@.";
         init_done := true;
         init_site ();
         let site = get_site () in
