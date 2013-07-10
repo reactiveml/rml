@@ -1,7 +1,7 @@
 include ../config
 include Makefile.common
 
-RMLC=../compiler/rpmlc.byte -no-clocking
+RMLC=../compiler/$(COMPILER).$(TARGET) -row-clocking
 RMLLIB=-I ../lib -I ../interpreter/_build
 
 INSTALLFILE=	rmltop_alt.cmi \

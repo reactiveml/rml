@@ -291,8 +291,9 @@ let clock_of_type_expression ty_vars env typexp =
         constr name (List.map (param_of_pe ty_vars) p_list)
 
     | Tprocess (te,_, ce, eer) ->
+        let r = react_or (new_react_var ()) no_react in
         process (clock_of_te ty_vars te) (carrier_of_ce ty_vars ce)
-          (effect_row_of_eer ty_vars eer) (*TODO*) no_react
+          (effect_row_of_eer ty_vars eer) r
 
     | Tdepend ce ->
         depend (carrier_row_of_cer ty_vars ce)

@@ -202,7 +202,7 @@ let add_missing_vars l =
     (* set the correct list of vars and arity for each declared type *)
     (* put the correct value for recursively defined constructors *)
     let set_params env (gl, params, td) =
-      let params = params @ (all_vars env gl.gi) in
+      let params = params @ (List.rev (all_vars env gl.gi)) in
       let info = match gl.ck_info with
         | None -> assert false
         | Some info -> { info with clock_arity = list_arity params }
@@ -226,7 +226,7 @@ let var_of_param vars pe = match pe with
 
    (This is different from the interpretation of annotations in OCaml where
    variables are bound existentially at the nearest toplevel let) *)
-let bind_annot_vars te =
+let add_vars_te te =
   let type_expression_desc funs (bound_vars, new_vars) ted = match ted with
     | Ptype_var s ->
         if not (List.mem (Kclock s) bound_vars) then
@@ -320,4 +320,12 @@ let bind_annot_vars te =
   } in
   let te, (_, params) = Parse_mapfold.type_expression_it funs ([], []) te in
   let params = List.map param_of_var params in
+  te, params
+
+let bind_annot_vars te =
+  let te, params = add_vars_te te in
   mkte (Ptype_some (params, te))
+
+let add_vars_te te =
+  let te, _ = add_vars_te te in
+  te

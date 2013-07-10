@@ -114,6 +114,7 @@ let main () =
   init_toplevel ();
   Rpmlcompiler.Interactive.init ();
   Rpmlcompiler.Misc.opt_iter Rmltop_alt_global.set_sampling !sampling;
+  Rpmlcompiler.Compiler_options.use_row_clocking := true;
   eval_ocaml_phrases Format.std_formatter !debug init_rml;
   start ();
   try

@@ -670,7 +670,7 @@ and translate_signal env sig_typ_list k ck r comb reset expr =
   | (s,typ) :: sig_typ_list ->
       let (id, rtyp) =
         Ident.create Ident.gen_var s.psimple_id Ident.Sig,
-        opt_map (fun te -> translate_te env (Clock_vars.bind_annot_vars te)) typ
+        opt_map (fun te -> translate_te env (Clock_vars.add_vars_te te)) typ
       in
       let env = Env.add s.psimple_id id env in
       make_expr
@@ -742,7 +742,7 @@ let translate_impl_item info_chan item =
                let gl = Modules.defined_global id (no_info()) (no_info()) in
                let _ = Modules.add_value gl in
                let rty_opt =
-                 opt_map (fun te -> translate_te Env.empty (Clock_vars.bind_annot_vars te)) ty_opt
+                 opt_map (fun te -> translate_te Env.empty (Clock_vars.add_vars_te te)) ty_opt
                in
                let rcomb_opt =
                  opt_map
@@ -792,7 +792,7 @@ let translate_intf_item info_chan item =
         let id = Ident.create Ident.gen_var s.psimple_id Ident.Val_ML in
         let gl = Modules.defined_global id (no_info()) (no_info()) in
         let _ = Modules.add_value gl in
-        Dval (gl, translate_te Env.empty t)
+        Dval (gl, translate_te Env.empty (Clock_vars.add_vars_te t))
 
     | Pintf_type l ->
         let l_translate = translate_type_declaration l in
@@ -802,7 +802,7 @@ let translate_intf_item info_chan item =
         let id = Ident.create Ident.gen_constr name.psimple_id Ident.Exn in
         let gl = Modules.defined_global id (no_info()) (no_info()) in
         let _ = Modules.add_constr gl in
-        Dexn (gl, opt_map (translate_te Env.empty) typ)
+        Dexn (gl, opt_map (fun te -> translate_te Env.empty (Clock_vars.add_vars_te te)) typ)
 
     | Pintf_open s ->
         Modules.open_module s;
