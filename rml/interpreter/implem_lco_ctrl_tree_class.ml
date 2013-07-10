@@ -19,8 +19,10 @@
 (**********************************************************************)
 
 (* author: Louis Mandel *)
-(* created: 2006-12-06  *)
-(* file: rec_implem.ml *)
+(* created: 2013-07-07  *)
+(* file: lco/implem_lco_ctrl_tree_class.ml *)
 
-module Lco_rewrite_record = Lco_rewrite.Rml_interpreter(Sig_env.Record)
 
+module Lco_ctrl_tree_class = Lco_ctrl_tree.Rml_interpreter(Sig_env.Class)
+
+module Rml_machine = Rml_machine.M(Lco_ctrl_tree_class)

@@ -1,0 +1,40 @@
+include ../config
+include ../configure-tools/Makefile.common
+
+THEAD_TYPE=-thread
+
+RUNTIME_DIR=lco_rewrite
+
+SRC=	sig_env.ml \
+	lco_interpreter.mli \
+	lco_rewrite.ml \
+	rml_machine.ml \
+	implem_lco_rewrite_record.ml \
+
+OBJ=	sig_env.cmo \
+	lco_rewrite.cmo \
+	rml_machine.cmo \
+	implem_lco_rewrite_record.cmo \
+
+OBJ_OPT = $(OBJ:.cmo=.cmx)
+
+INTF = 	lco_interpreter.cmi $(OBJ:.cmo=.cmi)
+
+LIB=	$(RUNTIME_DIR)/rmllib.cma \
+	$(RUNTIME_DIR)/rmllib.cmxa \
+	$(RUNTIME_DIR)/rmllib.a \
+
+
+INSTALLFILE=$(LIB) $(INTF)
+
+all: $(INSTALLFILE)
+
+lco_rewrite.cmo: OCAMLFLAGS += -rectypes
+lco_rewrite.cmx: OCAMLOPTFLAGS += -rectypes
+lco_rewrite.cmi: OCAMLOPTFLAGS += -rectypes
+implem_lco_rewrite_record.cmo: OCAMLFLAGS += -rectypes
+implem_lco_rewrite_record.cmx: OCAMLOPTFLAGS += -rectypes
+implem_lco_rewrite_record.cmi: OCAMLOPTFLAGS += -rectypes
+
+include Makefile-interpreter.common
+

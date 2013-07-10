@@ -25,12 +25,17 @@ open Misc
 open Configure
 
 let _ =
+  let runtime = ref "Lco" in
+  let v = ref false in
+  let version = ref false in
+  let where = ref false in
+  let stdlib = ref None in
   try
     Arg.parse
-      [ "-stdlib", Arg.String set_stdlib, doc_stdlib;
-	"-v", Arg.Unit show_v, doc_v;
-	"-version", Arg.Unit show_version, doc_version;
-	"-where", Arg.Unit show_where, doc_where;
+      [ "-stdlib", Arg.String (fun s -> stdlib := Some s), doc_stdlib;
+	"-v", Arg.Set v, doc_v;
+	"-version", Arg.Set version, doc_version;
+	"-where", Arg.Set where, doc_where;
 	"-c",Arg.Set no_link, doc_compilation;
 	"-I",Arg.String add_include,doc_libraries;
 	"-s", Arg.String set_simulation_process, doc_simulation;
@@ -43,8 +48,9 @@ let _ =
 	"-dreactivity", Arg.Unit set_dreactivity, doc_dreactivity;
         "-no_reactivity_simpl", Arg.Unit unset_no_reactivity_simpl, doc_no_reactivity_simpl;
 	"-old_loop_warning", Arg.Unit set_old_instantaneous_loop_warning, doc_old_loop_warning;
-	"-runtime", Arg.String set_runtime, doc_runtime;
+	"-runtime", Arg.Set_string runtime, doc_runtime;
 	"-interactive", Arg.Unit set_interactive, doc_interactive;
+        "-d", Arg.String set_output_dir, doc_d;
 	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;
 	"-no_nary_opt", Arg.Unit set_no_nary, doc_no_nary;
 	"-no_static_opt", Arg.Unit set_no_static, doc_no_static;
@@ -55,6 +61,14 @@ let _ =
       ]
       add_to_compile
       errmsg;
+    set_runtime !runtime;
+    if !v then show_v ();
+    if !version then show_version ();
+    if !where then show_where ();
+    begin match !stdlib with
+    | None -> ()
+    | Some s -> set_stdlib s
+    end;
   with x ->
     Errors.report_error Format.err_formatter x;
     exit 2
@@ -62,3 +76,5 @@ let _ =
 let _ =
   to_compile := List.rev !to_compile
 
+let _ =
+  Printexc.catch configure ()

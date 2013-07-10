@@ -52,18 +52,24 @@ let print_DEBUG msg =
 
 (* standard module *)
 let pervasives_module = "Pervasives"
-let interpreter_module = ref "Lco_ctrl_tree_record"
-(* let interpreter_module = ref "Lk_record" *)
-let interpreter_intf = ref "Lco_interpreter"
-let interpreter_impl = ref "Implem"
+let interpreter_module = ref ""
+let interpreter_intf = ref ""
+let interpreter_impl = ref ""
 
-
-let standard_lib = Version.stdlib
+let standard_lib = ref Version.stdlib
 
 (* List of file to compile *)
 let to_compile = ref ([] : string list)
 
 let default_used_modules = ref ([] : string list)
+
+(* directory in which output files are generated *)
+let output_dir = ref None
+
+let make_output_filename filename =
+  match !output_dir with
+  | None -> filename
+  | Some dir -> Filename.concat dir (Filename.basename filename)
 
 (* interpreter *)
 let set_interpreter_intf s = interpreter_intf := s

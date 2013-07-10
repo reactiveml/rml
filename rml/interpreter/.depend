@@ -1,7 +1,21 @@
 lco_interpreter.cmi : sig_env.cmo
 lk_interpreter.cmi : sig_env.cmo
-implem.cmo : sig_env.cmo lk_implem.cmo lco_ctrl_tree_n.cmo lco_ctrl_tree.cmo
-implem.cmx : sig_env.cmx lk_implem.cmx lco_ctrl_tree_n.cmx lco_ctrl_tree.cmx
+implem_lco_ctrl_tree_class.cmo : sig_env.cmo rml_machine.cmo \
+    lco_ctrl_tree.cmo
+implem_lco_ctrl_tree_class.cmx : sig_env.cmx rml_machine.cmx \
+    lco_ctrl_tree.cmx
+implem_lco_ctrl_tree_n_record.cmo : sig_env.cmo rml_machine.cmo \
+    lco_ctrl_tree_n.cmo
+implem_lco_ctrl_tree_n_record.cmx : sig_env.cmx rml_machine.cmx \
+    lco_ctrl_tree_n.cmx
+implem_lco_ctrl_tree_record.cmo : sig_env.cmo rml_machine.cmo \
+    lco_ctrl_tree.cmo
+implem_lco_ctrl_tree_record.cmx : sig_env.cmx rml_machine.cmx \
+    lco_ctrl_tree.cmx
+implem_lco_rewrite_record.cmo : sig_env.cmo rml_machine.cmo lco_rewrite.cmo
+implem_lco_rewrite_record.cmx : sig_env.cmx rml_machine.cmx lco_rewrite.cmx
+implem_lk_record.cmo : sig_env.cmo rml_machine.cmo lk_implem.cmo
+implem_lk_record.cmx : sig_env.cmx rml_machine.cmx lk_implem.cmx
 lco_ctrl_tree.cmo : sig_env.cmo lco_interpreter.cmi
 lco_ctrl_tree.cmx : sig_env.cmx lco_interpreter.cmi
 lco_ctrl_tree_n.cmo : sig_env.cmo lco_interpreter.cmi
@@ -14,8 +28,6 @@ lk_implem.cmo : sig_env.cmo lk_interpreter.cmi
 lk_implem.cmx : sig_env.cmx lk_interpreter.cmi
 lk_threaded.cmo : sig_env.cmo lk_interpreter.cmi
 lk_threaded.cmx : sig_env.cmx lk_interpreter.cmi
-rec_implem.cmo : sig_env.cmo lco_rewrite.cmo
-rec_implem.cmx : sig_env.cmx lco_rewrite.cmx
 rml_machine.cmo :
 rml_machine.cmx :
 sig_env.cmo :

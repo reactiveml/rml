@@ -126,7 +126,7 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
   done
 
 let init ocaml_in sampling =
-  output_string ocaml_in ("open Implem;;\n");
+  output_string ocaml_in ("open Implem_lco_ctrl_tree_record;;\n");
   begin match sampling with
   | None -> ()
   | Some n ->

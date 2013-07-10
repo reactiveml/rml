@@ -1,0 +1,36 @@
+# library
+$(RUNTIME_DIR)/rmllib.cma: $(OBJ)
+	$(OCAMLC) $(OCAMLFLAGS) -a -o $@ $^
+$(RUNTIME_DIR)/rmllib.cmxa: $(OBJ_OPT)
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -a -o $@ $^
+
+
+# dependencies
+include .depend
+
+# installing
+install: $(INSTALLFILE)
+	$(INSTALL) -d $(LIBDIR)/$(RUNTIME_DIR)
+	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/$(RUNTIME_DIR)
+
+uninstall:
+	(cd $(LIBDIR)/$(RUNTIME_DIR); rm -f $(INSTALLFILE) )
+
+
+# cleaning:
+clean:
+	rm -f *.cm* *.annot *.o $(INSTALLFILE)
+
+realclean: clean
+	rm -f  *~
+
+cleanall: realclean
+
+# utilities
+depend:
+	$(OCAMLDEP) $(OCAMLDEPFLAGS) $(INCLUDES) *.mli *.ml > .depend
+
+wc:
+	wc -l *.ml *.mli
+
+.PHONY: all install uninstall clean realclean .depend wc

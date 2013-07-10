@@ -138,7 +138,7 @@ let compile_implementation_front_end info_fmt filename itf impl_list =
   if Sys.file_exists (filename ^ ".rmli")
   (* ||  Sys.file_exists (filename ^ ".mli") *)
   then begin
-    if not (Sys.file_exists (filename ^ ".rzi")) then begin
+    if not (Sys.file_exists (make_output_filename (filename ^ ".rzi"))) then begin
       no_compile_itf filename
     end else begin
       (*
@@ -239,10 +239,10 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
 let compile_implementation module_name filename =
   (* input and output files *)
   let source_name = filename ^ ".rml"
-  and obj_interf_name = filename ^ ".rzi"
-  and obj_name = filename ^ ".ml"
-  and tannot_name = filename ^ ".tannot"
-  and sannot_name = filename ^ ".sannot"
+  and obj_interf_name = make_output_filename (filename ^ ".rzi")
+  and obj_name = make_output_filename (filename ^ ".ml")
+  and tannot_name = make_output_filename (filename ^ ".tannot")
+  and sannot_name = make_output_filename (filename ^ ".sannot")
   and module_name = String.capitalize (Filename.basename filename)  in
 
   let ic = open_in source_name in
@@ -306,8 +306,6 @@ let compile_implementation module_name filename =
         (* main process *)
 	if !simulation_process <> "" then
 	  begin
-	    output_string out_chan ("module Rml_machine = Rml_machine.M("^
-				    !interpreter_module ^");;\n");
 	    let main =
 	      try
 		Modules.pfind_value_desc
@@ -425,8 +423,8 @@ let compile_interface_back_end info_fmt out_chan module_name rml_table =
 let compile_interface parse module_name filename filename_end =
   (* input and output files *)
   let source_name = filename ^ filename_end
-  and obj_interf_name = filename ^ ".rzi"
-  and obj_name = filename ^ ".mli"
+  and obj_interf_name = make_output_filename (filename ^ ".rzi")
+  and obj_name = make_output_filename (filename ^ ".mli")
   and module_name = String.capitalize (Filename.basename filename)  in
 
   let ic = open_in source_name in

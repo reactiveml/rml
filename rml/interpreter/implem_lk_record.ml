@@ -7,8 +7,9 @@
 (*                          Louis Mandel                              *)
 (*                                                                    *)
 (*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
-(*  This file is distributed under the terms of the Q Public License  *)
-(*  version 1.0.                                                      *)
+(*  This file is distributed under the terms of the GNU Library       *)
+(*  General Public License, with the special exception on linking     *)
+(*  described in file ../LICENSE.                                     *)
 (*                                                                    *)
 (*  ReactiveML has been done in the following labs:                   *)
 (*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
@@ -17,23 +18,10 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: rmltop_reactive_machine.ml *)
-(* created: 2007-12-03  *)
 (* author: Louis Mandel *)
+(* created: 2013-07-07  *)
+(* file: lco/implem_lk_record.ml *)
 
-let rml_react_unsafe =
-  let react =
-    Implem_lco_ctrl_tree_record.Lco_ctrl_tree_record.rml_make_exec_process
-      Rmltop_machine_body.main
-  in
-  fun l ->
-    match react l with
-    | None -> ()
-    | Some () -> assert false
+module Lk_record = Lk_implem.Lk_interpreter(Sig_env.Record)
 
-let rml_react x =
-  Rmltop_global.lock();
-  begin try rml_react_unsafe x
-  with e -> Rmltop_global.unlock(); raise e
-  end;
-  Rmltop_global.unlock()
+module Rml_machine = Rml_machine.M(Lk_record)

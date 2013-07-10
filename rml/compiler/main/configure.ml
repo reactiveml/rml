@@ -29,9 +29,16 @@ open Misc
 let add_to_compile file =
   to_compile := file :: !to_compile
 
+(* set the output directory *)
+let set_output_dir dir =
+  output_dir := Some dir
+
 (* standard libraries and includes *)
+let set_standard_lib dir =
+  standard_lib := Version.stdlib ^ "/" ^ dir
+
 let set_init_stdlib () =
-  let standard_lib = try Sys.getenv "RMLLIB" with Not_found -> standard_lib in
+  let standard_lib = try Sys.getenv "RMLLIB" with Not_found -> !standard_lib in
   load_path := standard_lib :: !load_path
 
 let set_stdlib p =
@@ -44,7 +51,7 @@ let locate_stdlib () =
   try
     Sys.getenv "RMLLIB"
   with
-    Not_found -> standard_lib
+    Not_found -> !standard_lib
 
 (* standard pervasives module *)
 let set_init_pervasives () =
@@ -102,28 +109,34 @@ let set_runtime s =
   match s with
   | "Lco_rewrite" ->
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Rec_implem";
+      set_interpreter_impl "Implem_lco_rewrite_record";
       set_interpreter_module "Lco_rewrite_record";
+      set_standard_lib "lco_rewrite";
       set_translation Lco
   | "Lco_ctrl_tree" | "Lco" ->
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implem";
+      set_interpreter_impl "Implem_lco_ctrl_tree_record";
       set_interpreter_module "Lco_ctrl_tree_record";
+      set_standard_lib "lco";
       set_translation Lco
-  | "Lco_ctrl_tree_class" ->
+  | "Lco_ctrl_tree_class" | "Lco_class" ->
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implem";
+      set_interpreter_impl "Implem_lco_ctrl_tree_class";
       set_interpreter_module "Lco_ctrl_tree_class";
+      set_standard_lib "lco_class";
       set_translation Lco
+(*
   | "Lco_ctrl_tree_thread_safe" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Thread_implem";
       set_interpreter_module "Lco_ctrl_tree_thread_safe_record";
       set_translation Lco
+*)
   | "Lco_ctrl_tree_n" | "Lco_n" ->
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implem";
+      set_interpreter_impl "Implem_lco_ctrl_tree_n_record";
       set_interpreter_module "Lco_ctrl_tree_n_record";
+      set_standard_lib "lco_n";
       set_translation Lco
 (*
   | "ctrl_tree_debug" ->
@@ -133,16 +146,17 @@ let set_runtime s =
 *)
   | "Lk" ->
       set_interpreter_intf "Lk_interpreter";
-      set_interpreter_impl "Implem";
+      set_interpreter_impl "Implem_lk_record";
       set_interpreter_module "Lk_record";
+      set_standard_lib "lk";
       set_translation Lk
-
+(*
   | "Lk_threaded" ->
       set_interpreter_intf "Lk_interpreter";
       set_interpreter_impl "Thread_implem";
       set_interpreter_module "Lk_threaded_record";
       set_translation Lk
-
+*)
   | "Rmltop" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Rmltop_implem";
@@ -173,7 +187,7 @@ let set_interactive () =
   interpreter_module := "Rml_interactive";
 *)
   set_interpreter_intf "Lco_interpreter";
-  set_interpreter_impl "Implem";
+  set_interpreter_impl "Implem_lco_ctrl_tree_record";
   set_interpreter_module "Lco_ctrl_tree_record";
   interactive := true
 
@@ -206,6 +220,7 @@ and doc_dreactivity = "Display reactivity effects in process types"
 and doc_no_reactivity_simpl = "Do not simplify reactivity effects"
 and doc_old_loop_warning = "Set the old instantaneous loop and recursion analysis"
 and doc_interactive = "Read programs on stdin and output on stdout"
+and doc_d = "<dir> Generate files in directory <dir>, rather than in current directory"
 and doc_runtime =
 (*"<interpreter> select the runtime according to <interpreter>:\n"*)
    "(undocumented)\n" ^
@@ -232,7 +247,4 @@ Options are:"
 let configure () =
   set_init_stdlib ();
   set_init_pervasives ()
-
-let _ =
-  Printexc.catch configure ()
 

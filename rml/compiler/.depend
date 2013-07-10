@@ -278,8 +278,8 @@ main/compiler.cmx : other_analysis/wf_rec.cmx typing/typing.cmx \
     global/initialization.cmx global/ident.cmx global/global_ident.cmx \
     global/global.cmx external/external.cmx main/errors.cmx \
     caml/caml2caml.cmx reac/annot.cmx
-main/configure.cmo : global/misc.cmo
-main/configure.cmx : global/misc.cmx
+main/configure.cmo : global/version.cmo global/misc.cmo
+main/configure.cmx : global/version.cmx global/misc.cmx
 main/errors.cmo : global/warnings.cmo parsing/syntaxerr.cmo global/misc.cmo \
     parsing/location.cmo parsing/lexer.cmo
 main/errors.cmx : global/warnings.cmx parsing/syntaxerr.cmx global/misc.cmx \

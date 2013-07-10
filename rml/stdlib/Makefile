@@ -1,106 +1,39 @@
-# Warning: This file has been modified to be ReactiveML compatible.
-
-# Makefile for ReactiveML
-# Taken from Lucid-synchrone
-
 include ../config
 include ../configure-tools/Makefile.common
 
-RMLC := ../compiler/rmlc
+all:
+	(cd lco; $(MAKE) all)
+	(cd lco_n; $(MAKE) all)
+	(cd lco_class; $(MAKE) all)
+	(cd lco_rewrite; $(MAKE) all)
+	(cd lk; $(MAKE) all)
 
-#RMLC:=../compiler/rmlc.byte
-
-SRC= pervasives.rmli \
-	arg.rmli \
-	array.rmli \
-	buffer.rmli \
-	callback.rmli \
-	char.rmli \
-	complex.rmli \
-	digest.rmli \
-	filename.rmli \
-	format.rmli \
-	gc.rmli \
-	stream.rmli \
-	genlex.rmli \
-	graphics.rmli \
-	hashtbl.rmli \
-	int32.rmli \
-	nativeint.rmli \
-	int64.rmli \
-	lazy.rmli \
-	lexing.rmli \
-	list.rmli \
-	luc4ocaml.rmli \
-	luc4ocaml_nolbl.rmli \
-	marshal.rmli \
-	obj.rmli \
-	parsing.rmli \
-	printexc.rmli \
-	printf.rmli \
-	queue.rmli \
-	random.rmli \
-	sort.rmli \
-	stack.rmli \
-	str.rmli \
-	string.rmli \
-	sys.rmli \
-	unix.rmli \
-	weak.rmli \
-
-CIBLE= $(SRC:.rmli=.rzi)
-
-all:  $(CIBLE)
-
-install: $(CIBLE)
-	$(INSTALL) -d $(LIBDIR)
-	$(INSTALL) -m 644 $(patsubst %.rzi,%.rmli,$(CIBLE)) $(LIBDIR)
-	$(INSTALL) -m 644 $(CIBLE) $(LIBDIR)
+install:
+	(cd lco; $(MAKE) install)
+	(cd lco_n; $(MAKE) install)
+	(cd lco_class; $(MAKE) install)
+	(cd lco_rewrite; $(MAKE) install)
+	(cd lk; $(MAKE) install)
 
 uninstall:
-	(cd $(LIBDIR); rm -f $(patsubst,*.rzi,*.rmli,$(CIBLE)) $(CIBLE) )
+	(cd lco; $(MAKE) uninstall)
+	(cd lco_n; $(MAKE) uninstall)
+	(cd lco_class; $(MAKE) uninstall)
+	(cd lco_rewrite; $(MAKE) uninstall)
+	(cd lk; $(MAKE) uninstall)
 
 clean:
-	rm -f *.rzi
+	(cd lco; $(MAKE) clean)
+	(cd lco_n; $(MAKE) clean)
+	(cd lco_class; $(MAKE) clean)
+	(cd lco_rewrite; $(MAKE) clean)
+	(cd lk; $(MAKE) clean)
 
-realclean: clean
+realclean:
 	rm -f *~
-
-arg.rzi: pervasives.rzi
-array.rzi: pervasives.rzi
-buffer.rzi: pervasives.rzi
-callback.rzi: pervasives.rzi
-char.rzi: pervasives.rzi
-complex.rzi: pervasives.rzi
-digest.rzi: pervasives.rzi
-filename.rzi: pervasives.rzi
-format.rzi: pervasives.rzi buffer.rzi
-gc.rzi: pervasives.rzi
-genlex.rzi: pervasives.rzi stream.rzi
-graphics.rzi: pervasives.rzi
-hashtbl.rzi: pervasives.rzi
-int32.rzi: pervasives.rzi
-int64.rzi: pervasives.rzi nativeint.rzi int32.rzi
-lazy.rzi: pervasives.rzi
-lexing.rzi: pervasives.rzi
-list.rzi: pervasives.rzi
-luc4ocaml_nolbl.rzi: pervasives.rzi luc4ocaml.rzi
-luc4ocaml.rzi: pervasives.rzi
-marshal.rzi: pervasives.rzi
-nativeint.rzi: pervasives.rzi int32.rzi
-obj.rzi: pervasives.rzi
-parsing.rzi: pervasives.rzi obj.rzi lexing.rzi
-printexc.rzi: pervasives.rzi
-printf.rzi: pervasives.rzi buffer.rzi
-queue.rzi: pervasives.rzi
-random.rzi: pervasives.rzi
-sort.rzi: pervasives.rzi
-stack.rzi: pervasives.rzi
-stream.rzi: pervasives.rzi
-string.rzi: pervasives.rzi
-str.rzi: pervasives.rzi
-sys.rzi: pervasives.rzi
-unix.rzi: pervasives.rzi
-weak.rzi: pervasives.rzi
-
-.PHONY:opt byte all install uninstall clean realclean
+	(cd lco; $(MAKE) realclean)
+	(cd lco_n; $(MAKE) realclean)
+	(cd lco_class; $(MAKE) realclean)
+	(cd lco_rewrite; $(MAKE) realclean)
+	(cd lk; $(MAKE) realclean)
+cleanall: realclean

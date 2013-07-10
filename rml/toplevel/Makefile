@@ -2,7 +2,7 @@ include ../config
 include ../configure-tools/Makefile.common
 
 RMLC=../compiler/rmlc
-RMLLIB=-I ../stdlib -I ../interpreter
+RMLLIB=-I ../stdlib/lco -I ../interpreter
 
 INSTALLFILE=	rmltop.cmi \
 		rmltop_global.cmi \
@@ -34,7 +34,7 @@ all: rmltop lib
 rmltop: rmltop_lexer.cmo rmltop_global.cmo rmltop_directives.cmo rmltop.cmo
 	$(OCAMLC) -o rmltop -I +threads $(RMLLIB) unix.cma str.cma \
 		threads.cma \
-		rmllib.cma \
+		lco/rmllib.cma \
 		rmltop_lexer.cmo \
 		rmltop_global.cmo \
 		rmltop_directives.cmo \
@@ -50,8 +50,8 @@ install.bin: rmltop
 	$(INSTALL) rmltop $(BINDIR)/rmltop
 
 install.lib: lib
-	$(INSTALL) -d $(LIBDIR)/toplevel
-	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/toplevel
+	$(INSTALL) -d $(LIBDIR)/lco/toplevel
+	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/lco/toplevel
 
 uninstall:
 	rm -f $(BINDIR)/rmltop
