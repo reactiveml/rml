@@ -284,7 +284,7 @@ let rec translate_ml e =
 (* Translation of Process expressions                                    *)
 and translate_proc e k (ctrl: ident) =
   let kproc =
-    begin match e.expr_static with
+    begin match snd e.expr_static with
     | Def_static.Static ->
 	Kproc_compute (translate_ml e, k)
     | Def_static.Dynamic _ ->
@@ -362,7 +362,7 @@ and translate_proc e k (ctrl: ident) =
 		match l with
 		| [] -> assert false
 		| [p] -> translate_proc p k ctrl
-                | ({ expr_static = Def_static.Static } as p)::l' ->
+                | ({ expr_static = (ctx, Def_static.Static) } as p)::l' ->
                     let k' = f l' in
                       make_proc (Kproc_seq (translate_ml p, k')) Location.none
 		| p::l' ->
@@ -629,7 +629,7 @@ and translate_proc e k (ctrl: ident) =
 (* Translation of let definitions in a PROCESS context *)
 and translate_proc_let =
   let rec is_static =
-    List.for_all (fun (_, expr) -> expr.expr_static = Def_static.Static)
+    List.for_all (fun (_, expr) -> snd expr.expr_static = Def_static.Static)
   in
   fun flag patt_expr_list proc k ctrl ->
     let k_id = make_var "k" in

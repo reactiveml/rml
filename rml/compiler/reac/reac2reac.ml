@@ -381,7 +381,7 @@ let impl_map f impl =
 (* Print static information *)
 let print_static e =
   Location.print_oc stderr e.expr_loc;
-  prerr_string (Def_static.string_of_static e.expr_static);
+  prerr_string (Def_static.string_of_static (snd e.expr_static));
   prerr_newline ();
   e
 

@@ -191,7 +191,7 @@ module Sstatic =
     let get_type ti =
       begin match ti with
       | Ti_patt _ -> (Def_static.Static, [], Reactivity_effects.no_react)
-      | Ti_expr {expr_static = typ;
+      | Ti_expr {expr_static = (ctx, typ);
                  expr_reactivity = pi;
                  expr_reactivity_effect = k; } -> (typ, pi, k)
       end

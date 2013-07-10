@@ -507,7 +507,7 @@ let rec static_expr ctx e =
  	else
 	  expr_wrong_static_err !Misc.err_fmt p
   in
-  e.expr_static <- t;
+  e.expr_static <- (ctx, t);
   t
 
 and static_conf conf =

@@ -350,7 +350,7 @@ let instantaneous_loop_expr =
 	      patt_expr_list
 	  in
 	  begin match
-	    static_of_list (fun (_, e) -> e.expr_static) patt_expr_list
+	    static_of_list (fun (_, e) -> snd e.expr_static) patt_expr_list
 	  with
 	  | Dynamic Noninstantaneous ->
 	      let _ = analyse Env.empty expr in
@@ -489,7 +489,7 @@ let instantaneous_loop_expr =
 		  (true, ty_res)
 		else
 		  let ty = analyse vars e in
-		  (e.expr_static = Dynamic Noninstantaneous,
+		  (snd e.expr_static = Dynamic Noninstantaneous,
 		   Env.append ty ty_res))
 	      (false, Env.empty) e_list
 	  in ty
@@ -522,7 +522,8 @@ let instantaneous_loop_expr =
 	  ty1
 
       | Rexpr_loop (None, e) ->
-	  if e.expr_static <> Dynamic Noninstantaneous then loop_warning expr;
+	  if snd e.expr_static <> Dynamic Noninstantaneous then
+            loop_warning expr;
 	  analyse vars e
 
       | Rexpr_loop (Some n, e) ->

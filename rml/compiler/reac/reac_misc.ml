@@ -43,7 +43,7 @@ let make_expr e loc =
   { expr_desc = e;
     expr_loc = loc;
     expr_type = no_type_expression;
-    expr_static = Def_static.Dynamic Def_static.Dontknow;
+    expr_static = Def_static.Process, Def_static.Dynamic Def_static.Dontknow;
     expr_reactivity = [];
     expr_reactivity_effect = no_react; }
 

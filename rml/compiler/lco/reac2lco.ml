@@ -286,7 +286,7 @@ let rec translate_ml e =
 (* Translation of Process expressions                                    *)
 and translate_proc p =
   let coproc =
-    begin match p.expr_static with
+    begin match snd p.expr_static with
     | Def_static.Static ->
 	Coproc_compute (translate_ml p)
     | Def_static.Dynamic _ ->
@@ -353,7 +353,7 @@ and translate_proc p =
 		  if p.expr_type = Initialization.type_unit then
 		    translate_proc p
 		  else
-		    if p.expr_static = Def_static.Static then
+		    if snd p.expr_static = Def_static.Static then
 		      make_proc
 			(Coproc_compute
 			   (make_expr
@@ -475,7 +475,7 @@ and translate_proc_let =
     match patt_expr_list with
     | [] -> true
     | (_, expr) :: tl ->
-	if expr.expr_static <> Def_static.Static then
+	if snd expr.expr_static <> Def_static.Static then
 	  false
 	else
 	  is_static tl

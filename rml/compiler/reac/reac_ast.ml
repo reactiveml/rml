@@ -45,7 +45,7 @@ type expression =
   { expr_desc: expression_desc;
     expr_loc: Location.t;
     mutable expr_type: Def_types.type_expression;
-    mutable expr_static: Def_static.static;
+    mutable expr_static: Def_static.context * Def_static.static;
     mutable expr_reactivity: (varpatt * int) list;
     mutable expr_reactivity_effect: Def_types.reactivity_effect; }
 
