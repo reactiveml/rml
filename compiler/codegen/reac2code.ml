@@ -71,8 +71,11 @@ let compile_impl info_chan filename module_name intermediate_code =
               "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
               "*)\n\n");
         (* selection of the interpreter *)
-        output_string out_chan ("open "^ !interpreter_impl ^"\n");
-        output_string out_chan ("module Machine = "^ !machine_module ^ "(Interpreter);;\n");
+        output_string out_chan ("open "^ !interpreter_impl ^";;\n");
+        if !simulation_process <> "" then
+          output_string out_chan ("module Machine = "^ !machine_module ^ "(Interpreter);;\n")
+        else
+          output_string out_chan "Interpreter.R.init ();;\n";
 
         (* the implementation *)
         compile_implementation_back_end info_chan out_chan module_name intermediate_code;
