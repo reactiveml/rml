@@ -689,9 +689,18 @@ let rec type_of_expression env expr =
 
     | Rexpr_while (e1,e2) ->
 	type_expect_eps env e1 type_bool;
-        (* choix: on ne met pas de warning sur les boucles while *)
-	let _k = type_statement env e2 in
-	type_unit, react_epsilon ()
+        begin match fst expr.expr_static with
+        | Def_static.ML ->
+            (* choix: on ne met pas de warning quand on est dans une fonction *)
+	    let _k = type_statement env e2 in
+	    type_unit, react_epsilon ()
+        | Def_static.Process ->
+            push_type_level ();
+	    let k = type_statement env e2 in
+            pop_type_level ();
+            let k = remove_local_react_var k in
+	    type_unit, react_or [ react_epsilon (); react_loop k ]
+        end
 
     | Rexpr_for(i,e1,e2,flag,e3) ->
 	type_expect_eps env e1 type_int;

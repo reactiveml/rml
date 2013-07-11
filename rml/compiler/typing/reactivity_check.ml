@@ -121,6 +121,21 @@ let rec check_expr_one expr =
       | React_rec (true, k_body) -> ()
       | _ -> assert false
       end
+  | Rexpr_while _ ->
+      begin match k.react_desc with
+      | React_or [ { react_desc = React_epsilon }; k' ] ->
+          begin match k'.react_desc with
+          | React_rec (false, k_body) ->
+              if not (well_formed k) then begin
+                loop_warning expr k;
+                k.react_desc <- React_rec (true, k_body)
+              end
+          | React_rec (true, k_body) -> ()
+          | _ -> assert false
+          end
+      | React_epsilon -> ()
+      | _ -> assert false
+      end
   | Rexpr_run _ ->
       if not (well_formed k) then begin
         rec_warning expr k
@@ -141,7 +156,6 @@ let rec check_expr_one expr =
   | Rexpr_ifthenelse (_, _, _)
   | Rexpr_match (_, _)
   | Rexpr_when_match (_, _)
-  | Rexpr_while (_, _)
   | Rexpr_for (_, _, _, _, _)
   | Rexpr_seq _
   | Rexpr_process _
