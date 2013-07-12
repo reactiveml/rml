@@ -380,9 +380,10 @@ let impl_map f impl =
 
 (* Print static information *)
 let print_static e =
-  Location.print_oc stderr e.expr_loc;
-  prerr_string (Def_static.string_of_static (snd e.expr_static));
-  prerr_newline ();
+  Format.fprintf !Misc.err_fmt
+    "%a%s@."
+    Location.print e.expr_loc
+    (Def_static.string_of_static (snd e.expr_static));
   e
 
 

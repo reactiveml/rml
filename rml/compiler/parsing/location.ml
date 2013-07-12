@@ -128,8 +128,8 @@ let print ppf loc =
     fprintf ppf "%s%i%s@.%s" msg_to endchar msg_colon msg_head
   end
 
-let print_oc oc loc =
-  print (formatter_of_out_channel oc) loc
+(* let print_oc oc loc = *)
+(*   print (formatter_of_out_channel oc) loc *)
 
 let print_warning loc ppf w =
   if Warnings.is_active w then begin

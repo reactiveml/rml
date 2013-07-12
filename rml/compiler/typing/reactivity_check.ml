@@ -26,13 +26,15 @@ open Def_types
 
 (* Warnings *)
 let rec_warning expr k =
-  Printf.eprintf "%aWarning: This expression may produce an instantaneous recursion.\n"
-    Location.print_oc expr.expr_loc
+  Format.fprintf !err_fmt
+    "%aWarning: This expression may produce an instantaneous recursion.@."
+    Location.print expr.expr_loc
     (* (Types_printer.print_to_string Types_printer.print_reactivity k) *)
 
 let loop_warning expr k =
-  Printf.eprintf "%aWarning: This expression may be an instantaneous loop.\n"
-    Location.print_oc expr.expr_loc
+  Format.fprintf !err_fmt
+    "%aWarning: This expression may be an instantaneous loop.@."
+    Location.print expr.expr_loc
     (* (Types_printer.print_to_string Types_printer.print_reactivity k) *)
 
 (* non instantaneity of behaviors *)
