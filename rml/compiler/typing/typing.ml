@@ -1222,6 +1222,7 @@ let check_nongen_values impl_item_list =
 	    then
               cannot_generalize_err expr)
 	    patt_expr_list
+      | Rimpl_signal (l) -> () (* XXX TODO XXX *)
       | _ -> ())
     impl_item_list
 

@@ -1,0 +1,6 @@
+(* 12/07/2013 *)
+(* Devrait afficher l'erreur :
+      contains type variables that cannot be generalized
+*)
+
+signal s default [] gather (fun x y -> x :: y);;
