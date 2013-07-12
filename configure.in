@@ -77,7 +77,9 @@ else
 fi
 
 # Generate a dummy rzi.ml file
-if [ ! -f compiler/global/rzi.ml ]; then
+create_rzi=yes
+AC_CHECK_FILE(./compiler/global/rzi.ml, create_rzi=no)
+if test "$create_rzi" = "yes"; then
   echo "configure: creating compiler/global/rzi.ml"
   echo "let known_modules = [[]]" > compiler/global/rzi.ml
 fi
