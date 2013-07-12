@@ -109,7 +109,7 @@ rmltop_alt_global.cmo: rmltop_alt_global.ml rmltop_alt_global.cmi
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_alt_global.ml
 
 rmltop_alt_machine_body.ml: rmltop_alt_machine_body.rml
-	$(RMLC) $(RMLLIB) -runtime Lco rmltop_alt_machine_body.rml
+	$(RMLC) $(RMLLIB) -runtime Lco_top_alt rmltop_alt_machine_body.rml
 
 rmltop_alt_machine_body.cmi rmltop_alt_machine_body.cmo: rmltop_alt_machine_body.ml
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_alt_machine_body.ml
@@ -127,7 +127,7 @@ rmltop_alt_reactive_machine.cmo: rmltop_alt_reactive_machine.ml \
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_alt_reactive_machine.ml
 
 rmltop_alt_controller.ml: rmltop_alt_controller.rml rmltop_alt_global.rzi
-	$(RMLC) $(RMLLIB) -runtime Lco rmltop_alt_controller.rml
+	$(RMLC) $(RMLLIB) -runtime Lco_top_alt rmltop_alt_controller.rml
 
 rmltop_alt_controller.cmi rmltop_alt_controller.cmo: rmltop_alt_controller.ml \
 		rmltop_alt_reactive_machine.cmi rmltop_alt_implem.cmo rmltop_alt_global.cmi

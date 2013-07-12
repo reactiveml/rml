@@ -32,6 +32,11 @@ sig
   val is_empty_next : next -> bool
 end
 
+module type DUMMY =
+sig
+  val dummy : unit
+end
+
 
 type ('step, 'clock) control_type =
     | Clock_domain of 'clock

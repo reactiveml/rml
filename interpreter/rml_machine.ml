@@ -228,5 +228,6 @@ struct
 end
 
 module Lco_ctrl_tree_seq_interpreter = struct
-  module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqRuntime)
+  module Runtime = Seq_runtime.SeqRuntime(struct let dummy = () end)
+  module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(Runtime)
 end

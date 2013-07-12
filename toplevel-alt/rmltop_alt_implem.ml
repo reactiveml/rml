@@ -20,89 +20,16 @@
 (* file: rmltop_implem.ml *)
 (* author: Louis Mandel *)
 (* created: 2005-10-25  *)
-(*
-module Sig_env (* : S *) =
-  struct
-    type ('a, 'b) t =
-	{ mutable status: int;
-	  mutable value: 'b;
-	  mutable pre_status: int;
-	  mutable last: 'b;
-	  mutable default: 'b;
-	  combine: ('a -> 'b -> 'b); }
 
-    let instant = ref 0
-    let absent = -2
+module SeqRuntime = Seq_runtime.SeqRuntime(struct let dummy = () end)
 
-    let create default combine =
-      { status = absent;
-	value = default;
-	pre_status = absent;
-	last = default;
-	default = default;
-	combine = combine; }
-
-(* -------------------------- Access functions -------------------------- *)
-    let default n = n.default
-    let status n = n.status = !instant
-
-    let value n = n.value
-
-    let pre_status n =
-      if n.status = !instant
-      then n.pre_status = !instant - 1
-      else n.status = !instant - 1
-
-    let last n =
-      if n.status = !instant
-      then n.last
-      else n.value
-
-    let pre_value n =
-      if n.status = !instant
-      then
-	if n.pre_status = !instant - 1
-	then n.last
-	else n.default
-      else
-	if n.status = !instant - 1
-	then n.value
-	else n.default
-
-    let one n =
-      match n.value with
-      | x :: _ -> x
-      | _ -> assert false
-
-(***************************************)
-(* emit                                *)
-(***************************************)
-    let emit n v =
-      if n.status <> !instant
-      then
-	(n.pre_status <- n.status;
-	 n.last <- n.value;
-	 n.status <- !instant;
-	 n.value <- n.combine v n.default)
-      else
-	n.value <- n.combine v n.value
-
-(***************************************)
-(* next                                *)
-(***************************************)
-    let next () = incr instant
-
-  end
-
-module Machine_controler_machine = Lco_ctrl_tree.Rml_interpreter(Sig_env)
-*)
-
-module Machine_controler_machine = Lco_ctrl_tree_n.Rml_interpreter(Seq_runtime.SeqRuntime)
+module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(SeqRuntime)
 
 let make p =
-  let cd = Seq_runtime.SeqRuntime.get_top_clock_domain () in
+  let cd = SeqRuntime.get_top_clock_domain () in
   let result = ref None in
-  let react = Machine_controler_machine.rml_make cd result p in
+  let step = Interpreter.rml_make cd result p in
+  SeqRuntime.on_current_instant cd step;
   fun () ->
-    react ();
+    SeqRuntime.react cd;
     !result
