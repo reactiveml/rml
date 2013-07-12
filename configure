@@ -592,6 +592,7 @@ rmldep
 rmlc
 rpmllib_dir
 stdlib_dir
+target
 INSTALL
 OCAML_PKG_sdl
 MPILIBS
@@ -3089,6 +3090,11 @@ case "$OCAMLVERSION" in
      as_fn_error $? "You need Objective Caml 3.10 or higher" "$LINENO" 5;;
 esac
 
+target=native
+if test "$OCAMLOPT" = "no"; then
+  target=byte
+fi
+
   # checking for ocamllex
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ocamllex", so it can be a program name with args.
@@ -4524,6 +4530,7 @@ else
     rmlbuild_libdir="$stdlib_dir/rpmlbuild"
     mlmpi_libdir="$stdlib_dir"
 fi
+
 
 
 

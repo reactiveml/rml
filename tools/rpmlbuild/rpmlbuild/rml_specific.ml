@@ -230,7 +230,7 @@ let init () =
 
       flag ["rml"; "compile"; "annot"] (A "-dtypes");
       flag ["rml"; "compile"; "lco"] (S ([A "-runtime"; A "Lco"]));
-      flag ["rml"; "compile"; "lco_new"] (S ([A "-runtime"; A "Lco_new"]));
+      (*flag ["rml"; "compile"; "lco_new"] (S ([A "-runtime"; A "Lco_new"]));*)
       flag ["rml"; "compile"; "lco_mpi"] (S [A "-runtime"; A "Lco_mpi"]);
       flag ["rml"; "compile"; "lco_mpi_buffer"] (S [A "-runtime"; A "Lco_mpi_buffer"]);
       flag ["rml"; "compile"; "lco_mpi_c"] (S [A "-runtime"; A "Lco_mpi_c"]);

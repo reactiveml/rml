@@ -25,7 +25,7 @@ RPMLBUILD=@rmlbuild@
 RPMLBUILD_LIBDIR=@rmlbuild_libdir@
 MLMPI_LIBDIR=@mlmpi_libdir@
 
-TARGET=byte
+TARGET=@target@
 
 ENABLE_MPI=@enable_mpi@
 MPICC=@MPICC@

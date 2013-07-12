@@ -24,6 +24,11 @@ case "$OCAMLVERSION" in
      AC_MSG_ERROR(You need Objective Caml 3.10 or higher);;
 esac
 
+target=native
+if test "$OCAMLOPT" = "no"; then
+  target=byte
+fi
+
 AC_PROG_OCAMLLEX
 
 AC_PROG_FINDLIB
@@ -72,6 +77,7 @@ else
 fi
 
 AC_SUBST(INSTALL)
+AC_SUBST(target)
 AC_SUBST(stdlib_dir)
 AC_SUBST(rpmllib_dir)
 AC_SUBST(rmlc)

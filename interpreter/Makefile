@@ -16,7 +16,7 @@ endif
 
 all: byte native
 
-native:
+native: byte
 	$(OCAMLBUILD) $(OCAMLBUILD_OPTIONS) $(RPMLLIB:.cma=.cmxa)
 
 byte:
@@ -24,7 +24,11 @@ byte:
 
 install: all
 	$(INSTALL) -d $(INSTALL_BINDIR)
-	$(INSTALL) $(RPMLLIB).$(TARGET) $(INSTALL_LIBDIR)
+ifeq ($(TARGET), native)
+	$(INSTALL) $(patsubst %,_build/%,$(RPMLLIB:.cma=.cmxa)) $(INSTALL_LIBDIR)
+	$(INSTALL) $(patsubst %,_build/%,$(RPMLLIB:.cma=.a)) $(INSTALL_LIBDIR)
+endif
+	$(INSTALL) $(patsubst %,_build/%,$(RPMLLIB)) $(INSTALL_LIBDIR)
 
 clean:
 	$(OCAMLBUILD) -clean

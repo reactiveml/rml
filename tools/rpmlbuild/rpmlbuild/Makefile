@@ -37,7 +37,7 @@ NATIVE=$(LIBS:=.cmxa) $(PROGRAMS:=.native)
 
 all:
 	$(OCAMLBUILD) $(BYTE)
-ifeq ($(TARGET), opt)
+ifeq ($(TARGET), native)
 	$(OCAMLBUILD) $(NATIVE)
 endif
 byte:
@@ -61,7 +61,7 @@ realclean: clean
 	rm -rf ocamlbuild_Myocamlbuild_config.ml
 
 install: all install-prepare install-opt install-byte
-ifeq ($(TARGET), opt)
+ifeq ($(TARGET), native)
 	cp $(BUILDDIR)/rpmlbuild.native $(INSTALL_BIN)/rpmlbuild
 	cp $(BUILDDIR)/rpmlbuild.byte $(INSTALL_BIN)
 else
@@ -73,6 +73,7 @@ install-prepare:
 	mkdir -p $(INSTALL_LIB)
 
 install-opt: install-byte
+ifeq ($(TARGET), native)
 	cp $(BUILDDIR)/ocamlbuild.native $(BUILDDIR)/rpmlbuild.native
 	install -m 644 \
 	        $(BUILDDIR)/ocamlbuildlib.cmxa \
@@ -89,6 +90,7 @@ install-opt: install-byte
 	        $(BUILDDIR)/ocamlbuild.o \
 		$(INSTALL_LIB)
 	-ranlib $(INSTALL_LIB)/ocamlbuildlib.a
+endif
 
 install-byte:
 	cp $(BUILDDIR)/ocamlbuild.byte $(BUILDDIR)/rpmlbuild.byte

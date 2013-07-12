@@ -6,7 +6,7 @@ BIN:=$(COMPILER).$(TARGET)
 
 all: $(TARGET)
 
-native:
+native: byte
 	$(OCAMLBUILD) $(COMPILER).native
 
 byte:
