@@ -76,6 +76,12 @@ else
     mlmpi_libdir="$stdlib_dir"
 fi
 
+# Generate a dummy rzi.ml file
+if [ ! -f compiler/global/rzi.ml ]; then
+  echo "configure: creating compiler/global/rzi.ml"
+  echo "let known_modules = [[]]" > compiler/global/rzi.ml
+fi
+
 AC_SUBST(INSTALL)
 AC_SUBST(target)
 AC_SUBST(stdlib_dir)
