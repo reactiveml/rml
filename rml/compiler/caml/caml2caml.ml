@@ -26,6 +26,7 @@
 (* Source to source transformations *)
 
 open Misc
+open Asttypes
 open Caml_ast
 open Caml_misc
 
@@ -49,7 +50,7 @@ let constant_propagation =
 
       | Cexpr_constant c -> expr.cexpr_desc
 
-      | Cexpr_let (rec_flag, patt_expr_list, expression) ->
+      | Cexpr_let (Nonrecursive, patt_expr_list, expression) ->
 	  let patt_expr_list' =
 	    List.rev_map
 	      (fun (patt,expr) -> (patt, constant_propagation env expr))
@@ -73,10 +74,21 @@ let constant_propagation =
 	  begin match patt_expr_list'' with
 	  | [] -> (constant_propagation env' expression).cexpr_desc
 	  | _ ->
-	      Cexpr_let(rec_flag,
+	      Cexpr_let(Nonrecursive,
 			patt_expr_list'',
 			constant_propagation env' expression)
 	  end
+
+      | Cexpr_let (Recursive, patt_expr_list, expression) ->
+	  let patt_expr_list' =
+	    List.map
+	      (fun (patt,expr) -> (patt, constant_propagation env expr))
+	      patt_expr_list
+	  in
+          let expression' =
+            constant_propagation env expression
+          in
+          Cexpr_let (Recursive, patt_expr_list', expression')
 
       | Cexpr_function patt_expr_list ->
 	  let patt_expr_list' =
