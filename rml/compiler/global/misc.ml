@@ -106,19 +106,6 @@ let dparse = ref false
 (* dtime *)
 let dtime = ref false
 
-(*
-let display_time =
-  let last = ref 0.0 in
-  fun s ->
-    if !dtime then
-      let current = Sys.time() in
-      Printf.printf "%s\t%f\t%f\n"
-        s
-        (current -. !last)
-        current;
-      last := current
-*)
-
 (* interactive *)
 let interactive = ref false
 
