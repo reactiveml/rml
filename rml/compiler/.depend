@@ -213,9 +213,9 @@ lk/reac2lk.cmo : reac/reac_ast.cmo global/misc.cmo parsing/location.cmo \
 lk/reac2lk.cmx : reac/reac_ast.cmx global/misc.cmx parsing/location.cmx \
     lk/lk_ast.cmx global/ident.cmx static/def_static.cmx global/asttypes.cmx
 caml/caml2caml.cmo : global/symbol_table.cmo global/misc.cmo \
-    global/ident.cmo caml/caml_misc.cmo caml/caml_ast.cmo
+    global/ident.cmo caml/caml_misc.cmo caml/caml_ast.cmo global/asttypes.cmo
 caml/caml2caml.cmx : global/symbol_table.cmx global/misc.cmx \
-    global/ident.cmx caml/caml_misc.cmx caml/caml_ast.cmx
+    global/ident.cmx caml/caml_misc.cmx caml/caml_ast.cmx global/asttypes.cmx
 caml/caml_ast.cmo : parsing/location.cmo global/ident.cmo global/global.cmo \
     typing/def_types.cmo global/asttypes.cmo
 caml/caml_ast.cmx : parsing/location.cmx global/ident.cmx global/global.cmx \

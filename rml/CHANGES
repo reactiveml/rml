@@ -1,8 +1,13 @@
 Warning: incompatible changes with previous versions are marked with "*".
 
 
-ReactiveML 1.08.06 (XXXX-XX-XX):
+ReactiveML 1.08.06 (2013-07-06):
 --------------------------------
+ - rmlc: checking the compilation of .rmli files before .rml files.
+ - rmlc: new option -annot synonym for -dtypes.
+ - rmlc: bug fixes.
+ - rmllib: implementation of "await one s(x) when f x in ...".
+ - rmlbuild: support of multiple directories.
 
 
 ReactiveML 1.08.05 (2013-06-04):
