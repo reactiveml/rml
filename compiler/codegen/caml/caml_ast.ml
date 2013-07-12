@@ -28,6 +28,7 @@
 open Asttypes
 open Types
 open Modules
+open Def_modules
 
 type signal = Ident.t
 type ident = Ident.t

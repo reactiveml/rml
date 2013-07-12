@@ -25,26 +25,14 @@ OCAMLC=ocamlfind ocamlc -annot \
  -I +threads \
  -I +graphics \
  -I ../ \
- -I ../../interpreter/ \
- -I ../../compiler/ \
+ -I ../../interpreter/_build \
+ -I ../../compiler/_build \
  -I +compiler-libs/
 
 OPTIONS+=\
  -I $(shell ocamlc -where)/compiler-libs/ \
- -I ../../interpreter/ \
- -I ../../compiler/ \
- -I ../../compiler/global \
- -I ../../compiler/lco \
- -I ../../compiler/typing \
- -I ../../compiler/other_analysis \
- -I ../../compiler/reac \
- -I ../../compiler/caml \
- -I ../../compiler/parsing \
- -I ../../compiler/optimization \
- -I ../../compiler/static \
- -I ../../compiler/main \
- -I ../../compiler/lk \
- -I ../../compiler/external \
+ -I ../../interpreter/_build \
+ -I ../../compiler/_build \
  -I ../
 
 STDLIB=\
@@ -53,12 +41,15 @@ STDLIB=\
  graphics.cma \
  js_of_ocaml.cma \
  compiler.cma \
- rmlcompiler.cmo \
+ rpmlcompiler.cmo \
+ rml_types.cmo \
+ runtime_options.cmo \
  sig_env.cmo \
- lco_ctrl_tree.cmo \
+ runtime.cmo \
+ seq_runtime.cmo \
  lco_ctrl_tree_n.cmo \
- lk_implem.cmo \
- implem.cmo \
+ rmltest.cmo \
+ rml_machine.cmo \
  rmltop_alt_lexer.cmo \
  ocamlcommon.cma \
  ocamlbytecomp.cma \
@@ -116,9 +107,14 @@ STDLIB_MODULES=\
   stream \
   string \
   stringLabels \
+  rml_types \
+  runtime \
+  runtime_options \
   sig_env \
-  lco_ctrl_tree \
-  implem \
+  seq_runtime \
+  lco_ctrl_tree_n \
+  rmltest \
+  rml_machine \
   rmlcompiler \
   rmltop_alt_global \
   rmltop_alt_core \

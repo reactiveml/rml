@@ -80,13 +80,14 @@ let set_action b action =
   b##onclick <- Dom_html.handler (fun _ -> action b; Js._true)
 
 let start ppf =
-  Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rmlcompiler.Version.version);
+  Format.fprintf ppf "        ReactiveML (version %s)@.@." (Rpmlcompiler.Version.version);
   Rmltop_alt_core.init ();
-  Rmlcompiler.Misc.err_fmt := ppf;
-  Rmlcompiler.Misc.std_fmt := ppf;
-  Rmlcompiler.Configure.configure ();
+  Rpmlcompiler.Misc.err_fmt := ppf;
+  Rpmlcompiler.Misc.std_fmt := ppf;
+  Rpmlcompiler.Compiler_options.set_init_stdlib ();
+  Rpmlcompiler.Compiler_options.use_row_clocking := true;
 
-  let _ = Rmltop_alt_core.eval_ocaml_phrase ppf false "open Implem;;" in
+  let _ = Rmltop_alt_core.eval_ocaml_phrase ppf false "open Rml_machine.Lco_ctrl_tree_seq_interpreter;;" in
   let _ = Rmltop_alt_core.eval ppf "open Pervasives;;" in
   ()
 

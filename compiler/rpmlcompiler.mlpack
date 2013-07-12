@@ -12,7 +12,9 @@ Global_mapfold
 Static
 Types
 Clocks
+Rzi
 Clock_mapfold
+Def_modules
 Modules
 Symbol_table
 Lexer

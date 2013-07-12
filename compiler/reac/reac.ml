@@ -34,6 +34,7 @@ open Asttypes
 open Types
 open Clocks
 open Modules
+open Def_modules
 
 type ident = Ident.t
 

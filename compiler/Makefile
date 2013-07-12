@@ -7,16 +7,16 @@ BIN:=$(COMPILER).$(TARGET)
 all: $(TARGET)
 
 native:
-	$(OCAMLBUILD) $(COMPILER).native rpmlcompiler.cmx
+	$(OCAMLBUILD) $(COMPILER).native
 
 byte:
-	$(OCAMLBUILD) $(COMPILER).byte rpmlcompiler.cmo
+	$(OCAMLBUILD) $(COMPILER).byte
 
 debug:
-	$(OCAMLBUILD) $(COMPILER).d.byte rpmlcompiler.d.cmo
+	$(OCAMLBUILD) $(COMPILER).d.byte
 
 profile:
-	$(OCAMLBUILD) $(COMPILER).p.native rpmlcompiler.p.cmx
+	$(OCAMLBUILD) $(COMPILER).p.native
 
 install: all
 	$(INSTALL) -d $(INSTALL_BINDIR)

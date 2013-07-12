@@ -35,27 +35,7 @@ open Types
 open Clocks
 open Global
 open Parse_ident
-
-(* Informations associated with module names *)
-
-type value_description = (value_type_description, value_clock_description) global
-type constructor_description = (constructor_type_description,
-                               constructor_clock_description) global
-type label_description = (label_type_description,
-                           label_clock_description) global
-type type_description = (Types.type_description, clock_description) global
-
-type module0 =
-    { mod_name: string;                      (* name of the module *)
-      mod_values: (string, value_description) Hashtbl.t;
-                                             (* table of values *)
-      mod_constrs: (string, constructor_description) Hashtbl.t;
-                                             (* table of constructors *)
-      mod_labels: (string, label_description) Hashtbl.t;
-                                             (* table of labels *)
-      mod_types: (string, type_description) Hashtbl.t;
-                                             (* table of type constructors *)
-    }
+open Def_modules
 
 let name_of_module    md = md.mod_name
 and values_of_module  md = md.mod_values
@@ -94,19 +74,20 @@ let read_module basename filename =
     raise Error
 
 
-let use_extended_interfaces = ref false
-
 let load_module modname =
   let name = String.uncapitalize modname in
-  try
-    let fullname = find_in_path (name ^ ".rzi") in
-    let extname = fullname ^ "x" in
-    read_module name
-      (if !use_extended_interfaces && Sys.file_exists extname
-      then extname else fullname)
-  with Cannot_find_file _ ->
-    Printf.eprintf "Cannot find the compiled interface file %s.rzi.\n" name;
-    raise Error
+  let rzi = find_in_path (name ^ ".rzi") in
+  match rzi with
+  | Some rzi ->
+      read_module name rzi
+  | None ->
+      try
+        let md = List.assoc name Rzi.known_modules in
+        (Marshal.from_string md 0 : module0)
+      with Not_found ->
+        Format.fprintf !err_fmt
+          "Cannot find the compiled interface file %s.rzi.\n" name;
+        raise Error
 
 
 (* To find an interface by its name *)
