@@ -24,7 +24,7 @@
 open Rmltop_alt_core
 
 let (//) = Filename.concat
-let ocaml_stdlib = "/opt/local/lib/ocaml" (*Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir*)
+let ocaml_stdlib = Filename.dirname !Ocamlbuild_pack.Ocamlbuild_where.libdir
 
 let include_dir = ref [ ocaml_stdlib // "threads"; ]
 let hide_rml_dirs = ref false
