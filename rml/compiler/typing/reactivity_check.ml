@@ -64,7 +64,7 @@ let non_instantaneous k =
 (* correct behaviors *)
 let visited_list, visited = mk_visited ()
 
-let rec well_formed =
+let well_formed =
   let module Env =
     Set.Make (struct
       type t = int
