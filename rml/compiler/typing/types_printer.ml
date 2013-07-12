@@ -111,9 +111,9 @@ let rec print_reactivity ff k =
   | React_seq l -> fprintf ff "(%a)" (print_reactivity_list "; ") l
   | React_par l -> fprintf ff "(%a)" (print_reactivity_list " || ") l
   | React_or l -> fprintf ff "(%a)" (print_reactivity_list " + ") l
-  (* | React_raw (k1, { react_desc = React_var }) -> *)
-  (*     fprintf ff "(%a + ..)" *)
-  (*       print_reactivity k1 *)
+  | React_raw (k1, { react_desc = React_var }) ->
+      fprintf ff "(%a + ..)"
+        print_reactivity k1
   | React_raw (k1, k2) ->
       fprintf ff "(%a + %a)"
         print_reactivity k1
