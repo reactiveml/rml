@@ -21,9 +21,11 @@
 (* author: Louis Mandel *)
 (* created: 2005-10-25  *)
 
-module SeqRuntime = Seq_runtime.SeqRuntime(struct let dummy = () end)
+module SeqRuntime = Rmltop_interpreter.Seq_runtime.SeqRuntime
 
-module Interpreter = Lco_ctrl_tree_n.Rml_interpreter(SeqRuntime)
+module Interpreter = Rmltop_interpreter.Lco_ctrl_tree_n.Rml_interpreter(SeqRuntime)
+
+module Rml_types = Rmltop_interpreter.Rml_types
 
 let make p =
   let cd = SeqRuntime.get_top_clock_domain () in

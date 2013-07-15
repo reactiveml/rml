@@ -115,7 +115,7 @@ end
 module D = ListListDataStruct
 module E = Sig_env.Record
 
-module SeqRuntime (X:DUMMY) =
+module SeqRuntime =
 struct
     type 'a step = 'a -> unit
 

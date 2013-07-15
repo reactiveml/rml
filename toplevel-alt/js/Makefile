@@ -42,6 +42,7 @@ STDLIB=\
  js_of_ocaml.cma \
  compiler.cma \
  rpmlcompiler.cmo \
+ rmltop_interpreter.cmo \
  rml_types.cmo \
  runtime_options.cmo \
  sig_env.cmo \
@@ -115,7 +116,8 @@ STDLIB_MODULES=\
   lco_ctrl_tree_n \
   rmltest \
   rml_machine \
-  rmlcompiler \
+  rpmlcompiler \
+  rmltop_interpreter \
   rmltop_alt_global \
   rmltop_alt_core \
   rmltop_alt_implem \

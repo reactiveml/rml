@@ -34,13 +34,13 @@ all: rmltop_alt lib
 
 CL_INC=-I +ocamlbuild -I +compiler-libs
 
-rmltop_alt: ../compiler/_build/rpmlcompiler.cmo \
+rmltop_alt: ../compiler/_build/rpmlcompiler.cmo ../interpreter/_build/rmltop_interpreter.cmo \
 	$(RMLRUNFILES) \
 	rmltop_alt_global.cmo \
 	rmltop_alt_lexer.cmo \
 	rmltop_alt_core.cmo \
 	rmltop_alt.cmo
-	$(OCAMLC) $(OCAMLFLAGS) -o rmltop_alt $(CL_INC) -I +threads -I ../compiler/_build $(RMLLIB) \
+	$(OCAMLC) $(OCAMLFLAGS) -o rmltop_alt $(CL_INC) -I +threads -I ../compiler/_build -I ../interpreter/_build $(RMLLIB) \
 		ocamlcommon.cma \
 		ocamlbytecomp.cma \
 		ocamltoplevel.cma \
@@ -49,6 +49,7 @@ rmltop_alt: ../compiler/_build/rpmlcompiler.cmo \
 		threads.cma \
 		ocamlbuildlib.cma \
 		rpmlcompiler.cmo \
+		rmltop_interpreter.cmo \
 		rmltop_alt_global.cmo \
 		rmltop_alt_lexer.cmo \
 		rpmllib.cma \
@@ -139,7 +140,7 @@ rmltop_alt_implem.cmo rmltop_alt_implem.cmi: rmltop_alt_implem.ml
 rmltop_alt.cmo: rmltop_alt.ml ../compiler/_build/rpmlcompiler.cmo rmltop_alt_lexer.cmo rmltop_alt_global.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler/_build $(RMLLIB) -thread rmltop_alt.ml
 
-rmltop_alt_core.cmo: rmltop_alt_core.cmi errors.cmi ../compiler/_build/rpmlcompiler.cmo rmltop_alt_lexer.cmo rmltop_alt_global.cmo \
+rmltop_alt_core.cmo: rmltop_alt_core.cmi errors.cmi ../compiler/_build/rpmlcompiler.cmo ../interpreter/_build/rmltop_interpreter.cmo rmltop_alt_lexer.cmo rmltop_alt_global.cmo \
 		rmltop_alt_implem.cmo rmltop_alt_global.cmi rmltop_alt_controller.cmo
 	$(OCAMLC) $(OCAMLFLAGS) -c $(CL_INC) -I ../compiler/_build $(RMLLIB) -thread rmltop_alt_core.ml
 
