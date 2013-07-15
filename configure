@@ -4524,9 +4524,9 @@ if test "$enable_local_stdlib" = "yes"; then
 else
     stdlib_dir="$prefix/lib/rpml"
     rpmllib_dir="$stdlib_dir"
-    rmlc=rpmlc
-    rmldep=rpmldep
-    rmlbuild=rpmlbuild
+    rmlc="$prefix/bin/rpmlc"
+    rmldep="$prefix/bin/rpmldep"
+    rmlbuild="$prefix/bin/rpmlbuild"
     rmlbuild_libdir="$stdlib_dir/rpmlbuild"
     mlmpi_libdir="$stdlib_dir"
 fi
