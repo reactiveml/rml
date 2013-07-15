@@ -24,6 +24,7 @@ distclean:clean
 
 toplevel:all
 	(cd compiler && ocamlbuild rpmlcompiler.cmo)
+	(cd interpreter && ocamlbuild rmltop_interpreter.cmo)
 	(cd toplevel-alt && $(MAKE) rmltop_alt_global.rzi)
 	-rm compiler/global/rzi.ml
 	$(OCAML) -I compiler/_build/global compiler/_build/global/def_modules.cmo toplevel-alt/embedrzi.ml .
