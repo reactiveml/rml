@@ -103,7 +103,8 @@ let mk_includes dir =
 let find_rml_stdlib_dir () =
   let path = "rmlc.where" in
     if not (Pathname.exists path) then
-      (let cmd = Cmd (S [rmlc; A "-where"; Sh ">"; Px path]) in
+      (let cmd = Cmd (S [rmlc; T (tags_of_pathname path++"rml"++"where");
+                         A "-where"; Sh ">"; Px path]) in
          Command.execute cmd);
     let s = My_std.read_file (Pathname.to_string path) in
       stdlib_dir := String.sub s 0 (String.length s - 1)
@@ -247,11 +248,17 @@ let init () =
       end;
 
       flag ["rml"; "compile"; "annot"] (A "-dtypes");
+
       flag ["rml"; "compile"; "lco_rewrite"] (S ([A "-runtime"; A "Lco_rewrite"]));
+      flag ["rml"; "where"; "lco_rewrite"] (S ([A "-runtime"; A "Lco_rewrite"]));
       flag ["rml"; "compile"; "lco"] (S ([A "-runtime"; A "Lco"]));
+      flag ["rml"; "where"; "lco"] (S ([A "-runtime"; A "Lco"]));
       flag ["rml"; "compile"; "lco_ctrl_tree"] (S ([A "-runtime"; A "Lco_ctrl_tree"]));
+      flag ["rml"; "where"; "lco_ctrl_tree"] (S ([A "-runtime"; A "Lco_ctrl_tree"]));
       flag ["rml"; "compile"; "lco_ctrl_tree_n"] (S ([A "-runtime"; A "Lco_ctrl_tree_n"]));
-      flag ["rml"; "compile"; "lk"] (S ([A "-runtime"; A "Lk"]))
+      flag ["rml"; "where"; "lco_ctrl_tree_n"] (S ([A "-runtime"; A "Lco_ctrl_tree_n"]));
+      flag ["rml"; "compile"; "lk"] (S ([A "-runtime"; A "Lk"]));
+      flag ["rml"; "where"; "lk"] (S ([A "-runtime"; A "Lk"]));
 ;;
 
 
