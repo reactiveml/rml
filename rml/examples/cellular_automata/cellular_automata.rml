@@ -455,6 +455,7 @@ let process main =
     if !nox then ()
     else
       loop
+        ignore (Graphics.wait_next_event [Graphics.Poll]);
 	Graphics.synchronize ();
 	pause;
       end
