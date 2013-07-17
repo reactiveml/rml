@@ -62,6 +62,14 @@ let make_instruction s =
 	 info = no_info(); })
     Location.none
 
+let make_machine_instruction s =
+  make_expr
+    (Cexpr_global
+       { gi = { qual = "Rml_machine";
+		id = Ident.create Ident.gen_var s Ident.Internal };
+	 info = no_info(); })
+    Location.none
+
 let make_rml_type s ty_list =
   make_te
     (Ctype_constr ({ gi = { qual = !interpreter_module;

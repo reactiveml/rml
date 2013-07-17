@@ -31,7 +31,7 @@ cleanall: realclean
 .SUFFIXES : .rml .mli .ml .cmi .cmo .cmx .rzi
 
 .rml.ml:
-	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING)  -s $(MAIN) $<
+	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) $<
 .ml.cmo:
 	$(OCAMLC) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) $(INCLUDES) $<
 

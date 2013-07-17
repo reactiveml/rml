@@ -26,6 +26,7 @@
 (* The translation of Reac to Lco *)
 
 open Asttypes
+open Def_static
 open Reac_ast
 open Lco_ast
 open Global
@@ -700,14 +701,22 @@ and translate_proc_let =
 	       Location.none)
       end
 
+let translate_expr_or_process e =
+  match snd (e.expr_static) with
+    | Static -> translate_ml e
+    | Dynamic _ ->
+      let p = make_expr (Coexpr_process (translate_proc e)) Location.none in
+      make_expr (Coexpr_exec p) Location.none
+
+
 let translate_impl_item info_chan item =
   let coitem =
     match item.impl_desc with
-    | Rimpl_expr e -> Coimpl_expr (translate_ml e)
+    | Rimpl_expr e -> Coimpl_expr (translate_expr_or_process e)
     | Rimpl_let (flag, l) ->
 	Coimpl_let (flag,
 		   List.map
-		     (fun (p,e) -> (translate_pattern p, translate_ml e))
+		     (fun (p,e) -> (translate_pattern p, translate_expr_or_process e))
 		     l)
     | Rimpl_signal (l) ->
 	Coimpl_signal

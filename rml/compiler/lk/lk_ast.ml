@@ -73,6 +73,7 @@ and expression_desc =
   | Kexpr_signal of
       (ident * type_expression option)
 	* (expression * expression) option * expression
+  | Kexpr_exec of expression
 
 (* Process expressions *)
 and process =

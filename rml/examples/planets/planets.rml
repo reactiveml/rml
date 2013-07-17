@@ -245,7 +245,8 @@ let process systeme =
 ;;
 
 (****************************************************************************)
-let _ = Random.self_init()
+let _ =
+  Random.self_init();
+  run systeme
 ;;
-let main = systeme
-;;
+

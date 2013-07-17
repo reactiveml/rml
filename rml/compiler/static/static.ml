@@ -530,11 +530,10 @@ and static_conf conf =
 
 
 let static impl =
-  let typ =
     match impl.impl_desc with
-    | Rimpl_expr e -> static_expr ML e
+    | Rimpl_expr e -> ignore (static_expr Process e)
     | Rimpl_let (_, l) ->
-	static_expr_list static_expr max snd ML l
+	ignore (static_expr_list static_expr max snd Process l)
     | Rimpl_signal (s_list) ->
 	List.iter
 	  (fun (_, combine) ->
@@ -547,10 +546,6 @@ let static impl =
 		  then expr_wrong_static_err !Misc.err_fmt e2
 		  else ()
 	    | None -> ())
-	  s_list;
-	Static
-    | _ -> Static
-  in
-  if typ <> Static then impl_wrong_static_err !Misc.err_fmt impl
-
+	  s_list
+    | _ -> ()
 

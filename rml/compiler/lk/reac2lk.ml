@@ -26,6 +26,7 @@
 (* The translation of Reac to Lk *)
 
 open Asttypes
+open Def_static
 open Reac_ast
 open Lk_ast
 open Misc
@@ -729,14 +730,28 @@ and translate_conf conf =
   make_conf kconf conf.conf_loc
 
 
+let translate_expr_or_process e =
+  match snd (e.expr_static) with
+    | Static -> translate_ml e
+    | Dynamic _ ->
+      let id = make_var "k" in
+      let ctrl = make_var "ctrl" in
+      let k_var = make_proc (Kproc_var id) Location.none in
+      let p =
+        make_expr
+          (Kexpr_process (id, ctrl, translate_proc e k_var ctrl))
+          Location.none
+      in
+      make_expr (Kexpr_exec p) Location.none
+
 let translate_impl_item info_chan item =
   let kitem =
     match item.impl_desc with
-    | Rimpl_expr e -> Kimpl_expr (translate_ml e)
+    | Rimpl_expr e -> Kimpl_expr (translate_expr_or_process e)
     | Rimpl_let (flag, l) ->
 	Kimpl_let (flag,
 		   List.map
-		     (fun (p,e) -> (translate_pattern p, translate_ml e))
+		     (fun (p,e) -> (translate_pattern p, translate_expr_or_process e))
 		     l)
     | Rimpl_signal (l) ->
 	Kimpl_signal

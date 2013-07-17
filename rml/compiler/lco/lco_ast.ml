@@ -73,6 +73,7 @@ and expression_desc =
   | Coexpr_signal of
       (ident * type_expression option)
 	* (expression * expression) option * expression
+  | Coexpr_exec of expression
 
 (* Process expressions *)
 and process =

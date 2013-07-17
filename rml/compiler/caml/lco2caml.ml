@@ -280,6 +280,9 @@ let rec translate_ml e =
 		      Location.none],
 		   translate_ml e)
 
+    | Coexpr_exec p ->
+        Cexpr_apply (make_machine_instruction "rml_exec", [translate_ml p])
+
   in
   make_expr cexpr e.coexpr_loc
 
