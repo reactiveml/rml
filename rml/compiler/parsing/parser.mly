@@ -377,6 +377,7 @@ The precedences must be listed from low to high.
 %nonassoc below_SHARP
 %nonassoc SHARP                         /* simple_expr/toplevel_directive */
 %nonassoc below_DOT
+%left RUN
 %nonassoc DOT
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
@@ -616,6 +617,9 @@ expr:
 				     pexpr_loc = Location.none; })) }
   | PROCESS proc_def
       { $2 }
+  | RUN simple_expr simple_expr_list
+      { let e = mkexpr(Pexpr_apply($2, List.rev $3)) in
+        mkexpr(Pexpr_run(e)) }
   | RUN simple_expr
       { mkexpr(Pexpr_run($2)) }
 ;
