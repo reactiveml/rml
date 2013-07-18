@@ -36,27 +36,22 @@ let sampling = ref 0.01
 
 let print_prompt () = print_string "# "
 
-type 'a sync_point = 'a ref * Mutex.t * Condition.t
+type 'a sync_point = 'a option ref * Condition.t
 
 let create_sp () =
-  let r = ref (Obj.magic ()) in
-  let m = Mutex.create () in
+  let r = ref None in
   let c = Condition.create () in
-  Mutex.lock m;
-  (r, m, c)
+  (r, c)
 
-let push_sp (r, m, c) v =
-  Mutex.lock m;
-  r := v;
-  Mutex.unlock m;
+let push_sp (r, c) v =
+  r := (Some v);
   Condition.signal c
 
-let wait_sp (r, m, c) =
-  Condition.wait c m;
-  Mutex.unlock m;
-  !r
+let wait_sp (r, c) =
+  Condition.wait c global_mutex;
+  match !r with
+    | None -> assert false
+    | Some v -> v
 
 let add_to_run p =
-  lock ();
-  to_run := p :: !to_run;
-  unlock ()
+  to_run := p :: !to_run

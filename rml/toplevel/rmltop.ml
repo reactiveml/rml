@@ -57,7 +57,9 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
 	    flush rmlc_in;
 	    (* read the compiled phrase *)
 	    let ocaml_phrase = Rmltop_lexer.expr rmlc_out_lexbuf in
-	    [ ocaml_phrase;";;\n";
+	    [ "let () = Rmltop_global.lock();; \n";
+        ocaml_phrase;";;\n";
+	      "let () = Rmltop_global.unlock();; \n";
 	      "let () = Rmltop_global.print_prompt();;" ]
 	| Rmltop_lexer.OCaml_phrase s ->
 	    [ s; ";;\n";
