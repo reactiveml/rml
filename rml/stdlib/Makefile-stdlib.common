@@ -36,3 +36,5 @@ STDLIB_SRC= pervasives.rmli \
 	unix.rmli \
 	weak.rmli \
 	rml_list.rmli
+
+STDLIB_RML_SRC=rml_list.rml

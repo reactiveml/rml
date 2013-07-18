@@ -6,7 +6,7 @@ LIB=	$(RUNTIME_DIR)/rmllib.cma \
 
 INSTALLFILE= $(RMLLIB_INTF) $(LIB)
 
-STDLIB_OBJ=$(RUNTIME_DIR)/rml_list.cmo
+STDLIB_OBJ=$(patsubst %.rml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_RML_SRC))
 STDLIB_INTF = $(patsubst %.rmli,../stdlib/%.rzi,$(STDLIB_SRC)) $(STDLIB_OBJ:.cmo=.cmi)
 
 OBJ=$(RMLLIB_OBJ) $(STDLIB_OBJ)
