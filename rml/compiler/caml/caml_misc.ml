@@ -214,7 +214,7 @@ let rec ctype_expr_of_type_expr typ =
 let rec make_dummy t =
   let expr =
     begin match t.type_desc with
-    | Type_var -> assert false
+    | Type_var -> make_magic ()
 
     | Type_arrow _ | Type_process _ ->
 	Cexpr_function
