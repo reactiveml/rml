@@ -1,73 +1,73 @@
 val iter : ('a -> 'b process) -> 'a list -> unit process
 (** [Rml_list.iter p [a1; ...; an]] applies process [p] in turn to
-   [a1; ...; an]. It is equivalent to
-   [begin run p a1; run p a2; ...; run p an; () end]. *)
+    [a1; ...; an]. It is equivalent to
+    [begin run p a1; run p a2; ...; run p an; () end]. *)
 
 val iter2 : ('a -> 'b -> 'c process) -> 'a list -> 'b list -> unit process
 (** [Rml_list.iter2 p [a1; ...; an]] applies process [p] in turn to
-   [a1; ...; an] and [b1; ...; bn]. It is equivalent to
-   [begin run p a1 b1; run p a2 b2; ...; run p an bn; () end].
-   Raise [Invalid_argument] if the two lists have different lengths. *)
+    [a1; ...; an] and [b1; ...; bn]. It is equivalent to
+    [begin run p a1 b1; run p a2 b2; ...; run p an bn; () end].
+    Raise [Invalid_argument] if the two lists have different lengths. *)
 
 val par_iter : ('a -> 'b process) -> 'a list -> unit process
 (** [Rml_list.par_iter p [a1; ...; an]] applies process [p] in parallel to
-   [a1; ...; an]. It is equivalent to
-   [begin run p a1 || run p a2 || ... || run p an; () end]. *)
+    [a1; ...; an]. It is equivalent to
+    [begin run p a1 || run p a2 || ... || run p an; () end]. *)
 
 val par_iter2 : ('a -> 'b -> 'c process) -> 'a list -> 'b list -> unit process
 (** [Rml_list.par_iter2 p [a1; ...; an]] applies process [p] in parallel to
-   [a1; ...; an] and [b1; ...; bn]. It is equivalent to
-   [begin run p a1 b1 || run p a2 b2 || ... || run p an bn; () end].
-   Raise [Invalid_argument] if the two lists have different lengths. *)
+    [a1; ...; an] and [b1; ...; bn]. It is equivalent to
+    [begin run p a1 b1 || run p a2 b2 || ... || run p an bn; () end].
+    Raise [Invalid_argument] if the two lists have different lengths. *)
 
 val map : ('a -> 'b process) -> 'a list -> 'b list process
 (** [Rml_list.map p [a1; ...; an]] applies process [p] to [a1, ..., an],
-   and builds the list [[run p a1; ...; run p an]]
-   with the results returned by [p].  Not tail-recursive. *)
+    and builds the list [[run p a1; ...; run p an]]
+    with the results returned by [p].  Not tail-recursive. *)
 
 val map2 : ('a -> 'b -> 'c process) -> 'a list -> 'b list -> 'c list process
 (** [Rml_list.map2 p [a1; ...; an] [b1; ...; bn]] is
-   [[run p a1 b1; ...; run p an bn]].
-   Raise [Invalid_argument] if the two lists have
-   different lengths.  Not tail-recursive. *)
+    [[run p a1 b1; ...; run p an bn]].
+    Raise [Invalid_argument] if the two lists have
+    different lengths.  Not tail-recursive. *)
 
 val rev_map : ('a -> 'b process) -> 'a list -> 'c list process
 (** [Rml_List.rev_map p l] gives the same result as
-   {!List.rev}[ (]{!Rml_list.map}[ p l)], but is tail-recursive and
-   more efficient. *)
+    {!List.rev}[ (]{!Rml_list.map}[ p l)], but is tail-recursive and
+    more efficient. *)
 
 val rev_map2 : ('a -> 'b -> 'c process) -> 'a list -> 'b list -> 'd list process
 (** [Rml_list.rev_map2 p l1 l2] gives the same result as
-   {!List.rev}[ (]{!Rml_list.map2}[ p l1 l2)], but is tail-recursive and
-   more efficient. *)
+    {!List.rev}[ (]{!Rml_list.map2}[ p l1 l2)], but is tail-recursive and
+    more efficient. *)
 
 val par_map : ('a -> 'b process) -> 'a list -> 'b list process
-(** [Rml_list.map p [a1; ...; an]] applies process [p] to [a1, ..., an] in parallel,
-   and builds the list [[run p a1; ...; run p an]]
-   with the results returned by [p].  Not tail-recursive. *)
+(** [Rml_list.map p [a1; ...; an]] applies process [p] to [a1, ..., an]
+    in parallel, and builds the list [[run p a1; ...; run p an]] with
+    the results returned by [p].  Not tail-recursive. *)
 
 val par_map2 : ('a -> 'b -> 'c process) -> 'a list -> 'b list -> 'c list process
 (** [Rml_list.map2 p [a1; ...; an] [b1; ...; bn]] is
-   [[run p a1 b1; ...; run p an bn]] and runs the processes in paralell.
-   Raise [Invalid_argument] if the two lists have
-   different lengths.  Not tail-recursive. *)
+    [[run p a1 b1; ...; run p an bn]] and runs the processes in paralell.
+    Raise [Invalid_argument] if the two lists have
+    different lengths.  Not tail-recursive. *)
 
 val fold_left : ('a -> 'b -> 'a process) -> 'a -> 'b list -> 'a process
 (** [Rml_list.fold_left p a [b1; ...; bn]] is
-   [run p (... (run p (run p a b1) b2) ...) bn]. *)
+    [run p (... (run p (run p a b1) b2) ...) bn]. *)
 
 val fold_left2 : ('a -> 'b -> 'c -> 'a process) -> 'a -> 'b list -> 'c list -> 'a process
 (** [Rml_list.fold_left2 p a [b1; ...; bn] [c1; ...; cn]] is
-   [run p (... (run p (run p a b1 c1) b2 c2) ...) bn cn].
-   Raise [Invalid_argument] if the two lists have
-   different lengths. *)
+    [run p (... (run p (run p a b1 c1) b2 c2) ...) bn cn].
+    Raise [Invalid_argument] if the two lists have
+    different lengths. *)
 
 val fold_right : ('a -> 'b -> 'b process) -> 'a list -> 'b -> 'b process
 (** [Rml_list.fold_right p [a1; ...; an] b] is
-   [run p a1 (run p a2 (... (run p an b) ...))].  Not tail-recursive. *)
+    [run p a1 (run p a2 (... (run p an b) ...))].  Not tail-recursive. *)
 
 val fold_right2 : ('a -> 'b -> 'c -> 'c process) -> 'a list -> 'b list -> 'c -> 'c process
 (** [List.fold_right2 p [a1; ...; an] [b1; ...; bn] c] is
-   [run p a1 b1 (run p a2 b2 (... (run p an bn c) ...))].
-   Raise [Invalid_argument] if the two lists have
-   different lengths.  Not tail-recursive. *)
+    [run p a1 b1 (run p a2 b2 (... (run p an bn c) ...))].
+    Raise [Invalid_argument] if the two lists have
+    different lengths.  Not tail-recursive. *)
