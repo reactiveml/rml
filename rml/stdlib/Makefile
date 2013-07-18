@@ -24,6 +24,7 @@ clean:
 
 realclean: clean
 	rm -f *~
+cleanall: realclean
 
 arg.rzi: pervasives.rzi
 array.rzi: pervasives.rzi
