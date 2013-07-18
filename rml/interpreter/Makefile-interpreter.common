@@ -13,7 +13,7 @@ OBJ=$(RMLLIB_OBJ) $(STDLIB_OBJ)
 OBJ_OPT = $(OBJ:.cmo=.cmx)
 
 $(RUNTIME_DIR)/%.ml:../stdlib/%.rml
-	../compiler/rmlc -I ../stdlib -d $(RUNTIME_DIR) -no_reactivity_warning -runtime $(RUNTIME) $<
+	$(RMLC) -I ../stdlib -d $(RUNTIME_DIR) -no_reactivity_warning -runtime $(RUNTIME) $<
 
 $(RUNTIME_DIR)/%.cmo:$(RUNTIME_DIR)/%.ml
 	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) -o $@ $<
