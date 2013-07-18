@@ -287,6 +287,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token <string> PREFIXOP
 %token PRESENT             /* "present" */
 %token PRIVATE             /* "private" */
+%token PROC                /* "proc"  */
 %token PROCESS             /* "process" */
 %token QUESTION            /* "?" */
 %token QUESTIONQUESTION    /* "??" */
@@ -617,6 +618,8 @@ expr:
 				     pexpr_loc = Location.none; })) }
   | PROCESS proc_def
       { $2 }
+  | PROC simple_pattern proc_fun_def
+      { mkexpr(Pexpr_function([$2, $3])) }
   | RUN simple_expr simple_expr_list
       { let e = mkexpr(Pexpr_apply($2, List.rev $3)) in
         mkexpr(Pexpr_run(e)) }
@@ -762,6 +765,11 @@ match_cases:
 fun_def:
     match_action                                { $1 }
   | simple_pattern fun_def
+      { ghexpr(Pexpr_function([$1, $2])) }
+;
+proc_fun_def:
+    MINUSGREATER par_expr                       { mkexpr (Pexpr_process $2) }
+  | simple_pattern proc_fun_def
       { ghexpr(Pexpr_function([$1, $2])) }
 ;
 proc_def:

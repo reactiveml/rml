@@ -116,6 +116,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "pre", PRE;
     "present", PRESENT;
     "private", PRIVATE;
+    "proc", PROC;
     "process", PROCESS;
     "rec", REC;
     "run", RUN;
