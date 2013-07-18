@@ -26,16 +26,20 @@ open Def_types
 
 (* Warnings *)
 let rec_warning expr k =
-  Format.fprintf !err_fmt
-    "%aWarning: This expression may produce an instantaneous recursion.@."
-    Location.print expr.expr_loc
-    (* (Types_printer.print_to_string Types_printer.print_reactivity k) *)
+  if !Misc.reactivity_warning then (
+    Format.fprintf !err_fmt
+      "%aWarning: This expression may produce an instantaneous recursion.@."
+      Location.print expr.expr_loc
+  )
+(* (Types_printer.print_to_string Types_printer.print_reactivity k) *)
 
 let loop_warning expr k =
-  Format.fprintf !err_fmt
-    "%aWarning: This expression may be an instantaneous loop.@."
-    Location.print expr.expr_loc
-    (* (Types_printer.print_to_string Types_printer.print_reactivity k) *)
+  if !Misc.reactivity_warning then (
+    Format.fprintf !err_fmt
+      "%aWarning: This expression may be an instantaneous loop.@."
+      Location.print expr.expr_loc
+  )
+(* (Types_printer.print_to_string Types_printer.print_reactivity k) *)
 
 (* non instantaneity of behaviors *)
 let visited_list, visited = mk_visited ()
