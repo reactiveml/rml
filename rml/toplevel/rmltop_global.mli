@@ -30,8 +30,14 @@ val suspend : unit option ref
 val resume : unit option ref
 val step : int option ref
 val to_run : unit rml_process list ref
+val add_to_run : unit rml_process -> unit
 
 val lock : unit -> unit
 val unlock : unit -> unit
 
 val print_prompt : unit -> unit
+
+type 'a sync_point
+val create_sp : unit -> 'a sync_point
+val push_sp : 'a sync_point -> 'a -> unit
+val wait_sp : 'a sync_point -> 'a
