@@ -1,0 +1,93 @@
+let rec process iter p l = match l with
+| [] -> ()
+| x::l -> run p x; run iter p l
+
+let rec process iter2 p l1 l2 = match l1, l2 with
+| [], [] -> ()
+| x1::l1, x2::l2 -> run p x1 x2; run iter2 p l1 l2
+| _, _ -> invalid_arg "Rml_list.iter2"
+
+let rec process par_iter p l = match l with
+| [] -> ()
+| x::l -> run p x || run par_iter p l
+
+let rec process par_iter2 p l1 l2 = match l1, l2 with
+| [], [] -> ()
+| x1::l1, x2::l2 -> run p x1 x2 || run par_iter2 p l1 l2
+| _, _ -> invalid_arg "Rml_list.par_iter2"
+
+let rec process map p l = match l with
+| [] -> []
+| x::l ->
+    let x' = run p x in
+    let l' = run map p l in
+    x'::l'
+
+let rec process map2 p l1 l2 = match l1, l2 with
+| [], [] -> []
+| x1::l1, x2::l2 ->
+    let x' = run p x1 x2 in
+    let l' = run map2 p l1 l2 in
+    x'::l'
+| _, _ -> invalid_arg "Rml_list.map2"
+
+let rec process rev_map p l =
+  let rec process aux acc l = match l with
+  | [] -> []
+  | x::l ->
+      let x' = run p x in
+      run aux (x'::acc) l
+  in
+  run aux [] l
+
+let rec process rev_map2 p l1 l2 =
+  let rec process aux acc l1 l2 = match l1, l2 with
+  | [], [] -> []
+  | x1::l1, x2::l2 ->
+      let x' = run p x1 x2 in
+      run aux (x'::acc) l1 l2
+  | _, _ -> invalid_arg "Rml_list.rev_map2"
+  in
+  run aux [] l1 l2
+
+let rec process par_map p l = match l with
+| [] -> []
+| x::l ->
+    let x' = run p x
+    and l' = run par_map p l in
+    x'::l'
+
+let rec process par_map2 p l1 l2 = match l1, l2 with
+| [], [] -> []
+| x1::l1, x2::l2 ->
+    let x' = run p x1 x2
+    and l' = run par_map2 p l1 l2 in
+    x'::l'
+| _, _ -> invalid_arg "Rml_list.par_map2"
+
+
+let rec process fold_left p acc l = match l with
+| [] -> acc
+| x::l ->
+    let acc' = run p acc x in
+    run fold_left p acc' l
+
+let rec process fold_left2 p acc l1 l2 = match l1, l2 with
+| [], [] -> acc
+| x1::l1, x2::l2 ->
+    let acc' = run p acc x1 x2 in
+    run fold_left2 p acc' l1 l2
+| _, _ -> invalid_arg "Rml_list.fold_left2"
+
+let rec process fold_right p l acc = match l with
+| [] -> acc
+| x::l ->
+    let acc' = run fold_right p l acc in
+    run p x acc'
+
+let rec process fold_right2 p l1 l2 acc = match l1, l2 with
+| [], [] -> acc
+| x1::l1, x2::l2 ->
+    let acc' = run fold_right2 p l1 l2 acc in
+    run p x1 x2 acc'
+| _, _ -> invalid_arg "Rml_list.fold_right2"

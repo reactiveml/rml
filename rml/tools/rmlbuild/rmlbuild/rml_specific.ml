@@ -253,10 +253,10 @@ let init () =
       flag ["rml"; "where"; "lco_rewrite"] (S ([A "-runtime"; A "Lco_rewrite"]));
       flag ["rml"; "compile"; "lco"] (S ([A "-runtime"; A "Lco"]));
       flag ["rml"; "where"; "lco"] (S ([A "-runtime"; A "Lco"]));
-      flag ["rml"; "compile"; "lco_ctrl_tree"] (S ([A "-runtime"; A "Lco_ctrl_tree"]));
-      flag ["rml"; "where"; "lco_ctrl_tree"] (S ([A "-runtime"; A "Lco_ctrl_tree"]));
-      flag ["rml"; "compile"; "lco_ctrl_tree_n"] (S ([A "-runtime"; A "Lco_ctrl_tree_n"]));
-      flag ["rml"; "where"; "lco_ctrl_tree_n"] (S ([A "-runtime"; A "Lco_ctrl_tree_n"]));
+      flag ["rml"; "compile"; "lco_n"] (S ([A "-runtime"; A "Lco_n"]));
+      flag ["rml"; "where"; "lco_n"] (S ([A "-runtime"; A "Lco_n"]));
+      flag ["rml"; "compile"; "lco_class"] (S ([A "-runtime"; A "Lco_class"]));
+      flag ["rml"; "where"; "lco_class"] (S ([A "-runtime"; A "Lco_class"]));
       flag ["rml"; "compile"; "lk"] (S ([A "-runtime"; A "Lk"]));
       flag ["rml"; "where"; "lk"] (S ([A "-runtime"; A "Lk"]));
 ;;

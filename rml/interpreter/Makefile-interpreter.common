@@ -1,3 +1,25 @@
+include ../stdlib/Makefile-stdlib.common
+
+LIB=	$(RUNTIME_DIR)/rmllib.cma \
+	$(RUNTIME_DIR)/rmllib.cmxa \
+	$(RUNTIME_DIR)/rmllib.a \
+
+INSTALLFILE= $(RMLLIB_INTF) $(LIB)
+
+STDLIB_OBJ=$(RUNTIME_DIR)/rml_list.cmo
+STDLIB_INTF = $(patsubst %.rmli,../stdlib/%.rzi,$(STDLIB_SRC)) $(STDLIB_OBJ:.cmo=.cmi)
+
+OBJ=$(RMLLIB_OBJ) $(STDLIB_OBJ)
+OBJ_OPT = $(OBJ:.cmo=.cmx)
+
+$(RUNTIME_DIR)/%.ml:../stdlib/%.rml
+	../compiler/rmlc -I ../stdlib -d $(RUNTIME_DIR) -no_reactivity_warning -runtime $(RUNTIME) $<
+
+$(RUNTIME_DIR)/%.cmo:$(RUNTIME_DIR)/%.ml
+	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) -o $@ $<
+$(RUNTIME_DIR)/%.cmx:$(RUNTIME_DIR)/%.ml
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $(INCLUDES) -o $@ $<
+
 # library
 $(RUNTIME_DIR)/rmllib.cma: $(OBJ)
 	$(OCAMLC) $(OCAMLFLAGS) -a -o $@ $^
@@ -8,10 +30,13 @@ $(RUNTIME_DIR)/rmllib.cmxa: $(OBJ_OPT)
 # dependencies
 include .depend
 
+all: $(INSTALLFILE)
+
 # installing
 install: $(INSTALLFILE)
 	$(INSTALL) -d $(LIBDIR)/$(RUNTIME_DIR)
 	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/$(RUNTIME_DIR)
+	$(INSTALL) -m 644 $(STDLIB_INTF) $(LIBDIR)/$(RUNTIME_DIR)
 
 uninstall:
 	(cd $(LIBDIR)/$(RUNTIME_DIR); rm -f $(INSTALLFILE) )
@@ -19,7 +44,7 @@ uninstall:
 
 # cleaning:
 clean:
-	rm -f *.cm* *.annot *.o $(INSTALLFILE)
+	rm -f *.cm* *.annot *.o $(INSTALLFILE) $(RUNTIME_DIR)/*
 
 realclean: clean
 	rm -f  *~
