@@ -58,7 +58,8 @@ STDLIB=\
  lco_ctrl_tree.cmo \
  lco_ctrl_tree_n.cmo \
  lk_implem.cmo \
- implem.cmo \
+ rml_machine.cmo \
+ implem_lco_ctrl_tree_record.cmo \
  rmltop_alt_lexer.cmo \
  ocamlcommon.cma \
  ocamlbytecomp.cma \
@@ -118,7 +119,8 @@ STDLIB_MODULES=\
   stringLabels \
   sig_env \
   lco_ctrl_tree \
-  implem \
+  rml_machine \
+  implem_lco_ctrl_tree_record \
   rmlcompiler \
   rmltop_alt_global \
   rmltop_alt_core \

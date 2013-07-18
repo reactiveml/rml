@@ -2,7 +2,7 @@ include ../config
 include ../configure-tools/Makefile.common
 
 RMLC=../compiler/rmlc
-RMLLIB=-I ../stdlib -I ../interpreter
+RMLLIB=-I ../stdlib -I ../interpreter -I ../interpreter/lco
 
 INSTALLFILE=	rmltop_alt.cmi \
 		rmltop_alt_reactive_machine.cmi \

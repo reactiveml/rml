@@ -23,7 +23,7 @@
 
 let rml_react_unsafe =
   let react =
-    Implem.Lco_ctrl_tree_record.rml_make_exec_process
+    Implem_lco_ctrl_tree_record.Lco_ctrl_tree_record.rml_make_exec_process
       Rmltop_alt_machine_body.main
   in
   fun l ->

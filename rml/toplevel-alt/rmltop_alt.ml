@@ -40,7 +40,7 @@ let add_include_obj inc = include_obj := !include_obj @ [ inc ]
 let show_help = ref false
 
 let init_rml = [
-  "open Implem;;";
+  "open Implem_lco_ctrl_tree_record;;";
 ]
 
 let print_intro () =
@@ -104,12 +104,13 @@ let main () =
   if not !hide_rml_dirs then begin
     let rml_stdlib = Rmlcompiler.Configure.locate_stdlib () in
     include_dir :=
-         rml_stdlib
+         rml_stdlib // "lco"
       :: rml_stdlib // "toplevel"
       :: !include_dir
   end;
   print_intro();
   Sys.catch_break true;
+  Rmlcompiler.Configure.set_runtime "Lco";
   Rmltop_alt_core.init ();
   init_toplevel ();
   Rmlcompiler.Interactive.init ();
