@@ -1,0 +1,9 @@
+(* 18/07/2013 *)
+(* On souhaiterait afficher 2 warnings et pas 3. *)
+
+
+let rec process p l =
+  match l with
+  | [] -> run (p l)
+  | [ _ ] -> pause; run (p l)
+  | _ -> run (p l)
