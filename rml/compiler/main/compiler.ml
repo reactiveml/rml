@@ -138,15 +138,10 @@ let compile_implementation_front_end info_fmt filename itf impl_list =
   if Sys.file_exists (filename ^ ".rmli")
   (* ||  Sys.file_exists (filename ^ ".mli") *)
   then begin
-    if not (Sys.file_exists (make_output_filename (filename ^ ".rzi"))) then begin
-      no_compile_itf filename
-    end else begin
-      (*
-      let dclsig = Env.read_signature modulename cmifile in
-      Includemod.compunit "(obtained by packing)" sg mlifile dclsig
-       *)
-      ()
-    end
+    let rzi_file = (Filename.basename filename)^".rzi" in
+    match find_in_path rzi_file with
+      | Some _ -> ()
+      | None -> no_compile_itf filename
   end else begin
 
     (* write interface *)
