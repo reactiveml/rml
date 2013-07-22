@@ -1,0 +1,151 @@
+(**********************************************************************)
+(*                                                                    *)
+(*                           ReactiveML                               *)
+(*                    http://reactiveML.org                           *)
+(*                    http://rml.inria.fr                             *)
+(*                                                                    *)
+(*                          Louis Mandel                              *)
+(*                                                                    *)
+(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
+(*  This file is distributed under the terms of the Q Public License  *)
+(*  version 1.0.                                                      *)
+(*                                                                    *)
+(*  ReactiveML has been done in the following labs:                   *)
+(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
+(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
+(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
+(*                                                                    *)
+(**********************************************************************)
+
+(* file: rml_process_manager.rml *)
+(* created: 2013-07-21  *)
+(* authors: Louis Mandel and Florence Plateau *)
+
+type ident = int
+;;
+
+type kind = Killable | Suspendable | Extensible
+;;
+
+let string_of_kind k =
+  match k with
+  | Killable -> "k"
+  | Suspendable -> "s"
+  | Extensible -> "x"
+
+let gen_id =
+  let cpt = ref 0 in
+  fun () ->
+    incr cpt;
+    !cpt
+;;
+
+(**********************)
+(* process management *)
+(**********************)
+
+let processes = ref ([] : (ident * kind list) list)
+
+let ps () =
+  List.iter
+    (fun (id, kinds) ->
+      print_int id;
+      print_string ": ";
+      begin match kinds with
+      | [] -> print_string "?"
+      | _ -> List.iter (fun k -> print_string ((string_of_kind k)^" ")) kinds
+      end;
+      print_newline())
+    !processes
+
+let process manage p kinds =
+  let id = gen_id () in
+  print_endline ("["^(string_of_int id)^"]");
+  processes := (id, kinds) :: !processes;
+  let v = run (p id) in
+  processes := List.filter (fun (x,_) -> x <> id) !processes;
+  v
+
+(********************)
+(* Killable         *)
+(********************)
+
+signal kill;;
+
+let process killable' (id: ident) p =
+  do
+    let v = run p in Some v
+  until kill(ids) when List.mem id ids -> None done
+;;
+
+(* let killable p =  *)
+(*   let id = gen_id () in print_endline ("["^(string_of_int id)^"]"); *)
+(*   killable' id p *)
+(* ;; *)
+
+let killable p =
+  manage (fun id -> killable' id p) [Killable]
+;;
+
+
+(********************)
+(* Suspendable      *)
+(********************)
+
+signal sr;;
+
+let process suspendable' (id: ident) p =
+  signal suspend_me in
+  signal kill_me default None gather (fun x y -> assert (y = None); Some x) in
+  do
+    begin
+      control let v = run p in emit kill_me(v) with suspend_me done
+      ||
+      loop await sr(ids) in if List.mem id ids then emit suspend_me end
+    end;
+    assert false
+  until kill_me(Some x) -> x done
+;;
+
+(* let suspendable p =  *)
+(*   let id = gen_id () in print_endline ("("^(string_of_int id)^")"); *)
+(*   suspendable' (gen_id()) p *)
+(* ;; *)
+
+let suspendable p =
+  manage (fun id -> suspendable' id p) [Suspendable]
+;;
+
+
+(********************)
+(* Extensible       *)
+(********************)
+
+let process extensible' (id:ident)
+    (add: ('a , (ident * ('state -> 'b process)) list) event)
+    (p_init: 'state -> 'c process) (state:'state) =
+  signal add_to_me default process ()
+      gather fun p q -> process (run (p state) || run q)
+  in
+  let rec process extends =
+    await add_to_me(p) in
+    run p || run extends
+  in
+  run extends
+  ||
+  run (p_init state)
+  ||
+  loop
+    await add(ids) in
+    List.iter (fun (x,p) -> if x = id then emit add_to_me p) ids
+  end
+;;
+
+(* let extensible add p_init state = *)
+(*   let id = gen_id () in print_endline ("{"^(string_of_int id)^"}"); *)
+(*   extensible' id add p_init state *)
+(* ;; *)
+
+let extensible add p_init state =
+  manage (fun id ->  extensible' id add p_init state) [Extensible]
+;;

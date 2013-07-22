@@ -1,0 +1,63 @@
+(**********************************************************************)
+(*                                                                    *)
+(*                           ReactiveML                               *)
+(*                    http://reactiveML.org                           *)
+(*                    http://rml.inria.fr                             *)
+(*                                                                    *)
+(*                          Louis Mandel                              *)
+(*                                                                    *)
+(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
+(*  This file is distributed under the terms of the Q Public License  *)
+(*  version 1.0.                                                      *)
+(*                                                                    *)
+(*  ReactiveML has been done in the following labs:                   *)
+(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
+(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
+(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
+(*                                                                    *)
+(**********************************************************************)
+
+(* file: rml_process_manager.rmli *)
+(* created: 2013-07-21  *)
+(* authors: Louis Mandel and Florence Plateau *)
+
+type ident
+(** Type of the process identifier. *)
+
+val ps: unit -> unit
+(** Display the list of running processes with their behaviors:
+      - [k]: killable
+      - [s]: suspendable
+      - [x]: extensible
+*)
+
+val killable: 'a process -> 'a option process
+(** [run killable p] associates an id to the process [p] and executes
+    it. The execution of this process can be stopped by the emission
+    of its id on the signal [kill]. If the execution of [p] terminates
+    with the value [v], then [run killable p] returns [Some v]. If If
+    the execution of [p] is aborted, the value [None] is returned.  *)
+
+val kill: (int , ident list) event
+(** Signal gathering the killing orders. *)
+
+
+
+val suspendable: 'a process -> 'a process
+(** [run suspendable p] associates an id to the process [p] and
+    executes it. The execution of this process can be suspended and
+    then resumed by the emission of its id on the signal [sr].
+*)
+
+val sr: (int , ident list) event
+(** Signal gathering the suspension and resumption orders. *)
+
+
+val extensible:
+  ('a, (int * ('state -> unit process)) list) event ->
+  ('state -> unit process) -> 'state -> unit process
+(** [run extensible add p state] associates an id to the process
+    [(p state)] and executes it. New processes sharing the state [state]
+    can be executed in parallel to [(p state)] by send their
+    definition on the signal [add].
+*)
