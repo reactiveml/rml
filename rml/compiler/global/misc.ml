@@ -98,6 +98,9 @@ let number_of_instant = ref (-1)
 (* samplin rate *)
 let sampling = ref (-. 1.0)
 
+(* threads *)
+let with_thread = ref false
+
 (* verbose *)
 let print_type = ref false
 let save_types = ref false

@@ -49,6 +49,7 @@ let _ =
         "-no_reactivity_simpl", Arg.Unit unset_no_reactivity_simpl, doc_no_reactivity_simpl;
 	"-old_loop_warning", Arg.Unit set_old_instantaneous_loop_warning, doc_old_loop_warning;
 	"-runtime", Arg.Set_string runtime, doc_runtime;
+        "-thread", Arg.Set with_thread, doc_thread;
 	"-interactive", Arg.Unit set_interactive, doc_interactive;
         "-d", Arg.String set_output_dir, doc_d;
 	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;

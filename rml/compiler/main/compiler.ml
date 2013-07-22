@@ -309,6 +309,10 @@ let compile_implementation module_name filename =
 		unbound_main !simulation_process
 	    in
 	    let main_id = Ident.name main.Global.gi.Global_ident.id in
+            let boi_hook =
+              if !with_thread then "[Async_body.boi_hook] "
+              else "[] "
+            in
  	    if not (Typing.is_unit_process (Global.info main)) then
 	      bad_type_main !simulation_process (Global.info main);
 	    match !number_of_instant >= 0, !sampling >= 0.0 with
@@ -327,7 +331,9 @@ let compile_implementation module_name filename =
 		   main_id^" "^(string_of_float !sampling)^"\n")
 	    | false, false ->
 		output_string out_chan
-		  ("let _ = Rml_machine.rml_exec "^main_id^"\n")
+		  ("let _ = Rml_machine.rml_exec "^
+                   boi_hook^
+                   main_id^"\n")
 	  end;
 	close_out out_chan;
 (*	Back_end_timer.time()*)

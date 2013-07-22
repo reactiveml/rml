@@ -6,8 +6,11 @@ LIB=	$(RUNTIME_DIR)/rmllib.cma \
 
 INSTALLFILE= $(RMLLIB_INTF) $(LIB)
 
-STDLIB_OBJ=$(patsubst %.rml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_RML_SRC))
-STDLIB_INTF = $(patsubst %.rmli,../stdlib/%.rzi,$(STDLIB_SRC)) $(STDLIB_OBJ:.cmo=.cmi)
+STDLIB_OBJ=$(patsubst %.ml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_ML_SRC)) \
+	$(patsubst %.rml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_RML_SRC))
+
+STDLIB_INTF = $(patsubst %.rmli,../stdlib/%.rzi,$(STDLIB_SRC)) \
+	$(STDLIB_OBJ:.cmo=.cmi)
 
 OBJ=$(RMLLIB_OBJ) $(STDLIB_OBJ)
 OBJ_OPT = $(OBJ:.cmo=.cmx)
@@ -15,10 +18,13 @@ OBJ_OPT = $(OBJ:.cmo=.cmx)
 $(RUNTIME_DIR)/%.ml:../stdlib/%.rml
 	$(RMLC) -I ../stdlib -d $(RUNTIME_DIR) -no_reactivity_warning -runtime $(RUNTIME) $<
 
+$(RUNTIME_DIR)/%.ml:../stdlib/%.ml
+	cp $< $@
+
 $(RUNTIME_DIR)/%.cmo:$(RUNTIME_DIR)/%.ml
-	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) -o $@ $<
+	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) -I $(RUNTIME_DIR) -o $@ $<
 $(RUNTIME_DIR)/%.cmx:$(RUNTIME_DIR)/%.ml
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $(INCLUDES) -o $@ $<
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $(INCLUDES) -I $(RUNTIME_DIR) -o $@ $<
 
 # library
 $(RUNTIME_DIR)/rmllib.cma: $(OBJ)

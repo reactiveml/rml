@@ -37,6 +37,18 @@ STDLIB_SRC= pervasives.rmli \
 	sys.rmli \
 	unix.rmli \
 	weak.rmli \
-	rml_list.rmli
+	rml_list.rmli \
+	async_body.rmli \
+	async.rmli \
 
-STDLIB_RML_SRC=rml_list.rml
+STDLIB_RML_SRC=rml_list.rml \
+	async.rml \
+
+STDLIB_ML_SRC=async_body.ml \
+
+
+# extra dependencies
+$(RUNTIME_DIR)/async.cmo: $(RUNTIME_DIR)/async_body.cmo
+$(RUNTIME_DIR)/async.cmx: $(RUNTIME_DIR)/async_body.cmx
+$(RUNTIME_DIR)/async_body.cmo: OCAMLFLAGS += $(THEAD_TYPE)
+$(RUNTIME_DIR)/async_body.cmx: OCAMLOPTFLAGS += -thread

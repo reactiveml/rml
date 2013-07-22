@@ -62,13 +62,14 @@ let make_instruction s =
 	 info = no_info(); })
     Location.none
 
-let make_machine_instruction s =
+let make_module_value mod_name val_name =
   make_expr
     (Cexpr_global
-       { gi = { qual = "Rml_machine";
-		id = Ident.create Ident.gen_var s Ident.Internal };
+       { gi = { qual = mod_name;
+		id = Ident.create Ident.gen_var val_name Ident.Internal };
 	 info = no_info(); })
     Location.none
+
 
 let make_rml_type s ty_list =
   make_te

@@ -196,12 +196,12 @@ lco/lco_misc.cmo : lco/lco_ast.cmo
 lco/lco_misc.cmx : lco/lco_ast.cmx
 lco/reac2lco.cmo : reac/reac_misc.cmo reac/reac_ast.cmo global/modules.cmo \
     global/misc.cmo parsing/location.cmo lco/lco_ast.cmo \
-    global/initialization.cmo global/ident.cmo global/global.cmo \
-    static/def_static.cmo global/asttypes.cmo
+    global/initialization.cmo global/ident.cmo global/global_ident.cmo \
+    global/global.cmo static/def_static.cmo global/asttypes.cmo
 lco/reac2lco.cmx : reac/reac_misc.cmx reac/reac_ast.cmx global/modules.cmx \
     global/misc.cmx parsing/location.cmx lco/lco_ast.cmx \
-    global/initialization.cmx global/ident.cmx global/global.cmx \
-    static/def_static.cmx global/asttypes.cmx
+    global/initialization.cmx global/ident.cmx global/global_ident.cmx \
+    global/global.cmx static/def_static.cmx global/asttypes.cmx
 lk/lk_ast.cmo : parsing/location.cmo global/ident.cmo global/global.cmo \
     typing/def_types.cmo global/asttypes.cmo
 lk/lk_ast.cmx : parsing/location.cmx global/ident.cmx global/global.cmx \

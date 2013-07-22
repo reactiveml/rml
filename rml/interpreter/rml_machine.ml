@@ -82,13 +82,31 @@ module M =
   functor (Interpretor: Interpretor_type) ->
   struct
 
-    let rml_exec p =
+    let rml_exec boi_hook p =
       let react = Interpretor.rml_make p in
-      let rec exec () =
-	match react () with
-	| None -> exec()
-	| Some v -> v
-      in exec ()
+      match boi_hook with
+      | [] ->
+          let rec exec () =
+	    match react () with
+	    | None -> exec()
+	    | Some v -> v
+          in exec ()
+      | l ->
+          let hook =
+            match l with
+            | [] -> (fun () -> ())
+            | [f] -> f
+            | [f1; f2] -> (fun () -> f1 (); f2 ())
+            | [f1; f2; f3] -> (fun () -> f1 (); f2 (); f3 ())
+            | [f1; f2; f3; f4] -> (fun () -> f1 (); f2 (); f3 (); f4 ())
+            | l -> (fun () -> List.iter (fun f -> f ()) l)
+          in
+          let rec exec () =
+            hook ();
+	    match react () with
+	    | None -> exec()
+	    | Some v -> v
+          in exec ()
 
     let rml_exec_n p n =
       let react = Interpretor.rml_make p in
