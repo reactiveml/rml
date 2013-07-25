@@ -60,6 +60,9 @@ let set_init_pervasives () =
 let set_no_pervasives () =
   default_used_modules := []
 
+let add_stdlib_thread () =
+  add_include (locate_stdlib () ^ "/thread")
+
 (* show version *)
 let show_v () =
   Printf.printf "The ReactiveML compiler, version %s\n" version;

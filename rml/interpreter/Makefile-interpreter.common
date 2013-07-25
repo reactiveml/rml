@@ -7,10 +7,14 @@ LIB=	$(RUNTIME_DIR)/rmllib.cma \
 INSTALLFILE= $(RMLLIB_INTF) $(LIB)
 
 STDLIB_OBJ=$(patsubst %.ml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_ML_SRC)) \
-	$(patsubst %.rml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_RML_SRC))
+	$(patsubst %.rml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_RML_SRC)) \
+	$(patsubst thread/%.ml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_THREAD_ML_SRC)) \
+	$(patsubst thread/%.rml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_THREAD_RML_SRC)) \
 
 STDLIB_INTF = $(patsubst %.rmli,../stdlib/%.rzi,$(STDLIB_SRC)) \
 	$(STDLIB_OBJ:.cmo=.cmi)
+
+STDLIB_THREAD_INTF = $(patsubst thread/%.rmli,../stdlib/thread/%.rzi,$(STDLIB_THREAD_SRC))
 
 OBJ=$(RMLLIB_OBJ) $(STDLIB_OBJ)
 OBJ_OPT = $(OBJ:.cmo=.cmx)
@@ -19,6 +23,12 @@ $(RUNTIME_DIR)/%.ml:../stdlib/%.rml
 	$(RMLC) -I ../stdlib -d $(RUNTIME_DIR) -no_reactivity_warning -runtime $(RUNTIME) $<
 
 $(RUNTIME_DIR)/%.ml:../stdlib/%.ml
+	cp $< $@
+
+$(RUNTIME_DIR)/%.ml:../stdlib/thread/%.rml
+	$(RMLC) -I ../stdlib -I ../stdlib/thread -d $(RUNTIME_DIR) -no_reactivity_warning -runtime $(RUNTIME) $<
+
+$(RUNTIME_DIR)/%.ml:../stdlib/thread/%.ml
 	cp $< $@
 
 $(RUNTIME_DIR)/%.cmo:$(RUNTIME_DIR)/%.ml
@@ -41,8 +51,10 @@ all: $(INSTALLFILE)
 # installing
 install: $(INSTALLFILE)
 	$(INSTALL) -d $(LIBDIR)/$(RUNTIME_DIR)
+	$(INSTALL) -d $(LIBDIR)/$(RUNTIME_DIR)/thread
 	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/$(RUNTIME_DIR)
 	$(INSTALL) -m 644 $(STDLIB_INTF) $(LIBDIR)/$(RUNTIME_DIR)
+	$(INSTALL) -m 644 $(STDLIB_THREAD_INTF) $(LIBDIR)/$(RUNTIME_DIR)/thread
 
 uninstall:
 	(cd $(LIBDIR)/$(RUNTIME_DIR); rm -f $(INSTALLFILE) )

@@ -63,13 +63,14 @@ let _ =
       add_to_compile
       errmsg;
     set_runtime !runtime;
-    if !v then show_v ();
-    if !version then show_version ();
-    if !where then show_where ();
     begin match !stdlib with
     | None -> ()
     | Some s -> set_stdlib s
     end;
+    if !v then show_v ();
+    if !version then show_version ();
+    if !where then show_where ();
+    if !with_thread then add_stdlib_thread ();
   with x ->
     Errors.report_error Format.err_formatter x;
     exit 2

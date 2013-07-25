@@ -12,7 +12,7 @@ include Makefile-stdlib.common
 .rmli.rzi:
 	$(RMLC) -c $<
 
-all: $(STDLIB_SRC:.rmli=.rzi)
+all: $(STDLIB_SRC:.rmli=.rzi) $(STDLIB_THREAD_SRC:.rmli=.rzi)
 
 install:
 
@@ -63,7 +63,7 @@ unix.rzi: pervasives.rzi
 weak.rzi: pervasives.rzi
 
 rml_list.rzi: pervasives.rzi list.rzi
-async.rzi: pervasives.rzi async_body.rzi
-async_body.rzi: pervasives.rzi
+thread/async.rzi: pervasives.rzi thread/async_body.rzi
+thread/async_body.rzi: pervasives.rzi
 
 .PHONY:opt byte all install uninstall clean realclean
