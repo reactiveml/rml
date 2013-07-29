@@ -528,6 +528,10 @@ let run _ =
     window##close ()
   )
   in
+  let reset_button = text_button "Reset" (fun _ ->
+    window##location##reload ()
+  )
+  in
 
   make_code_clickable ();
   make_execute_button ();
@@ -537,11 +541,12 @@ let run _ =
     step_button;
     resume_button;
   ];
-  (* append_children "buttons-right" [ *)
+  append_children "buttons-right" [
   (*   debug_button; *)
   (*   (\* send_button; *\) *)
   (*   (\* save_button; *\) *)
-  (* ]; *)
+    reset_button;
+  ];
 
   append_children "tutorial" [
     start_tutorial_button;
