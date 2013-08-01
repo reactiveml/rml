@@ -21,15 +21,22 @@
 (* created: 2013-07-22  *)
 (* author: Louis Mandel *)
 
+val proc_of_fun : ('a -> 'b) -> 'a -> 'b process
+(** [run proc_of_fun f x] executes [f x] in a thread. The execution
+    can last several instants and terminates when the computation of
+    [f x] terminates. If [f x] do not terminate, the system remains
+    cooperative.
+*)
+
+val exec : ('a, 'b) event -> ('c -> 'a) -> 'c -> unit
+(** [exec term f x] spawn the computation of [f x] in a thread and
+    terminates instantaneously. When the computation of [f x]
+    terminates, the result is sent on the signal [term].
+*)
+
 val safe_emit : ('a, 'b) event -> 'a -> unit
 (** [safe_emit s v] will emit the value [v] on the signal [s], but
     there is no guaranty on the instant of emission. This function can
     be called from an external thread.
 *)
 
-val proc_of_fun : ('a -> 'b) -> 'a -> 'b process
-(** [run proc_of_fun f x] executes [f x] in a thread. The execution
-    can last several instants and terminates when the computation of
-    [f x] terminates. If [f x] do not terminate, the system reamins
-    cooperative.
-*)
