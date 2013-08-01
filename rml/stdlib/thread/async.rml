@@ -24,12 +24,11 @@
 let safe_emit s v =
   Async_body.exec_boi (fun () -> emit s v)
 
-
-let exec return f x =
-  Async_body.spawn (fun () -> let v = f x in safe_emit return v)
+let exec term f x =
+  Async_body.spawn (fun () -> let v = f x in safe_emit term v)
 
 let process proc_of_fun (f: 'a -> 'b) (x : 'a) =
-  signal return default (Obj.magic () : 'b) gather (fun x y -> x) in
-  exec return f x;
-  await return (v) in
+  signal term default (Obj.magic () : 'b) gather (fun x y -> x) in
+  exec term f x;
+  await term (v) in
   v
