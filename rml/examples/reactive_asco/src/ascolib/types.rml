@@ -1,76 +1,76 @@
 (***************************************************************)
 (*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
 (*                                                             *)
 (*                                                             *)
-(* Type definitions for Asco                                   *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
 (***************************************************************)
 
-(* Alias for readability *)
+(** Alias for readability *)
 type delay = float
 type instr_event_label = int
 type tempo = float
 
-(* Atomic action *)
+(** Atomic action *)
 type action =
-  | Message of string  (* Max/MSP control message *)
-  | Signal of (unit,unit list) event (* RML signal *)
+  | Message of string  (** Max/MSP control message *)
+  | Signal of (unit, unit list) event (** ReactiveML signal *)
 
-(* Synchronization strategies *)
+(** Synchronization strategies *)
 type sync = Tight | Loose
 
-(* Error handling strategies *)
+(** Error handling strategies *)
 type err = Local | Global | Causal | Partial
 
 
-(* Electronic score event *)
+(** Electronic score event *)
 type score_event =
     { event : instr_event_label;
       seq : sequence; }
 
 and sequence =  (delay * asco_event) list
 
-(* Generic asco event *)
+(** Generic asco event *)
 and asco_event =
   | Group of group
   | Action of action
   | Until of asco_until
 
-(* Asco group *)
+(** Asco group *)
 and group =
       { group_synchro : sync;
 	group_error : err;
 	group_seq : sequence }
 
-(* Preemption construct *)
+(** Preemption construct *)
 and asco_until =
     { until_seq : sequence;
       until_event : instr_event_label; }
 
 
-
-(* Instrumental score, play the role of function E *)
+(** Instrumental score, play the role of function E *)
 type instr_score = delay list
 
-(* type instr_score_map = (label, delay) Reactive_map.t *)
-
-(* Electronic score *)
+(** Electronic score *)
 type score = score_event list
 
-(* Instrumental event *)
+(** Instrumental event *)
 type instr_event =
     { index : instr_event_label;
       bps : float; }
 
-(* Status for an event *)
+(** Status for an event *)
 type status = Detected | Missed of instr_event_label
 
-(* Performance element *)
+(** Performance element *)
 type perf_elem = instr_event_label * delay * action
 
-(* Simulation of the listening machine *)
+(** Simulation of the listening machine *)
 type simulation = (instr_event_label * delay * tempo) list
 
-(* Type of input *)
+(** Type of input *)
 type input_mode =
   | Udp
   | File of string

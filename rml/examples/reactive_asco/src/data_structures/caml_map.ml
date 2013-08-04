@@ -1,3 +1,15 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
+(** Implementation of the [Map] module of OCaml without functors. *)
+
 (***********************************************************************)
 (*                                                                     *)
 (*                                OCaml                                *)

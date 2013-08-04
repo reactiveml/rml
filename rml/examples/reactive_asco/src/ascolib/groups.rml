@@ -1,16 +1,21 @@
 (***************************************************************)
 (*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
 (*                                                             *)
 (*                                                             *)
-(* Group traitment                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
 (***************************************************************)
+
+(** Group traitment. *)
 
 open Types
 open Reactive_map
 
-(* Slice the group 'g' associated to the event 'i' after a delay 'delta'.
-   Each action in 'g.group_seq' is reassociated to the nearest event.
-   Returns a list of score_event.
+(** Slice the group [g] associated to the event [i] after a delay [delta].
+    Each action in [g.group_seq] is reassociated to the nearest event.
+    Returns a list of score_event.
 *)
 let slice instr_score i delta g =
   let di = instr_score.find i in
@@ -45,10 +50,10 @@ let slice instr_score i delta g =
   build_groups nl
 
 
-(* Split the group g associated to the event i after a delay 'delta'
-   in two.  actions that should happen before event 'j' and action
-   that should happen after 'j'. Returns a Group for the future and a
-   list of asco_event for the past.
+(** Split the group [g] associated to the event [i] after a delay [delta]
+    in two. Actions that should happen before event [j] and action
+    that should happen after [j]. Returns a [group] for the future and a
+    list of [asco_event] for the past.
 *)
 let split instr_score i j delta g =
   let di = instr_score.find i in
@@ -72,7 +77,7 @@ let split instr_score i j delta g =
   past, future
 
 
-(* Extract groups from a list of electronic actions. *)
+(** Extract groups from a list of electronic actions. *)
 let rec extract_group l =
   let rec aux d l =
     match l with

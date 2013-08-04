@@ -1,22 +1,25 @@
 (***************************************************************)
 (*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
 (*                                                             *)
 (*                                                             *)
-(* This is the interpreter core.                               *)
-(* It contains the execution process, handle synchronization   *)
-(* and performance errors                                      *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
 (***************************************************************)
 
+(** This is the interpreter core. It contains the execution process,
+    handle synchronization and performance errors. *)
 
 open Types
 open Reactive_map
 open Utils
 
-(* Create a process player that takes as argument an electronic score
-   'score' and executes it. The player depends on the instrumental
-   score 'instr_score', it follows the position in the instrumental
-   score using the process wait_event, and the tempo with the process
-   'wait'.
+(** Create a process player that takes as argument an electronic score
+    [score] and executes it. The player depends on the instrumental
+    score [instr_score], it follows the position in the instrumental
+    score using the process [wait_event], and the tempo with the process
+    [wait]. The resulting performance is sent on the signal [perf].
 *)
 let make_player instr_score wait wait_event perf =
 
@@ -97,7 +100,7 @@ let make_player instr_score wait wait_event perf =
                      group_seq = future;})
             in
             (run (exec_seq (missed i j) delta gpast) ||
-            run (detected j 0.0 gfuture))
+             run (detected j 0.0 gfuture))
         | Causal ->
             (* rule (Missed Causal Group) *)
             let past, future = Groups.split instr_score i j delta g in
@@ -107,7 +110,7 @@ let make_player instr_score wait wait_event perf =
                      group_seq = future;})
             in
             (run (exec_seq (missed i j) delta past) ||
-            run (detected j 0.0 gfuture))
+             run (detected j 0.0 gfuture))
         end
     | Until(u) ->
         signal kill in
@@ -134,5 +137,5 @@ let make_player instr_score wait wait_event perf =
     run (exec_past past i)
   in
 
-  (* Return the process wich play an electronic score *)
+  (* Return the process which play an electronic score *)
   play_score

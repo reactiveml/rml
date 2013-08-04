@@ -1,15 +1,20 @@
-(****************************************************************)
-(*                                                              *)
-(*                Dummy tools for all other files               *)
-(*                                                              *)
-(*                  Author : Guillaume Baudart                  *)
-(****************************************************************)
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
+(** Dummy tools for all other files. *)
 
 open Types
 open Lexing
 open Network
 
-(* Alias for last on event sig. *)
+(** Alias for last on event [s]. *)
 let last_one s =
   let l = last ? s in
   match l with
@@ -17,7 +22,7 @@ let last_one s =
   | [ x ] -> x
   | x :: _ -> prerr_endline "Warning: the player is too fast!"; x
 
-(* Convert delay of the instrumental score into dates. *)
+(** Convert delay of the instrumental score into dates. *)
 let delay_to_date l =
   let rec aux d l =
     match l with
@@ -26,7 +31,7 @@ let delay_to_date l =
   in
   0. :: aux 0. l
 
-(* Return the position of the parsing error. *)
+(** Return the position of the parsing error. *)
 let localisation pos file =
   let l = pos.pos_lnum in
   let c = pos.pos_cnum - pos.pos_bol + 1 in
@@ -37,8 +42,8 @@ let localisation pos file =
   print_newline ()
 
 
-(* Returns the instrumental part played at the tempo 'tempo' given the
-   instr_score 'is'.
+(** Returns the instrumental part played at the tempo [tempo] given the
+    instrumental score [is].
 *)
 let extract_instr is tempo =
   let rec aux i l =
@@ -48,6 +53,8 @@ let extract_instr is tempo =
   in
   aux 1 is
 
+
+(** Display messages emitted on [listen] and [perf]. *)
 let process verbose listen perf =
   loop
     await immediate one listen (ev) in

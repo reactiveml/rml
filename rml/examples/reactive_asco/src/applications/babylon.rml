@@ -1,3 +1,18 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
+(** Simple example using the [Music] module for playing the round
+    "Babylon" of (Don McLean).
+*)
+
+
 open Music
 
 signal clock

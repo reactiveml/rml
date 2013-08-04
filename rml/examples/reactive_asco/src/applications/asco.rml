@@ -1,11 +1,16 @@
 (***************************************************************)
 (*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
 (*                                                             *)
 (*                                                             *)
-(* Main file for Reactive Asco                                 *)
-(* Read a score and optionally a simulation file and launch    *)
-(* The sequencer.                                              *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
 (***************************************************************)
+
+(** Main file for Reactive Asco. Read a score and optionally a
+    simulation file and launch The sequencer.
+*)
 
 open Ascolib
 open Types
@@ -14,10 +19,10 @@ let process main =
   (* Read arguments of the command line *)
   let config = Config.read_args () in
 
-  (* Environment *)
+  (* Create the runtime environment *)
   let asco = create_asco_from_config config in
 
-  (* Initialize the signal listen *)
+  (* Initialize the runtime environment *)
   run (init_asco asco);
 
   (* Run! *)

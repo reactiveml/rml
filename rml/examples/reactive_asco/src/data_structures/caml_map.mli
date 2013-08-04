@@ -1,3 +1,15 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
+(** The [Map] module of OCaml without functors. *)
+
 type ('key, 'a) t
 val empty: ('key, 'a) t
 val is_empty: ('key, 'a) t -> bool

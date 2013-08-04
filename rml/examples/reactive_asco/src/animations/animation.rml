@@ -1,4 +1,14 @@
-(* Data structures *)
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
+(** {6 Data structures} *)
 
 type vect =
     { x: float;
@@ -26,7 +36,7 @@ and shape =
   | Poly | Poly_fill
 
 
-(* Utility functions *)
+(** {6 Utility functions} *)
 
 let random_pos () =
   let x = box.left +. Random.float box.right in
@@ -44,7 +54,7 @@ let distance2 pos1 pos2 =
 let norme v = v.x *. v.x +. v.y *. v.y
 
 
-(* Graphics *)
+(** {6 Graphics} *)
 
 signal draw default [] gather (fun x y -> x :: y)
 signal click default { x = 0.; y = 0.; } gather (fun x y -> x)

@@ -1,3 +1,15 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
+(** Implementation of priority queues as in the OCaml manual. *)
+
 type ('prio, 'a) queue =
   | Empty
   | Node of 'prio * 'a * ('prio, 'a) queue * ('prio, 'a) queue

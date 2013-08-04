@@ -1,7 +1,19 @@
-type ('a,'b) rqueue =
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
+type ('a, 'b) rqueue =
     { pop: 'a -> ('a * 'b) list;
       push: 'a * 'b -> unit }
+
 val make_queue : unit -> ('a, 'b) rqueue
+
 val scheduler :
   ('a, 'a list) event ->
   ('a -> ('a * 'b) list -> 'c) -> ('d, ('a * 'b) list) event -> unit process

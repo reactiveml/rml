@@ -1,8 +1,23 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
+(** Example of the use of [Ascolib] to program the second pianist in
+    Piano Phase of Steve Reich.
+*)
+
 open Types
 open Ascolib
 open Music
 
-(* Graphic Mess *)
+(** {6 Graphical Utility Functions} *)
+
 type pos = Right | Left | Full
 
 let draw_rect pos color =
@@ -44,7 +59,10 @@ let process graphic_observer asco s1 s2 desync resync =
     until resync done
   end
 
-(* Track the instrumental event k mod 12 *)
+
+(** {6 Utility Functions to Manage the Desynchonization Part} *)
+
+(** Track the instrumental event k mod 12. *)
 let process track asco k kth_note =
   let ie = instr_event asco in
   loop
@@ -52,16 +70,19 @@ let process track asco k kth_note =
     emit kth_note
   end
 
-(* Compare the date of the last emision of two signal *)
-(* and emit signal resync if |d1-d2| < eps *)
+(** Compare the date of the last emission of two signals [s1] and [s2]
+    and emit signal [resync] if |d1-d2| < eps.
+*)
 let process compare asco s1 s2 resync eps =
+  (* Emit the current date on [f] each time [s] is emitted. *)
   let process stamps s f =
     loop
       await s;
       emit f (date asco)
     end
   in
-
+  (* Emit [resync] each time the date emitted on [f1] and [f2] are
+     less than [eps]. *)
   let process spy f1 f2 resync eps =
     loop
       await (f1 \/ f2);
@@ -71,7 +92,7 @@ let process compare asco s1 s2 resync eps =
 	emit resync
     end
   in
-
+  (* Compare the emission date of [s1] and [s2]. *)
   signal f1 default 0.0 gather (fun x y -> x) in
   signal f2 default 1.0 gather (fun x y -> x) in
   run (stamps s1 f1) ||
@@ -79,7 +100,7 @@ let process compare asco s1 s2 resync eps =
   run (spy f1 f2 resync eps)
 
 
-
+(** Behavior of the second pianist and the graphical interface. *)
 let process main =
   Graphics.open_graph " 600x300";
   let asco = create_asco "examples/piano_phase.asco" 120. in

@@ -1,8 +1,19 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
 open Types
 open Utils
 open Reactive_map
 
-(* Data structure containing all information that can be needed at runtime *)
+(** {6 Data structure containing all information that can be needed at runtime}
+*)
 
 type asco =
     { config : Config.t;
@@ -15,7 +26,7 @@ type asco =
       date : (delay, delay list) event;
       perf : (perf_elem, perf_elem list) event; }
 
-(* Observe runtime environment *)
+(** {6 Observe runtime environment} *)
 
 let date asco = Utils.last_one asco.date
 
@@ -27,7 +38,7 @@ let last_event asco =
   max 1 (Utils.last_one asco.instr_event).index
 
 
-(* Parse the score and simulation files *)
+(** {6 Parse the score and simulation files} *)
 
 let parse file p =
   let f = open_in file in
@@ -50,7 +61,7 @@ let parse_score s = parse s Parser.make_score
 let parse_simu s = parse s Parser.make_simu
 
 
-(* Create and configure the runtime environment *)
+(** {6 Create and configure the runtime environment} *)
 
 let create_asco_from_config config =
   signal instr_event in
@@ -109,7 +120,7 @@ let process load_instr_score asco instr_score =
   pause
 
 
-(* Execute the runtime *)
+(** {6 Execute the runtime} *)
 
 let process init_asco asco =
   let _, instr_score = asco.score_init in
@@ -156,8 +167,7 @@ let process sender asco =
     run (Boids.main asco.instr_event))
 
 
-
-(* Build Antescofo actions *)
+(** {6 Build Antescofo actions} *)
 
 let action_note note =
   Action(Message (Music.string_of_note note))
@@ -178,7 +188,7 @@ let group synchro error seq =
          group_seq = seq;})
 
 
-(* Execute Antescofo actions *)
+(** {6 Execute Antescofo actions} *)
 
 let process play asco sequence =
  let rec process exec s delta =

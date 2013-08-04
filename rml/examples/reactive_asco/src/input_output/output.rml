@@ -1,15 +1,20 @@
 (***************************************************************)
 (*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
 (*                                                             *)
 (*                                                             *)
-(* Handle output                                               *)
-(* Send control messages to Max/MSP via UDP or print in the    *)
-(* standart output                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
 (***************************************************************)
+
+(** Handle output: send control messages to Max/MSP via UDP or print
+    in the standart output.
+*)
 
 open Types
 
-(* Send control message in UDP or emit a ReactiveML signal *)
+(** Send control message in UDP or emit a ReactiveML signal. *)
 let process udp out_port perf =
   let send (i,d,a) sock_actions =
     match a with
@@ -25,7 +30,7 @@ let process udp out_port perf =
     List.iter (fun x -> send x sock_actions) p
   end
 
-(* Print a feedback on the standart output *)
+(** Print a feedback on the standart output. *)
 let process stdout perf =
   let print (i,d,a) =
     match a with

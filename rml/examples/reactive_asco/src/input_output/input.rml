@@ -1,17 +1,21 @@
 (***************************************************************)
 (*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
 (*                                                             *)
 (*                                                             *)
-(* Handle inputs                                               *)
-(* Receive from Max/MSP via UDP or simulate the output of the  *)
-(* listening machine                                           *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
 (***************************************************************)
 
+(** Handle inputs received from Max/MSP via UDP or simulate the output
+    of the listening machine.
+*)
 
 open Types
 open Utils
 
-(* Manage input from the listening machine with a priority queue*)
+(** Manage input from the listening machine with a priority queue. *)
 let process event_scheduler listen adding =
   let process spy listen deadline =
     loop
@@ -33,7 +37,10 @@ let process event_scheduler listen adding =
   run (Reactive_queue.scheduler deadline sending adding) ||
   run (spy listen deadline)
 
-(* Wait for an instrumental event and return its status (detected or missed) *)
+
+(** Wait for an instrumental event and return its status (detected or
+    missed).
+*)
 let process wait_event i add_event listen =
   await immediate one listen (ev) in
   if ev.index = i then
@@ -46,8 +53,9 @@ let process wait_event i add_event listen =
     await immediate one s (status) in
     status
 
-(* Create a scheduler for instrumental event and the corresponding
-   waiting process
+
+(** Create a scheduler for instrumental event and the corresponding
+    waiting process.
 *)
 let make_event_scheduler listen =
   signal add_event in
@@ -56,7 +64,7 @@ let make_event_scheduler listen =
   event_scheduler, wait_event
 
 
-(* Receive message from Max via UDP and send them to the motor. *)
+(** Receive message from Max via UDP and send them to the motor. *)
 let process udp in_port listen =
   let maxlen = 1024 in
   let sock_event = Network.init_server in_port in
@@ -77,14 +85,13 @@ let process udp in_port listen =
   in
   run max_server
 
-(* Send messages on signal events corresponding to the simulation with
-   'errors' the probability of error
+(** Send messages on signal events corresponding to the simulation with
+    [errors] the probability of error.
 *)
 let process simulator simu errors freq listen =
   signal clock in
   signal t in
   let period = 1. /. freq in
-
   (* Time in seconds (same as elapsed but without the moving tempo) *)
   let process time =
     let x = ref 0.0 in
@@ -94,10 +101,8 @@ let process simulator simu errors freq listen =
       pause
     end
   in
-
   (* Play the simulation with a probability of error 'error'
-     for each event
-  *)
+     for each event *)
   let rec process play s =
     match s with
     | [] -> ()
@@ -113,7 +118,6 @@ let process simulator simu errors freq listen =
 	  else
 	    (pause; run (play s))
   in
-
   do run time when clock done ||
   run (Time.emit_clock clock freq) ||
   run (play simu)
