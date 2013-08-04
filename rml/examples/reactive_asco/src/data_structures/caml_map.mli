@@ -37,3 +37,10 @@ val split: 'key -> ('key, 'a) t -> ('key, 'a) t * 'a option * ('key, 'a) t
 val find: 'key -> ('key, 'a) t -> 'a
 val map: ('a -> 'b) -> ('key, 'a) t -> ('key, 'b) t
 val mapi: ('key -> 'a -> 'b) -> ('key, 'a) t -> ('key, 'b) t
+
+(** [nearest x m] searchs the entry [(v, d)] in [m] such that
+    [d] is the bigest value which satifies [d <= x]. The map [m]
+    must be such that if [(v1, d1)] and [(v2, d2)] are in [m] then
+    [v1 <= v2] if and only if [d1 <= d2].
+*)
+val nearest: 'a -> ('key, 'a) t -> 'key * 'a

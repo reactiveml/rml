@@ -305,3 +305,28 @@ let bindings s =
   bindings_aux [] s
 
 let choose = min_binding
+
+(** [nearest x m] searchs the entry [(v, d)] in [m] such that
+    [d] is the bigest value which satifies [d < x]. The map [m]
+    must be such that if [(v1, d1)] and [(v2, d2)] are in [m] then
+    [v1 <= v2] if and only if [d1 <= d2].
+*)
+let nearest =
+  let rec nearest x m res =
+    match m with
+    | Empty ->
+        (* res *)
+        let (v, d) = res in
+        if d <= x then res
+        else raise Not_found
+    | Node(l, v, d, r, _) ->
+        begin match Pervasives.compare x d with
+        | 0 -> (v, d)
+        | c when c < 0 -> nearest x l res
+        | c -> nearest x r (v, d)
+        end
+  in
+  fun x m ->
+    match m with
+    | Empty -> raise Not_found
+    | Node(l, v, d, r, _) -> nearest x m (v, d)

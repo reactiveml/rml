@@ -13,28 +13,36 @@
 open Types
 open Reactive_map
 
+
 (** Slice the group [g] associated to the event [i] after a delay [delta].
     Each action in [g.group_seq] is reassociated to the nearest event.
     Returns a list of score_event.
 *)
 let slice instr_score i delta g =
   let di = instr_score.find i in
-  let rec asso_nearest de l =
+  let rec asso_nearest de l acc =
     match l with
-    |[] -> []
-    |(da, ae)::t ->
+    | [] -> acc
+    | (da, ae)::t ->
 	let date = de +. da in
 	let r, d = instr_score.nearest date in
-	let dn = date -. d in
-	(r, dn, da, ae)::asso_nearest date t
+        begin match acc with
+        | [] ->
+	    let dn = date -. d in
+            asso_nearest date t [ (r, [(dn, ae)]) ]
+        | (r', l) :: acc' ->
+            if r = r' then
+              asso_nearest date t ((r, ((da, ae) :: l)) :: acc')
+            else
+	      let dn = date -. d in
+              asso_nearest date t ((r, [(dn, ae)]) :: acc)
+        end
   in
-  let rec build_groups l =
+  let rec build_groups l acc =
     match l with
-    |[] -> []
-    |(r, d, da, ae)::t ->
-	let l1, l2 = List.partition (fun (r', _, _, _) -> (r = r')) t in
-	let tr = List.map (fun (_, _, dae, ae) -> (dae, ae)) l1 in
-	let br = (d, ae)::tr in
+    | [] -> acc
+    | (r, l1)::l2 ->
+        let br = List.rev l1 in
 	let g =
 	  { group_synchro = Loose;
 	    group_error = g.group_error;
@@ -44,10 +52,10 @@ let slice instr_score i delta g =
 	  { event = r;
 	    seq = [(0.0, Group(g))]; }
 	in
-	se::(build_groups l2)
+	build_groups l2 (se::acc)
   in
-  let nl = asso_nearest (di +. delta) g.group_seq in
-  build_groups nl
+  let nl = asso_nearest (di +. delta) g.group_seq [] in
+  build_groups nl []
 
 
 (** Split the group [g] associated to the event [i] after a delay [delta]
