@@ -1,0 +1,119 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*                                                             *)
+(*                                                             *)
+(* Handle inputs                                               *)
+(* Receive from Max/MSP via UDP or simulate the output of the  *)
+(* listening machine                                           *)
+(***************************************************************)
+
+
+open Types
+open Utils
+
+(* Manage input from the listening machine with a priority queue*)
+let process event_scheduler listen adding =
+  let process spy listen deadline =
+    loop
+      await immediate one listen (ev) in
+      emit deadline ev.index;
+      pause
+    end
+  in
+  let rec sending i sl =
+    match sl with
+    | [] -> ()
+    | (h, sh)::q ->
+	if h = i then
+	  (emit sh Detected; sending i q)
+	else
+	  (emit sh (Missed i); sending i q)
+  in
+  signal deadline in
+  run (Reactive_queue.scheduler deadline sending adding) ||
+  run (spy listen deadline)
+
+(* Wait for an instrumental event and return its status (detected or missed) *)
+let process wait_event i add_event listen =
+  await immediate one listen (ev) in
+  if ev.index = i then
+    Detected
+  else if ev.index > i then
+    Missed i
+  else
+    signal s in
+    emit add_event (i, s);
+    await immediate one s (status) in
+    status
+
+(* Create a scheduler for instrumental event and the corresponding
+   waiting process
+*)
+let make_event_scheduler listen =
+  signal add_event in
+  let wait_event i = wait_event i add_event listen in
+  let event_scheduler = event_scheduler listen add_event in
+  event_scheduler, wait_event
+
+
+(* Receive message from Max via UDP and send them to the motor. *)
+let process udp in_port listen =
+  let maxlen = 1024 in
+  let sock_event = Network.init_server in_port in
+  print_endline ("waiting on port : "^(string_of_int in_port));
+  let rec process max_server =
+    let newmsg = String.create maxlen in
+    begin try
+      let len,_ = Unix.recvfrom sock_event newmsg 0 maxlen [] in
+      let msg = String.sub newmsg 0 len in
+      let s = Str.split (Str.regexp "[ \t]+") msg in
+      let c = int_of_string (List.nth s 0) in
+      let b = float_of_string (List.nth s 1) /. 60. in
+      let nev = {index = c; bps=b;} in
+      emit listen nev
+    with _ -> () end;
+    pause;
+    run max_server
+  in
+  run max_server
+
+(* Send messages on signal events corresponding to the simulation with
+   'errors' the probability of error
+*)
+let process simulator simu errors freq listen =
+  signal clock in
+  signal t in
+  let period = 1. /. freq in
+
+  (* Time in seconds (same as elapsed but without the moving tempo) *)
+  let process time =
+    let x = ref 0.0 in
+    loop
+      x := !x +. period;
+      emit t !x;
+      pause
+    end
+  in
+
+  (* Play the simulation with a probability of error 'error'
+     for each event
+  *)
+  let rec process play s =
+    match s with
+    | [] -> ()
+    | (i, d, b)::s' ->
+	  await immediate one t (e) in
+	  if d < e then
+	    let p = Random.float 100.0 in
+	    begin if p > errors then
+	      let nev = {index = i; bps = b /. 60.;} in
+	      emit listen nev
+	    end;
+	    run (play s')
+	  else
+	    (pause; run (play s))
+  in
+
+  do run time when clock done ||
+  run (Time.emit_clock clock freq) ||
+  run (play simu)

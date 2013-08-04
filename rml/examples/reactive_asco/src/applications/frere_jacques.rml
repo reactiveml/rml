@@ -1,0 +1,96 @@
+open Music
+
+signal clock
+let period = 0.01
+
+let process emit_clock  =
+  let next = ref (Unix.gettimeofday () +. period) in
+  loop
+    let current = Unix.gettimeofday () in
+    if (current >= !next)
+    then
+      begin
+	emit clock ();
+	next := !next +. period;
+      end;
+    pause
+  end
+
+let process wait dur =
+  let d = int_of_float (dur /. (2. *. period)) in
+  for i = 1 to d do
+    await clock
+  done
+
+signal perf
+
+let rec process play sequence =
+  match sequence with
+  | [] -> ()
+  | ((dur, pitch) as note) :: s ->
+      emit perf note;
+      run (wait dur);
+      run (play s)
+
+let send_to_audio sock note =
+  let m = string_of_note note in
+  Network.sendUDP m sock 7400 ()
+
+
+let process sender =
+  let sock = Network.init_client () in
+  print_endline ("playing on port : "^(string_of_int 7400));
+  loop
+    await perf (notes) in
+    List.iter (fun n -> send_to_audio sock n) notes
+  end
+
+
+let jacques =
+  [1.0, (F,4); 1.0, (G,4); 1.0, (A,4); 1.0, (F,4);
+   1.0, (F,4); 1.0, (G,4); 1.0, (A,4); 1.0, (F,4);
+   1.0, (A,4); 1.0, (Bf,4); 2.0, (C,5);
+   1.0, (A,4); 1.0, (Bf,4); 2.0, (C,5);
+   0.5, (C,5); 0.5, (D,5); 0.5, (C,5); 0.5, (Bf,4); 1.0, (A,4); 1.0, (F,4);
+   0.5, (C,5); 0.5, (D,5); 0.5, (C,5); 0.5, (Bf,4); 1.0, (A,4); 1.0, (F,4);
+   1.0, (F,4); 1.0, (C,4); 2.0, (F,4);
+   1.0, (F,4); 1.0, (C,4); 2.0, (F,4);]
+
+
+let process double sequence =
+  run (play sequence) ||
+  run (play (transpose 4 sequence))
+
+
+let process delayed p dur =
+  run (wait dur);
+  run p
+
+let process theme =
+  loop
+    run (play jacques)
+  end
+
+let process round_basic =
+  run theme ||
+  run (delayed theme 8.0) ||
+  run (delayed theme 16.0) ||
+  run (delayed theme 24.0)
+
+let process round_for =
+  for i = 0 to 3 dopar
+    run (delayed theme (float (i * 8)))
+  done
+
+let rec process round nb_voices =
+  if nb_voices <= 0 then ()
+  else begin
+    run theme ||
+    run (delayed (round (nb_voices - 1)) 8.0)
+  end
+
+
+let process main =
+  run emit_clock ||
+  run (round 4) ||
+  run sender

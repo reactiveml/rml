@@ -1,0 +1,96 @@
+open Types
+
+type asco
+(** Data structure containing all information that can be needed at runtime. *)
+
+
+(** {6 Create and configure the runtime environment} *)
+
+val parse_score : string -> score * instr_score
+(** Parse an Antescofo score to extract electronic and instrumental scores. *)
+
+val parse_simu : string -> simulation
+(** Parse a file which simulates the output of the listening machine. *)
+
+val create_asco_from_config : Config.t -> asco
+(** Create a runtime from a complete configuration. *)
+
+val create_asco : string -> float -> asco
+(** Create a runtime environment from a Antescofo score and an initial tempo. *)
+
+val load_instr_score : asco -> instr_score -> unit process
+(** Load an expected instrumental score. *)
+
+
+(** {6 Execute the runtime} *)
+
+val init_asco : asco -> unit process
+(** Initialize the runtime environment. Must be call before launching
+   [listener] and [sender]. *)
+
+val listener : asco -> unit process
+(** Listen the information sent by the score follower or simulate the
+    listening from a file or a score. *)
+
+val sender : asco -> unit process
+(** Perform the electronic actions. *)
+
+
+(** {6 Build Antescofo actions} *)
+
+val action_note : Music.note -> asco_event
+(** Create an action which is to play a note. *)
+
+val action_signal : (unit, unit list) event -> asco_event
+(** Create an action_signal which is to send a signal. *)
+
+val tight : sync
+(** Synchronization strategy. *)
+val loose : sync
+(** Synchronization strategy. *)
+
+val partial : err
+(** Error handling strategy. *)
+val causal : err
+(** Error handling strategy. *)
+val global : err
+(** Error handling strategy. *)
+val local : err
+(** Error handling strategy. *)
+
+val group : sync -> err -> sequence -> asco_event
+(** Create a group. *)
+
+
+(** {6 Execute Antescofo actions} *)
+
+val play : asco -> sequence -> unit process
+(** Play an Antescofo sequence following the tempo. *)
+
+val link : asco -> instr_event_label -> sequence -> unit process
+(** Link a sequence to an instrumental event. *)
+
+val play_loop : asco -> delay -> int -> sequence -> unit process
+(** [play_loop asco period n seq] plays [n] iterations of the sequence [seq]
+    where each iteration is separated by a delay [period]. *)
+
+val link_and_loop :
+  asco -> instr_event_label -> delay -> int -> sequence -> unit process
+(** Link a loop to an instrumental event. *)
+
+val send_to_audio : asco -> Music.note -> unit
+val play_line : asco -> Music.note list -> unit process
+
+(** {6 Observe runtime environment} *)
+
+val date : asco -> delay
+(** Return the current date relative to the tempo. *)
+
+val wait : asco -> delay -> unit process
+(** Wait a delay relative to the tempo. *)
+
+val instr_event : asco -> (instr_event,  instr_event list) event
+(** Signal on which detected events are emitted. *)
+
+val last_event : asco -> int
+(** Index of the last detected event. *)

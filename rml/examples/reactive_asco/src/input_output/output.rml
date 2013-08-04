@@ -1,0 +1,46 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*                                                             *)
+(*                                                             *)
+(* Handle output                                               *)
+(* Send control messages to Max/MSP via UDP or print in the    *)
+(* standart output                                             *)
+(***************************************************************)
+
+open Types
+
+(* Send control message in UDP or emit a ReactiveML signal *)
+let process udp out_port perf =
+  let send (i,d,a) sock_actions =
+    match a with
+    | Message m ->
+	Network.sendUDP m sock_actions out_port ()
+    | Signal s ->
+	emit s
+  in
+  let sock_actions = Network.init_client () in
+  print_endline ("playing on port : "^(string_of_int out_port));
+  loop
+    await perf (p) in
+    List.iter (fun x -> send x sock_actions) p
+  end
+
+(* Print a feedback on the standart output *)
+let process stdout perf =
+  let print (i,d,a) =
+    match a with
+    | Message m ->
+	print_endline (m^"\t\tevent : "^
+		       (string_of_int i)^
+		       " delay : "^
+		       (string_of_float d))
+    | Signal s ->
+	print_endline ("emit rml signal"^"\t\tevent : "^
+		       (string_of_int i)^
+		       " delay : "^
+		       (string_of_float d))
+  in
+  loop
+    await perf (p) in
+    List.iter (fun x -> print x) p
+  end

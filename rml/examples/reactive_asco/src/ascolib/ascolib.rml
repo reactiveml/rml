@@ -1,0 +1,263 @@
+open Types
+open Utils
+open Reactive_map
+
+(* Data structure containing all information that can be needed at runtime *)
+
+type asco =
+    { config : Config.t;
+      score_init : score * instr_score;
+      instr_score : (instr_event_label, delay) rmap;
+      runtime : unit process;
+      player : score -> unit process;
+      wait : delay -> unit process;
+      instr_event : (instr_event, instr_event list) event;
+      date : (delay, delay list) event;
+      perf : (perf_elem, perf_elem list) event; }
+
+(* Observe runtime environment *)
+
+let date asco = Utils.last_one asco.date
+
+let wait asco = asco.wait
+
+let instr_event asco = asco.instr_event
+
+let last_event asco =
+  max 1 (Utils.last_one asco.instr_event).index
+
+
+(* Parse the score and simulation files *)
+
+let parse file p =
+  let f = open_in file in
+  let buf = Lexing.from_channel f in
+  try
+      let res = p Lexer.make_token buf in
+      close_in f;
+      res
+  with
+    Lexer.Lexing_error s ->
+      Utils.localisation (Lexing.lexeme_start_p buf) file;
+      prerr_endline ("Syntax error: "^file);
+      exit 1
+  | Parsing.Parse_error ->
+      Utils.localisation (Lexing.lexeme_start_p buf) file;
+      prerr_endline ("Syntax error: "^file);
+      exit 1
+
+let parse_score s = parse s Parser.make_score
+let parse_simu s = parse s Parser.make_simu
+
+
+(* Create and configure the runtime environment *)
+
+let create_asco_from_config config =
+  signal instr_event in
+  signal date in
+  signal perf in
+  let score_init =
+    if config.Config.scorefile = "" then
+      ([], [])
+    else
+      parse_score config.Config.scorefile
+  in
+  let action_scheduler, wait = Time.make_action_scheduler date in
+  let event_scheduler, wait_event = Input.make_event_scheduler instr_event in
+  let instr_score = make_map () in
+
+  let process runtime =
+    run (Time.metronome instr_event config.Config.freq date) ||
+    run event_scheduler ||
+    run action_scheduler
+  in
+
+  let process player score =
+    let play_score =
+      Motor.make_player instr_score wait wait_event perf
+    in
+    await immediate one instr_event (ev) in
+    run (play_score score ev.index)
+  in
+
+  { config = config;
+    score_init = score_init;
+    instr_score = instr_score;
+    runtime = runtime;
+    player = player;
+    wait = wait;
+    instr_event = instr_event;
+    date = date;
+    perf = perf; }
+
+let create_asco score_init tempo_init =
+  let config = Config.make score_init tempo_init in
+  create_asco_from_config config
+
+let process load_instr_score asco instr_score =
+  let rec aux i l =
+    match l with
+    | [] -> ()
+    | h::t ->
+        begin
+          asco.instr_score.add (i,h);
+          aux (i + 1) t
+        end
+  in
+  aux 1 instr_score;
+  emit asco.instr_event {index = 0; bps = ( asco.config.Config.tempo /. 60.)};
+  pause
+
+
+(* Execute the runtime *)
+
+let process init_asco asco =
+  let _, instr_score = asco.score_init in
+  if instr_score <> [] then
+    run (load_instr_score asco instr_score)
+  else begin
+    emit asco.instr_event {index = 0; bps = ( asco.config.Config.tempo /. 60.)};
+    pause
+  end
+
+let runtime asco =
+  asco.runtime
+
+let process listener asco  =
+  let score, instr_score = asco.score_init in
+  run (runtime asco)
+  ||
+  begin match asco.config.Config.input_mode with
+  | Udp ->
+      run (Input.udp asco.config.Config.in_port asco.instr_event)
+  | File f ->
+      let simu = parse_simu f in
+      let errors = asco.config.Config.errors in
+      let freq = asco.config.Config.freq in
+      run (Input.simulator simu errors freq asco.instr_event)
+  | Score ->
+      let _, instr_score = asco.score_init in
+      let simu = Utils.extract_instr instr_score asco.config.Config.tempo in
+      let errors = asco.config.Config.errors in
+      let freq = asco.config.Config.freq in
+      run (Input.simulator simu errors freq asco.instr_event)
+  end
+
+let process sender asco =
+  let score, _ = asco.score_init in
+  run (Output.udp asco.config.Config.out_port asco.perf) ||
+  run (asco.player score) ||
+  (if asco.config.Config.verbose then
+    run (Utils.verbose asco.instr_event asco.perf)) ||
+  run (Animation.window) ||
+  (if asco.config.Config.ball then
+    run (Dancing_ball.main asco.instr_event)) ||
+  (if asco.config.Config.boids then
+    run (Boids.main asco.instr_event))
+
+
+
+(* Build Antescofo actions *)
+
+let action_note note =
+  Action(Message (Music.string_of_note note))
+
+let action_signal s =
+  Action(Signal s)
+
+let tight = Tight
+let loose = Loose
+let partial = Partial
+let causal = Causal
+let global = Global
+let local = Local
+
+let group synchro error seq =
+  Group({group_synchro = synchro;
+         group_error = error;
+         group_seq = seq;})
+
+
+(* Execute Antescofo actions *)
+
+let process play asco sequence =
+ let rec process exec s delta =
+    match s with
+    | [] -> ()
+    | (d,ae)::s' ->
+        let dn = d +. delta in
+        run (asco.wait d);
+        begin match ae with
+        | Action(a) ->
+            emit asco.perf (-1,d,a);
+            run (exec s' dn)
+        | Group(g) ->
+            (run (exec g.group_seq dn) ||
+             run (exec s' dn))
+        | Until(u) ->
+            begin
+              do
+                run (exec u.until_seq dn)
+              until asco.instr_event ([ev])
+              when (ev.index = u.until_event) done
+              ||
+              run (exec s' dn)
+            end
+        end
+  in
+  run (exec sequence 0.0)
+
+
+let process link asco i sequence =
+  let se =
+    { event = i;
+      seq = sequence; }
+  in
+  run (asco.player [se])
+
+
+let rec process play_loop asco period n sequence =
+  if n <= 0 then ()
+  else
+    begin
+      run (play asco sequence)
+      ||
+      begin
+        run (asco.wait period);
+        run (play_loop asco period (n-1) sequence)
+      end
+    end
+
+
+let process link_and_loop asco i period n sequence =
+  let j = (Utils.last_one asco.instr_event).index + 1 in
+  let di = asco.instr_score.find i in
+  let dj = asco.instr_score.find j in
+  let process looop n i delta seq =
+    for cpt = 0 to (n-1) dopar
+      let c = float_of_int cpt in
+      let d = delta +. c *. period in
+      let s = [d, group loose partial sequence] in
+      run (link asco i s);
+    done
+  in
+  if di >= dj then
+    run (looop n i 0.0 sequence)
+  else
+    let n' = int_of_float ((dj -. di) /. period) in
+    let nf' = float_of_int n' in
+    run (looop (n - n') i (nf' *. period)  sequence)
+
+
+let send_to_audio asco (d,p) =
+  emit asco.perf (-1, date asco, Message (Music.string_of_note (d, p)));;
+
+
+(* Turn a line into a sequence of electronic actions and execute it *)
+let rec process play_line asco sequence =
+  match sequence with
+  | [] -> ()
+  | (d,p) as note :: s ->
+      send_to_audio asco note;
+      run (wait asco d);
+      run (play_line asco s);;

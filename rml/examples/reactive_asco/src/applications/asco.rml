@@ -1,0 +1,27 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*                                                             *)
+(*                                                             *)
+(* Main file for Reactive Asco                                 *)
+(* Read a score and optionally a simulation file and launch    *)
+(* The sequencer.                                              *)
+(***************************************************************)
+
+open Ascolib
+open Types
+
+let process main =
+  (* Read arguments of the command line *)
+  let config = Config.read_args () in
+
+  (* Environment *)
+  let asco = create_asco_from_config config in
+
+  (* Initialize the signal listen *)
+  run (init_asco asco);
+
+  (* Run! *)
+  begin
+    run (listener asco) ||
+    run (sender asco)
+  end

@@ -1,0 +1,93 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*                                                             *)
+(*                                                             *)
+(* Implement the wait process (relative to the tempo)          *)
+(* This is an optimized version using a priority queue.        *)
+(***************************************************************)
+
+open Types
+open Utils
+
+(* Generate a regular real-time signal clock of frequence freq. *)
+let process emit_clock clock freq  =
+  let period = 1. /. freq in
+  let start = Unix.gettimeofday () in
+  let cpt = ref 1 in
+  let next = ref (start +. period) in
+  loop
+    let current = Unix.gettimeofday () in
+    if (current >= !next)
+    then
+      begin
+	emit clock ();
+	cpt := !cpt + 1;
+	next := start +. (float !cpt) *. period
+      end;
+    pause
+  end
+
+
+(* Compute the delay, relative to the tempo, elapsed since the
+   beginning of its execution.
+*)
+let process elapsed listen clock freq date =
+  let period = 1. /. freq in
+  let m = ref 0.0 in
+  let c = ref 0.0 in
+  emit date 0.0;
+  do
+    (* use Kahan summation *)
+    loop
+      let ev = last_one listen in
+      let y = ev.bps -. !c in
+      let t = !m +. y in
+      c := (t -. !m) -. y;
+      m := t;
+      emit date (!m *. period);
+      pause
+    end
+  when clock done
+
+
+(* Wait a delay 'dur' relatively to the tempo. The waiting process is
+   realized by the scheduler. Thereofore to achieve the desired
+   behavior we just need to register on the scheduler queue with the
+   'queue' signal. 'date' is the current value of 'elapsed'.
+*)
+let process wait date adding dur =
+  signal s in
+  await immediate one date(e) in
+  emit adding (dur +. e, s);
+  await immediate s
+
+
+(* Run the processes tick and elapsed and return date *)
+let process metronome listen freq date =
+  signal clock in
+  run (emit_clock clock freq) ||
+  run (elapsed listen clock freq date)
+
+
+(* Create a pair of processes '(scheduler, wait)'. The 'wait' process
+   suspends the execution for a duration 'dur' relative to the tempo
+   given by the signal 'date'. The 'scheduler' process manages the
+   waitings.
+*)
+let make_action_scheduler date =
+  signal adding in
+  let sending d sl = List.iter (fun (_, s) -> emit s) sl in
+  let wait = wait date adding in
+  signal deadline in
+  let rec process deadline_generator pre_d =
+    await immediate one date (d) in
+    emit deadline (d +. (d -. pre_d) /. 2.);
+    pause;
+    run (deadline_generator d)
+  in
+  let process action_scheduler =
+    run (Reactive_queue.scheduler deadline sending adding)
+    ||
+    run (deadline_generator 0.0)
+  in
+  action_scheduler, wait

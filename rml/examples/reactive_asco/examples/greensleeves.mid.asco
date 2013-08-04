@@ -1,0 +1,1793 @@
+NOTE 84 2.0
+GROUP  @tight @partial
+{
+0.0 'mnote 72 127'
+0.0 'mnote 76 127'
+0.0 'mnote 79 127'
+3.0 'mnote 60 127'
+3.0 'mnote 67 127'
+0.0 'mnote 74 127'
+0.0 'mnote 79 127'
+3.0 'mnote 55 127'
+3.0 'mnote 69 127'
+0.0 'mnote 72 127'
+0.0 'mnote 76 127'
+3.0 'mnote 57 127'
+3.0 'mnote 64 127'
+0.0 'mnote 71 127'
+0.0 'mnote 76 127'
+3.0 'mnote 52 127'
+3.0 'mnote 60 127'
+0.0 'mnote 76 127'
+2.0 'mnote 74 127'
+1.0 'mnote 72 127'
+1.0 'mnote 76 127'
+1.0 'mnote 79 127'
+1.0 'mnote 57 127'
+0.0 'mnote 79 127'
+2.0 'mnote 74 127'
+1.0 'mnote 71 127'
+1.5 'mnote 69 127'
+0.5 'mnote 67 127'
+1.0 'mnote 57 127'
+0.0 'mnote 64 127'
+2.0 'mnote 76 127'
+1.0 'mnote 74 127'
+1.5 'mnote 72 127'
+0.5 'mnote 71 127'
+1.0 'mnote 57 127'
+0.0 'mnote 72 127'
+3.0 'mnote 72 127'
+3.0 'mnote 60 127'
+0.0 'mnote 76 127'
+2.0 'mnote 74 127'
+1.0 'mnote 72 127'
+1.5 'mnote 74 127'
+0.5 'mnote 72 127'
+1.0 'mnote 55 127'
+0.0 'mnote 71 127'
+1.5 'mnote 72 127'
+0.5 'mnote 71 127'
+1.0 'mnote 67 127'
+1.5 'mnote 69 127'
+0.5 'mnote 71 127'
+1.0 'mnote 57 127'
+0.0 'mnote 64 127'
+2.0 'mnote 69 127'
+1.0 'mnote 69 127'
+0.0 'mnote 72 127'
+1.5 'mnote 74 127'
+0.5 'mnote 76 127'
+1.0 'mnote 64 127'
+0.0 'mnote 76 127'
+2.0 'mnote 80 127'
+1.0 'mnote 52 127'
+0.0 'mnote 83 127'
+1.0 'mnote 81 127'
+0.5 'mnote 80 127'
+1.5 'mnote 60 127'
+0.0 'mnote 76 127'
+1.5 'mnote 77 127'
+0.5 'mnote 79 127'
+1.0 'mnote 72 127'
+1.5 'mnote 74 127'
+0.5 'mnote 76 127'
+1.0 'mnote 55 127'
+0.0 'mnote 71 127'
+1.5 'mnote 72 127'
+0.5 'mnote 71 127'
+1.0 'mnote 67 127'
+1.5 'mnote 69 127'
+0.5 'mnote 71 127'
+1.0 'mnote 57 127'
+0.0 'mnote 64 127'
+2.0 'mnote 72 127'
+1.0 'mnote 52 127'
+0.0 'mnote 71 127'
+0.5 'mnote 72 127'
+0.5 'mnote 71 127'
+0.5 'mnote 69 127'
+0.5 'mnote 71 127'
+1.0 'mnote 57 127'
+0.0 'mnote 72 127'
+1.5 'mnote 74 127'
+0.5 'mnote 71 127'
+1.0 'mnote 69 127'
+0.0 'mnote 72 127'
+3.0 'mnote 72 127'
+0.0 'mnote 76 127'
+2.0 'mnote 76 127'
+1.0 'mnote 60 127'
+0.0 'mnote 76 127'
+1.0 'mnote 74 127'
+1.0 'mnote 72 127'
+1.0 'mnote 67 127'
+0.0 'mnote 71 127'
+2.0 'mnote 71 127'
+1.0 'mnote 55 127'
+0.0 'mnote 67 127'
+1.0 'mnote 69 127'
+1.0 'mnote 71 127'
+1.0 'mnote 57 127'
+0.0 'mnote 64 127'
+2.0 'mnote 76 127'
+1.0 'mnote 69 127'
+0.0 'mnote 72 127'
+1.0 'mnote 76 127'
+1.0 'mnote 81 127'
+1.0 'mnote 52 127'
+0.0 'mnote 80 127'
+2.0 'mnote 80 127'
+1.0 'mnote 64 127'
+0.0 'mnote 71 127'
+1.0 'mnote 72 127'
+1.0 'mnote 74 127'
+1.0 'mnote 60 127'
+0.0 'mnote 76 127'
+2.0 'mnote 76 127'
+1.0 'mnote 76 127'
+1.0 'mnote 74 127'
+1.0 'mnote 72 127'
+1.0 'mnote 67 127'
+0.0 'mnote 71 127'
+2.0 'mnote 74 127'
+1.0 'mnote 79 127'
+1.0 'mnote 81 127'
+1.0 'mnote 83 127'
+1.0 'mnote 57 127'
+0.0 'mnote 84 127'
+1.0 'mnote 83 127'
+1.0 'mnote 81 127'
+1.0 'mnote 52 127'
+0.0 'mnote 83 127'
+1.0 'mnote 81 127'
+1.0 'mnote 80 127'
+1.0 'mnote 57 127'
+0.0 'mnote 81 127'
+1.0 'mnote 76 127'
+1.0 'mnote 72 127'
+1.0 'mnote 69 127'
+3.0 'mnote 72 127'
+0.0 'mnote 76 127'
+0.0 'mnote 81 127'
+3.0 'mnote 60 127'
+3.0 'mnote 67 127'
+0.0 'mnote 74 127'
+0.0 'mnote 79 127'
+3.0 'mnote 55 127'
+3.0 'mnote 69 127'
+0.0 'mnote 72 127'
+0.0 'mnote 76 127'
+3.0 'mnote 57 127'
+3.0 'mnote 64 127'
+0.0 'mnote 71 127'
+0.0 'mnote 76 127'
+3.0 'mnote 52 127'
+3.0 'mnote 60 127'
+1.0 'mnote 79 127'
+1.0 'mnote 76 127'
+1.0 'mnote 72 127'
+1.0 'mnote 79 127'
+1.0 'mnote 76 127'
+1.0 'mnote 67 127'
+1.0 'mnote 79 127'
+1.0 'mnote 74 127'
+1.0 'mnote 55 127'
+1.0 'mnote 79 127'
+1.0 'mnote 74 127'
+1.0 'mnote 57 127'
+1.0 'mnote 76 127'
+1.0 'mnote 72 127'
+1.0 'mnote 64 127'
+1.0 'mnote 76 127'
+1.0 'mnote 71 127'
+1.0 'mnote 69 127'
+1.0 'mnote 76 127'
+1.0 'mnote 72 127'
+1.0 'mnote 57 127'
+0.0 'mnote 81 127'
+3.0 'mnote 72 127'
+0.0 'mnote 76 127'
+2.0 'mnote 77 127'
+1.0 'mnote 60 127'
+0.0 'mnote 76 127'
+1.5 'mnote 74 127'
+0.5 'mnote 72 127'
+1.0 'mnote 67 127'
+0.0 'mnote 71 127'
+1.0 'mnote 74 127'
+1.0 'mnote 79 127'
+1.0 'mnote 55 127'
+0.0 'mnote 79 127'
+2.0 'mnote 74 127'
+1.0 'mnote 57 127'
+0.0 'mnote 72 127'
+2.0 'mnote 74 127'
+1.0 'mnote 69 127'
+0.0 'mnote 76 127'
+1.0 'mnote 74 127'
+1.0 'mnote 72 127'
+1.0 'mnote 64 127'
+0.0 'mnote 71 127'
+2.0 'mnote 69 127'
+1.0 'mnote 68 127'
+1.0 'mnote 71 127'
+1.0 'mnote 76 127'
+1.0 'mnote 60 127'
+0.0 'mnote 76 127'
+2.0 'mnote 77 127'
+1.0 'mnote 76 127'
+1.5 'mnote 74 127'
+0.5 'mnote 72 127'
+1.0 'mnote 67 127'
+0.0 'mnote 71 127'
+1.0 'mnote 74 127'
+1.0 'mnote 79 127'
+1.0 'mnote 83 127'
+3.0 'mnote 69 127'
+0.0 'mnote 76 127'
+1.0 'mnote 74 127'
+1.0 'mnote 72 127'
+1.0 'mnote 64 127'
+0.0 'mnote 74 127'
+1.0 'mnote 72 127'
+1.0 'mnote 71 127'
+1.0 'mnote 57 127'
+0.0 'mnote 72 127'
+1.0 'mnote 69 127'
+1.0 'mnote 64 127'
+1.0 'mnote 57 127'
+3.0 'mnote 60 120'
+0.0 'mnote 72 120'
+0.5 'mnote 74 120'
+0.5 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 69 120'
+1.0 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 67 120'
+0.0 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 74 120'
+1.0 'mnote 71 120'
+1.0 'mnote 67 120'
+1.0 'mnote 74 120'
+1.0 'mnote 71 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+0.5 'mnote 74 120'
+0.5 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 69 120'
+1.0 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 64 120'
+0.0 'mnote 68 120'
+0.5 'mnote 69 120'
+0.5 'mnote 71 120'
+1.0 'mnote 68 120'
+1.0 'mnote 64 120'
+0.0 'mnote 64 120'
+1.0 'mnote 71 120'
+1.0 'mnote 68 120'
+1.0 'mnote 60 120'
+0.0 'mnote 76 120'
+0.5 'mnote 77 120'
+0.5 'mnote 79 120'
+1.0 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 79 120'
+1.0 'mnote 76 120'
+1.0 'mnote 55 120'
+0.0 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 74 120'
+1.0 'mnote 71 120'
+1.0 'mnote 67 120'
+1.0 'mnote 74 120'
+1.0 'mnote 71 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+1.0 'mnote 76 120'
+1.0 'mnote 81 120'
+1.0 'mnote 52 120'
+1.0 'mnote 71 120'
+1.0 'mnote 80 120'
+1.0 'mnote 57 120'
+0.0 'mnote 81 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.5 'mnote 74 120'
+0.5 'mnote 76 120'
+1.0 'mnote 69 120'
+3.0 'mnote 60 120'
+0.0 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 74 120'
+1.0 'mnote 76 120'
+1.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 67 120'
+0.0 'mnote 74 120'
+1.0 'mnote 71 120'
+1.0 'mnote 72 120'
+1.0 'mnote 55 120'
+0.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 57 120'
+0.0 'mnote 69 120'
+1.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 69 120'
+0.0 'mnote 69 120'
+1.0 'mnote 71 120'
+1.0 'mnote 72 120'
+1.0 'mnote 64 120'
+0.0 'mnote 68 120'
+1.0 'mnote 71 120'
+1.0 'mnote 76 120'
+1.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 60 120'
+0.0 'mnote 79 120'
+1.0 'mnote 76 120'
+1.0 'mnote 77 120'
+1.0 'mnote 79 120'
+1.0 'mnote 77 120'
+1.0 'mnote 76 120'
+1.0 'mnote 67 120'
+0.0 'mnote 74 120'
+1.0 'mnote 71 120'
+1.0 'mnote 72 120'
+1.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 69 120'
+1.0 'mnote 72 120'
+1.0 'mnote 76 120'
+1.0 'mnote 64 120'
+1.0 'mnote 71 120'
+1.0 'mnote 76 120'
+1.0 'mnote 57 120'
+0.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 69 120'
+0.0 'mnote 69 120'
+0.0 'mnote 72 120'
+3.0 'mnote 60 120'
+0.0 'mnote 60 120'
+0.0 'mnote 76 120'
+1.0 'mnote 72 120'
+0.5 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 74 120'
+0.5 'mnote 76 120'
+1.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 67 120'
+0.0 'mnote 74 120'
+0.5 'mnote 76 120'
+0.5 'mnote 74 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+1.0 'mnote 55 120'
+0.0 'mnote 71 120'
+3.0 'mnote 57 120'
+0.0 'mnote 72 120'
+0.5 'mnote 71 120'
+0.5 'mnote 69 120'
+0.5 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 74 120'
+0.5 'mnote 69 120'
+0.0 'mnote 76 120'
+1.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 64 120'
+0.0 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+0.5 'mnote 69 120'
+0.5 'mnote 68 120'
+1.0 'mnote 52 120'
+0.0 'mnote 68 120'
+3.0 'mnote 60 120'
+0.0 'mnote 76 120'
+1.0 'mnote 72 120'
+0.5 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 74 120'
+0.5 'mnote 76 120'
+1.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 55 120'
+0.0 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+0.5 'mnote 69 120'
+0.5 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+1.0 'mnote 74 120'
+1.0 'mnote 79 120'
+1.0 'mnote 57 120'
+0.0 'mnote 76 120'
+1.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 52 120'
+0.0 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+0.5 'mnote 69 120'
+0.5 'mnote 71 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+3.0 'mnote 57 120'
+0.0 'mnote 64 120'
+0.5 'mnote 69 120'
+2.5 'mnote 72 120'
+0.0 'mnote 76 120'
+0.0 'mnote 79 120'
+3.0 'mnote 60 120'
+3.0 'mnote 67 120'
+0.0 'mnote 74 120'
+0.0 'mnote 79 120'
+3.0 'mnote 55 120'
+3.0 'mnote 57 120'
+0.0 'mnote 72 120'
+0.0 'mnote 76 120'
+3.0 'mnote 69 120'
+3.0 'mnote 64 120'
+0.0 'mnote 71 120'
+0.0 'mnote 76 120'
+3.0 'mnote 52 120'
+3.0 'mnote 60 120'
+0.0 'mnote 76 120'
+2.0 'mnote 77 120'
+1.0 'mnote 79 120'
+1.0 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 55 120'
+0.0 'mnote 71 120'
+2.0 'mnote 67 120'
+1.0 'mnote 74 120'
+1.0 'mnote 79 120'
+1.0 'mnote 77 120'
+1.0 'mnote 57 120'
+0.0 'mnote 76 120'
+2.0 'mnote 72 120'
+1.0 'mnote 64 120'
+0.0 'mnote 71 120'
+1.0 'mnote 76 120'
+1.0 'mnote 76 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+1.5 'mnote 74 120'
+0.5 'mnote 71 120'
+1.0 'mnote 69 120'
+0.0 'mnote 72 120'
+3.0 'mnote 72 120'
+1.0 'mnote 76 120'
+0.5 'mnote 74 120'
+0.5 'mnote 72 120'
+1.0 'mnote 69 120'
+1.0 'mnote 72 120'
+0.5 'mnote 74 120'
+0.5 'mnote 76 120'
+1.0 'mnote 71 120'
+1.0 'mnote 74 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+1.0 'mnote 67 120'
+1.0 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 76 120'
+0.5 'mnote 74 120'
+0.5 'mnote 72 120'
+1.0 'mnote 69 120'
+1.0 'mnote 72 120'
+0.5 'mnote 74 120'
+0.5 'mnote 76 120'
+1.0 'mnote 68 120'
+1.0 'mnote 71 120'
+0.5 'mnote 69 120'
+0.5 'mnote 68 120'
+1.0 'mnote 64 120'
+1.0 'mnote 68 120'
+0.5 'mnote 69 120'
+0.5 'mnote 71 120'
+1.0 'mnote 60 120'
+0.0 'mnote 76 120'
+1.0 'mnote 79 120'
+0.5 'mnote 77 120'
+0.5 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 76 120'
+0.5 'mnote 77 120'
+0.5 'mnote 79 120'
+1.0 'mnote 67 120'
+0.0 'mnote 71 120'
+1.0 'mnote 74 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+1.0 'mnote 67 120'
+1.0 'mnote 71 120'
+0.5 'mnote 72 120'
+0.5 'mnote 74 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+1.0 'mnote 76 120'
+0.5 'mnote 74 120'
+0.5 'mnote 72 120'
+1.0 'mnote 52 120'
+0.0 'mnote 71 120'
+1.0 'mnote 68 120'
+0.5 'mnote 69 120'
+0.5 'mnote 71 120'
+1.0 'mnote 57 120'
+0.0 'mnote 69 120'
+1.0 'mnote 72 120'
+1.0 'mnote 76 120'
+1.0 'mnote 81 120'
+3.0 'mnote 72 120'
+0.0 'mnote 72 120'
+0.0 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 79 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.0 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 79 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 67 120'
+0.0 'mnote 67 120'
+0.0 'mnote 67 120'
+0.0 'mnote 67 120'
+0.5 'mnote 74 120'
+0.5 'mnote 79 120'
+0.5 'mnote 74 120'
+0.5 'mnote 67 120'
+0.0 'mnote 67 120'
+0.0 'mnote 67 120'
+0.5 'mnote 74 120'
+0.5 'mnote 67 120'
+0.0 'mnote 67 120'
+0.5 'mnote 74 120'
+0.5 'mnote 79 120'
+0.5 'mnote 74 120'
+0.5 'mnote 67 120'
+0.0 'mnote 67 120'
+0.5 'mnote 74 120'
+0.5 'mnote 69 120'
+0.0 'mnote 69 120'
+0.5 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.5 'mnote 69 120'
+0.0 'mnote 69 120'
+0.5 'mnote 72 120'
+0.5 'mnote 69 120'
+0.0 'mnote 69 120'
+0.5 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.5 'mnote 69 120'
+0.0 'mnote 69 120'
+0.5 'mnote 72 120'
+0.5 'mnote 64 127'
+0.0 'mnote 64 127'
+0.5 'mnote 71 120'
+0.5 'mnote 76 120'
+0.5 'mnote 71 120'
+0.5 'mnote 68 127'
+0.0 'mnote 68 127'
+0.5 'mnote 71 120'
+0.5 'mnote 64 127'
+0.0 'mnote 64 127'
+2.0 'mnote 62 127'
+1.0 'mnote 60 120'
+0.0 'mnote 60 120'
+0.5 'mnote 76 120'
+0.5 'mnote 79 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.0 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.0 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 79 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.0 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 67 120'
+0.0 'mnote 67 120'
+0.5 'mnote 74 120'
+0.5 'mnote 79 120'
+0.5 'mnote 74 120'
+0.5 'mnote 67 120'
+0.0 'mnote 67 120'
+0.5 'mnote 74 120'
+0.5 'mnote 67 120'
+0.0 'mnote 67 120'
+0.5 'mnote 74 120'
+0.5 'mnote 79 120'
+0.5 'mnote 74 120'
+0.5 'mnote 67 120'
+0.0 'mnote 67 120'
+0.5 'mnote 74 120'
+0.5 'mnote 69 120'
+0.0 'mnote 69 120'
+0.5 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.5 'mnote 69 120'
+0.0 'mnote 69 120'
+0.5 'mnote 72 120'
+0.5 'mnote 64 120'
+0.0 'mnote 64 120'
+0.5 'mnote 71 120'
+0.5 'mnote 76 120'
+0.5 'mnote 71 120'
+0.5 'mnote 64 120'
+0.0 'mnote 64 120'
+0.5 'mnote 71 120'
+0.5 'mnote 57 120'
+0.0 'mnote 57 120'
+0.5 'mnote 72 120'
+0.5 'mnote 76 120'
+0.5 'mnote 72 120'
+0.5 'mnote 69 120'
+0.0 'mnote 69 120'
+0.5 'mnote 72 120'
+0.5 'mnote 57 120'
+3.0 'mnote 60 120'
+0.0 'mnote 72 120'
+2.0 'mnote 74 120'
+1.0 'mnote 60 120'
+0.0 'mnote 76 120'
+1.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 55 120'
+0.0 'mnote 74 120'
+1.0 'mnote 71 120'
+1.0 'mnote 72 120'
+1.0 'mnote 55 120'
+0.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+2.0 'mnote 71 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 69 120'
+1.0 'mnote 64 120'
+0.0 'mnote 71 120'
+2.0 'mnote 69 120'
+1.0 'mnote 68 120'
+1.0 'mnote 71 120'
+1.0 'mnote 76 120'
+1.0 'mnote 60 120'
+0.0 'mnote 76 120'
+2.0 'mnote 77 120'
+1.0 'mnote 79 120'
+1.0 'mnote 77 120'
+1.0 'mnote 76 120'
+1.0 'mnote 55 120'
+0.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 74 120'
+1.0 'mnote 71 120'
+1.0 'mnote 72 120'
+1.0 'mnote 74 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 69 120'
+1.0 'mnote 52 120'
+0.0 'mnote 68 120'
+1.0 'mnote 66 120'
+1.0 'mnote 68 120'
+1.0 'mnote 57 120'
+0.0 'mnote 69 120'
+1.0 'mnote 72 120'
+1.0 'mnote 76 120'
+1.0 'mnote 81 120'
+3.0 'mnote 72 120'
+0.0 'mnote 76 120'
+2.0 'mnote 79 120'
+1.0 'mnote 60 120'
+0.0 'mnote 76 120'
+1.0 'mnote 69 120'
+1.0 'mnote 72 120'
+1.0 'mnote 67 120'
+0.0 'mnote 74 120'
+2.0 'mnote 79 120'
+1.0 'mnote 55 120'
+0.0 'mnote 74 120'
+1.0 'mnote 67 120'
+1.0 'mnote 71 120'
+1.0 'mnote 69 120'
+0.0 'mnote 72 120'
+2.0 'mnote 76 120'
+1.0 'mnote 57 120'
+0.0 'mnote 81 120'
+1.0 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 52 120'
+0.0 'mnote 71 120'
+2.0 'mnote 72 120'
+1.0 'mnote 64 120'
+0.0 'mnote 71 120'
+2.0 'mnote 68 120'
+1.0 'mnote 60 120'
+0.0 'mnote 76 120'
+2.0 'mnote 77 120'
+1.0 'mnote 72 120'
+0.0 'mnote 79 120'
+1.0 'mnote 77 120'
+1.0 'mnote 76 120'
+1.0 'mnote 55 120'
+0.0 'mnote 74 120'
+2.0 'mnote 76 120'
+1.0 'mnote 67 120'
+0.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 69 120'
+1.0 'mnote 64 120'
+0.0 'mnote 68 120'
+1.0 'mnote 71 120'
+1.0 'mnote 76 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+1.0 'mnote 74 120'
+1.0 'mnote 76 120'
+1.0 'mnote 69 120'
+3.0 'mnote 72 120'
+0.0 'mnote 76 120'
+0.5 'mnote 74 120'
+0.5 'mnote 72 120'
+1.0 'mnote 69 120'
+1.0 'mnote 60 120'
+0.0 'mnote 76 120'
+0.5 'mnote 74 120'
+0.5 'mnote 72 120'
+1.0 'mnote 69 120'
+1.0 'mnote 67 120'
+0.0 'mnote 74 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+1.0 'mnote 67 120'
+1.0 'mnote 55 120'
+0.0 'mnote 74 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+1.0 'mnote 67 120'
+1.0 'mnote 69 120'
+0.0 'mnote 72 120'
+0.5 'mnote 74 120'
+0.5 'mnote 76 120'
+1.0 'mnote 81 120'
+1.0 'mnote 57 120'
+0.0 'mnote 76 120'
+0.5 'mnote 74 120'
+0.5 'mnote 72 120'
+1.0 'mnote 74 120'
+1.0 'mnote 64 120'
+0.0 'mnote 76 120'
+0.5 'mnote 78 120'
+0.5 'mnote 80 120'
+1.0 'mnote 76 120'
+1.0 'mnote 52 120'
+0.0 'mnote 71 120'
+1.0 'mnote 68 120'
+1.0 'mnote 64 120'
+1.0 'mnote 72 120'
+0.0 'mnote 79 120'
+0.5 'mnote 77 120'
+0.5 'mnote 76 120'
+1.0 'mnote 72 120'
+1.0 'mnote 60 120'
+0.0 'mnote 79 120'
+0.5 'mnote 77 120'
+0.5 'mnote 79 120'
+1.0 'mnote 76 120'
+1.0 'mnote 67 120'
+0.0 'mnote 74 120'
+0.5 'mnote 72 120'
+0.5 'mnote 71 120'
+1.0 'mnote 67 120'
+1.0 'mnote 55 120'
+0.0 'mnote 74 120'
+0.5 'mnote 72 120'
+0.5 'mnote 74 120'
+1.0 'mnote 71 120'
+1.0 'mnote 64 120'
+0.0 'mnote 72 120'
+0.5 'mnote 71 120'
+0.5 'mnote 72 120'
+1.0 'mnote 62 120'
+0.0 'mnote 74 120'
+1.0 'mnote 64 120'
+0.0 'mnote 71 120'
+1.0 'mnote 76 120'
+1.0 'mnote 74 120'
+1.0 'mnote 57 120'
+0.0 'mnote 72 120'
+0.5 'mnote 69 120'
+0.5 'mnote 64 120'
+1.0 'mnote 60 120'
+1.0 'mnote 57 120'
+3.0 'mnote 60 120'
+0.0 'mnote 76 120'
+2.0 'mnote 62 120'
+0.0 'mnote 77 120'
+1.0 'mnote 64 120'
+0.0 'mnote 79 120'
+2.0 'mnote 65 120'
+0.0 'mnote 81 120'
+1.0 'mnote 67 120'
+0.0 'mnote 83 120'
+2.0 'mnote 84 120'
+1.0 'mnote 86 120'
+3.0 'mnote 57 120'
+0.0 'mnote 72 120'
+2.0 'mnote 59 120'
+0.0 'mnote 74 120'
+1.0 'mnote 60 120'
+0.0 'mnote 76 120'
+2.0 'mnote 78 120'
+1.0 'mnote 52 120'
+0.0 'mnote 80 120'
+2.0 'mnote 81 120'
+1.0 'mnote 83 120'
+3.0 'mnote 60 120'
+0.0 'mnote 76 120'
+2.0 'mnote 62 120'
+0.0 'mnote 77 120'
+1.0 'mnote 64 120'
+0.0 'mnote 79 120'
+2.0 'mnote 65 120'
+0.0 'mnote 81 120'
+1.0 'mnote 67 120'
+0.0 'mnote 83 120'
+2.0 'mnote 84 120'
+1.0 'mnote 86 120'
+3.0 'mnote 57 120'
+0.0 'mnote 72 120'
+2.0 'mnote 76 120'
+1.0 'mnote 64 120'
+0.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 71 120'
+1.0 'mnote 57 120'
+0.0 'mnote 69 120'
+1.0 'mnote 72 120'
+1.0 'mnote 76 120'
+1.0 'mnote 81 120'
+3.0 'mnote 72 120'
+0.0 'mnote 76 120'
+0.0 'mnote 79 120'
+3.0 'mnote 60 120'
+3.0 'mnote 67 120'
+0.0 'mnote 74 120'
+0.0 'mnote 79 120'
+3.0 'mnote 55 120'
+3.0 'mnote 69 120'
+0.0 'mnote 72 120'
+0.0 'mnote 76 120'
+3.0 'mnote 57 120'
+3.0 'mnote 64 120'
+0.0 'mnote 71 120'
+0.0 'mnote 76 120'
+3.0 'mnote 52 120'
+3.0 'mnote 60 120'
+0.0 'mnote 76 120'
+2.0 'mnote 74 120'
+1.0 'mnote 72 120'
+1.0 'mnote 76 120'
+1.0 'mnote 79 120'
+1.0 'mnote 57 120'
+0.0 'mnote 79 120'
+2.0 'mnote 74 120'
+1.0 'mnote 71 120'
+1.5 'mnote 69 120'
+0.5 'mnote 67 120'
+1.0 'mnote 57 120'
+0.0 'mnote 64 120'
+2.0 'mnote 76 120'
+1.0 'mnote 64 120'
+0.0 'mnote 74 120'
+1.5 'mnote 72 120'
+0.5 'mnote 71 120'
+1.0 'mnote 69 120'
+0.0 'mnote 72 120'
+1.5 'mnote 74 120'
+0.5 'mnote 71 120'
+
+}
+NOTE 86 1.0
+NOTE 88 2.0
+NOTE 88 1.0
+NOTE 86 2.0
+NOTE 83 1.0
+NOTE 79 3.0
+NOTE 81 1.5
+NOTE 83 0.5
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 83 2.0
+NOTE 80 1.0
+NOTE 76 3.0
+NOTE 84 2.0
+NOTE 86 1.0
+NOTE 88 1.5
+NOTE 86 0.5
+NOTE 84 1.0
+NOTE 86 2.0
+NOTE 83 1.0
+NOTE 79 1.5
+NOTE 81 0.5
+NOTE 83 1.0
+NOTE 84 1.5
+NOTE 83 0.5
+NOTE 81 1.0
+NOTE 83 0.25
+NOTE 84 0.25
+NOTE 83 1.0
+NOTE 81 0.5
+NOTE 80 1.0
+NOTE 81 3.0
+NOTE 81 3.0
+NOTE 84 1.5
+NOTE 86 0.5
+NOTE 88 1.0
+NOTE 88 1.5
+NOTE 89 0.5
+NOTE 88 1.0
+NOTE 86 1.5
+NOTE 88 0.5
+NOTE 86 1.0
+NOTE 83 1.5
+NOTE 84 0.5
+NOTE 86 1.0
+NOTE 84 1.5
+NOTE 83 0.5
+NOTE 84 1.0
+NOTE 81 1.5
+NOTE 83 0.5
+NOTE 84 1.0
+NOTE 83 1.5
+NOTE 81 0.5
+NOTE 83 1.0
+NOTE 80 1.5
+NOTE 81 0.5
+NOTE 83 1.0
+NOTE 84 1.5
+NOTE 86 0.5
+NOTE 88 1.0
+NOTE 88 1.5
+NOTE 89 0.5
+NOTE 91 1.0
+NOTE 86 1.5
+NOTE 88 0.5
+NOTE 86 1.0
+NOTE 83 1.5
+NOTE 84 0.5
+NOTE 86 1.0
+NOTE 84 1.0
+NOTE 83 1.0
+NOTE 81 1.0
+NOTE 80 0.25
+NOTE 81 0.25
+NOTE 80 1.0
+NOTE 78 0.5
+NOTE 80 1.0
+NOTE 81 3.0
+NOTE 81 3.0
+NOTE 91 2.0
+NOTE 91 1.0
+NOTE 91 1.0
+NOTE 89 1.0
+NOTE 88 1.0
+NOTE 86 2.0
+NOTE 86 1.0
+NOTE 83 1.0
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 84 2.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 83 1.0
+NOTE 84 1.0
+NOTE 83 2.0
+NOTE 83 1.0
+NOTE 80 1.0
+NOTE 81 1.0
+NOTE 83 1.0
+NOTE 91 2.0
+NOTE 91 1.0
+NOTE 91 1.0
+NOTE 89 1.0
+NOTE 88 1.0
+NOTE 86 2.0
+NOTE 86 1.0
+NOTE 83 1.0
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 88 1.0
+NOTE 86 1.0
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 83 0.25
+NOTE 84 0.25
+NOTE 83 1.5
+NOTE 81 3.0
+NOTE 81 3.0
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 86 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 86 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 83 1.0
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 83 1.0
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 91 0.25
+NOTE 93 0.25
+NOTE 91 0.5
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 91 0.25
+NOTE 93 0.25
+NOTE 91 0.5
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 86 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 83 0.25
+NOTE 84 0.25
+NOTE 83 0.5
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 81 3.0
+NOTE 81 3.0
+NOTE 91 1.0
+NOTE 84 1.0
+NOTE 93 1.0
+NOTE 91 0.25
+NOTE 93 0.25
+NOTE 91 1.0
+NOTE 89 0.5
+NOTE 88 1.0
+NOTE 86 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 86 1.0
+NOTE 74 1.0
+NOTE 89 0.5
+NOTE 91 0.5
+NOTE 93 1.0
+NOTE 81 1.0
+NOTE 95 1.0
+NOTE 96 1.0
+NOTE 95 1.0
+NOTE 93 1.0
+NOTE 92 1.0
+NOTE 88 1.0
+NOTE 83 1.0
+NOTE 88 1.0
+NOTE 88 0.25
+NOTE 89 0.25
+NOTE 88 1.0
+NOTE 89 0.5
+NOTE 91 1.0
+NOTE 84 1.0
+NOTE 93 1.0
+NOTE 91 0.25
+NOTE 93 0.25
+NOTE 91 1.0
+NOTE 89 0.5
+NOTE 88 1.0
+NOTE 86 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 86 1.0
+NOTE 74 1.0
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 1.0
+NOTE 83 1.0
+NOTE 81 1.0
+NOTE 83 1.0
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 81 3.0
+NOTE 81 3.0
+NOTE 81 1.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 1.0
+NOTE 79 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 79 1.0
+NOTE 81 1.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 1.0
+NOTE 76 1.0
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 80 0.5
+NOTE 78 0.5
+NOTE 76 1.0
+NOTE 84 1.0
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 91 0.5
+NOTE 89 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 1.0
+NOTE 79 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 79 1.0
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 1.0
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 80 0.5
+NOTE 78 0.5
+NOTE 76 1.0
+NOTE 81 3.0
+NOTE 81 0.25
+NOTE 83 0.25
+NOTE 81 2.5
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 83 1.0
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 88 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 81 1.0
+NOTE 83 1.0
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 83 1.0
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 88 1.0
+NOTE 83 2.0
+NOTE 80 1.0
+NOTE 76 3.0
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 88 1.0
+NOTE 89 1.0
+NOTE 91 1.0
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 81 1.0
+NOTE 83 1.0
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 84 0.25
+NOTE 86 0.25
+NOTE 84 0.5
+NOTE 81 1.0
+NOTE 84 1.0
+NOTE 83 0.25
+NOTE 84 0.25
+NOTE 83 0.5
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 81 3.0
+NOTE 81 3.0
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 81 0.5
+NOTE 93 0.5
+NOTE 92 0.5
+NOTE 93 0.5
+NOTE 95 0.5
+NOTE 96 0.5
+NOTE 93 0.5
+NOTE 95 0.25
+NOTE 96 0.25
+NOTE 95 1.5
+NOTE 91 1.0
+NOTE 91 3.0
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 81 0.5
+NOTE 93 0.5
+NOTE 92 0.5
+NOTE 93 0.5
+NOTE 95 0.5
+NOTE 96 0.5
+NOTE 93 0.5
+NOTE 92 0.25
+NOTE 93 0.25
+NOTE 92 1.5
+NOTE 88 1.0
+NOTE 88 3.0
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 89 0.5
+NOTE 91 0.5
+NOTE 93 0.5
+NOTE 91 0.5
+NOTE 89 0.5
+NOTE 88 0.5
+NOTE 89 0.5
+NOTE 91 0.25
+NOTE 93 0.25
+NOTE 91 0.5
+NOTE 86 1.0
+NOTE 86 1.0
+NOTE 86 1.5
+NOTE 84 0.5
+NOTE 83 1.0
+NOTE 84 1.0
+NOTE 83 1.0
+NOTE 81 1.0
+NOTE 80 1.5
+NOTE 78 0.5
+NOTE 80 1.0
+NOTE 81 3.0
+NOTE 81 3.0
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 79 0.5
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 80 0.5
+NOTE 78 0.5
+NOTE 76 0.5
+NOTE 78 0.5
+NOTE 80 0.5
+NOTE 81 0.5
+NOTE 83 1.0
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 80 0.5
+NOTE 81 3.0
+NOTE 81 0.25
+NOTE 83 0.25
+NOTE 81 2.5
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 1.0
+NOTE 81 1.0
+NOTE 79 0.5
+NOTE 81 0.5
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 1.0
+NOTE 79 1.0
+NOTE 81 0.5
+NOTE 83 0.5
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 1.0
+NOTE 81 1.0
+NOTE 76 0.5
+NOTE 78 0.5
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 80 0.5
+NOTE 81 0.5
+NOTE 83 1.0
+NOTE 76 1.0
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 88 0.5
+NOTE 89 0.5
+NOTE 91 1.0
+NOTE 84 1.0
+NOTE 79 0.5
+NOTE 81 0.5
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 1.0
+NOTE 79 1.0
+NOTE 93 0.5
+NOTE 95 0.5
+NOTE 96 1.0
+NOTE 93 1.0
+NOTE 92 0.5
+NOTE 93 0.5
+NOTE 95 1.0
+NOTE 92 1.0
+NOTE 93 3.0
+NOTE 93 0.25
+NOTE 95 0.25
+NOTE 93 2.5
+NOTE 96 1.0
+NOTE 96 1.0
+NOTE 96 1.0
+NOTE 84 1.0
+NOTE 84 1.0
+NOTE 84 1.0
+NOTE 91 1.0
+NOTE 91 1.0
+NOTE 91 1.0
+NOTE 79 1.5
+NOTE 81 0.5
+NOTE 83 1.0
+NOTE 93 1.0
+NOTE 93 1.0
+NOTE 93 1.0
+NOTE 81 1.5
+NOTE 83 0.5
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 1.0
+NOTE 88 1.0
+NOTE 88 1.0
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 76 1.0
+NOTE 96 1.0
+NOTE 96 1.0
+NOTE 96 1.0
+NOTE 84 1.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 89 0.5
+NOTE 91 1.0
+NOTE 91 1.0
+NOTE 93 1.0
+NOTE 95 1.5
+NOTE 93 0.5
+NOTE 91 1.0
+NOTE 96 1.0
+NOTE 95 1.0
+NOTE 93 1.0
+NOTE 92 1.5
+NOTE 90 0.5
+NOTE 92 1.0
+NOTE 93 3.0
+NOTE 93 3.0
+NOTE 84 0.5
+NOTE 88 0.5
+NOTE 88 0.5
+NOTE 88 0.5
+NOTE 88 0.5
+NOTE 88 0.5
+NOTE 84 0.5
+NOTE 88 0.5
+NOTE 88 0.5
+NOTE 88 0.5
+NOTE 88 0.5
+NOTE 88 0.5
+NOTE 83 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 83 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 81 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 81 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 80 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 76 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 88 0.5
+NOTE 91 0.5
+NOTE 91 0.5
+NOTE 91 0.5
+NOTE 91 0.5
+NOTE 91 0.5
+NOTE 84 0.5
+NOTE 91 0.5
+NOTE 91 0.5
+NOTE 91 0.5
+NOTE 91 0.5
+NOTE 91 0.5
+NOTE 83 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 79 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 86 0.5
+NOTE 81 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 84 0.5
+NOTE 76 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 83 0.5
+NOTE 81 3.0
+NOTE 81 3.0
+NOTE 93 1.0
+NOTE 91 0.5
+NOTE 89 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 2.0
+NOTE 81 1.0
+NOTE 91 1.0
+NOTE 89 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 2.0
+NOTE 79 1.0
+NOTE 93 1.0
+NOTE 91 0.5
+NOTE 89 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 2.0
+NOTE 81 1.0
+NOTE 88 1.0
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 80 2.0
+NOTE 76 1.0
+NOTE 96 1.0
+NOTE 95 0.5
+NOTE 93 0.5
+NOTE 91 0.5
+NOTE 89 0.5
+NOTE 88 2.0
+NOTE 84 1.0
+NOTE 91 1.0
+NOTE 89 0.5
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 2.0
+NOTE 79 1.0
+NOTE 84 0.5
+NOTE 86 0.5
+NOTE 88 0.5
+NOTE 90 0.5
+NOTE 92 0.5
+NOTE 93 0.5
+NOTE 95 0.5
+NOTE 93 0.5
+NOTE 92 0.5
+NOTE 88 0.5
+NOTE 90 0.5
+NOTE 92 0.5
+NOTE 93 3.0
+NOTE 93 3.0
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 88 0.5
+NOTE 86 0.5
+NOTE 84 1.0
+NOTE 81 1.0
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 80 1.0
+NOTE 76 1.0
+NOTE 91 0.5
+NOTE 89 0.5
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 91 0.5
+NOTE 89 0.5
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 1.0
+NOTE 79 1.0
+NOTE 88 0.5
+NOTE 89 0.5
+NOTE 91 1.0
+NOTE 88 1.0
+NOTE 93 1.0
+NOTE 92 0.25
+NOTE 93 0.25
+NOTE 92 1.5
+NOTE 90 0.5
+NOTE 92 0.5
+NOTE 93 3.0
+NOTE 93 3.0
+NOTE 84 1.0
+NOTE 91 1.0
+NOTE 89 1.0
+NOTE 88 1.0
+NOTE 86 1.0
+NOTE 84 1.0
+NOTE 79 1.0
+NOTE 86 1.0
+NOTE 84 1.0
+NOTE 83 1.0
+NOTE 81 1.0
+NOTE 79 1.0
+NOTE 81 1.0
+NOTE 88 1.0
+NOTE 86 1.0
+NOTE 84 1.0
+NOTE 83 1.0
+NOTE 81 1.0
+NOTE 76 1.0
+NOTE 83 1.0
+NOTE 81 1.0
+NOTE 80 1.0
+NOTE 78 1.0
+NOTE 76 1.0
+NOTE 84 1.0
+NOTE 91 1.0
+NOTE 89 1.0
+NOTE 88 1.0
+NOTE 86 1.0
+NOTE 84 1.0
+NOTE 79 1.0
+NOTE 86 1.0
+NOTE 84 1.0
+NOTE 83 1.0
+NOTE 81 1.0
+NOTE 79 1.0
+NOTE 81 1.0
+NOTE 88 1.0
+NOTE 86 0.5
+NOTE 84 0.5
+NOTE 83 0.5
+NOTE 81 0.5
+NOTE 80 0.5
+NOTE 78 0.5
+NOTE 80 0.5
+NOTE 76 0.5
+NOTE 81 3.0
+NOTE 81 3.0
+NOTE 84 2.0
+NOTE 86 1.0
+NOTE 88 2.0
+NOTE 88 1.0
+NOTE 86 2.0
+NOTE 83 1.0
+NOTE 79 3.0
+NOTE 81 1.5
+NOTE 83 0.5
+NOTE 84 1.0
+NOTE 86 1.0
+NOTE 88 1.0
+NOTE 84 1.0
+NOTE 83 2.0
+NOTE 80 1.0
+NOTE 76 3.0
+NOTE 84 2.0
+NOTE 86 1.0
+NOTE 88 1.5
+NOTE 86 0.5
+NOTE 84 1.0
+NOTE 86 2.0
+NOTE 83 1.0
+NOTE 79 1.5
+NOTE 81 0.5
+NOTE 83 1.0
+NOTE 84 1.5
+NOTE 83 0.5
+NOTE 81 1.0
+NOTE 83 0.25
+NOTE 84 0.25
+NOTE 83 1.0
+NOTE 81 0.5
+NOTE 80 1.0
+NOTE 81 3.0
+NOTE 81 3.0

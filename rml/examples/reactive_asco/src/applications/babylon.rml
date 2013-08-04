@@ -1,0 +1,96 @@
+open Music
+
+signal clock
+let period = 0.01
+
+
+let process emit_clock  =
+  let start = Unix.gettimeofday () in
+  let cpt = ref 1 in
+  let next = ref (start +. period) in
+  loop
+    let current = Unix.gettimeofday () in
+    if (current >= !next)
+    then
+      begin
+	emit clock ();
+	cpt := !cpt + 1;
+	next := start +. (float !cpt) *. period
+      end;
+    pause
+  end
+(* let process emit_clock  = *)
+(*   let next = ref (Unix.gettimeofday () +. period) in *)
+(*   loop *)
+(*     let current = Unix.gettimeofday () in *)
+(*     if (current >= !next) *)
+(*     then *)
+(*       begin *)
+(* 	emit clock (); *)
+(* 	next := !next +. period; *)
+(*       end; *)
+(*     pause *)
+(*   end *)
+
+let process wait dur =
+  let d = int_of_float (dur /. (2. *. period)) in
+  for i = 1 to d do
+    await clock
+  done
+
+signal perf
+
+let rec process play sequence =
+  match sequence with
+  | [] -> ()
+  | ((dur, pitch) as note) :: s ->
+      emit perf note;
+      run (wait dur);
+      run (play s)
+
+let send_to_audio sock note =
+  let m = string_of_note note in
+  Network.sendUDP m sock 7400 ()
+
+
+let process sender =
+  let sock = Network.init_client () in
+  print_endline ("playing on port : "^(string_of_int 7400));
+  loop
+    await perf (notes) in
+    List.iter (fun n -> send_to_audio sock n) notes
+  end
+
+let babylon =
+  [1.5, (G,4); 0.25, (F,4); 0.25, (Ef,4); 1.0, (D,4); 1.0, (Ef, 4);
+   1.5, (F,4); 0.25, (Ef,4); 0.25, (D,4); 1.0, (C,4); 1.0, (D,4);
+   1.5, (Ef, 4); 0.25, (D,4); 0.25, (C,4); 1.0, (Bf,3); 1.0, (C,4); 1.0, (D,4); 1.0, (D,4); 2.0, (G,3);
+   1.0, (Bf,4); 1.0, (Bf,4); 1.0, (Bf,4); 1.0, (Bf,4); 1.0, (Bf,4); 2.0, (A,4);
+   1.0, (A,4); 1.0, (A,4); 2.0, (G,4); 1.0, (G,4); 1.0, (G,4); 1.0, (Fs,4); 2.0, (G,4);
+   1.5, (D,4); 0.5, (Ef,4); 1.0, (F,4); 1.0, (G,4);
+   1.5, (C,4); 0.5, (D,4); 1.0, (Ef,4); 1.0, (F,4);
+   1.5, (Bf,3); 0.5, (C,4); 1.0, (D,4); 1.0, (Ef,4); 1.0, (D,4); 1.0, (D,4); 2.0, (G,3);]
+
+
+let process delayed p dur =
+  run (wait dur);
+  run p
+
+let process theme =
+  loop
+    run (play babylon)
+  end
+
+
+let process round =
+  (* run (play babylon); *)
+  begin
+    run theme ||
+    run (delayed theme 64.0) ||
+    run (delayed theme 80.0)
+  end
+
+let process main =
+  run emit_clock ||
+  run round ||
+  run sender

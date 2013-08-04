@@ -1,0 +1,138 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*                                                             *)
+(*                                                             *)
+(* This is the interpreter core.                               *)
+(* It contains the execution process, handle synchronization   *)
+(* and performance errors                                      *)
+(***************************************************************)
+
+
+open Types
+open Reactive_map
+open Utils
+
+(* Create a process player that takes as argument an electronic score
+   'score' and executes it. The player depends on the instrumental
+   score 'instr_score', it follows the position in the instrumental
+   score using the process wait_event, and the tempo with the process
+   'wait'.
+*)
+let make_player instr_score wait wait_event perf =
+
+  let rec process exec_seq generic delta seq =
+    match seq with
+    | [] -> (* rule (Empty Sequence) *) ()
+    | (dae, ae)::s ->
+        (* rule (Exec Sequence) *)
+        run (generic (delta +. dae) ae) ||
+        run (exec_seq generic (delta +. dae) s) in
+
+  let rec process exec score =
+    match score with
+    | [] -> (* rule (Empty Score) *) ()
+    | se::sc ->
+        (* rule (Exec Score) *)
+        run (exec_score_event se) ||
+        run (exec sc)
+
+  and process exec_score_event se =
+    let status = run (wait_event se.event) in
+    match status with
+    | Detected ->
+        (* rule (Detect) *)
+        run (exec_seq (detected se.event) 0.0 se.seq)
+    | Missed(j) ->
+        (* rule (Missed) *)
+        run (exec_seq (missed se.event j) 0.0 se.seq)
+
+  and process detected i delta ae =
+    match ae with
+    | Action(a) ->
+        (* rule (Detected Action) *)
+        run (wait delta);
+        emit perf (i,delta,a);
+    | Group(g) ->
+        begin match g.group_synchro with
+        | Loose ->
+            (* rule (Detected Loose Group) *)
+            run (exec_seq (detected i) delta g.group_seq)
+        | Tight ->
+            (* rule (Detected Tight Group) *)
+            let gs = Groups.slice instr_score i delta g  in
+            run (exec gs)
+        end
+    | Until(u) ->
+        (* Preemption Construct *)
+        signal kill in
+        do
+          run (exec_seq (detected i) delta u.until_seq); emit kill
+          ||
+          let _ = run (wait_event u.until_event) in emit kill
+        until kill done
+
+
+  and process missed i j delta ae =
+    let dj = instr_score.find j in
+    let di = instr_score.find i in
+    match ae with
+    | Action(a) ->
+        (* rule (Missed Action) *)
+        let d = (max 0.0 (delta +. di -. dj)) in
+        run (wait d);
+        emit perf (j,d,a);
+    | Group(g) ->
+        begin match g.group_error with
+        | Local -> (* rule (Missed Local Group) *) ()
+        | Global ->
+            (* rule (Missed Global Group) *)
+            run (detected j 0.0 ae)
+        | Partial ->
+            (* rule (Missed Partial Group) *)
+            let past, future = Groups.split instr_score i j delta g in
+            let gpast = Groups.extract_group past in
+            let gfuture =
+              Group({group_synchro = g.group_synchro;
+                     group_error = g.group_error;
+                     group_seq = future;})
+            in
+            (run (exec_seq (missed i j) delta gpast) ||
+            run (detected j 0.0 gfuture))
+        | Causal ->
+            (* rule (Missed Causal Group) *)
+            let past, future = Groups.split instr_score i j delta g in
+            let gfuture =
+              Group({group_synchro = g.group_synchro;
+                     group_error = g.group_error;
+                     group_seq = future;})
+            in
+            (run (exec_seq (missed i j) delta past) ||
+            run (detected j 0.0 gfuture))
+        end
+    | Until(u) ->
+        signal kill in
+        do
+          run (exec_seq (missed i j) delta u.until_seq); emit kill
+          ||
+          let _ = run (wait_event u.until_event) in emit kill
+        until kill done
+  in
+
+  (* Launch the already past part of a dynamically loaded score *)
+  let rec process exec_past score j =
+    match score with
+    | [] -> ()
+    | se::sc ->
+        run (exec_seq (missed se.event j) 0.0 se.seq) ||
+        run (exec_past sc j)
+  in
+
+  (* Launch a score that could start after the beginning of the performance *)
+  let process play_score score i =
+    let past, future = List.partition (fun se -> se.event < i) score in
+    run (exec future) ||
+    run (exec_past past i)
+  in
+
+  (* Return the process wich play an electronic score *)
+  play_score

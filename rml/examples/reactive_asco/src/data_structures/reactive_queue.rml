@@ -1,0 +1,108 @@
+open Caml_queue
+
+type ('prio, 'a) action =
+  | Push of 'prio * 'a
+  | Remove
+
+type ('prio,'a) kind =
+  | Not_yet of ('prio * 'a) list * int * ('prio,'a) queue
+  | Current of ('prio,'a) queue
+
+
+type ('prio, 'a) body = { mutable state : ('prio, 'a) kind; }
+
+type ('prio, 'a) state = ('prio, 'a) body option
+
+let rec fold f n acc =
+  match n with
+  | 0 -> acc
+  | _ -> fold f (n-1) (f acc)
+
+let apply_actions ads rms q =
+  let q' = fold remove_top rms q in
+  List.fold_left (fun q  x -> push q x) q' ads
+
+let add_action x st =
+  match x with
+  | Remove ->
+      begin match st with
+      | Not_yet (ads, rms, q) -> Not_yet (ads, rms + 1, q)
+      | Current q -> assert false
+      end
+  | Push e ->
+      begin match st with
+      | Not_yet (ads, rms, q) -> Not_yet (e::ads, rms, q)
+      | Current q -> assert false
+      end
+
+let get_last st =
+  match (last ?st) with
+  | None -> empty
+  | Some st' ->
+      begin match st'.state with
+      | Current q -> q
+      | Not_yet(ads, rms, q) ->
+	  let q' = apply_actions ads rms q in
+	  st'.state <- Current q';
+	  q'
+      end
+
+type ('prio, 'a) rqueue =
+    { push : 'prio * 'a -> unit;
+      pop : 'prio -> ('prio * 'a) list; }
+
+let make_queue () =
+  let combine (x, last_q) st =
+    match st with
+    | None ->
+	let st' = { state = add_action x (Not_yet ([], 0, last_q)) } in
+	Some st'
+    | Some st' ->
+	st'.state <- add_action x st'.state;
+	Some st'
+  in
+  signal state default None gather combine in
+  let push v =
+    emit state (Push v, get_last state)
+  in
+  let pop d =
+    let qq = get_last state in
+    let rec aux l qq =
+      if is_empty qq then l
+      else
+	begin match pop qq with
+	| None -> l
+	| Some(d', s', qq') ->
+	    if d >= d' then
+	      (emit state (Remove, qq); aux ((d', s')::l) qq')
+	    else l
+	end
+    in
+    aux [] qq
+  in
+  {push = push;
+   pop = pop; }
+
+
+
+let process scheduler deadline sending adding =
+  let process send queue_pop =
+    pause;
+    loop
+      await immediate one deadline (d) in
+      let p = queue_pop d in
+      sending d p;
+      pause
+    end
+  in
+
+  let process update queue_push =
+    loop
+      await adding (v) in
+      List.iter (fun x -> queue_push x) v;
+    end
+  in
+
+  let queue = make_queue () in
+  run (send queue.pop) ||
+  run (update queue.push)

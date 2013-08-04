@@ -1,0 +1,85 @@
+open Caml_map
+
+type ('key, 'a) action =
+  | Add of 'key * 'a
+  | Remove of 'key
+
+type ('key,'a) kind =
+  | Not_yet of (('key * 'a) list * 'key list * ('key,'a) t)
+  | Current of ('key,'a) t
+
+type ('key, 'a) body = { mutable state : ('key, 'a) kind; }
+
+type ('key, 'a) state = ('key, 'a) body option
+
+let apply_actions ads rms t =
+  let t' =  List.fold_left (fun t  x -> remove x t) t rms in
+  List.fold_left (fun t  (k,a) -> add k a t) t' ads
+
+
+let add_action x st =
+  match x with
+  | Remove k ->
+      begin match st with
+      | Not_yet (ads, rms, t) -> Not_yet (ads, k::rms, t)
+      | Current t -> assert false
+      end
+  | Add e ->
+      begin match st with
+      | Not_yet (ads, rms, t) -> Not_yet (e::ads, rms, t)
+      | Current t -> assert false
+      end
+
+
+let get_last st =
+  match (last ?st) with
+  | None -> empty
+  | Some st' ->
+      begin match st'.state with
+      | Current t -> t
+      | Not_yet(ads, rms, t) ->
+	  let t' = apply_actions ads rms t in
+	  st'.state <- Current t';
+	  t'
+      end
+
+type ('key, 'a) rmap =
+    { add : 'key * 'a -> unit;
+      remove : 'key -> unit;
+      find : 'key -> 'a;
+      nearest : 'a -> 'key * 'a; }
+
+let make_map () =
+  let combine (x, last_map) st =
+    match st with
+    | None ->
+	let st' = { state = add_action x (Not_yet ([], [], last_map)) } in
+	Some st'
+    | Some st' ->
+	st'.state <- add_action x st'.state;
+	Some st'
+  in
+  signal state default None gather combine in
+  let add v =
+    emit state (Add v, get_last state)
+  in
+
+  let remove k =
+   emit state (Remove k, get_last state)
+  in
+
+  let find k =
+    let tt = get_last state in
+    find k tt
+  in
+
+  let nearest c =
+    let tt = get_last state in
+    let i,d = max_binding (filter (fun i d' -> d' <= c) tt) in
+    i,d
+  in
+
+  {add = add;
+   remove = remove;
+   find = find;
+   nearest = nearest; }

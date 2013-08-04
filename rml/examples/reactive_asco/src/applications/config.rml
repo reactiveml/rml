@@ -1,0 +1,124 @@
+(***************************************************************)
+(*                                                             *)
+(* Read and set the options.                                   *)
+(*                                                             *)
+(***************************************************************)
+
+(* Initial config *)
+open Types
+
+type t =
+    { scorefile: string;
+      input_mode: input_mode;
+      verbose: bool;
+      ball: bool;
+      boids: bool;
+      errors: float;
+      tempo: float;
+      freq: float;
+      in_port: int;
+      out_port: int; }
+
+
+let make scorefile tempo =
+  { scorefile = scorefile;
+    input_mode = Udp;
+    verbose = false;
+    ball = false;
+    boids = false;
+    errors = 0.0;
+    tempo = tempo;
+    freq = 100.;
+    in_port = 5151;
+    out_port = 7400; }
+
+
+let read_args () =
+
+  let usage = "usage: asco [option] file.asco" in
+
+  let scorefile = ref "" in
+  let simufile = ref "" in
+  let errors = ref 0.0 in
+  let tempo = ref 120. in
+  let freq = ref 100. in
+  let verbose = ref false in
+  let ball = ref false in
+  let boids = ref false in
+  let out_port = ref 7400 in
+  let in_port = ref 5151 in
+  let input = ref [] in
+
+  let set_input v = input := v :: !input in
+  let set f s = f := s in
+
+  let options =
+    [("-verbose", Arg.Set verbose,
+      "Display actions and instrumental events");
+     ("-input", Arg.String set_input,
+      "Set the input mode\n"^
+      "\t udp : Receive instrumental events via UDP\n"^
+      "\t score : Generate the instrumental part from the score\n"^
+      "\t file : Generate the instrumental part from a file (option -input_file)");
+     ("-input_file", Arg.String (set simufile),
+      "<file>  Load the instrumental part for simulation");
+     ("-errors", Arg.Float (set errors),
+      "<%errors> Add errors to the simulation (default 0%)");
+     ("-bpm", Arg.Float (set tempo),
+      "<bpm>  Set the initial tempo of the performance");
+     ("-sampling", Arg.Float (set freq),
+      "<freq>  Set the sampling frequence");
+     ("-out_port", Arg.Int (set out_port),
+      "<out_port>  Set the output UDP port (default 7400)");
+     ("-in_port", Arg.Int (set in_port),
+      "<in_port>  Set the input UDP port (default 5151)");
+     ("-ball", Arg.Set ball,
+      "Display a dancing ball");
+     ("-boids", Arg.Set boids,
+      "Display dancing boids");]
+  in
+
+  Arg.parse options (set scorefile) usage;
+
+  if !scorefile = "" then begin
+    prerr_endline "No score file\n";
+    Arg.usage options usage;
+    exit 1
+  end;
+  if not (Filename.check_suffix !scorefile ".asco") then begin
+    prerr_endline "Extension of the entry file must be .asco\n";
+    Arg.usage options usage;
+    exit 1
+  end;
+  if !simufile <> "" && not (Filename.check_suffix !simufile ".sim") then begin
+    prerr_endline "Extension of the simulation file must be .sim\n";
+    Arg.usage options usage;
+    exit 1
+  end;
+
+  let input =
+    match !input with
+    | [ ] -> Udp
+    | [ "udp" ] -> Udp
+    | [ "file" ] -> File !simufile
+    | [ "score" ] -> Score
+    | [ _ ] ->
+	prerr_endline "Unknown input mode\n";
+	Arg.usage options usage;
+	exit 1
+    | _ ->
+	prerr_endline "No more than one input mode!\n";
+	Arg.usage options usage;
+	exit 1
+  in
+
+  { scorefile = !scorefile;
+    input_mode = input;
+    verbose = !verbose;
+    ball = !ball;
+    boids = !boids;
+    errors = !errors;
+    tempo = !tempo;
+    freq = !freq;
+    out_port = !out_port;
+    in_port = !in_port; }

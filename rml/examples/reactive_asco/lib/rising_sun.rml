@@ -1,0 +1,162 @@
+(* Launch with: rmltop ascolive.cma *)
+
+(* Load the library for live coding *)
+open Ascolib
+open Music
+
+(* Environment *)
+let asco = create_asco "rising_sun.asco" 120.;;
+#run (init_asco asco);;
+#run (listener asco);;
+#run (sender asco);;
+
+
+
+
+(* The bass *)
+let bass =
+  [0.0, (A, Min); 2.0, (C, Maj); 2.0, (D, Maj); 2.0, (F, Maj);
+   2.0, (A, Min); 2.0, (C, Maj); 2.0, (E, Maj); 2.0, (E, Maj);
+   2.0, (A, Min); 2.0, (C, Maj); 2.0, (D, Maj); 2.0, (F, Maj);
+   2.0, (A, Min); 2.0, (E, Maj); 2.0, (A, Min); 2.0, (A, Min);];;
+
+(* Only the bass *)
+let root_of_chord2 chord octave =
+  let pitch_class, color = chord in
+  match pitch_class with
+  | A -> (A, octave - 1)
+  | _ -> (pitch_class, octave)
+
+let only_roots chords octave dur =
+  List.map
+    (fun (delay, chord) ->
+      let root = root_of_chord2 chord octave in
+      (delay, action_note (dur, root)))
+    chords
+;;
+
+let roots = only_roots bass 3 2.0;;
+
+let process basic_accomp =
+  let period = 2.0 *. 16.0 in
+  run (link_and_loop asco 2 period 50 roots);;
+
+
+(* Launch the accompaniment controlled by the signal kill_bass *)
+let process killable k p =
+  do run p until k done;;
+
+signal kill_bass;;
+#run (killable kill_bass basic_accomp);;
+
+
+(* Stop the accompaniment *)
+emit kill_bass;;
+
+
+
+(* Waltz accompaniment *)
+let waltz chord octave =
+  let pitch_class, color = chord in
+  let fond = root_of_chord2 chord octave in
+  let third =
+    match color with
+    | Min -> move_pitch 3 fond
+    | Maj -> move_pitch 4 fond
+  in
+  let fifth = move_pitch 7 fond in
+  let dur = 0.125 in
+  group loose local
+    [0.0, action_note (dur, fond);
+     0.666, action_note (dur, third);
+     0.0, action_note (dur, fifth);
+     0.666, action_note (dur, third);
+     0.0, action_note (dur, fifth);];;
+
+
+let waltz_bass chords octave =
+  List.map
+    (fun (delay, chord) ->
+       (delay, waltz chord octave))
+    chords;;
+
+let process waltz_accomp =
+  let chords = waltz_bass bass 3 in
+  let g = group tight partial chords in
+  let period = 2.0 *. 16.0 in
+  run (link_and_loop asco 2 period 50 [0.0, g]);;
+
+
+#run (killable kill_bass waltz_accomp);;
+emit kill_bass;;
+
+
+
+
+(* Arpeggio accompaniment *)
+let arpeggio chord octave =
+  let pitch_class, color = chord in
+  let fond = root_of_chord2 chord octave in
+  let third =
+    match color with
+    | Min -> move_pitch 3 fond
+    | Maj -> move_pitch 4 fond
+  in
+  let fifth = move_pitch 7 fond in
+  let dur = 0.125 in
+  group loose local
+    [0.0, action_note (dur, fond);
+     0.625, action_note (dur, third);
+     0.125, action_note (dur, fifth);
+     0.125, action_note (dur, move_octave 1 fond);
+     0.125, action_note (dur, move_octave 1 third);
+     0.333, action_note (dur, move_octave 1 fond);
+     0.333, action_note (dur, fifth);];;
+
+
+let arpeggio_bass chords octave =
+  List.map
+    (fun (delay, chord) ->
+       (delay, arpeggio chord octave))
+    chords;;
+
+let process arpeggio_accomp =
+  let chords = arpeggio_bass bass 3 in
+  let g = group tight partial chords in
+  let period = 2.0 *. 16.0 in
+  run (link_and_loop asco 2 period 50 [0.0, g]);;
+
+#run (killable kill_bass arpeggio_accomp);;
+
+emit kill_bass;;
+
+
+(* switching between accompaniments *)
+let rec process replaceable r p =
+  do run p
+  until r (q) -> run (replaceable r q)
+  done;;
+
+signal replace
+    default (process ())
+    gather (fun p q -> process (run p || run q));;
+
+#run (killable kill_bass (replaceable replace basic_accomp));;
+
+emit replace waltz_accomp;;
+emit replace arpeggio_accomp;;
+emit replace basic_accomp;;
+emit replace arpeggio_accomp;;
+
+
+(* Graphical feedback *)
+
+signal kill_ball;;
+#run (killable kill_ball (Dancing_ball.main (instr_event asco)));;
+
+signal kill_boids;;
+#run (killable kill_boids (Boids.main (instr_event asco)));;
+
+emit kill_ball;;
+emit kill_boids;;
+emit kill_bass;;

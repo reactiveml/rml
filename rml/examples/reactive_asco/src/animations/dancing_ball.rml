@@ -1,0 +1,74 @@
+open Animation
+
+type state =
+    { pos: (Animation.vect, Animation.vect) event;
+      speed: (Animation.vect, Animation.vect) event;
+      radius: float;
+      color: Graphics.color; }
+
+let sprite_of_ball state =
+  { Animation.center = last ?state.pos;
+    Animation.radius = state.radius;
+    Animation.color = state.color;
+    Animation.shape = Animation.Circle_fill; }
+
+let process move state =
+  loop
+    (* emit the position *)
+    emit draw (sprite_of_ball state);
+
+    (* compute the new position *)
+    let pre_v = last ?state.speed in
+    let pre_p = last ?state.pos in
+    let vx =
+      if box.left +. state.radius <= pre_p.x &&
+         pre_p.x <= box.right -.state.radius
+      then pre_v.x
+      else -. pre_v.x
+    in
+    let vy =
+      if box.bot +. state.radius <= pre_p.y &&
+         pre_p.y <= box.top -. state.radius then pre_v.y
+      else -. pre_v.y
+    in
+    let p = { x = pre_p.x +. vx; y = pre_p.y +. vy } in
+
+    (* update the state *)
+    emit state.speed { x = vx; y = vy };
+    emit state.pos p;
+    pause
+  end
+
+
+let new_state () =
+  let center =
+    { x = (box.right -. box.left) /. 2. ;
+      y = (box.top -. box.bot) /. 2. ; }
+  in
+  signal pos default center gather (fun x _ -> x)
+  in
+  signal speed default random_speed 0. gather (fun x _ -> x) in
+  let color = Animation.color_of_int (Random.int 7) in
+  { pos = pos; speed = speed; radius = 25.; color = color; }
+
+
+let new_state' state index tempo =
+  signal pos default last ?state.pos gather fun x _ -> x in
+  signal speed default random_speed (tempo /. 25.) gather fun x _ -> x in
+  let color = Animation.color_of_int index in
+  { pos = pos; speed = speed; radius = state.radius; color = color; }
+
+
+let rec process ball state listen =
+  do run (move state)
+  until listen([evt]) ->
+    run (ball (new_state' state evt.Types.index evt.Types.bps) listen)
+  done
+
+
+(* Main *)
+let process main listen =
+  begin
+    run (ball (new_state ()) listen)
+  end
+;;

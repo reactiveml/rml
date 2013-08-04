@@ -1,0 +1,6 @@
+type ('a,'b) rmap =
+    { nearest: 'b -> 'a * 'b;
+      find: 'a -> 'b;
+      remove: 'a -> unit;
+      add: 'a * 'b -> unit }
+val make_map : unit -> ('a, 'b) rmap

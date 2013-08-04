@@ -1,0 +1,245 @@
+open Animation
+
+(* Data types *)
+
+type boid =
+    { id : int;
+      family : int;
+      pos : Animation.vect;
+      v : Animation.vect;
+      acc : Animation.vect;
+      color : Graphics.color;
+      shape : Animation.shape; }
+
+
+(* Constants *)
+
+let coef_sep = 50.0
+let coef_cohes = 7.5
+let coef_alig = 30.0
+let coef_tempo_speed = 2.0
+let vision_sep2 = 100.0
+let vision_cohes2_min = 100.0
+let vision_cohes2 = 50000.0
+let vision_alig2 = 4000.0
+let vmax = 10.0
+let dt = 0.1
+let max_wind = 1.
+let max_family = 3
+let number_of_boids = 200
+let bounds = (box.left, box.right, box.bot, box.top)
+
+
+(* Utility functions *)
+
+let compute_boid_color family =
+  color_of_int family
+
+let compute_shape family =
+  shape_of_int family
+
+let sprite_of_boids b =
+  { Animation.center = b.pos;
+    Animation.radius = 4.;
+    Animation.shape = b.shape;
+    Animation.color = b.color; }
+
+
+let check_bounds (min_x, max_x, min_y, max_y) b =
+  let pos_x, v_x =
+    if b.pos.x < min_x then (min_x, abs_float b.v.x)
+    else if b.pos.x > max_x then (max_x, -. (abs_float b.v.x))
+    else (b.pos.x, b.v.x)
+  in
+  let pos_y, v_y =
+    if b.pos.y < min_y then (min_y, abs_float b.v.y)
+    else if b.pos.y > max_y then (max_y, -.(abs_float b.v.y))
+    else (b.pos.y, b.v.y)
+  in
+  { b with pos = { x = pos_x ; y = pos_y; };
+           v = { x = v_x; y = v_y; }; }
+
+
+let compute_acc =
+  let rec aux b1 all f_sep (cpt_coh, f_coh) (cpt_ali, f_ali) =
+    match all with
+    | [] -> (f_sep, (cpt_coh ,f_coh), (cpt_ali, f_ali))
+    | b2 :: all ->
+	let dist2 = distance2 b1.pos b2.pos in
+	let f_separation =
+	  if (epsilon_float <= dist2) & (dist2 < vision_sep2) then
+	    { x = f_sep.x -. (b2.pos.x -. b1.pos.x)/.dist2;
+	      y = f_sep.y -. (b2.pos.y -. b1.pos.y)/.dist2; }
+	  else
+	    (* if (epsilon_float >= dist2) & (b1.id <> b2.id) then *)
+	    (*   { x = Random.float 0.5; *)
+	    (*     y = Random.float 0.5; } *)
+	    (* else *)
+	    f_sep
+	in
+	let f_cohesion =
+	  if (epsilon_float +. vision_cohes2_min <= dist2) & (dist2 < vision_cohes2)
+	      & (b1.family = b2.family) then
+	    (cpt_coh + 1,
+	     { x = f_coh.x +. b2.pos.x;
+	       y = f_coh.y +. b2.pos.y; })
+	  else
+	    (cpt_coh, f_coh)
+	in
+	let f_alignement =
+	  if (epsilon_float <= dist2) & (dist2 < vision_alig2)
+	      & (b1.family = b2.family) then
+	    let norme_v2 = norme b2.v in
+	    if (norme_v2 <> 0.0) then
+	      (cpt_ali + 1,
+	       { x = f_ali.x +. b2.v.x /. norme_v2;
+		 y = f_ali.y +. b2.v.y /. norme_v2; })
+	    else
+	      (cpt_ali, f_ali)
+	  else
+	    (cpt_ali, f_ali)
+	in
+	aux b1 all
+	  f_separation f_cohesion f_alignement
+  in
+  fun me all wind ->
+    let (f_separation, (cpt_coh, f_cohesion), (cpt_ali, f_alignement)) =
+      aux me all
+	{ x = 0.0; y = 0.0; }
+	(0, { x = 0.0; y = 0.0; })
+	(0, { x = 0.0; y = 0.0; })
+    in
+    let f_cohesion =
+      if cpt_coh <> 0 then
+	{ x = (f_cohesion.x /. (float_of_int cpt_coh)) -. me.pos.x;
+	  y = (f_cohesion.y /. (float_of_int cpt_coh)) -. me.pos.y; }
+      else
+	{ x = 0.0;
+	  y = 0.0; }
+    in
+    let f_alignement =
+      if cpt_ali <> 0 then
+	{ x = f_alignement.x /. (float_of_int cpt_ali);
+	  y = f_alignement.y /. (float_of_int cpt_ali); }
+      else
+	{ x = 0.0;
+	  y = 0.0; }
+    in
+    { x = Random.float
+	(f_separation.x *. coef_sep
+	   +. f_cohesion.x *. coef_cohes
+	   +. f_alignement.x *. coef_alig
+	   +. wind.x);
+      y = Random.float
+	(f_separation.y *. coef_sep
+	+. f_cohesion.y *. coef_cohes
+	+. f_alignement.y *. coef_alig
+	+. wind.y); }
+
+
+let compute_v b acc k =
+  let vx = acc.x *. dt +. b.v.x in
+  let vy = acc.y *. dt +. b.v.y in
+  let vx = (vx +. 3. *. b.v.x) /. 4. in
+  let vy = (vy +. 3. *. b.v.y) /. 4. in
+  let v = vx *. vx +. vy *. vy in
+  { x = (if v <= epsilon_float or v < vmax then vx else (vx /. v)) *. k;
+    y = (if v <= epsilon_float or v < vmax then vy else (vy /. v)) *. k; }
+
+
+let compute_pos b all wind k =
+  let acc = compute_acc b all wind in
+  let v = compute_v b acc k in
+  let pos =
+    { x = b.v.x *. dt +. b.pos.x;
+      y = b.v.y *. dt +. b.pos.y; }
+  in
+  let me = { b with pos = pos; v = v; }
+  in
+  check_bounds bounds me
+
+
+(* Boid *)
+
+let rec process boid_behavior boid_init env wind listen k =
+  let me = ref boid_init in
+  do
+    loop
+      emit draw (sprite_of_boids !me);
+      emit env !me;
+      await env (all) in
+      me := compute_pos !me all (pre ?wind) k
+    end
+  until listen ( [{ Types.bps = bps }] ) ->
+    let state =
+      let family = Random.int max_family in
+      { !me with family = family;
+                 color = compute_boid_color family;
+                 v = random_speed 50. }
+    in
+    run (boid_behavior state env wind listen (bps *. coef_tempo_speed))
+  done
+
+
+let gen_id =
+  let cpt = ref 0 in
+  fun () ->
+    incr cpt;
+    !cpt
+
+let process boid id family pos_init env wind listen =
+  let me = { id = id;
+	     pos = pos_init;
+             v = {x = 0.0; y = 0.0};
+             acc = {x = 0.0; y = 0.0};
+	     family = family;
+	     color = compute_boid_color family;
+	     shape = compute_shape family; }
+  in
+  run (boid_behavior me env wind listen 1.)
+
+
+(* Wind *)
+
+let process wind max_w delta w =
+  let delta_2 = 2.0 *. delta in
+  let x = ref 0.0 in
+  let y = ref 0.0 in
+  loop
+    x := max (min (!x +. Random.float delta_2 -. delta) max_w) (-. max_w);
+    y := max (min (!y +. Random.float delta_2 -. delta) max_w) (-. max_w);
+    emit w { x = !x; y = !y; };
+    pause
+  end
+
+
+let rec process add new_boid env w listen =
+  await new_boid (pos) in
+  run (add new_boid env w listen)
+  ||
+  let family = Random.int max_family in
+  run (boid (gen_id ()) family pos env w.(family) listen)
+
+
+let process system n listen =
+  let w =
+    Array.init
+      max_family
+      (fun _ -> signal w default {x = 0.0; y = 0.0} gather fun x y -> x in w)
+  in
+  signal env, new_boid, suspend in
+  for i = 0 to max_family - 1 dopar
+    run (wind max_wind 0.3 w.(i))
+  done
+  ||
+  for i = 1 to n dopar
+    let id = gen_id () in
+    let family = id mod max_family in
+    run (boid id family (random_pos()) env w.(family) listen)
+  done
+  ||
+  run (add click env w listen)
+
+let process main listen =
+  Random.self_init();
+  run (system number_of_boids listen)

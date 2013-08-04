@@ -1,0 +1,54 @@
+;A comment
+;We illustrate here the syntax of our language.
+;Group strategies are @tight @loose and @local @global @partial @causal
+;There is also an example of the preemption construct
+
+
+NOTE	69	4.0			;An instrumental event
+0.5 	'a1'				;Simple action
+1.2	'a2'
+0.0	GROUP	@tight	@causal{	;Simple group
+	1.	'a3'			;Control messages are into '...'
+	1.2	'a4'	
+	1.	'a5' 
+	0.5	'a6'
+	1.	'a7'
+	1.78	'a8'
+	1.	'a9'
+	0.8	'a10'
+	}
+
+CHORD	(52 60 68)	2.0		;An instrumental event
+0.0	GROUP	@tight	@partial{
+	0.5	'b1'
+	1.5	'b2'	
+	0.5	GROUP	@loose @global{	;Nested group
+		0.0	'c1'
+		1.5	'c2'
+		}
+	0.25	'b3'
+	0.5	'b4'
+	1.5	'b5'
+	2.4	'b6'
+	0.5	'b7'
+	}
+
+
+TRILL	(63 64)		2.0		;An instrumental event
+UNTIL 	7{  				;Preemption construct (until the 7th event)
+	0.0	'd1'
+	10.0	'd2'
+	5.0	GROUP	@loose	@local{
+		0.0	'e1'
+		4.0	'e2'
+		}
+	}
+
+NOTE	54	2.0			;A set of instrumental events
+NOTE	58	2.0
+NOTE	60	2.0
+NOTE	54	2.0
+NOTE	52	2.0
+NOTE	45	2.0
+NOTE	89	2.0
+

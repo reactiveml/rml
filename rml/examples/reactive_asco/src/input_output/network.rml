@@ -1,0 +1,23 @@
+let init_server in_port =
+  let sock =
+    Unix.socket Unix.PF_INET Unix.SOCK_DGRAM
+      (Unix.getprotobyname "udp").Unix.p_proto
+  in
+  Unix.bind sock (Unix.ADDR_INET (Unix.inet_addr_any, in_port));
+  Unix.set_nonblock sock;
+  print_endline "Waiting...";
+  sock
+
+let init_client () =
+  let sock =
+    Unix.socket Unix.PF_INET Unix.SOCK_DGRAM
+      (Unix.getprotobyname "udp").Unix.p_proto
+  in
+  sock
+
+let localhost = Unix.gethostbyname "localhost"
+
+let sendUDP msg sock out_port () =
+  let addr = localhost.Unix.h_addr_list.(0) in
+  let sockaddr = Unix.ADDR_INET (addr, out_port) in
+  ignore (Unix.sendto sock msg 0 (String.length msg) [] sockaddr)

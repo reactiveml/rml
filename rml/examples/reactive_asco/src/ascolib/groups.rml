@@ -1,0 +1,86 @@
+(***************************************************************)
+(*                        Reactive Asco                        *)
+(*                                                             *)
+(*                                                             *)
+(* Group traitment                                             *)
+(***************************************************************)
+
+open Types
+open Reactive_map
+
+(* Slice the group 'g' associated to the event 'i' after a delay 'delta'.
+   Each action in 'g.group_seq' is reassociated to the nearest event.
+   Returns a list of score_event.
+*)
+let slice instr_score i delta g =
+  let di = instr_score.find i in
+  let rec asso_nearest de l =
+    match l with
+    |[] -> []
+    |(da, ae)::t ->
+	let date = de +. da in
+	let r, d = instr_score.nearest date in
+	let dn = date -. d in
+	(r, dn, da, ae)::asso_nearest date t
+  in
+  let rec build_groups l =
+    match l with
+    |[] -> []
+    |(r, d, da, ae)::t ->
+	let l1, l2 = List.partition (fun (r', _, _, _) -> (r = r')) t in
+	let tr = List.map (fun (_, _, dae, ae) -> (dae, ae)) l1 in
+	let br = (d, ae)::tr in
+	let g =
+	  { group_synchro = Loose;
+	    group_error = g.group_error;
+	    group_seq = br; }
+	in
+	let se =
+	  { event = r;
+	    seq = [(0.0, Group(g))]; }
+	in
+	se::(build_groups l2)
+  in
+  let nl = asso_nearest (di +. delta) g.group_seq in
+  build_groups nl
+
+
+(* Split the group g associated to the event i after a delay 'delta'
+   in two.  actions that should happen before event 'j' and action
+   that should happen after 'j'. Returns a Group for the future and a
+   list of asco_event for the past.
+*)
+let split instr_score i j delta g =
+  let di = instr_score.find i in
+  let dj = instr_score.find j in
+  let rec aux de ael p f df =
+    match ael with
+    | [] -> p, f, df
+    | (da, ae)::t ->
+	if (de +. da) < dj then
+	  aux (de +. da) t ((da, ae)::p) f (de +. da)
+	else
+	  aux (de +. da) t p ((da, ae)::f) df
+  in
+  let p, f, df = aux (di +. delta) g.group_seq [] [] (di +. delta) in
+  let past, future = List.rev p, List.rev f in
+  let future =
+    match future with
+    | [] -> []
+    | (dae, ae)::t -> ((df +. dae -. dj), ae)::t
+  in
+  past, future
+
+
+(* Extract groups from a list of electronic actions. *)
+let rec extract_group l =
+  let rec aux d l =
+    match l with
+    | [] -> []
+    | (da, ae)::t ->
+	begin match ae with
+	| Group(g) -> (da +. d, ae)::(aux 0.0 t)
+	| _ -> aux (da +. d) t
+	end
+  in
+  aux 0.0 l
