@@ -8,7 +8,7 @@
 (*                                                             *)
 (***************************************************************)
 
-(** Group traitment. *)
+(** Groups traitment. *)
 
 open Types
 open Reactive_map
@@ -16,7 +16,7 @@ open Reactive_map
 
 (** Slice the group [g] associated to the event [i] after a delay [delta].
     Each action in [g.group_seq] is reassociated to the nearest event.
-    Returns a list of score_event.
+    Return a list of score_event.
 *)
 let slice instr_score i delta g =
   let di = instr_score.find i in
@@ -60,8 +60,7 @@ let slice instr_score i delta g =
 
 (** Split the group [g] associated to the event [i] after a delay [delta]
     in two. Actions that should happen before event [j] and action
-    that should happen after [j]. Returns a [group] for the future and a
-    list of [asco_event] for the past.
+    that should happen after [j]. Return two sequences of actions.
 *)
 let split instr_score i j delta g =
   let di = instr_score.find i in

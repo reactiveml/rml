@@ -9,7 +9,7 @@
 (***************************************************************)
 
 (** Simple example using the [Music] module for playing the round
-    "Babylon" of (Don McLean).
+    "Babylon" of Don McLean.
 *)
 
 
@@ -34,18 +34,6 @@ let process emit_clock  =
       end;
     pause
   end
-(* let process emit_clock  = *)
-(*   let next = ref (Unix.gettimeofday () +. period) in *)
-(*   loop *)
-(*     let current = Unix.gettimeofday () in *)
-(*     if (current >= !next) *)
-(*     then *)
-(*       begin *)
-(* 	emit clock (); *)
-(* 	next := !next +. period; *)
-(*       end; *)
-(*     pause *)
-(*   end *)
 
 let process wait dur =
   let d = int_of_float (dur /. (2. *. period)) in
@@ -98,11 +86,11 @@ let process theme =
 
 
 let process round =
-  (* run (play babylon); *)
+  run (play babylon);
   begin
     run theme ||
-    run (delayed theme 64.0) ||
-    run (delayed theme 80.0)
+    run (delayed theme 16.0) ||
+    run (delayed theme 32.0)
   end
 
 let process main =

@@ -17,8 +17,8 @@ open Utils
 
 (** Create a process player that takes as argument an electronic score
     [score] and executes it. The player depends on the instrumental
-    score [instr_score], it follows the position in the instrumental
-    score using the process [wait_event], and the tempo with the process
+    score [instr_score]. It follows the position in the instrumental
+    score using the process [wait_event] and the tempo with the process
     [wait]. The resulting performance is sent on the signal [perf].
 *)
 let make_player instr_score wait wait_event perf =

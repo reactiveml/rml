@@ -8,9 +8,11 @@
 (*                                                             *)
 (***************************************************************)
 
-(** Alias for readability *)
+(** delay *)
 type delay = float
+(** label of an instrumental event *)
 type instr_event_label = int
+(** tempo *)
 type tempo = float
 
 (** Atomic action *)
@@ -30,6 +32,7 @@ type score_event =
     { event : instr_event_label;
       seq : sequence; }
 
+(** Sequence of electronic actions *)
 and sequence =  (delay * asco_event) list
 
 (** Generic asco event *)
@@ -50,7 +53,7 @@ and asco_until =
       until_event : instr_event_label; }
 
 
-(** Instrumental score, play the role of function E *)
+(** Instrumental score *)
 type instr_score = delay list
 
 (** Electronic score *)

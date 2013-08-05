@@ -11,25 +11,25 @@
 open Types
 
 type asco
-(** Data structure containing all information that can be needed at runtime. *)
+(** Data structure containing all the information that can be needed at runtime. *)
 
 
 (** {6 Create and configure the runtime environment} *)
 
 val parse_score : string -> score * instr_score
-(** Parse an Antescofo score to extract electronic and instrumental scores. *)
+(** Parse an Antescofo: extract electronic parts and instrumental scores. *)
 
 val parse_simu : string -> simulation
-(** Parse a file which simulates the output of the listening machine. *)
+(** Parse a file that simulates the output of the listening machine. *)
 
 val create_asco_from_config : Config.t -> asco
 (** Create a runtime from a complete configuration. *)
 
 val create_asco : string -> float -> asco
-(** Create a runtime environment from a Antescofo score and an initial tempo. *)
+(** Create a runtime environment from an Antescofo score and an initial tempo. *)
 
 val load_instr_score : asco -> instr_score -> unit process
-(** Load an expected instrumental score. *)
+(** Load an instrumental score. *)
 
 
 (** {6 Execute the runtime} *)
@@ -39,8 +39,8 @@ val init_asco : asco -> unit process
    [listener] and [sender]. *)
 
 val listener : asco -> unit process
-(** Listen the information sent by the score follower or simulate the
-    listening from a file or a score. *)
+(** Listen to the information sent by the score follower or simulate the
+    output of the listening machine from a file or a score. *)
 
 val sender : asco -> unit process
 (** Perform the electronic actions. *)
@@ -49,14 +49,15 @@ val sender : asco -> unit process
 (** {6 Build Antescofo actions} *)
 
 val action_note : Music.note -> asco_event
-(** Create an action which is to play a note. *)
+(** Create an atomic action that play a midi note. *)
 
 val action_signal : (unit, unit list) event -> asco_event
-(** Create an action_signal which is to send a signal. *)
+(** Create an atomic action that send a rml signal. *)
 
 val tight : sync
 (** Synchronization strategy. *)
 val loose : sync
+
 (** Synchronization strategy. *)
 
 val partial : err
@@ -82,14 +83,17 @@ val link : asco -> instr_event_label -> sequence -> unit process
 
 val play_loop : asco -> delay -> int -> sequence -> unit process
 (** [play_loop asco period n seq] plays [n] iterations of the sequence [seq]
-    where each iteration is separated by a delay [period]. *)
+    where each iteration of the loop is separated by a delay [period]. *)
 
 val link_and_loop :
   asco -> instr_event_label -> delay -> int -> sequence -> unit process
 (** Link a loop to an instrumental event. *)
 
 val send_to_audio : asco -> Music.note -> unit
+(** Send a midi note to the audio environment. *)
+
 val play_line : asco -> Music.note list -> unit process
+(** Play a sequence of notes. *)
 
 (** {6 Observe runtime environment} *)
 

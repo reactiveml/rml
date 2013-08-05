@@ -1,8 +1,14 @@
 (***************************************************************)
+(*                        Reactive Asco                        *)
+(*             http://reactiveml.org/reactive_asco             *)
 (*                                                             *)
-(* Read and set the options.                                   *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
 (*                                                             *)
 (***************************************************************)
+
+(** Read and set the options from the command line. *)
 
 (* Initial config *)
 open Types

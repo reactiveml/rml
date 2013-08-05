@@ -68,7 +68,7 @@ let process metronome listen freq date =
 (** Wait a delay [dur] relatively to the tempo. The waiting process is
     realized by the scheduler. Therefore to achieve the desired
     behavior we just need to register on the scheduler queue with the
-    [adding] signal. The signal [date] carries is the current date
+    [adding] signal. The signal [date] carries the current date
     relative to the tempo.
 *)
 let process wait date adding dur =
@@ -78,10 +78,10 @@ let process wait date adding dur =
   await immediate s
 
 
-(** Create a pair of processes [(scheduler, wait)]. The [wait] process
+(** Create a pair of processes [(scheduler, wait)]. The process [wait]
     suspends the execution for a duration [dur] relative to the tempo
-    given by the signal [date]. The [scheduler] process manages the
-    waitings.
+    given by the signal [date]. The process [scheduler] manages the
+    waiting.
 *)
 let make_action_scheduler date =
   signal adding in

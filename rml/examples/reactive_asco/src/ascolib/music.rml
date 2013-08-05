@@ -8,6 +8,9 @@
 (*                                                             *)
 (***************************************************************)
 
+(** Pitch class of a note
+    (Af = A flat, As = A sharp).
+*)
 type pitch_class =
   | A | Af | As
   | B | Bf | Bs
@@ -17,12 +20,16 @@ type pitch_class =
   | F | Ff | Fs
   | G | Gf | Gs
 
-
+(** Octave *)
 type octave = int
+(** Pitch *)
 type pitch = pitch_class * octave
+(** Duration *)
 type dur = float
+(** Note*)
 type note = dur * pitch
 
+(** Convert a pitch class into an integer. *)
 let int_of_pitch_class pc =
   match pc with
   | Cf -> -1
@@ -47,10 +54,12 @@ let int_of_pitch_class pc =
   | B -> 11
   | Bs -> 12
 
+(** Convert a pitch into an integer (MIDI standart). *)
 let int_of_pitch p =
   let (pitch_class, octave) =  p in
   12 * (octave + 1) + (int_of_pitch_class pitch_class)
 
+(** Convert an integer into a pitch (MIDI standart). *)
 let pitch_of_int i =
   let octave = (i / 12) - 1 in
   let pitch_class =
@@ -71,30 +80,38 @@ let pitch_of_int i =
   in
   (pitch_class, octave)
 
+(** Convert a note into a string destined for the MaX/MSP interface of Reactive Asco. *)
 let string_of_note note =
   let (d, p) = note in
   let dms = int_of_float (d *. 500.0) in
   let n = int_of_pitch p in
   "mnote "^(string_of_int n)^" 127 "^(string_of_int dms)
 
+(** Transpose a pitch by a given interval in semitones. *)
 let move_pitch inter p =
   pitch_of_int ((int_of_pitch p) + inter)
 
+(** Transpose a pitch by a given number of octaves. *)
 let move_octave n (pc, o) =
   (pc, o + n)
 
+(** Transpose an entire sequence of note. *)
 let transpose inter sequence =
   List.map
     (fun (d, p) -> d, (move_pitch inter p))
     sequence
 
+(** Color of a chord *)
 type color = Maj | Min
+(** Chord *)
 type chord = pitch_class * color
 
+(** Extract the root of a chord. *)
 let root_of_chord chord octave =
   let (pitch_class, color) = chord in
   (pitch_class, octave)
 
+(** Turn a sequence of electronic action into a line of notes. *)
 let sequence_of_line l =
   let rec aux d l =
     match l with

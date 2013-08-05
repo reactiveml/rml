@@ -8,7 +8,7 @@
 (*                                                             *)
 (***************************************************************)
 
-(** Main file for Reactive Asco. Read a score and optionally a
+(** Reactive Asco Main file. Read a score and optionally a
     simulation file and launch The sequencer.
 *)
 

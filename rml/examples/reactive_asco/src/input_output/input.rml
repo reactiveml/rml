@@ -54,7 +54,7 @@ let process wait_event i add_event listen =
     status
 
 
-(** Create a scheduler for instrumental event and the corresponding
+(** Create a scheduler for instrumental events and the corresponding
     waiting process.
 *)
 let make_event_scheduler listen =

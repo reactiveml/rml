@@ -14,7 +14,7 @@ open Types
 open Lexing
 open Network
 
-(** Alias for last on event [s]. *)
+(** Alias for the last emission on event [s]. *)
 let last_one s =
   let l = last ? s in
   match l with
@@ -22,7 +22,7 @@ let last_one s =
   | [ x ] -> x
   | x :: _ -> prerr_endline "Warning: the player is too fast!"; x
 
-(** Convert delay of the instrumental score into dates. *)
+(** Convert delays of the instrumental score into dates. *)
 let delay_to_date l =
   let rec aux d l =
     match l with
@@ -52,17 +52,3 @@ let extract_instr is tempo =
     | h::t -> (i, h *. 60. /. tempo, tempo)::(aux (i + 1) t)
   in
   aux 1 is
-
-
-(** Display messages emitted on [listen] and [perf]. *)
-let process verbose listen perf =
-  loop
-    await immediate one listen (ev) in
-    print_endline ("\nEvent : "^
-		   (string_of_int ev.index)^
-		   " Tempo : "^
-		   (string_of_float (ev.bps *. 60.)));
-    pause
-  end
-  ||
-  run (Output.stdout perf)

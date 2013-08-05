@@ -12,7 +12,7 @@ open Types
 open Utils
 open Reactive_map
 
-(** {6 Data structure containing all information that can be needed at runtime}
+(** {6 Data structure containing all of the information that can be needed at runtime}
 *)
 
 type asco =
@@ -38,7 +38,7 @@ let last_event asco =
   max 1 (Utils.last_one asco.instr_event).index
 
 
-(** {6 Parse the score and simulation files} *)
+(** {6 Parse the score and the simulation files} *)
 
 let parse file p =
   let f = open_in file in
@@ -159,7 +159,7 @@ let process sender asco =
   run (Output.udp asco.config.Config.out_port asco.perf) ||
   run (asco.player score) ||
   (if asco.config.Config.verbose then
-    run (Utils.verbose asco.instr_event asco.perf)) ||
+    run (Output.verbose asco.instr_event asco.perf)) ||
   run (Animation.window) ||
   (if asco.config.Config.ball then
     run (Dancing_ball.main asco.instr_event)) ||

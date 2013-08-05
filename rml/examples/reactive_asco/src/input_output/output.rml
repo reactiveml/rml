@@ -49,3 +49,16 @@ let process stdout perf =
     await perf (p) in
     List.iter (fun x -> print x) p
   end
+
+(** Display messages emitted on [listen] and [perf]. *)
+let process verbose listen perf =
+  loop
+    await immediate one listen (ev) in
+    print_endline ("\nEvent : "^
+		   (string_of_int ev.index)^
+		   " Tempo : "^
+		   (string_of_float (ev.bps *. 60.)));
+    pause
+  end
+  ||
+  run (stdout perf)
