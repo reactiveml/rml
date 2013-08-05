@@ -24,17 +24,17 @@ type boid =
 
 (* Constants *)
 
-let coef_sep = 50.0
-let coef_cohes = 7.5
-let coef_alig = 30.0
+let coef_sep = 15.0
+let coef_cohes = 5.
+let coef_alig = 18.0
 let coef_tempo_speed = 2.0
 let vision_sep2 = 100.0
 let vision_cohes2_min = 100.0
 let vision_cohes2 = 50000.0
-let vision_alig2 = 4000.0
-let vmax = 10.0
+let vision_alig2 = 400.0
+let vmax = 175.0
 let dt = 0.1
-let max_wind = 1.
+let max_wind = 3.
 let max_family = 3
 let number_of_boids = 200
 let bounds = (box.left, box.right, box.bot, box.top)
@@ -171,11 +171,12 @@ let compute_pos b all wind k =
 
 (* Boid *)
 
-let rec process boid_behavior boid_init env wind listen k =
+let rec process boid_behavior boid_init step env wind listen k =
   let me = ref boid_init in
   do
     loop
       emit draw (sprite_of_boids !me);
+      await immediate step;
       emit env !me;
       await env (all) in
       me := compute_pos !me all (pre ?wind) k
@@ -187,7 +188,7 @@ let rec process boid_behavior boid_init env wind listen k =
                  color = compute_boid_color family;
                  v = random_speed 50. }
     in
-    run (boid_behavior state env wind listen (bps *. coef_tempo_speed))
+    run (boid_behavior state step env wind listen (bps *. coef_tempo_speed))
   done
 
 
@@ -197,7 +198,7 @@ let gen_id =
     incr cpt;
     !cpt
 
-let process boid id family pos_init env wind listen =
+let process boid id family pos_init step env wind listen =
   let me = { id = id;
 	     pos = pos_init;
              v = {x = 0.0; y = 0.0};
@@ -206,7 +207,7 @@ let process boid id family pos_init env wind listen =
 	     color = compute_boid_color family;
 	     shape = compute_shape family; }
   in
-  run (boid_behavior me env wind listen 1.)
+  run (boid_behavior me step env wind listen 1.)
 
 
 (* Wind *)
@@ -223,21 +224,23 @@ let process wind max_w delta w =
   end
 
 
-let rec process add new_boid env w listen =
+let rec process add new_boid step env w listen =
   await new_boid (pos) in
-  run (add new_boid env w listen)
+  run (add new_boid step env w listen)
   ||
   let family = Random.int max_family in
-  run (boid (gen_id ()) family pos env w.(family) listen)
+  run (boid (gen_id ()) family pos step env w.(family) listen)
 
 
-let process system n listen =
+let process system n wait listen =
   let w =
     Array.init
       max_family
       (fun _ -> signal w default {x = 0.0; y = 0.0} gather fun x y -> x in w)
   in
-  signal env, new_boid, suspend in
+  signal step, env, new_boid, suspend in
+  loop run (wait 0.025); emit step end
+  ||
   for i = 0 to max_family - 1 dopar
     run (wind max_wind 0.3 w.(i))
   done
@@ -245,11 +248,15 @@ let process system n listen =
   for i = 1 to n dopar
     let id = gen_id () in
     let family = id mod max_family in
-    run (boid id family (random_pos()) env w.(family) listen)
+    run (boid id family (random_pos()) step env w.(family) listen)
   done
   ||
-  run (add click env w listen)
+  run (add click step env w listen)
+  ||
+  loop
+    emit active; pause
+  end
 
-let process main listen =
+let process main wait listen =
   Random.self_init();
-  run (system number_of_boids listen)
+  run (system number_of_boids wait listen)

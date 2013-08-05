@@ -56,6 +56,7 @@ let norme v = v.x *. v.x +. v.y *. v.y
 
 (** {6 Graphics} *)
 
+signal active default () gather (fun () () -> ())
 signal draw default [] gather (fun x y -> x :: y)
 signal click default { x = 0.; y = 0.; } gather (fun x y -> x)
 signal key default 'X' gather (fun x y -> x)
@@ -164,7 +165,11 @@ let process window =
       run (read_inputs click key)
       ||
       loop
-        present draw then pause else emit not_draw
+        present active then pause else emit not_draw
+      end
+      ||
+      loop
+        present draw then (emit active; pause);
       end
     until not_draw ->
       Graphics.close_graph ()

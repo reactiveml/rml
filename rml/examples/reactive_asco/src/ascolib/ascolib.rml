@@ -164,7 +164,7 @@ let process sender asco =
   (if asco.config.Config.ball then
     run (Dancing_ball.main asco.instr_event)) ||
   (if asco.config.Config.boids then
-    run (Boids.main asco.instr_event))
+    run (Boids.main asco.wait asco.instr_event))
 
 
 (** {6 Build Antescofo actions} *)
