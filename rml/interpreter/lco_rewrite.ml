@@ -36,7 +36,7 @@ module Rml_interpreter : Lco_interpreter.S =
 
     type ('a, 'b) event = ('a, 'b) Event.t
 
-    and event_cfg = unit -> unit -> bool
+    and 'a event_cfg = unit -> unit -> bool
 
     and 'a status = SUSP | STOP | TERM of 'a
 
@@ -282,6 +282,12 @@ module Rml_interpreter : Lco_interpreter.S =
       fun () ->
 	let evt = expr_evt () in
 	rml_await_all_match' evt matching p ()
+
+(**************************************)
+(* await_all_match_conf               *)
+(**************************************)
+let rml_await_all_match_conf expr_cfg matching p =
+  raise RML (* XXX TODO XXX *)
 
 
 (**************************************)
@@ -645,6 +651,12 @@ module Rml_interpreter : Lco_interpreter.S =
 	let evt = expr_evt () in
 	rml_until_handler_match' evt matching p hdl ()
 
+    let rml_until_handler_conf expr_cfg p =
+      raise RML (* XXX TODO XXX *)
+
+    let rml_until_handler_match_conf expr_cfg p =
+      raise RML (* XXX TODO XXX *)
+
 (**************************************)
 (* control                            *)
 (**************************************)
@@ -711,6 +723,9 @@ module Rml_interpreter : Lco_interpreter.S =
       fun () ->
 	let evt = expr_evt () in
 	rml_control_match' evt matching p ()
+
+    let rml_control_match_conf expr_cfg matching p =
+      raise RML (* XXX TODO XXX *)
 
 (**************************************)
 (* control_conf                       *)
@@ -944,6 +959,9 @@ module Rml_interpreter : Lco_interpreter.S =
 
     let rml_await_all' evt p =
       rml_seq (rml_await_immediate' evt) (rml_get' evt p)
+
+    let rml_await_all_conf expr_cfg p =
+      raise RML (* XXX TODO XXX *)
 
     let rml_await_one expr_evt p =
       let pause_p x =

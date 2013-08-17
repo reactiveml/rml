@@ -45,7 +45,7 @@ module Rml_interpreter : Lco_interpreter.S =
 
     type ('a, 'b) event =
 	('a,'b) Event.t * unit step list ref * unit step list ref
-    and event_cfg = bool -> (unit -> bool) * unit step list ref list
+    and 'a event_cfg = bool -> (unit -> bool) * unit step list ref list
 
     and control_tree =
 	{ kind: control_type;
@@ -637,6 +637,13 @@ module Rml_interpreter : Lco_interpreter.S =
  	step_await_all_match f_k ctrl jp evt matching p
 
 (**************************************)
+(* await_all_match_conf               *)
+(**************************************)
+let rml_await_all_match_conf expr_cfg matching p =
+  raise RML (* XXX TODO XXX *)
+
+
+(**************************************)
 (* present                            *)
 (**************************************)
 
@@ -1071,6 +1078,12 @@ let rml_loop p =
       rml_until_handler_local' evt (Some matching) p p_handler
 
 
+    let rml_until_handler_conf expr_cfg p =
+      raise RML (* XXX TODO XXX *)
+
+    let rml_until_handler_match_conf expr_cfg p =
+      raise RML (* XXX TODO XXX *)
+
 (**************************************)
 (* control                            *)
 (**************************************)
@@ -1113,6 +1126,9 @@ let rml_loop p =
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	new_ctrl.cond <- (fun () -> Event.status n && matching (Event.value n));
 	start_ctrl f_k ctrl f new_ctrl
+
+    let rml_control_match_conf expr_cfg matching p =
+      raise RML (* XXX TODO XXX *)
 
 (**************************************)
 (* control_conf                       *)
@@ -1341,6 +1357,9 @@ let rml_loop p =
     let rml_await_all' evt p =
       fun f_k ctrl jp ->
 	rml_await_immediate' evt (rml_get' evt p f_k ctrl jp) ctrl None
+
+    let rml_await_all_conf expr_cfg p =
+      raise RML (* XXX TODO XXX *)
 
     let rml_await_one expr_evt p =
       let pause_p x =
