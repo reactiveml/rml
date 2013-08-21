@@ -1365,8 +1365,8 @@ let rml_loop p =
     let rml_await_all_conf expr_cfg p =
       fun f_k ctrl ->
 	fun _ ->
-	  let _, get, _ = expr_cfg true in
-	  rml_await_immediate_conf expr_cfg
+	  let (_, get, _) as cfg = expr_cfg true in
+	  rml_await_immediate_conf (fun _ -> cfg)
             (step_get_cfg f_k ctrl get p) ctrl unit_value
 
     let rml_await_one expr_evt p =
