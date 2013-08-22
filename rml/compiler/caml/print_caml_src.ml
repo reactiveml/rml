@@ -465,7 +465,7 @@ and print_pattern pri pat =
   | Cpatt_construct(gl, Some pat) ->
       print_global gl;
       pp_print_space !formatter ();
-      print_pattern 2 pat
+      print_pattern 3 pat
   | Cpatt_tuple(pat_list) ->
       pp_print_string !formatter "(";
       print_list (print_pattern (pri_e - 1))
@@ -481,9 +481,11 @@ and print_pattern pri pat =
         (fun () -> pp_print_string !formatter ";") l;
       pp_print_string !formatter "}"
   | Cpatt_or(pat1, pat2) ->
+      pp_print_string !formatter "(";
       print_pattern pri_e pat1;
       pp_print_string !formatter "|";
-      print_pattern pri_e pat2
+      print_pattern pri_e pat2;
+      pp_print_string !formatter ")"
   | Cpatt_alias(pat, s) ->
       pp_print_string !formatter "(";
       print_pattern pri_e pat;
