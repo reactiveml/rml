@@ -1146,6 +1146,32 @@ let rml_loop p =
 	end;
 	start_ctrl f_k ctrl f new_ctrl
 
+    let rml_until_handler_conf_local expr_cfg matching_opt p p_handler =
+      fun f_k ctrl ->
+        let ref_get = ref (fun () -> raise RML) in
+        let handler =
+          fun () ->
+            let x = (!ref_get) () in
+            let f_handler = p_handler x f_k ctrl in
+            f_handler
+        in
+        let new_ctrl = new_ctrl (Kill_handler handler) in
+        let f = p (end_ctrl f_k new_ctrl) new_ctrl in
+        let f_until =
+          fun _ ->
+            let (is_true, get, _) = expr_cfg true in
+            ref_get := get;
+            begin match matching_opt with
+            | None ->
+                new_ctrl.cond <- is_true;
+            | Some matching ->
+                new_ctrl.cond <-
+                  (fun () -> is_true () && matching (get ()));
+            end;
+            start_ctrl f_k ctrl f new_ctrl unit_value
+        in f_until
+
+
     let rml_until_handler expr_evt p p_handler =
       rml_until_handler_local expr_evt None p p_handler
 
@@ -1158,12 +1184,12 @@ let rml_loop p =
     let rml_until_handler_match' evt matching p p_handler =
       rml_until_handler_local' evt (Some matching) p p_handler
 
+    let rml_until_handler_conf expr_cfg p p_handler =
+      rml_until_handler_conf_local expr_cfg None p p_handler
 
-    let rml_until_handler_conf expr_cfg p =
-      raise RML (* XXX TODO XXX *)
+    let rml_until_handler_match_conf expr_cfg matching p p_handler =
+      rml_until_handler_conf_local expr_cfg (Some matching) p p_handler
 
-    let rml_until_handler_match_conf expr_cfg p =
-      raise RML (* XXX TODO XXX *)
 
 (**************************************)
 (* control                            *)
