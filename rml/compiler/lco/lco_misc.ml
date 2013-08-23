@@ -46,10 +46,8 @@ let rec is_value e =
 
   | Coexpr_constraint (expr, _) -> is_value expr
 
-  | Coexpr_trywith (expr, patt_expr_list) ->
+  | Coexpr_trywith (expr, _) ->
       (is_value expr)
-	&&
-      (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
 
   | Coexpr_assert expr -> is_value expr
 

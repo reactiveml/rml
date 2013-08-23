@@ -47,10 +47,8 @@ let rec is_value e =
   | Kexpr_constraint (expr, _) -> is_value expr
   | Kexpr_trywith (expr, patt_expr_list) ->
       (is_value expr)
-      &&
-      (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
 
-  | Kexpr_assert expr -> is_value expr
+  | Kexpr_assert expr -> false
   | Kexpr_ifthenelse  (e1, e2, e3) ->
       (is_value e1) && (is_value e2) && (is_value e3)
 
