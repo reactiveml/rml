@@ -161,7 +161,6 @@ let rec check_expr_one expr =
   | Rexpr_assert _
   | Rexpr_ifthenelse (_, _, _)
   | Rexpr_match (_, _)
-  | Rexpr_when_match (_, _)
   | Rexpr_for (_, _, _, _, _)
   | Rexpr_seq _
   | Rexpr_process _
@@ -176,13 +175,13 @@ let rec check_expr_one expr =
   | Rexpr_par _
   | Rexpr_merge (_, _)
   | Rexpr_signal (_, _, _)
-  | Rexpr_until (_, _, _)
+  | Rexpr_until (_, _, _, _)
   | Rexpr_when (_, _)
   | Rexpr_control (_, _, _)
   | Rexpr_get (_, _, _)
   | Rexpr_present (_, _, _)
   | Rexpr_await (_, _)
-  | Rexpr_await_val (_, _, _, _) -> ()
+  | Rexpr_await_val (_, _, _, _, _) -> ()
   end;
   expr
 

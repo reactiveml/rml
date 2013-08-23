@@ -144,6 +144,7 @@ let emit_outputs =
 			  (lucky_constr_of_ty ty,
 			   Some
 			     (make_var_patt "x")))]),
+    None,
     if is_valued ty then
       make_expr (Pexpr_emit_val
 		   (make_expr
@@ -172,6 +173,7 @@ let emit_outputs =
       (Ppatt_tuple
 	 [make_var_patt "s";
 	  make_pattern (Ppatt_any)]),
+    None,
     (make_expr
        (Pexpr_apply
 	  (make_expr
@@ -359,12 +361,15 @@ let lucky_to_parse (id,inputs,outputs,files) =
       make_expr
 	(Pexpr_function
 	   [make_var_patt "step_mode",
+            None,
 	    make_expr
 	      (Pexpr_function
 		 [patt_of_inputs inputs,
+                  None,
 		  make_expr
 		    (Pexpr_function
 		       [patt_of_outputs outputs,
+                        None,
 			make_expr (Pexpr_process body)
 		      ])
 		])

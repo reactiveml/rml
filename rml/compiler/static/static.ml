@@ -95,6 +95,21 @@ let static_expr_list static_expr combine filter ctx l =
 	(fun typ x -> combine (* max *) typ (static_expr ctx (filter x)))
 	ty l
 
+let static_patt_when_opt_expr_list static_expr combine ctx l =
+  match l with
+  | [] -> Static
+  | [(_, when_opt, e)] ->
+      let _ = Misc.opt_map (static_expr ML) when_opt in
+      static_expr ctx e
+  | (_, when_opt, e)::l ->
+      let _ = Misc.opt_map (static_expr ML) when_opt in
+      let ty = static_expr ctx e in
+      List.fold_left
+	(fun typ (_, when_opt, e) ->
+          let _ = Misc.opt_map (static_expr ML) when_opt in
+          combine (* max *) typ (static_expr ctx e))
+	ty l
+
 
 let rec static_expr ctx e =
   let t =
@@ -114,8 +129,9 @@ let rec static_expr ctx e =
 	let typ2 = static_expr ctx e1 in
 	max typ1 typ2
 
-    | Rexpr_function patt_expr_list ->
-	if static_expr_list static_expr max snd ML patt_expr_list = Static
+    | Rexpr_function patt_when_opt_expr_list ->
+	if static_patt_when_opt_expr_list
+            static_expr max ML patt_when_opt_expr_list = Static
 	then Static
 	else expr_wrong_static_err !Misc.err_fmt e
 
@@ -171,9 +187,12 @@ let rec static_expr ctx e =
 	then Static
 	else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_trywith (e1, patt_expr_list) ->
+    | Rexpr_trywith (e1, patt_when_opt_expr_list) ->
 	let typ1 = static_expr ML e1 in
-	let typ2 = static_expr_list static_expr max snd ML patt_expr_list in
+	let typ2 =
+          static_patt_when_opt_expr_list static_expr max ML
+            patt_when_opt_expr_list
+        in
 	if max typ1 typ2 = Static
 	then Static
 	else expr_wrong_static_err !Misc.err_fmt e
@@ -202,7 +221,7 @@ let rec static_expr ctx e =
 	  end
 	else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_match (e1, patt_expr_list) ->
+    | Rexpr_match (e1, patt_when_opt_expr_list) ->
 	let typ1 = static_expr ML e1 in
 	if typ1 <> Static then expr_wrong_static_err !Misc.err_fmt e1;
 	let typ2 =
@@ -220,21 +239,10 @@ let rec static_expr ctx e =
 	    | Dynamic _, Dynamic _ -> Dynamic Dontknow
 	    end
 	  in
-	  static_expr_list static_expr combine snd ctx patt_expr_list
+	  static_patt_when_opt_expr_list static_expr combine ctx
+            patt_when_opt_expr_list
 	in
 	typ2
-
-    | Rexpr_when_match (e1,e2) ->
-	let _typ1 = static_expr ML e1 in
-	let typ2 = static_expr ctx e2 in
-	begin match ctx with
-	| ML -> typ2
-	| Process ->
-	    begin match typ2 with
-	    | Static -> Dynamic Instantaneous
-	    | Dynamic _ -> typ2
-	    end
-	end
 
     | Rexpr_while (e1,e2) ->
 	let _typ1 = static_expr ML e1 in
@@ -396,10 +404,13 @@ let rec static_expr ctx e =
 	then Dynamic Dontknow
 	else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_until (s, p, e_opt) ->
+    | Rexpr_until (s, when_opt, p, e_opt) ->
 	if ctx = Process
 	then
 	  (static_conf s;
+           let _typ0_opt =
+	     Misc.opt_map (fun e -> static_expr ML e) when_opt
+	   in
 	   let typ1 = static_expr Process p in
 	   let _typ2_opt =
 	     Misc.opt_map (fun e -> static_expr Process e) e_opt
@@ -460,18 +471,20 @@ let rec static_expr ctx e =
 	   Dynamic Noninstantaneous)
 	else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_await_val (Immediate, One, s, p) ->
+    | Rexpr_await_val (Immediate, One, s, when_opt, p) ->
 	if ctx = Process
 	then
 	  (static_conf s;
+           let _ = Misc.opt_map (static_expr ML) when_opt in
 	   let typ = static_expr Process p in
 	   max (Dynamic Dontknow) typ)
 	else
 	  expr_wrong_static_err !Misc.err_fmt e
-    | Rexpr_await_val (_, _, s, p) ->
+    | Rexpr_await_val (_, _, s, when_opt, p) ->
 	if ctx = Process
 	then
           (static_conf s;
+           let _ = Misc.opt_map (static_expr ML) when_opt in
 	   let _typ1 = static_expr Process p in
 	   Dynamic Noninstantaneous)
 	else

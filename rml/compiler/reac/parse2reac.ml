@@ -382,11 +382,6 @@ let rec translate env e =
 	Rexpr_match(translate env expr,
 		    translate_match env patt_expr_list)
 
-    | Pexpr_when_match (e1, e2) ->
-	let tr_e1 = translate env e1 in
-	let tr_e2 = translate env e2 in
-	Rexpr_when_match (tr_e1, tr_e2)
-
     | Pexpr_while (e1, e2) ->
 	let tr_e1 = translate env e1 in
 	let tr_e2 = translate env e2 in
@@ -464,11 +459,12 @@ let rec translate env e =
     | Pexpr_run (expr) ->
 	Rexpr_run (translate env expr)
 
-    | Pexpr_until (conf, expr, expr_opt) ->
+    | Pexpr_until (conf, when_opt, expr, expr_opt) ->
         let rexpr = translate env expr in
         let vars, rconf = translate_conf env conf in
         let new_env = add_varpatt env vars in
         Rexpr_until (rconf,
+                     opt_map (translate new_env) when_opt,
                      rexpr,
                      opt_map (translate new_env) expr_opt)
 
@@ -498,12 +494,13 @@ let rec translate env e =
         if vars <> [] then event_config_err conf.pconf_loc;
         Rexpr_await (flag, rconf)
 
-    | Pexpr_await_val (flag, k, conf, expr) ->
+    | Pexpr_await_val (flag, k, conf, when_opt, expr) ->
         let vars, rconf = translate_conf env conf in
         let new_env = add_varpatt env vars in
         Rexpr_await_val (flag,
                          k,
                          rconf,
+                         opt_map (translate new_env) when_opt,
                          translate new_env expr)
 
     | Pexpr_get _ ->
@@ -573,17 +570,25 @@ and translate_let is_global env rec_flag patt_expr_list =
   in
   new_env, rpatt_rexpr_list
 
-(* Translation of a pair of pattern and expression*)
+(* Translation of a pair of pattern and expression *)
 and translate_patt_expr env (patt,expr)=
     let vars, rpatt = translate_pattern false patt in
     let env = add_varpatt env vars in
     let rexpr = translate env expr in
     (rpatt, rexpr)
 
+(* Translation of a triple of pattern, expression option and expression *)
+and translate_patt_expr_opt_expr env (patt,expr_opt,expr)=
+    let vars, rpatt = translate_pattern false patt in
+    let env = add_varpatt env vars in
+    let rexpr_opt = opt_map (translate env) expr_opt in
+    let rexpr = translate env expr in
+    (rpatt, rexpr_opt, rexpr)
+
 (* Translation of match in an ML context *)
 and translate_match =
   fun env patt_expr_list ->
-    List.map (translate_patt_expr env) patt_expr_list
+    List.map (translate_patt_expr_opt_expr env) patt_expr_list
 
 (* Translation of record *)
 and translate_record env lab_expr_list =

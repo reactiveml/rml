@@ -55,7 +55,9 @@ let rec is_value e =
   | Kexpr_match (expr, patt_expr_list) ->
       (is_value expr)
 	&&
-      (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
+      (List.for_all
+         (fun (_, when_opt, e) -> when_opt = None && is_value e)
+         patt_expr_list)
 
 
   | _ -> false

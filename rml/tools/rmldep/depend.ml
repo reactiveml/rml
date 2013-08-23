@@ -101,7 +101,7 @@ let rec add_expr bv exp =
     Pexpr_ident l -> add bv l
   | Pexpr_constant _ -> ()
   | Pexpr_let(_, pel, e) -> add_pat_expr_list bv pel; add_expr bv e
-  | Pexpr_function pel -> add_pat_expr_list bv pel
+  | Pexpr_function pel -> add_pat_when_opt_expr_list bv pel
   | Pexpr_apply(e, el) ->
       add_expr bv e; List.iter (fun e -> add_expr bv e) el
   | Pexpr_tuple el -> List.iter (add_expr bv) el
@@ -118,12 +118,11 @@ let rec add_expr bv exp =
   | Pexpr_constraint(e1, ty) ->
       add_expr bv e1;
       add_type bv ty
-  | Pexpr_trywith(e, pel) -> add_expr bv e; add_pat_expr_list bv pel
+  | Pexpr_trywith(e, pel) -> add_expr bv e; add_pat_when_opt_expr_list bv pel
   | Pexpr_assert (e) -> add_expr bv e
   | Pexpr_ifthenelse(e1, e2, opte3) ->
       add_expr bv e1; add_expr bv e2; add_opt add_expr bv opte3
-  | Pexpr_match(e, pel) -> add_expr bv e; add_pat_expr_list bv pel
-  | Pexpr_when_match(e1, e2) -> add_expr bv e1; add_expr bv e2
+  | Pexpr_match(e, pel) -> add_expr bv e; add_pat_when_opt_expr_list bv pel
   | Pexpr_while(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_for(_, e1, e2, _, e3) ->
       add_expr bv e1; add_expr bv e2; add_expr bv e3
@@ -144,8 +143,9 @@ let rec add_expr bv exp =
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
   | Pexpr_run(e1) -> add_expr bv e1
-  | Pexpr_until(cfg, e1, oe) ->
+  | Pexpr_until(cfg, when_opt, e1, oe) ->
       add_config bv cfg;
+      Misc.opt_iter (add_expr bv) when_opt;
       add_expr bv e1;
       Misc.opt_iter (fun e -> add_expr bv e) oe
   | Pexpr_when(cfg, e1) -> add_config bv cfg; add_expr bv e1
@@ -157,8 +157,11 @@ let rec add_expr bv exp =
   | Pexpr_present(cfg, e1, e2) ->
       add_config bv cfg; add_expr bv e1; add_expr bv e2
   | Pexpr_await(_, cfg) -> add_config bv cfg
-  | Pexpr_await_val(_, _, cfg, e1) ->
-      add_config bv cfg; add_config bv cfg; add_expr bv e1
+  | Pexpr_await_val(_, _, cfg, when_opt, e1) ->
+      add_config bv cfg;
+      add_config bv cfg;
+      Misc.opt_iter (add_expr bv) when_opt;
+      add_expr bv e1
   | Pexpr_pre(_, e1) -> add_expr bv e1
   | Pexpr_last(e1) -> add_expr bv e1
   | Pexpr_default(e1) -> add_expr bv e1
@@ -172,6 +175,14 @@ and add_config bv conf =
 
 and add_pat_expr_list bv pel =
   List.iter (fun (p, e) -> add_pattern bv p; add_expr bv e) pel
+
+and add_pat_when_opt_expr_list bv pel =
+  List.iter
+    (fun (p, when_opt, e) ->
+      add_pattern bv p;
+      Misc.opt_iter (add_expr bv) when_opt;
+      add_expr bv e)
+    pel
 
 and add_signature bv = function
     [] -> ()

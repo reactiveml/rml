@@ -54,7 +54,7 @@ and expression_desc =
   | Rexpr_global of value_type_description global
   | Rexpr_constant of immediate
   | Rexpr_let of rec_flag * (pattern * expression) list * expression
-  | Rexpr_function of (pattern * expression) list
+  | Rexpr_function of (pattern * expression option * expression) list
   | Rexpr_apply of expression * expression list
   | Rexpr_tuple of expression list
   | Rexpr_construct of constructor_type_description global * expression option
@@ -66,11 +66,10 @@ and expression_desc =
   | Rexpr_record_update of
       expression * label_type_description global * expression
   | Rexpr_constraint of expression * type_expression
-  | Rexpr_trywith of expression * (pattern * expression) list
+  | Rexpr_trywith of expression * (pattern * expression option * expression)list
   | Rexpr_assert of expression
   | Rexpr_ifthenelse of expression * expression * expression
-  | Rexpr_match of expression * (pattern * expression) list
-  | Rexpr_when_match of expression * expression
+  | Rexpr_match of expression * (pattern * expression option * expression) list
   | Rexpr_while of expression * expression
   | Rexpr_for of
       ident * expression * expression * direction_flag * expression
@@ -92,14 +91,15 @@ and expression_desc =
       (ident * type_expression option)
 	* (expression * expression) option * expression
   | Rexpr_run of expression
-  | Rexpr_until of event_config * expression * expression option
+  | Rexpr_until of
+      event_config * expression option * expression * expression option
   | Rexpr_when of event_config * expression
   | Rexpr_control of event_config * expression option * expression
   | Rexpr_get of expression * pattern * expression
   | Rexpr_present of event_config * expression * expression
   | Rexpr_await of immediate_flag * event_config
   | Rexpr_await_val of
-      immediate_flag * await_kind * event_config * expression
+     immediate_flag * await_kind * event_config * expression option * expression
 
 (* event configuration *)
 and event_config =

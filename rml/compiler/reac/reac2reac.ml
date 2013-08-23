@@ -71,7 +71,9 @@ let expr_map  =
 
       | Rexpr_function patt_expr_list ->
 	  let patt_expr_list' =
-	    List.map (fun (p,e) -> (p, expr_map f e)) patt_expr_list
+	    List.map (fun (p, when_opt, e) ->
+              (p, Misc.opt_map (expr_map f) when_opt , expr_map f e))
+              patt_expr_list
 	  in
 	  f (make_expr_all
 	       (Rexpr_function patt_expr_list')
@@ -148,7 +150,9 @@ let expr_map  =
       | Rexpr_trywith (e, patt_expr_list) ->
 	  let e' = expr_map f e in
 	  let patt_expr_list' =
-	    List.map (fun (p,e) -> (p, expr_map f e)) patt_expr_list
+	    List.map (fun (p, when_opt, e) ->
+              (p, Misc.opt_map (expr_map f) when_opt , expr_map f e))
+              patt_expr_list
 	  in
 	  f (make_expr_all
 	       (Rexpr_trywith(e', patt_expr_list'))
@@ -171,17 +175,12 @@ let expr_map  =
       | Rexpr_match (e, patt_expr_list) ->
 	  let e' = expr_map f e in
 	  let patt_expr_list' =
-	    List.map (fun (p,e) -> (p, expr_map f e)) patt_expr_list
+	    List.map (fun (p, when_opt, e) ->
+              (p, Misc.opt_map (expr_map f) when_opt , expr_map f e))
+              patt_expr_list
 	  in
 	  f (make_expr_all
 	       (Rexpr_match (e', patt_expr_list'))
-               typ static reactivity reactivity_effect loc)
-
-      | Rexpr_when_match (e1,e2) ->
-	  let e1' = expr_map f e1 in
-	  let e2' = expr_map f e2 in
-	  f (make_expr_all
-	       (Rexpr_when_match (e1', e2'))
                typ static reactivity reactivity_effect loc)
 
       | Rexpr_while (e1,e2) ->
@@ -284,17 +283,19 @@ let expr_map  =
 	  f (make_expr_all (Rexpr_run e')
                typ static reactivity reactivity_effect loc)
 
-      | Rexpr_until (config, e, None) ->
+      | Rexpr_until (config, when_opt, e, None) ->
 	  let config' = config_map f config in
+          let when_opt' = Misc.opt_map (expr_map f) when_opt in
 	  let e' = expr_map f e in
 	  f (make_expr_all
-	       (Rexpr_until (config', e', None))
+	       (Rexpr_until (config', when_opt', e', None))
                typ static reactivity reactivity_effect loc)
-      | Rexpr_until (config, e, Some e1) ->
+      | Rexpr_until (config, when_opt, e, Some e1) ->
 	  let config' = config_map f config in
+          let when_opt' = Misc.opt_map (expr_map f) when_opt in
 	  let e' = expr_map f e in
 	  let e1' = expr_map f e1 in
-	  f (make_expr_all (Rexpr_until (config', e', Some e1'))
+	  f (make_expr_all (Rexpr_until (config', when_opt', e', Some e1'))
 	       typ static reactivity reactivity_effect loc)
 
       | Rexpr_when (config, e) ->
@@ -336,10 +337,12 @@ let expr_map  =
 	  f (make_expr_all (Rexpr_await (immediate_flag, config'))
 	       typ static reactivity reactivity_effect loc)
 
-      | Rexpr_await_val (immediate, kind, config, e1) ->
+      | Rexpr_await_val (immediate, kind, config, when_opt, e1) ->
 	  let config' = config_map f config in
+          let when_opt' = Misc.opt_map (expr_map f) when_opt in
 	  let e1' = expr_map f e1 in
-	  f (make_expr_all (Rexpr_await_val (immediate, kind, config', e1'))
+	  f (make_expr_all
+               (Rexpr_await_val (immediate, kind, config', when_opt', e1'))
 	       typ static reactivity reactivity_effect loc)
     in
     expr'.expr_type <- expr.expr_type;
@@ -420,7 +423,6 @@ let translate_merge =
     | Rexpr_assert _
     | Rexpr_ifthenelse _
     | Rexpr_match _
-    | Rexpr_when_match _
     | Rexpr_while _
     | Rexpr_for _
     | Rexpr_seq _

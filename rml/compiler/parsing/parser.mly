@@ -77,14 +77,15 @@ let mkimpl d =
 let mkintf d =
   { pintf_desc = d; pintf_loc = symbol_rloc() }
 
-let rec mkexpr_until body cfg_expr_opt_list =
-  match cfg_expr_opt_list with
+let rec mkexpr_until body cfg_when_opt_expr_opt_list =
+  match cfg_when_opt_expr_opt_list with
   | [] -> raise Parse_error
-  | [(s, expr_opt)] ->
+  | [(s, when_opt, expr_opt)] ->
       mkexpr (Pexpr_until (s,
+                           when_opt,
 			   body,
 			   expr_opt))
-  | (s, expr_opt) :: list ->
+  | (s, when_opt, expr_opt) :: list ->
       assert false
 
 let reloc_patt x = { x with ppatt_loc = symbol_rloc () };;
@@ -117,6 +118,8 @@ let ghexpr d = { pexpr_desc = d;
 let ghpatt d = { ppatt_desc = d; ppatt_loc = symbol_gloc () };;
 let ghte d = { pte_desc = d; pte_loc = symbol_gloc () };;
 let ghimpl d = { pimpl_desc = d; pimpl_loc = symbol_gloc () };;
+
+let ghexpr_unit () = ghexpr (Pexpr_constant(Const_unit))
 
 let mkassert e =
   mkexpr (Pexpr_assert (e))
@@ -498,7 +501,8 @@ expr:
   | FUNCTION opt_bar match_cases
       { mkexpr(Pexpr_function(List.rev $3)) }
   | FUN simple_pattern fun_def
-      { mkexpr(Pexpr_function([$2, $3])) }
+      { let when_opt, expr = $3 in
+        mkexpr(Pexpr_function([$2, when_opt, expr])) }
   | MATCH par_expr WITH opt_bar match_cases
       { mkexpr(Pexpr_match($2, List.rev $5)) }
   | TRY par_expr WITH opt_bar match_cases
@@ -601,18 +605,16 @@ expr:
   | AWAIT await_flag event_config IN par_expr
       { match $2 with
         | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
-	| im, k -> mkexpr(Pexpr_await_val(im, k, $3, $5)) }
+	| im, k -> mkexpr(Pexpr_await_val(im, k, $3, None, $5)) }
   | AWAIT await_flag event_config WHEN par_expr IN par_expr
       { match $2 with
         | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
 	| im, k ->
-	    mkexpr(Pexpr_await_val(im, k, $3,
-				   { pexpr_desc = Pexpr_when_match($5, $7);
-				     pexpr_loc = Location.none; })) }
+	    mkexpr(Pexpr_await_val(im, k, $3, Some $5, $7)) }
   | PROCESS proc_def
       { $2 }
   | PROC simple_pattern proc_fun_def
-      { mkexpr(Pexpr_function([$2, $3])) }
+      { mkexpr(Pexpr_function([$2, None, $3])) }
   | RUN simple_expr simple_expr_list
       { let e = mkexpr(Pexpr_apply($2, List.rev $3)) in
         mkexpr(Pexpr_run(e)) }
@@ -824,7 +826,7 @@ strict_binding:
     EQUAL par_expr
       { $2 }
   | simple_pattern fun_binding
-      { ghexpr(Pexpr_function([$1, $2])) }
+      { ghexpr(Pexpr_function([$1, None, $2])) }
 ;
 proc_binding:
     strict_proc_binding
@@ -836,21 +838,26 @@ strict_proc_binding:
     EQUAL par_expr
       { ghexpr(Pexpr_process($2)) }
   | simple_pattern proc_binding
-      { ghexpr(Pexpr_function([$1, $2])) }
+      { ghexpr(Pexpr_function([$1, None, $2])) }
 ;
 match_cases:
-    pattern match_action                        { [$1, $2] }
-  | match_cases BAR pattern match_action        { ($3, $4) :: $1 }
+    pattern match_action
+      { let when_opt, expr = $2 in
+        [$1, when_opt, expr] }
+  | match_cases BAR pattern match_action
+      { let when_opt, expr = $4 in
+        ($3, when_opt, expr) :: $1 }
 ;
 fun_def:
     match_action                                { $1 }
   | simple_pattern fun_def
-      { ghexpr(Pexpr_function([$1, $2])) }
+      { let when_opt, expr = $2 in
+        when_opt, ghexpr(Pexpr_function([$1, None, expr])) }
 ;
 proc_fun_def:
     MINUSGREATER par_expr                       { mkexpr (Pexpr_process $2) }
   | simple_pattern proc_fun_def
-      { ghexpr(Pexpr_function([$1, $2])) }
+      { ghexpr(Pexpr_function([$1, None, $2])) }
 ;
 proc_def:
     simple_expr                                 { mkexpr(Pexpr_process $1) }
@@ -861,17 +868,13 @@ proc_def:
 */
 ;
 match_action:
-    MINUSGREATER par_expr                       { $2 }
-  | WHEN par_expr MINUSGREATER par_expr         { mkexpr(Pexpr_when_match
-							   ($2, $4)) }
+    MINUSGREATER par_expr                       { None, $2 }
+  | WHEN par_expr MINUSGREATER par_expr         { Some $2, $4 }
 ;
 until_action:
-    MINUSGREATER par_expr                       { $2 }
-  | WHEN par_expr
-      { mkexpr(Pexpr_when_match($2, { pexpr_desc = Pexpr_nothing;
-				      pexpr_loc = Location.none; })) }
-  | WHEN par_expr MINUSGREATER par_expr         { mkexpr(Pexpr_when_match
-							   ($2, $4)) }
+    MINUSGREATER par_expr                       { None, $2 }
+  | WHEN par_expr                               { Some $2, ghexpr_unit() }
+  | WHEN par_expr MINUSGREATER par_expr         { Some $2, $4 }
 ;
 expr_comma_list:
     expr_comma_list COMMA expr                  { $3 :: $1 }
@@ -896,12 +899,13 @@ type_constraint:
 ;
 
 until_cases:
-    event_config                                { [$1, None] }
+    event_config                                { [$1, None, None] }
   | until_handlers                              { $1 }
 ;
 until_handlers:
     event_config until_action
-                                              { [$1, Some $2] }
+      { let when_opt, expr = $2 in
+        [$1, when_opt, Some expr] }
 /*
   | until_handlers BAR simple_expr LPAREN pattern RPAREN MINUSGREATER par_expr
                                               { ($3, Some($5, $8)) :: $1 }

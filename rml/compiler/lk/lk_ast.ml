@@ -43,7 +43,7 @@ and expression_desc =
   | Kexpr_global of value_type_description global
   | Kexpr_constant of immediate
   | Kexpr_let of rec_flag * (pattern * expression) list * expression
-  | Kexpr_function of (pattern * expression) list
+  | Kexpr_function of (pattern * expression option * expression) list
   | Kexpr_apply of expression * expression list
   | Kexpr_tuple of expression list
   | Kexpr_construct of constructor_type_description global * expression option
@@ -55,11 +55,11 @@ and expression_desc =
   | Kexpr_record_update of
       expression * label_type_description global * expression
   | Kexpr_constraint of expression * type_expression
-  | Kexpr_trywith of expression * (pattern * expression) list
+  | Kexpr_trywith of
+      expression * (pattern * expression option * expression) list
   | Kexpr_assert of expression
   | Kexpr_ifthenelse of expression * expression * expression
-  | Kexpr_match of expression * (pattern * expression) list
-  | Kexpr_when_match of expression * expression
+  | Kexpr_match of expression * (pattern * expression option * expression) list
   | Kexpr_while of expression * expression
   | Kexpr_for of
       ident * expression * expression * direction_flag * expression
@@ -111,7 +111,7 @@ and process_desc =
   | Kproc_run of expression  * process * ident
   | Kproc_start_until of
       ident (* ctrl father *) *
-      event_config * (ident * process) * (pattern * process)
+      event_config * expression option * (ident * process) * (pattern * process)
   | Kproc_end_until of ident * process
   | Kproc_start_when of
       ident * event_config * (ident * process)
@@ -123,11 +123,11 @@ and process_desc =
   | Kproc_get of expression * pattern * process * ident
   | Kproc_present of ident * event_config * process * process
   | Kproc_ifthenelse of expression * process * process
-  | Kproc_match of expression * (pattern * process) list
-  | Kproc_when_match of expression * process
+  | Kproc_match of expression * (pattern * expression option * process) list
   | Kproc_await of immediate_flag * event_config * process * ident
   | Kproc_await_val of
-      immediate_flag * await_kind * expression * pattern * process * ident
+      immediate_flag * await_kind * expression * pattern * expression option *
+        process * ident
   | Kproc_bind of
       pattern * process * process
   | Kproc_var of ident

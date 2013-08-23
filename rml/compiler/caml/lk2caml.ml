@@ -196,9 +196,13 @@ let rec translate_ml e =
 		   translate_ml expr)
 
     | Kexpr_function  patt_expr_list ->
-	Cexpr_function (List.map
-			  (fun (p,e) -> (translate_pattern p, translate_ml e))
-			  patt_expr_list)
+	Cexpr_function
+          (List.map
+	     (fun (p,when_opt,e) ->
+               (translate_pattern p,
+                opt_map translate_ml when_opt,
+                translate_ml e))
+	     patt_expr_list)
 
     | Kexpr_apply (expr, expr_list) ->
 	Cexpr_apply (translate_ml expr,
@@ -232,10 +236,14 @@ let rec translate_ml e =
 	Cexpr_constraint (translate_ml expr, translate_te typ)
 
     | Kexpr_trywith (expr, l) ->
-	Cexpr_trywith (translate_ml expr,
-		       List.map
-			 (fun (p,e) -> translate_pattern p, translate_ml e)
-			 l)
+	Cexpr_trywith
+          (translate_ml expr,
+	   List.map
+	     (fun (p,when_opt,e) ->
+               (translate_pattern p,
+                opt_map translate_ml when_opt,
+                translate_ml e))
+	     l)
 
     | Kexpr_assert expr -> Cexpr_assert (translate_ml expr)
 
@@ -245,13 +253,14 @@ let rec translate_ml e =
 			  translate_ml e3)
 
     | Kexpr_match (expr, l) ->
-	Cexpr_match (translate_ml expr,
-		     List.map
-		       (fun (p,e) -> translate_pattern p, translate_ml e)
-		       l)
-
-    | Kexpr_when_match (e1, e2) ->
-	Cexpr_when_match (translate_ml e1, translate_ml e2)
+	Cexpr_match
+          (translate_ml expr,
+	   List.map
+	     (fun (p,when_opt,e) ->
+               (translate_pattern p,
+                opt_map translate_ml when_opt,
+                translate_ml e))
+	     l)
 
     | Kexpr_while(e1, e2) ->
 	Cexpr_while (translate_ml e1, translate_ml e2)
@@ -343,7 +352,7 @@ let rec translate_ml e =
 (* Embedding of ML expressions in a process *)
 and embed_ml e =
   make_expr
-    (Cexpr_function [make_patt_unit(), translate_ml e])
+    (Cexpr_function [make_patt_unit(), None, translate_ml e])
     e.kexpr_loc
 
 (* Translation of process *)
@@ -466,7 +475,8 @@ and translate_proc e =
 	Cexpr_apply
 	  (make_instruction "rml_loop",
 	   [make_expr
-	      (Cexpr_function [make_patt_var_local k_id, translate_proc k])
+	      (Cexpr_function
+                 [make_patt_var_local k_id, None, translate_proc k])
 	      Location.none])
 
     | Kproc_loop_n (k_id, e, k, k') ->
@@ -475,7 +485,8 @@ and translate_proc e =
 	    (make_instruction "rml_loop_n_v",
 	     [translate_ml e;
 	      make_expr
-		(Cexpr_function [make_patt_var_local k_id, translate_proc k])
+		(Cexpr_function
+                   [make_patt_var_local k_id, None, translate_proc k])
 		Location.none;
 	      translate_proc k'])
 	else
@@ -483,7 +494,8 @@ and translate_proc e =
 	    (make_instruction "rml_loop_n",
 	     [embed_ml e;
 	      make_expr
-		(Cexpr_function [make_patt_var_local k_id, translate_proc k])
+		(Cexpr_function
+                   [make_patt_var_local k_id, None, translate_proc k])
 		Location.none;
 	      translate_proc k'])
 
@@ -492,7 +504,8 @@ and translate_proc e =
 	  (make_instruction "rml_while",
 	   [embed_ml e1;
 	    make_expr
-	      (Cexpr_function [make_patt_var_local k_id, translate_proc k1])
+	      (Cexpr_function
+                 [make_patt_var_local k_id, None, translate_proc k1])
 	      Location.none;
 	    translate_proc k2])
 
@@ -587,7 +600,7 @@ and translate_proc e =
 	    Cexpr_apply
 	      (make_instruction "rml_signal",
 	       [make_expr
-		  (Cexpr_function [pattern_of_signal s, translate_proc k])
+		  (Cexpr_function [pattern_of_signal s, None, translate_proc k])
 		  Location.none])
 	| Inline ->
 (* Tr(signal s in k) =                                                   *)
@@ -620,7 +633,8 @@ and translate_proc e =
 		   [translate_ml e1;
 		    translate_ml e2;
 		    make_expr
-		      (Cexpr_function [pattern_of_signal s, translate_proc k])
+		      (Cexpr_function
+                         [pattern_of_signal s, None, translate_proc k])
 		      Location.none])
 	    | true, false ->
 		Cexpr_apply
@@ -628,7 +642,8 @@ and translate_proc e =
 		   [translate_ml e1;
 		    embed_ml e2;
 		    make_expr
-		      (Cexpr_function [pattern_of_signal s, translate_proc k])
+		      (Cexpr_function
+                         [pattern_of_signal s, None, translate_proc k])
 		      Location.none])
 	    | false, true ->
 		Cexpr_apply
@@ -636,7 +651,8 @@ and translate_proc e =
 		   [embed_ml e1;
 		    translate_ml e2;
 		    make_expr
-		      (Cexpr_function [pattern_of_signal s, translate_proc k])
+		      (Cexpr_function
+                         [pattern_of_signal s, None, translate_proc k])
 		      Location.none])
 	    | false, false ->
 		Cexpr_apply
@@ -644,7 +660,8 @@ and translate_proc e =
 		   [embed_ml e1;
 		    embed_ml e2;
 		    make_expr
-		      (Cexpr_function [pattern_of_signal s, translate_proc k])
+		      (Cexpr_function
+                         [pattern_of_signal s, None, translate_proc k])
 		      Location.none])
 	    end
 	| Inline ->
@@ -717,6 +734,7 @@ and translate_proc e =
 				make_expr
 				  (Cexpr_function
 				     [make_patt_unit(),
+                                      None,
 				      make_expr
 					(Cexpr_tuple
 					   (List.map
@@ -813,7 +831,7 @@ and translate_proc e =
 	end
 
 
-    | Kproc_start_until(ctrl, {kconf_desc = Kconf_present s},
+    | Kproc_start_until(ctrl, {kconf_desc = Kconf_present s}, None,
 			(ctrl', k1), (patt,k2)) ->
 	if Lk_misc.is_value s then
 	  Cexpr_apply
@@ -911,7 +929,7 @@ and translate_proc e =
 	     [translate_ml s;
 	      make_expr
 		(Cexpr_function
-		   [translate_pattern patt, translate_proc k])
+		   [translate_pattern patt, None, translate_proc k])
 		Location.none;
 	      make_expr_var_local ctrl])
 	else
@@ -920,7 +938,7 @@ and translate_proc e =
 	     [embed_ml s;
 	      make_expr
 		(Cexpr_function
-		   [translate_pattern patt, translate_proc k])
+		   [translate_pattern patt, None, translate_proc k])
 		Location.none;
 	      make_expr_var_local ctrl])
 
@@ -990,8 +1008,10 @@ and translate_proc e =
 		  make_expr
 		    (Cexpr_function
 		       (List.map
-			  (fun (patt,k) ->
-			    translate_pattern patt, translate_proc k)
+			  (fun (patt,when_opt,k) ->
+			    (translate_pattern patt,
+                             opt_map translate_ml when_opt,
+                             translate_proc k))
 			  patt_proc_list))
 		    Location.none])
 	    else
@@ -1001,8 +1021,10 @@ and translate_proc e =
 		  make_expr
 		    (Cexpr_function
 		       (List.map
-			  (fun (patt,k) ->
-			    translate_pattern patt, translate_proc k)
+			  (fun (patt,when_opt,k) ->
+			    (translate_pattern patt,
+                             opt_map translate_ml when_opt,
+                             translate_proc k))
 			  patt_proc_list))
 		    Location.none])
 	| Inline ->
@@ -1013,8 +1035,9 @@ and translate_proc e =
 		(Cexpr_match
 		   (translate_ml expr,
 		    List.map
-		      (fun (p,k) ->
+		      (fun (p,when_opt,k) ->
 			(translate_pattern p,
+                         None,
 			 make_expr
 			   (Cexpr_apply (translate_proc k, [make_expr_unit()]))
 			   Location.none))
@@ -1022,17 +1045,6 @@ and translate_proc e =
 		e.kproc_loc
 	    in f.cexpr_desc
 	end
-
-
-    | Kproc_when_match (expr, k) ->
-(* Tr(when e -> k) =                                                     *)
-(*   when e -> k()                                                       *)
-	Cexpr_when_match
-	  (translate_ml expr,
-	   translate_proc k)
-(* 	   make_expr  *)
-(* 	     (Cexpr_apply (translate_proc k, [make_expr_unit()])) *)
-(* 	     Location.none) *)
 
 
 
@@ -1059,7 +1071,7 @@ and translate_proc e =
 	not_yet_implemented "lk2caml: Kproc_await"
 
 
-    | Kproc_await_val (flag1, flag2, s, patt, k, ctrl) ->
+    | Kproc_await_val (flag1, flag2, s, patt, when_opt, k, ctrl) ->
 	let im =
 	  match flag1 with
 	  | Immediate -> "_immediate"
@@ -1071,61 +1083,29 @@ and translate_proc e =
 	  | All -> "_all"
 	in
 	let cpatt = translate_pattern patt in
-	begin match Caml_misc.partial_match cpatt, k.kproc_desc with
-	| partial_match, Kproc_when_match (e1, _) ->
+	begin match Caml_misc.partial_match cpatt, when_opt with
+	| true, _ | _, Some _ ->
 	    Cexpr_apply
 	      (make_instruction ("rml_await"^im^kind^"_match"),
 	       [embed_ml s;
 		make_expr
 		  (Cexpr_function
-		     [cpatt,
-		      make_expr
-			(Cexpr_when_match(translate_ml e1,
-					  make_expr
-					    (Cexpr_constant (Const_bool true))
-					    Location.none))
-			Location.none;
-		      make_patt Cpatt_any Location.none,
-		      make_expr
-			(Cexpr_constant (Const_bool false)) Location.none;])
+		     [(cpatt, opt_map translate_ml when_opt, make_true());
+		      (make_patt_any(), None, make_false());])
 		  Location.none;
 		make_expr
 		  (Cexpr_function
-		     [(cpatt, translate_proc k);
-		      (make_patt Cpatt_any Location.none, make_raise_RML())])
+		     [(cpatt, None, translate_proc k);
+		      (make_patt_any(), None, make_raise_RML());])
 		  Location.none;
 		make_expr_var_local ctrl])
-
-
-  (*  | partial_match,
-	      Kproc_compute ({ kexpr_desc = Kexpr_when_match (e1, e2) }, _) -> *)
-	| true, _ ->
-	    Cexpr_apply
-	      (make_instruction ("rml_await"^im^kind^"_match"),
-	       [embed_ml s;
-		make_expr
-		  (Cexpr_function
-		     [cpatt,
-		      make_expr
-			(Cexpr_constant (Const_bool true)) Location.none;
-		      make_patt Cpatt_any Location.none,
-		      make_expr
-			(Cexpr_constant (Const_bool false)) Location.none;])
-		  Location.none;
-		make_expr
-		  (Cexpr_function
-		     [(cpatt, translate_proc k);
-		      (make_patt Cpatt_any Location.none, make_raise_RML())])
-		  Location.none;
-		make_expr_var_local ctrl])
-
-	| false, _ ->
+	| false, None ->
 	    if Lk_misc.is_value s then
 	      Cexpr_apply
 		(make_instruction ("rml_await"^im^kind^"_v"),
 		 [translate_ml s;
 		  make_expr
-		    (Cexpr_function [cpatt, translate_proc k])
+		    (Cexpr_function [cpatt, None, translate_proc k])
 		    Location.none;
 		  make_expr_var_local ctrl])
 	    else
@@ -1133,7 +1113,7 @@ and translate_proc e =
 		(make_instruction ("rml_await"^im^kind),
 		 [embed_ml s;
 		  make_expr
-		    (Cexpr_function [cpatt, translate_proc k])
+		    (Cexpr_function [cpatt, None, translate_proc k])
 		    Location.none;
 		  make_expr_var_local ctrl])
 (*

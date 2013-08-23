@@ -201,7 +201,7 @@ let rec expression i ppf x =
       expression i ppf e;
   | Pexpr_function (l) ->
       line i ppf "Pexpr_function\n";
-      list i pattern_x_expression_case ppf l;
+      list i pattern_x_expression_option_x_expression_case ppf l;
   | Pexpr_apply (e, l) ->
       line i ppf "Pexp_apply\n";
       expression i ppf e;
@@ -209,11 +209,11 @@ let rec expression i ppf x =
   | Pexpr_match (e, l) ->
       line i ppf "Pexpr_match\n";
       expression i ppf e;
-      list i pattern_x_expression_case ppf l;
+      list i pattern_x_expression_option_x_expression_case ppf l;
   | Pexpr_trywith (e, l) ->
       line i ppf "Pexpr_trywith\n";
       expression i ppf e;
-      list i pattern_x_expression_case ppf l;
+      list i pattern_x_expression_option_x_expression_case ppf l;
   | Pexpr_tuple (l) ->
       line i ppf "Pexpr_tuple\n";
       list i expression ppf l;
@@ -267,10 +267,6 @@ let rec expression i ppf x =
       line i ppf "Pexpr_constraint\n";
       expression i ppf e;
       type_expression i ppf te;
-  | Pexpr_when_match (e1, e2) ->
-      line i ppf "Pexpr_when_match\n";
-      expression i ppf e1;
-      expression i ppf e2;
   | Pexpr_assert (e) ->
       line i ppf "Pexpr_assert";
       expression i ppf e;
@@ -309,10 +305,11 @@ let rec expression i ppf x =
   | Pexpr_run (e) ->
       line i ppf "Pexpr_run\n";
       expression i ppf e;
-  | Pexpr_until (s, e, expr_opt) ->
+  | Pexpr_until (s, when_opt, e, expr_opt) ->
       line i ppf "Pexpr_until\n";
       event_config i ppf s;
       expression i ppf e;
+      option i expression ppf when_opt;
       option i expression ppf expr_opt
   | Pexpr_when (s,e) ->
       line i ppf "Pexpr_when\n";
@@ -334,10 +331,11 @@ let rec expression i ppf x =
   | Pexpr_await (imf,s) ->
       line i ppf "Pexpr_await %a\n" fmt_immediate_flag imf;
       event_config i ppf s;
-  | Pexpr_await_val (flag1, flag2, s, e) ->
+  | Pexpr_await_val (flag1, flag2, s, when_opt, e) ->
       line i ppf "Pexpr_await_val %a %a\n"
 	fmt_immediate_flag flag1 fmt_await_kind_flag flag2;
       event_config i ppf s;
+      option i expression ppf when_opt;
       expression i ppf e;
   | Pexpr_pre (k, s) ->
       line i ppf "Pexpr_pre %a\n" fmt_pre_kind k;
@@ -364,9 +362,10 @@ and event_config i ppf cfg =
       event_config i ppf e1;
       event_config i ppf e2
 
-and pattern_x_expression_case i ppf (p, e) =
+and pattern_x_expression_option_x_expression_case i ppf (p, when_opt, e) =
   line i ppf "<case>\n";
   pattern (i+1) ppf  p;
+  option (i+1) expression ppf when_opt;
   expression (i+1) ppf e;
 
 and pattern_x_expression_def i ppf (p, e) =

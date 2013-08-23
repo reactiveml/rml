@@ -201,7 +201,7 @@ let rec print pri e =
       List.iter
 	(fun patt_expr ->
 	  pp_print_string !formatter "| ";
-	  print_patt_expr
+	  print_patt_when_opt_expr
             (fun () -> pp_print_string !formatter " ->"; pp_print_space !formatter ()) patt_expr)
 	patt_expr_list
   | Cexpr_fun(param_list,e1) ->
@@ -302,7 +302,7 @@ let rec print pri e =
       List.iter
 	(fun pat_expr ->
 	  pp_print_string !formatter "| ";
-	  print_patt_expr
+	  print_patt_when_opt_expr
             (fun () -> pp_print_string !formatter " ->"; pp_print_space !formatter ()) pat_expr)
 	l
   | Cexpr_seq (e1,e2) ->
@@ -320,7 +320,7 @@ let rec print pri e =
       List.iter
 	(fun pat_expr ->
 	  pp_print_string !formatter "| ";
-	  print_patt_expr
+	  print_patt_when_opt_expr
             (fun () -> pp_print_string !formatter " ->"; pp_print_space !formatter ()) pat_expr)
 	l
   | Cexpr_assert e ->
@@ -360,8 +360,6 @@ let rec print pri e =
       pp_print_space !formatter ();
       print_te 0 typ;
       pp_print_string !formatter ")";
-  | Cexpr_when_match _ ->
-      raise (Internal (e.cexpr_loc, "Print_caml_src.print Cexpr_when_match"))
   end;
   if pri > pri_e then pp_print_string !formatter ")";
   pp_close_box !formatter ()
@@ -517,21 +515,26 @@ and print_pattern pri pat =
 and print_patt_expr print_sep (pat, expr) =
   pp_open_box !formatter 2;
   print_pattern 0 pat;
-  match expr.cexpr_desc with
-  | Cexpr_when_match(e1,e2) ->
-      pp_print_space !formatter ();
+  print_sep ();
+  print 1 expr;
+  pp_close_box !formatter ();
+  pp_print_space !formatter ()
+
+and print_patt_when_opt_expr print_sep (pat, when_opt, expr) =
+  pp_open_box !formatter 2;
+  print_pattern 0 pat;
+  pp_print_space !formatter ();
+  begin match when_opt with
+  | None -> ()
+  | Some e1 ->
       pp_print_string !formatter "when";
       pp_print_space !formatter ();
       print 1 e1;
-      print_sep ();
-      print 1 e2;
-      pp_close_box !formatter ();
-      pp_print_space !formatter ()
-  | _ ->
-      print_sep ();
-      print 1 expr;
-      pp_close_box !formatter ();
-      pp_print_space !formatter ()
+  end;
+  print_sep ();
+  print 1 expr;
+  pp_close_box !formatter ();
+  pp_print_space !formatter ()
 
 let print_impl_item item =
   match item.cimpl_desc with

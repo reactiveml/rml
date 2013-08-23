@@ -70,7 +70,6 @@ let rec check_patt_expr (patt, expr) =
     | Rexpr_trywith _
     | Rexpr_ifthenelse _
     | Rexpr_match _
-    | Rexpr_when_match _
     | Rexpr_while _
     | Rexpr_for _
     | Rexpr_seq _

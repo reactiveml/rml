@@ -43,7 +43,7 @@ and expression_desc =
   | Cexpr_global of value_type_description global
   | Cexpr_constant of immediate
   | Cexpr_let of rec_flag * (pattern * expression) list * expression
-  | Cexpr_function of (pattern * expression) list
+  | Cexpr_function of (pattern * expression option * expression) list
   | Cexpr_fun of pattern list * expression
   | Cexpr_apply of expression * expression list
   | Cexpr_tuple of expression list
@@ -56,11 +56,11 @@ and expression_desc =
   | Cexpr_record_update of
       expression * label_type_description global * expression
   | Cexpr_constraint of expression * type_expression
-  | Cexpr_trywith of expression * (pattern * expression) list
+  | Cexpr_trywith of
+      expression * (pattern * expression option * expression) list
   | Cexpr_assert of expression
   | Cexpr_ifthenelse of expression * expression * expression
-  | Cexpr_match of expression * (pattern * expression) list
-  | Cexpr_when_match of expression * expression
+  | Cexpr_match of expression * (pattern * expression option * expression) list
   | Cexpr_while of expression * expression
   | Cexpr_for of
       ident * expression * expression * direction_flag * expression

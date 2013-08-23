@@ -47,7 +47,7 @@ and expression_desc =
   | Pexpr_ident of ident
   | Pexpr_constant of immediate
   | Pexpr_let of rec_flag * (pattern * expression) list * expression
-  | Pexpr_function of (pattern * expression) list
+  | Pexpr_function of (pattern * expression option * expression) list
 (*  | Pexpr_fun of pattern list * expression *)
   | Pexpr_apply of expression * expression list
   | Pexpr_tuple of expression list
@@ -58,11 +58,10 @@ and expression_desc =
   | Pexpr_record_with of expression * (ident * expression) list
   | Pexpr_record_update of expression * ident * expression
   | Pexpr_constraint of expression * type_expression
-  | Pexpr_trywith of expression * (pattern * expression) list
+  | Pexpr_trywith of expression * (pattern * expression option * expression)list
   | Pexpr_assert of expression
   | Pexpr_ifthenelse of expression * expression * expression option
-  | Pexpr_match of expression * (pattern * expression) list
-  | Pexpr_when_match of expression * expression
+  | Pexpr_match of expression * (pattern * expression option * expression) list
   | Pexpr_while of expression * expression
   | Pexpr_for of
       simple_ident * expression * expression * direction_flag * expression
@@ -82,8 +81,9 @@ and expression_desc =
 	(expression * expression) option * expression
   | Pexpr_process of expression
   | Pexpr_run of expression
-  | Pexpr_until of event_config * expression * expression option
-                (* signal        * body       * handler *)
+  | Pexpr_until of
+      event_config * expression option * expression * expression option
+   (* signal       * when condition    * body       * handler *)
   | Pexpr_when of event_config * expression
   | Pexpr_control of event_config * expression option * expression
                   (* signal       * when condition    * body *)
@@ -91,7 +91,8 @@ and expression_desc =
   | Pexpr_present of event_config * expression * expression
   | Pexpr_await of immediate_flag * event_config
   | Pexpr_await_val of
-      immediate_flag * await_kind * event_config * expression
+     immediate_flag * await_kind * event_config * expression option * expression
+  (* immediate?     * one?       * signal       * when condition    * body *)
   | Pexpr_pre of pre_kind * expression
   | Pexpr_last of expression
   | Pexpr_default of expression

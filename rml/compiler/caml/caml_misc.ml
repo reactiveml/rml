@@ -240,6 +240,7 @@ let rec make_dummy t =
     | Type_arrow _ | Type_process _ ->
 	Cexpr_function
 	  [make_patt Cpatt_any Location.none,
+           None,
 	   make_expr
 	     (Cexpr_assert
 		(make_expr (Cexpr_constant (Const_bool false)) Location.none))
@@ -360,10 +361,8 @@ let rec is_value e =
 
   | Cexpr_trywith (expr, patt_expr_list) ->
       (is_value expr)
-	&&
-      (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
 
-  | Cexpr_assert expr -> is_value expr
+  | Cexpr_assert expr -> false
 
   | Cexpr_ifthenelse (e1, e2, e3) ->
       (is_value e1) && (is_value e2) && (is_value e3)
@@ -371,7 +370,9 @@ let rec is_value e =
   | Cexpr_match (expr, patt_expr_list) ->
       (is_value expr)
 	&&
-      (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
+      (List.for_all
+         (fun (_, when_opt, e) -> when_opt = None && is_value e)
+         patt_expr_list)
 
   | _ -> false
 

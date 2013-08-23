@@ -182,10 +182,14 @@ let rec translate_ml e =
 		      patt_expr_list,
 		    translate_ml expr)
 
-    | Rexpr_function  patt_expr_list ->
-	Coexpr_function (List.map
-			   (fun (p,e) -> (translate_pattern p, translate_ml e))
-			   patt_expr_list)
+    | Rexpr_function  patt_when_opt_expr_list ->
+        Coexpr_function
+          (List.map
+             (fun (p,when_opt,e) ->
+               (translate_pattern p,
+                opt_map translate_ml when_opt,
+                translate_ml e))
+             patt_when_opt_expr_list)
 
     | Rexpr_apply (expr, expr_list) ->
 	Coexpr_apply (translate_ml expr,
@@ -217,10 +221,14 @@ let rec translate_ml e =
 	Coexpr_constraint (translate_ml expr, translate_te typ)
 
     | Rexpr_trywith (expr, l) ->
-	Coexpr_trywith (translate_ml expr,
-			List.map
-			  (fun (p,e) -> translate_pattern p, translate_ml e)
-			  l)
+        Coexpr_trywith
+          (translate_ml expr,
+           List.map
+             (fun (p,when_opt,e) ->
+               (translate_pattern p,
+                opt_map translate_ml when_opt,
+                translate_ml e))
+             l)
     | Rexpr_assert expr -> Coexpr_assert (translate_ml expr)
 
     | Rexpr_ifthenelse (e1, e2, e3) ->
@@ -229,13 +237,14 @@ let rec translate_ml e =
 			   translate_ml e3)
 
     | Rexpr_match (expr, l) ->
-	Coexpr_match (translate_ml expr,
-		      List.map
-			(fun (p,e) -> translate_pattern p, translate_ml e)
-			l)
-
-    | Rexpr_when_match (e1, e2) ->
-	Coexpr_when_match (translate_ml e1, translate_ml e2)
+        Coexpr_match
+          (translate_ml expr,
+           List.map
+             (fun (p, when_opt, e) ->
+               (translate_pattern p,
+                opt_map translate_ml when_opt,
+                translate_ml e))
+             l)
 
     | Rexpr_while(e1, e2) ->
 	Coexpr_while (translate_ml e1, translate_ml e2)
@@ -403,8 +412,9 @@ and translate_proc p =
 	| Rexpr_run (expr) ->
 	    Coproc_run (translate_ml expr)
 
-	| Rexpr_until (conf, proc, proc_opt) ->
+	| Rexpr_until (conf, when_opt, proc, proc_opt) ->
 	    Coproc_until (translate_conf conf,
+                          opt_map translate_ml when_opt,
 			  translate_proc proc,
 			  opt_map translate_proc proc_opt)
 
@@ -434,19 +444,19 @@ and translate_proc p =
 	| Rexpr_match (expr, l) ->
 	    Coproc_match (translate_ml expr,
 			  List.map
-			    (fun (p,e) ->
-			      (translate_pattern p, translate_proc e))
+                            (fun (p,when_opt,e) ->
+                              (translate_pattern p,
+                               opt_map translate_ml when_opt,
+                               translate_proc e))
 			    l)
-
-	| Rexpr_when_match (e1, e2) ->
-	    Coproc_when_match (translate_ml e1, translate_proc e2)
 
 	| Rexpr_await (flag, conf) -> Coproc_await (flag, translate_conf conf)
 
-	| Rexpr_await_val (flag1, flag2, conf, proc) ->
+	| Rexpr_await_val (flag1, flag2, conf, when_opt, proc) ->
 	    Coproc_await_val (flag1,
 			      flag2,
 			      translate_conf conf,
+                              opt_map translate_ml when_opt,
 			      translate_proc proc)
 
 	| _ ->
@@ -652,6 +662,7 @@ and translate_proc_let =
 				  :: patt_list)
 				id_array []))
 			  Location.none,
+                        None,
 			make_expr
 			  (Coexpr_tuple
 			     (Array.fold_right
@@ -661,6 +672,7 @@ and translate_proc_let =
 				id_array []))
 			  Location.none);
 		       (make_patt (Copatt_any) Location.none,
+                        None,
 			make_expr (Coexpr_assert
 				     (make_expr (Coexpr_constant
 						   (Const_bool false))

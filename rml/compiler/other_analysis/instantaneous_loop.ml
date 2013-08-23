@@ -399,8 +399,21 @@ let instantaneous_loop_expr =
 		patt_ty_min_list
 	  end
 
-      | Rexpr_function patt_expr_list ->
-	  instantaneous_loop_expr_list analyse snd vars patt_expr_list
+      | Rexpr_function patt_when_opt_expr_list ->
+          let ty1 =
+            instantaneous_loop_expr_list
+              (fun vars e_opt ->
+                match e_opt with
+                | None -> Env.empty
+                | Some e -> analyse vars e)
+              (fun (_, x, _) -> x) vars
+              patt_when_opt_expr_list
+          in
+          let ty2 =
+            instantaneous_loop_expr_list analyse (fun (_, _, x) -> x) vars
+              patt_when_opt_expr_list
+          in
+          Env.append ty1 ty2
 
       | Rexpr_apply (e, expr_list) ->
 	  let ty = analyse vars e in
@@ -441,12 +454,22 @@ let instantaneous_loop_expr =
       | Rexpr_constraint (e, ty) ->
 	  analyse vars e
 
-      | Rexpr_trywith (e, patt_expr_list) ->
-	  let ty = analyse vars e in
-	  let ty' =
-	    instantaneous_loop_expr_list analyse snd vars patt_expr_list
-	  in
-	  Env.append ty' ty
+      | Rexpr_trywith (e, patt_when_opt_expr_list) ->
+          let ty = analyse vars e in
+          let ty_when =
+            instantaneous_loop_expr_list
+              (fun vars e_opt ->
+                match e_opt with
+                | None -> Env.empty
+                | Some e -> analyse vars e)
+              (fun (_, x, _) -> x) vars
+              patt_when_opt_expr_list
+          in
+          let ty' =
+            instantaneous_loop_expr_list analyse (fun (_, _, x) -> x) vars
+              patt_when_opt_expr_list
+          in
+          Env.append ty_when (Env.append ty' ty)
 
       | Rexpr_assert e ->
 	  analyse vars e
@@ -457,17 +480,22 @@ let instantaneous_loop_expr =
 	  let ty2 = analyse vars e2 in
 	  Env.append ty (Env.append ty1 ty2)
 
-      | Rexpr_match (e, patt_expr_list) ->
-	  let ty = analyse vars e in
-	  let ty' =
-	    instantaneous_loop_expr_list analyse snd vars patt_expr_list
-	  in
-	  Env.append ty ty'
-
-      | Rexpr_when_match (e1,e2) ->
-	  let ty1 = analyse vars e1 in
-	  let ty2 = analyse vars e2 in
-	  Env.append ty1 ty2
+      | Rexpr_match (e, patt_when_opt_expr_list) ->
+          let ty = analyse vars e in
+          let ty_when =
+            instantaneous_loop_expr_list
+              (fun vars e_opt ->
+                match e_opt with
+                | None -> Env.empty
+                | Some e -> analyse vars e)
+              (fun (_, x, _) -> x) vars
+              patt_when_opt_expr_list
+          in
+          let ty' =
+            instantaneous_loop_expr_list analyse (fun (_, _, x) -> x) vars
+              patt_when_opt_expr_list
+          in
+          Env.append ty_when (Env.append ty ty')
 
       | Rexpr_while (e1,e2) ->
 	  let ty1 = analyse vars e1 in
@@ -562,13 +590,15 @@ let instantaneous_loop_expr =
 	  if not (Env.positive ty') then rec_warning expr;
 	  Env.remove_zero ty'
 
-      | Rexpr_until (config, e, None) ->
+      | Rexpr_until (config, when_opt, e, None) ->
 	  let ty_config = config_analyse vars config in
 	  let ty = analyse vars e in
+          let _ = Misc.opt_map (analyse Env.empty) when_opt in
 	  Env.append ty_config ty
-      | Rexpr_until (config, e, Some e1) ->
+      | Rexpr_until (config, when_opt, e, Some e1) ->
 	  let ty_config = config_analyse vars config in
 	  let ty = analyse vars e in
+          let _ = Misc.opt_map (analyse Env.empty) when_opt in
 	  let _ = analyse Env.empty e1 in
 	  Env.append ty_config ty
 
@@ -601,12 +631,13 @@ let instantaneous_loop_expr =
       | Rexpr_await (immediate_flag, config) ->
 	  config_analyse vars config
 
-      | Rexpr_await_val (Immediate, One, e, e1) ->
+      | Rexpr_await_val (Immediate, One, e, None, e1) ->
 	  let ty = config_analyse vars e in
 	  let ty1 = analyse vars e1 in
 	  Env.append ty ty1
-      | Rexpr_await_val (immediate, kind, e, e1) ->
+      | Rexpr_await_val (immediate, kind, e, when_opt, e1) ->
 	  let ty = config_analyse vars e in
+          let _ = Misc.opt_map (analyse Env.empty) when_opt in
 	  let _ = analyse Env.empty e1 in
 	  ty
       end

@@ -243,7 +243,6 @@ let rec is_nonexpansive expr =
         (Global.info lbl).lbl_mut == Immutable && is_nonexpansive expr)
         lbl_expr_list
   | Rexpr_record_access(e, lbl) -> is_nonexpansive e
-  | Rexpr_when_match(cond, act) -> is_nonexpansive act
   | Rexpr_process _ -> true
   | Rexpr_pre (_, e) -> is_nonexpansive e
   | Rexpr_last e -> is_nonexpansive e
@@ -257,12 +256,12 @@ let rec is_nonexpansive expr =
       is_nonexpansive_conf e && is_nonexpansive e1 && is_nonexpansive e2
   | Rexpr_await (_, e) ->
       is_nonexpansive_conf e
-  | Rexpr_await_val (_, _, c, e) ->
-      is_nonexpansive_conf c && is_nonexpansive e
-  | Rexpr_until (c, e, None) ->
-      is_nonexpansive_conf c && is_nonexpansive e
-  | Rexpr_until (c, e, Some e') ->
-      is_nonexpansive_conf c && is_nonexpansive e && is_nonexpansive e'
+  | Rexpr_await_val (_, _, c, when_opt, e) ->
+      is_nonexpansive_conf c && is_nonexpansive_opt when_opt &&
+      is_nonexpansive e
+  | Rexpr_until (c, when_opt, e, e_opt) ->
+      is_nonexpansive_conf c && is_nonexpansive_opt when_opt &&
+      is_nonexpansive e && is_nonexpansive_opt e_opt
   | Rexpr_when (c, e) ->
       is_nonexpansive_conf c && is_nonexpansive e
   | Rexpr_control (c, None, e) ->
@@ -283,6 +282,11 @@ and is_nonexpansive_conf c =
       is_nonexpansive_conf c1 && is_nonexpansive_conf c2
   | Rconf_or (c1,c2) ->
       is_nonexpansive_conf c1 && is_nonexpansive_conf c2
+
+and is_nonexpansive_opt e_opt =
+  match e_opt with
+  | Some e -> is_nonexpansive e
+  | None -> true
 
 (* Typing functions *)
 
@@ -517,10 +521,13 @@ let rec type_of_expression env expr =
 	let ty_res = new_var() in
 	let ty = arrow ty_arg ty_res in
 	List.iter
-	  (fun (p,e) ->
+	  (fun (p,when_opt,e) ->
 	    let gl_env, loc_env = type_of_pattern [] [] p ty_arg in
 	    assert (gl_env = []);
 	    let new_env = env_add loc_env env in
+            opt_iter
+              (fun e_opt -> type_expect_eps new_env e_opt type_bool)
+              when_opt;
 	    type_expect_eps new_env e ty_res)
 	  matching;
 	ty, react_epsilon()
@@ -642,10 +649,13 @@ let rec type_of_expression env expr =
 	let ty, k = type_of_expression env body in
 	let kl =
           List.map
-	    (fun (p,e) ->
+	    (fun (p,when_opt,e) ->
 	      let gl_env, loc_env = type_of_pattern [] [] p type_exn in
 	      assert (gl_env = []);
 	      let new_env = env_add loc_env env in
+              opt_iter
+                (fun e_opt -> type_expect_eps new_env e_opt type_bool)
+                when_opt;
 	      type_expect new_env e ty)
 	    matching
         in
@@ -667,18 +677,17 @@ let rec type_of_expression env expr =
 	let ty_res = new_var() in
         let kl =
 	  List.map
-	    (fun (p,e) ->
+	    (fun (p,when_opt,e) ->
 	      let gl_env, loc_env = type_of_pattern [] [] p ty_body in
 	      assert (gl_env = []);
 	      let new_env = env_add loc_env env in
+              opt_iter
+                (fun e_opt -> type_expect_eps new_env e_opt type_bool)
+                when_opt;
 	      type_expect new_env e ty_res)
 	    matching
         in
 	ty_res, react_or kl
-
-    | Rexpr_when_match (e1,e2) ->
-	type_expect_eps env e1 type_bool;
-	type_of_expression env e2
 
     | Rexpr_while (e1,e2) ->
 	type_expect_eps env e1 type_bool;
@@ -865,14 +874,21 @@ let rec type_of_expression env expr =
           ty_e;
         ty, react_run (* raw *) k
 
-    | Rexpr_until (conf,p,None) ->
-        let _loc_env = type_of_event_config env conf in
+    | Rexpr_until (conf,when_opt,p,None) ->
         let k = type_expect env p type_unit in
-        type_unit, k
-    | Rexpr_until (conf, p, Some hdl) ->
         let loc_env = type_of_event_config env conf in
-        let ty_body, k_body = type_of_expression env p in
         let new_env = env_add loc_env env in
+        opt_iter
+          (fun e_opt -> type_expect_eps new_env e_opt type_bool)
+          when_opt;
+        type_unit, k
+    | Rexpr_until (conf, when_opt, p, Some hdl) ->
+        let ty_body, k_body = type_of_expression env p in
+        let loc_env = type_of_event_config env conf in
+        let new_env = env_add loc_env env in
+        opt_iter
+          (fun e_opt -> type_expect_eps new_env e_opt type_bool)
+          when_opt;
         let k_hdl = type_expect new_env hdl ty_body in
         ty_body, react_or [ k_body;
                             react_seq [ react_pause(); k_hdl ] ]
@@ -919,15 +935,18 @@ let rec type_of_expression env expr =
                    | Immediate -> react_epsilon()
                    end
 
-    | Rexpr_await_val (flag,All,config,p) ->
+    | Rexpr_await_val (flag,All,config,when_opt,p) ->
         let loc_env = type_of_event_config env config in
         let new_env = env_add loc_env env in
+        opt_iter
+          (fun e_opt -> type_expect_eps new_env e_opt type_bool)
+          when_opt;
         let ty_p, k_p = type_of_expression new_env p in
         ty_p, begin match flag with
               | Nonimmediate -> react_seq [ react_pause(); k_p ]
               | Immediate -> k_p
               end
-    | Rexpr_await_val (flag,One,config,p) ->
+    | Rexpr_await_val (flag,One,config,when_opt,p) ->
         begin match config.conf_desc with
         | Rconf_present (s, Some patt) ->
             let ty_s, k_s = type_of_expression env s in
@@ -945,6 +964,9 @@ let rec type_of_expression env expr =
             let gl_env, loc_env = type_of_pattern [] [] patt ty_emit in
             assert (gl_env = []);
             let new_env = env_add loc_env env in
+            opt_iter
+              (fun e_opt -> type_expect_eps new_env e_opt type_bool)
+              when_opt;
             let ty_p, k_p = type_of_expression new_env p in
             ty_p, begin match flag with
                   | Nonimmediate -> react_seq [ react_pause(); k_p ]

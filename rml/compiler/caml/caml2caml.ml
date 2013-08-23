@@ -93,7 +93,10 @@ let constant_propagation =
       | Cexpr_function patt_expr_list ->
 	  let patt_expr_list' =
 	    List.map
-	      (fun (patt,expr) -> (patt, constant_propagation env expr))
+	      (fun (patt,when_opt,expr) ->
+                (patt,
+                 opt_map (constant_propagation env) when_opt,
+                 constant_propagation env expr))
 	      patt_expr_list
 	  in
 	  Cexpr_function patt_expr_list'
@@ -149,7 +152,10 @@ let constant_propagation =
 	  Cexpr_trywith
 	    (constant_propagation env expr,
 	     List.map
-	       (fun (patt, expr) -> (patt, constant_propagation env expr))
+	       (fun (patt, when_opt, expr) ->
+                 (patt,
+                  opt_map (constant_propagation env) when_opt,
+                  constant_propagation env expr))
 	       patt_expr_list)
 
       | Cexpr_assert expr ->
@@ -165,13 +171,11 @@ let constant_propagation =
 	  Cexpr_match
 	    (constant_propagation env expr,
 	     List.map
-	       (fun (patt, expr) -> (patt, constant_propagation env expr))
+	       (fun (patt, when_opt, expr) ->
+                 (patt,
+                  opt_map (constant_propagation env) when_opt,
+                  constant_propagation env expr))
 	       patt_expr_list)
-
-      | Cexpr_when_match (e1,e2) ->
-	  Cexpr_when_match
-	    (constant_propagation env e1,
-	     constant_propagation env e2)
 
       | Cexpr_while (e1,e2) ->
 	  Cexpr_while

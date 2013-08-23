@@ -168,9 +168,13 @@ let rec translate_ml e =
 		   translate_ml expr)
 
     | Rexpr_function  patt_expr_list ->
-	Kexpr_function (List.map
-			  (fun (p,e) -> (translate_pattern p, translate_ml e))
-			  patt_expr_list)
+        Kexpr_function
+          (List.map
+             (fun (p,when_opt,e) ->
+               (translate_pattern p,
+                opt_map translate_ml when_opt,
+                translate_ml e))
+             patt_expr_list)
 
     | Rexpr_apply (expr, expr_list) ->
 	Kexpr_apply (translate_ml expr,
@@ -202,10 +206,14 @@ let rec translate_ml e =
 	Kexpr_constraint (translate_ml expr, translate_te typ)
 
     | Rexpr_trywith (expr, l) ->
-	Kexpr_trywith (translate_ml expr,
-		       List.map
-			 (fun (p,e) -> translate_pattern p, translate_ml e)
-			 l)
+        Kexpr_trywith
+          (translate_ml expr,
+           List.map
+             (fun (p,when_opt,e) ->
+               translate_pattern p,
+               opt_map translate_ml when_opt,
+               translate_ml e)
+             l)
 
     | Rexpr_assert expr -> Kexpr_assert (translate_ml expr)
 
@@ -217,11 +225,11 @@ let rec translate_ml e =
     | Rexpr_match (expr, l) ->
 	Kexpr_match (translate_ml expr,
 		     List.map
-		       (fun (p,e) -> translate_pattern p, translate_ml e)
+                       (fun (p,when_opt,e) ->
+                         translate_pattern p,
+                         opt_map translate_ml when_opt,
+                         translate_ml e)
 		       l)
-
-    | Rexpr_when_match (e1, e2) ->
-	Kexpr_when_match (translate_ml e1, translate_ml e2)
 
     | Rexpr_while(e1, e2) ->
 	Kexpr_while (translate_ml e1, translate_ml e2)
@@ -595,19 +603,18 @@ and translate_proc e k (ctrl: ident) =
 		 (Kproc_match
 		    (translate_ml expr,
 		     List.map
-		       (fun (p,e) ->
-			 translate_pattern p, translate_proc e k_var ctrl)
+                       (fun (p,when_opt,e) ->
+                         (translate_pattern p,
+                          opt_map translate_ml when_opt,
+                          translate_proc e k_var ctrl))
 		       l))
 		 Location.none)
-
-	| Rexpr_when_match (e1, e2) ->
-	    Kproc_when_match (translate_ml e1, translate_proc e2 k ctrl)
 
 	| Rexpr_await (flag, s) ->
 	    Kproc_await (flag, translate_conf s, k, ctrl)
 
 (*> XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
-	| Rexpr_await_val (flag1, flag2, conf, proc) ->
+	| Rexpr_await_val (flag1, flag2, conf, when_opt, proc) ->
             begin match conf.conf_desc with
             | Rconf_present (s, Some patt) ->
 	        let k_id = make_var "k" in
@@ -622,6 +629,7 @@ and translate_proc e k (ctrl: ident) =
 				       flag2,
 				       translate_ml s,
 				       translate_pattern patt,
+                                       opt_map translate_ml when_opt,
 				       translate_proc proc k_var ctrl,
 				       ctrl))
 		     Location.none)

@@ -49,7 +49,7 @@ let rec is_value e =
   | Coexpr_trywith (expr, _) ->
       (is_value expr)
 
-  | Coexpr_assert expr -> is_value expr
+  | Coexpr_assert expr -> false
 
   | Coexpr_ifthenelse (e1, e2, e3) ->
       (is_value e1) && (is_value e2) && (is_value e3)
@@ -57,6 +57,8 @@ let rec is_value e =
   | Coexpr_match (expr, patt_expr_list) ->
       (is_value expr)
 	&&
-      (List.for_all (fun (_, e) -> is_value e) patt_expr_list)
+      (List.for_all
+         (fun (_, when_opt, e) -> when_opt = None && is_value e)
+         patt_expr_list)
 
   | _ -> false

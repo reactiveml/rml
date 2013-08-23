@@ -173,8 +173,9 @@ let expr_free_vars e =
 
     | Rexpr_function patt_expr_list ->
 	List.iter
-	  (fun (p,e) ->
+	  (fun (p,when_opt,e) ->
 	    let vars' = (vars_of_patt p) @ vars in
+            Misc.opt_iter (expr_free_vars vars') when_opt;
 	    expr_free_vars vars' e)
 	  patt_expr_list
 
@@ -213,8 +214,9 @@ let expr_free_vars e =
     | Rexpr_trywith (e, patt_expr_list) ->
 	expr_free_vars vars e;
 	List.iter
-	  (fun (p,e) ->
+	  (fun (p,when_opt,e) ->
 	    let vars' = (vars_of_patt p) @ vars in
+            Misc.opt_iter (expr_free_vars vars') when_opt;
 	    expr_free_vars vars' e)
 	  patt_expr_list
 
@@ -229,14 +231,11 @@ let expr_free_vars e =
     | Rexpr_match (e, patt_expr_list) ->
 	expr_free_vars vars e;
 	List.iter
-	  (fun (p,e) ->
+	  (fun (p,when_opt,e) ->
 	    let vars' = (vars_of_patt p) @ vars in
+            Misc.opt_iter (expr_free_vars vars') when_opt;
 	    expr_free_vars vars' e)
 	  patt_expr_list
-
-    | Rexpr_when_match (e1,e2) ->
-	expr_free_vars vars e1;
-	expr_free_vars vars e2
 
     | Rexpr_while (e1,e2) ->
 	expr_free_vars vars e1;
@@ -305,14 +304,12 @@ let expr_free_vars e =
     | Rexpr_run e ->
 	expr_free_vars vars e
 
-    | Rexpr_until (config, e, None) ->
-	config_free_vars vars config;
-	expr_free_vars vars e
-    | Rexpr_until (config, e, Some e1) ->
-	config_free_vars vars config;
+    | Rexpr_until (config, when_opt, e, e_opt) ->
 	expr_free_vars vars e;
+	config_free_vars vars config;
 	let vars' = (vars_of_config config) @ vars in
-	expr_free_vars vars' e1
+        Misc.opt_iter (expr_free_vars vars') when_opt;
+	Misc.opt_iter (expr_free_vars vars') e_opt
 
     | Rexpr_when (config, e) ->
 	config_free_vars vars config;
@@ -340,9 +337,10 @@ let expr_free_vars e =
     | Rexpr_await (immediate_flag, config) ->
 	config_free_vars vars config
 
-    | Rexpr_await_val (immediate, kind, config, e1) ->
+    | Rexpr_await_val (immediate, kind, config, when_opt, e1) ->
 	config_free_vars vars config;
 	let vars' = (vars_of_config config) @ vars in
+        Misc.opt_iter (expr_free_vars vars') when_opt;
 	expr_free_vars vars' e1
 
     end

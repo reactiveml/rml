@@ -43,7 +43,7 @@ and expression_desc =
   | Coexpr_global of value_type_description global
   | Coexpr_constant of immediate
   | Coexpr_let of rec_flag * (pattern * expression) list * expression
-  | Coexpr_function of (pattern * expression) list
+  | Coexpr_function of (pattern * expression option * expression) list
   | Coexpr_apply of expression * expression list
   | Coexpr_tuple of expression list
   | Coexpr_construct of constructor_type_description global * expression option
@@ -55,11 +55,11 @@ and expression_desc =
   | Coexpr_record_update of
       expression * label_type_description global * expression
   | Coexpr_constraint of expression * type_expression
-  | Coexpr_trywith of expression * (pattern * expression) list
+  | Coexpr_trywith of
+      expression * (pattern * expression option * expression) list
   | Coexpr_assert of expression
   | Coexpr_ifthenelse of expression * expression * expression
-  | Coexpr_match of expression * (pattern * expression) list
-  | Coexpr_when_match of expression * expression
+  | Coexpr_match of expression * (pattern * expression option * expression) list
   | Coexpr_while of expression * expression
   | Coexpr_for of
       ident * expression * expression * direction_flag * expression
@@ -101,17 +101,16 @@ and process_desc =
   | Coproc_def_dyn of (pattern * process) * process
   | Coproc_def_and_dyn of (pattern * process) list * process
   | Coproc_run of expression
-  | Coproc_until of event_config * process * process option
+  | Coproc_until of event_config * expression option * process * process option
   | Coproc_when of event_config * process
   | Coproc_control of event_config * expression option * process
   | Coproc_get of expression * pattern * process
   | Coproc_present of event_config * process * process
   | Coproc_ifthenelse of expression * process * process
-  | Coproc_match of expression * (pattern * process) list
-  | Coproc_when_match of expression * process
+  | Coproc_match of expression * (pattern * expression option * process) list
   | Coproc_await of immediate_flag * event_config
   | Coproc_await_val of
-      immediate_flag * await_kind * event_config * process
+      immediate_flag * await_kind * event_config * expression option * process
 
 (* event configuration *)
 and event_config =
