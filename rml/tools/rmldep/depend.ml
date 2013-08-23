@@ -144,26 +144,31 @@ let rec add_expr bv exp =
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
   | Pexpr_run(e1) -> add_expr bv e1
-  | Pexpr_until(cfg, e1, ope) ->
-      add_expr bv cfg;
+  | Pexpr_until(cfg, e1, oe) ->
+      add_config bv cfg;
       add_expr bv e1;
-      Misc.opt_iter (fun (p,e) -> add_pattern bv p; add_expr bv e) ope
-  | Pexpr_when(e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pexpr_control(e1, ope, e2) ->
-      add_expr bv e1;
-      Misc.opt_iter (fun (p,e) -> add_pattern bv p; add_expr bv e) ope;
-      add_expr bv e2
+      Misc.opt_iter (fun e -> add_expr bv e) oe
+  | Pexpr_when(cfg, e1) -> add_config bv cfg; add_expr bv e1
+  | Pexpr_control(cfg, oe, e1) ->
+      add_config bv cfg;
+      Misc.opt_iter (fun e -> add_expr bv e) oe;
+      add_expr bv e1
   | Pexpr_get(e1) -> add_expr bv e1
-  | Pexpr_present(e1, e2, e3) -> add_expr bv e1; add_expr bv e2; add_expr bv e3
-  | Pexpr_await(_, e1) -> add_expr bv e1
-  | Pexpr_await_val(_, _, e1, p, e2) ->
-      add_expr bv e1; add_pattern bv p; add_expr bv e2
+  | Pexpr_present(cfg, e1, e2) ->
+      add_config bv cfg; add_expr bv e1; add_expr bv e2
+  | Pexpr_await(_, cfg) -> add_config bv cfg
+  | Pexpr_await_val(_, _, cfg, e1) ->
+      add_config bv cfg; add_config bv cfg; add_expr bv e1
   | Pexpr_pre(_, e1) -> add_expr bv e1
   | Pexpr_last(e1) -> add_expr bv e1
   | Pexpr_default(e1) -> add_expr bv e1
-  | Pconf_present(e1) -> add_expr bv e1
-  | Pconf_and(e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pconf_or(e1, e2) -> add_expr bv e1; add_expr bv e2
+
+and add_config bv conf =
+  match conf.pconf_desc with
+  | Pconf_present(e1, op) ->
+      add_expr bv e1; Misc.opt_iter (fun p -> add_pattern bv p) op
+  | Pconf_and(e1, e2) -> add_config bv e1; add_config bv e2
+  | Pconf_or(e1, e2) -> add_config bv e1; add_config bv e2
 
 and add_pat_expr_list bv pel =
   List.iter (fun (p, e) -> add_pattern bv p; add_expr bv e) pel

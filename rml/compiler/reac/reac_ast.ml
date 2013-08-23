@@ -92,21 +92,21 @@ and expression_desc =
       (ident * type_expression option)
 	* (expression * expression) option * expression
   | Rexpr_run of expression
-  | Rexpr_until of event_config * expression * (pattern * expression) option
+  | Rexpr_until of event_config * expression * expression option
   | Rexpr_when of event_config * expression
-  | Rexpr_control of event_config * (pattern * expression) option * expression
+  | Rexpr_control of event_config * expression option * expression
   | Rexpr_get of expression * pattern * expression
   | Rexpr_present of event_config * expression * expression
   | Rexpr_await of immediate_flag * event_config
   | Rexpr_await_val of
-      immediate_flag * await_kind * expression * pattern * expression
+      immediate_flag * await_kind * event_config * expression
 
 (* event configuration *)
 and event_config =
     { conf_desc: event_config_desc;
       conf_loc: Location.t; }
 and event_config_desc =
-  | Rconf_present of expression
+  | Rconf_present of expression * pattern option
   | Rconf_and of event_config * event_config
   | Rconf_or of event_config * event_config
 

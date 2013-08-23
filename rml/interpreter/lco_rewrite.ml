@@ -96,6 +96,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	let is_true2 = c2 () in
 	(fun () -> is_true1() || is_true2())
 
+    let cfg_or_option = cfg_or
 
 (* ------------------------------------------------------------------------ *)
 

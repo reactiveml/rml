@@ -309,36 +309,36 @@ let rec expression i ppf x =
   | Pexpr_run (e) ->
       line i ppf "Pexpr_run\n";
       expression i ppf e;
-  | Pexpr_until (s,e, patt_expr_opt) ->
+  | Pexpr_until (s, e, expr_opt) ->
       line i ppf "Pexpr_until\n";
-      expression i ppf s;
+      event_config i ppf s;
       expression i ppf e;
-      option i pattern_x_expression_case ppf patt_expr_opt
+      option i expression ppf expr_opt
   | Pexpr_when (s,e) ->
       line i ppf "Pexpr_when\n";
-      expression i ppf s;
+      event_config i ppf s;
       expression i ppf e;
-  | Pexpr_control (s, peo, e) ->
+  | Pexpr_control (s, expr_opt, e) ->
       line i ppf "Pexpr_control\n";
-      expression i ppf s;
-      option i pattern_x_expression_case ppf peo;
+      event_config i ppf s;
+      option i expression ppf expr_opt;
       expression i ppf e;
   | Pexpr_get (e) ->
       line i ppf "Pexpr_values\n";
       expression i ppf e;
   | Pexpr_present (s,e1,e2) ->
       line i ppf "Pexpr_present\n";
-      expression i ppf s;
+      event_config i ppf s;
       expression i ppf e1;
       expression i ppf e2;
   | Pexpr_await (imf,s) ->
       line i ppf "Pexpr_await %a\n" fmt_immediate_flag imf;
-      expression i ppf s;
-  | Pexpr_await_val (flag1, flag2, s, p, e) ->
+      event_config i ppf s;
+  | Pexpr_await_val (flag1, flag2, s, e) ->
       line i ppf "Pexpr_await_val %a %a\n"
 	fmt_immediate_flag flag1 fmt_await_kind_flag flag2;
-      expression i ppf s;
-      pattern_x_expression_def i ppf (p,e);
+      event_config i ppf s;
+      expression i ppf e;
   | Pexpr_pre (k, s) ->
       line i ppf "Pexpr_pre %a\n" fmt_pre_kind k;
       expression i ppf s;
@@ -348,17 +348,21 @@ let rec expression i ppf x =
   | Pexpr_default s ->
       line i ppf "Pexpr_default\n";
       expression i ppf s;
-  | Pconf_present (e) ->
+
+and event_config i ppf cfg =
+  match cfg.pconf_desc with
+  | Pconf_present (e, p) ->
       line i ppf "Pconf_present\n";
-      expression i ppf e
+      expression i ppf e;
+      option i pattern ppf p
   | Pconf_and (e1,e2) ->
       line i ppf "Pconf_and\n";
-      expression i ppf e1;
-      expression i ppf e2
+      event_config i ppf e1;
+      event_config i ppf e2
   | Pconf_or (e1,e2) ->
       line i ppf "Pconf_or\n";
-      expression i ppf e1;
-      expression i ppf e2
+      event_config i ppf e1;
+      event_config i ppf e2
 
 and pattern_x_expression_case i ppf (p, e) =
   line i ppf "<case>\n";

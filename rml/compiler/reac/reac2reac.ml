@@ -35,9 +35,9 @@ let expr_map  =
   let rec config_map f config =
     let loc = config.conf_loc in
     match config.conf_desc with
-    | Rconf_present e ->
+    | Rconf_present (e, patt_opt) ->
 	let e' = f e in
-	make_conf (Rconf_present e') loc
+	make_conf (Rconf_present (e', patt_opt)) loc
     | Rconf_and (c1, c2) ->
 	let c1' = config_map f c1 in
 	let c2' = config_map f c2 in
@@ -290,11 +290,11 @@ let expr_map  =
 	  f (make_expr_all
 	       (Rexpr_until (config', e', None))
                typ static reactivity reactivity_effect loc)
-      | Rexpr_until (config, e, Some(p,e1)) ->
+      | Rexpr_until (config, e, Some e1) ->
 	  let config' = config_map f config in
 	  let e' = expr_map f e in
 	  let e1' = expr_map f e1 in
-	  f (make_expr_all ( Rexpr_until (config', e', Some(p,e1')))
+	  f (make_expr_all (Rexpr_until (config', e', Some e1'))
 	       typ static reactivity reactivity_effect loc)
 
       | Rexpr_when (config, e) ->
@@ -309,12 +309,12 @@ let expr_map  =
 	  f (make_expr_all
 	       (Rexpr_control (config', None, e'))
                typ static reactivity reactivity_effect loc)
-      | Rexpr_control (config, Some(p,e1), e) ->
+      | Rexpr_control (config, Some e1, e) ->
 	  let config' = config_map f config in
 	  let e1' = expr_map f e1 in
 	  let e' = expr_map f e in
 	  f (make_expr_all
-	       (Rexpr_control (config', Some(p,e1'), e'))
+	       (Rexpr_control (config', Some e1', e'))
 	       typ static reactivity reactivity_effect loc)
 
       | Rexpr_get (e,patt,e1) ->
@@ -336,10 +336,10 @@ let expr_map  =
 	  f (make_expr_all (Rexpr_await (immediate_flag, config'))
 	       typ static reactivity reactivity_effect loc)
 
-      | Rexpr_await_val (immediate, kind, e, patt, e1) ->
-	  let e' = expr_map f e in
+      | Rexpr_await_val (immediate, kind, config, e1) ->
+	  let config' = config_map f config in
 	  let e1' = expr_map f e1 in
-	  f (make_expr_all (Rexpr_await_val (immediate, kind, e', patt, e1'))
+	  f (make_expr_all (Rexpr_await_val (immediate, kind, config', e1'))
 	       typ static reactivity reactivity_effect loc)
     in
     expr'.expr_type <- expr.expr_type;

@@ -82,25 +82,28 @@ and expression_desc =
 	(expression * expression) option * expression
   | Pexpr_process of expression
   | Pexpr_run of expression
-  | Pexpr_until of
-      event_config * expression * (pattern * expression) option
-  (* signal        * body       * handler *)
+  | Pexpr_until of event_config * expression * expression option
+                (* signal        * body       * handler *)
   | Pexpr_when of event_config * expression
-  | Pexpr_control of event_config * (pattern * expression) option * expression
+  | Pexpr_control of event_config * expression option * expression
+                  (* signal       * when condition    * body *)
   | Pexpr_get of expression
   | Pexpr_present of event_config * expression * expression
   | Pexpr_await of immediate_flag * event_config
   | Pexpr_await_val of
-      immediate_flag * await_kind * expression * pattern * expression
+      immediate_flag * await_kind * event_config * expression
   | Pexpr_pre of pre_kind * expression
   | Pexpr_last of expression
   | Pexpr_default of expression
+
 (* event configuration *)
-  | Pconf_present of expression
+and event_config =
+    { pconf_desc: event_config_desc;
+      pconf_loc: Location.t; }
+and event_config_desc =
+  | Pconf_present of expression * pattern option
   | Pconf_and of event_config * event_config
   | Pconf_or of event_config * event_config
-
-and event_config = expression
 
 (* Patterns *)
 and pattern =

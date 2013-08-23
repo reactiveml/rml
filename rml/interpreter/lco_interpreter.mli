@@ -54,9 +54,9 @@ module type S =
     val cfg_present': ('a,'b) event -> 'b event_cfg
     val cfg_present: (unit -> ('a,'b) event) -> 'b event_cfg
     val cfg_and: 'a event_cfg -> 'b event_cfg -> ('a * 'b) event_cfg
-    val cfg_or: 'a event_cfg -> 'a event_cfg -> 'a event_cfg
-    (* val cfg_or_option: *)
-    (*     'a event_cfg -> 'b event_cfg -> ('a option * 'b option) event_cfg *)
+    (* val cfg_or: 'a event_cfg -> 'a event_cfg -> 'a event_cfg *)
+    val cfg_or_option:
+        'a event_cfg -> 'b event_cfg -> ('a option * 'b option) event_cfg
 
     val rml_nothing: unit expr
     val rml_compute: (unit -> 'a) -> 'a expr

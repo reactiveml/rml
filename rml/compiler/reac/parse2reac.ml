@@ -265,7 +265,9 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
       in
       (vars, List.rev rlab_rpatt_list)
   in
-  translate_pattern [], translate_pattern_list [], translate_pattern_record []
+  (fun ?(or_vars=[]) is_global p -> translate_pattern or_vars is_global p),
+  translate_pattern_list [],
+  translate_pattern_record []
 
 (* Translation of identifier *)
 let translate_ident env x =
@@ -462,65 +464,92 @@ let rec translate env e =
     | Pexpr_run (expr) ->
 	Rexpr_run (translate env expr)
 
-    | Pexpr_until (s, expr, patt_expr_opt) ->
-	Rexpr_until (translate_conf env s,
-		     translate env expr,
-		     opt_map
-		       (translate_patt_expr env)
-		       patt_expr_opt)
+    | Pexpr_until (conf, expr, expr_opt) ->
+        let rexpr = translate env expr in
+        let vars, rconf = translate_conf env conf in
+        let new_env = add_varpatt env vars in
+        Rexpr_until (rconf,
+                     rexpr,
+                     opt_map (translate new_env) expr_opt)
 
-    | Pexpr_when (s, expr) ->
-	Rexpr_when (translate_conf env s,
-		    translate env expr)
+    | Pexpr_when (conf, expr) ->
+        let rexpr = translate env expr in
+        let vars, rconf = translate_conf env conf in
+        if vars <> [] then event_config_err conf.pconf_loc;
+        Rexpr_when (rconf, rexpr)
 
-    | Pexpr_control (s, patt_expr_opt, expr) ->
-	Rexpr_control (translate_conf env s,
-		       opt_map
-			 (translate_patt_expr env)
-			 patt_expr_opt,
-		       translate env expr)
+    | Pexpr_control (conf, expr_opt, expr) ->
+        let rexpr = translate env expr in
+        let vars, rconf = translate_conf env conf in
+        let new_env = add_varpatt env vars in
+        Rexpr_control (rconf,
+                       opt_map (translate new_env) expr_opt,
+                       rexpr)
 
-    | Pexpr_present (s, e1, e2) ->
-	Rexpr_present(translate_conf env s,
+    | Pexpr_present (conf, e1, e2) ->
+        let vars, rconf = translate_conf env conf in
+        if vars <> [] then event_config_err conf.pconf_loc;
+        Rexpr_present(rconf,
 		      translate env e1,
 		      translate env e2)
 
-    | Pexpr_await (flag, s) ->
-	Rexpr_await (flag,
-		     translate_conf env s)
+    | Pexpr_await (flag, conf) ->
+        let vars, rconf = translate_conf env conf in
+        if vars <> [] then event_config_err conf.pconf_loc;
+        Rexpr_await (flag, rconf)
 
-    | Pexpr_await_val (flag, k, s, patt, expr) ->
-	let vars, rpatt = translate_pattern false patt in
-	let new_env = add_varpatt env vars in
-	Rexpr_await_val (flag,
-			 k,
-			 translate env s,
-			 rpatt,
-			 translate new_env expr)
+    | Pexpr_await_val (flag, k, conf, expr) ->
+        let vars, rconf = translate_conf env conf in
+        let new_env = add_varpatt env vars in
+        Rexpr_await_val (flag,
+                         k,
+                         rconf,
+                         translate new_env expr)
 
     | Pexpr_get _ ->
 	raise (Internal (e.pexpr_loc,
 			 "Parse2reac.translate: expr"))
-    | Pconf_or _ | Pconf_and _ | Pconf_present _ ->
-	event_config_err e.pexpr_loc
   in
   make_expr rexpr e.pexpr_loc
 
 (* Translation of event configurations *)
-and translate_conf env c =
-  let rconf =
-    match c.pexpr_desc with
-    | Pconf_present e -> Rconf_present (translate env e)
+and translate_conf =
+  let rec translate_conf or_vars env c =
+    let vars, rconf =
+      match c.pconf_desc with
+      | Pconf_present (e, None) ->
+          [], Rconf_present (translate env e, None)
 
-    | Pconf_and (conf1, conf2) ->
-	Rconf_and (translate_conf env conf1, translate_conf env conf2)
+      | Pconf_present (e, Some patt) ->
+          let vars, rpatt = translate_pattern ~or_vars:or_vars false patt in
+          vars, Rconf_present (translate env e, Some rpatt)
 
-    | Pconf_or (conf1, conf2) ->
-	Rconf_or (translate_conf env conf1, translate_conf env conf2)
+      | Pconf_and (conf1, conf2) ->
+          let vars1, rconf1 = translate_conf or_vars env conf1 in
+          let vars2, rconf2 = translate_conf or_vars env conf2 in
+	  let vars =
+	    List.fold_left
+	      (fun acc ((x,_) as e)  ->
+		if List.mem_assoc x vars1
+		then multiply_bound_variable_err x c.pconf_loc
+		else e::acc)
+	      vars1 vars2
+	  in
+	  vars, Rconf_and (rconf1, rconf2)
 
-    | _ -> Rconf_present (translate env c)
+      | Pconf_or (conf1, conf2) ->
+          let vars1, rconf1 = translate_conf or_vars env conf1 in
+          let vars2, rconf2 = translate_conf vars1 env conf2 in
+          if List.for_all (fun (x,_) -> List.mem_assoc x vars1) vars2 &
+            List.for_all (fun (x,_) -> List.mem_assoc x vars2) vars1
+          then
+            vars1, Rconf_or (rconf1, rconf2)
+          else
+            orconfig_vars c.pconf_loc
+    in
+    vars, make_conf rconf c.pconf_loc
   in
-  make_conf rconf c.pexpr_loc
+  (fun env c -> translate_conf [] env c)
 
 (* Translation of let definitions in an ML context *)
 and translate_let is_global env rec_flag patt_expr_list =

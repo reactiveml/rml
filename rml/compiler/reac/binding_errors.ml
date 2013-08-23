@@ -68,8 +68,14 @@ let orpat_vars loc =
     Location.print loc;
   raise Error
 
+let orconfig_vars loc =
+  Format.fprintf !err_fmt
+    "%aVariables must occur on both branchs of this \\/ configuration.\n"
+    Location.print loc;
+  raise Error
+
 let event_config_err loc =
   Format.fprintf !err_fmt
-    "%aEvent configuration outside of a await, present, until, control or when.\n"
+    "%aIt is not allowed to get the value of a signal in this context.\n"
     Location.print loc;
   raise Error

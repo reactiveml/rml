@@ -107,6 +107,17 @@ let rec vars_of_patt p =
   | Rpatt_constraint (patt, _) -> vars_of_patt patt
 
 
+(* Compute the list of variables introduce in an event configuration *)
+let rec vars_of_config config =
+  match config.conf_desc with
+  | Rconf_present (e, None) -> []
+
+  | Rconf_present (e, Some p) -> vars_of_patt p
+
+  | Rconf_and (cfg1, cfg2) -> (vars_of_config cfg1) @ (vars_of_config cfg2)
+
+  | Rconf_or (cfg1, cfg2) -> (vars_of_config cfg1) @ (vars_of_config cfg2)
+
 (* Checks that a variable is not in a variables list *)
 let rec is_free x vars =
   begin match vars with
@@ -297,10 +308,10 @@ let expr_free_vars e =
     | Rexpr_until (config, e, None) ->
 	config_free_vars vars config;
 	expr_free_vars vars e
-    | Rexpr_until (config, e, Some(p,e1)) ->
+    | Rexpr_until (config, e, Some e1) ->
 	config_free_vars vars config;
 	expr_free_vars vars e;
-	let vars' = (vars_of_patt p) @ vars in
+	let vars' = (vars_of_config config) @ vars in
 	expr_free_vars vars' e1
 
     | Rexpr_when (config, e) ->
@@ -310,10 +321,10 @@ let expr_free_vars e =
     | Rexpr_control (config, None, e) ->
 	config_free_vars vars config;
 	expr_free_vars vars e
-    | Rexpr_control (config, Some(p,e1), e) ->
+    | Rexpr_control (config, Some e1, e) ->
 	config_free_vars vars config;
 	expr_free_vars vars e;
-	let vars' = (vars_of_patt p) @ vars in
+	let vars' = (vars_of_config config) @ vars in
 	expr_free_vars vars' e1
 
     | Rexpr_get (e,patt,e1) ->
@@ -329,16 +340,16 @@ let expr_free_vars e =
     | Rexpr_await (immediate_flag, config) ->
 	config_free_vars vars config
 
-    | Rexpr_await_val (immediate, kind, e, patt, e1) ->
-	expr_free_vars vars e;
-	let vars' = (vars_of_patt patt) @ vars in
+    | Rexpr_await_val (immediate, kind, config, e1) ->
+	config_free_vars vars config;
+	let vars' = (vars_of_config config) @ vars in
 	expr_free_vars vars' e1
 
     end
 
   and config_free_vars vars config =
     match config.conf_desc with
-    | Rconf_present e ->
+    | Rconf_present (e, _) ->
 	expr_free_vars vars e
 
     | Rconf_and (c1, c2) ->

@@ -101,9 +101,9 @@ and process_desc =
   | Coproc_def_dyn of (pattern * process) * process
   | Coproc_def_and_dyn of (pattern * process) list * process
   | Coproc_run of expression
-  | Coproc_until of event_config * process * (pattern * process) option
+  | Coproc_until of event_config * process * process option
   | Coproc_when of event_config * process
-  | Coproc_control of event_config * (pattern * expression) option * process
+  | Coproc_control of event_config * expression option * process
   | Coproc_get of expression * pattern * process
   | Coproc_present of event_config * process * process
   | Coproc_ifthenelse of expression * process * process
@@ -111,14 +111,14 @@ and process_desc =
   | Coproc_when_match of expression * process
   | Coproc_await of immediate_flag * event_config
   | Coproc_await_val of
-      immediate_flag * await_kind * expression * pattern * process
+      immediate_flag * await_kind * event_config * process
 
 (* event configuration *)
 and event_config =
     { coconf_desc: event_config_desc;
       coconf_loc: Location.t; }
 and event_config_desc =
-  | Coconf_present of expression
+  | Coconf_present of expression * pattern option
   | Coconf_and of event_config * event_config
   | Coconf_or of event_config * event_config
 

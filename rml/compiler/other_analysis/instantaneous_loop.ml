@@ -566,7 +566,7 @@ let instantaneous_loop_expr =
 	  let ty_config = config_analyse vars config in
 	  let ty = analyse vars e in
 	  Env.append ty_config ty
-      | Rexpr_until (config, e, Some(p,e1)) ->
+      | Rexpr_until (config, e, Some e1) ->
 	  let ty_config = config_analyse vars config in
 	  let ty = analyse vars e in
 	  let _ = analyse Env.empty e1 in
@@ -581,7 +581,7 @@ let instantaneous_loop_expr =
 	  let ty_config = config_analyse vars config in
 	  let ty = analyse vars e in
 	  Env.append ty_config ty
-      | Rexpr_control (config, Some(p,e1), e) ->
+      | Rexpr_control (config, Some e1, e) ->
 	  let ty_config = config_analyse vars config in
 	  let ty = analyse vars e in
 	  let _ = analyse Env.empty e1 in
@@ -601,12 +601,12 @@ let instantaneous_loop_expr =
       | Rexpr_await (immediate_flag, config) ->
 	  config_analyse vars config
 
-      | Rexpr_await_val (Immediate, One, e, patt, e1) ->
-	  let ty = analyse vars e in
+      | Rexpr_await_val (Immediate, One, e, e1) ->
+	  let ty = config_analyse vars e in
 	  let ty1 = analyse vars e1 in
 	  Env.append ty ty1
-      | Rexpr_await_val (immediate, kind, e, patt, e1) ->
-	  let ty = analyse vars e in
+      | Rexpr_await_val (immediate, kind, e, e1) ->
+	  let ty = config_analyse vars e in
 	  let _ = analyse Env.empty e1 in
 	  ty
       end
@@ -619,7 +619,7 @@ let instantaneous_loop_expr =
 
     and config_analyse vars config =
       match config.conf_desc with
-      | Rconf_present e ->
+      | Rconf_present (e, _) ->
 	  analyse vars e
 
       | Rconf_and (c1, c2) ->

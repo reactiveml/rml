@@ -182,7 +182,7 @@ let rec check_expr_one expr =
   | Rexpr_get (_, _, _)
   | Rexpr_present (_, _, _)
   | Rexpr_await (_, _)
-  | Rexpr_await_val (_, _, _, _, _) -> ()
+  | Rexpr_await_val (_, _, _, _) -> ()
   end;
   expr
 

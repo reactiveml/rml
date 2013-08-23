@@ -78,6 +78,8 @@ let make_rml_type s ty_list =
 		     info = no_info(); }, ty_list))
     Location.none
 
+let make_patt_any () =
+  make_patt Cpatt_any Location.none
 
 let make_patt_unit () =
   make_patt (Cpatt_constant Const_unit) Location.none
@@ -179,6 +181,24 @@ let make_magic () =
 let make_magic_expr () =
   make_expr (make_magic ()) Location.none
 
+(* Creates the pattern "None" *)
+let make_patt_none () =
+  let none =
+    { gi = { qual="Pervasives";
+             id=Ident.create Ident.gen_var "None" Ident.Internal; };
+      info = no_info(); }
+  in
+  make_patt (Cpatt_construct (none, None)) Location.none
+
+
+(* Creates the pattern "Some p" *)
+let make_patt_some p =
+  let some =
+    { gi = { qual="Pervasives";
+             id=Ident.create Ident.gen_var "Some" Ident.Internal; };
+      info = no_info(); }
+  in
+  make_patt (Cpatt_construct (some, Some p)) Location.none
 
 (* Translation of type expressions *)
 let rec ctype_expr_of_type_expr typ =

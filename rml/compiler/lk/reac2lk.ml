@@ -460,6 +460,8 @@ and translate_proc e k (ctrl: ident) =
 (* C_k[do p until s(x) -> p' done] =                                       *)
 (*   bind K = k in                                                         *)
 (*   start ctrl C[s] (fun ctrl' -> C_(end.k, ctrl')[p]) (x -> C_k[p'])     *)
+(*> XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
+(*
 	| Rexpr_until (s, proc, patt_proc_opt) ->
             let k_id = make_var "k" in
 	    let k_var = make_proc (Kproc_var k_id) Location.none in
@@ -486,6 +488,8 @@ and translate_proc e k (ctrl: ident) =
 			  translate_proc proc' k_var ctrl)
 		     end))
 		 Location.none)
+*)
+(*< XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
 
 (* C_k[do p when s] =                                                      *)
 (*   bind K = k in                                                         *)
@@ -602,22 +606,27 @@ and translate_proc e k (ctrl: ident) =
 	| Rexpr_await (flag, s) ->
 	    Kproc_await (flag, translate_conf s, k, ctrl)
 
-	| Rexpr_await_val (flag1, flag2, s, patt, proc) ->
-	    let k_id = make_var "k" in
-	    let k_var = make_proc (Kproc_var k_id) Location.none in
-	    let k_patt =
-	      make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none
-	    in
-	    Kproc_bind
-	      (k_patt, k,
-	     make_proc
-		 (Kproc_await_val (flag1,
-				   flag2,
-				   translate_ml s,
-				   translate_pattern patt,
-				   translate_proc proc k_var ctrl,
-				   ctrl))
-		 Location.none)
+(*> XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
+	| Rexpr_await_val (flag1, flag2, conf, proc) ->
+            begin match conf.conf_desc with
+            | Rconf_present (s, Some patt) ->
+	        let k_id = make_var "k" in
+	        let k_var = make_proc (Kproc_var k_id) Location.none in
+	        let k_patt =
+	          make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none
+	        in
+	        Kproc_bind
+	          (k_patt, k,
+	           make_proc
+		     (Kproc_await_val (flag1,
+				       flag2,
+				       translate_ml s,
+				       translate_pattern patt,
+				       translate_proc proc k_var ctrl,
+				       ctrl))
+		     Location.none)
+            end
+(*< XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
 
 	| _ ->
 	    raise (Internal (e.expr_loc,
@@ -718,7 +727,9 @@ and translate_proc_let =
 and translate_conf conf =
   let kconf =
     match conf.conf_desc with
-    | Rconf_present e -> Kconf_present (translate_ml e)
+(*> XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
+    | Rconf_present (e, None) -> Kconf_present (translate_ml e)
+(*< XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
 
     | Rconf_and (c1,c2) ->
 	Kconf_and (translate_conf c1, translate_conf c2)

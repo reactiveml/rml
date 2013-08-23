@@ -69,22 +69,23 @@ let mkpatt d =
 let mkexpr d =
   { pexpr_desc = d;
     pexpr_loc = symbol_rloc(); }
+let mkconf d =
+  { pconf_desc = d;
+    pconf_loc = symbol_rloc(); }
 let mkimpl d =
   { pimpl_desc = d; pimpl_loc = symbol_rloc() }
 let mkintf d =
   { pintf_desc = d; pintf_loc = symbol_rloc() }
 
-let rec mkexpr_until body sig_patt_expr_opt_list =
-  match sig_patt_expr_opt_list with
+let rec mkexpr_until body cfg_expr_opt_list =
+  match cfg_expr_opt_list with
   | [] -> raise Parse_error
-  | [(s, patt_expr_opt)] ->
+  | [(s, expr_opt)] ->
       mkexpr (Pexpr_until (s,
 			   body,
-			   (patt_expr_opt)))
-  | (s, patt_expr_opt) :: list ->
-      mkexpr (Pexpr_until (s,
-			   mkexpr_until body list,
-			   (patt_expr_opt)))
+			   expr_opt))
+  | (s, expr_opt) :: list ->
+      assert false
 
 let reloc_patt x = { x with ppatt_loc = symbol_rloc () };;
 let reloc_expr x = { x with pexpr_loc = symbol_rloc () };;
@@ -380,6 +381,7 @@ The precedences must be listed from low to high.
 %nonassoc below_DOT
 %left RUN
 %nonassoc DOT
+%nonassoc below_LPAREN
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT HALT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
@@ -546,14 +548,10 @@ expr:
       { mkinfix $1 ">" $3 }
   | expr OR expr
       { mkinfix $1 "or" $3 }
-  | expr BACKSLASHSLASH expr
-      { mkexpr(Pconf_or($1,$3)) }
   | expr AMPERSAND expr
       { mkinfix $1 "&" $3 }
   | expr AMPERAMPER expr
       { mkinfix $1 "&&" $3 }
-  | expr SLASHBACKSLASH expr
-      { mkexpr(Pconf_and($1,$3)) }
   | expr COLONEQUAL expr
       { mkinfix $1 ":=" $3 }
   | subtractive expr %prec prec_unary_minus
@@ -584,37 +582,32 @@ expr:
       { mkexpr(Pexpr_signal(List.rev $2, Some($4, $6), $8)) }
   | DO par_expr UNTIL opt_bar until_cases DONE
       { mkexpr_until $2 (List.rev $5) }
-  | DO par_expr WHEN simple_expr DONE
+  | DO par_expr WHEN event_config DONE
       { mkexpr(Pexpr_when($4, $2)) }
-  | CONTROL par_expr WITH simple_expr DONE
+  | CONTROL par_expr WITH event_config DONE
       { mkexpr(Pexpr_control($4, None, $2)) }
-  | CONTROL par_expr WITH simple_expr LPAREN pattern RPAREN DONE
-      { mkexpr(Pexpr_control($4,
-			     Some($6, mkexpr (Pexpr_constant(Const_bool true))),
-			     $2)) }
-  | CONTROL par_expr WITH simple_expr LPAREN pattern RPAREN WHEN par_expr DONE
-      { mkexpr(Pexpr_control($4, Some ($6, $9), $2)) }
-
-  | PRESENT par_expr THEN expr ELSE expr
+  | CONTROL par_expr WITH event_config WHEN par_expr DONE
+      { mkexpr(Pexpr_control($4, Some $6, $2)) }
+  | PRESENT event_config THEN expr ELSE expr
       { mkexpr(Pexpr_present($2, $4, $6)) }
-  | PRESENT par_expr THEN expr
+  | PRESENT event_config THEN expr
       { mkexpr(Pexpr_present($2, $4, ghexpr(Pexpr_nothing))) }
-  | PRESENT par_expr ELSE expr
+  | PRESENT event_config ELSE expr
       { mkexpr(Pexpr_present($2, ghexpr(Pexpr_nothing), $4)) }
-  | AWAIT await_flag simple_expr
+  | AWAIT await_flag event_config
       { if (snd $2) = One
         then raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
         else mkexpr(Pexpr_await(fst $2, $3)) }
-  | AWAIT await_flag simple_expr LPAREN pattern RPAREN IN par_expr
+  | AWAIT await_flag event_config IN par_expr
       { match $2 with
         | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
-	| im, k -> mkexpr(Pexpr_await_val(im, k, $3, $5, $8)) }
-  | AWAIT await_flag simple_expr LPAREN pattern RPAREN WHEN par_expr IN par_expr
+	| im, k -> mkexpr(Pexpr_await_val(im, k, $3, $5)) }
+  | AWAIT await_flag event_config WHEN par_expr IN par_expr
       { match $2 with
         | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
 	| im, k ->
-	    mkexpr(Pexpr_await_val(im, k, $3, $5,
-				   { pexpr_desc = Pexpr_when_match($8, $10);
+	    mkexpr(Pexpr_await_val(im, k, $3,
+				   { pexpr_desc = Pexpr_when_match($5, $7);
 				     pexpr_loc = Location.none; })) }
   | PROCESS proc_def
       { $2 }
@@ -705,11 +698,98 @@ simple_expr:
 !!!!!!!!!! *)
 	| _ -> raise (Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2))) }
 ;
+very_simple_expr: /* simple_expr without "LPAREN expr RPAREN" */
+    val_longident
+      { mkexpr(Pexpr_ident $1) }
+  | constant
+      { mkexpr(Pexpr_constant $1) }
+  | constr_longident %prec prec_constant_constructor
+      { mkexpr(Pexpr_construct($1, None)) }
+  | BEGIN par_expr END
+      { reloc_expr $2 }
+  | BEGIN END
+      { mkexpr (Pexpr_constant Const_unit) }
+  | BEGIN par_expr error
+      { unclosed "begin" 1 "end" 3 }
+  | very_simple_expr DOT label_longident
+      { mkexpr(Pexpr_record_access($1, $3)) }
+  | very_simple_expr DOT LPAREN par_expr RPAREN
+      { mkexpr(Pexpr_apply(ghexpr(Pexpr_ident(array_function "Array" "get")),
+                           [$1; $4])) }
+  | very_simple_expr DOT LPAREN par_expr error
+      { unclosed "(" 3 ")" 5 }
+  | very_simple_expr DOT LBRACKET par_expr RBRACKET
+      { mkexpr(Pexpr_apply(ghexpr(Pexpr_ident(array_function "String" "get")),
+                           [$1; $4])) }
+  | very_simple_expr DOT LBRACKET par_expr error
+      { unclosed "[" 3 "]" 5 }
+  | LBRACE record_expr RBRACE
+      { mkexpr(Pexpr_record($2)) }
+  | LBRACE record_expr error
+      { unclosed "{" 1 "}" 5 }
+  | LBRACE simple_expr WITH record_expr RBRACE
+      { mkexpr(Pexpr_record_with ($2, $4)) }
+  | LBRACKETBAR expr_semi_list opt_semi BARRBRACKET
+      { mkexpr(Pexpr_array(List.rev $2)) }
+  | LBRACKETBAR expr_semi_list opt_semi error
+      { unclosed "[|" 1 "|]" 4 }
+  | LBRACKETBAR BARRBRACKET
+      { mkexpr(Pexpr_array []) }
+  | LBRACKET expr_semi_list opt_semi RBRACKET
+      { reloc_expr (mktailexpr (List.rev $2)) }
+  | LBRACKET expr_semi_list opt_semi error
+      { unclosed "[" 1 "]" 4 }
+  | PREFIXOP simple_expr
+      { mkexpr(Pexpr_apply(mkoperator $1 1, [$2])) }
+  | NOTHING
+      { mkexpr Pexpr_nothing }
+  | PAUSE
+      { mkexpr Pexpr_pause }
+  | HALT
+      { mkexpr Pexpr_halt }
+  | LOOP par_expr END
+      { mkexpr (Pexpr_loop $2) }
+  | SHARP ident
+      { match $2 with
+        | "suspend" ->
+	    mkexpr
+	      (Pexpr_apply
+		 (mkexpr (Pexpr_ident
+			    (mkident (Pdot("Rmltop_controller",
+					   "set_suspend")) 2)),
+		  [mkexpr (Pexpr_constant Const_unit)]))
+(* !!!!!!!!!!
+	    mkexpr
+	      (Pexpr_seq
+		 (mkexpr
+		    (Pexpr_apply
+		       (mkexpr (Pexpr_ident
+				  (mkident (Pdot("Rmltop_controller",
+						 "set_suspend")) 2)),
+			[mkexpr (Pexpr_constant Const_unit)])),
+		  mkexpr Pexpr_pause))
+!!!!!!!!!! *)
+	| _ -> raise (Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2))) }
+;
 pre_expr:
     simple_expr
       { Status, $1 }
   | QUESTION simple_expr
       { Value, $2 }
+;
+event_config:
+    very_simple_expr  %prec below_LPAREN
+      { mkconf(Pconf_present($1, None))}
+  | very_simple_expr LPAREN pattern RPAREN
+      { mkconf(Pconf_present($1, Some $3))}
+  | event_config BACKSLASHSLASH event_config
+      { mkconf(Pconf_or($1,$3)) }
+  | event_config SLASHBACKSLASH event_config
+      { mkconf(Pconf_and($1,$3)) }
+  | LPAREN event_config RPAREN
+      { $2 }
+  | LPAREN event_config error
+      { unclosed "(" 1 ")" 3 }
 ;
 simple_expr_list:
     simple_expr
@@ -786,8 +866,7 @@ match_action:
 							   ($2, $4)) }
 ;
 until_action:
-    /* empty */                     { mkexpr Pexpr_nothing }
-  | MINUSGREATER par_expr                       { $2 }
+    MINUSGREATER par_expr                       { $2 }
   | WHEN par_expr
       { mkexpr(Pexpr_when_match($2, { pexpr_desc = Pexpr_nothing;
 				      pexpr_loc = Location.none; })) }
@@ -817,15 +896,12 @@ type_constraint:
 ;
 
 until_cases:
-    simple_expr                                 { [$1, None] }
+    event_config                                { [$1, None] }
   | until_handlers                              { $1 }
 ;
 until_handlers:
-    simple_expr LPAREN pattern RPAREN until_action
-                                              { [$1, Some($3, $5)] }
-  | simple_expr MINUSGREATER par_expr
-                                              { [$1,
-						 Some(mkpatt(Ppatt_any), $3)] }
+    event_config until_action
+                                              { [$1, Some $2] }
 /*
   | until_handlers BAR simple_expr LPAREN pattern RPAREN MINUSGREATER par_expr
                                               { ($3, Some($5, $8)) :: $1 }

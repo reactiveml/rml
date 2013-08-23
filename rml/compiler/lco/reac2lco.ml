@@ -403,23 +403,17 @@ and translate_proc p =
 	| Rexpr_run (expr) ->
 	    Coproc_run (translate_ml expr)
 
-	| Rexpr_until (s, proc, patt_proc_opt) ->
-	    Coproc_until (translate_conf s,
+	| Rexpr_until (conf, proc, proc_opt) ->
+	    Coproc_until (translate_conf conf,
 			  translate_proc proc,
-			  opt_map
-			    (fun (patt, proc) ->
-			      translate_pattern patt, translate_proc proc)
-			    patt_proc_opt)
+			  opt_map translate_proc proc_opt)
 
-	| Rexpr_when (s, proc) ->
-	    Coproc_when (translate_conf s, translate_proc proc)
+	| Rexpr_when (conf, proc) ->
+	    Coproc_when (translate_conf conf, translate_proc proc)
 
-	| Rexpr_control (s, patt_proc_opt, proc) ->
-	    Coproc_control (translate_conf s,
-			    opt_map
-			      (fun (patt, proc) ->
-				translate_pattern patt, translate_ml proc)
-			      patt_proc_opt,
+	| Rexpr_control (conf, proc_opt, proc) ->
+	    Coproc_control (translate_conf conf,
+			    opt_map translate_ml proc_opt,
 			    translate_proc proc)
 
 	| Rexpr_get (s, patt, proc) ->
@@ -427,8 +421,8 @@ and translate_proc p =
 			translate_pattern patt,
 			translate_proc proc)
 
-	| Rexpr_present (s, p1, p2) ->
-	    Coproc_present (translate_conf s,
+	| Rexpr_present (conf, p1, p2) ->
+	    Coproc_present (translate_conf conf,
 			    translate_proc p1,
 			    translate_proc p2)
 
@@ -447,13 +441,12 @@ and translate_proc p =
 	| Rexpr_when_match (e1, e2) ->
 	    Coproc_when_match (translate_ml e1, translate_proc e2)
 
-	| Rexpr_await (flag, s) -> Coproc_await (flag, translate_conf s)
+	| Rexpr_await (flag, conf) -> Coproc_await (flag, translate_conf conf)
 
-	| Rexpr_await_val (flag1, flag2, s, patt, proc) ->
+	| Rexpr_await_val (flag1, flag2, conf, proc) ->
 	    Coproc_await_val (flag1,
 			      flag2,
-			      translate_ml s,
-			      translate_pattern patt,
+			      translate_conf conf,
 			      translate_proc proc)
 
 	| _ ->
@@ -468,7 +461,8 @@ and translate_proc p =
 and translate_conf conf =
   let coconf =
     match conf.conf_desc with
-    | Rconf_present e -> Coconf_present (translate_ml e)
+    | Rconf_present (e, patt_opt) ->
+        Coconf_present (translate_ml e, opt_map translate_pattern patt_opt)
 
     | Rconf_and (c1,c2) ->
 	Coconf_and (translate_conf c1, translate_conf c2)

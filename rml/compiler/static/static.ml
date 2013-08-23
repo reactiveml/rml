@@ -396,13 +396,13 @@ let rec static_expr ctx e =
 	then Dynamic Dontknow
 	else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_until (s, p, p_e_opt) ->
+    | Rexpr_until (s, p, e_opt) ->
 	if ctx = Process
 	then
 	  (static_conf s;
 	   let typ1 = static_expr Process p in
 	   let _typ2_opt =
-	     Misc.opt_map (fun (_,e) -> static_expr Process e) p_e_opt
+	     Misc.opt_map (fun e -> static_expr Process e) e_opt
 	   in
 	   begin match typ1 with
 	   | Static -> Dynamic Instantaneous
@@ -420,16 +420,16 @@ let rec static_expr ctx e =
 	else
 	  expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_control (s, p_e_opt, p) ->
+    | Rexpr_control (s, e_opt, p) ->
 	if ctx = Process
 	then
 	  (static_conf s;
 	   let typ1 = static_expr Process p in
 	   Misc.opt_iter
-	     (fun (_,e) ->
+	     (fun e ->
 	       if static_expr ML e <> Static
 	       then expr_wrong_static_err !Misc.err_fmt e)
-	     p_e_opt;
+	     e_opt;
 	   begin match typ1 with
 	   | Static -> Dynamic Instantaneous
 	   | _ -> typ1
@@ -460,24 +460,20 @@ let rec static_expr ctx e =
 	   Dynamic Noninstantaneous)
 	else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_await_val (Immediate, One, s, _, p) ->
+    | Rexpr_await_val (Immediate, One, s, p) ->
 	if ctx = Process
 	then
-	  if static_expr ML s = Static
-	  then
-	    let typ = static_expr Process p in
-	    max (Dynamic Dontknow) typ
-	  else expr_wrong_static_err !Misc.err_fmt s
+	  (static_conf s;
+	   let typ = static_expr Process p in
+	   max (Dynamic Dontknow) typ)
 	else
 	  expr_wrong_static_err !Misc.err_fmt e
-    | Rexpr_await_val (_, _, s, _, p) ->
+    | Rexpr_await_val (_, _, s, p) ->
 	if ctx = Process
 	then
-	  if static_expr ML s = Static
-	  then
-	    let _typ1 = static_expr Process p in
-	    Dynamic Noninstantaneous
-	  else expr_wrong_static_err !Misc.err_fmt s
+          (static_conf s;
+	   let _typ1 = static_expr Process p in
+	   Dynamic Noninstantaneous)
 	else
 	  expr_wrong_static_err !Misc.err_fmt e
 
@@ -513,7 +509,7 @@ let rec static_expr ctx e =
 and static_conf conf =
   let t =
     match conf.conf_desc with
-    | Rconf_present e ->
+    | Rconf_present (e, _) ->
 	if static_expr ML e = Static
 	then ()
 	else expr_wrong_static_err !Misc.err_fmt e

@@ -267,6 +267,16 @@ module Rml_interpreter : Lco_interpreter.S =
         (fun () -> if is_true1() then get1() else get2()),
 	rev_app evt_list1 evt_list2
 
+    let cfg_or_option c1 c2 =
+      fun is_long_wait ->
+        let is_true1, get1, evt_list1 = c1 is_long_wait in
+        let is_true2, get2, evt_list2 = c2 is_long_wait in
+        (fun () -> is_true1() || is_true2()),
+        (fun () ->
+          (if is_true1() then Some (get1()) else None),
+          (if is_true2() then Some (get2()) else None)),
+        rev_app evt_list1 evt_list2
+
 
 
 (* ------------------------------------------------------------------------ *)
@@ -632,8 +642,92 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* await_all_match_conf               *)
 (**************************************)
-let rml_await_all_match_conf expr_cfg matching p =
-  raise RML (* XXX TODO XXX *)
+    let step_await_all_match_conf f_k ctrl expr_cfg matching p =
+      let is_true, get, w_list = expr_cfg (ctrl.kind = Top) in
+      let gen_step_wake_up ref_f =
+        let rec step_wake_up w _ =
+          match !ref_f with
+          | None -> sched ()
+          | Some f -> f w step_wake_up
+        in step_wake_up
+      in
+      let f_await_all_match =
+	if ctrl.kind = Top then
+	  let gen_f_await_top ref_f =
+            let f_await_top w step_wake_up =
+	      if !eoi
+	      then
+		let v = get () in
+		if is_true () && matching v
+		then
+                  (ref_f := None;
+		   let x = v in
+		   let f_body = p x f_k ctrl in
+		   ctrl.next <- f_body :: ctrl.next;
+		   sched())
+		else
+		  (w := (step_wake_up w) :: !w;
+		   sched ())
+	      else
+		if is_true ()
+		then
+		  (weoi := (step_wake_up w) :: !weoi;
+		   sched ())
+		else
+		  (w := (step_wake_up w) :: !w;
+		   sched ())
+            in f_await_top
+	  in
+          fun () ->
+            let ref_f = ref None in
+            let f_await_top = gen_f_await_top ref_f in
+            let step_wake_up = gen_step_wake_up ref_f in
+            ref_f := Some f_await_top;
+            List.iter
+              (fun w ->
+                w := (step_wake_up w) :: !w;
+		toWakeUp := w :: !toWakeUp)
+              w_list;
+            sched ()
+	else
+	  let gen_f_await_not_top ref_f =
+	    let f_await_not_top w step_wake_up =
+	      if !eoi
+	      then
+		let v = get () in
+		if is_true() && matching v
+		then
+                  (ref_f := None;
+		   let x = v in
+		   let f_body = p x f_k ctrl in
+		   ctrl.next <- f_body :: ctrl.next;
+		   sched())
+		else
+		    (ctrl.next <- (step_wake_up w) :: ctrl.next;
+		     sched ())
+	      else
+		(w := (step_wake_up w) :: !w;
+		 toWakeUp := w :: !toWakeUp;
+		 sched ())
+            in f_await_not_top
+          in
+          fun () ->
+            let ref_f = ref None in
+            let f_await_not_top = gen_f_await_not_top ref_f in
+            let step_wake_up = gen_step_wake_up ref_f in
+            ref_f := Some f_await_not_top;
+            List.iter
+              (fun w ->
+                w := (step_wake_up w) :: !w;
+		toWakeUp := w :: !toWakeUp)
+              w_list;
+            sched ()
+      in f_await_all_match
+
+
+    let rml_await_all_match_conf expr_cfg matching p =
+      fun f_k ctrl ->
+ 	step_await_all_match_conf f_k ctrl expr_cfg matching p
 
 (**************************************)
 (* present                            *)

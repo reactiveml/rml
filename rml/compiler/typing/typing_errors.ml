@@ -115,6 +115,12 @@ let non_event_err2 conf =
     Location.print conf.conf_loc;
   raise Error
 
+let non_event_patt_err conf =
+  Format.fprintf !err_fmt
+    "%aThis expression is not an event with a pattern.\n"
+    Location.print conf.conf_loc;
+  raise Error
+
 (* typing errors *)
 (* unbound *)
 let unbound_typ_err name loc =
@@ -183,6 +189,12 @@ let non_linear_pattern_err pat n =
     Location.print pat.patt_loc n;
   raise Error
 
+let non_linear_config_err conf n =
+  Format.fprintf !err_fmt
+    "%aThe variable %s is bound several times in this event configuration.\n"
+    Location.print conf.conf_loc n;
+  raise Error
+
 let non_linear_record_err label loc =
   Format.fprintf !err_fmt
     "%aThe label %a is defined several times\n"
@@ -204,6 +216,12 @@ let repeated_label_definition_err s loc =
 let orpat_vars loc s =
   Format.fprintf !err_fmt
     "%aVariable %s must occur on both sides of this | pattern.\n"
+    Location.print loc s;
+  raise Error
+
+let orconfig_vars loc s =
+  Format.fprintf !err_fmt
+    "%aVariable %s must occur on both branchs of this \\/ configuration.\n"
     Location.print loc s;
   raise Error
 
