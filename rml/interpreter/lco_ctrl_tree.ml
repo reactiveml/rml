@@ -639,9 +639,11 @@ module Rml_interpreter : Lco_interpreter.S =
       fun f_k ctrl ->
  	step_await_all_match f_k ctrl evt matching p
 
+
 (**************************************)
 (* await_all_match_conf               *)
 (**************************************)
+
     let step_await_all_match_conf f_k ctrl expr_cfg matching p =
       let is_true, get, w_list = expr_cfg (ctrl.kind = Top) in
       let gen_step_wake_up ref_f =
@@ -724,10 +726,10 @@ module Rml_interpreter : Lco_interpreter.S =
             sched ()
       in f_await_all_match
 
-
     let rml_await_all_match_conf expr_cfg matching p =
       fun f_k ctrl ->
  	step_await_all_match_conf f_k ctrl expr_cfg matching p
+
 
 (**************************************)
 (* present                            *)

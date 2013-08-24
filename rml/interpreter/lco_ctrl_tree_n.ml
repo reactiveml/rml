@@ -45,7 +45,8 @@ module Rml_interpreter : Lco_interpreter.S =
 
     type ('a, 'b) event =
 	('a,'b) Event.t * unit step list ref * unit step list ref
-    and 'a event_cfg = bool -> (unit -> bool) * unit step list ref list
+    and 'a event_cfg =
+        bool -> (unit -> bool) * (unit -> 'a) * unit step list ref list
 
     and control_tree =
 	{ kind: control_type;
@@ -249,6 +250,7 @@ module Rml_interpreter : Lco_interpreter.S =
     let cfg_present' (n,wa,wp) =
       fun is_long_wait ->
 	(fun () -> Event.status n),
+	(fun () -> Event.value n),
 	[ if is_long_wait then wa else wp ]
 
     let cfg_present evt_expr =
@@ -258,19 +260,29 @@ module Rml_interpreter : Lco_interpreter.S =
 
     let cfg_and c1 c2 =
       fun is_long_wait ->
-	let is_true1, evt_list1 = c1 is_long_wait in
-	let is_true2, evt_list2 = c2 is_long_wait in
+	let is_true1, get1, evt_list1 = c1 is_long_wait in
+	let is_true2, get2, evt_list2 = c2 is_long_wait in
 	(fun () -> is_true1() && is_true2()),
+        (fun () -> get1(), get2()),
 	rev_app evt_list1 evt_list2
 
     let cfg_or c1 c2 =
       fun is_long_wait ->
-	let is_true1, evt_list1 = c1 is_long_wait in
-	let is_true2, evt_list2 = c2 is_long_wait in
+	let is_true1, get1, evt_list1 = c1 is_long_wait in
+	let is_true2, get2, evt_list2 = c2 is_long_wait in
 	(fun () -> is_true1() || is_true2()),
+        (fun () -> if is_true1() then get1() else get2()),
 	rev_app evt_list1 evt_list2
 
-    let cfg_or_option = cfg_or
+    let cfg_or_option c1 c2 =
+      fun is_long_wait ->
+        let is_true1, get1, evt_list1 = c1 is_long_wait in
+        let is_true2, get2, evt_list2 = c2 is_long_wait in
+        (fun () -> is_true1() || is_true2()),
+        (fun () ->
+          (if is_true1() then Some (get1()) else None),
+          (if is_true2() then Some (get2()) else None)),
+        rev_app evt_list1 evt_list2
 
 
 (* ------------------------------------------------------------------------ *)
@@ -421,7 +433,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	if ctrl.kind = Top then
 	  let f_await_top =
 	    fun _ ->
-	      let is_true, w_list = expr_cfg true in
+	      let is_true, _, w_list = expr_cfg true in
 	      if is_true() then
 		f_k unit_value
 	      else
@@ -450,7 +462,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	else
 	  let f_await_not_top =
 	    fun _ ->
-	      let is_true, w_list = expr_cfg false in
+	      let is_true, _, w_list = expr_cfg false in
 	      if is_true() then
 		f_k unit_value
 	      else
@@ -640,8 +652,92 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* await_all_match_conf               *)
 (**************************************)
-let rml_await_all_match_conf expr_cfg matching p =
-  raise RML (* XXX TODO XXX *)
+
+    let step_await_all_match_conf f_k ctrl jp expr_cfg matching p =
+      let is_true, get, w_list = expr_cfg (ctrl.kind = Top) in
+      let gen_step_wake_up ref_f =
+        let rec step_wake_up w _ =
+          match !ref_f with
+          | None -> sched ()
+          | Some f -> f w step_wake_up
+        in step_wake_up
+      in
+      let f_await_all_match =
+	if ctrl.kind = Top then
+	  let gen_f_await_top ref_f =
+            let f_await_top w step_wake_up =
+	      if !eoi
+	      then
+		let v = get () in
+		if is_true () && matching v
+		then
+                  (ref_f := None;
+		   let x = v in
+		   let f_body = p x f_k ctrl jp in
+		   ctrl.next <- f_body :: ctrl.next;
+		   sched())
+		else
+		  (w := (step_wake_up w) :: !w;
+		   sched ())
+	      else
+		if is_true ()
+		then
+		  (weoi := (step_wake_up w) :: !weoi;
+		   sched ())
+		else
+		  (w := (step_wake_up w) :: !w;
+		   sched ())
+            in f_await_top
+	  in
+          fun () ->
+            let ref_f = ref None in
+            let f_await_top = gen_f_await_top ref_f in
+            let step_wake_up = gen_step_wake_up ref_f in
+            ref_f := Some f_await_top;
+            List.iter
+              (fun w ->
+                w := (step_wake_up w) :: !w;
+		toWakeUp := w :: !toWakeUp)
+              w_list;
+            sched ()
+	else
+	  let gen_f_await_not_top ref_f =
+	    let f_await_not_top w step_wake_up =
+	      if !eoi
+	      then
+		let v = get () in
+		if is_true() && matching v
+		then
+                  (ref_f := None;
+		   let x = v in
+		   let f_body = p x f_k ctrl jp in
+		   ctrl.next <- f_body :: ctrl.next;
+		   sched())
+		else
+		    (ctrl.next <- (step_wake_up w) :: ctrl.next;
+		     sched ())
+	      else
+		(w := (step_wake_up w) :: !w;
+		 toWakeUp := w :: !toWakeUp;
+		 sched ())
+            in f_await_not_top
+          in
+          fun () ->
+            let ref_f = ref None in
+            let f_await_not_top = gen_f_await_not_top ref_f in
+            let step_wake_up = gen_step_wake_up ref_f in
+            ref_f := Some f_await_not_top;
+            List.iter
+              (fun w ->
+                w := (step_wake_up w) :: !w;
+		toWakeUp := w :: !toWakeUp)
+              w_list;
+            sched ()
+      in f_await_all_match
+
+    let rml_await_all_match_conf expr_cfg matching p =
+      fun f_k ctrl jp ->
+ 	step_await_all_match_conf f_k ctrl jp expr_cfg matching p
 
 
 (**************************************)
@@ -689,7 +785,7 @@ let rml_await_all_match_conf expr_cfg matching p =
 	fun _ ->
 	  let f_1 = p_1 f_k ctrl jp in
 	  let f_2 = p_2 f_k ctrl jp in
-	  let is_true, w_list = expr_cfg false in
+	  let is_true, _, w_list = expr_cfg false in
 	  if is_true ()
 	  then
 	    f_1 unit_value
@@ -1001,7 +1097,7 @@ let rml_loop p =
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	let f_until =
 	  fun _ ->
-	    let cond, _ = expr_cfg true in
+	    let cond, _, _ = expr_cfg true in
 	    new_ctrl.cond <- cond;
 	    start_ctrl f_k ctrl f new_ctrl unit_value
 	in f_until
@@ -1066,6 +1162,30 @@ let rml_loop p =
 	end;
 	start_ctrl f_k ctrl f new_ctrl
 
+    let rml_until_handler_conf_local expr_cfg matching_opt p p_handler =
+      fun f_k ctrl jp ->
+        let ref_get = ref (fun () -> raise RML) in
+        let handler =
+          fun () ->
+            let x = (!ref_get) () in
+            let f_handler = p_handler x f_k ctrl jp in
+            f_handler
+        in
+        let new_ctrl = new_ctrl (Kill_handler handler) in
+        let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
+        let f_until =
+          fun _ ->
+            let (is_true, get, _) = expr_cfg true in
+            ref_get := get;
+            begin match matching_opt with
+            | None ->
+                new_ctrl.cond <- is_true;
+            | Some matching ->
+                new_ctrl.cond <- (fun () -> is_true() && matching (get ()));
+            end;
+            start_ctrl f_k ctrl f new_ctrl unit_value
+        in f_until
+
     let rml_until_handler expr_evt p p_handler =
       rml_until_handler_local expr_evt None p p_handler
 
@@ -1078,12 +1198,12 @@ let rml_loop p =
     let rml_until_handler_match' evt matching p p_handler =
       rml_until_handler_local' evt (Some matching) p p_handler
 
+    let rml_until_handler_conf expr_cfg p p_handler =
+      rml_until_handler_conf_local expr_cfg None p p_handler
 
-    let rml_until_handler_conf expr_cfg p =
-      raise RML (* XXX TODO XXX *)
+    let rml_until_handler_match_conf expr_cfg matching p p_handler =
+      rml_until_handler_conf_local expr_cfg (Some matching) p p_handler
 
-    let rml_until_handler_match_conf expr_cfg p =
-      raise RML (* XXX TODO XXX *)
 
 (**************************************)
 (* control                            *)
@@ -1129,7 +1249,16 @@ let rml_loop p =
 	start_ctrl f_k ctrl f new_ctrl
 
     let rml_control_match_conf expr_cfg matching p =
-      raise RML (* XXX TODO XXX *)
+      fun f_k ctrl jp ->
+	let new_ctrl = new_ctrl Susp in
+	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
+	let f_control =
+	  fun _ ->
+	    let cond, get, _ = expr_cfg true in
+	    new_ctrl.cond <- (fun () -> cond () && matching (get ()));
+	    start_ctrl f_k ctrl f new_ctrl ()
+	in f_control
+
 
 (**************************************)
 (* control_conf                       *)
@@ -1141,7 +1270,7 @@ let rml_loop p =
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	let f_control =
 	  fun _ ->
-	    let cond, _ = expr_cfg true in
+	    let cond, _, _ = expr_cfg true in
 	    new_ctrl.cond <- cond;
 	    start_ctrl f_k ctrl f new_ctrl ()
 	in f_control
@@ -1359,8 +1488,23 @@ let rml_loop p =
       fun f_k ctrl jp ->
 	rml_await_immediate' evt (rml_get' evt p f_k ctrl jp) ctrl None
 
+    let step_get_cfg f_k ctrl jp get p =
+      let f_get_cfg_eoi _ =
+        let x = get () in
+        let f_body = p x f_k ctrl jp in
+        ctrl.next <- f_body :: ctrl.next;
+        sched ()
+      in
+      fun _ ->
+        weoi := f_get_cfg_eoi :: !weoi;
+        sched ()
+
     let rml_await_all_conf expr_cfg p =
-      raise RML (* XXX TODO XXX *)
+      fun f_k ctrl jp ->
+	fun _ ->
+	  let (_, get, _) as cfg = expr_cfg true in
+	  rml_await_immediate_conf (fun _ -> cfg)
+            (step_get_cfg f_k ctrl jp get p) ctrl jp unit_value
 
     let rml_await_one expr_evt p =
       let pause_p x =
