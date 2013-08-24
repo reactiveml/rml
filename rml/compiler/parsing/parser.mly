@@ -348,7 +348,8 @@ conflicts.
 The precedences must be listed from low to high.
 */
 
-%nonassoc IN
+%nonassoc above_IN
+%nonassoc IN WHEN
 %nonassoc below_BARBAR
 %nonassoc BARBAR BARGRATER              /* below SEMI e; e || e*/
 %nonassoc below_SEMI
@@ -598,7 +599,7 @@ expr:
       { mkexpr(Pexpr_present($2, $4, ghexpr(Pexpr_nothing))) }
   | PRESENT event_config ELSE expr
       { mkexpr(Pexpr_present($2, ghexpr(Pexpr_nothing), $4)) }
-  | AWAIT await_flag event_config
+  | AWAIT await_flag event_config %prec above_IN
       { if (snd $2) = One
         then raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
         else mkexpr(Pexpr_await(fst $2, $3)) }
