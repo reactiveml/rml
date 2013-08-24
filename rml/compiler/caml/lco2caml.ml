@@ -634,18 +634,27 @@ and translate_proc e =
 	     [embed_ml s;
 	      matching;
 	      translate_proc k])
-(*> XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
-(*
-    | Coproc_control (s, None, k) ->
-	Cexpr_apply
-	  (make_instruction "rml_control_conf",
-	   [translate_conf s;
-	    translate_proc k])
-*)
-(*< XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
 
-    | Coproc_control (s, Some _, k) ->
-	not_yet_implemented "Lco2caml.translate_proc Coproc_control"
+    | Coproc_control (conf, when_opt, k) ->
+        let cconf, cpatt = translate_conf conf in
+        begin match Caml_misc.partial_match cpatt, when_opt with
+        | false, None ->
+	    Cexpr_apply
+	      (make_instruction "rml_control_conf",
+	       [cconf;
+	        translate_proc k])
+        | (true, _) | (_, Some _) ->
+            Cexpr_apply
+              (make_instruction "rml_control_match_conf",
+               [cconf;
+                make_expr
+                  (Cexpr_function
+                     [cpatt, opt_map translate_ml when_opt, make_true();
+                      make_patt_any(), None, make_false();])
+                  Location.none;
+                translate_proc k]
+              )
+        end
 
     | Coproc_get (s, patt, k) ->
 	Cexpr_apply

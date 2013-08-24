@@ -1235,7 +1235,15 @@ let rml_loop p =
 	start_ctrl f_k ctrl f new_ctrl
 
     let rml_control_match_conf expr_cfg matching p =
-      raise RML (* XXX TODO XXX *)
+      fun f_k ctrl ->
+        let new_ctrl = new_ctrl Susp in
+        let f = p (end_ctrl f_k new_ctrl) new_ctrl in
+        let f_control =
+          fun _ ->
+            let cond, get, _ = expr_cfg true in
+            new_ctrl.cond <- (fun () -> cond () && matching (get ()));
+            start_ctrl f_k ctrl f new_ctrl ()
+        in f_control
 
 (**************************************)
 (* control_conf                       *)
