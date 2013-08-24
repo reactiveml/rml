@@ -30,7 +30,7 @@ module type S =
       exception RML
 
       type ('a, 'b) event
-      and event_cfg
+      (* and event_cfg *)
       and 'a step = 'a -> unit
       and control_tree
       and 'a process = 'a step -> control_tree -> unit step

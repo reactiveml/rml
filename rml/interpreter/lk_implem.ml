@@ -32,7 +32,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 
     type ('a, 'b) event =
 	('a,'b) Event.t * unit step list ref * unit step list ref
-    and event_cfg = bool -> (unit -> bool) * unit step list ref list
+    (* and event_cfg = bool -> (unit -> bool) * unit step list ref list *)
 
     and control_tree =
 	{ kind: control_type;

@@ -208,10 +208,12 @@ lk/lk_ast.cmx : parsing/location.cmx global/ident.cmx global/global.cmx \
     typing/def_types.cmx global/asttypes.cmx
 lk/lk_misc.cmo : lk/lk_ast.cmo
 lk/lk_misc.cmx : lk/lk_ast.cmx
-lk/reac2lk.cmo : reac/reac_ast.cmo global/misc.cmo parsing/location.cmo \
-    lk/lk_ast.cmo global/ident.cmo static/def_static.cmo global/asttypes.cmo
-lk/reac2lk.cmx : reac/reac_ast.cmx global/misc.cmx parsing/location.cmx \
-    lk/lk_ast.cmx global/ident.cmx static/def_static.cmx global/asttypes.cmx
+lk/reac2lk.cmo : reac/reac_misc.cmo reac/reac_ast.cmo global/misc.cmo \
+    parsing/location.cmo lk/lk_ast.cmo global/ident.cmo static/def_static.cmo \
+    global/asttypes.cmo
+lk/reac2lk.cmx : reac/reac_misc.cmx reac/reac_ast.cmx global/misc.cmx \
+    parsing/location.cmx lk/lk_ast.cmx global/ident.cmx static/def_static.cmx \
+    global/asttypes.cmx
 caml/caml2caml.cmo : global/symbol_table.cmo global/misc.cmo \
     global/ident.cmo caml/caml_misc.cmo caml/caml_ast.cmo global/asttypes.cmo
 caml/caml2caml.cmx : global/symbol_table.cmx global/misc.cmx \

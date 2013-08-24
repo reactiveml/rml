@@ -468,9 +468,18 @@ and translate_proc e k (ctrl: ident) =
 (* C_k[do p until s(x) -> p' done] =                                       *)
 (*   bind K = k in                                                         *)
 (*   start ctrl C[s] (fun ctrl' -> C_(end.k, ctrl')[p]) (x -> C_k[p'])     *)
-(*> XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
-(*
-	| Rexpr_until (s, proc, patt_proc_opt) ->
+	| Rexpr_until ({ conf_desc = Rconf_present (_, patt_opt) } as s,
+                       when_opt, proc, proc_opt) ->
+     (* | Rexpr_until (s, proc, patt_proc_opt) -> *)
+            let patt_proc_opt =
+              match patt_opt, proc_opt with
+              | None, None -> None
+              | Some patt, Some proc -> Some (patt, proc)
+              | None, Some proc ->
+                  let patt = Reac_misc.make_patt Rpatt_any Location.none in
+                  Some (patt, proc)
+              | Some patt, None -> assert false
+            in
             let k_id = make_var "k" in
 	    let k_var = make_proc (Kproc_var k_id) Location.none in
 	    let k_patt =
@@ -486,7 +495,7 @@ and translate_proc e k (ctrl: ident) =
 	      (k_patt, k,
 	       make_proc
 		 (Kproc_start_until
-		    (ctrl, translate_conf s,
+		    (ctrl, translate_conf s, opt_map translate_ml when_opt,
 		     (ctrl_id, translate_proc proc end_until ctrl_id),
 		     begin match patt_proc_opt with
 		     | None ->
@@ -496,8 +505,6 @@ and translate_proc e k (ctrl: ident) =
 			  translate_proc proc' k_var ctrl)
 		     end))
 		 Location.none)
-*)
-(*< XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
 
 (* C_k[do p when s] =                                                      *)
 (*   bind K = k in                                                         *)
@@ -613,14 +620,20 @@ and translate_proc e k (ctrl: ident) =
 	| Rexpr_await (flag, s) ->
 	    Kproc_await (flag, translate_conf s, k, ctrl)
 
-(*> XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
 	| Rexpr_await_val (flag1, flag2, conf, when_opt, proc) ->
             begin match conf.conf_desc with
-            | Rconf_present (s, Some patt) ->
+            | Rconf_present (s, patt_opt) ->
 	        let k_id = make_var "k" in
 	        let k_var = make_proc (Kproc_var k_id) Location.none in
 	        let k_patt =
-	          make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none
+                  make_patt (Kpatt_var (Kvarpatt_local k_id)) Location.none
+                in
+                let patt =
+                  match patt_opt with
+                  | Some patt ->
+	             translate_pattern patt
+                  | None ->
+                      make_patt Kpatt_any Location.none
 	        in
 	        Kproc_bind
 	          (k_patt, k,
@@ -628,13 +641,14 @@ and translate_proc e k (ctrl: ident) =
 		     (Kproc_await_val (flag1,
 				       flag2,
 				       translate_ml s,
-				       translate_pattern patt,
+				       patt,
                                        opt_map translate_ml when_opt,
 				       translate_proc proc k_var ctrl,
 				       ctrl))
 		     Location.none)
+            | Rconf_and (_, _) | Rconf_or (_, _) ->
+                not_yet_implemented "Reac2lk.translate_proc(await_val) with config"
             end
-(*< XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
 
 	| _ ->
 	    raise (Internal (e.expr_loc,
@@ -735,9 +749,10 @@ and translate_proc_let =
 and translate_conf conf =
   let kconf =
     match conf.conf_desc with
-(*> XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
     | Rconf_present (e, None) -> Kconf_present (translate_ml e)
-(*< XXXXXXXXXXXXXXXXXXXXXXXXXXX TODO XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX *)
+
+    | Rconf_present (_, Some _) ->
+        not_yet_implemented "Reac2lk.translate_conf (present) with pattern"
 
     | Rconf_and (c1,c2) ->
 	Kconf_and (translate_conf c1, translate_conf c2)
