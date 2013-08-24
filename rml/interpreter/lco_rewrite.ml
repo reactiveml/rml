@@ -36,7 +36,7 @@ module Rml_interpreter : Lco_interpreter.S =
 
     type ('a, 'b) event = ('a, 'b) Event.t
 
-    and 'a event_cfg = unit -> unit -> bool
+    and 'a event_cfg = unit -> (unit -> bool) * (unit -> 'a)
 
     and 'a status = SUSP | STOP | TERM of 'a
 
@@ -77,7 +77,9 @@ module Rml_interpreter : Lco_interpreter.S =
 (* configurations                     *)
 (**************************************)
     let cfg_present' evt =
-      fun () () -> Event.status evt
+      fun () ->
+        (fun () -> Event.status evt),
+        (fun () -> Event.value evt)
 
     let cfg_present evt_expr =
       fun () ->
@@ -86,17 +88,26 @@ module Rml_interpreter : Lco_interpreter.S =
 
     let cfg_and c1 c2 =
       fun () ->
-	let is_true1 = c1 () in
-	let is_true2 = c2 () in
-	(fun () -> is_true1() && is_true2())
+	let is_true1, get1 = c1 () in
+	let is_true2, get2 = c2 () in
+	(fun () -> is_true1() && is_true2()),
+        (fun () -> get1(), get2())
 
     let cfg_or c1 c2 =
       fun () ->
-	let is_true1 = c1 () in
-	let is_true2 = c2 () in
-	(fun () -> is_true1() || is_true2())
+	let is_true1, get1 = c1 () in
+	let is_true2, get2 = c2 () in
+	(fun () -> is_true1() || is_true2()),
+        (fun () -> if is_true1() then get1() else get2())
 
-    let cfg_or_option = cfg_or
+    let cfg_or_option c1 c2 =
+      fun () ->
+        let is_true1, get1 = c1 () in
+        let is_true2, get2 = c2 () in
+        (fun () -> is_true1() || is_true2()),
+        (fun () ->
+          (if is_true1() then Some (get1()) else None),
+          (if is_true2() then Some (get2()) else None))
 
 (* ------------------------------------------------------------------------ *)
 
@@ -192,14 +203,14 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* await_immediate_conf               *)
 (**************************************)
-    let rml_await_immediate_conf' cfg =
+    let rml_await_immediate_conf' (cfg_status, _) =
       let rec self =
 	fun () ->
 	  if !eoi
 	  then
 	    (STOP, self)
 	  else
-	    if cfg()
+	    if cfg_status()
 	    then
 	      (TERM (), rml_nothing)
 	    else
@@ -287,9 +298,27 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* await_all_match_conf               *)
 (**************************************)
-let rml_await_all_match_conf expr_cfg matching p =
-  raise RML (* XXX TODO XXX *)
+    let rml_await_all_match_conf' (cfg_status, cfg_value) matching p =
+      let rec self =
+        fun () ->
+          if !eoi
+          then
+            let v = cfg_value () in
+            if (cfg_status ()) && (matching v)
+            then
+              let x = v in
+              let f_body = p x in
+              (STOP, f_body)
+            else
+              (STOP, self)
+          else
+            (SUSP, self)
+      in self
 
+    let rml_await_all_match_conf expr_cfg matching p =
+      fun () ->
+        let cfg = expr_cfg () in
+        rml_await_all_match_conf' cfg matching p ()
 
 (**************************************)
 (* present                            *)
@@ -316,14 +345,14 @@ let rml_await_all_match_conf expr_cfg matching p =
 (**************************************)
 (* present_conf                       *)
 (**************************************)
-    let rml_present_conf' cfg p1 p2 =
+    let rml_present_conf' (cfg_status, _) p1 p2 =
       let rec self =
 	fun () ->
 	  if !eoi
 	  then
 	    (STOP, p2)
 	  else
-	    if cfg()
+	    if cfg_status()
 	    then
 	      p1 ()
 	    else
@@ -575,11 +604,11 @@ let rml_await_all_match_conf expr_cfg matching p =
 	  | TERM v, _ -> TERM v, rml_nothing
 	  | SUSP, p' -> SUSP, until cfg p'
 	  | STOP, p' -> until_star cfg p' ()
-      and until_star cfg p =
+      and until_star ((cfg_status, _) as cfg) p =
 	fun () ->
 	  if !eoi
 	  then
-	    if cfg()
+	    if cfg_status()
 	    then
 	      (STOP, rml_nothing)
 	    else
@@ -652,11 +681,38 @@ let rml_await_all_match_conf expr_cfg matching p =
 	let evt = expr_evt () in
 	rml_until_handler_match' evt matching p hdl ()
 
-    let rml_until_handler_conf expr_cfg p =
-      raise RML (* XXX TODO XXX *)
 
-    let rml_until_handler_match_conf expr_cfg p =
-      raise RML (* XXX TODO XXX *)
+    let rml_until_handler_match_conf' =
+      let rec until cfg matching p hdl =
+        fun () ->
+          match p() with
+          | TERM v, _ -> TERM v, rml_compute (fun _ -> v)
+          | SUSP, p' -> SUSP, until cfg matching p' hdl
+          | STOP, p' -> until_star cfg matching p' hdl ()
+      and until_star ((cfg_status, cfg_value) as cfg) matching p hdl =
+        fun () ->
+          if !eoi
+          then
+            let v = cfg_value () in
+            if cfg_status () && matching v
+            then
+              let f = hdl v in
+              (STOP, f)
+            else
+              (STOP, until cfg matching p hdl)
+          else
+            (SUSP, until_star cfg matching p hdl)
+      in until
+
+    let rml_until_handler_conf expr_cfg p hdl =
+      fun () ->
+        let cfg = expr_cfg () in
+        rml_until_handler_match_conf' cfg (fun _ -> true) p hdl ()
+
+    let rml_until_handler_match_conf expr_cfg matching p hdl =
+      fun () ->
+        let cfg = expr_cfg () in
+        rml_until_handler_match_conf' cfg matching p hdl ()
 
 (**************************************)
 (* control                            *)
@@ -725,20 +781,28 @@ let rml_await_all_match_conf expr_cfg matching p =
 	let evt = expr_evt () in
 	rml_control_match' evt matching p ()
 
+    let rml_control_match_conf' cfg matching p =
+      rml_control_aux
+        (fun (cfg_status, cfg_value) ->
+          cfg_status () && matching (cfg_value ()))
+        cfg p
+
     let rml_control_match_conf expr_cfg matching p =
-      raise RML (* XXX TODO XXX *)
+      fun () ->
+        let cfg = expr_cfg () in
+        rml_control_match_conf' cfg matching p ()
 
 (**************************************)
 (* control_conf                       *)
 (**************************************)
     let rml_control_conf' =
-      let rec active cfg p =
+      let rec active ((cfg_status, _) as cfg) p =
 	fun () ->
 	  match p () with
 	  | TERM v, _ -> TERM v, rml_compute (fun () -> v)
 	  | SUSP, p' ->
 	      if !eoi then
-		if cfg()
+		if cfg_status()
 		then
 		  (STOP, suspended cfg p')
 		else
@@ -747,26 +811,26 @@ let rml_await_all_match_conf expr_cfg matching p =
 		(SUSP, active cfg p')
 	  | STOP, p' ->
 	      if !eoi then
-		if cfg()
+		if cfg_status()
 		then
 		  (STOP, suspended cfg p')
 		else
 		  (STOP, active cfg p')
 	      else
 		(SUSP, active_await cfg p')
-      and active_await cfg p =
+      and active_await ((cfg_status, _) as cfg) p =
 	fun () ->
 	  if !eoi then
-	    if cfg ()
+	    if cfg_status ()
 	    then
 	      (STOP, suspended cfg p)
 	    else
 	      (STOP, active cfg p)
 	  else (SUSP, active_await cfg p)
-      and suspended cfg p =
+      and suspended ((cfg_status, _) as cfg) p =
 	fun () ->
 	  if !eoi then
-	    if cfg ()
+	    if cfg_status ()
 	    then
 	      (STOP, active cfg p)
 	    else
@@ -807,14 +871,14 @@ let rml_await_all_match_conf expr_cfg matching p =
 (**************************************)
 (* when_conf                          *)
 (**************************************)
-    let rec rml_when_conf' cfg p =
+    let rec rml_when_conf' ((cfg_status, _) as cfg) p =
       let rec self =
 	fun () ->
 	  if !eoi
 	  then
 	    (STOP, self)
 	  else
-	    if cfg()
+	    if cfg_status()
 	    then
 	      match p() with
 	      | TERM v, _ -> TERM v, rml_compute (fun () -> v)
@@ -962,7 +1026,7 @@ let rml_await_all_match_conf expr_cfg matching p =
       rml_seq (rml_await_immediate' evt) (rml_get' evt p)
 
     let rml_await_all_conf expr_cfg p =
-      raise RML (* XXX TODO XXX *)
+      rml_until_handler_conf expr_cfg rml_halt p
 
     let rml_await_one expr_evt p =
       let pause_p x =
