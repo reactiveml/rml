@@ -259,9 +259,13 @@ let rec is_nonexpansive expr =
   | Rexpr_await_val (_, _, c, when_opt, e) ->
       is_nonexpansive_conf c && is_nonexpansive_opt when_opt &&
       is_nonexpansive e
-  | Rexpr_until (c, when_opt, e, e_opt) ->
-      is_nonexpansive_conf c && is_nonexpansive_opt when_opt &&
-      is_nonexpansive e && is_nonexpansive_opt e_opt
+  | Rexpr_until (e, conf_when_opt_expr_opt_list) ->
+      is_nonexpansive e &&
+      List.for_all
+        (fun (conf, when_opt, expr_opt) ->
+          is_nonexpansive_conf conf && is_nonexpansive_opt when_opt &&
+          is_nonexpansive_opt expr_opt)
+        conf_when_opt_expr_opt_list
   | Rexpr_when (c, e) ->
       is_nonexpansive_conf c && is_nonexpansive e
   | Rexpr_control (c, None, e) ->
@@ -874,7 +878,7 @@ let rec type_of_expression env expr =
           ty_e;
         ty, react_run (* raw *) k
 
-    | Rexpr_until (conf,when_opt,p,None) ->
+    | Rexpr_until (p,[conf,when_opt,None]) ->
         let k = type_expect env p type_unit in
         let loc_env = type_of_event_config env conf in
         let new_env = env_add loc_env env in
@@ -882,14 +886,27 @@ let rec type_of_expression env expr =
           (fun e_opt -> type_expect_eps new_env e_opt type_bool)
           when_opt;
         type_unit, k
-    | Rexpr_until (conf, when_opt, p, Some hdl) ->
+    | Rexpr_until (p, conf_when_opt_expr_opt_list) ->
         let ty_body, k_body = type_of_expression env p in
-        let loc_env = type_of_event_config env conf in
-        let new_env = env_add loc_env env in
-        opt_iter
-          (fun e_opt -> type_expect_eps new_env e_opt type_bool)
-          when_opt;
-        let k_hdl = type_expect new_env hdl ty_body in
+        let k_hdl_list =
+          List.fold_left
+            (fun acc (conf, when_opt, expr_opt) ->
+              let loc_env = type_of_event_config env conf in
+              let new_env = env_add loc_env env in
+              opt_iter
+                (fun e -> type_expect_eps new_env e type_bool)
+                when_opt;
+              let k_hdl =
+                match expr_opt with
+                | None ->
+                    unify_expr p type_unit ty_body;
+                    react_epsilon ()
+                | Some hdl -> type_expect new_env hdl ty_body
+              in
+              k_hdl :: acc)
+            [] conf_when_opt_expr_opt_list
+        in
+        let k_hdl = react_or (List.rev k_hdl_list) in
         ty_body, react_or [ k_body;
                             react_seq [ react_pause(); k_hdl ] ]
 

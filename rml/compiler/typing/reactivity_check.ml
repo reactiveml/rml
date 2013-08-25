@@ -175,7 +175,7 @@ let rec check_expr_one expr =
   | Rexpr_par _
   | Rexpr_merge (_, _)
   | Rexpr_signal (_, _, _)
-  | Rexpr_until (_, _, _, _)
+  | Rexpr_until (_, _)
   | Rexpr_when (_, _)
   | Rexpr_control (_, _, _)
   | Rexpr_get (_, _, _)

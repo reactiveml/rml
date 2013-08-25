@@ -404,22 +404,25 @@ let rec static_expr ctx e =
 	then Dynamic Dontknow
 	else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_until (s, when_opt, p, e_opt) ->
+    | Rexpr_until (p, conf_when_opt_expr_opt_list) ->
 	if ctx = Process
 	then
-	  (static_conf s;
-           let _typ0_opt =
-	     Misc.opt_map (fun e -> static_expr ML e) when_opt
-	   in
-	   let typ1 = static_expr Process p in
-	   let _typ2_opt =
-	     Misc.opt_map (fun e -> static_expr Process e) e_opt
-	   in
-	   begin match typ1 with
-	   | Static -> Dynamic Instantaneous
-	   | _ -> typ1
-	   end)
-	else
+	  let typ1 = static_expr Process p in
+          List.iter
+            (fun (conf, when_opt, expr_opt) ->
+              static_conf conf;
+              Misc.opt_iter
+                (fun e -> ignore (static_expr ML e))
+                when_opt;
+              Misc.opt_iter
+                (fun e -> ignore (static_expr Process e))
+                expr_opt)
+            conf_when_opt_expr_opt_list;
+	  begin match typ1 with
+	  | Static -> Dynamic Instantaneous
+	  | _ -> typ1
+	  end
+        else
 	  expr_wrong_static_err !Misc.err_fmt e
 
     | Rexpr_when (s, p) ->

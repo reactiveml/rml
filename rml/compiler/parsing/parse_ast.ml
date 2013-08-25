@@ -82,8 +82,8 @@ and expression_desc =
   | Pexpr_process of expression
   | Pexpr_run of expression
   | Pexpr_until of
-      event_config * expression option * expression * expression option
-   (* signal       * when condition    * body       * handler *)
+      expression * (event_config * expression option * expression option) list
+   (* body       *  signal       * when condition    * handler *)
   | Pexpr_when of event_config * expression
   | Pexpr_control of event_config * expression option * expression
                   (* signal       * when condition    * body *)

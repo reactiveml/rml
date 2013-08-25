@@ -143,11 +143,14 @@ let rec add_expr bv exp =
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
   | Pexpr_run(e1) -> add_expr bv e1
-  | Pexpr_until(cfg, when_opt, e1, oe) ->
-      add_config bv cfg;
-      Misc.opt_iter (add_expr bv) when_opt;
+  | Pexpr_until(e1, cfg_when_opt_oe_list) ->
       add_expr bv e1;
-      Misc.opt_iter (fun e -> add_expr bv e) oe
+      List.iter
+        (fun (cfg, when_opt, oe) ->
+          add_config bv cfg;
+          Misc.opt_iter (add_expr bv) when_opt;
+          Misc.opt_iter (fun e -> add_expr bv e) oe)
+        cfg_when_opt_oe_list
   | Pexpr_when(cfg, e1) -> add_config bv cfg; add_expr bv e1
   | Pexpr_control(cfg, oe, e1) ->
       add_config bv cfg;

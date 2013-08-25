@@ -590,17 +590,16 @@ let instantaneous_loop_expr =
 	  if not (Env.positive ty') then rec_warning expr;
 	  Env.remove_zero ty'
 
-      | Rexpr_until (config, when_opt, e, None) ->
-	  let ty_config = config_analyse vars config in
-	  let ty = analyse vars e in
-          let _ = Misc.opt_map (analyse Env.empty) when_opt in
-	  Env.append ty_config ty
-      | Rexpr_until (config, when_opt, e, Some e1) ->
-	  let ty_config = config_analyse vars config in
-	  let ty = analyse vars e in
-          let _ = Misc.opt_map (analyse Env.empty) when_opt in
-	  let _ = analyse Env.empty e1 in
-	  Env.append ty_config ty
+      | Rexpr_until (e, conf_when_opt_expr_opt_list) ->
+          let ty = analyse vars e in
+          List.fold_left
+            (fun acc (conf, when_opt, expr_opt) ->
+              let ty_config = config_analyse vars conf in
+	      let _ = Misc.opt_map (analyse Env.empty) when_opt in
+	      let _ = Misc.opt_map (analyse Env.empty) expr_opt in
+	      Env.append ty_config acc)
+            ty
+            conf_when_opt_expr_opt_list
 
       | Rexpr_when (config, e) ->
 	  let ty_config = config_analyse vars config in

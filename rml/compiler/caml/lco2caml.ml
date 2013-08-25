@@ -498,7 +498,8 @@ and translate_proc e =
 	  (make_instruction "rml_run",
 	   [embed_ml expr;])
 
-    | Coproc_until ({coconf_desc = Coconf_present (s, None)}, None, k, None) ->
+    | Coproc_until (k,
+                    [{coconf_desc = Coconf_present (s, None)}, None, None]) ->
 	if Lco_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_until'",
@@ -510,7 +511,7 @@ and translate_proc e =
 	     [embed_ml s;
 	      translate_proc k])
 
-    | Coproc_until (conf, when_opt, k, kh_opt) ->
+    | Coproc_until (k, [conf, when_opt, kh_opt]) ->
         let event_kind, cevt, cpatt =
           match conf.coconf_desc with
           | Coconf_present (s, patt_opt) ->
@@ -573,6 +574,79 @@ and translate_proc e =
 	  (make_instruction ("rml_until"^handler_kind^match_kind^event_kind),
            [cevt] @ matching @ [translate_proc k] @ handler)
 
+    | Coproc_until (k, conf_when_opt_kh_opt_list) ->
+        let add_case case_list (patt, when_opt, expr) =
+          let case_list =
+            List.map
+              (fun (patt, when_opt, expr) ->
+                (make_patt
+                   (Cpatt_tuple [ make_patt_some patt; make_patt_any(); ])
+                   Location.none,
+                 when_opt,
+                 expr))
+              case_list
+          in
+          let case =
+            make_patt
+              (Cpatt_tuple [ make_patt_any(); make_patt_some patt; ])
+              Location.none,
+            when_opt,
+            expr
+          in
+          case_list @ [ case ]
+        in
+        let cconf_when_opt_kh_opt_list =
+          List.map
+            (fun (conf, when_opt, kh_opt) ->
+              let cevt, cpatt = translate_conf conf in
+              let cwhen_opt = opt_map translate_ml when_opt in
+              let handler =
+                match kh_opt with
+                | Some kh -> translate_proc kh
+                | None -> make_instruction "rml_nothing"
+              in
+              (cevt, cpatt, cwhen_opt, handler))
+            conf_when_opt_kh_opt_list
+        in
+        let cconf, matching_cases, handler_cases =
+          match cconf_when_opt_kh_opt_list with
+          | [] -> assert false
+          | (cevt, cpatt, cwhen_opt, handler) :: l ->
+              List.fold_left
+                (fun (cconf, matching_cases, handler_cases)
+                    (cevt, cpatt, cwhen_opt, handler) ->
+                  let cconf =
+                    make_expr
+                      (Cexpr_apply
+                         (make_instruction "cfg_or_option", [cconf; cevt]))
+                      Location.none
+                  in
+                  let matching_cases =
+                    add_case matching_cases (cpatt, cwhen_opt, make_true())
+                  in
+                  let handler_cases =
+                    add_case handler_cases (cpatt, None, handler)
+                  in
+                  (cconf, matching_cases, handler_cases))
+                (cevt,
+                 [cpatt, cwhen_opt, make_true()],
+                 [cpatt, None, handler])
+                l
+        in
+        Cexpr_apply
+          (make_instruction "rml_until_handler_match_conf",
+           [cconf;
+            make_expr
+              (Cexpr_function
+                 (matching_cases @
+                  [(make_patt_any(), None, make_false())]))
+              Location.none;
+            translate_proc k;
+            make_expr
+              (Cexpr_function
+                 (handler_cases @
+                  [(make_patt_any(), None, make_raise_RML())]))
+              Location.none])
 
     | Coproc_when ({coconf_desc = Coconf_present (s, None)}, k) ->
 	if Lco_misc.is_value s then

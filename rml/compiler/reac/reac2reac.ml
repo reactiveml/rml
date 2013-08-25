@@ -283,20 +283,20 @@ let expr_map  =
 	  f (make_expr_all (Rexpr_run e')
                typ static reactivity reactivity_effect loc)
 
-      | Rexpr_until (config, when_opt, e, None) ->
-	  let config' = config_map f config in
-          let when_opt' = Misc.opt_map (expr_map f) when_opt in
+      | Rexpr_until (e, config_when_opt_e_opt_list) ->
 	  let e' = expr_map f e in
+          let config_when_opt_e_opt_list' =
+            List.map
+              (fun (config, when_opt, e_opt) ->
+	        let config' = config_map f config in
+                let when_opt' = Misc.opt_map (expr_map f) when_opt in
+	        let e_opt' = Misc.opt_map (expr_map f) e_opt in
+                (config', when_opt', e_opt'))
+              config_when_opt_e_opt_list
+          in
 	  f (make_expr_all
-	       (Rexpr_until (config', when_opt', e', None))
+	       (Rexpr_until (e', config_when_opt_e_opt_list'))
                typ static reactivity reactivity_effect loc)
-      | Rexpr_until (config, when_opt, e, Some e1) ->
-	  let config' = config_map f config in
-          let when_opt' = Misc.opt_map (expr_map f) when_opt in
-	  let e' = expr_map f e in
-	  let e1' = expr_map f e1 in
-	  f (make_expr_all (Rexpr_until (config', when_opt', e', Some e1'))
-	       typ static reactivity reactivity_effect loc)
 
       | Rexpr_when (config, e) ->
 	  let config' = config_map f config in

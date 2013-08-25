@@ -459,14 +459,19 @@ let rec translate env e =
     | Pexpr_run (expr) ->
 	Rexpr_run (translate env expr)
 
-    | Pexpr_until (conf, when_opt, expr, expr_opt) ->
+    | Pexpr_until (expr, conf_when_opt_expr_opt_list) ->
         let rexpr = translate env expr in
-        let vars, rconf = translate_conf env conf in
-        let new_env = add_varpatt env vars in
-        Rexpr_until (rconf,
-                     opt_map (translate new_env) when_opt,
-                     rexpr,
-                     opt_map (translate new_env) expr_opt)
+        let rconf_when_opt_expr_opt_list =
+          List.map
+            (fun (conf, when_opt, expr_opt) ->
+              let vars, rconf = translate_conf env conf in
+              let new_env = add_varpatt env vars in
+              (rconf,
+               opt_map (translate new_env) when_opt,
+               opt_map (translate new_env) expr_opt))
+            conf_when_opt_expr_opt_list
+        in
+        Rexpr_until (rexpr, rconf_when_opt_expr_opt_list)
 
     | Pexpr_when (conf, expr) ->
         let rexpr = translate env expr in
@@ -601,7 +606,7 @@ and translate_record env lab_expr_list =
       (glab, translate env expr))
     lab_expr_list
 
-
+(* Translation of signal declatation *)
 and translate_signal env sig_typ_list comb expr =
   match sig_typ_list with
   | [] -> translate env expr

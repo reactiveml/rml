@@ -80,13 +80,8 @@ let mkintf d =
 let rec mkexpr_until body cfg_when_opt_expr_opt_list =
   match cfg_when_opt_expr_opt_list with
   | [] -> raise Parse_error
-  | [(s, when_opt, expr_opt)] ->
-      mkexpr (Pexpr_until (s,
-                           when_opt,
-			   body,
-			   expr_opt))
-  | (s, when_opt, expr_opt) :: list ->
-      assert false
+  | _ :: _ ->
+      mkexpr (Pexpr_until (body, cfg_when_opt_expr_opt_list))
 
 let reloc_patt x = { x with ppatt_loc = symbol_rloc () };;
 let reloc_expr x = { x with pexpr_loc = symbol_rloc () };;
@@ -586,7 +581,7 @@ expr:
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, Some($4, $6), $8)) }
   | DO par_expr UNTIL opt_bar until_cases DONE
-      { mkexpr_until $2 (List.rev $5) }
+      { mkexpr_until $2 $5 }
   | DO par_expr WHEN event_config DONE
       { mkexpr(Pexpr_when($4, $2)) }
   | CONTROL par_expr WITH event_config DONE
@@ -901,16 +896,15 @@ type_constraint:
 
 until_cases:
     event_config                                { [$1, None, None] }
-  | until_handlers                              { $1 }
+  | until_handlers                              { List.rev $1 }
 ;
 until_handlers:
     event_config until_action
       { let when_opt, expr = $2 in
         [$1, when_opt, Some expr] }
-/*
-  | until_handlers BAR simple_expr LPAREN pattern RPAREN MINUSGREATER par_expr
-                                              { ($3, Some($5, $8)) :: $1 }
-*/
+  | until_handlers BAR event_config until_action
+      { let when_opt, expr = $4 in
+        ($3, when_opt, Some expr) :: $1 }
 ;
 
 /* Patterns */

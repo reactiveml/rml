@@ -468,8 +468,9 @@ and translate_proc e k (ctrl: ident) =
 (* C_k[do p until s(x) -> p' done] =                                       *)
 (*   bind K = k in                                                         *)
 (*   start ctrl C[s] (fun ctrl' -> C_(end.k, ctrl')[p]) (x -> C_k[p'])     *)
-	| Rexpr_until ({ conf_desc = Rconf_present (_, patt_opt) } as s,
-                       when_opt, proc, proc_opt) ->
+	| Rexpr_until (proc,
+                       [ {conf_desc = Rconf_present (_, patt_opt) } as s,
+                         when_opt, proc_opt; ]) ->
      (* | Rexpr_until (s, proc, patt_proc_opt) -> *)
             let patt_proc_opt =
               match patt_opt, proc_opt with
@@ -505,6 +506,8 @@ and translate_proc e k (ctrl: ident) =
 			  translate_proc proc' k_var ctrl)
 		     end))
 		 Location.none)
+	| Rexpr_until (proc, conf_when_opt_expr_opt_list) ->
+            not_yet_implemented "Reac2lk.translate_proc(until)"
 
 (* C_k[do p when s] =                                                      *)
 (*   bind K = k in                                                         *)
@@ -650,7 +653,25 @@ and translate_proc e k (ctrl: ident) =
                 not_yet_implemented "Reac2lk.translate_proc(await_val) with config"
             end
 
-	| _ ->
+        | Rexpr_local _
+        | Rexpr_global _
+        | Rexpr_constant _
+        | Rexpr_function _
+        | Rexpr_apply (_, _)
+        | Rexpr_tuple _
+        | Rexpr_construct (_, _)
+        | Rexpr_array _
+        | Rexpr_record _
+        | Rexpr_record_access (_, _)
+        | Rexpr_record_with (_, _)
+        | Rexpr_record_update (_, _, _)
+        | Rexpr_constraint (_, _)
+        | Rexpr_trywith (_, _)
+        | Rexpr_assert _
+        | Rexpr_process _
+        | Rexpr_pre (_, _)
+        | Rexpr_last _
+        | Rexpr_default _ ->
 	    raise (Internal (e.expr_loc,
 			     "Reac2lk.translate_proc: expr"))
 	end

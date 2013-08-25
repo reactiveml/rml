@@ -304,12 +304,15 @@ let expr_free_vars e =
     | Rexpr_run e ->
 	expr_free_vars vars e
 
-    | Rexpr_until (config, when_opt, e, e_opt) ->
+    | Rexpr_until (e, config_when_opt_e_opt_list) ->
 	expr_free_vars vars e;
-	config_free_vars vars config;
-	let vars' = (vars_of_config config) @ vars in
-        Misc.opt_iter (expr_free_vars vars') when_opt;
-	Misc.opt_iter (expr_free_vars vars') e_opt
+        List.iter
+          (fun (config, when_opt, e_opt) ->
+            config_free_vars vars config;
+            let vars' = (vars_of_config config) @ vars in
+            Misc.opt_iter (expr_free_vars vars') when_opt;
+            Misc.opt_iter (expr_free_vars vars') e_opt)
+          config_when_opt_e_opt_list
 
     | Rexpr_when (config, e) ->
 	config_free_vars vars config;

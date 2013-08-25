@@ -412,11 +412,17 @@ and translate_proc p =
 	| Rexpr_run (expr) ->
 	    Coproc_run (translate_ml expr)
 
-	| Rexpr_until (conf, when_opt, proc, proc_opt) ->
-	    Coproc_until (translate_conf conf,
-                          opt_map translate_ml when_opt,
-			  translate_proc proc,
-			  opt_map translate_proc proc_opt)
+        | Rexpr_until (proc, conf_when_opt_expr_opt_list) ->
+            let conf_when_opt_expr_opt_list =
+              List.map
+                (fun (conf, when_opt, proc_opt) ->
+                  (translate_conf conf,
+                   opt_map translate_ml when_opt,
+                   opt_map translate_proc proc_opt))
+                conf_when_opt_expr_opt_list
+            in
+            Coproc_until (translate_proc proc,
+                          conf_when_opt_expr_opt_list)
 
 	| Rexpr_when (conf, proc) ->
 	    Coproc_when (translate_conf conf, translate_proc proc)
@@ -459,9 +465,29 @@ and translate_proc p =
                               opt_map translate_ml when_opt,
 			      translate_proc proc)
 
-	| _ ->
+        | Rexpr_local _
+        | Rexpr_global _
+        | Rexpr_constant _
+        | Rexpr_function _
+        | Rexpr_apply (_, _)
+        | Rexpr_tuple _
+        | Rexpr_construct (_, _)
+        | Rexpr_array _
+        | Rexpr_record _
+        | Rexpr_record_access (_, _)
+        | Rexpr_record_with (_, _)
+        | Rexpr_record_update (_, _, _)
+        | Rexpr_constraint (_, _)
+        | Rexpr_trywith (_, _)
+        | Rexpr_assert _
+        | Rexpr_process _
+        | Rexpr_pre (_, _)
+        | Rexpr_last _
+        | Rexpr_default _ ->
 	    raise (Internal (p.expr_loc,
 			     "Reac2lco.translate_proc: expr"))
+        | Rexpr_seq [] ->
+            assert false
 	end
     end
   in

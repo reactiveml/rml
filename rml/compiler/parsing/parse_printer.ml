@@ -305,12 +305,14 @@ let rec expression i ppf x =
   | Pexpr_run (e) ->
       line i ppf "Pexpr_run\n";
       expression i ppf e;
-  | Pexpr_until (s, when_opt, e, expr_opt) ->
+  | Pexpr_until (e, cfg_when_opt_expr_opt_list) ->
       line i ppf "Pexpr_until\n";
-      event_config i ppf s;
       expression i ppf e;
-      option i expression ppf when_opt;
-      option i expression ppf expr_opt
+      list i (fun i ppf  (s, when_opt, expr_opt) ->
+        event_config i ppf s;
+        option i expression ppf when_opt;
+        option i expression ppf expr_opt)
+        ppf cfg_when_opt_expr_opt_list
   | Pexpr_when (s,e) ->
       line i ppf "Pexpr_when\n";
       event_config i ppf s;
