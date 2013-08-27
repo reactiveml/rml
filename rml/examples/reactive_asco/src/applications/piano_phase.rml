@@ -74,31 +74,19 @@ let process track asco k kth_note =
     and emit signal [resync] if |d1-d2| < eps.
 *)
 let process compare asco s1 s2 resync eps =
-  (* Emit the current date on [f] each time [s] is emitted. *)
-  let process stamps s f =
-    loop
-      await s;
-      emit f (date asco)
-    end
+  let rec process looop d1 d2 =
+    let d1, d2 =
+      do halt
+      until
+      | s1 /\ s2 -> let d = date asco in (d, d)
+      | s1 -> (date asco, d2)
+      | s2 -> (d1, date asco)
+      done
+    in
+    if abs_float (d1 -. d2) < eps then emit resync;
+    run (looop d1 d2)
   in
-  (* Emit [resync] each time the date emitted on [f1] and [f2] are
-     less than [eps]. *)
-  let process spy f1 f2 resync eps =
-    loop
-      await (f1 \/ f2);
-      let t1 = last ?f1
-      and t2 = last ?f2 in
-      if abs_float (t1 -. t2) < eps then
-	emit resync
-    end
-  in
-  (* Compare the emission date of [s1] and [s2]. *)
-  signal f1 default 0.0 gather (fun x y -> x) in
-  signal f2 default 1.0 gather (fun x y -> x) in
-  run (stamps s1 f1) ||
-  run (stamps s2 f2) ||
-  run (spy f1 f2 resync eps)
-
+  run (looop (-.eps) (-.eps))
 
 (** Behavior of the second pianist and the graphical interface. *)
 let process main =
