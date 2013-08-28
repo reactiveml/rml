@@ -11,7 +11,8 @@ STDLIB_OBJ=$(patsubst %.ml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_ML_SRC)) \
 	$(patsubst thread/%.ml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_THREAD_ML_SRC)) \
 	$(patsubst thread/%.rml,$(RUNTIME_DIR)/%.cmo,$(STDLIB_THREAD_RML_SRC)) \
 
-STDLIB_INTF = $(patsubst %.rmli,../stdlib/%.rzi,$(STDLIB_SRC)) \
+STDLIB_INTF = ../stdlib/pervasives.rzi \
+	$(patsubst %.rmli,../stdlib/%.rzi,$(STDLIB_SRC)) \
 	$(STDLIB_OBJ:.cmo=.cmi)
 
 STDLIB_THREAD_INTF = $(patsubst thread/%.rmli,../stdlib/thread/%.rzi,$(STDLIB_THREAD_SRC))

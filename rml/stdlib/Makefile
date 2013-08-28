@@ -12,7 +12,7 @@ include Makefile-stdlib.common
 .rmli.rzi:
 	$(RMLC) -c $<
 
-all: $(STDLIB_SRC:.rmli=.rzi) $(STDLIB_THREAD_SRC:.rmli=.rzi)
+all: pervasives.rzi $(STDLIB_SRC:.rmli=.rzi) $(STDLIB_THREAD_SRC:.rmli=.rzi)
 
 install:
 
