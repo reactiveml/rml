@@ -69,7 +69,8 @@
           "\\|default\\|ex\\(ception\\|ternal\\)\\|fun\\(ct\\(ion\\|or\\)\\)?"
           "\\|gather\\|i\\(n\\(herit\\|itializer\\)?\\|mmediate\\)\\|let"
           "\\|m\\(ethod\\|utable\\|odule\\)"
-          "\\|o\\(f\\|ne\\)\\|p\\(arser\\|rivate\\|rocess\\)\\|rec\\|signal\\|type"
+          "\\|o\\(f\\|ne\\)\\|p\\(arser\\|r\\(ivate\\|oc\\(ess\\)?\\)\\)"
+          "\\|rec\\|signal\\|type"
           "\\|v\\(al\\|irtual\\)\\)\\>")
          'font-lock-type-face)
 ;builtin

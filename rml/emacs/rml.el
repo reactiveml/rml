@@ -1188,7 +1188,7 @@ Returns nil for the parenthesis openning a comment."
 	  "\\|else\\|i\\(f\\|n\\(herit\\|itializer\\)?\\)"
           "\\|f\\(or\\|un\\(ct\\(ion\\|or\\)\\)?\\)"
           "\\|l\\(and\\|or\\|s[lr]\\|xor\\)\\|m\\(atch\\|od\\)"
-	  "\\|present\\|control"
+	  "\\|pr\\(esent\\|oc\\)\\|control"
           "\\|o[fr]\\|parser\\|s\\(ig\\|truct\\)\\|t\\(hen\\|o\\|ry\\)"
           "\\|until\\|w\\(h\\(en\\|ile\\)\\|ith\\)\\)\\>\\|:begin\\>"
           "\\|[=<>@^|&+-*/$%][!$%*+-./:<=>?@^|~]*\\|:[:=]\\|[[({,;]")
@@ -1335,6 +1335,7 @@ keywords."
     ("parser"           nil     3       rml-parser-indent)
     ("present"               nil     6       rml-present-indent)
     ("present-else"          nil     6       rml-present-else-indent)
+    ("proc"              nil     3       rml-fun-indent)
     ("signal"              nil     6       rml-signal-indent)
     ("signal-in"           nil     6       rml-signal-in-indent)
     ("try"              nil     6       rml-try-indent)
@@ -1380,7 +1381,7 @@ the line where the governing keyword occurs.")
       (concat
        (aref rml-kwop-regexps 1)
        "\\|\\<\\(fun\\(ction\\)?\\|initializer\\|await\\|let\\|signal"
-       "\\|m\\(atch\\|ethod\\)\\|parser\\|try\\|control\\|val\\)\\>\\|->"))
+       "\\|m\\(atch\\|ethod\\)\\|p\\(arser\\|roc\\)\\|try\\|control\\|val\\)\\>\\|->"))
 (aset rml-kwop-regexps 3
       (concat (aref rml-kwop-regexps 2)
 	      "\\|\\<if\\|present\\|when\\>\\|\\(|\\)\\(|\\)"))
