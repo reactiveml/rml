@@ -1,3 +1,5 @@
+(** Lucky ocaml API. *)
+
 open Luc4ocaml
 
 val make :

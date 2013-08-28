@@ -21,6 +21,8 @@
 (* created: 2013-07-21  *)
 (* authors: Louis Mandel and Florence Plateau *)
 
+(** Process management combinators. *)
+
 type ident
 (** Type of the process identifier. *)
 

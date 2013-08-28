@@ -8,7 +8,7 @@
 ** Author: jahier@imag.fr
 *)
 
-(** Lucky ocaml API *)
+(** Lucky ocaml API. *)
 
 
 type var_name = string
@@ -43,7 +43,6 @@ val make :
   numeric solutions; the step mode is used iff at least one
   controllable variable is numeric.
 *)
-
 type step_mode = StepInside | StepEdges | StepVertices
 
 (** the default step mode is StepInside *)

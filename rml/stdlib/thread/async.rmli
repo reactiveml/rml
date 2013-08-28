@@ -21,7 +21,9 @@
 (* created: 2013-07-22  *)
 (* author: Louis Mandel *)
 
-(** To use this module, ReactiveML programs need to be compiled with
+(** Launching asychronous computations.
+
+    To use this module, ReactiveML programs need to be compiled with
     the option -thread.
 *)
 
