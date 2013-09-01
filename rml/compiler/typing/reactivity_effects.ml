@@ -453,7 +453,7 @@ let rec occur_check_react level index k =
     | React_seq l -> List.exists check l
     | React_par l ->  List.exists check l
     | React_or l ->  List.exists check l
-    | React_raw (k1, k2) -> check k1 or check k2
+    | React_raw (k1, k2) -> check k1 || check k2
     | React_rec (_, k') ->
         if not (visited k) then check k'
         else false

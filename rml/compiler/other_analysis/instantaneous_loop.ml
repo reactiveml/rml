@@ -85,7 +85,7 @@ module Env :
       | [], [] -> true
       | [], _ | _, [] -> false
       | (x,n)::env1', _ ->
-	  if List.exists (fun (x',n') -> n = n' & same x x') env2 then
+	  if List.exists (fun (x',n') -> n = n' && same x x') env2 then
 	    equal env1' env2
 	  else false
       end

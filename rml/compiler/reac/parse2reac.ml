@@ -186,7 +186,7 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
       | Ppatt_or (patt1, patt2) ->
 	  let vars1, rpatt1 = translate_pattern or_vars is_global patt1 in
 	  let vars2, rpatt2 = translate_pattern vars1 is_global patt2 in
-	  if List.for_all (fun (x,_) -> List.mem_assoc x vars1) vars2 &
+	  if List.for_all (fun (x,_) -> List.mem_assoc x vars1) vars2 &&
 	    List.for_all (fun (x,_) -> List.mem_assoc x vars2) vars1
 	  then
 	    vars1, Rpatt_or (rpatt1, rpatt2)
@@ -542,7 +542,7 @@ and translate_conf =
       | Pconf_or (conf1, conf2) ->
           let vars1, rconf1 = translate_conf or_vars env conf1 in
           let vars2, rconf2 = translate_conf vars1 env conf2 in
-          if List.for_all (fun (x,_) -> List.mem_assoc x vars1) vars2 &
+          if List.for_all (fun (x,_) -> List.mem_assoc x vars1) vars2 &&
             List.for_all (fun (x,_) -> List.mem_assoc x vars2) vars1
           then
             vars1, Rconf_or (rconf1, rconf2)

@@ -85,11 +85,11 @@ let print_immediate i =
 let print_name s =
   let c = String.get s 0 in
   let s =
-    if s = "or" or s = "mod" or s = "lxor" or s = "lnot" or s = "lsl"
-	or s = "lsr" or s = "asr"
+    if s = "or" || s = "mod" || s = "lxor" || s = "lnot" || s = "lsl"
+	|| s = "lsr" || s = "asr"
     then "(" ^ s ^ ")"
     else
-      if c >= 'a' & c <= 'z' or c >= 'A' & c <= 'Z' or c = '_'
+      if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c = '_'
       then s
       else if c = '*' then "( " ^ s ^ " )"
 	else

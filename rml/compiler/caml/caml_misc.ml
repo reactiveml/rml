@@ -402,7 +402,7 @@ let rec partial_match patt =
   | Cpatt_constant _ -> true
   | Cpatt_tuple patt_list -> List.exists partial_match patt_list
   | Cpatt_construct _ -> true
-  | Cpatt_or (p1, p2) -> (partial_match p1) & (partial_match p2)
+  | Cpatt_or (p1, p2) -> (partial_match p1) && (partial_match p2)
   | Cpatt_record _ -> true
   | Cpatt_array _ -> true
   | Cpatt_constraint (p, _) -> partial_match p

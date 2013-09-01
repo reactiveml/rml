@@ -22,7 +22,7 @@ end
 
 module type SET = sig
   include Set.S
-  val find : (elt -> bool) -> t -> elt
+  val get : (elt -> bool) -> t -> elt
   val map : (elt -> elt) -> t -> t
   val of_list : elt list -> t
   val print : Format.formatter -> t -> unit

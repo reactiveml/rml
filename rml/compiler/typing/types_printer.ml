@@ -43,8 +43,8 @@ open Global
 (* if it is different from the current module *)
 (* or if it is from the standard module *)
 let print_qualified_ident ff q =
-  if (compiled_module_name () <> q.qual) &
-    (pervasives_module <> q.qual) &
+  if (compiled_module_name () <> q.qual) &&
+    (pervasives_module <> q.qual) &&
     (!interpreter_module <> q.qual)
   then begin pp_print_string ff q.qual;pp_print_string ff "." end;
   pp_print_string ff (Ident.name q.id)

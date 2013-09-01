@@ -187,7 +187,7 @@ let is_an_infix_or_prefix_operator op =
   if op = "" then false
   else
     let c = String.get op 0 in
-    not (((c >= 'a') & (c <= 'z')) or ((c >= 'A') & (c <= 'Z')))
+    not (((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')))
 
 
 (* Expand a -I option: if it starts with +, make it relative to the standard
