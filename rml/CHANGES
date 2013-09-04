@@ -2,7 +2,41 @@ Warning: incompatible changes with previous versions are marked with "*".
 
 ReactiveML 1.09.00 (XXXX-XX-XX):
 --------------------------------
-
+ - New construct: non-instantaneous phrases can now be defined at
+                  toplevel. For instance, it is possible to write:
+       let process p = pause; print_endline "Hello World!" ;;
+       let () = run p;;
+ - New construct: the precedence of the run operator as been reduced.
+                  Parantheses around processes with arguments
+                  are no more mandatory. For instance, it is possible
+                  to write:
+       let process p msg = pause; print_endline msg ;;
+       let () = run p "Hello World!";;
+ * New construct: new "proc" keyword to define anonymous processes
+                  with argument.  For instance, it is prossible to
+                  write:
+       let () = run (proc msg -> pause; print_endline msg) "Hello World!"
+ - New construct: event configuration with values. For each construct
+                  which allows to get the value of a signal, it is
+                  possible to put an event configuration. For
+                  instance, it is possible to write:
+       await (s1(x) /\ s2(y)) \/ s3(x::y::_) in ...
+ - New construct: do/until with multiple handlers. For instance, it is
+                  possible to write:
+       do ...
+       until s1(x) /\ s2(y) -> ...
+       | s1(x) when x > 10 -> ...
+       | s3 -> ...
+       done
+ - rmlc: new option -no_reactivity_warning to discard reactivity warnings.
+ - rmlc: new option -thread to use the Async module of the standard library.
+ - rmlc: bug fixes.
+ - rmlc: compatibility with OCaml 4.01.
+ - rmlbuild: compatibility with OCaml 4.01.
+ * rmllib: new organization of the installation. There is one rmllib
+           file per back-end. Each of them is installed in a new directory.
+ - stdlib: new standard library.
+ - examples: new application to mixed music programming.
 
 
 ReactiveML 1.08.06 (2013-07-06):
