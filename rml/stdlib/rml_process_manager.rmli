@@ -31,6 +31,7 @@ val ps: unit -> unit
       - [k]: killable
       - [s]: suspendable
       - [r]: resetable
+      - [c]: changeable
       - [x]: extensible
 *)
 
@@ -65,11 +66,19 @@ val reset: (int, ident list) event
 (** Signal gathering the reseting orders. *)
 
 
+val changeable:
+  ('a, (int * ('state -> unit process)) list) event ->
+  ('state -> unit process) -> 'state -> unit process
+(** [run changeable change p state] associates an id to the process
+    [(p state)] and executes it. The behavior process can be changed
+    by emitting a new process on the signal [change]. The state
+    [state] is transnited to the new process. *)
+
+
 val extensible:
   ('a, (int * ('state -> unit process)) list) event ->
   ('state -> unit process) -> 'state -> unit process
 (** [run extensible add p state] associates an id to the process
     [(p state)] and executes it. New processes sharing the state [state]
     can be executed in parallel to [(p state)] by send their
-    definition on the signal [add].
-*)
+    definition on the signal [add]. *)

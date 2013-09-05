@@ -24,7 +24,7 @@
 type ident = int
 ;;
 
-type kind = Killable | Suspendable | Resetable | Extensible
+type kind = Killable | Suspendable | Resetable | Changeable | Extensible
 ;;
 
 let string_of_kind k =
@@ -32,6 +32,7 @@ let string_of_kind k =
   | Killable -> "k"
   | Suspendable -> "s"
   | Resetable -> "r"
+  | Changeable -> "c"
   | Extensible -> "x"
 
 let gen_id =
@@ -131,6 +132,29 @@ let rec process resetable' (id: ident) p =
 
 let resetable p =
   manage (fun id -> resetable' id p) [Resetable]
+;;
+
+(********************)
+(* Changeable       *)
+(********************)
+
+let process changeable' (id:ident)
+    (change: ('a , (ident * ('state -> 'b process)) list) event)
+    (p_init: 'state -> 'c process) (state:'state) =
+  do
+    run (p_init state)
+  until change(l) when List.exists (fun (id',_) -> id = id') ->
+    let p =
+      List.fold_left
+        (fun x y -> (proc state -> (run (x state) || run (y state))))
+        (process ()) l
+    in
+    run (changeable' id change p state)
+  done
+;;
+
+let changeable change p_init state =
+  manage (fun id -> changeable' id change p_init state) [Changeable]
 ;;
 
 (********************)
