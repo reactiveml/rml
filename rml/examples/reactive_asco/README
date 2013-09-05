@@ -1,0 +1,25 @@
+This project aims to embed a kernel of the language of the sequencer
+Antescofo (http://repmus.ircam.fr/antescofo) in ReactiveML.
+
+To compile, just type make (clean with make clean). Applications are
+the following:
+ - asco.rml.native: the sequencer
+ - piano_phase.rml.native: Steve Reich's Piano Phase with graphical interface
+ - frere_jacques.rml.native: a famous French musical round
+
+These applications communicate with the listening machine of Antescofo
+and the audio environment through UDP messages. A stand alone MacOS
+application that play both roles is available at:
+  http://reactiveml.org/reactive_asco/resources/ascoDemo.app.tar.gz
+
+To launch the sequencer, execute the following command (options can be
+displayed with "./asco.rml.native -help"):
+  ./asco.rml.native examples/bach.mid.asco
+
+To use it with ascoDemo.app, launch the application, select the
+correct score and press play.
+
+A session of live coding is also available in lib/rising_sun.rml.
+
+More information about the project can be found at:
+  http://reactiveml.org/reactive_asco
