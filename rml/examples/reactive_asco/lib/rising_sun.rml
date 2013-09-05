@@ -146,7 +146,6 @@ signal replace
 emit replace waltz_accomp;;
 emit replace arpeggio_accomp;;
 emit replace basic_accomp;;
-emit replace arpeggio_accomp;;
 
 
 (* Graphical feedback *)
@@ -154,9 +153,5 @@ emit replace arpeggio_accomp;;
 signal kill_ball;;
 #run (killable kill_ball (Dancing_ball.main (instr_event asco)));;
 
-signal kill_boids;;
-#run (killable kill_boids (Boids.main (instr_event asco)));;
-
 emit kill_ball;;
-emit kill_boids;;
 emit kill_bass;;
