@@ -30,8 +30,10 @@ val ps: unit -> unit
 (** Display the list of running processes with their behaviors:
       - [k]: killable
       - [s]: suspendable
+      - [r]: resetable
       - [x]: extensible
 *)
+
 
 val killable: 'a process -> 'a option process
 (** [run killable p] associates an id to the process [p] and executes
@@ -44,7 +46,6 @@ val kill: (int , ident list) event
 (** Signal gathering the killing orders. *)
 
 
-
 val suspendable: 'a process -> 'a process
 (** [run suspendable p] associates an id to the process [p] and
     executes it. The execution of this process can be suspended and
@@ -53,6 +54,15 @@ val suspendable: 'a process -> 'a process
 
 val sr: (int , ident list) event
 (** Signal gathering the suspension and resumption orders. *)
+
+
+val resetable: 'a process -> 'a process
+(** [run resetable p] associates an id to the process [p] and executes
+    it. The execution of this process can be reset by the emission of
+    its id on the signal [reset]. *)
+
+val reset: (int, ident list) event
+(** Signal gathering the reseting orders. *)
 
 
 val extensible:

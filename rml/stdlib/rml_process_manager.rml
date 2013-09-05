@@ -24,13 +24,14 @@
 type ident = int
 ;;
 
-type kind = Killable | Suspendable | Extensible
+type kind = Killable | Suspendable | Resetable | Extensible
 ;;
 
 let string_of_kind k =
   match k with
   | Killable -> "k"
   | Suspendable -> "s"
+  | Resetable -> "r"
   | Extensible -> "x"
 
 let gen_id =
@@ -116,6 +117,21 @@ let suspendable p =
   manage (fun id -> suspendable' id p) [Suspendable]
 ;;
 
+(********************)
+(* Resetable        *)
+(********************)
+
+signal reset;;
+
+let rec process resetable' (id: ident) p =
+  do
+    run p
+  until reset(ids) when List.mem id ids -> run (resetable' id p)
+;;
+
+let resetable p =
+  manage (fun id -> resetable' id p) [Resetable]
+;;
 
 (********************)
 (* Extensible       *)
