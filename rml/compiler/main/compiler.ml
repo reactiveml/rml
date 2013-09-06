@@ -308,32 +308,26 @@ let compile_implementation module_name filename =
 	      with Modules.Desc_not_found ->
 		unbound_main !simulation_process
 	    in
-	    let main_id = Ident.name main.Global.gi.Global_ident.id in
-            let boi_hook =
-              if !with_thread then "[Async_body.boi_hook] "
-              else "[] "
-            in
  	    if not (Typing.is_unit_process (Global.info main)) then
 	      bad_type_main !simulation_process (Global.info main);
-	    match !number_of_instant >= 0, !sampling >= 0.0 with
-	    | true, true ->
-		output_string out_chan
-		  ("let _ = Rml_machine.rml_exec_n_sampling "^
-		   main_id^" "^(string_of_int !number_of_instant)^" "^
-		   (string_of_float !sampling)^"\n")
-	    | true, false ->
-		output_string out_chan
-		  ("let _ = Rml_machine.rml_exec_n "^
-		   main_id^" "^(string_of_int !number_of_instant)^"\n")
-	    | false, true ->
-		output_string out_chan
-		  ("let _ = Rml_machine.rml_exec_sampling "^
-		   main_id^" "^(string_of_float !sampling)^"\n")
-	    | false, false ->
-		output_string out_chan
-		  ("let _ = Rml_machine.rml_exec "^
-                   boi_hook^
-                   main_id^"\n")
+	    let main_id = Ident.name main.Global.gi.Global_ident.id in
+            let boi_hook =
+              "["^
+              (if !number_of_instant >= 0 then
+                "Rml_machine.n_hook "^(string_of_int !number_of_instant)^"; "
+              else "")^
+              (if !sampling >= 0.0 then
+                "Rml_machine.sampling_hook "^(string_of_float !sampling)^"; "
+              else "")^
+              (if !with_thread then
+                "Async_body.boi_hook; "
+              else "")^
+              "] "
+            in
+	    output_string out_chan
+	      ("let _ = Rml_machine.rml_exec "^
+               boi_hook^
+               main_id^"\n")
 	  end;
 	close_out out_chan;
 (*	Back_end_timer.time()*)

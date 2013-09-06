@@ -82,6 +82,28 @@ module M =
   functor (Interpretor: Interpretor_type) ->
   struct
 
+    let sampling_hook =
+      let starting = ref (Unix.gettimeofday ()) in
+      (fun min ->
+        let hook () =
+          let ending = Unix.gettimeofday () in
+          ignore (wait_next_instant !starting ending min);
+          starting := Unix.gettimeofday ()
+        in
+        hook)
+
+    let n_hook =
+      let first = ref true in
+      let cpt = ref 0 in
+      (fun n ->
+        if !first then (first := false; cpt := n);
+        let hook () =
+          if !cpt > 0 then decr cpt
+          else exit 0
+        in hook)
+
+    let rml_exec_first = ref true
+
     let rml_exec boi_hook p =
       let react = Interpretor.rml_make p in
       match boi_hook with
@@ -102,34 +124,12 @@ module M =
             | l -> (fun () -> List.iter (fun f -> f ()) l)
           in
           let rec exec () =
-            hook ();
 	    match react () with
-	    | None -> exec()
+	    | None -> hook (); exec()
 	    | Some v -> v
-          in exec ()
-
-    let rml_exec_n p n =
-      let react = Interpretor.rml_make p in
-      let rec exec n =
-	if n > 0 then
-	  match react () with
-	  | None -> exec (n-1)
-	  | v -> v
-	else
-	  None
-      in exec n
-
-    let rml_exec_sampling p min =
-      let react = Interpretor.rml_make p in
-      let rec exec () =
-	let debut = Unix.gettimeofday () in
-	let v = react () in
-	let fin = Unix.gettimeofday () in
-        ignore (wait_next_instant debut fin min);
-	match v with
-	| None -> exec ()
-	| Some v -> v
-      in exec ()
+          in
+          if !rml_exec_first then (rml_exec_first := false; hook ());
+          exec ()
 
 
     let rml_exec_n_sampling p n min =

@@ -93,6 +93,22 @@ let make_patt_var_local id =
 let make_expr_var_local id =
   make_expr (Cexpr_local id) Location.none
 
+let make_list c_list =
+  List.fold_right
+    (fun e acc ->
+      make_expr
+	(Cexpr_construct
+	   (Initialization.cons_constr_desc,
+	    Some
+	      (make_expr
+		 (Cexpr_tuple [e; acc])
+		 Location.none)))
+	Location.none)
+    c_list
+    (make_expr
+       (Cexpr_construct (Initialization.nil_constr_desc, None))
+       Location.none)
+
 let make_raise_RML () =
   make_expr
     (Cexpr_apply
@@ -112,21 +128,33 @@ let make_raise_RML () =
 	   Location.none]))
     Location.none
 
-let make_list c_list =
-  List.fold_right
-    (fun e acc ->
-      make_expr
-	(Cexpr_construct
-	   (Initialization.cons_constr_desc,
-	    Some
-	      (make_expr
-		 (Cexpr_tuple [e; acc])
-		 Location.none)))
-	Location.none)
-    c_list
-    (make_expr
-       (Cexpr_construct (Initialization.nil_constr_desc, None))
-       Location.none)
+let make_rml_exec_hook () =
+  let n_hook =
+    if !number_of_instant >= 0 then
+      let n_hook = make_module_value "Rml_machine" "n_hook" in
+      let n =
+        make_expr (Cexpr_constant (Const_int !number_of_instant)) Location.none
+      in
+      [ make_expr (Cexpr_apply (n_hook, [n])) Location.none ]
+    else []
+  in
+  let thread_hook =
+    if !with_thread then
+      [ make_module_value "Async_body" "boi_hook" ]
+    else
+      []
+  in
+  let sampling_hook =
+    if !sampling >= 0.0 then
+      let sampling_hook = make_module_value "Rml_machine" "sampling_hook" in
+      let s =
+        make_expr (Cexpr_constant (Const_float !sampling)) Location.none
+      in
+      [ make_expr (Cexpr_apply (sampling_hook, [s])) Location.none ]
+    else []
+  in
+  make_list (n_hook @ sampling_hook @ thread_hook)
+
 
 (* Creates the expression "()" *)
 let make_unit () =

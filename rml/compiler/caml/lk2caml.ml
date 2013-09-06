@@ -332,12 +332,7 @@ let rec translate_ml e =
 		   translate_ml e)
 
     | Kexpr_exec p ->
-        let hook =
-          if !with_thread then
-            make_list [make_module_value "Async_body" "boi_hook"]
-          else
-            make_list []
-        in
+        let hook = make_rml_exec_hook () in
         Cexpr_apply
           (make_module_value "Rml_machine" "rml_exec",
            [hook;
