@@ -119,10 +119,20 @@ let declare_rmllib () =
     Ocaml_utils.ocaml_lib ~extern:true ~native:true ~dir:!stdlib_dir "rmllib"
   )
 
-let link_rml extension env _build =
+let link_rmlsim extension env _build =
   let rmlsim_file = env "%.rmlsim" in
   let main_file = env "%.rml" in
   let () = read_rmlsim rmlsim_file main_file in
+  let byte_file = Pathname.update_extension extension main_file in
+  let rml_byte_file = env ("%.rml."^extension) in
+  declare_rmllib ();
+  tag_file byte_file ["use_rmllib"; "use_unix"];
+  tag_file byte_file (Tags.elements (tags_of_pathname rml_byte_file));
+  List.iter Outcome.ignore_good (_build [[byte_file]]);
+  mv byte_file rml_byte_file
+
+let link_rml extension env _build =
+  let main_file = env "%.rml" in
   let byte_file = Pathname.update_extension extension main_file in
   let rml_byte_file = env ("%.rml."^extension) in
   declare_rmllib ();
@@ -216,22 +226,45 @@ let init () =
       rule "rml: rmlsim -> byte"
         ~prod:"%.rml.byte"
         ~dep:"%.rmlsim"
-        (link_rml "byte");;
+        (link_rmlsim "byte");;
 
       rule "rml: rmlsim -> d.byte"
         ~prod:"%.rml.d.byte"
         ~dep:"%.rmlsim"
-        (link_rml "d.byte");;
+        (link_rmlsim "d.byte");;
 
       rule "rml: rmlsim -> native"
         ~prod:"%.rml.native"
         ~dep:"%.rmlsim"
-        (link_rml "native");;
+        (link_rmlsim "native");;
 
       rule "rml: rmlsim -> p.native"
         ~prod:"%.rml.p.native"
         ~dep:"%.rmlsim"
+        (link_rmlsim "p.native");;
+
+
+      rule "rml: rml -> byte"
+        ~prod:"%.rml.byte"
+        ~dep:"%.rml"
+        (link_rml "byte");;
+
+      rule "rml: rml -> d.byte"
+        ~prod:"%.rml.d.byte"
+        ~dep:"%.rml"
+        (link_rml "d.byte");;
+
+      rule "rml: rml -> native"
+        ~prod:"%.rml.native"
+        ~dep:"%.rml"
+        (link_rml "native");;
+
+      rule "rml: rml -> p.native"
+        ~prod:"%.rml.p.native"
+        ~dep:"%.rml"
         (link_rml "p.native");;
+
+
 
       rule "rml: rmllib -> mllib"
         ~prod:"%.mllib"
