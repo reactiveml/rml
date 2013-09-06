@@ -79,6 +79,10 @@ let read_rmlsim file filename =
   let cmds = read_rmlsim_lines inc in
   close_in inc;
   tag_file filename ["simulation_file"];
+  if not (List.mem_assoc "sim" cmds) then (
+    Log.eprintf "Error: The file '%s' must contain a 'sim' field" file;
+    raise (My_std.Exit_with_code Exit_codes.rc_build_error)
+  );
   let specs = [A "-s"; A (List.assoc "sim" cmds)] in
   let specs =
     if List.mem_assoc "sampling" cmds then
