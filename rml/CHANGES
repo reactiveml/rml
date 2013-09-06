@@ -30,9 +30,12 @@ ReactiveML 1.09.00 (XXXX-XX-XX):
        done
  - rmlc: new option -no_reactivity_warning to discard reactivity warnings.
  - rmlc: new option -thread to use the Async module of the standard library.
+ - rmlc: new option -debug to display instant numbers.
+ - rmlc: new way to generate process execution.
  - rmlc: bug fixes.
  - rmlc: compatibility with OCaml 4.01.
  - rmlbuild: compatibility with OCaml 4.01.
+ - rmlbuild: rmlsim file is nomore mendatory.
  * rmllib: new organization of the installation. There is one rmllib
            file per back-end. Each of them is installed in a new directory.
  - stdlib: new standard library.
