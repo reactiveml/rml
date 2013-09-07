@@ -83,12 +83,17 @@ module M =
   struct
 
     let sampling_hook =
-      let starting = ref (Unix.gettimeofday ()) in
+      let first = ref true in
+      let starting = ref 0.0 in
       (fun min ->
         let hook () =
-          let ending = Unix.gettimeofday () in
-          ignore (wait_next_instant !starting ending min);
-          starting := Unix.gettimeofday ()
+          if !first then
+            (first := false;
+             starting := Unix.gettimeofday ())
+          else
+            let ending = Unix.gettimeofday () in
+            ignore (wait_next_instant !starting ending min);
+            starting := Unix.gettimeofday ()
         in
         hook)
 
