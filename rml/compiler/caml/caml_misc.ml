@@ -138,12 +138,6 @@ let make_rml_exec_hook () =
       [ make_expr (Cexpr_apply (n_hook, [n])) Location.none ]
     else []
   in
-  let thread_hook =
-    if !with_thread then
-      [ make_module_value "Async_body" "boi_hook" ]
-    else
-      []
-  in
   let sampling_hook =
     if !sampling >= 0.0 then
       let sampling_hook = make_module_value "Rml_machine" "sampling_hook" in
@@ -153,7 +147,19 @@ let make_rml_exec_hook () =
       [ make_expr (Cexpr_apply (sampling_hook, [s])) Location.none ]
     else []
   in
-  make_list (n_hook @ sampling_hook @ thread_hook)
+  let debug_hook =
+    if !with_debug then
+      [ make_module_value "Rml_machine" "debug_hook" ]
+    else
+      []
+  in
+  let thread_hook =
+    if !with_thread then
+      [ make_module_value "Async_body" "boi_hook" ]
+    else
+      []
+  in
+  make_list (n_hook @ sampling_hook @ debug_hook @ thread_hook)
 
 
 (* Creates the expression "()" *)

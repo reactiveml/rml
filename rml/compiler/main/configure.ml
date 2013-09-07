@@ -233,6 +233,7 @@ and doc_runtime =
    "\t Lco_ctrl_tree_class\n" ^
    "\t Lk"
 and doc_thread = "Generate code that supports the async library"
+and doc_debug = "Print instant numbers on the error output"
 
 and doc_dparse = "(undocumented)"
 and doc_dtime = "(undocumented)"

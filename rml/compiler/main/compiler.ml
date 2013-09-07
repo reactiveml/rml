@@ -319,6 +319,9 @@ let compile_implementation module_name filename =
               (if !sampling >= 0.0 then
                 "Rml_machine.sampling_hook "^(string_of_float !sampling)^"; "
               else "")^
+              (if !with_debug then
+                "Rml_machine.debug_hook;"
+              else "")^
               (if !with_thread then
                 "Async_body.boi_hook; "
               else "")^

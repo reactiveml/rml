@@ -101,6 +101,9 @@ let sampling = ref (-. 1.0)
 (* threads *)
 let with_thread = ref false
 
+(* debug *)
+let with_debug = ref false
+
 (* verbose *)
 let print_type = ref false
 let save_types = ref false

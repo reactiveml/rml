@@ -102,6 +102,12 @@ module M =
           else exit 0
         in hook)
 
+    let debug_hook =
+      let instant = ref 0 in
+      (fun () ->
+        incr instant;
+        Format.eprintf "************ Instant %d ************@." !instant)
+
     let rml_exec_first = ref true
 
     let rml_exec boi_hook p =
