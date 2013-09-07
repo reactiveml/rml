@@ -85,3 +85,5 @@ let process main =
 (*      Gc.print_stat stdout;*)
       exit 0;
     end
+
+let () = run main

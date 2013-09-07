@@ -44,3 +44,6 @@ let process main =
   ||
   run (filter start)
 ;;
+
+let () = run main
+;;

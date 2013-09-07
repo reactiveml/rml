@@ -41,3 +41,5 @@ let process main =
   run (filter nat primes)
   ||
   run (output primes)
+
+let () = run main

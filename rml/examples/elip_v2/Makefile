@@ -44,7 +44,7 @@ rml: $(SRC)
 	$(RMLC) $(RMLCFLAGS) routing.rml
 	$(RMLC) $(RMLCFLAGS) node.rml
 	$(RMLC) $(RMLCFLAGS) dynamic.rml
-	$(RMLC) $(RMLCFLAGS) -s main -n $(N) -sampling $(SAMPLING) simul.rml
+	$(RMLC) $(RMLCFLAGS) -n $(N) -sampling $(SAMPLING) simul.rml
 
 cmo: rml link
 	$(OCAMLC) -c -I `$(RMLC) -where` $(OCAMLCFLAGS) init.ml

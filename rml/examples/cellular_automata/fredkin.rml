@@ -295,3 +295,4 @@ let process main =
       end
   end
 
+let () = run main

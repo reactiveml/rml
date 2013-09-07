@@ -38,3 +38,4 @@ let process main =
   ||
   run (output primes)
 
+let () = run main

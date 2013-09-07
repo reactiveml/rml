@@ -231,3 +231,5 @@ let process game =
     (game_controller
        coin ready stop
        go_on go_off game_over_on game_over_off red_on red_off display ring_bell)
+
+let () = run game

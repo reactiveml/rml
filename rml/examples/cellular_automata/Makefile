@@ -6,7 +6,6 @@ RMLC=rmlc
 N=-1
 SAMPLING=-1.0
 RMLFLAGS=-dtypes
-MAIN=main
 
 OCAMLC=ocamlc
 OCAMLFLAGS=
@@ -39,7 +38,7 @@ $(FILE).opt: $(FILE).cmx
 .SUFFIXES: .rml .mli .ml .cmi .cmo .cmx .o .rzi
 
 .rml.ml:
-	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) -s $(MAIN) $<
+	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) $<
 
 .ml.cmo:
 	$(OCAMLC) $(OCAMLFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<

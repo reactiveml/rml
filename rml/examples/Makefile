@@ -5,6 +5,7 @@ all:
 	(cd planets; $(MAKE))
 	(cd primes; $(MAKE))
 	(cd reflex; $(MAKE))
+	(cd reactive_asco; $(MAKE))
 
 clean:
 	(cd cellular_automata; $(MAKE) clean)
@@ -13,6 +14,7 @@ clean:
 	(cd planets; $(MAKE) clean)
 	(cd primes; $(MAKE) clean)
 	(cd reflex; $(MAKE) clean)
+	(cd reactive_asco; $(MAKE) clean)
 
 realclean:
 	(cd cellular_automata; $(MAKE) realclean)
@@ -21,4 +23,5 @@ realclean:
 	(cd planets; $(MAKE) realclean)
 	(cd primes; $(MAKE) realclean)
 	(cd reflex; $(MAKE) realclean)
+	(cd reactive_asco; $(MAKE) cleanall)
 cleanall: realclean
