@@ -1,0 +1,20 @@
+include ../config
+include ../configure-tools/Makefile.common
+
+THEAD_TYPE=-thread
+
+RUNTIME=Lco_toplevel
+RUNTIME_DIR=lco_toplevel
+
+SRC=	sig_env.ml \
+	lco_interpreter.mli \
+	lco_ctrl_tree.ml \
+	implem_lco_toplevel.ml \
+
+RMLLIB_OBJ=	sig_env.cmo \
+	lco_ctrl_tree.cmo \
+	implem_lco_toplevel.cmo \
+
+RMLLIB_INTF = lco_interpreter.cmi $(RMLLIB_OBJ:.cmo=.cmi)
+
+include Makefile-interpreter.common

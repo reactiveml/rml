@@ -160,6 +160,13 @@ let set_runtime s =
       set_interpreter_module "Lk_threaded_record";
       set_translation Lk
 *)
+  | "Lco_toplevel" ->
+      set_interpreter_intf "Lco_interpreter";
+      set_interpreter_impl "Implem_lco_toplevel";
+      set_interpreter_module "Lco_toplevel";
+      set_standard_lib "lco_toplevel";
+      set_translation Lco
+
   | "Rmltop" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Rmltop_implem";

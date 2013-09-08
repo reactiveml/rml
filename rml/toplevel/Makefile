@@ -2,18 +2,16 @@ include ../config
 include ../configure-tools/Makefile.common
 
 RMLC=../compiler/rmlc
-RMLLIB=-I ../stdlib -I ../interpreter
+RMLLIB=-I ../stdlib -I ../interpreter -I ../interpreter/lco_toplevel
 
 INSTALLFILE=	rmltop.cmi \
 		rmltop_global.cmi \
-		rmltop_machine_body.cmi \
 		rmltop_reactive_machine.cmi \
 		rmltop_controller.cmi \
 		rmltop_lexer.cmo \
 		rmltop.cmo \
 		rmltop_global.cmo \
 		rmltop_global.rzi \
-		rmltop_machine_body.cmo \
 		rmltop_reactive_machine.cmo \
 		rmltop_controller.cmo \
 		rmltop_controller.rzi \
@@ -25,7 +23,6 @@ INSTALLFILE=	rmltop.cmi \
 		rmltop_main.cmo
 
 GENSOURCES=	rmltop_controller.ml \
-		rmltop_machine_body.ml \
 		rmltop_reactive_machine.mli \
 		rmltop_lexer.ml
 
@@ -34,7 +31,7 @@ all: rmltop lib
 rmltop: rmltop_lexer.cmo rmltop_global.cmo rmltop_directives.cmo rmltop.cmo
 	$(OCAMLC) -o rmltop -I +threads $(RMLLIB) unix.cma str.cma \
 		threads.cma \
-		lco/rmllib.cma \
+		lco_toplevel/rmllib.cma \
 		rmltop_lexer.cmo \
 		rmltop_global.cmo \
 		rmltop_directives.cmo \
@@ -50,8 +47,8 @@ install.bin: rmltop
 	$(INSTALL) rmltop $(BINDIR)/rmltop
 
 install.lib: lib
-	$(INSTALL) -d $(LIBDIR)/lco/toplevel
-	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/lco/toplevel
+	$(INSTALL) -d $(LIBDIR)/lco_toplevel/toplevel
+	$(INSTALL) -m 644 $(INSTALLFILE) $(LIBDIR)/lco_toplevel/toplevel
 
 uninstall:
 	rm -f $(BINDIR)/rmltop
@@ -96,12 +93,6 @@ rmltop_global.cmi: rmltop_global.mli
 rmltop_global.cmo: rmltop_global.ml rmltop_global.cmi
 	$(OCAMLC) -c $(RMLLIB) -thread rmltop_global.ml
 
-rmltop_machine_body.ml: rmltop_machine_body.rml
-	$(RMLC) $(RMLLIB) -runtime Lco_ctrl_tree rmltop_machine_body.rml
-
-rmltop_machine_body.cmi rmltop_machine_body.cmo: rmltop_machine_body.ml
-	$(OCAMLC) -c $(RMLLIB) -thread rmltop_machine_body.ml
-
 rmltop_reactive_machine.rzi rmltop_reactive_machine.mli: \
 		rmltop_reactive_machine.rmli rmltop_global.rzi
 	$(RMLC) $(RMLLIB) rmltop_reactive_machine.rmli
@@ -110,11 +101,9 @@ rmltop_reactive_machine.cmi: rmltop_reactive_machine.mli rmltop_global.cmi
 	$(OCAMLC) $(RMLLIB) rmltop_reactive_machine.mli
 
 rmltop_reactive_machine.cmo: rmltop_reactive_machine.ml \
-		rmltop_machine_body.cmo rmltop_global.cmi \
+		rmltop_global.cmi \
 		rmltop_reactive_machine.cmi
 	$(OCAMLC) -c $(RMLLIB) -thread rmltop_reactive_machine.ml
-
-rmltop_machine_body.ml: rmltop_global.cmi
 
 rmltop_controller.ml rmltop_controller.rzi: rmltop_controller.rml rmltop_global.rzi \
 		rmltop_reactive_machine.rzi

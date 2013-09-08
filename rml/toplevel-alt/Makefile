@@ -2,13 +2,11 @@ include ../config
 include ../configure-tools/Makefile.common
 
 RMLC=../compiler/rmlc
-RMLLIB=-I ../stdlib -I ../interpreter -I ../interpreter/lco
+RMLLIB=-I ../stdlib -I ../interpreter -I ../interpreter/lco_toplevel
 
 INSTALLFILE=	rmltop_alt.cmi \
 		rmltop_alt_reactive_machine.cmi \
 		rmltop_alt_reactive_machine.cmo \
-		rmltop_alt_machine_body.cmi \
-		rmltop_alt_machine_body.cmo \
 		rmltop_alt_controller.rzi \
 		rmltop_alt_controller.cmi \
 		rmltop_alt_controller.cmo \
@@ -21,12 +19,10 @@ INSTALLFILE=	rmltop_alt.cmi \
 		rmltop_alt.cmo
 
 RMLRUNFILES = rmltop_alt_implem.cmo \
-	rmltop_alt_machine_body.cmo \
 	rmltop_alt_reactive_machine.cmo \
 	rmltop_alt_controller.cmo
 
 GENSOURCES=	rmltop_alt_controller.ml \
-		rmltop_alt_machine_body.ml \
 		rmltop_alt_reactive_machine.mli \
 		rmltop_alt_lexer.ml
 
@@ -53,7 +49,6 @@ rmltop_alt: ../compiler/rmlcompiler.cmo \
 		rmltop_alt_lexer.cmo \
 		rmllib.cma \
 		rmltop_alt_implem.cmo \
-		rmltop_alt_machine_body.cmo \
 		rmltop_alt_reactive_machine.cmo \
 		rmltop_alt_controller.cmo \
 		rmltop_alt_core.cmo \
@@ -111,11 +106,6 @@ rmltop_alt_global.cmi: rmltop_alt_global.mli
 rmltop_alt_global.cmo: rmltop_alt_global.ml rmltop_alt_global.cmi
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_alt_global.ml
 
-rmltop_alt_machine_body.ml: rmltop_alt_machine_body.rml
-	$(RMLC) $(RMLLIB) -runtime Lco_ctrl_tree rmltop_alt_machine_body.rml
-
-rmltop_alt_machine_body.cmi rmltop_alt_machine_body.cmo: rmltop_alt_machine_body.ml
-	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_alt_machine_body.ml
 
 rmltop_alt_reactive_machine.rzi rmltop_alt_reactive_machine.mli: \
 		rmltop_alt_reactive_machine.rmli rmltop_alt_global.rzi
@@ -125,7 +115,7 @@ rmltop_alt_reactive_machine.cmi: rmltop_alt_reactive_machine.mli rmltop_alt_glob
 	$(OCAMLC) $(OCAMLFLAGS) $(RMLLIB) rmltop_alt_reactive_machine.mli
 
 rmltop_alt_reactive_machine.cmo: rmltop_alt_reactive_machine.ml \
-		rmltop_alt_machine_body.cmo rmltop_alt_global.cmi \
+		rmltop_alt_global.cmi \
 		rmltop_alt_reactive_machine.cmi
 	$(OCAMLC) $(OCAMLFLAGS) -c $(RMLLIB) -thread rmltop_alt_reactive_machine.ml
 

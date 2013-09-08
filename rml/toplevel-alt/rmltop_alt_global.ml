@@ -21,7 +21,7 @@
 (* author: Louis Mandel *)
 (* created: 2005-09-23  *)
 
-type 'a rml_process = 'a Implem_lco_ctrl_tree_record.Lco_ctrl_tree_record.process
+type 'a rml_process = 'a Implem_lco_toplevel.Lco_toplevel.process
 
 let global_mutex = Mutex.create ()
 let lock () = Mutex.lock global_mutex

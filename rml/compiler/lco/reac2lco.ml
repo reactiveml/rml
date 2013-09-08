@@ -746,42 +746,6 @@ let translate_expr_or_process e =
   match snd (e.expr_static) with
     | Static -> translate_ml e
     | Dynamic _ ->
-      if !Misc.interactive then
-        (* let r = Rmltop_global.create_sp () in
-           Rmltop_global.add_to_run (process (let v = e in Rmltop_global.push_sp r v));
-           Rmltp_global.wait_sp r*)
-        let r_id = Ident.create Ident.gen_var "r" Ident.Internal in
-        let r_expr = make_expr (Coexpr_local r_id) Location.none in
-        let r_pat = make_patt (Copatt_var (Covarpatt_local r_id)) Location.none in
-        let v_id = Ident.create Ident.gen_var "v" Ident.Internal in
-        let v_expr = make_expr (Coexpr_local v_id) Location.none in
-        let v_pat = make_patt (Copatt_var (Covarpatt_local v_id)) Location.none in
-        let create =
-          make_expr (Coexpr_apply (make_rmltop_instruction "create_sp",
-                                   [make_unit ()])) Location.none
-        in
-        let push =
-          make_proc (Coproc_compute
-                       (make_expr
-                          (Coexpr_apply (make_rmltop_instruction "push_sp",
-                                         [r_expr; v_expr]))
-                          Location.none)) Location.none
-        in
-        let body =
-          make_proc (Coproc_def_dyn ((v_pat, translate_proc e), push)) Location.none
-        in
-        let p = make_expr (Coexpr_process body) Location.none in
-        let add =
-          make_expr (Coexpr_apply
-                       (make_rmltop_instruction "add_to_run", [p])) Location.none
-        in
-        let wait =
-          make_expr (Coexpr_apply (make_rmltop_instruction "wait_sp",
-                                   [r_expr])) Location.none
-        in
-        let seq = make_expr (Coexpr_seq (add, wait)) Location.none in
-        make_expr (Coexpr_let (Nonrecursive, [r_pat, create], seq)) Location.none
-      else
         let p = make_expr (Coexpr_process (translate_proc e)) Location.none in
         make_expr (Coexpr_exec p) Location.none
 

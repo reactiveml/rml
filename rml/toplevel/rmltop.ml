@@ -126,7 +126,7 @@ let main_loop rmltop_in rmlc_in rmlc_out ocaml_in =
   done
 
 let init ocaml_in sampling =
-  output_string ocaml_in ("open Implem_lco_ctrl_tree_record;;\n");
+  output_string ocaml_in ("open Implem_lco_toplevel;;\n");
   begin match sampling with
   | None -> ()
   | Some n ->
@@ -146,11 +146,11 @@ let print_intro () =
   print_newline();
   if !show_help then print_help ()
 
-let rmlc = ref "rmlc -i -interactive -I `rmlc -where`/toplevel"
+let rmlc = ref "rmlc -i -interactive -runtime Lco_toplevel -I `rmlc -where`/toplevel"
 let ocaml =
   ref
 (*"ocaml -I +threads -I `rmlc -where` unix.cma threads.cma rml_interactive.cmo "*)
-    "TERM=norepeat ocaml -noprompt -I +threads -I `rmlc -where` -I `rmlc -where`/toplevel unix.cma threads.cma rmllib.cma rmltop_global.cmo rmltop_implem.cmo rmltop_machine_body.cmo rmltop_reactive_machine.cmo rmltop_controller.cmo rmltop_directives.cmo rmltop_main.cmo "
+    "TERM=norepeat ocaml -noprompt -I +threads -I `rmlc -runtime Lco_toplevel -where` -I `rmlc -runtime Lco_toplevel -where`/toplevel unix.cma threads.cma rmllib.cma rmltop_global.cmo rmltop_implem.cmo rmltop_reactive_machine.cmo rmltop_controller.cmo rmltop_directives.cmo rmltop_main.cmo "
 
 let sampling = ref None
 
