@@ -143,35 +143,5 @@ module M =
           exec ()
 
 
-    let rml_exec_n_sampling p n min =
-      let instant = ref 0 in
-      let react = Interpretor.rml_make p in
-      let rec exec n =
-	if n > 0 then
-	  let _ =
-	    print_string ("************ Instant "^
-			  (string_of_int !instant)^
-			  " ************");
-	    print_newline();
-	    incr instant
-	  in
-	  let debut = Unix.gettimeofday () in
-	  let v = react () in
-	  let fin = Unix.gettimeofday () in
-          if wait_next_instant debut fin min then begin
-	    print_string "Instant ";
-	    print_int !instant;
-	    print_string " : depassement !";
-	    (* print_float (-. !diff); *)
-	    print_newline()
-          end;
-	  match v with
-	  | None -> exec (n-1)
-	  | v -> v
-	else
-	  None
-      in exec n
-
-
   end
 
