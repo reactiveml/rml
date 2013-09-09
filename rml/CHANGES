@@ -6,14 +6,14 @@ ReactiveML 1.09.00 (XXXX-XX-XX):
                   toplevel. For instance, it is possible to write:
        let process p = pause; print_endline "Hello World!" ;;
        let () = run p;;
- - New construct: the precedence of the run operator as been reduced.
+ - New construct: the precedence of the run operator has been reduced.
                   Parantheses around processes with arguments
-                  are no more mandatory. For instance, it is possible
+                  are no longer mandatory. For instance, it is possible
                   to write:
        let process p msg = pause; print_endline msg ;;
        let () = run p "Hello World!";;
  * New construct: new "proc" keyword to define anonymous processes
-                  with argument.  For instance, it is prossible to
+                  with argument. For instance, it is prossible to
                   write:
        let () = run (proc msg -> pause; print_endline msg) "Hello World!"
  - New construct: event configuration with values. For each construct
@@ -35,7 +35,7 @@ ReactiveML 1.09.00 (XXXX-XX-XX):
  - rmlc: bug fixes.
  - rmlc: compatibility with OCaml 4.01.
  - rmlbuild: compatibility with OCaml 4.01.
- - rmlbuild: rmlsim file is nomore mendatory.
+ - rmlbuild: rmlsim file is no longer mandatory.
  * rmllib: new organization of the installation. There is one rmllib
            file per back-end. Each of them is installed in a new directory.
  - stdlib: new standard library.
