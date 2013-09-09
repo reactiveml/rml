@@ -85,9 +85,9 @@ let start ppf =
   Rmlcompiler.Misc.err_fmt := ppf;
   Rmlcompiler.Misc.std_fmt := ppf;
   Rmlcompiler.Configure.configure ();
-  Rmlcompiler.Configure.set_runtime "Lco_toplevel";
+  Rmlcompiler.Configure.set_runtime "Lco_toplevel_alt";
 
-  let _ = Rmltop_alt_core.eval_ocaml_phrase ppf false "open Implem_lco_toplevel;;" in
+  let _ = Rmltop_alt_core.eval_ocaml_phrase ppf false "open Implem_lco_ctrl_tree_record;;" in
   let _ = Rmltop_alt_core.eval ppf "open Pervasives;;" in
   ()
 

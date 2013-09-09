@@ -14,8 +14,6 @@ implem_lco_ctrl_tree_record.cmx : sig_env.cmx rml_machine.cmx \
     lco_ctrl_tree.cmx
 implem_lco_rewrite_record.cmo : sig_env.cmo rml_machine.cmo lco_rewrite.cmo
 implem_lco_rewrite_record.cmx : sig_env.cmx rml_machine.cmx lco_rewrite.cmx
-implem_lco_toplevel.cmo : sig_env.cmo lco_ctrl_tree.cmo
-implem_lco_toplevel.cmx : sig_env.cmx lco_ctrl_tree.cmx
 implem_lk_record.cmo : sig_env.cmo rml_machine.cmo lk_implem.cmo
 implem_lk_record.cmx : sig_env.cmx rml_machine.cmx lk_implem.cmx
 lco_ctrl_tree.cmo : sig_env.cmo lco_interpreter.cmi

@@ -6,7 +6,6 @@ all:
 	$(MAKE) -f Makefile-lco_n all
 	$(MAKE) -f Makefile-lco_class all
 	$(MAKE) -f Makefile-lco_rewrite all
-	$(MAKE) -f Makefile-lco_toplevel all
 	$(MAKE) -f Makefile-lk all
 
 install:
@@ -14,7 +13,6 @@ install:
 	$(MAKE) -f Makefile-lco_n install
 	$(MAKE) -f Makefile-lco_class install
 	$(MAKE) -f Makefile-lco_rewrite install
-	$(MAKE) -f Makefile-lco_toplevel install
 	$(MAKE) -f Makefile-lk install
 
 uninstall:
@@ -22,7 +20,6 @@ uninstall:
 	$(MAKE) -f Makefile-lco_n uninstall
 	$(MAKE) -f Makefile-lco_class uninstall
 	$(MAKE) -f Makefile-lco_rewrite uninstall
-	$(MAKE) -f Makefile-lco_toplevel uninstall
 	$(MAKE) -f Makefile-lk uninstall
 
 clean:
@@ -30,7 +27,6 @@ clean:
 	$(MAKE) -f Makefile-lco_n clean
 	$(MAKE) -f Makefile-lco_class clean
 	$(MAKE) -f Makefile-lco_rewrite clean
-	$(MAKE) -f Makefile-lco_toplevel clean
 	$(MAKE) -f Makefile-lk clean
 
 realclean:
@@ -39,7 +35,6 @@ realclean:
 	$(MAKE) -f Makefile-lco_n realclean
 	$(MAKE) -f Makefile-lco_class realclean
 	$(MAKE) -f Makefile-lco_rewrite realclean
-	$(MAKE) -f Makefile-lco_toplevel realclean
 	$(MAKE) -f Makefile-lk realclean
 cleanall: realclean
 

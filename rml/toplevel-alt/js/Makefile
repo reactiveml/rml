@@ -34,7 +34,7 @@ OPTIONS+=\
  -I ../../interpreter/ \
  -I ../../compiler/ \
  -I ../../compiler/global \
- -I ../../compiler/lco_toplevel \
+ -I ../../compiler/lco \
  -I ../../compiler/typing \
  -I ../../compiler/other_analysis \
  -I ../../compiler/reac \
@@ -55,13 +55,15 @@ STDLIB=\
  rmlcompiler.cmo \
  sig_env.cmo \
  lco_ctrl_tree.cmo \
- implem_lco_toplevel.cmo \
+ rml_machine.cmo \
+ implem_lco_ctrl_tree_record.cmo \
  rmltop_alt_lexer.cmo \
  ocamlcommon.cma \
  ocamlbytecomp.cma \
  ocamltoplevel.cma \
  rmltop_alt_global.cmo \
  rmltop_alt_implem.cmo \
+ rmltop_alt_machine_body.cmo \
  rmltop_alt_reactive_machine.cmo \
  rmltop_alt_controller.cmo \
  rmltop_alt_core.cmo \
@@ -114,11 +116,13 @@ STDLIB_MODULES=\
   stringLabels \
   sig_env \
   lco_ctrl_tree \
-  implem_lco_toplevel \
+  rml_machine \
+  implem_lco_ctrl_tree_record \
   rmlcompiler \
   rmltop_alt_global \
   rmltop_alt_core \
   rmltop_alt_implem \
+  rmltop_alt_machine_body \
   rmltop_alt_reactive_machine \
   rmltop_alt_controller \
   weak

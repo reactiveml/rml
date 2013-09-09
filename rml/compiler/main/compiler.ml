@@ -314,13 +314,15 @@ let compile_implementation module_name filename =
             let boi_hook =
               "["^
               (if !number_of_instant >= 0 then
-                "Rml_machine.n_hook "^(string_of_int !number_of_instant)^"; "
+                !Misc.rml_machine_module^".n_hook "^
+                (string_of_int !number_of_instant)^"; "
               else "")^
               (if !sampling >= 0.0 then
-                "Rml_machine.sampling_hook "^(string_of_float !sampling)^"; "
+                !Misc.rml_machine_module^".sampling_hook "^
+                (string_of_float !sampling)^"; "
               else "")^
               (if !with_debug then
-                "Rml_machine.debug_hook;"
+                !Misc.rml_machine_module^".debug_hook;"
               else "")^
               (if !with_thread then
                 "Async_body.boi_hook; "
@@ -328,7 +330,7 @@ let compile_implementation module_name filename =
               "] "
             in
 	    output_string out_chan
-	      ("let _ = Rml_machine.rml_exec "^
+	      ("let _ = "^(!Misc.rml_machine_module)^".rml_exec "^
                boi_hook^
                main_id^"\n")
 	  end;

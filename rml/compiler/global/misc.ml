@@ -55,6 +55,7 @@ let pervasives_module = "Pervasives"
 let interpreter_module = ref ""
 let interpreter_intf = ref ""
 let interpreter_impl = ref ""
+let rml_machine_module = ref ""
 
 let standard_lib = ref Version.stdlib
 
@@ -75,6 +76,7 @@ let make_output_filename filename =
 let set_interpreter_intf s = interpreter_intf := s
 let set_interpreter_impl s = interpreter_impl := s
 let set_interpreter_module s = interpreter_module := s
+let set_rml_machine_module s = rml_machine_module := s
 
 (* different translations *)
 type translations = Lk | Lco

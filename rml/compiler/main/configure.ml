@@ -114,18 +114,21 @@ let set_runtime s =
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implem_lco_rewrite_record";
       set_interpreter_module "Lco_rewrite_record";
+      set_rml_machine_module "Rml_machine";
       set_standard_lib "lco_rewrite";
       set_translation Lco
   | "Lco_ctrl_tree" | "Lco" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implem_lco_ctrl_tree_record";
       set_interpreter_module "Lco_ctrl_tree_record";
+      set_rml_machine_module "Rml_machine";
       set_standard_lib "lco";
       set_translation Lco
   | "Lco_ctrl_tree_class" | "Lco_class" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implem_lco_ctrl_tree_class";
       set_interpreter_module "Lco_ctrl_tree_class";
+      set_rml_machine_module "Rml_machine";
       set_standard_lib "lco_class";
       set_translation Lco
 (*
@@ -139,6 +142,7 @@ let set_runtime s =
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implem_lco_ctrl_tree_n_record";
       set_interpreter_module "Lco_ctrl_tree_n_record";
+      set_rml_machine_module "Rml_machine";
       set_standard_lib "lco_n";
       set_translation Lco
 (*
@@ -151,6 +155,7 @@ let set_runtime s =
       set_interpreter_intf "Lk_interpreter";
       set_interpreter_impl "Implem_lk_record";
       set_interpreter_module "Lk_record";
+      set_rml_machine_module "Rml_machine";
       set_standard_lib "lk";
       set_translation Lk
 (*
@@ -162,21 +167,32 @@ let set_runtime s =
 *)
   | "Lco_toplevel" ->
       set_interpreter_intf "Lco_interpreter";
-      set_interpreter_impl "Implem_lco_toplevel";
-      set_interpreter_module "Lco_toplevel";
-      set_standard_lib "lco_toplevel";
+      set_interpreter_impl "Implem_lco_ctrl_tree_record";
+      set_interpreter_module "Lco_ctrl_tree_record";
+      set_rml_machine_module "Rmltop_reactive_machine";
+      set_standard_lib "lco";
+      set_translation Lco
+
+  | "Lco_toplevel_alt" ->
+      set_interpreter_intf "Lco_interpreter";
+      set_interpreter_impl "Implem_lco_ctrl_tree_record";
+      set_interpreter_module "Lco_ctrl_tree_record";
+      set_rml_machine_module "Rmltop_alt_reactive_machine";
+      set_standard_lib "lco";
       set_translation Lco
 
   | "Rmltop" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Rmltop_implem";
       set_interpreter_module "Machine_controler_machine";
+      set_rml_machine_module "Rml_machine";
       set_translation Lco
 
   | "Rmltop_alt" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Rmltop_alt_implem";
       set_interpreter_module "Machine_controler_machine";
+      set_rml_machine_module "Rml_machine";
       set_translation Lco
 
 
@@ -193,12 +209,6 @@ let set_dreactivity () = dreactivity := true
 
 (* sets the interactive mode *)
 let set_interactive () =
-(*
-  interpreter_module := "Rml_interactive";
-*)
-  set_interpreter_intf "Lco_interpreter";
-  set_interpreter_impl "Implem_lco_ctrl_tree_record";
-  set_interpreter_module "Lco_ctrl_tree_record";
   interactive := true
 
 (* suspend the nary optimization *)

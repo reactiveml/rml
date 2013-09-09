@@ -334,7 +334,7 @@ let rec translate_ml e =
     | Kexpr_exec p ->
         let hook = make_rml_exec_hook () in
         Cexpr_apply
-          (make_module_value "Rml_machine" "rml_exec",
+          (make_module_value !Misc.rml_machine_module "rml_exec",
            [hook;
             translate_ml p])
 
