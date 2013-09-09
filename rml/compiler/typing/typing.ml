@@ -987,7 +987,10 @@ let rec type_of_expression env expr =
             let ty_p, k_p = type_of_expression new_env p in
             ty_p, begin match flag with
                   | Nonimmediate -> react_seq [ react_pause(); k_p ]
-                  | Immediate -> k_p
+                  | Immediate ->
+                      if Reac_misc.partial_match patt || when_opt <> None then
+                        partial_match_err config;
+                      k_p
                   end
         | Rconf_present (_, None)
         | Rconf_and (_, _) | Rconf_or (_, _) ->

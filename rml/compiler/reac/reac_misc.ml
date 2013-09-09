@@ -368,3 +368,18 @@ let int_of_expr expr =
   match expr.expr_desc with
   | Rexpr_constant (Const_int n) -> Some n
   | _ -> None
+
+(* Test is a pattern is a partial matching *)
+let rec partial_match patt =
+  match patt.patt_desc with
+  | Rpatt_any -> false
+  | Rpatt_var _ -> false
+  | Rpatt_alias (p, _) -> partial_match p
+  | Rpatt_constant Const_unit -> false
+  | Rpatt_constant _ -> true
+  | Rpatt_tuple patt_list -> List.exists partial_match patt_list
+  | Rpatt_construct _ -> true
+  | Rpatt_or (p1, p2) -> (partial_match p1) && (partial_match p2)
+  | Rpatt_record _ -> true
+  | Rpatt_array _ -> true
+  | Rpatt_constraint (p, _) -> partial_match p

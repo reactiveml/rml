@@ -121,6 +121,12 @@ let non_event_patt_err conf =
     Location.print conf.conf_loc;
   raise Error
 
+let partial_match_err conf =
+  Format.fprintf !err_fmt
+    "%aPartial match is not allowed.\n"
+    Location.print conf.conf_loc;
+  raise Error
+
 (* typing errors *)
 (* unbound *)
 let unbound_typ_err name loc =

@@ -1,5 +1,0 @@
-(* 29/08/2013 *)
-(* Le compilateur devrait rejetter ce programme. *)
-
-let process p s =
-  await immediate one s(1) in ()
