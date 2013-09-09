@@ -1218,7 +1218,17 @@ let check_nongen_values impl_item_list =
 	    then
               cannot_generalize_err expr)
 	    patt_expr_list
-      | Rimpl_signal (l) -> () (* XXX TODO XXX *)
+      | Rimpl_signal (l) ->
+          List.iter
+            (fun ((glob, _), _) ->
+              match glob.info with
+              | None -> ()
+              | Some info ->
+                  let typ = info.value_typ.ts_desc in
+                  if fst (free_type_vars notgeneric typ) <> []
+	          then
+                    cannot_generalize_err2 impl_item.impl_loc typ)
+            l
       | _ -> ())
     impl_item_list
 

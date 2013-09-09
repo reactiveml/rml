@@ -249,6 +249,16 @@ let cannot_generalize_err expr =
   raise Error
 ;;
 
+let cannot_generalize_err2 loc typ =
+  Format.fprintf !err_fmt
+    "%aThe type of this declaration, %a,\n\
+    contains type variables that cannot be generalized"
+    Location.print loc
+    Types_printer.output typ;
+  raise Error
+;;
+
+
 (* Warnings *)
 let partial_apply_warning loc =
   Format.fprintf !err_fmt "%aWarning: this function application is partial,\n\
