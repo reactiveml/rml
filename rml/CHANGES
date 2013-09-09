@@ -2,7 +2,8 @@ Warning: incompatible changes with previous versions are marked with "*".
 
 ReactiveML 1.09.01 (XXXX-XX-XX):
 --------------------------------
-
+ - rmlc: bug fixes.
+ - rmltop: bug fixes.
 
 
 ReactiveML 1.09.00 (2013-09-09):
@@ -44,6 +45,7 @@ ReactiveML 1.09.00 (2013-09-09):
  * rmllib: new organization of the installation. There is one rmllib
            file per back-end. Each of them is installed in a new directory.
  - stdlib: new standard library.
+ - rmltop: new architecture of the toplevel.
  - examples: new application to mixed music programming.
 
 
