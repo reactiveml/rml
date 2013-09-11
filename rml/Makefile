@@ -85,7 +85,6 @@ wc:
 	(cd compiler;$(MAKE) wc)
 	(cd interpreter; $(MAKE) wc)
 	(cd toplevel; $(MAKE) wc)
-	(cd toplevel-alt; $(MAKE) wc)
 	(cd tools; $(MAKE) wc)
 
 clean:
@@ -93,7 +92,6 @@ clean:
 	(cd stdlib; $(MAKE) clean)
 	(cd interpreter; $(MAKE) clean)
 	(cd toplevel; $(MAKE) clean)
-	(cd toplevel-alt; $(MAKE) clean)
 	(cd tools; $(MAKE) clean)
 	(cd man; $(MAKE) clean)
 	(cd doc; $(MAKE) clean)
@@ -105,7 +103,6 @@ realclean: clean-distrib
 	(cd stdlib; $(MAKE) realclean)
 	(cd interpreter; $(MAKE) realclean)
 	(cd toplevel; $(MAKE) realclean)
-	(cd toplevel-alt; $(MAKE) realclean)
 	(cd tools; $(MAKE) realclean)
 	(cd man; $(MAKE) realclean)
 	(cd doc; $(MAKE) realclean)
