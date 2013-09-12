@@ -285,6 +285,7 @@ let init () =
       end;
 
       flag ["rml"; "compile"; "annot"] (A "-dtypes");
+      flag ["rml"; "compile"; "thread"] (A "-thread");
 
       flag ["rml"; "compile"; "lco_rewrite"] (S ([A "-runtime"; A "Lco_rewrite"]));
       flag ["rml"; "where"; "lco_rewrite"] (S ([A "-runtime"; A "Lco_rewrite"]));
