@@ -38,13 +38,17 @@ let process wait dur =
 
 signal perf
 
-let rec process play sequence =
-  match sequence with
-  | [] -> ()
-  | ((dur, pitch) as note) :: s ->
-      emit perf note;
-      run (wait dur);
-      run (play s)
+
+let process play sequence =
+  run (Rml_list.iter (proc ((dur, pitch) as note) -> emit perf note; run (wait dur)) sequence)
+
+(* let rec process play sequence = *)
+(*   match sequence with *)
+(*   | [] -> () *)
+(*   | ((dur, pitch) as note) :: s -> *)
+(*       emit perf note; *)
+(*       run (wait dur); *)
+(*       run (play s) *)
 
 let send_to_audio sock note =
   let m = string_of_note note in

@@ -191,31 +191,52 @@ let group synchro error seq =
 (** {6 Execute Antescofo actions} *)
 
 let process play asco sequence =
- let rec process exec s delta =
-    match s with
-    | [] -> ()
-    | (d,ae)::s' ->
-        let dn = d +. delta in
-        run (asco.wait d);
-        begin match ae with
-        | Action(a) ->
-            emit asco.perf (-1,d,a);
-            run (exec s' dn)
-        | Group(g) ->
-            (run (exec g.group_seq dn) ||
-             run (exec s' dn))
-        | Until(u) ->
-            begin
-              do
-                run (exec u.until_seq dn)
-              until asco.instr_event ([ev])
-              when (ev.index = u.until_event) done
-              ||
-              run (exec s' dn)
-            end
-        end
+  let rec compute_delay delta seq = 
+    match seq with
+    | [] -> []
+    | (dae, ae)::s -> ((delta +. dae), ae) :: (compute_delay (delta +. dae) s)
   in
-  run (exec sequence 0.0)
+  let rec process exec (d,ae) = 
+    match ae with
+    | Action(a) -> 
+	emit asco.perf (-1, d, a)
+    | Group(g) ->
+	run (Rml_list.par_iter exec g.group_seq)
+    | Until(u) -> 
+	do
+          run (Rml_list.par_iter exec u.until_seq)
+        until asco.instr_event ([ev])
+        when (ev.index = u.until_event) done
+  in
+  let seq = compute_delay 0.0 sequence in
+  run (Rml_list.par_iter exec seq)
+
+(* let process play asco sequence = *)
+ (* let rec process exec s delta = *)
+ (*    match s with *)
+ (*    | [] -> () *)
+ (*    | (d,ae)::s' -> *)
+ (*        let dn = d +. delta in *)
+ (*        run (asco.wait d); *)
+ (*        begin match ae with *)
+ (*        | Action(a) -> *)
+ (*            emit asco.perf (-1,d,a); *)
+ (*            run (exec s' dn) *)
+ (*        | Group(g) -> *)
+ (*            (run (exec g.group_seq dn) || *)
+ (*             run (exec s' dn)) *)
+ (*        | Until(u) -> *)
+ (*            begin *)
+ (*              do *)
+ (*                run (exec u.until_seq dn) *)
+ (*              until asco.instr_event ([ev]) *)
+ (*              when (ev.index = u.until_event) done *)
+ (*              || *)
+ (*              run (exec s' dn) *)
+ (*            end *)
+ (*        end *)
+ (*  in *)
+ (*  run (exec sequence 0.0) *)
 
 
 let process link asco i sequence =
@@ -264,10 +285,15 @@ let send_to_audio asco (d,p) =
 
 
 (* Turn a line into a sequence of electronic actions and execute it *)
-let rec process play_line asco sequence =
-  match sequence with
-  | [] -> ()
-  | (d,p) as note :: s ->
-      send_to_audio asco note;
-      run (wait asco d);
-      run (play_line asco s);;
+let process play_line asco sequence =
+  run (Rml_list.iter 
+	 (proc ((d,p) as note) -> (send_to_audio asco note; run (wait asco d))) 
+	 sequence)
+  
+(* let rec process play_line asco sequence = *)
+  (* match sequence with *)
+  (* | [] -> () *)
+  (* | (d,p) as note :: s -> *)
+  (*     send_to_audio asco note; *)
+  (*     run (wait asco d); *)
+  (*     run (play_line asco s);; *)

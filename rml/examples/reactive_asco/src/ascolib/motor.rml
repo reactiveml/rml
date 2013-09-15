@@ -23,21 +23,34 @@ open Utils
 *)
 let make_player instr_score wait wait_event perf =
 
-  let rec process exec_seq generic delta seq =
-    match seq with
-    | [] -> (* rule (Empty Sequence) *) ()
-    | (dae, ae)::s ->
-        (* rule (Exec Sequence) *)
-        run (generic (delta +. dae) ae) ||
-        run (exec_seq generic (delta +. dae) s) in
+  (* let rec process exec_seq generic delta seq = *)
+  (*   match seq with *)
+  (*   | [] -> (\* rule (Empty Sequence) *\) () *)
+  (*   | (dae, ae)::s -> *)
+  (*       (\* rule (Exec Sequence) *\) *)
+  (*       run (generic (delta +. dae) ae) || *)
+  (*       run (exec_seq generic (delta +. dae) s) in *)
+
+  let process exec_seq generic delta seq = 
+    let rec compute_delay delta seq = 
+      match seq with
+      | [] -> []
+      | (dae, ae)::s -> ((delta +. dae), ae) :: (compute_delay (delta +. dae) s)
+    in
+    let seq' = compute_delay delta seq in
+    run (Rml_list.par_iter (proc (dae,ae) -> run (generic dae ae)) seq') 
+  in
+
+  (* let rec process exec score = *)
+  (*   match score with *)
+  (*   | [] -> (\* rule (Empty Score) *\) () *)
+  (*   | se::sc -> *)
+  (*       (\* rule (Exec Score) *\) *)
+  (*       run (exec_score_event se) || *)
+  (*       run (exec sc) *)
 
   let rec process exec score =
-    match score with
-    | [] -> (* rule (Empty Score) *) ()
-    | se::sc ->
-        (* rule (Exec Score) *)
-        run (exec_score_event se) ||
-        run (exec sc)
+    run (Rml_list.par_iter exec_score_event score)
 
   and process exec_score_event se =
     let status = run (wait_event se.event) in
@@ -122,12 +135,16 @@ let make_player instr_score wait wait_event perf =
   in
 
   (* Launch the already past part of a dynamically loaded score *)
-  let rec process exec_past score j =
-    match score with
-    | [] -> ()
-    | se::sc ->
-        run (exec_seq (missed se.event j) 0.0 se.seq) ||
-        run (exec_past sc j)
+  (* let rec process exec_past score j = *)
+  (*   match score with *)
+  (*   | [] -> () *)
+  (*   | se::sc -> *)
+  (*       run (exec_seq (missed se.event j) 0.0 se.seq) || *)
+  (*       run (exec_past sc j) *)
+  (* in *)
+
+  let process exec_past score j =
+    run (Rml_list.par_iter (proc se -> exec_seq (missed se.event j) 0.0 se.seq) score)
   in
 
   (* Launch a score that could start after the beginning of the performance *)
