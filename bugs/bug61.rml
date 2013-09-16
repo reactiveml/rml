@@ -1,0 +1,6 @@
+(* 16/09/2013 *)
+(* Bug dans les annotations de type : le compilateur boucle ! *)
+
+let rec process reset s (p: 'c process) =
+  do run p
+  until s -> run reset s p done
