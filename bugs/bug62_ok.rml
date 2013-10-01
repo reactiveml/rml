@@ -1,0 +1,4 @@
+(* 24/09/2013 *)
+(* Printing des opérateurs infixes. *)
+
+let f x y = x lor y

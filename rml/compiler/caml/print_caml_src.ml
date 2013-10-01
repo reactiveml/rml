@@ -85,8 +85,8 @@ let print_immediate i =
 let print_name s =
   let c = String.get s 0 in
   let s =
-    if s = "or" || s = "mod" || s = "lxor" || s = "lnot" || s = "lsl"
-	|| s = "lsr" || s = "asr"
+    if s = "or" || s = "mod" || s = "lxor" || s = "lsl"
+	|| s = "lsr" || s = "asr" || s = "land" || s = "lor"
     then "(" ^ s ^ ")"
     else
       if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c = '_'
