@@ -43,6 +43,8 @@ STDLIB_SRC= \
 
 STDLIB_RML_SRC=rml_list.rml \
 
+# rml_process_manager.rml \
+
 STDLIB_ML_SRC=
 
 STDLIB_THREAD_SRC=thread/async_body.rmli \

@@ -63,6 +63,7 @@ unix.rzi: pervasives.rzi
 weak.rzi: pervasives.rzi
 
 rml_list.rzi: pervasives.rzi list.rzi
+rml_process_manager.rzi: pervasives.rzi
 thread/async.rzi: pervasives.rzi thread/async_body.rzi
 thread/async_body.rzi: pervasives.rzi
 
