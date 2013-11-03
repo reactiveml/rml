@@ -1,0 +1,11 @@
+(* 03/11/13 *)
+(* Bug dans les effets des processus : le compilateur boucle ! *)
+
+let bug =
+  let rec process incr =
+    if true then process ()
+    else run decr
+  and process decr =
+    run incr
+  in
+  incr
