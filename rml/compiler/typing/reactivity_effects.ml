@@ -498,16 +498,18 @@ let rec unify_react_effect expected_k actual_k =
             | _, None -> assert false
             | kl2, Some v2 -> kl2, v2
           in
-          let k1_1' = react_or (k1_1 :: kl1) in
-          let k1_2' = react_or (k1_2 :: kl2) in
-          (*if react_equal k1_1' k1_2' then unify_react_effect v1 v2
-          else begin*)
+          if react_equal v1 v2 then ()
+          else begin
+            let k1_1' = react_or (k1_1 :: kl1) in
+            let k1_2' = react_or (k1_2 :: kl2) in
+            (*if react_equal k1_1' k1_2' then unify_react_effect v1 v2
+              else begin*)
             let var = new_react_var () in
             let new_k1_1 = react_raw k1_1' var in
             let new_k1_2 = react_raw k1_2' var in
             unify_react_effect v1 new_k1_2;
             unify_react_effect v2 new_k1_1
-         (*end*)
+          end
       (* | React_or kl1, React_or kl2 -> *)
       (*     let kl1, v1 =  try find_row_var kl1 with Not_found -> raise Unify in *)
       (*     let kl2, v2 =  try find_row_var kl2 with Not_found -> raise Unify in *)
