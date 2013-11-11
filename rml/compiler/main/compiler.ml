@@ -470,8 +470,10 @@ let compile_interface parse module_name filename filename_end =
 
 (* compiling a scalar interface *)
 let compile_scalar_interface module_name filename =
+  let no_link_save = !no_link in
   no_link := true;
-  compile_interface Parse.interface module_name filename ".mli"
+  compile_interface Parse.interface module_name filename ".mli";
+  no_link := no_link_save
 
 (* compiling a ReactiveML interface *)
 let compile_interface module_name filename =
