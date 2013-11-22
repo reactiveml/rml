@@ -5,6 +5,7 @@ all:
 	(cd planets; $(MAKE))
 	(cd primes; $(MAKE))
 	(cd reflex; $(MAKE))
+	(cd reactiveart; $(MAKE))
 	(cd reactive_asco; $(MAKE))
 
 clean:
@@ -14,6 +15,7 @@ clean:
 	(cd planets; $(MAKE) clean)
 	(cd primes; $(MAKE) clean)
 	(cd reflex; $(MAKE) clean)
+	(cd reactiveart; $(MAKE) clean)
 	(cd reactive_asco; $(MAKE) clean)
 
 realclean:
@@ -23,5 +25,6 @@ realclean:
 	(cd planets; $(MAKE) realclean)
 	(cd primes; $(MAKE) realclean)
 	(cd reflex; $(MAKE) realclean)
+	(cd reactiveart; $(MAKE) realclean)
 	(cd reactive_asco; $(MAKE) cleanall)
 cleanall: realclean
