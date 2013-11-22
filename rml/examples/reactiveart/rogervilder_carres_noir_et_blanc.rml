@@ -1,0 +1,74 @@
+(* D'après http://www.rogervilder.com/projets/carre_16.html *)
+
+let process sum state delta =
+  loop
+    emit state (last ?state +. delta);
+    pause
+  end
+
+let incr_decr state delta =
+  let rec process incr =
+    do run sum state delta
+    until state(x) when x >= 1. -> run decr done
+  and process decr =
+    do run sum state (-. delta)
+    until state(x) when x <= 0. -> run incr done
+  in
+  incr
+
+let ( *: ) n p = int_of_float ((float n) *. (max 0. (min 1.0 p)))
+
+type dir = Up | Down | Left | Right
+
+let process draw dir x y n state =
+  loop
+    let k = n *: (last ?state) in
+    begin match dir with
+    | Up -> Graphics.fill_rect x y n k
+    | Down -> Graphics.fill_rect x (y + n - k) n k
+    | Left -> Graphics.fill_rect (x + n - k) y k n
+    | Right -> Graphics.fill_rect x y k n
+    end;
+    pause
+  end
+
+let process pump dir x y n state delta =
+  run incr_decr state delta ||
+  run draw dir x y n state
+
+let random_speed n = float (100 + Random.int 100) /. 20000.
+
+let rec process splittable split atom x y n init =
+  signal state default 0. gather (+.) in
+  do
+    emit state init;
+    run atom x y n state (random_speed n)
+  until split ->
+    Graphics.clear_graph ();
+    run cell split x y n (last ?state)
+  done
+
+and process cell split x y n init =
+  let n_2 = n / 2 in
+  run splittable split (pump Left) x y n_2 init ||
+  run splittable split (pump Down) (x + n_2 + 1) y n_2 init ||
+  run splittable split (pump Up) x (y + n_2 + 1) n_2 init ||
+  run splittable split (pump Right) (x + n_2 + 1) (y + n_2 + 1) n_2 init
+
+let process main =
+  let n = 600 in
+  let s = string_of_int n in
+  signal split in
+  Graphics.open_graph (" "^s^"x"^s);
+  Graphics.set_window_title "A la Roger Vilder";
+  Graphics.auto_synchronize false;
+  loop
+    Graphics.synchronize ();
+    Graphics.clear_graph ();
+    if Graphics.key_pressed() then emit split (Graphics.read_key());
+    pause
+  end
+  ||
+  run splittable split (pump Up) 0 0 n 0.0
+
+let () = run main
