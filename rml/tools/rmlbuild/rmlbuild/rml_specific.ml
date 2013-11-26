@@ -274,13 +274,13 @@ let init () =
         let file = env "%.rmllib" in
         let mllib_file = Pathname.update_extension "mllib" (Pathname.basename file) in
         let cma_file = Pathname.update_extension "cma" file in
-        tag_file cma_file ["use_rmllib"; "use_unix"];
+        tag_file cma_file [(* "use_rmllib"; "use_unix" *)];
         let cma_file = Pathname.update_extension "d.cma" file in
-        tag_file cma_file ["use_rmllib"; "use_unix"];
+        tag_file cma_file [(* "use_rmllib"; "use_unix" *)];
         let cmxa_file = Pathname.update_extension "cmxa" file in
-        tag_file cmxa_file ["use_rmllib"; "use_unix"];
+        tag_file cmxa_file [(* "use_rmllib"; "use_unix" *)];
         let cmxa_file = Pathname.update_extension "p.cmxa" file in
-        tag_file cmxa_file ["use_rmllib"; "use_unix"];
+        tag_file cmxa_file [(* "use_rmllib"; "use_unix" *)];
         cp file mllib_file
       end;
 
