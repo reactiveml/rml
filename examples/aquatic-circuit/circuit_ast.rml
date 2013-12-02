@@ -1,0 +1,10 @@
+(* Language *)
+type op =
+  | And
+  | Or
+
+type 'a circuit =
+    { inputs: 'a list;
+      outputs: 'a list;
+      locals: 'a list;
+      eqs: ('a * (op * 'a * 'a)) list; }

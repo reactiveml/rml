@@ -1,0 +1,66 @@
+open Circuit_ast
+open Circuit_simulator
+
+(* Display *)
+let output_endline oc s =
+  output_string oc (s^"\n");
+  flush oc
+
+let color_of_signal s =
+  if pre s then "blue" else "black"
+
+let dot_of_wire oc x =
+  let i = "\""^x.id^".i\"" in
+  let o = "\""^x.id^".o\"" in
+  let label = "label=\""^x.id^"\"" in
+  let color_i = "color="^(color_of_signal x.i) in
+  let color_o = "color="^(color_of_signal x.o) in
+  let shape = "shape=circle,style=filled,label=\"\",height=.1,width=.1" in
+  output_endline oc ("  "^i^" ["^shape^","^color_i^"];");
+  output_endline oc ("  "^o^" ["^shape^","^color_o^"];");
+  output_endline oc ("  "^i^" -> "^o^" ["^label^","^color_i^"];")
+
+let gen_id =
+  let cpt = ref 0 in
+  (fun s -> incr cpt; s^(string_of_int !cpt))
+
+let string_of_op op =
+  match op with
+  | And -> "and"
+  | Or -> "or"
+
+let dot_of_eq oc (o, (op, x, y)) =
+  let color_x = "color="^(color_of_signal x.o) in
+  let color_y = "color="^(color_of_signal y.o) in
+  let color_o = "color="^(color_of_signal o.i) in
+  let op = string_of_op op in
+  let id = "\""^(gen_id op)^"\"" in
+  let x = "\""^x.id^".o\"" in
+  let y = "\""^y.id^".o\"" in
+  let o = "\""^o.id^".i\"" in
+  output_endline oc ("  "^id^" [ label="^op^", shape=square, "^color_o^" ];");
+  output_endline oc ("  "^x^" ->"^id^" ["^color_x^"];");
+  output_endline oc ("  "^y^" ->"^id^" ["^color_y^"];");
+  output_endline oc ("  "^id^" ->"^o^" ["^color_o^"];")
+
+let dot_of_circuit oc circuit =
+  output_endline oc "digraph G {";
+  output_endline oc "  graph [rankdir = LR];";
+  List.iter (dot_of_wire oc) circuit.inputs;
+  List.iter (dot_of_wire oc) circuit.outputs;
+  List.iter (dot_of_wire oc) circuit.locals;
+  List.iter (dot_of_eq oc) circuit.eqs;
+  output_endline oc "}"
+
+let pdf_of_circuit circuit =
+  let oc = open_out "/tmp/circuit.dot" in
+  dot_of_circuit oc circuit;
+  close_out oc;
+  ignore (Sys.command "dot -Tpdf /tmp/circuit.dot > /tmp/circuit.pdf")
+
+let process display circuit =
+  loop
+    pdf_of_circuit circuit;
+    ignore (Sys.command "open /tmp/circuit.pdf");
+    pause
+  end

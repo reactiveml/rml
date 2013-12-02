@@ -1,0 +1,98 @@
+open Circuit_ast
+
+(* Semantics *)
+type wire =
+    { id: string;
+      i: (unit, unit) event;
+      o: (unit, unit) event; }
+
+let process wire x =
+  loop
+    present x.i then (pause; emit x.o)
+  end
+
+let process and_ x y o =
+  loop
+    present x.o then
+      present y.o then (emit o.i; pause)
+  end
+;assert false
+
+let process or_ x y o =
+  loop present x.o then (emit o.i; pause) end ||
+  loop present y.o then (emit o.i; pause) end
+
+let process input switch o =
+  loop await switch; pause end
+  ||
+  control
+    emit switch; pause;
+    loop emit o.i; pause end
+  with switch done
+
+
+(* Compilation *)
+exception Unbound of string
+exception Multiple_def
+
+let make_wire id =
+  { id = id;
+    i = (signal s default () gather (fun () () -> ()) in s);
+    o = (signal s default () gather (fun () () -> ()) in s); }
+
+let bind x env =
+  if List.exists (fun (x', _) -> x = x') env then raise Multiple_def;
+  let x' = make_wire x in
+  let p = wire x' in
+  let env = (x, x') :: env in
+  env, p, x'
+
+let proc_of_eq env (o, (op, x, y)) =
+  let x = try List.assoc x env with Not_found -> raise (Unbound x) in
+  let y = try List.assoc y env with Not_found -> raise (Unbound y) in
+  let o = try List.assoc o env with Not_found -> raise (Unbound o) in
+  match op with
+  | And -> and_ x y o, (o, (op, x, y))
+  | Or -> or_ x y o, (o, (op, x, y))
+
+let build_circuit circuit =
+  let env, switchs, procs, inputs =
+    List.fold_right
+      (fun x (env, switchs, procs, inputs) ->
+        let env, p, x = bind x env in
+        signal s default () gather (fun () () -> ()) in
+        let p' = input s x in
+        env, s::switchs, p::p'::procs, x::inputs)
+      circuit.inputs ([], [], [], [])
+  in
+  let env, procs, outputs =
+    List.fold_right
+      (fun x (env, procs, outputs) ->
+        let env, p, x = bind x env in
+        env, p::procs, x::outputs)
+      circuit.outputs (env, procs, [])
+  in
+  let env, procs, locals =
+    List.fold_right
+      (fun x (env, procs, locals) ->
+        let env, p, x = bind x env in
+        env, p::procs, x::locals)
+      circuit.locals (env, procs, [])
+  in
+  let procs, eqs =
+    List.fold_right
+      (fun eq (procs, eqs) ->
+        let p, eq = proc_of_eq env eq in
+        p::procs, eq::eqs)
+      circuit.eqs (procs, [])
+  in
+  let circuit =
+    { inputs = inputs;
+      outputs = outputs;
+      locals = locals;
+      eqs = eqs; }
+  in
+  switchs, procs, circuit
+
+let process run_circuit procs =
+  run Rml_list.par_iter (proc p -> run p) procs

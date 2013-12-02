@@ -1,0 +1,69 @@
+(* rmltop -I _build _build/aquatic.cma *)
+
+open Circuit_ast
+open Circuit_simulator
+open Circuit_misc
+
+(* Exemple 1 : o = x /\ y *)
+let switchs1, procs1, circuit1 =
+  build_circuit
+    { inputs = [ "x"; "y" ];
+      outputs = [ "o" ];
+      locals = [];
+      eqs = [ ("o", (And, "x", "y")); ]; }
+;;
+
+let x, y =
+  match switchs1 with
+  | [ x; y; ] -> (x, y)
+  | _ -> assert false
+;;
+
+let process simu1 = (run run_circuit procs1 || run display circuit1)
+;;
+
+(* #suspend;; *)
+(* #run simu1;; *)
+(* #step 3;; *)
+
+(* let () = emit x;; *)
+(* let () = emit x;; *)
+(* #step 3;; *)
+
+
+(* Exemple 2: (present s then () else ()); emit s *)
+
+let switchs2, procs2, circuit2 =
+  build_circuit
+    { inputs = [ "go"; "res" ];
+      outputs = [ ];
+      locals = [ "t"; "s"; ];
+      eqs = [ ("t", (And, "go", "s"));
+              ("s", (Or, "t", "res")); ]; }
+;;
+
+let go, res =
+  match switchs2 with
+  | [ x; y; ] -> (x, y)
+  | _ -> assert false
+;;
+
+let process simu2 = (run run_circuit procs2 || run display circuit2)
+;;
+
+#suspend;;
+
+#run simu2 ;;
+#step 3;;
+
+let () = emit go;;
+#step 3;;
+#step;;
+#step;;
+
+let () = emit go;;
+let () = emit res;;
+#step 3;;
+#step;;
+#step;;
+#step;;
