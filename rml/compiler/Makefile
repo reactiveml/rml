@@ -219,7 +219,7 @@ lexer.cmx: parser.cmi
 
 #.PHONY: global/rzi.ml
 global/rzi.ml: global/rzi.cmi global/def_modules.cmo
-	$(OCAML) -I $(CURDIR)/global global/def_modules.cmo $(CURDIR)/../configure-tools/embedrzi.ml "$(CURDIR)/../"
+	$(OCAML) -I global global/def_modules.cmo ../configure-tools/embedrzi.ml "../"
 
 # version
 global/version.ml:
