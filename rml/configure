@@ -271,6 +271,19 @@ else
 fi
 ocamlcp=$compiler
 
+# checking for ocamlbuild
+set dummy ocamlbuild; compiler_name=$2
+echo -n "checking for $compiler_name... "
+if sh ./searchpath $compiler_name; then
+    echo "$compiler_name"
+    compiler=$compiler_name
+else
+    echo "not found"
+    { echo "configure: error: Cannot find $compiler_name." 1>&2; exit 1; }
+fi
+ocamlbuild=$compiler
+
+
 # Finish generated files
 
 echo "INSTALL=$install" >> config
@@ -281,6 +294,7 @@ echo "OCAMLOPT=$ocamlopt" >> config
 echo "OCAMLDEP=$ocamldep" >> config
 echo "OCAMLLEX=$ocamllex" >> config
 echo "OCAMLYACC=$ocamlyacc" >> config
+echo "OCAMLBUILD=$ocamlbuild" >> config
 echo "OCAMLFLAGS=$debug" >> config
 echo "OCAMLOPTFLAGS=$debug" >> config
 echo "OCAMLDEPFLAGS=-slash" >> config
