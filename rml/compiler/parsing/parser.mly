@@ -263,6 +263,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token LOOP                /* "loop" */
 %token LPAREN              /* "(" */
 %token MATCH               /* "match" */
+%token MEMORY              /* "memory" */
 %token METHOD              /* "method" */
 %token MINUS               /* "-" */
 %token MINUSDOT            /* "-." */
@@ -437,7 +438,9 @@ structure_item:
   | SIGNAL signal_comma_list
       { mkimpl(Pimpl_signal(List.rev $2, None)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr
-      { mkimpl(Pimpl_signal(List.rev $2, Some($4, $6))) }
+      { mkimpl(Pimpl_signal(List.rev $2, Some(Default, $4, $6))) }
+  | SIGNAL signal_comma_list MEMORY par_expr GATHER par_expr
+      { mkimpl(Pimpl_signal(List.rev $2, Some(Memory, $4, $6))) }
   | TYPE type_declarations
       { mkimpl(Pimpl_type(List.rev $2)) }
   | EXCEPTION UIDENT constructor_arguments
@@ -579,7 +582,9 @@ expr:
   | SIGNAL signal_comma_list IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr
-      { mkexpr(Pexpr_signal(List.rev $2, Some($4, $6), $8)) }
+      { mkexpr(Pexpr_signal(List.rev $2, Some(Default, $4, $6), $8)) }
+  | SIGNAL signal_comma_list MEMORY par_expr GATHER par_expr IN par_expr
+      { mkexpr(Pexpr_signal(List.rev $2, Some(Memory, $4, $6), $8)) }
   | DO par_expr UNTIL opt_bar until_cases DONE
       { mkexpr_until $2 $5 }
   | DO par_expr WHEN event_config DONE

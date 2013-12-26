@@ -50,6 +50,8 @@ module type S =
 
     val rml_global_signal: unit -> ('a, 'a list) event
     val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+    val rml_global_signal_memory_combine:
+        'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
 
     val cfg_present': ('a,'b) event -> 'b event_cfg
     val cfg_present: (unit -> ('a,'b) event) -> 'b event_cfg
@@ -116,6 +118,9 @@ module type S =
     val rml_signal_combine:
 	(unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
 	  (('a, 'b) event -> 'c expr) -> 'c expr
+    val rml_signal_memory_combine:
+        (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
+          (('a, 'b) event -> 'c expr) -> 'c expr
     val rml_def: (unit -> 'a) -> ('a -> 'b expr) -> 'b expr
     val rml_def_dyn: 'a expr -> ('a -> 'b expr) -> 'b expr
 (*    val rml_def_and_dyn: expr array -> (value array -> expr) -> expr *)

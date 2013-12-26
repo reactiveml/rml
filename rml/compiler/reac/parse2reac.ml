@@ -426,8 +426,8 @@ let rec translate env e =
 
     | Pexpr_signal (sig_typ_list, None, expr) ->
 	(translate_signal env sig_typ_list None expr).expr_desc
-    | Pexpr_signal (sig_typ_list, Some(e1,e2), expr) ->
-	let comb = Some(translate env e1, translate env e2) in
+    | Pexpr_signal (sig_typ_list, Some(k,e1,e2), expr) ->
+	let comb = Some(k, translate env e1, translate env e2) in
 	(translate_signal env sig_typ_list comb expr).expr_desc
 
     | Pexpr_fordopar (i, e1, e2, flag, e3) ->
@@ -678,8 +678,8 @@ let translate_impl_item info_fmt item =
 	       let rty_opt = opt_map translate_te ty_opt in
 	       let rcomb_opt =
 		 opt_map
-		   (fun (e1,e2) ->
-		     (translate Env.empty e1, translate Env.empty e2))
+		   (fun (k,e1,e2) ->
+		     (k, translate Env.empty e1, translate Env.empty e2))
 		   comb_opt
 	       in
 	       (gl,rty_opt), rcomb_opt)

@@ -54,6 +54,8 @@ type await_kind = All | One
 
 type pre_kind = Status | Value
 
+type signal_kind = Default | Memory
+
 type continue_begin_of_instant = K_boi | K_not_boi
 
 type immediate =

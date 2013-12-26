@@ -575,7 +575,7 @@ let instantaneous_loop_expr =
 
       | Rexpr_signal ((ident, tyexpr_opt), None, e) ->
 	  analyse vars e
-      | Rexpr_signal ((ident, tyexpr_opt), Some(e1,e2), e) ->
+      | Rexpr_signal ((ident, tyexpr_opt), Some(k,e1,e2), e) ->
 	  let ty1 = analyse vars e1 in
 	  let ty2 = analyse vars e2 in
 	  let ty2' = Env.plus ty2 (-2) in
@@ -696,7 +696,7 @@ let instantaneous_loop impl =
       List.iter
 	(fun (_, combine) ->
 	  match combine with
-	  | Some(e1,e2) ->
+	  | Some(k,e1,e2) ->
 	      let _ty1 = instantaneous_loop_expr Env.empty e1 in
 	      let _ty2 = instantaneous_loop_expr Env.empty e2 in
 	      ()

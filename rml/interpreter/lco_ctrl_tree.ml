@@ -201,6 +201,10 @@ module Rml_interpreter : Lco_interpreter.S =
       (Event.create default combine,
        ref ([]: unit step list), ref ([]: unit step list))
 
+    let new_evt_memory_combine default combine =
+      (Event.create_memory default combine,
+       ref ([]: unit step list), ref ([]: unit step list))
+
     let new_evt() =
       new_evt_combine [] (fun x y -> x :: y)
 
@@ -234,7 +238,9 @@ module Rml_interpreter : Lco_interpreter.S =
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal = new_evt
 
-    let rml_global_signal_combine =  new_evt_combine
+    let rml_global_signal_combine = new_evt_combine
+
+    let rml_global_signal_memory_combine = new_evt_memory_combine
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
@@ -937,6 +943,15 @@ let rml_loop p =
 	    let f = p evt f_k ctrl in
 	    f unit_value
 	in f_signal
+
+    let rml_signal_memory_combine default comb p =
+      fun f_k ctrl ->
+        let f_signal =
+          fun _ ->
+            let evt = new_evt_memory_combine (default()) (comb()) in
+            let f = p evt f_k ctrl in
+            f unit_value
+        in f_signal
 
 (**************************************)
 (* def                                *)

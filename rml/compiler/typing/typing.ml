@@ -823,7 +823,7 @@ let rec type_of_expression env expr =
 		(constr_notabbrev event_ident
 		   [ty_emit; (constr_notabbrev list_ident [ty_emit])])
 		ty_s
-	  | Some (default,comb) ->
+	  | Some (kind,default,comb) ->
 	      type_expect_eps env default ty_get;
 	      type_expect_eps env comb (arrow ty_emit (arrow ty_get ty_get))
 	end;
@@ -1265,7 +1265,7 @@ let type_impl_item info_fmt item =
 		unify_event s.gi.id
 		  (constr_notabbrev list_ident [ty_emit])
 		  ty_get
-	    | Some (default,comb) ->
+	    | Some (kind,default,comb) ->
 		let k_default = type_expect Env.empty default ty_get in
                 check_epsilon k_default;
 		let k_gather =

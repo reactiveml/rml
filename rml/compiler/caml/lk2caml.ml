@@ -320,7 +320,7 @@ let rec translate_ml e =
 			  [make_expr_unit()]))
 		      Location.none],
 		   translate_ml e)
-    | Kexpr_signal (s, Some(e1,e2), e) ->
+    | Kexpr_signal (s, Some(Default,e1,e2), e) ->
 	Cexpr_let (Nonrecursive,
 		   [pattern_of_signal s,
 		    make_expr
@@ -330,6 +330,16 @@ let rec translate_ml e =
 			   translate_ml e2;]))
 		      Location.none],
 		   translate_ml e)
+    | Kexpr_signal (s, Some(Memory,e1,e2), e) ->
+        Cexpr_let (Nonrecursive,
+                   [pattern_of_signal s,
+                    make_expr
+                      (Cexpr_apply
+                         (make_instruction "rml_global_signal_memory_combine",
+                          [translate_ml e1;
+                           translate_ml e2;]))
+                      Location.none],
+                   translate_ml e)
 
     | Kexpr_exec p ->
         let hook = make_rml_exec_hook () in
@@ -615,13 +625,18 @@ and translate_proc e =
 	    in f.cexpr_desc
 	end
 
-    | Kproc_signal (s, Some(e1,e2), k) ->
+    | Kproc_signal (s, Some(kind,e1,e2), k) ->
+        let kind =
+          match kind with
+          | Default -> ""
+          | Memory -> "memory_"
+        in
 	begin match !version with
 	| Combinator ->
 	    begin match Lk_misc.is_value e1, Lk_misc.is_value e2 with
 	    | true, true ->
 		Cexpr_apply
-		  (make_instruction "rml_signal_combine_v_v",
+		  (make_instruction ("rml_signal_"^kind^"combine_v_v"),
 		   [translate_ml e1;
 		    translate_ml e2;
 		    make_expr
@@ -630,7 +645,7 @@ and translate_proc e =
 		      Location.none])
 	    | true, false ->
 		Cexpr_apply
-		  (make_instruction "rml_signal_combine_v_e",
+		  (make_instruction ("rml_signal_"^kind^"combine_v_e"),
 		   [translate_ml e1;
 		    embed_ml e2;
 		    make_expr
@@ -639,7 +654,7 @@ and translate_proc e =
 		      Location.none])
 	    | false, true ->
 		Cexpr_apply
-		  (make_instruction "rml_signal_combine_e_v",
+		  (make_instruction ("rml_signal_"^kind^"combine_e_v"),
 		   [embed_ml e1;
 		    translate_ml e2;
 		    make_expr
@@ -648,7 +663,7 @@ and translate_proc e =
 		      Location.none])
 	    | false, false ->
 		Cexpr_apply
-		  (make_instruction "rml_signal_combine",
+		  (make_instruction ("rml_signal_"^kind^"combine"),
 		   [embed_ml e1;
 		    embed_ml e2;
 		    make_expr
@@ -663,7 +678,7 @@ and translate_proc e =
 		   (Nonrecursive,
 		    [pattern_of_signal s,
 		     make_expr
-		       (Cexpr_apply (make_instruction "rml_global_signal_combine",
+		       (Cexpr_apply (make_instruction ("rml_global_signal_"^kind^"combine"),
 				     [ translate_ml e1;
 				       translate_ml e2; ]))
 		       Location.none],
@@ -1198,11 +1213,19 @@ let translate_impl_item info_chan item =
 				(make_instruction "rml_global_signal",
 				 [make_expr_unit()]))
 			     Location.none
-		       | ((s,ty_opt), Some(e1,e2)) ->
+		       | ((s,ty_opt), Some(Default,e1,e2)) ->
 			   pattern_of_signal_global (s, ty_opt),
 			   make_expr
 			     (Cexpr_apply
 				(make_instruction "rml_global_signal_combine",
+				 [translate_ml e1;
+				  translate_ml e2;]))
+			     Location.none
+		       | ((s,ty_opt), Some(Memory,e1,e2)) ->
+			   pattern_of_signal_global (s, ty_opt),
+			   make_expr
+			     (Cexpr_apply
+				(make_instruction "rml_global_signal_memory_combine",
 				 [translate_ml e1;
 				  translate_ml e2;]))
 			     Location.none)

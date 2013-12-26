@@ -72,7 +72,7 @@ and expression_desc =
   | Coexpr_emit_val of expression * expression
   | Coexpr_signal of
       (ident * type_expression option)
-	* (expression * expression) option * expression
+	* (signal_kind * expression * expression) option * expression
   | Coexpr_exec of expression
 
 (* Process expressions *)
@@ -96,7 +96,7 @@ and process_desc =
   | Coproc_merge of process * process
   | Coproc_signal of
       (ident * type_expression option)
-	* (expression * expression) option * process
+	* (signal_kind * expression * expression) option * process
   | Coproc_def of (pattern * expression) * process
   | Coproc_def_dyn of (pattern * process) * process
   | Coproc_def_and_dyn of (pattern * process) list * process
@@ -170,7 +170,7 @@ and impl_desc =
   | Coimpl_let of rec_flag * (pattern * expression) list
   | Coimpl_signal of
       ((value_type_description global * type_expression option)
-	 * (expression * expression) option) list
+	 * (signal_kind * expression * expression) option) list
   | Coimpl_type of
       (type_description global * string list * type_declaration) list
   | Coimpl_exn of

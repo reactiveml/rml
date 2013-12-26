@@ -271,11 +271,11 @@ let expr_map  =
 	  let e' = expr_map f e in
 	  f (make_expr_all (Rexpr_signal (id_tyexpr_opt, None, e'))
 	       typ static reactivity reactivity_effect loc)
-      | Rexpr_signal (id_tyexpr_opt, Some(e1,e2), e) ->
+      | Rexpr_signal (id_tyexpr_opt, Some(k, e1,e2), e) ->
 	  let e1' = expr_map f e1 in
 	  let e2' = expr_map f e2 in
 	  let e' = expr_map f e in
-	  f (make_expr_all (Rexpr_signal (id_tyexpr_opt, Some(e1',e2'), e'))
+	  f (make_expr_all (Rexpr_signal (id_tyexpr_opt, Some(k,e1',e2'), e'))
 	       typ static reactivity reactivity_effect loc)
 
       | Rexpr_run e ->
@@ -367,10 +367,10 @@ let impl_map f impl =
       let decl_list' =
 	List.map
 	  (function
-	    | (id_tyexpr_opt, Some(e1,e2)) ->
+	    | (id_tyexpr_opt, Some(k,e1,e2)) ->
 		let e1' = expr_map f e1 in
 		let e2' = expr_map f e2 in
-		(id_tyexpr_opt, Some(e1',e2'))
+		(id_tyexpr_opt, Some(k,e1',e2'))
 	    | decl -> decl)
 	  decl_list
       in

@@ -23,13 +23,17 @@
 
 module Sig_env (* : S *) =
   struct
+
+    type kind = Default | Memory
+
     type ('a, 'b) t =
 	{ mutable status: int;
 	  mutable value: 'b;
 	  mutable pre_status: int;
 	  mutable last: 'b;
-	  mutable default: 'b;
-	  combine: ('a -> 'b -> 'b); }
+	  default: 'b;
+	  combine: ('a -> 'b -> 'b);
+          kind: kind; }
 
     let instant = ref 0
     let absent = -2
@@ -40,7 +44,17 @@ module Sig_env (* : S *) =
 	pre_status = absent;
 	last = default;
 	default = default;
-	combine = combine; }
+	combine = combine;
+        kind = Default; }
+
+    let create_memory default combine =
+      { status = absent;
+        value = default;
+        pre_status = absent;
+        last = default;
+        default = default;
+        combine = combine;
+        kind = Memory; }
 
 (* -------------------------- Access functions -------------------------- *)
     let default n = n.default
@@ -83,7 +97,10 @@ module Sig_env (* : S *) =
 	(n.pre_status <- n.status;
 	 n.last <- n.value;
 	 n.status <- !instant;
-	 n.value <- n.combine v n.default)
+         begin match n.kind with
+         | Default -> n.value <- n.combine v n.default
+         | Memory -> n.value <- n.combine v n.value
+         end)
       else
 	n.value <- n.combine v n.value
 

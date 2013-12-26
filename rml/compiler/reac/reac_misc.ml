@@ -295,7 +295,7 @@ let expr_free_vars e =
     | Rexpr_signal ((ident, tyexpr_opt), None, e) ->
 	let vars' = (Varpatt_local ident) :: vars in
 	expr_free_vars vars' e
-    | Rexpr_signal ((ident, tyexpr_opt), Some(e1,e2), e) ->
+    | Rexpr_signal ((ident, tyexpr_opt), Some(kind, e1,e2), e) ->
 	let vars' = (Varpatt_local ident) :: vars in
 	expr_free_vars vars' e1;
 	expr_free_vars vars' e2;

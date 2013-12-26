@@ -78,7 +78,7 @@ and expression_desc =
   | Pexpr_merge of expression * expression
   | Pexpr_signal of
       (simple_ident * type_expression option) list *
-	(expression * expression) option * expression
+	(signal_kind * expression * expression) option * expression
   | Pexpr_process of expression
   | Pexpr_run of expression
   | Pexpr_until of
@@ -150,7 +150,7 @@ and impl_desc =
   | Pimpl_let of rec_flag * (pattern * expression) list
   | Pimpl_signal of
       (simple_ident * type_expression option) list *
-	(expression * expression) option
+	(signal_kind * expression * expression) option
   | Pimpl_type of (simple_ident * string list * type_declaration) list
   | Pimpl_exn of simple_ident * type_expression option
   | Pimpl_exn_rebind of simple_ident * ident

@@ -38,6 +38,8 @@ module type S =
 
       val rml_global_signal: unit -> ('a, 'a list) event
       val rml_global_signal_combine: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
+      val rml_global_signal_memory_combine:
+          'b -> ('a -> 'b -> 'b) -> ('a, 'b) event
       val rml_expr_emit_pure: (unit, 'b) event -> unit
       val rml_expr_emit: ('a, 'b) event -> 'a -> unit
       val rml_pre_status: ('a, 'b) event -> bool
@@ -133,13 +135,25 @@ module type S =
       val rml_signal_combine:
 	  (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
 	    (('a, 'b) event -> unit step) -> 'c step
+      val rml_signal_memory_combine:
+	  (unit -> 'b) -> (unit -> ('a -> 'b -> 'b)) ->
+	    (('a, 'b) event -> unit step) -> 'c step
       val rml_signal_combine_v_e:
+	  'b -> (unit -> ('a -> 'b -> 'b)) ->
+	    (('a, 'b) event -> unit step) -> 'c step
+      val rml_signal_memory_combine_v_e:
 	  'b -> (unit -> ('a -> 'b -> 'b)) ->
 	    (('a, 'b) event -> unit step) -> 'c step
       val rml_signal_combine_e_v:
 	  (unit -> 'b) -> ('a -> 'b -> 'b) ->
 	    (('a, 'b) event -> unit step) -> 'c step
+      val rml_signal_memory_combine_e_v:
+	  (unit -> 'b) -> ('a -> 'b -> 'b) ->
+	    (('a, 'b) event -> unit step) -> 'c step
       val rml_signal_combine_v_v:
+	  'b -> ('a -> 'b -> 'b) ->
+	    (('a, 'b) event -> unit step) -> 'c step
+      val rml_signal_memory_combine_v_v:
 	  'b -> ('a -> 'b -> 'b) ->
 	    (('a, 'b) event -> unit step) -> 'c step
 

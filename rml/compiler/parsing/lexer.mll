@@ -100,6 +100,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "let", LET;
     "loop", LOOP;
     "match", MATCH;
+    "memory", MEMORY;
     "method", METHOD;
     "module", MODULE;
     "mutable", MUTABLE;

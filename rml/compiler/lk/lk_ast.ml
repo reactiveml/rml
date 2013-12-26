@@ -72,7 +72,7 @@ and expression_desc =
   | Kexpr_emit_val of expression * expression
   | Kexpr_signal of
       (ident * type_expression option)
-	* (expression * expression) option * expression
+	* (signal_kind * expression * expression) option * expression
   | Kexpr_exec of expression
 
 (* Process expressions *)
@@ -104,7 +104,7 @@ and process_desc =
 (*  | Kproc_merge of process * process *)
   | Kproc_signal of
       (ident * type_expression option)
-	* (expression * expression) option * process
+	* (signal_kind * expression * expression) option * process
   | Kproc_def of rec_flag * (pattern * expression) list * process
   | Kproc_def_dyn of pattern * process
   | Kproc_def_and_dyn of pattern list * process
@@ -190,7 +190,7 @@ and impl_desc =
   | Kimpl_let of rec_flag * (pattern * expression) list
   | Kimpl_signal of
       ((value_type_description global * type_expression option)
-	 * (expression * expression) option) list
+	 * (signal_kind * expression * expression) option) list
   | Kimpl_type of
       (type_description global * string list * type_declaration) list
   | Kimpl_exn of

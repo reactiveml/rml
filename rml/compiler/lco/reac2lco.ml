@@ -291,8 +291,8 @@ let rec translate_ml e =
     | Rexpr_signal ((s,typ), comb, e) ->
 	Coexpr_signal ((s, opt_map translate_te typ),
 		       opt_map
-			 (fun (e1,e2) ->
-			   translate_ml e1, translate_ml e2) comb,
+			 (fun (k,e1,e2) ->
+			   k, translate_ml e1, translate_ml e2) comb,
 		       translate_ml e)
 
     | _ ->
@@ -394,8 +394,8 @@ and translate_proc p =
 	| Rexpr_signal ((s,typ), comb, proc) ->
 	    Coproc_signal ((s, opt_map translate_te typ),
 			   opt_map
-			     (fun (e1,e2) ->
-			       translate_ml e1, translate_ml e2) comb,
+			     (fun (k,e1,e2) ->
+			       k, translate_ml e1, translate_ml e2) comb,
 			   translate_proc proc)
 
 (*
@@ -765,7 +765,7 @@ let translate_impl_item info_chan item =
 	     (fun ((s, ty_opt), comb_opt) ->
 	       (s, opt_map translate_te ty_opt),
 	       opt_map
-		 (fun (e1,e2) ->(translate_ml e1, translate_ml e2))
+		 (fun (k, e1,e2) ->(k, translate_ml e1, translate_ml e2))
 		 comb_opt)
 	     l)
     | Rimpl_type l ->

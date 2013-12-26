@@ -165,6 +165,9 @@ module Lk_interpreter: Lk_interpreter.S  =
     let new_evt_combine default combine =
       (Event.create default combine, ref [], ref [])
 
+    let new_evt_memory_combine default combine =
+      (Event.create_memory default combine, ref [], ref [])
+
     let new_evt() =
       new_evt_combine [] (fun x y -> x :: y)
 
@@ -194,7 +197,9 @@ module Lk_interpreter: Lk_interpreter.S  =
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal = new_evt
 
-    let rml_global_signal_combine =  new_evt_combine
+    let rml_global_signal_combine = new_evt_combine
+
+    let rml_global_signal_memory_combine = new_evt_memory_combine
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
@@ -486,6 +491,20 @@ module Lk_interpreter: Lk_interpreter.S  =
 
     let rml_signal_combine default comb p _ =
       rml_signal_combine_v_v (default()) (comb()) p ()
+
+    let rml_signal_memory_combine_v_v default comb p _ =
+      let evt = new_evt_memory_combine default comb in
+      let f = p evt in
+      f ()
+
+    let rml_signal_memory_combine_v_e default comb p _ =
+      rml_signal_memory_combine_v_v default (comb()) p ()
+
+    let rml_signal_memory_combine_e_v default comb p _ =
+      rml_signal_memory_combine_v_v (default()) comb p ()
+
+    let rml_signal_memory_combine default comb p _ =
+      rml_signal_memory_combine_v_v (default()) (comb()) p ()
 
 
 (**************************************)

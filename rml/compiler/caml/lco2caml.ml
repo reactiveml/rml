@@ -278,12 +278,23 @@ let rec translate_ml e =
 		      Location.none],
 		   translate_ml e)
 
-    | Coexpr_signal (s, Some(e1,e2), e) ->
+    | Coexpr_signal (s, Some(Default,e1,e2), e) ->
 	Cexpr_let (Nonrecursive,
 		   [pattern_of_signal s,
 		    make_expr
 		      (Cexpr_apply
 			 (make_instruction "rml_global_signal_combine",
+			  [translate_ml e1;
+			   translate_ml e2;]))
+		      Location.none],
+		   translate_ml e)
+
+    | Coexpr_signal (s, Some(Memory,e1,e2), e) ->
+	Cexpr_let (Nonrecursive,
+		   [pattern_of_signal s,
+		    make_expr
+		      (Cexpr_apply
+			 (make_instruction "rml_global_signal_memory_combine",
 			  [translate_ml e1;
 			   translate_ml e2;]))
 		      Location.none],
@@ -427,9 +438,18 @@ and translate_proc e =
 	      (Cexpr_function [pattern_of_signal s, None, translate_proc k])
 	      Location.none])
 
-    | Coproc_signal (s, Some(e1,e2), k) ->
+    | Coproc_signal (s, Some(Default,e1,e2), k) ->
 	Cexpr_apply
 	  (make_instruction "rml_signal_combine",
+	   [embed_ml e1;
+	    embed_ml e2;
+	    make_expr
+	      (Cexpr_function [pattern_of_signal s, None, translate_proc k])
+	      Location.none])
+
+    | Coproc_signal (s, Some(Memory,e1,e2), k) ->
+	Cexpr_apply
+	  (make_instruction "rml_signal_memory_combine",
 	   [embed_ml e1;
 	    embed_ml e2;
 	    make_expr
@@ -929,11 +949,19 @@ let translate_impl_item info_chan item =
 				    (Cexpr_constant Const_unit)
 				    Location.none]))
 			     Location.none
-		       | ((s,ty_opt), Some(e1,e2)) ->
+		       | ((s,ty_opt), Some(Default,e1,e2)) ->
 			   pattern_of_signal_global (s, ty_opt),
 			   make_expr
 			     (Cexpr_apply
 				(make_instruction "rml_global_signal_combine",
+				 [translate_ml e1;
+				  translate_ml e2;]))
+			     Location.none
+		       | ((s,ty_opt), Some(Memory,e1,e2)) ->
+			   pattern_of_signal_global (s, ty_opt),
+			   make_expr
+			     (Cexpr_apply
+				(make_instruction "rml_global_signal_memory_combine",
 				 [translate_ml e1;
 				  translate_ml e2;]))
 			     Location.none)

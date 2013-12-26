@@ -89,7 +89,7 @@ and expression_desc =
   | Rexpr_merge of expression * expression
   | Rexpr_signal of
       (ident * type_expression option)
-	* (expression * expression) option * expression
+	* (signal_kind * expression * expression) option * expression
   | Rexpr_run of expression
   | Rexpr_until of
       expression * (event_config * expression option * expression option) list
@@ -159,7 +159,7 @@ and impl_desc =
   | Rimpl_let of rec_flag * (pattern * expression) list
   | Rimpl_signal of
       ((value_type_description global * type_expression option)
-	 * (expression * expression) option) list
+	 * (signal_kind * expression * expression) option) list
   | Rimpl_type of
       (type_description global * string list * type_declaration) list
   | Rimpl_exn of

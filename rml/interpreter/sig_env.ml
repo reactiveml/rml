@@ -27,6 +27,7 @@ module type S =
     type ('a, 'b) t
 
     val create: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) t
+    val create_memory: 'b -> ('a -> 'b -> 'b) -> ('a, 'b) t
     val status: ('a, 'b) t -> bool
     val value: ('a, 'b) t -> 'b
     val pre_status: ('a, 'b) t -> bool
@@ -43,13 +44,17 @@ module type S =
 
 module Record  (*: S*)  =
   struct
+
+    type kind = Default | Memory
+
     type ('a, 'b) t =
 	{ mutable status: int;
 	  mutable value: 'b;
 	  mutable pre_status: int;
 	  mutable last: 'b;
-	  mutable default: 'b;
-	  combine: ('a -> 'b -> 'b); }
+	  default: 'b;
+	  combine: ('a -> 'b -> 'b);
+          kind: kind; }
 
     let instant = ref 0
     let absent = -2
@@ -60,7 +65,17 @@ module Record  (*: S*)  =
 	pre_status = absent;
 	last = default;
 	default = default;
-	combine = combine; }
+	combine = combine;
+        kind = Default; }
+
+    let create_memory default combine =
+      { status = absent;
+        value = default;
+        pre_status = absent;
+        last = default;
+        default = default;
+        combine = combine;
+        kind = Memory; }
 
 (* -------------------------- Access functions -------------------------- *)
     let default n = n.default
@@ -103,7 +118,10 @@ module Record  (*: S*)  =
 	(n.pre_status <- n.status;
 	 n.last <- n.value;
 	 n.status <- !instant;
-	 n.value <- n.combine v n.default)
+         begin match n.kind with
+         | Default -> n.value <- n.combine v n.default
+         | Memory -> n.value <- n.combine v n.value
+         end)
       else
 	n.value <- n.combine v n.value
 
@@ -175,6 +193,26 @@ module Class : S =
 	    false
       end
 
+    class ['a, 'b] memory_event((default: 'b), (combine: ('a -> 'b -> 'b))) =
+      object (self)
+        inherit ['a, 'b] valued_event (default, combine)
+
+        method update =
+          if to_update then
+            begin
+              if status then
+                begin
+                  last <- value
+                end;
+              pre_status <- status;
+              status <- false;
+              to_update <- pre_status;
+              pre_status
+            end
+          else
+            false
+      end
+
     type ('a,'b) t =
 	< status : bool;
           value : 'b;
@@ -186,6 +224,10 @@ module Class : S =
 
     let create default combine =
       ((new valued_event (default, combine)) :> ('a, 'b) t)
+
+    let create_memory default combine =
+      ((new memory_event (default, combine)) :> ('a, 'b) t)
+
 
 (* -------------------------- Access functions -------------------------- *)
     let default n = n#default

@@ -297,7 +297,7 @@ let rec expression i ppf x =
   | Pexpr_signal (l, eeo, e) ->
       line i ppf "Pexpr_signal\n";
       list i string_x_type_expression_option ppf l;
-      option i expression_x_expression ppf eeo;
+      option i signal_kind_x_expression_x_expression ppf eeo;
       expression i ppf e;
   | Pexpr_process (e) ->
       line i ppf "Pexpr_process\n";
@@ -390,6 +390,10 @@ and string_x_type_expression_option i ppf (s, teo) =
 and expression_x_expression i ppf (e1, e2) =
   expression i ppf e1;
   expression i ppf e2
+
+and signal_kind_x_expression_x_expression i ppf (kind, e1, e2) =
+  expression i ppf e1;
+  expression i ppf e2
 ;;
 
 let rec type_declaration i ppf x =
@@ -431,7 +435,7 @@ let rec impl_item i ppf x =
   | Pimpl_signal (l, eeo) ->
       line i ppf "Pimpl_signal\n";
       list i string_x_type_expression_option ppf l;
-      option i expression_x_expression ppf eeo;
+      option i signal_kind_x_expression_x_expression ppf eeo;
   | Pimpl_type (l) ->
       line i ppf "Pimpl_type\n";
       list i string_x_string_list_x_type_expression_def ppf l;

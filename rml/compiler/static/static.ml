@@ -387,7 +387,7 @@ let rec static_expr ctx e =
     | Rexpr_signal (_, None, p) ->
 	static_expr ctx p
 
-    | Rexpr_signal (_, Some(e1,e2), p) ->
+    | Rexpr_signal (_, Some(k,e1,e2), p) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in
 	let typ3 = static_expr ctx p in
@@ -550,7 +550,7 @@ let static impl =
 	List.iter
 	  (fun (_, combine) ->
 	    match combine with
-	    | Some(e1,e2) ->
+	    | Some(k,e1,e2) ->
 		if (static_expr ML e1) <> Static
 		then expr_wrong_static_err !Misc.err_fmt e1
 		else

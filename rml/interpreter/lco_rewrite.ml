@@ -53,6 +53,8 @@ module Rml_interpreter : Lco_interpreter.S =
 (* creation d'evenements *)
     let new_evt_combine = Event.create
 
+    let new_evt_memory_combine = Event.create_memory
+
     let new_evt() =
       new_evt_combine [] (fun x y -> x :: y)
 
@@ -70,7 +72,9 @@ module Rml_interpreter : Lco_interpreter.S =
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal = new_evt
 
-    let rml_global_signal_combine =  new_evt_combine
+    let rml_global_signal_combine = new_evt_combine
+
+    let rml_global_signal_memory_combine = new_evt_memory_combine
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
@@ -471,6 +475,12 @@ module Rml_interpreter : Lco_interpreter.S =
 	let evt = new_evt_combine (default()) (comb()) in
 	let f = p evt in
 	f ()
+
+    let rml_signal_memory_combine default comb p =
+      fun () ->
+        let evt = new_evt_memory_combine (default()) (comb()) in
+        let f = p evt in
+        f ()
 
 (**************************************)
 (* def                                *)
