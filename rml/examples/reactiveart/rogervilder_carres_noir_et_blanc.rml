@@ -1,11 +1,30 @@
-(* D'après http://www.rogervilder.com/projets/carre_16.html *)
+(************************************************************************)
+(*                         ReactiveArt                                  *)
+(*                                                                      *)
+(*  Inspierd by http://www.rogervilder.com/projets/carre_16.html        *)
+(*                                                                      *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)               *)
+(*           Louis Mandel (louis.mandel@lri.fr)                         *)
+(*                                                                      *)
+(************************************************************************)
 
+(** {2 One pump} *)
+
+(** [sum state delta] emits the value [delta] at each instant on the
+    signal [state]. If [state] is a memory signal with the gathering
+    function (+), the process integrates the constant delta.
+*)
 let process sum state delta =
   loop
-    emit state (last ?state +. delta);
+    emit state delta;
     pause
   end
 
+(** [incr_decr state delta] is a two state automaton which executes
+    [run sum state delta] while the value of the signal is less than
+    one, then executes [run sum state (-. delta)] while the value of
+    the signal is greater than zero then returns in the initial state.
+*)
 let incr_decr state delta =
   let rec process incr =
     do run sum state delta
@@ -16,59 +35,104 @@ let incr_decr state delta =
   in
   incr
 
+(** [n *: p] multiplies [n] by [p] if [0. < p < 1.]. If [p <= 0.], it
+    returns 0. If [p >= 1.], it returns [n]
+*)
 let ( *: ) n p = int_of_float ((float n) *. (max 0. (min 1.0 p)))
 
+(** The four directions for the display of a pump. *)
 type dir = Up | Down | Left | Right
 
-let process draw dir x y n state =
+(** [draw dir x y size state] display a pump of state [state] of size
+    [size] in the direction [dir] with the lower left corner at the
+    position [(x, y)].
+
+*)
+let process draw dir x y size state =
   loop
-    let k = n *: (last ?state) in
+    let k = size *: (last ?state) in
     begin match dir with
-    | Up -> Graphics.fill_rect x y n k
-    | Down -> Graphics.fill_rect x (y + n - k) n k
-    | Left -> Graphics.fill_rect (x + n - k) y k n
-    | Right -> Graphics.fill_rect x y k n
+    | Up -> Graphics.fill_rect x y size k
+    | Down -> Graphics.fill_rect x (y + size - k) size k
+    | Left -> Graphics.fill_rect (x + size - k) y k size
+    | Right -> Graphics.fill_rect x y k size
     end;
     pause
   end
 
-let process pump dir x y n state delta =
+(** [pump dir x y size state delta] is a pump. It is defined by the
+    parallel composition of [incr_decr] to compute the state of the
+    pump and [draw] to display it.
+ *)
+let process pump dir x y size state delta =
   run incr_decr state delta ||
-  run draw dir x y n state
+  run draw dir x y size state
 
-let random_speed n = float (100 + Random.int 100) /. 20000.
+(** {2 Multiple pumps} *)
 
-let rec process splittable split atom x y n init =
-  signal state default 0. gather (+.) in
+(** [random_speed ()] returns a random float. *)
+let random_speed () = float (100 + Random.int 100) /. 20000.
+
+(** [splittable split dir x y size init] executes a pump characterized
+    by the arguments [dir x y size] and a random speed. This pump
+    becomes a cell of four splittable pumps when the signal [split] is
+    emitted.
+*)
+let rec process splittable split dir x y size init =
+  signal state memory 0. gather (+.) in
   do
     emit state init;
-    run atom x y n state (random_speed n)
+    run pump dir x y size state (random_speed ())
   until split ->
     Graphics.clear_graph ();
-    run cell split x y n (last ?state)
+    run cell split x y size (last ?state)
   done
 
-and process cell split x y n init =
-  let n_2 = n / 2 in
-  run splittable split (pump Left) x y n_2 init ||
-  run splittable split (pump Down) (x + n_2 + 1) y n_2 init ||
-  run splittable split (pump Up) x (y + n_2 + 1) n_2 init ||
-  run splittable split (pump Right) (x + n_2 + 1) (y + n_2 + 1) n_2 init
+(** [cell split x y size init] is a cell of four splittable pumps. *)
+and process cell split x y size init =
+  let size_2 = size / 2 in
+  run splittable split Left x y size_2 init ||
+  run splittable split Down (x + size_2 + 1) y size_2 init ||
+  run splittable split Up x (y + size_2 + 1) size_2 init ||
+  run splittable split Right (x + size_2 + 1) (y + size_2 + 1) size_2 init
 
+
+(** {2 Main} *)
+
+(** [resetable r p] execute the process [p] and reset it each time [r]
+    is emitted.
+*)
+let rec process resetable r p =
+  do run p
+  until r -> run resetable r p done
+
+
+(** [main] is a resetable splittable pump. *)
 let process main =
-  let n = 600 in
-  let s = string_of_int n in
-  signal split in
+  let size = 600 in
+  let s = string_of_int size in
+  signal reset, split in
+  print_endline "Press in the graphical window";
+  print_endline "  s or space to split";
+  print_endline "  r to reset";
+  print_endline "  q to quit";
   Graphics.open_graph (" "^s^"x"^s);
   Graphics.set_window_title "A la Roger Vilder";
   Graphics.auto_synchronize false;
   loop
     Graphics.synchronize ();
     Graphics.clear_graph ();
-    if Graphics.key_pressed() then emit split (Graphics.read_key());
+    if Graphics.key_pressed() then begin
+      match Graphics.read_key() with
+      | ' ' | 's' -> emit split
+      | 'r' -> emit reset
+      | 'q' -> print_endline "Bye!"; exit 0
+      | _ -> emit split
+    end;
     pause
   end
   ||
-  run splittable split (pump Up) 0 0 n 0.0
+  run resetable reset (splittable split Up 0 0 size 0.0)
 
+(** Execution of the main. *)
 let () = run main
