@@ -402,9 +402,10 @@ let run _ =
           code_file##innerHTML <- (Js.string "");
           let path = text_of_html (Js.to_string html) in
           let button =
-            text_button "execute"
+            text_button ("try "^(Filename.basename path))
               (fun b -> Lwt.ignore_result (execute_file path))
           in
+          button##className <- Js.string "btn btn-primary";
           Dom.appendChild code_file button
         end)
       (Dom.list_of_nodeList (doc##getElementsByTagName (Js.string "a")))
@@ -501,6 +502,8 @@ let run _ =
     );
     Js._true
   ) in
+  start_tutorial_button##className <- Js.string "btn btn-large btn-primary";
+
   let step_button = text_button "Step" (fun b ->
     Rmltop_alt_global.set_step 1
   ) in
