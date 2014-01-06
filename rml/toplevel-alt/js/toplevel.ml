@@ -402,7 +402,7 @@ let run _ =
           code_file##innerHTML <- (Js.string "");
           let path = text_of_html (Js.to_string html) in
           let button =
-            text_button ("try "^(Filename.basename path))
+            text_button ("Try "^(Filename.basename path))
               (fun b -> Lwt.ignore_result (execute_file path))
           in
           button##className <- Js.string "btn btn-primary";
