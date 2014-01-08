@@ -1,9 +1,31 @@
 Warning: incompatible changes with previous versions are marked with "*".
 
-ReactiveML 1.09.02 (XXXX-XX-XX):
+ReactiveML 1.09.02 (2014-01-08):
 --------------------------------
-
-
+ * New construct: "signal s memory v gather f in e" declares a signal
+                  whose value is not reset form an instant to the other.
+		  It means that when the gathering function is applied,
+		  the initial value is not the default value, but the
+		  last value of the signal. For example, in the following
+		  process, the signal of the signal is the number of times
+		  it has been emitted since the beginning of the execution.
+		  The value printed at the end will be 3 (and not 1).
+     let process example =
+       signal count memory 0 gather (fun x y -> y + 1) in
+       emit count;
+       emit count;
+       pause; pause;
+       emit count;
+       pause;
+       print_int (last ?count);;
+ - rmlc: bug fixes.
+ * rmlbuild: do not link unix.cma and rmllib.cma by default when
+             building a cma file.
+ - rmlbuild: new "thread" tag for the use of the Async module.
+ - examples: reactive_asco bug fixes.
+ - examples: new example base on Roger Vilder
+             http://www.rogervilder.com/projets/carre_16.html.
+ - configure: check that ocamlbuild is available.
 
 ReactiveML 1.09.01 (2013-09-10):
 --------------------------------
