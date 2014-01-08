@@ -137,9 +137,9 @@ let rec add_expr bv exp =
   | Pexpr_loop(e1) -> add_expr bv e1
   | Pexpr_par(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_merge(e1, e2) -> add_expr bv e1; add_expr bv e2
-  | Pexpr_signal(ioel, oee, e) ->
+  | Pexpr_signal(ioel, koee, e) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
-      Misc.opt_iter (fun (e1, e2) -> add_expr bv e1; add_expr bv e2) oee;
+      Misc.opt_iter (fun (_, e1, e2) -> add_expr bv e1; add_expr bv e2) koee;
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
   | Pexpr_run(e1) -> add_expr bv e1
@@ -213,9 +213,9 @@ and add_struct_item bv item =
       add_expr bv e; bv
   | Pimpl_let(_, pel) ->
       add_pat_expr_list bv pel; bv
-  | Pimpl_signal(ioel, oee) ->
+  | Pimpl_signal(ioel, koee) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
-      Misc.opt_iter (fun (e1, e2) -> add_expr bv e1; add_expr bv e2) oee;
+      Misc.opt_iter (fun (_,e1, e2) -> add_expr bv e1; add_expr bv e2) koee;
       bv
   | Pimpl_type dcls ->
       List.iter (fun (_, _, td) -> add_type_declaration bv td) dcls; bv
