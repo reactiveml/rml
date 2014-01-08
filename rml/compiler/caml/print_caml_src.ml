@@ -110,6 +110,10 @@ let print_pervasives n =
     "End_of_file" | "Division_by_zero" | "Sys_blocked_io" |
     "Undefined_recursive_module" ->
       print_name n
+  | "or" ->
+      pp_print_string !formatter  "Pervasives";
+      pp_print_string !formatter  ".";
+      pp_print_string !formatter  "(||)"
   | _ ->
       pp_print_string !formatter  "Pervasives";
       pp_print_string !formatter  ".";
