@@ -77,19 +77,19 @@ let compute_acc =
     | b2 :: all ->
 	let dist2 = distance2 b1.pos b2.pos in
 	let f_separation =
-	  if (epsilon_float <= dist2) & (dist2 < vision_sep2) then
+	  if (epsilon_float <= dist2) && (dist2 < vision_sep2) then
 	    { x = f_sep.x -. (b2.pos.x -. b1.pos.x)/.dist2;
 	      y = f_sep.y -. (b2.pos.y -. b1.pos.y)/.dist2; }
 	  else
-	    (* if (epsilon_float >= dist2) & (b1.id <> b2.id) then *)
+	    (* if (epsilon_float >= dist2) && (b1.id <> b2.id) then *)
 	    (*   { x = Random.float 0.5; *)
 	    (*     y = Random.float 0.5; } *)
 	    (* else *)
 	    f_sep
 	in
 	let f_cohesion =
-	  if (epsilon_float +. vision_cohes2_min <= dist2) & (dist2 < vision_cohes2)
-	      & (b1.family = b2.family) then
+	  if (epsilon_float +. vision_cohes2_min <= dist2) && (dist2 < vision_cohes2)
+	      && (b1.family = b2.family) then
 	    (cpt_coh + 1,
 	     { x = f_coh.x +. b2.pos.x;
 	       y = f_coh.y +. b2.pos.y; })
@@ -97,8 +97,8 @@ let compute_acc =
 	    (cpt_coh, f_coh)
 	in
 	let f_alignement =
-	  if (epsilon_float <= dist2) & (dist2 < vision_alig2)
-	      & (b1.family = b2.family) then
+	  if (epsilon_float <= dist2) && (dist2 < vision_alig2)
+	      && (b1.family = b2.family) then
 	    let norme_v2 = norme b2.v in
 	    if (norme_v2 <> 0.0) then
 	      (cpt_ali + 1,

@@ -71,7 +71,7 @@ let search_best_age kind src_node dest age_limit =
 	  match best with
 	  | None ->
 	      let (pos, date) = Pos_tbl.get pos_tbl dest in
-	      if date <> Pos_tbl.no_info &
+	      if date <> Pos_tbl.no_info &&
 		abs (n.date - date) <= age_limit
 	      then
 		Some (n, (pos, abs (n.date - date)))
@@ -86,7 +86,7 @@ let search_best_age kind src_node dest age_limit =
 	None
 	neighbors
     in
-    if (best = None) & (!next_neighbors <> []) then
+    if (best = None) && (!next_neighbors <> []) then
       let (best, lvl, node_cpt, overhead) = aux !next_neighbors in
       (best, lvl, node_cpt, (1+lvl-current_level) * !visited_cpt + overhead)
     else
@@ -148,7 +148,7 @@ let search_best_age kind src_node dest age_limit =
 	  match best with
 	  | None ->
 	      let (pos, date) = Pos_tbl.get pos_tbl dest in
-	      if date <> Pos_tbl.no_info &
+	      if date <> Pos_tbl.no_info &&
 		abs (n.date - date) <= age_limit
 	      then
 		Some (n, (pos, abs (n.date - date)))
@@ -163,7 +163,7 @@ let search_best_age kind src_node dest age_limit =
 	None
 	neighbors
     in
-    if (best = None) & (!next_neighbors <> []) then
+    if (best = None) && (!next_neighbors <> []) then
       let (best, lvl, node_cpt, overhead) = aux !next_neighbors in
       set_not_visited !next_neighbors;
       (best, lvl, node_cpt, (1+lvl-current_level) * !visited_cpt + overhead)

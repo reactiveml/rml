@@ -102,7 +102,7 @@ let maj_aff all =
 	(int_of_float p.pos.x + max_x_2)
 	(int_of_float p.pos.y  + max_y_2)
 	(*3*)
-	(if (-200.0 < p.pos.z) & (p.pos.z < 5000.0) then
+	(if (-200.0 < p.pos.z) && (p.pos.z < 5000.0) then
 	  5+(int_of_float p.pos.z / 50)
 	else 1))
     all
