@@ -42,7 +42,7 @@ let process wind () (wind_x, wind_y) =
   loop
     let dir_x = Random.float 1.0 -. 0.5 in
     let dir_y = Random.float 1.0 -. 0.5 in
-    for t = 1 to Random.int 500 do
+    for t = 0 to Random.int 500 do
       emit wind_x (dir_x *. coef);
       emit wind_y (dir_y *. coef);
       pause
