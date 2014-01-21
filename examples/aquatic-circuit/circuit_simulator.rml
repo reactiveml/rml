@@ -23,8 +23,6 @@ let process or_ x y o =
   loop present y.o then (emit o.i; pause) end
 
 let process input switch o =
-  loop await switch; pause end
-  ||
   control
     emit switch; pause;
     loop emit o.i; pause end
