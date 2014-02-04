@@ -724,6 +724,16 @@ module Rml_interpreter : Lco_interpreter.S =
         let cfg = expr_cfg () in
         rml_until_handler_match_conf' cfg matching p hdl ()
 
+    let rml_until_match expr_evt matching p =
+      rml_until_handler_match expr_evt matching p (fun _ -> rml_nothing)
+
+    let rml_until_match' evt matching p =
+      rml_until_handler_match' evt matching p (fun _ -> rml_nothing)
+
+    let rml_until_match_conf expr_cfg matching p =
+      rml_until_handler_match_conf expr_cfg matching p (fun _ -> rml_nothing)
+
+
 (**************************************)
 (* control                            *)
 (**************************************)

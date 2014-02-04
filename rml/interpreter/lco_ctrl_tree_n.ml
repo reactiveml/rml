@@ -1219,6 +1219,15 @@ let rml_loop p =
     let rml_until_handler_match_conf expr_cfg matching p p_handler =
       rml_until_handler_conf_local expr_cfg (Some matching) p p_handler
 
+    let rml_until_match expr_evt matching p =
+      rml_until_handler_local expr_evt (Some matching) p (fun _ -> rml_nothing)
+
+    let rml_until_match' evt matching p =
+      rml_until_handler_local' evt (Some matching) p (fun _ -> rml_nothing)
+
+    let rml_until_match_conf expr_cfg matching p =
+      rml_until_handler_conf_local expr_cfg (Some matching) p (fun _ -> rml_nothing)
+
 
 (**************************************)
 (* control                            *)

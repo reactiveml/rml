@@ -143,6 +143,12 @@ module type S =
     val rml_until_handler_match_conf:
 	'b event_cfg -> ('b -> bool) ->
 	  'c expr -> ('b -> 'c expr) -> 'c expr
+    val rml_until_match':
+	('a, 'b) event -> ('b -> bool) -> unit expr -> unit expr
+    val rml_until_match:
+	(unit -> ('a, 'b) event) -> ('b -> bool) -> unit expr -> unit expr
+    val rml_until_match_conf:
+	'b event_cfg -> ('b -> bool) -> unit expr -> unit expr
     val rml_control': ('a, 'b) event -> 'c expr -> 'c expr
     val rml_control: (unit -> ('a, 'b) event) -> 'c expr -> 'c expr
     val rml_control_conf: 'a event_cfg -> 'c expr -> 'c expr
