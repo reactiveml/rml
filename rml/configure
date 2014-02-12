@@ -89,7 +89,9 @@ esac
 
 # Generate the config file
 
-cd configure-tools
+rootdir=`dirname $0`
+
+cd $rootdir/configure-tools
 rm -f config
 touch config
 
