@@ -68,7 +68,7 @@ else
 	cp $(BUILDDIR)/rmlbuild.byte   $(INSTALL_BIN)/rmlbuild
 endif
 
-uninstall:
+uninstall: uninstall.$(TARGET)
 	rm -f $(INSTALL_BIN)/rmlbuild
 	rm -rf $(INSTALL_LIB)
 
