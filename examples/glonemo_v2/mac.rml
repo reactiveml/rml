@@ -170,7 +170,7 @@ let process emission self p =
   for i = 1 to (Random.int cw_max + 1) do pause done;
   let i = ref 1 in
   let ok = ref true in
-  while !i < periode_ecoute & !ok  do
+  while !i < periode_ecoute && !ok  do
     incr i;
     pause;
     if pre self.node_mac.activation then
