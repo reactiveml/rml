@@ -1,12 +1,11 @@
-(* Js_of_ocaml compiler
- * http://www.ocsigen.org/js_of_ocaml/
+(* Graph viewer
  * Copyright (C) 2010 Jérôme Vouillon
  * Laboratoire PPS - CNRS Université Paris Diderot
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, with linking exception;
- * either version 2.1 of the License, or (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,10 +17,19 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *)
 
-val from_channel : paths:string list -> in_channel -> Code.program
+type kind = [`Graph | `Digraph]
 
-val from_string : string array -> string -> Code.program
+type attr_type = [`Graph | `Edge | `Node]
 
-val set_pretty : unit -> unit
+type attributes = (string * string) list
 
-val build_toplevel : unit -> unit
+type node = { name : string; port : string option }
+
+type graph = { graph_name : string option; body : statement list }
+
+and compound = [`Node of node | `Graph of graph] list * attributes
+
+and statement =
+  [`Attributes of attr_type * attributes | `Compound of compound]
+
+type t = { kind : kind; strict : bool; graph : graph }

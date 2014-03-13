@@ -124,7 +124,33 @@ function caml_float_compare (x, y) {
   return 0;
 }
 
-// FIX: these four functions only give approximate results.
+//Provides: caml_copysign_float const
+function caml_copysign_float (x, y) {
+  if (y == 0) y = 1 / y;
+  x = Math.abs(x);
+  return (y < 0)?(-x):x;
+}
+
+//Provides: caml_expm1_float const
+function caml_expm1_float (x) {
+  var y = Math.exp(x), z = y - 1;
+  return (Math.abs(x)>1?z:(z==0?x:x*z/Math.log(y)));
+}
+
+//Provides: caml_log1p_float const
+function caml_log1p_float (x) {
+  var y = 1 + x, z = y - 1;
+  return (z==0?x:x*Math.log(y)/z);
+}
+
+//Provides: caml_hypot_float const
+function caml_hypot_float (x, y) {
+  var x = Math.abs(x), y = Math.abs(y);
+  var a = Math.max(x, y), b = Math.min(x,y) / (a?a:1);
+  return (a * Math.sqrt(1 + b*b));
+}
+
+// FIX: these five functions only give approximate results.
 //Provides: caml_log10_float const
 function caml_log10_float (x) { return Math.LOG10E * Math.log(x); }
 //Provides: caml_cosh_float const

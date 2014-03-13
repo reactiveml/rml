@@ -130,6 +130,7 @@ class type ['element] document = object
   method documentElement : 'element t readonly_prop
   method createDocumentFragment : documentFragment t meth
   method createElement : js_string t -> 'element t meth
+  method createElementNS : js_string t -> js_string t -> 'element t meth
   method createTextNode : js_string t -> text t meth
   method createAttribute : js_string t -> attr t meth
   method getElementById : js_string t -> 'element t opt meth
@@ -141,22 +142,25 @@ end
 (** {2 Helper functions} *)
 
 val insertBefore : #node t -> #node t -> #node t opt -> unit
-  (** [insertBefore n c p] inserts node [c] as child of node [n],
-      just before node [p], or as last child if [p] is empty.
+  (** [insertBefore p n c] inserts node [n] as child of node [p],
+      just before node [c], or as last child if [p] is empty.
       The expression [insertBefore n c p] behave the same as
-      [n##insertBefore(c, p)] but avoid the need of coercing the
+      [p##insertBefore(n, c)] but avoid the need of coercing the
       different objects to [node t]. *)
 val replaceChild : #node t -> #node t -> #node t -> unit
-  (** The expression [replaceChild n c p] behave the same as
-      [n##replaceChild(c, p)] but avoid the need of coercing the
+  (** The expression [replaceChild p n c] behave the same as
+      [p##replaceChild(n, c)] (replace [c] by [n] in [p])
+      but avoid the need of coercing the
       different objects to [node t]. *)
 val removeChild : #node t -> #node t -> unit
   (** The expression [removeChild n c] behave the same as
-      [n##removeChild(c)] but avoid the need of coercing the
+      [n##removeChild(c)] (remove [c] from [n])
+      but avoid the need of coercing the
       different objects to [node t]. *)
 val appendChild : #node t -> #node t -> unit
   (** The expression [appendChild n c] behave the same as
-      [n##appendChild(c)] but avoid the need of coercing the
+      [n##appendChild(c)] (appends [c] to [n])
+      but avoid the need of coercing the
       different objects to [node t]. *)
 
 val list_of_nodeList : 'a nodeList t -> 'a t list
@@ -225,6 +229,11 @@ val addEventListener :
 
 val removeEventListener : event_listener_id -> unit
   (** Remove the given event listener. *)
+
+val preventDefault : 'a #event Js.t -> unit
+(** Call this to prevent the default handler for the event.
+    To stop propagation of the event, call {!Dom_html.stopPropagation}. *)
+
 
 (** {2 Other DOM objects} *)
 

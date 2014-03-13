@@ -439,6 +439,14 @@ val unescape : js_string t -> js_string t
   (** Unescape a string: 2-digit and 4-digit escape sequences are
       replaced by the corresponding UTF-16 code point. *)
 
+
+val isNaN : 'a -> bool
+
+val parseInt : js_string t -> int
+
+val parseFloat : js_string t -> float t
+
+
 (** {2 Conversion functions between Javascript and OCaml types} *)
 
 external bool : bool -> bool t = "caml_js_from_bool"
@@ -479,7 +487,7 @@ val coerce_opt : 'a Opt.t -> ('a -> 'b Opt.t) -> ('a -> 'b) -> 'b
       If [v] is [null] or the coercion returns [null], function [f] is
       called.
       Typical usage is the following:
-      {[Js.coerce_opt (Dom_html.getElementById id)
+      {[Js.coerce_opt (Dom_html.document##getElementById(id))
       Dom_html.CoerceTo.div (fun _ -> assert false)]} *)
 
 (** {2 Type checking operators.} *)
@@ -511,6 +519,9 @@ module Unsafe : sig
   external set : 'a -> 'b -> 'c -> unit = "caml_js_set"
     (** Set an object property.  The expression [set o s v]
         set the property [s] of object [o] to value [v]. *)
+  external delete : 'a -> 'b -> unit = "caml_js_delete"
+    (** Delete an object property.  The expression [delete o s]
+        deletes property [s] of object [o]. *)
   external call : 'a -> 'b -> any array -> 'c = "caml_js_call"
     (** Performs a Javascript function call.  The expression
         [call f o a] calls the Javascript function [f] with the
@@ -527,6 +538,11 @@ module Unsafe : sig
     (** Create a Javascript object.  The expression [new_obj c a]
         creates a Javascript object with constructor [c] using the
         arguments given by the array [a]. *)
+
+  external obj : (string * any) array -> 'a = "caml_js_object"
+    (** Creates a Javascript literal object.  The expression
+        [obj a] creates a Javascript object whose fields are given by
+        the array [a] *)
 
   external pure_expr : (unit -> 'a) -> 'a = "caml_js_pure_expr"
     (** Asserts that an expression is pure, and can therefore be

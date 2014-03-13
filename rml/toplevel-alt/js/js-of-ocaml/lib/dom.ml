@@ -141,6 +141,7 @@ class type ['element] document = object
   method documentElement : 'element t readonly_prop
   method createDocumentFragment : documentFragment t meth
   method createElement : js_string t -> 'element t meth
+  method createElementNS : js_string t -> js_string t -> 'element t meth
   method createTextNode : js_string t -> text t meth
   method createAttribute : js_string t -> attr t meth
   method getElementById : js_string t -> 'element t opt meth
@@ -208,7 +209,8 @@ let handler f =
       then
         let e = window_event () in
         let res = f e in
-        e##returnValue <- res;
+        if not (Js.to_bool res)
+        then e##returnValue <- res;
 	res
       else
 	let res = f e in
@@ -224,7 +226,9 @@ let full_handler f =
       then
         let e = window_event () in
         let res = f this e in
-        e##returnValue <- res; res
+        if not (Js.to_bool res)
+        then e##returnValue <- res;
+        res
       else
         let res = f this e in
         if not (Js.to_bool res) then
@@ -234,14 +238,12 @@ let invoke_handler
   (f : ('a, 'b) event_listener) (this : 'a) (event : 'b) : bool t =
   Js.Unsafe.call f this [|Js.Unsafe.inject event|]
 
-let node_constr : node t constr = Js.Unsafe.variable "window.Node"
-
 let eventTarget (e: (< .. > as 'a) #event t) : 'a t =
   let target =
     Optdef.get (e##target) (fun () ->
     Optdef.get (e##srcElement) (fun () -> assert false))
   in
-  if Js.instanceof target node_constr
+  if Js.instanceof target (Js.Unsafe.variable "this.Node")
   then
     (* Workaround for Safari bug *)
     let target' : node Js.t = Js.Unsafe.coerce target in
@@ -270,6 +272,11 @@ let addEventListener (e : (< .. > as 'a) t) typ h capt =
   end
 
 let removeEventListener id = id ()
+
+let preventDefault ev =
+  if Js.Optdef.test ((Js.Unsafe.coerce ev)##preventDefault) (* IE hack *)
+  then (Js.Unsafe.coerce ev)##preventDefault()
+  else (Js.Unsafe.coerce ev)##returnValue <- Js.bool false (* IE < 9 *)
 
 class type stringList = object
   method item : int -> js_string t opt meth

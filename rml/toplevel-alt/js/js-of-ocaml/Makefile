@@ -1,5 +1,5 @@
 
-all: check_lwt compiler library runtime
+all: check_lwt compiler library doc runtime examples
 
 include Makefile.conf
 -include Makefile.local
@@ -49,8 +49,10 @@ clean:
 	$(MAKE) -C compiler clean
 	$(MAKE) -C lib clean
 	$(MAKE) -C runtime clean
+	$(MAKE) -C examples clean
 ifeq ($(wildcard tests),tests)
 	$(MAKE) -C tests clean
+	$(MAKE) -C doc clean
 endif
 
 realclean: clean
@@ -59,5 +61,6 @@ realclean: clean
 dist:
 	rm -rf /tmp/js_of_ocaml-${VERSION} &&\
         cd /tmp &&\
-	darcs get http://ocsigen.org/darcs/js_of_ocaml/ js_of_ocaml-${VERSION} &&\
-	tar zcvf js_of_ocaml-${VERSION}.tar.gz js_of_ocaml-${VERSION} --exclude benchmarks --exclude _darcs --exclude tests
+	git clone https://github.com/ocsigen/js_of_ocaml.git js_of_ocaml-${VERSION} &&\
+	(cd js_of_ocaml-${VERSION}; git checkout 1.4) &&\
+	tar zcvf js_of_ocaml-${VERSION}.tar.gz js_of_ocaml-${VERSION} --exclude benchmarks --exclude .git --exclude tests

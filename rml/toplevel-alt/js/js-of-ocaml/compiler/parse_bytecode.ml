@@ -29,6 +29,8 @@ let debug = Util.debug "parser"
 
 let blocks = ref AddrSet.empty
 
+type debug_loc = int -> (string * int * int * int) option
+
 let add_jump info pc = blocks := AddrSet.add pc !blocks
 
 let rec scan info code pc len =
@@ -161,10 +163,21 @@ module Debug = struct
       ce_heap: int Ident.tbl;  (* Structure of the heap-allocated env *)
       ce_rec: int Ident.tbl }  (* Functions bound by the same let rec *)
 
+  type pos =
+    { pos_fname: string;
+      pos_lnum: int;
+      pos_bol: int;
+      pos_cnum: int }
+
+  type loc_info =
+    { li_start: pos;
+      li_end: pos;
+      li_ghost: unit }
+
   type debug_event =
     { mutable ev_pos: int;                (* Position in bytecode *)
       ev_module: string;                  (* Name of defining module *)
-      ev_loc: unit;                       (* Location in source file *)
+      ev_loc: loc_info;                   (* Location in source file *)
       ev_kind: unit;                      (* Before/after event *)
       ev_info: unit;                      (* Extra information *)
       ev_typenv: unit;                    (* Typing environment *)
@@ -195,6 +208,16 @@ module Debug = struct
       Ident.table_contents ev.ev_stacksize ev.ev_compenv.ce_stack
     with Not_found ->
       []
+
+  let find_loc pc =
+    try
+      let ev = Hashtbl.find events_by_pc pc in
+      let loc = ev.ev_loc in
+      let pos = loc.li_start in
+      Some (pos.pos_fname, pos.pos_lnum, pos.pos_cnum - pos.pos_bol,
+            loc.li_end.pos_cnum - loc.li_end.pos_bol)
+    with Not_found ->
+      None
 
   let rec propagate l1 l2 =
     match l1, l2 with
@@ -431,14 +454,16 @@ let get_global state instrs i =
           (x, state, instrs)
       end
 
+let tagged_blocks = ref AddrSet.empty
 let compiled_blocks = ref AddrMap.empty
 
 let rec compile_block code pc state =
-  if not (AddrMap.mem pc !compiled_blocks) then begin
+  if not (AddrSet.mem pc !tagged_blocks) then begin
     let len = String.length code  / 4 in
     let limit = next_block len pc in
     if debug () then Format.eprintf "Compiling from %d to %d@." pc (limit - 1);
     let state = State.start_block state in
+    tagged_blocks := AddrSet.add pc !tagged_blocks;
     let (instr, last, state') = compile code limit pc state [] in
     compiled_blocks :=
       AddrMap.add pc (state, List.rev instr, last) !compiled_blocks;
@@ -876,7 +901,7 @@ and compile code limit pc state instrs =
         Format.printf "}@."
       end;
       compile code limit (pc + 2) state
-        (Let (x, Block (-1, Array.of_list contents)) :: instrs)
+        (Let (x, Block (254, Array.of_list contents)) :: instrs)
   | GETFIELD0 ->
       let y = State.accu state in
       let (x, state) = State.fresh_var state in
@@ -1561,6 +1586,7 @@ let parse_bytecode code state standalone_info =
       !compiled_blocks
   in
   compiled_blocks := AddrMap.empty;
+  tagged_blocks := AddrSet.empty;
 
   let free_pc = String.length code / 4 in
   let g = State.globals state in
@@ -1581,6 +1607,7 @@ let parse_bytecode code state standalone_info =
         register_global 2; (* Failure *)
         register_global 3; (* Invalid_argument *)
         register_global 5; (* Division_by_zero *)
+        register_global 6; (* Not_found *)
         for i = Array.length g.constants - 1  downto 0 do
           match g.vars.(i) with
             Some x when g.is_const.(i) ->
@@ -1647,7 +1674,10 @@ let parse_bytecode code state standalone_info =
   in
   let free_pc = free_pc + 1 in
   let blocks = match_exn_traps (pc, blocks, free_pc) in
-  (pc, blocks, free_pc)
+  let debug pc =
+    Debug.find_loc pc
+  in
+  ((pc, blocks, free_pc), debug)
 
 (****)
 

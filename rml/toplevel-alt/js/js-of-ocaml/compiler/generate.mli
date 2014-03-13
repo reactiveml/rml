@@ -20,5 +20,5 @@
 
 val set_pretty : unit -> unit
 
-val f : Pretty_print.t -> ?standalone:bool ->
-        Code.program -> int array -> unit
+val f : Pretty_print.t -> ?standalone:bool -> ?linkall:bool ->
+        Code.program -> Parse_bytecode.debug_loc -> int array -> unit

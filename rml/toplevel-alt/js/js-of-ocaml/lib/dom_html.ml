@@ -167,11 +167,11 @@ and keyboardEvent = object
   method metaKey : bool t readonly_prop
 end
 
-and wheelEvent = object (* All browsers but Firefox *)
+and mousewheelEvent = object (* All browsers but Firefox *)
   inherit mouseEvent
-  method delta : int readonly_prop
-  method deltaX : int optdef readonly_prop
-  method deltaY : int optdef readonly_prop
+  method wheelDelta : int readonly_prop
+  method wheelDeltaX : int optdef readonly_prop
+  method wheelDeltaY : int optdef readonly_prop
 end
 
 and mouseScrollEvent = object (* Firefox *)
@@ -211,7 +211,7 @@ and touch = object
 end
 
 and dragEvent = object
-  inherit event
+  inherit mouseEvent
   method dataTransfer : dataTransfer t readonly_prop
 end
 
@@ -239,6 +239,7 @@ and eventTarget = object ('self)
   method onkeypress : ('self t, keyboardEvent t) event_listener writeonly_prop
   method onkeydown : ('self t, keyboardEvent t) event_listener writeonly_prop
   method onkeyup : ('self t, keyboardEvent t) event_listener writeonly_prop
+  method onscroll : ('self t, event t) event_listener writeonly_prop
   method ondragstart : ('self t, dragEvent t) event_listener writeonly_prop
   method ondragend : ('self t, dragEvent t) event_listener writeonly_prop
   method ondragenter : ('self t, dragEvent t) event_listener writeonly_prop
@@ -269,6 +270,12 @@ and storage = object
   method setItem : js_string t -> js_string t -> unit meth
   method removeItem : js_string t -> unit meth
   method clear : unit meth
+end
+
+and hashChangeEvent = object
+  inherit event
+  method oldURL : js_string t readonly_prop
+  method newURL : js_string t readonly_prop
 end
 
 and nodeSelector = object
@@ -332,7 +339,7 @@ end
 
 and clientRectList = object
   method length : int readonly_prop
-  method item : int -> clientRect t optdef meth
+  method item : int -> clientRect t opt meth
 end
 
 let no_handler : ('a, 'b) event_listener = Dom.no_handler
@@ -365,6 +372,33 @@ module Event = struct
   let dragleave = Dom.Event.make "dragleave"
   let drag = Dom.Event.make "drag"
   let drop = Dom.Event.make "drop"
+  let hashchange = Dom.Event.make "hashchange"
+  let change = Dom.Event.make "change"
+  let input = Dom.Event.make "input"
+  let submit = Dom.Event.make "submit"
+  let scroll = Dom.Event.make "scroll"
+  let focus = Dom.Event.make "focus"
+  let blur = Dom.Event.make "blur"
+  let load = Dom.Event.make "load"
+  let beforeunload = Dom.Event.make "beforeunload"
+  let resize = Dom.Event.make "resize"
+  let popstate = Dom.Event.make "popstate"
+  let hashchange = Dom.Event.make "hashchange"
+  let error = Dom.Event.make "error"
+  let abort = Dom.Event.make "abort"
+  let select = Dom.Event.make "select"
+
+  let online = Dom.Event.make "online"
+  let offline = Dom.Event.make "offline"
+
+  let checking = Dom.Event.make "checking"
+  let error = Dom.Event.make "error"
+  let noupdate = Dom.Event.make "noupdate"
+  let downloading = Dom.Event.make "downloading"
+  let progress = Dom.Event.make "progress"
+  let updateready = Dom.Event.make "updateready"
+  let cached = Dom.Event.make "cached"
+  let obsolete = Dom.Event.make "obsolete"
 
   let make = Dom.Event.make
 end
@@ -377,7 +411,7 @@ let removeEventListener = Dom.removeEventListener
 
 class type ['node] collection = object
   method length : int readonly_prop
-  method item : int -> 'node t optdef meth
+  method item : int -> 'node t opt meth
   method namedItem : js_string t -> 'node t opt meth
 end
 
@@ -479,6 +513,7 @@ class type selectElement = object ('self)
   method focus : unit meth
 
   method onchange : ('self t, event t) event_listener prop
+  method oninput : ('self t, event t) event_listener prop
 end
 
 class type inputElement = object ('self)
@@ -506,9 +541,12 @@ class type inputElement = object ('self)
   method select : unit meth
   method click : unit meth
   method files : File.fileList t optdef readonly_prop
-
+  method placeholder : js_string t writeonly_prop
   method onselect : ('self t, event t) event_listener prop
   method onchange : ('self t, event t) event_listener prop
+  method oninput : ('self t, event t) event_listener prop
+  method onblur : ('self t, event t) event_listener prop
+  method onfocus : ('self t, event t) event_listener prop
 end
 
 class type textAreaElement = object ('self)
@@ -527,9 +565,12 @@ class type textAreaElement = object ('self)
   method blur : unit meth
   method focus : unit meth
   method select : unit meth
-
+  method placeholder : js_string t writeonly_prop
   method onselect : ('self t, event t) event_listener prop
   method onchange : ('self t, event t) event_listener prop
+  method oninput : ('self t, event t) event_listener prop
+  method onblur : ('self t, event t) event_listener prop
+  method onfocus : ('self t, event t) event_listener prop
 end
 
 class type buttonElement = object
@@ -679,6 +720,7 @@ class type scriptElement = object
   method defer : bool t prop
   method src : js_string t prop
   method _type : js_string t prop
+  method async : bool t prop
 end
 
 class type tableCellElement = object
@@ -895,9 +937,11 @@ external pixel_set : canvasPixelArray t -> int -> int -> unit = "caml_js_set"
 class type document = object
   inherit [element] Dom.document
   inherit nodeSelector
+  inherit eventTarget
+
   method title : js_string t prop
   method referrer : js_string t readonly_prop
-  method domain : js_string t readonly_prop
+  method domain : js_string t prop
   method _URL : js_string t readonly_prop
   method head : headElement t prop
   method body : bodyElement t prop
@@ -956,22 +1000,53 @@ class type navigator = object
   method appName : js_string t readonly_prop
   method appVersion : js_string t readonly_prop
   method cookieEnabled : bool t readonly_prop
-  method online : bool t readonly_prop
+  method onLine : bool t readonly_prop
   method platform : js_string t readonly_prop
   method userAgent : js_string t readonly_prop
   method language : js_string t optdef readonly_prop
   method userLanguage : js_string t optdef readonly_prop
 end
 
+class type screen = object
+  method width : int readonly_prop
+  method height : int readonly_prop
+  method availWidth : int readonly_prop
+  method availHeight : int readonly_prop
+end
+
+class type applicationCache = object
+  method status : int readonly_prop
+
+  method update : unit meth
+  method abort : unit meth
+  method swapCache : unit meth
+
+  method onchecking : (applicationCache t, event t) event_listener prop
+  method onerror : (applicationCache t, event t) event_listener prop
+  method onnoupdate : (applicationCache t, event t) event_listener prop
+  method ondownloading : (applicationCache t, event t) event_listener prop
+  method onprogress : (applicationCache t, event t) event_listener prop
+  method onupdateready : (applicationCache t, event t) event_listener prop
+  method oncached : (applicationCache t, event t) event_listener prop
+  method onobsolete : (applicationCache t, event t) event_listener prop
+
+  inherit eventTarget
+
+end
+
 class type window = object
+  inherit eventTarget
+
   method document : document t readonly_prop
+  method applicationCache : applicationCache t readonly_prop
   method name : js_string t prop
   method location : location t readonly_prop
   method history : history t readonly_prop
   method undoManager : undoManager t readonly_prop
-  method navigator : navigator t
+  method navigator : navigator t readonly_prop
   method getSelection : selection t meth
   method close : unit meth
+  method closed : bool t readonly_prop
   method stop : unit meth
   method focus : unit meth
   method blur : unit meth
@@ -987,7 +1062,7 @@ class type window = object
   method open_ : js_string t -> js_string t -> js_string t opt -> window t meth
   method alert : js_string t -> unit meth
   method confirm : js_string t -> bool t meth
-  method prompt : js_string t -> js_string t -> js_string t meth
+  method prompt : js_string t -> js_string t -> js_string t opt meth
   method print : unit meth
 
   method setInterval : (unit -> unit) Js.callback -> float -> interval_id meth
@@ -996,16 +1071,25 @@ class type window = object
   method setTimeout : (unit -> unit) Js.callback -> float -> timeout_id meth
   method clearTimeout : timeout_id -> unit meth
 
+  method screen : screen t readonly_prop
+  method innerWidth : int optdef readonly_prop
+  method innerHeight : int optdef readonly_prop
+  method outerWidth : int optdef readonly_prop
+  method outerHeight : int optdef readonly_prop
+
   method onload : (window t, event t) event_listener prop
   method onbeforeunload : (window t, event t) event_listener prop
   method onblur : (window t, event t) event_listener prop
   method onfocus : (window t, event t) event_listener prop
   method onresize : (window t, event t) event_listener prop
-  method onscroll : (window t, event t) event_listener prop
   method onpopstate : (window t, popStateEvent t) event_listener prop
+  method onhashchange : (window t, hashChangeEvent t) event_listener prop
+
+  method ononline : (window t, event t) event_listener writeonly_prop
+  method onoffline : (window t, event t) event_listener writeonly_prop
 end
 
-let window : window t = Js.Unsafe.variable "window"
+let window : window t = Js.Unsafe.variable "this" (* The toplevel object *)
 
 let document = window##document
 
@@ -1053,24 +1137,46 @@ let opt_iter x f = match x with None -> () | Some v -> f v
 
 let createElement (doc : document t) name = doc##createElement(Js.string name)
 let unsafeCreateElement doc name = Js.Unsafe.coerce (createElement doc name)
-let unsafeCreateElementEx ?_type ?name doc elt =
+
+let createElementSyntax = ref `Unknown
+
+let rec unsafeCreateElementEx ?_type ?name doc elt =
   if _type = None && name = None then
     Js.Unsafe.coerce (createElement doc elt)
-  else if not onIE then begin
-    let res = Js.Unsafe.coerce (createElement doc elt) in
-    opt_iter _type (fun t -> res##_type <- t);
-    opt_iter name (fun n -> res##name <- n);
-    res
-  end else begin
-    let a = jsnew Js.array_empty () in
-    ignore (a##push_2(Js.string "<", Js.string elt));
-    opt_iter _type (fun t ->
-      ignore (a##push_3(Js.string " type=\"", html_escape t, Js.string "\"")));
-    opt_iter name (fun n ->
-      ignore (a##push_3(Js.string " name=\"", html_escape n, Js.string "\"")));
-    ignore (a##push(Js.string ">"));
-    Js.Unsafe.coerce (doc##createElement (a##join (Js.string "")))
-  end
+  else
+    match !createElementSyntax with
+      `Standard ->
+        let res = Js.Unsafe.coerce (createElement doc elt) in
+        opt_iter _type (fun t -> res##_type <- t);
+        opt_iter name (fun n -> res##name <- n);
+        res
+    | `Extended ->
+        let a = jsnew Js.array_empty () in
+        ignore (a##push_2(Js.string "<", Js.string elt));
+        opt_iter _type (fun t ->
+          ignore
+            (a##push_3(Js.string " type=\"", html_escape t, Js.string "\"")));
+        opt_iter name (fun n ->
+          ignore
+            (a##push_3(Js.string " name=\"", html_escape n, Js.string "\"")));
+        ignore (a##push(Js.string ">"));
+        Js.Unsafe.coerce (doc##createElement (a##join (Js.string "")))
+    | `Unknown ->
+        createElementSyntax :=
+          if
+            try
+              let el : inputElement Js.t =
+                Js.Unsafe.coerce
+                  (document##createElement(Js.string "<input name=\"x\">")) in
+              el##tagName##toLowerCase() == Js.string "input" &&
+              el##name == Js.string "x"
+            with _ ->
+              false
+          then
+            `Extended
+          else
+            `Standard;
+        unsafeCreateElementEx ?_type ?name doc elt
 
 let createHtml doc : htmlElement t = unsafeCreateElement doc "html"
 let createHead doc : headElement t = unsafeCreateElement doc "head"
@@ -1164,7 +1270,7 @@ let createCanvas doc : canvasElement t =
   if not (Opt.test c##getContext) then raise Canvas_not_available;
   c
 
-let html_element : htmlElement t constr = Js.Unsafe.variable "window.HTMLElement"
+let html_element : htmlElement t constr = Js.Unsafe.variable "this.HTMLElement"
 
 module CoerceTo = struct
   let element : #Dom.node Js.t -> element Js.t Js.opt =
@@ -1251,11 +1357,11 @@ module CoerceTo = struct
       Js.some (Js.Unsafe.coerce ev)
     else Js.null
 
-  let mouseEvent ev = unsafeCoerceEvent "window.MouseEvent" ev
-  let keyboardEvent ev = unsafeCoerceEvent "window.KeyboardEvent" ev
-  let wheelEvent ev = unsafeCoerceEvent "window.WheelEvent" ev
-  let mouseScrollEvent ev = unsafeCoerceEvent "window.MouseScrollEvent" ev
-  let popStateEvent ev = unsafeCoerceEvent "window.PopStateEvent" ev
+  let mouseEvent ev = unsafeCoerceEvent "this.MouseEvent" ev
+  let keyboardEvent ev = unsafeCoerceEvent "this.KeyboardEvent" ev
+  let wheelEvent ev = unsafeCoerceEvent "this.WheelEvent" ev
+  let mouseScrollEvent ev = unsafeCoerceEvent "this.MouseScrollEvent" ev
+  let popStateEvent ev = unsafeCoerceEvent "this.PopStateEvent" ev
 
 end
 
@@ -1313,10 +1419,10 @@ let addMousewheelEventListener e h capt =
   if hasMousewheelEvents () then
     addEventListener e Event.mousewheel
       (handler
-         (fun (e : wheelEvent t) ->
-            let dx = - Optdef.get (e##deltaX) (fun () -> 0) / 40 in
+         (fun (e : mousewheelEvent t) ->
+            let dx = - Optdef.get (e##wheelDeltaX) (fun () -> 0) / 40 in
             let dy =
-              - Optdef.get (e##deltaY) (fun () -> e##delta) / 40 in
+              - Optdef.get (e##wheelDeltaY) (fun () -> e##wheelDelta) / 40 in
             h (e :> mouseEvent t) ~dx ~dy))
       capt
   else
@@ -1527,7 +1633,7 @@ let opt_tagged e = Opt.case e (fun () -> None) (fun e -> Some (tagged e))
 type taggedEvent =
   | MouseEvent of mouseEvent t
   | KeyboardEvent of keyboardEvent t
-  | WheelEvent of wheelEvent t
+  | MousewheelEvent of mousewheelEvent t
   | MouseScrollEvent of mouseScrollEvent t
   | PopStateEvent of popStateEvent t
   | OtherEvent of event t
@@ -1541,7 +1647,7 @@ let taggedEvent (ev : #event Js.t) =
 	    (fun () -> OtherEvent (ev :> event t))
 	    (fun ev -> PopStateEvent ev))
 	  (fun ev -> MouseScrollEvent ev))
-	(fun ev -> WheelEvent ev))
+	(fun ev -> MousewheelEvent ev))
       (fun ev -> KeyboardEvent ev))
     (fun ev -> MouseEvent ev)
 
@@ -1577,3 +1683,8 @@ let _requestAnimationFrame : (unit -> unit) Js.callback -> unit =
            let dt = if dt < 0. then 0. else dt in
            last := t;
            ignore (window##setTimeout (callback, dt)))
+
+(****)
+
+let hasPushState () =
+  Js.Optdef.test ((Js.Unsafe.coerce (window##history))##pushState)
