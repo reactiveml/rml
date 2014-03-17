@@ -1,0 +1,31 @@
+<p>
+To play with the alarm clock, we need to define the three control signals:
+</p>
+
+<p><pre class="code">
+signal off, arm, snooze;;
+</pre></p>
+
+<p>
+Then, we can start the clock:
+</p>
+
+<p><pre class="code">
+#run alarm off arm snooze;;
+</pre></p>
+
+<p>
+and emit the control signals whenever we want:
+<p>
+
+<p><pre class="code">
+emit arm;;
+</pre></p>
+
+<p><pre class="code">
+emit snooze;;
+</pre></p>
+
+<p><pre class="code">
+emit off;;
+</pre></p>

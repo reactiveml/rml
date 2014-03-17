@@ -1,0 +1,24 @@
+<p>
+In lesson, we use automata to implement a simple alarm-clock
+</p>
+
+<p>
+The controller of an alarm-clock can be described by a three-states automaton.
+<ul>
+<li> Idle: no alarm is set; </li>
+<li> Armed: waiting for the deadline; </li>
+<li> Bipbipip: the clock is ringing.</li>
+</ul>
+</p>
+
+<p>
+Lets start with a very simple process that wait for a duration
+expressed in number of logical steps.
+</p>
+
+<p><pre class="code">
+let process sleep d = 
+  for i = 1 to d do
+    pause;
+  done
+</pre></p>

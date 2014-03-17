@@ -1,0 +1,44 @@
+(* Sleep for a duration d (in nb of steps) *)
+let process sleep d = 
+  for i = 1 to d do
+    pause;
+  done
+
+(* Automaton for the alarm clock *)
+let process alarm off arm snooze = 
+  let rec process idle = 
+    do
+      halt
+    until arm -> 
+      print_endline "Armed!";
+      run (armed 1000) 
+    done
+
+  and process armed d = 
+    do 
+      run (sleep d);
+      run bipbipbip
+    until off -> 
+	print_endline "Off!";
+	run idle
+    done
+
+  and process bipbipbip = 
+    do 
+      loop
+	print_endline "Bip, Bip, Bip!!!";
+	pause
+      end
+    until snooze  -> 
+      print_endline "Snooze!";
+      run (armed 200)
+    | off -> 
+	print_endline "Off!";
+	run idle
+    done
+  in
+run idle
+
+(* Controller send *)
+signal off, arm, snooze
+
