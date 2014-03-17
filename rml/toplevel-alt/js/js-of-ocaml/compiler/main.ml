@@ -20,26 +20,26 @@
 
 let debug = Util.debug "main"
 let times = Util.debug "times"
+let linkall = ref false
 
 let f paths js_files input_file output_file =
   let t = Util.Timer.make () in
   List.iter Linker.add_file js_files;
   let paths = List.rev_append paths [Findlib.package_directory "stdlib"] in
-
-  
   let t1 = Util.Timer.make () in
   let p =
     match input_file with
       None ->
-        Parse.from_channel ~paths stdin
+        Parse_bytecode.from_channel ~paths stdin
     | Some f ->
         let ch = open_in_bin f in
-        let p = Parse.from_channel ~paths ch in
+        let p = Parse_bytecode.from_channel ~paths ch in
         close_in ch;
         p
   in
   if times () then Format.eprintf "  parsing: %a@." Util.Timer.print t1;
-  let output_program = Driver.f p in
+  let linkall = !linkall in
+  let output_program = Driver.f ~linkall p in
   begin match output_file with
     None ->
       output_program (Pretty_print.to_out_channel stdout)
@@ -49,7 +49,7 @@ let f paths js_files input_file output_file =
       close_out ch
   end;
   if times () then Format.eprintf "compilation: %a@." Util.Timer.print t
- 
+
 let _ =
   Findlib.init ();
   Util.Timer.init Unix.gettimeofday;
@@ -63,10 +63,13 @@ let _ =
      ("-disable",
       Arg.String Util.set_disabled, "<name> disable optimization <name>");
      ("-pretty", Arg.Unit Driver.set_pretty, " pretty print the output");
-     ("-noinline", Arg.Unit Inline.disable_inlining, " disable inlining");
+     ("-debuginfo", Arg.Unit Driver.set_debug_info, " output debug info");
+     ("-opt", Arg.Int Driver.set_profile, "<oN> set optimization profile : o1 (default), o2, o3");
+     ("-noinline", Arg.Unit (fun () -> Util.set_disabled "inline"), " disable inlining");
+     ("-linkall", Arg.Set linkall, " link all primitives");
      ("-noruntime", Arg.Unit (fun () -> no_runtime := true),
       " do not include the standard runtime");
-     ("-toplevel", Arg.Unit Parse.build_toplevel,
+     ("-toplevel", Arg.Unit Parse_bytecode.build_toplevel,
       " compile a toplevel");
      ("-I", Arg.String (fun s -> paths := s :: !paths),
       "<dir> Add <dir> to the list of include directories");

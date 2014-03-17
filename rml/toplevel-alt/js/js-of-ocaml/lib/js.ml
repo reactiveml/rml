@@ -30,10 +30,13 @@ module Unsafe = struct
 
   external get : 'a -> 'b -> 'c = "caml_js_get"
   external set : 'a -> 'b -> 'c -> unit = "caml_js_set"
+  external delete : 'a -> 'b -> unit = "caml_js_delete"
   external call : 'a -> 'b -> any array -> 'c = "caml_js_call"
   external fun_call : 'a -> any array -> 'b = "caml_js_fun_call"
   external meth_call : 'a -> string -> any array -> 'b = "caml_js_meth_call"
   external new_obj : 'a -> any array -> 'b = "caml_js_new"
+
+  external obj : (string * any) array -> 'a = "caml_js_object"
 
   external equals : 'a -> 'b -> bool = "caml_js_equals"
 
@@ -351,6 +354,21 @@ external to_bytestring : js_string t -> string = "caml_js_to_byte_string"
 
 external typeof : < .. > t -> js_string t = "caml_js_typeof"
 external instanceof : 'a -> 'b -> bool = "caml_js_instanceof"
+
+let isNaN (i : 'a) : bool =
+  to_bool (Unsafe.fun_call (Unsafe.variable "isNaN") [|Unsafe.inject i|])
+
+let parseInt (s : js_string t) : int =
+  let s = Unsafe.fun_call (Unsafe.variable "parseInt") [|Unsafe.inject s|] in
+  if isNaN s
+  then failwith "parseInt"
+  else s
+
+let parseFloat (s : js_string t) : float t =
+  let s = Unsafe.fun_call (Unsafe.variable "parseFloat") [|Unsafe.inject s|] in
+  if isNaN s
+  then failwith "parseFloat"
+  else s
 
 let _ =
   Printexc.register_printer

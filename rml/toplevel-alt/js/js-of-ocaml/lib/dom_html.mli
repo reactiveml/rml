@@ -174,11 +174,11 @@ and keyboardEvent = object
   method metaKey : bool t readonly_prop
 end
 
-and wheelEvent = object (* All browsers but Firefox *)
+and mousewheelEvent = object (* All browsers but Firefox *)
   inherit mouseEvent
-  method delta : int readonly_prop
-  method deltaX : int optdef readonly_prop
-  method deltaY : int optdef readonly_prop
+  method wheelDelta : int readonly_prop
+  method wheelDeltaX : int optdef readonly_prop
+  method wheelDeltaY : int optdef readonly_prop
 end
 
 and mouseScrollEvent = object (* Firefox *)
@@ -218,7 +218,7 @@ and touch = object
 end
 
 and dragEvent = object
-  inherit event
+  inherit mouseEvent
   method dataTransfer : dataTransfer t readonly_prop
 end
 
@@ -248,6 +248,7 @@ and eventTarget = object ('self)
   method onkeypress : ('self t, keyboardEvent t) event_listener writeonly_prop
   method onkeydown : ('self t, keyboardEvent t) event_listener writeonly_prop
   method onkeyup : ('self t, keyboardEvent t) event_listener writeonly_prop
+  method onscroll : ('self t, event t) event_listener writeonly_prop
   method ondragstart : ('self t, dragEvent t) event_listener writeonly_prop
   method ondragend : ('self t, dragEvent t) event_listener writeonly_prop
   method ondragenter : ('self t, dragEvent t) event_listener writeonly_prop
@@ -280,6 +281,13 @@ and storage = object
   method removeItem : js_string t -> unit meth
   method clear : unit meth
 end
+
+and hashChangeEvent = object
+  inherit event
+  method oldURL : js_string t readonly_prop
+  method newURL : js_string t readonly_prop
+end
+
 
 (** {2 HTML elements} *)
 
@@ -346,13 +354,13 @@ end
 
 and clientRectList = object
   method length : int readonly_prop
-  method item : int -> clientRect t optdef meth
+  method item : int -> clientRect t opt meth
 end
 
 (** Collection of HTML elements *)
 class type ['node] collection = object
   method length : int readonly_prop
-  method item : int -> 'node t optdef meth
+  method item : int -> 'node t opt meth
   method namedItem : js_string t -> 'node t opt meth
 end
 
@@ -454,6 +462,7 @@ class type selectElement = object ('self)
   method focus : unit meth
 
   method onchange : ('self t, event t) event_listener prop
+  method oninput : ('self t, event t) event_listener prop
 end
 
 class type inputElement = object ('self)
@@ -481,9 +490,12 @@ class type inputElement = object ('self)
   method select : unit meth
   method click : unit meth
   method files : File.fileList t optdef readonly_prop
-
+  method placeholder : js_string t writeonly_prop (* Not supported by IE 9 *)
   method onselect : ('self t, event t) event_listener prop
   method onchange : ('self t, event t) event_listener prop
+  method oninput : ('self t, event t) event_listener prop
+  method onblur : ('self t, event t) event_listener prop
+  method onfocus : ('self t, event t) event_listener prop
 end
 
 class type textAreaElement = object ('self)
@@ -502,9 +514,13 @@ class type textAreaElement = object ('self)
   method blur : unit meth
   method focus : unit meth
   method select : unit meth
+  method placeholder : js_string t writeonly_prop (* Not supported by IE 9 *)
 
   method onselect : ('self t, event t) event_listener prop
   method onchange : ('self t, event t) event_listener prop
+  method oninput : ('self t, event t) event_listener prop
+  method onblur : ('self t, event t) event_listener prop
+  method onfocus : ('self t, event t) event_listener prop
 end
 
 class type buttonElement = object
@@ -655,6 +671,7 @@ class type scriptElement = object
   method defer : bool t prop
   method src : js_string t prop
   method _type : js_string t prop
+  method async : bool t prop
 end
 
 class type tableCellElement = object
@@ -875,9 +892,11 @@ external pixel_set : canvasPixelArray t -> int -> int -> unit = "caml_js_set"
 class type document = object
   inherit [element] Dom.document
   inherit nodeSelector
+  inherit eventTarget
+
   method title : js_string t prop
   method referrer : js_string t readonly_prop
-  method domain : js_string t readonly_prop
+  method domain : js_string t prop
   method _URL : js_string t readonly_prop
   method head : headElement t prop
   method body : bodyElement t prop
@@ -945,11 +964,37 @@ class type navigator = object
   method appName : js_string t readonly_prop
   method appVersion : js_string t readonly_prop
   method cookieEnabled : bool t readonly_prop
-  method online : bool t readonly_prop
+  method onLine : bool t readonly_prop
   method platform : js_string t readonly_prop
   method userAgent : js_string t readonly_prop
   method language : js_string t optdef readonly_prop
   method userLanguage : js_string t optdef readonly_prop
+end
+
+class type screen = object
+  method width : int readonly_prop
+  method height : int readonly_prop
+  method availWidth : int readonly_prop
+  method availHeight : int readonly_prop
+end
+
+class type applicationCache = object
+  method status : int readonly_prop
+
+  method update : unit meth
+  method abort : unit meth
+  method swapCache : unit meth
+
+  method onchecking : (applicationCache t, event t) event_listener prop
+  method onerror : (applicationCache t, event t) event_listener prop
+  method onnoupdate : (applicationCache t, event t) event_listener prop
+  method ondownloading : (applicationCache t, event t) event_listener prop
+  method onprogress : (applicationCache t, event t) event_listener prop
+  method onupdateready : (applicationCache t, event t) event_listener prop
+  method oncached : (applicationCache t, event t) event_listener prop
+  method onobsolete : (applicationCache t, event t) event_listener prop
+
+  inherit eventTarget
 end
 
 type interval_id
@@ -957,14 +1002,18 @@ type timeout_id
 
 (** Specification of window objects *)
 class type window = object
+  inherit eventTarget
+
   method document : document t readonly_prop
+  method applicationCache : applicationCache t readonly_prop
   method name : js_string t prop
   method location : location t readonly_prop
   method history : history t readonly_prop
   method undoManager : undoManager t readonly_prop
-  method navigator : navigator t
+  method navigator : navigator t readonly_prop
   method getSelection : selection t meth
   method close : unit meth
+  method closed : bool t readonly_prop
   method stop : unit meth
   method focus : unit meth
   method blur : unit meth
@@ -980,7 +1029,7 @@ class type window = object
   method open_ : js_string t -> js_string t -> js_string t opt -> window t meth
   method alert : js_string t -> unit meth
   method confirm : js_string t -> bool t meth
-  method prompt : js_string t -> js_string t -> js_string t meth
+  method prompt : js_string t -> js_string t -> js_string t opt meth
   method print : unit meth
 
   method setInterval : (unit -> unit) Js.callback -> float -> interval_id meth
@@ -989,13 +1038,22 @@ class type window = object
   method setTimeout : (unit -> unit) Js.callback -> float -> timeout_id meth
   method clearTimeout : timeout_id -> unit meth
 
+  method screen : screen t readonly_prop
+  method innerWidth : int optdef readonly_prop
+  method innerHeight : int optdef readonly_prop
+  method outerWidth : int optdef readonly_prop
+  method outerHeight : int optdef readonly_prop
+
   method onload : (window t, event t) event_listener prop
   method onbeforeunload : (window t, event t) event_listener prop
   method onblur : (window t, event t) event_listener prop
   method onfocus : (window t, event t) event_listener prop
   method onresize : (window t, event t) event_listener prop
-  method onscroll : (window t, event t) event_listener prop
   method onpopstate : (window t, popStateEvent t) event_listener prop
+  method onhashchange : (window t, hashChangeEvent t) event_listener prop
+
+  method ononline : (window t, event t) event_listener writeonly_prop
+  method onoffline : (window t, event t) event_listener writeonly_prop
 end
 
 val window : window t
@@ -1076,7 +1134,7 @@ module Event : sig
   val keypress : keyboardEvent t typ
   val keydown : keyboardEvent t typ
   val keyup : keyboardEvent t typ
-  val mousewheel : wheelEvent t typ
+  val mousewheel : mousewheelEvent t typ
   val _DOMMouseScroll : mouseScrollEvent t typ
   val touchstart : touchEvent t typ
   val touchmove : touchEvent t typ
@@ -1089,6 +1147,33 @@ module Event : sig
   val dragleave : dragEvent t typ
   val drag : dragEvent t typ
   val drop : dragEvent t typ
+  val hashchange : hashChangeEvent t typ
+  val change : event t typ
+  val input : event t typ
+  val submit : event t typ
+  val scroll : event t typ
+  val focus : event t typ
+  val blur : event t typ
+  val load : event t typ
+  val beforeunload : event t typ
+  val resize : event t typ
+  val popstate : event t typ
+  val hashchange : event t typ
+  val error : event t typ
+  val abort : event t typ
+  val select : event t typ
+
+  val online : event t typ
+  val offline : event t typ
+
+  val checking : event t typ
+  val error : event t typ
+  val noupdate : event t typ
+  val downloading : event t typ
+  val progress : event t typ
+  val updateready : event t typ
+  val cached : event t typ
+  val obsolete : event t typ
 
   val make : string -> 'a typ
 end
@@ -1295,7 +1380,7 @@ val opt_tagged : #element t opt -> taggedElement option
 type taggedEvent =
   | MouseEvent of mouseEvent t
   | KeyboardEvent of keyboardEvent t
-  | WheelEvent of wheelEvent t
+  | MousewheelEvent of mousewheelEvent t
   | MouseScrollEvent of mouseScrollEvent t
   | PopStateEvent of popStateEvent t
   | OtherEvent of event t
@@ -1376,7 +1461,7 @@ module CoerceTo : sig
 
   val mouseEvent : #event t -> mouseEvent t opt
   val keyboardEvent : #event t -> keyboardEvent t opt
-  val wheelEvent : #event t -> wheelEvent t opt
+  val wheelEvent : #event t -> mousewheelEvent t opt
   val mouseScrollEvent : #event t -> mouseScrollEvent t opt
   val popStateEvent : #event t -> popStateEvent t opt
 
@@ -1385,3 +1470,4 @@ end
 (**/**)
 
 val onIE : bool
+val hasPushState : unit -> bool

@@ -19,52 +19,124 @@
  *)
 
 let debug = Util.debug "main"
+let times = Util.debug "times"
+let tailcall p =
+  if debug () then Format.eprintf "Tail-call optimization...@.";
+  Tailcall.f p
 
-let f ?standalone p =
-if debug () then Code.print_program (fun _ _ -> "") p;
+let deadcode' p =
+  if debug () then Format.eprintf "Dead-code...@.";
+  Deadcode.f p
 
-if debug () then Format.eprintf "Tail-call optimization...@.";
-  let p = Tailcall.f p in
+let deadcode p =
+  let r,_ = deadcode' p
+  in r
 
-if debug () then Format.eprintf "Variable passing simplification...@.";
-  let p = Phisimpl.f p in
+let inline p =
+  let (p,live_vars) = deadcode' p in
+  if debug () then Format.eprintf "Inlining...@.";
+  Inline.f p live_vars
 
-if debug () then Format.eprintf "Data flow...@.";
-  let p = Flow.f p in
-if debug () then Format.eprintf "Dead-code...@.";
-  let (p, live_vars) = Deadcode.f p in
+let constant p =
+p
+(*
+  let (p,_,defs) = deadcode' p in
+  if debug () then Format.eprintf "Constant...@.";
+  Constant.f p defs
+*)
+let flow p =
+  if debug () then Format.eprintf "Data flow...@.";
+  Flow.f p
 
-if debug () then Format.eprintf "Inlining...@.";
-  let p = Inline.f p live_vars in
-if debug () then Format.eprintf "Dead-code...@.";
-  let (p, live_vars) = Deadcode.f p in
+let flow_simple p =
+  if debug () then Format.eprintf "Data flow...@.";
+  Flow.f ~skip_param:true p
+
+let phi p =
+  if debug () then Format.eprintf "Variable passing simplification...@.";
+  Phisimpl.f p
+
+let print p =
+  if debug () then Code.print_program (fun _ _ -> "") p; p
+
+let (>>>) x f = f x
+
+let (>>) f g = fun x -> g (f x)
+
+let rec loop max name round i p =
+  let p' = round p in
+  if i >= max || Code.eq p' p
+  then p'
+  else
+    begin
+      if times ()
+      then Format.eprintf "Start Iteration (%s) %d...@." name i;
+      loop max name round (i+1) p'
+    end
+
+let identity x = x
+
+(* o1 *)
+
+let o1 =
+  print >>
+  tailcall >>
+  phi >>
+  flow >>
+  inline >>
+  deadcode >>
+  print >>
+  flow >>
+  inline >>
+  deadcode >>
+  phi >>
+  flow >>
+  identity
+
+(* o2 *)
+
+let o2 =
+  loop 10 "o1" o1 1 >>
+  print
+
+(* o3 *)
+
+let round1 =
+  print >>
+  tailcall >>
+  inline >> (* inlining may reveal new tailcall opt *)
+  constant >>
+  flow_simple >> (* flow simple to keep information for furture tailcall opt *)
+  identity
+
+let round2 =
+  constant >> o1
+
+let o3 =
+  loop 10 "tailcall+inline" round1 1 >>
+  loop 10 "flow" round2 1 >>
+  print
 
 
-if debug () then Code.print_program (fun _ _ -> "") p;
-if debug () then Format.eprintf "Data flow...@.";
-  let p = Flow.f p in
-if debug () then Format.eprintf "Dead-code...@.";
-  let (p, live_vars) = Deadcode.f p in
+let profile = ref o1
 
-if debug () then Format.eprintf "Inlining...@.";
-  let p = Inline.f p live_vars in
-if debug () then Format.eprintf "Dead-code...@.";
-  let (p, live_vars) = Deadcode.f p in
-
-
-if debug () then Format.eprintf "Variable passing simplification...@.";
-  let p = Phisimpl.f p in
-
-if debug () then Format.eprintf "Data flow...@.";
-  let p = Flow.f p in
-if debug () then Format.eprintf "Dead-code...@.";
-  let (p, live_vars) = Deadcode.f p in
-
-if debug () then Code.print_program (fun _ _ -> "") p;
-  fun formatter -> Generate.f formatter ?standalone p live_vars
+let f ?standalone ?linkall (p, d) =
+  !profile p >>> deadcode' >>> fun (p,live_vars) ->
+  fun formatter ->
+    if times ()
+    then Format.eprintf "Start Generation...@.";
+    Generate.f formatter ?standalone ?linkall p d live_vars
 
 let from_string prims s =
-  let p = Parse.from_string prims s in
+  let p = Parse_bytecode.from_string prims s in
   f ~standalone:false p
 
-let set_pretty () = Generate.set_pretty (); Parse.set_pretty ()
+let set_pretty () = Generate.set_pretty (); Parse_bytecode.set_pretty ()
+
+let set_debug_info () = Js_output.set_debug_info ()
+
+let set_profile = function
+  | 1 -> profile := o1
+  | 2 -> profile := o2
+  | 3 -> profile := o3
+  | _ -> ()

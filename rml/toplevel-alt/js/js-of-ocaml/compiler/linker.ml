@@ -156,6 +156,7 @@ let add_file f =
        let id = !last_code_id in
        List.iter
          (fun (loc, nm, kind) ->
+           Code.add_reserved_name nm;
             let kind =
               match kind with
                 "pure" | "const" -> `Pure
@@ -193,8 +194,8 @@ let rec resolve_dep f visited path loc nm =
     visited
   end
 
-let resolve_deps compact f l =
-  let (missing, _) =
+let resolve_deps ?(linkall = false) compact f l =
+  let (missing, visited) =
     List.fold_left
       (fun (missing, visited) nm ->
          if Hashtbl.mem provided nm then
@@ -203,6 +204,12 @@ let resolve_deps compact f l =
            (nm :: missing, visited))
       ([], Util.IntSet.empty) l
   in
+  if linkall then begin
+    let visited = ref visited in
+    Hashtbl.iter (fun nm (id, loc) ->
+      visited := resolve_dep f !visited [] ("", -1) nm
+    ) provided;
+  end;
   List.rev missing
 
 (*
