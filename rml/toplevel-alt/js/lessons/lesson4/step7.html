@@ -1,0 +1,24 @@
+<p>
+Now we can run our alarm-clock,
+</p>
+
+<p><pre class="code">
+#run alarm ck_off ck_bip ck_snooze ck_arm;;
+</p></pre>
+
+<p>
+and control it via signals <code>ck_arm</code>, <code>ck_snooze</code>
+and <code>ck_off</code>
+</p>
+
+<p><pre class="code">
+emit ck_arm 1000;;
+</p></pre>
+
+<p><pre class="code">
+emit ck_snooze;;
+</p></pre>
+
+<p><pre class="code">
+emit ck_off;;
+</p></pre>

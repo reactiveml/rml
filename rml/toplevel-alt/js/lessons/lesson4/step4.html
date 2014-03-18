@@ -1,31 +1,19 @@
 <p>
-To play with the alarm clock, we need to define the three control signals:
+Now lets try a little more complex example: an alarm-clock.
 </p>
 
-<p><pre class="code">
-signal off, arm, snooze;;
-</pre></p>
-
 <p>
-Then, we can start the clock:
+The controller of an alarm-clock has three states:
+<ul>
+<li> <code>idle</code>: The alarm is deactivated </li>
+<li> <code>armed</code>: The clock is waiting </li> 
+<li> <code>bipbipbip</code>: The clock is ringing </li>
+</ul>
 </p>
 
-<p><pre class="code">
-#run alarm off arm snooze;;
-</pre></p>
-
 <p>
-and emit the control signals whenever we want:
-<p>
-
-<p><pre class="code">
-emit arm;;
-</pre></p>
-
-<p><pre class="code">
-emit snooze;;
-</pre></p>
-
-<p><pre class="code">
-emit off;;
-</pre></p>
+The user controls the alarm-clock through the emission of three signals
+<code>ck_arm</code>, <code>ck_off</code>
+and <code>ck_snooze</code>. An additional signal <code>ck_bip</code>
+is emitted when the alarm starts ringing.
+</p>

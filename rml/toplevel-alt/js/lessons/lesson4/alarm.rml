@@ -1,31 +1,59 @@
+signal switch_on, switch_off;;
+
+(* Light Controller *)
+let process light on off =  
+  let rec process state_on = 
+    do 
+      print_endline "Light on!";
+      halt
+    until switch_off -> run state_off
+    done
+
+  and process state_off = 
+    do 
+      print_endline "Light off";
+      halt
+    until switch_on -> run state_on
+    done
+
+in run state_off;; 
+
+#run light switch_on switch_off;;
+
+emit switch_on;;
+emit switch_off;;
+
 (* Sleep for a duration d (in nb of steps) *)
 let process sleep d = 
   for i = 1 to d do
     pause;
-  done
+  done;;
+
+(* Control signal *)
+signal ck_arm default 0 gather (fun x y -> x);;
+signal ck_off, ck_snooze, ck_bip;;
 
 (* Automaton for the alarm clock *)
-let process alarm off arm snooze = 
+let alarm ck_off ck_bip ck_snooze ck_arm = 
+
   let rec process idle = 
     do
       halt
     until 
-    | arm -> 
+    | ck_arm (d) -> 
 	print_endline "Armed!";
-	run (armed 1000) 
+	run (armed d) 
     done
 
   and process armed d = 
-    signal bip in
     do 
       run (sleep d);
-      emit bip;
-      pause
+      emit ck_bip; pause
     until 
-    | off -> 
+    | ck_off -> 
 	print_endline "Off!";
 	run idle
-    | bip -> 
+    | ck_bip -> 
 	run bipbipbip
     done
 
@@ -36,19 +64,41 @@ let process alarm off arm snooze =
 	pause
       end
     until 
-    | snooze  -> 
+    | ck_snooze  -> 
 	print_endline "Snooze!";
 	run (armed 200)
-    | off ->
+    | ck_off ->
     	print_endline "Off!";
     	run idle
     done
-  in
-run idle
 
-(* Controller send *)
-signal off, arm, snooze;;
+  in idle;;
 
-#run alarm off arm snooze;;
+(* Run *)
+#run alarm ck_off ck_bip ck_snooze ck_arm;;
 
-emit snooze;;
+emit ck_arm 1000;;
+emit ck_snooze;;
+emit ck_off;;
+
+let rec process light_clock =
+  do 
+    halt
+  until
+  | ck_off -> 
+      emit switch_off;
+      run light_clock
+  | ck_bip ->
+      emit switch_on;
+      run light_clock
+  | ck_snooze ->
+      emit switch_off;
+      run light_clock
+  done;;
+
+#run light_clock;;
+
+
+emit ck_arm 1000;;
+emit ck_snooze;;
+emit ck_off;;

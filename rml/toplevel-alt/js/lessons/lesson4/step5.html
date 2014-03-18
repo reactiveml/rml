@@ -1,0 +1,27 @@
+<p>
+First we need a process that wait for a given duration expressed in
+number of logical steps.
+</p>
+
+<p><pre class="code">
+let process sleep d = 
+  for i = 1 to d do
+    pause;
+  done;;
+</p></pre>
+
+<p>
+Then lets define the clock control signals,
+</p>
+
+<p><pre class="code">
+signal ck_off, ck_bip, ck_snooze;;
+signal ck_arm default 0 gather (fun x y -> x);;
+</p></pre>
+
+<p>
+Note that signal <code>ck_arm</code> carry a value. This value will be
+used to set up the countdown of the alarm. On the other hand, when the
+snooze button is hit, the duration of the countdown is fixed. Hence
+signal <code>ck_snooze</code> does not need to carry a value.
+</p>

@@ -1,19 +1,26 @@
 <p>
-Now, we can implement the three states automaton using three mutually
-recurssive processes, one for each state.
-</p>
-
-<p>
-The structure of a process modeling a state of an automaton is always
-the following:
+The two states are implemented with two mutually recurssive processes,
+transitions are triggered by the emission of
+signals <code>switch_on</code> and <code>switch_off</code> with
+the <code>do/until</code> construct.
 </p>
 
 <p><pre class="code">
-let rec process state1 t1 t2 = 
-  do 
-    halt (* Could be any process *)
-  until 
-  | t1 -> run state1 (* Could be any state*)
-  | t2 -> run state1
-  done
+let light on off = 
+ 
+  let rec process light_on = 
+    do 
+      print_endline "Light on!";
+      halt
+    until switch_off -> run state_off
+    done
+
+  and process light_off = 
+    do 
+      print_endline "Light off!";
+      halt
+    until switch_on -> run state_on
+    done
+
+in state_off;; 
 </pre></p>

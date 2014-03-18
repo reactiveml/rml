@@ -1,24 +1,17 @@
 <p>
-In this lesson, we use automata to implement a simple alarm-clock
+In this lesson, we present how to implement automata in ReactiveML<br>
+Lets start with a simple example: a light controller.
 </p>
 
 <p>
-The controller of an alarm-clock can be described by a three-states automaton.
+The controller has two states:
 <ul>
-<li> Idle: no alarm is set; </li>
-<li> Armed: waiting for the deadline; </li>
-<li> Bipbipip: the clock is ringing.</li>
+<li> <code>light_on</code> </li>
+<li> <code>light_off</code> </li>
 </ul>
 </p>
 
 <p>
-Lets start with a very simple process that wait for a duration
-expressed in number of logical steps.
+The user controls the light through the mission of two
+signals <code>switch_on</code> and <code>switch_off</code>
 </p>
-
-<p><pre class="code">
-let process sleep d = 
-  for i = 1 to d do
-    pause;
-  done
-</pre></p>

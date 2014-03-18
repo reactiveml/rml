@@ -1,0 +1,29 @@
+<p>
+Finally, it is very easy to make our two automata communicate with
+each other. For instance we can easily switch on the light when the
+alam is ringing, and switch off the ligth when the arlam is snoozed or
+turned off.
+</p>
+
+<p>
+The idea is to write a synchronous observer that listens to the control
+signals of the alarm clock and emits control signals of the light
+controller.
+</p>
+
+<p><pre class="code">
+let rec process light_clock =
+  do 
+    halt
+  until
+  | ck_off -> 
+      emit switch_off;
+      run light_clock
+  | ck_bip ->
+      emit switch_on;
+      run light_clock
+  | ck_snooze ->
+      emit switch_off;
+      run light_clock
+  done;;
+</p></pre>
