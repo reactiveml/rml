@@ -7,18 +7,24 @@ let process alarm off arm snooze =
   let rec process idle = 
     do
       halt
-    until arm -> 
-      print_endline "Armed!";
-      run (armed 1000) 
+    until 
+    | arm -> 
+	print_endline "Armed!";
+	run (armed 1000) 
     done
 
   and process armed d = 
+    signal bip in
     do 
       run (sleep d);
-      run bipbipbip
-    until off -> 
+      emit bip;
+      pause
+    until 
+    | off -> 
 	print_endline "Off!";
 	run idle
+    | bip -> 
+	run bipbipbip
     done
 
   and process bipbipbip = 
@@ -27,12 +33,13 @@ let process alarm off arm snooze =
 	print_endline "Bip, Bip, Bip!!!";
 	pause
       end
-    until snooze  -> 
-      print_endline "Snooze!";
-      run (armed 200)
-    | off -> 
-	print_endline "Off!";
-	run idle
+    until 
+    | snooze  -> 
+	print_endline "Snooze!";
+	run (armed 200)
+    | off ->
+    	print_endline "Off!";
+    	run idle
     done
   in
 run idle

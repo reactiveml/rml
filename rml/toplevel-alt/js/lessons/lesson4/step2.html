@@ -12,6 +12,8 @@ the following:
 let rec process state1 t1 t2 = 
   do 
     halt (* Could be any process *)
-  until t1 -> run state1 (* Could be any state*)
+  until 
+  | t1 -> run state1 (* Could be any state*)
   | t2 -> run state1
+  done
 </pre></p>
