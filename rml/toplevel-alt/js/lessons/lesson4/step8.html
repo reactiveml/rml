@@ -1,7 +1,7 @@
 <p>
 Finally, it is very easy to make our two automata communicate with
 each other. For instance we can easily switch on the light when the
-alam is ringing, and switch off the ligth when the arlam is snoozed or
+alarm is ringing, and switch off the light when the alarm is snoozed or
 turned off.
 </p>
 
@@ -13,10 +13,10 @@ controller.
 
 <p><pre class="code">
 let rec process light_clock =
-  do 
+  do
     halt
   until
-  | ck_off -> 
+  | ck_off ->
       emit switch_off;
       run light_clock
   | ck_bip ->
@@ -25,5 +25,5 @@ let rec process light_clock =
   | ck_snooze ->
       emit switch_off;
       run light_clock
-  done;;
-</p></pre>
+  done
+</pre></p>

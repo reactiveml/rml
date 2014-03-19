@@ -4,11 +4,11 @@ number of logical steps.
 </p>
 
 <p><pre class="code">
-let process sleep d = 
+let process sleep d =
   for i = 1 to d do
     pause;
-  done;;
-</p></pre>
+  done
+</pre></p>
 
 <p>
 Then lets define the clock control signals,
@@ -16,8 +16,10 @@ Then lets define the clock control signals,
 
 <p><pre class="code">
 signal ck_off, ck_bip, ck_snooze;;
+</pre></p>
+<p><pre class="code">
 signal ck_arm default 0 gather (fun x y -> x);;
-</p></pre>
+</pre></p>
 
 <p>
 Note that signal <code>ck_arm</code> carry a value. This value will be

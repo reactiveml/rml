@@ -1,26 +1,27 @@
 <p>
-The two states are implemented with two mutually recurssive processes,
-transitions are triggered by the emission of
-signals <code>switch_on</code> and <code>switch_off</code> with
-the <code>do/until</code> construct.
+The two states are implemented with two mutually recursive processes.
+Transitions are triggered by the emission of
+signals <code>switch_on</code> and <code>switch_off</code>. The
+initial state is <code>state_off</code>.
 </p>
 
 <p><pre class="code">
-let light on off = 
- 
-  let rec process light_on = 
-    do 
+let light switch_on switch_off =
+
+  let rec process state_on =
+    do
       print_endline "Light on!";
       halt
     until switch_off -> run state_off
     done
 
-  and process light_off = 
-    do 
+  and process state_off =
+    do
       print_endline "Light off!";
       halt
     until switch_on -> run state_on
     done
 
-in state_off;; 
+  in
+  state_off
 </pre></p>
