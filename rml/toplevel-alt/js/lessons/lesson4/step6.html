@@ -1,44 +1,17 @@
 <p>
-Again, the automata is implemented using three mutually recursive processes.
+Then lets define the clock control signals,
 </p>
 
 <p><pre class="code">
-let alarm ck_off ck_bip ck_snooze ck_arm =
-
-  let rec process idle =
-    do
-      halt
-    until ck_arm (d) ->
-	print_endline "Armed!";
-	run (armed d)
-    done
-
-  and process armed d =
-    do
-      run (sleep d);
-      emit ck_bip; pause
-    until
-    | ck_off ->
-	print_endline "Off!";
-	run idle
-    | ck_bip ->
-	run bipbipbip
-    done
-
-  and process bipbipbip =
-    do
-      loop
-	print_endline "Bip, Bip, Bip!!!";
-	pause
-      end
-    until
-    | ck_snooze  ->
-	print_endline "Snooze!";
-	run (armed 200)
-    | ck_off ->
-    	print_endline "Off!";
-    	run idle
-    done
-
-  in idle
+signal ck_off, ck_bip, ck_snooze;;
 </pre></p>
+<p><pre class="code">
+signal ck_arm default 0 gather (fun x y -> x);;
+</pre></p>
+
+<p>
+Note that signal <code>ck_arm</code> carry a value. This value will be
+used to set up the countdown of the alarm. On the other hand, when the
+snooze button is hit, the duration of the countdown is fixed. Hence
+signal <code>ck_snooze</code> does not need to carry a value.
+</p>

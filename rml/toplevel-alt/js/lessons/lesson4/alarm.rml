@@ -33,12 +33,24 @@ let process sleep d =
 signal ck_arm default 0 gather (fun x y -> x);;
 signal ck_off, ck_snooze, ck_bip;;
 
+
+let process bipbipbip = 
+     loop
+       for i = 1 to 4 do 
+      	 print_string "Bip "; flush stdout;
+      	 run sleep 10;
+       done;
+       run sleep 100;
+       print_newline ()
+      end
+ 
+
+
 (* Automaton for the alarm clock *)
 let alarm ck_off ck_bip ck_snooze ck_arm = 
 
   let rec process idle = 
-    do
-      halt
+    do halt
     until 
     | ck_arm (d) -> 
 	print_endline "Armed!";
@@ -46,23 +58,18 @@ let alarm ck_off ck_bip ck_snooze ck_arm =
     done
 
   and process armed d = 
-    do 
-      run (sleep d);
-      emit ck_bip; pause
+    do run (sleep d);
+       emit ck_bip; pause
     until 
     | ck_off -> 
 	print_endline "Off!";
 	run idle
     | ck_bip -> 
-	run bipbipbip
+	run ring
     done
 
-  and process bipbipbip = 
-    do 
-      loop
-	print_endline "Bip, Bip, Bip!!!";
-	pause
-      end
+  and process ring = 
+    do run bipbipbip
     until 
     | ck_snooze  -> 
 	print_endline "Snooze!";
@@ -77,7 +84,7 @@ let alarm ck_off ck_bip ck_snooze ck_arm =
 (* Run *)
 #run alarm ck_off ck_bip ck_snooze ck_arm;;
 
-emit ck_arm 1000;;
+emit ck_arm 500;;
 emit ck_snooze;;
 emit ck_off;;
 

@@ -11,19 +11,17 @@ let process sleep d =
 </pre></p>
 
 <p>
-Then lets define the clock control signals,
+and a ring tone
 </p>
 
 <p><pre class="code">
-signal ck_off, ck_bip, ck_snooze;;
+let process bipbipbip = 
+     loop
+       for i = 1 to 4 do 
+      	 print_string "Bip "; flush stdout;
+      	 run sleep 10;
+       done;
+       run sleep 100;
+       print_newline ()
+      end
 </pre></p>
-<p><pre class="code">
-signal ck_arm default 0 gather (fun x y -> x);;
-</pre></p>
-
-<p>
-Note that signal <code>ck_arm</code> carry a value. This value will be
-used to set up the countdown of the alarm. On the other hand, when the
-snooze button is hit, the duration of the countdown is fixed. Hence
-signal <code>ck_snooze</code> does not need to carry a value.
-</p>

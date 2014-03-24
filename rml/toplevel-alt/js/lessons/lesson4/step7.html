@@ -1,24 +1,39 @@
 <p>
-Now we can run our alarm-clock,
+Again, the automata is implemented using three mutually recursive processes.
 </p>
 
 <p><pre class="code">
-#run alarm ck_off ck_bip ck_snooze ck_arm;;
-</pre></p>
+let alarm ck_off ck_bip ck_snooze ck_arm = 
 
-<p>
-and control it via signals <code>ck_arm</code>, <code>ck_snooze</code>
-and <code>ck_off</code>
-</p>
+  let rec process idle = 
+    do halt
+    until 
+    | ck_arm (d) -> 
+	print_endline "Armed!";
+	run (armed d) 
+    done
 
-<p><pre class="code">
-emit ck_arm 1000;;
-</pre></p>
+  and process armed d = 
+    do run (sleep d);
+       emit ck_bip; pause
+    until 
+    | ck_off -> 
+	print_endline "Off!";
+	run idle
+    | ck_bip -> 
+	run ring
+    done
 
-<p><pre class="code">
-emit ck_snooze;;
-</pre></p>
+  and process ring = 
+    do run bipbipbip
+    until 
+    | ck_snooze  -> 
+	print_endline "Snooze!";
+	run (armed 200)
+    | ck_off ->
+    	print_endline "Off!";
+    	run idle
+    done
 
-<p><pre class="code">
-emit ck_off;;
+  in idle;;
 </pre></p>
