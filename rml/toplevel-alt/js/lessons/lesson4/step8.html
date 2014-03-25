@@ -11,14 +11,25 @@ and control it via signals <code>ck_arm</code>, <code>ck_snooze</code>
 and <code>ck_off</code>
 </p>
 
+<p>
+First lets arm the alarm with value 500 and wait until the alarm
+rings.
+</p>
+
 <p><pre class="code">
 emit ck_arm 500;;
 </pre></p>
 
+<p>
+Then, one can snooze the clock. It should ring again in one or two seconds.
+</p>
 <p><pre class="code">
 emit ck_snooze;;
 </pre></p>
 
+<p>
+Finally, one can turn off the clock.
+</p>
 <p><pre class="code">
 emit ck_off;;
 </pre></p>
