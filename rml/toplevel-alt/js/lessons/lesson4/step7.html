@@ -25,7 +25,7 @@ let alarm ck_off ck_bip ck_snooze ck_arm =
     done
 
   and process ring = 
-    do run bipbipbip
+    do run bipbipbipbip
     until 
     | ck_snooze  -> 
 	print_endline "Snooze!";
