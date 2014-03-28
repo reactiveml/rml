@@ -1,5 +1,5 @@
-# path     ; title                        ; number of steps
-lesson1    ; Quick tour                   ; 7
-lesson2    ; Moving ball                  ; 7
-lesson3    ; Dynamic Reconfiguration      ; 16
-lesson4    ; Automata                     ; 10
+# path     ; title                        ; number of steps ; description
+lesson1    ; Quick tour                   ; 7               ; an introduction to the main constructs of ReactiveML.
+lesson2    ; Moving ball                  ; 7               ; illustration of the dynamic creation of processes through a graphical example.
+lesson3    ; Dynamic reconfiguration      ; 16              ; examples of the expressiveness of higher order.
+lesson4    ; Alarm clock                  ; 10              ; how to program automata.

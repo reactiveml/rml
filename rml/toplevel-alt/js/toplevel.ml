@@ -33,6 +33,7 @@ let split_primitives p =
 
 let (>>=) = Lwt.bind
 let (>|=) = Lwt.(>|=)
+let (<|) e l = List.iter (fun c -> Dom.appendChild e c) l; e
 
 class type global_data = object
   method toc : (string * string) list Js.readonly_prop
@@ -127,8 +128,8 @@ let parse_lessons_index content =
       if String.length line > 0 && line.[0] <> '#' then
         let lesson = Regexp.split (Regexp.regexp "[ \t]*;[ \t]*") line in
         match lesson with
-          | path::title::steps::[] ->
-              (path, title, int_of_string steps) :: lessons
+          | path::title::steps::descr::[] ->
+              (path, title, int_of_string steps, descr) :: lessons
           | _ -> lessons
       else
         lessons
@@ -171,7 +172,7 @@ let safe_state_buttons lessons steps =
 
 let load_lesson_step lessons =
   let len = Array.length lessons in
-  let path, name, steps = Array.get lessons (!cur_lesson - 1) in
+  let path, name, steps, _ = Array.get lessons (!cur_lesson - 1) in
   safe_state_buttons len steps;
   update_info name !cur_lesson len !cur_step steps;
   let lesson_url =
@@ -205,7 +206,7 @@ let load_previous_lesson lessons =
     Lwt.return "No previous lessons found!"
 
 let load_next_step lessons =
-  let path, _, steps = Array.get lessons (!cur_lesson - 1) in
+  let path, _, steps, _ = Array.get lessons (!cur_lesson - 1) in
   if !cur_step < steps then begin
     incr cur_step;
     load_lesson_step lessons;
@@ -220,6 +221,13 @@ let load_previous_step lessons =
   end
   else
     Lwt.return "No previous steps found!"
+
+let load_tutorial_toc lessons =
+  XmlHttpRequest.get "lessons/index.html" >|=
+    (fun frame ->
+      frame.XmlHttpRequest.content
+    )
+
 
 let extract_escaped_and_kill html i =
   let len = String.length html in
@@ -463,6 +471,74 @@ let run _ =
         make_execute_button ();
         Lwt.return ()
     ) in
+  let make_toc
+      previous_lesson
+      previous_step
+      load_next_lesson
+      lessons
+      next_lesson
+      next_step =
+    match Js.Opt.to_option doc##getElementById (Js.string "lessons-toc") with
+    | None -> assert false
+    | Some elt ->
+        let make_item i (path, title, steps, descr) =
+          let li = doc##createElement (Js.string "li") in
+          let text = Format.sprintf "Lesson %d, %s:" (i+1) title in
+          li##innerHTML <- Js.string text;
+          li##onclick <-
+            (Dom_html.handler (fun _ ->
+              cur_lesson := i;
+              Lwt.ignore_result
+                (tutorial_action load_next_lesson lessons next_lesson >>=
+                 (fun _ ->
+                   let intro = get_element_by_id "intro"
+                   and sidebar = get_element_by_id "sidebar" in
+                   Lwt.return (Dom.removeChild sidebar intro)
+                 )
+                );
+              append_children "navbar" [
+                previous_lesson;
+                previous_step;
+                next_step;
+                next_lesson
+              ];
+              Js._true));
+          let p = doc##createElement (Js.string "p") in
+          p##innerHTML <- Js.string descr;
+          Dom.appendChild li p;
+          li
+        in
+        let items =
+          Array.mapi make_item lessons
+        in
+        let make_list items =
+          doc##createElement (Js.string "ul") <| items
+        in
+        let list = make_list (Array.to_list items) in
+        Dom.appendChild elt list
+
+        (* elt##innerHTML <- (Js.string "coucou") *)
+  in
+  let tutorial_toc previous_lesson previous_step lessons next_lesson next_step =
+    Lwt.ignore_result
+      (load_tutorial_toc lessons >|=
+        (fun content ->
+          tutorial_div##innerHTML <- Js.string content;
+          make_toc
+            previous_lesson
+            previous_step
+            load_next_lesson
+            lessons
+            next_lesson
+            next_step;
+          Lwt.return ()
+        ) >>=
+          (fun _ ->
+            let intro = get_element_by_id "intro"
+            and sidebar = get_element_by_id "sidebar" in
+            Lwt.return (Dom.removeChild sidebar intro)
+      ))
+  in
   let start_tutorial_button = text_button "Start tutorial" (fun b ->
     get_lessons () >|= fun lessons -> (
       b##disabled <- Js._true;
@@ -484,21 +560,8 @@ let run _ =
       next_step##title <- Js.string "Go to next step";
       next_lesson##title <- Js.string "Go to next lesson";
 
-      Lwt.ignore_result (
-        tutorial_action load_next_lesson lessons next_lesson >>=
-          (fun _ ->
-            let intro = get_element_by_id "intro"
-            and sidebar = get_element_by_id "sidebar" in
-            Lwt.return (Dom.removeChild sidebar intro)
-          )
-      );
+      tutorial_toc previous_lesson previous_step lessons next_lesson next_step
 
-      append_children "navbar" [
-        previous_lesson;
-        previous_step;
-        next_step;
-        next_lesson
-      ]
     );
     Js._true
   ) in
