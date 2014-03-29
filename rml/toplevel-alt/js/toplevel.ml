@@ -483,9 +483,11 @@ let run _ =
     | Some elt ->
         let make_item i (path, title, steps, descr) =
           let li = doc##createElement (Js.string "li") in
-          let text = Format.sprintf "Lesson %d, %s:" (i+1) title in
-          li##innerHTML <- Js.string text;
-          li##onclick <-
+          let a = doc##createElement (Js.string "a") in
+          Dom.appendChild li a;
+          let text = Format.sprintf "Lesson %d: %s" (i+1) title in
+          a##innerHTML <- Js.string text;
+          a##onclick <-
             (Dom_html.handler (fun _ ->
               cur_lesson := i;
               Lwt.ignore_result
