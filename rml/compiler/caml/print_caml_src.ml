@@ -65,13 +65,13 @@ let print_immediate i =
   | Const_unit -> pp_print_string !formatter "()"
   | Const_bool(b) -> pp_print_string !formatter  (if b then "true" else "false")
   | Const_int(i) ->
-      if i < 0 then
+      if i <= 0 then
 	(pp_print_string !formatter "(";
 	 pp_print_int !formatter i;
 	 pp_print_string !formatter ")")
       else pp_print_int !formatter i
   | Const_float(f) ->
-      if f < 0.0 then
+      if f <= 0.0 then
 	(pp_print_string !formatter "(";
 	 pp_print_float !formatter f;
 	 pp_print_string !formatter ")")
