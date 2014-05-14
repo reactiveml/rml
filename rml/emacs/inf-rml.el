@@ -75,6 +75,7 @@ be sent from another buffer in Rml mode.
   (setq comment-start-skip "(\\*+ *")
   (make-local-variable 'parse-sexp-ignore-comments)
   (setq parse-sexp-ignore-comments nil)
+  (setq comint-scroll-to-bottom-on-output t)
   (use-local-map inferior-rml-mode-map)
   (run-hooks 'inferior-rml-mode-hooks))
 
@@ -254,7 +255,8 @@ should lies."
   (if (< arg 1) (inferior-rml-just-eval-phrase (max 1 (- 0 arg)) min max)
     (let ((proc (get-buffer-process inferior-rml-buffer-name))
           (buf (current-buffer))
-          previous-output orig beg end err)
+          previous-output orig beg end err
+	  inf-point)
       (save-window-excursion
         (while (and (> arg 0) (not err))
           (setq previous-output (marker-position (process-mark proc)))
@@ -305,14 +307,20 @@ should lies."
                  (setq err beg))
                 (t
                  (switch-to-buffer buf)))
-          (setq arg (- arg 1))
-          )
+          (setq arg (- arg 1)))
         (pop-to-buffer inferior-rml-buffer-name)
         (if err
             (goto-char (point-max))
           (goto-char previous-output)
           (goto-char (point-max)))
-        (pop-to-buffer buf))
+        (pop-to-buffer buf)
+	(with-current-buffer inferior-rml-buffer-name
+	  (setq inf-point (point))))
+      (let ((owindow (selected-window)))
+	(dolist (w (get-buffer-window-list inferior-rml-buffer-name nil t))
+	  (select-window w)
+	  (goto-char inf-point))
+	(select-window owindow))
       (if err (progn (beep) (rml-overlay-region (point) end))
         (if inferior-rml-output
             (message "No error")
