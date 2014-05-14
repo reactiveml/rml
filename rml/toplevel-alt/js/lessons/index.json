@@ -2,4 +2,4 @@
 lesson1    ; Quick tour                   ; 7               ; An introduction to the main constructs of ReactiveML.
 lesson2    ; Moving ball                  ; 7               ; Illustration of the dynamic creation of processes through a graphical example.
 lesson3    ; Dynamic reconfiguration      ; 16              ; Examples of the expressiveness of higher order.
-lesson4    ; Alarm clock                  ; 10              ; How to program automata.
+lesson4    ; Alarm clock                  ; 9              ; How to program automata.

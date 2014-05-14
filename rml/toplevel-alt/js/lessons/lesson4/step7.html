@@ -1,39 +1,44 @@
 <p>
-Again, the automata is implemented using three mutually recursive processes.
+Now, we define the clock control signals. Note that
+signal <code>ck_arm</code> carries the value used to set up the
+countdown of the alarm.
 </p>
 
 <p><pre class="code">
-let alarm ck_off ck_bip ck_snooze ck_arm = 
+signal ck_off, ck_bip, ck_snooze;;
+</pre></p>
+<p><pre class="code">
+signal ck_arm default 0 gather (fun x y -> x);;
+</pre></p>
 
-  let rec process idle = 
-    do halt
-    until 
-    | ck_arm (d) -> 
-	print_endline "Armed!";
-	run (armed d) 
-    done
 
-  and process armed d = 
-    do run (sleep d);
-       emit ck_bip; pause
-    until 
-    | ck_off -> 
-	print_endline "Off!";
-	run idle
-    | ck_bip -> 
-	run ring
-    done
+<p>
+Then, we can run our alarm-clock.
+</p>
 
-  and process ring = 
-    do run bipbipbipbip
-    until 
-    | ck_snooze  -> 
-	print_endline "Snooze!";
-	run (armed 200)
-    | ck_off ->
-    	print_endline "Off!";
-    	run idle
-    done
+<p><pre class="code">
+#run alarm ck_off ck_bip ck_snooze ck_arm;;
+</pre></p>
 
-  in idle;;
+<p>
+We arm the alarm by emitting the value 500 on <code>ck_arm</code> and
+wait until the alarm rings (about 5 seconds depending on the browser).
+</p>
+
+<p><pre class="code">
+emit ck_arm 500;;
+</pre></p>
+
+<p>
+Then, one can snooze the clock. It should ring again in one or two seconds.
+</p>
+<p><pre class="code">
+emit ck_snooze;;
+</pre></p>
+
+<p>
+Finally, one can turn off the clock.
+</p>
+<p><pre class="code">
+emit ck_off;;
 </pre></p>

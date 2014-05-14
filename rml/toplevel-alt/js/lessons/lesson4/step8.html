@@ -1,35 +1,28 @@
 <p>
-Now we can run our alarm-clock,
-</p>
-
-<p><pre class="code">
-#run alarm ck_off ck_bip ck_snooze ck_arm;;
-</pre></p>
-
-<p>
-and control it via signals <code>ck_arm</code>, <code>ck_snooze</code>
-and <code>ck_off</code>.
+Finally, it is very easy to make our two automata communicate through
+a third one. For instance we can switch on the light when the alarm is
+ringing, and switch off the light when the alarm is snoozed or turned
+off.
 </p>
 
 <p>
-First lets arm the alarm with value 500 and wait until the alarm
-rings.
+The idea is to write one state automaton that listens to the control
+signals of the alarm clock and emits control signals of the light.
 </p>
 
 <p><pre class="code">
-emit ck_arm 500;;
-</pre></p>
-
-<p>
-Then, one can snooze the clock. It should ring again in one or two seconds.
-</p>
-<p><pre class="code">
-emit ck_snooze;;
-</pre></p>
-
-<p>
-Finally, one can turn off the clock.
-</p>
-<p><pre class="code">
-emit ck_off;;
+let rec process light_clock =
+  do
+    halt
+  until
+  | ck_off ->
+      emit switch_off;
+      run light_clock
+  | ck_bip ->
+      emit switch_on;
+      run light_clock
+  | ck_snooze ->
+      emit switch_off;
+      run light_clock
+  done
 </pre></p>

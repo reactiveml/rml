@@ -6,7 +6,7 @@ initial state is <code>state_off</code>.
 </p>
 
 <p><pre class="code">
-let light switch_on switch_off =
+let process light switch_on switch_off =
 
   let rec process state_on =
     do
@@ -23,5 +23,10 @@ let light switch_on switch_off =
     done
 
   in
-  state_off
+  run state_off
 </pre></p>
+
+<p>
+When a state becomes active, the message <code>Light on!</code>
+or <code>Light off!</code> is displayed.
+</p>
