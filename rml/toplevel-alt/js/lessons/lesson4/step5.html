@@ -1,12 +1,15 @@
 <p>
-In this example, time will be only logical to avoid interactions
-with the operating system. To see how to logical time can be linked to
-physical time, the interested reader can see the <a href="http://reactiveml.org/reactive_asco">Reactive Asco example</a>.
+In this example, time will be only logical to avoid interactions with
+the operating system. To see how logical time can be linked to
+physical time, the interested reader can find details in
+the <a href="http://reactiveml.org/reactive_asco">Reactive Asco
+example</a>.
 </p>
 
 <p>
-So, first, we need a process that waits for a given
-duration <code>d</code> expressed in number of logical steps and at least one.
+First, we need a process that waits for a given
+duration <code>d</code> expressed in a number of logical steps greater
+or equal to one.
 </p>
 
 <p><pre class="code">
@@ -19,7 +22,7 @@ let process sleep d =
 
 <p>
 Using this process, we can define the ring tone, a process that
-prints <code>Bip Bip Bip Bip</code> periodically on the standard
+periodically prints <code>Bip Bip Bip Bip</code> on the standard
 output.
 </p>
 
@@ -27,8 +30,8 @@ output.
 let process bipbipbipbip =
      loop
        for i = 1 to 4 do
-      	 print_string "Bip "; flush stdout;
-      	 run sleep 10;
+         print_string "Bip "; flush stdout;
+         run sleep 10;
        done;
        run sleep 100;
        print_newline ()
