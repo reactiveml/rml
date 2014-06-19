@@ -116,22 +116,22 @@ fi
 echo "# Where to install" >> config
 echo "PREFIX=$prefix" >> config
 case "$bindir" in
-  "") echo 'BINDIR=$(PREFIX)/bin' >> config
+  "") echo 'BINDIR="$(PREFIX)/bin"' >> config
       bindir="$prefix/bin";;
-   *) echo "BINDIR=$bindir" >> config;;
+   *) echo 'BINDIR="$bindir"' >> config;;
 esac
 case "$libdir" in
-  "") echo 'LIBDIR=$(PREFIX)/lib/rml' >> config
+  "") echo 'LIBDIR="$(PREFIX)/lib/rml"' >> config
       libdir="$prefix/lib/rml";;
-   *) echo "LIBDIR=$libdir" >> config;;
+   *) echo 'LIBDIR="$libdir"' >> config;;
 esac
 case "$mandir" in
-  "") echo 'MANDIR=$(PREFIX)/man' >> config
+  "") echo 'MANDIR="$(PREFIX)/man"' >> config
       mandir="$prefix/man";;
-   *) echo "MANDIR=$mandir" >> config;;
+   *) echo 'MANDIR="$mandir"' >> config;;
 esac
 echo "MANEXT=$manext" >> config
-echo "EMACSDIR=\"$emacsdir\"" >> config
+echo 'EMACSDIR="$emacsdir"' >> config
 echo "" >> config
 
 # Check for install script
