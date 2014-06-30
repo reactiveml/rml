@@ -1,4 +1,12 @@
-(* D'après http://www.rogervilder.com/projets/carre_16.html *)
+(************************************************************************)
+(*                         ReactiveArt                                  *)
+(*                                                                      *)
+(*  Inspierd by http://www.rogervilder.com/projets/carre_16.html        *)
+(*                                                                      *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)               *)
+(*           Louis Mandel (louis.mandel@lri.fr)                         *)
+(*                                                                      *)
+(************************************************************************)
 
 let process sum state delta =
   loop
@@ -21,7 +29,7 @@ let ( *: ) n p = int_of_float ((float n) *. (max 0. (min 1.0 p)))
 type dir = Up | Down | Left | Right
 type style = Color | Black | Rand
 
-let random_color () = 
+let random_color () =
   match Random.int 4 with
   | 0 -> Graphics.red
   | 1 -> Graphics.blue
@@ -29,7 +37,7 @@ let random_color () =
   | 3 -> Graphics.green
   | _ -> Graphics.black
 
-let color_of_style style dir = 
+let color_of_style style dir =
   match style with
   | Black -> Graphics.black
   | Color ->
@@ -39,22 +47,22 @@ let color_of_style style dir =
       | Right -> Graphics.green
       | Left -> Graphics.yellow
       end
-  | Rand -> random_color () 
+  | Rand -> random_color ()
 
 let process draw style dir x y n state =
-  let rec process draw s = 
+  let rec process draw s =
     let c = color_of_style s dir in
     do
       loop
-	let k = n *: (last ?state) in
-	Graphics.set_color c;
-	begin match dir with
-	| Up -> Graphics.fill_rect x y n k
-	| Down -> Graphics.fill_rect x (y + n - k) n k
-	| Left -> Graphics.fill_rect (x + n - k) y k n
-	| Right -> Graphics.fill_rect x y k n
-	end;
-	pause
+        let k = n *: (last ?state) in
+        Graphics.set_color c;
+        begin match dir with
+        | Up -> Graphics.fill_rect x y n k
+        | Down -> Graphics.fill_rect x (y + n - k) n k
+        | Left -> Graphics.fill_rect (x + n - k) y k n
+        | Right -> Graphics.fill_rect x y k n
+        end;
+        pause
       end
     until style(s) ->
       run draw s
@@ -69,7 +77,7 @@ let process pump style dir x y n state delta =
 
 let random_speed n = float (100 + Random.int 100) /. 20000.
 
-let in_cell x' y' x y n = 
+let in_cell x' y' x y n =
   (x' >= x) &&
   (y' >= y) &&
   (x' <= x + n) &&
@@ -94,32 +102,32 @@ and process cell click split pump x y n init =
   run splittable click split pump Up x (y + n_2 + 1) n_2 init ||
   run splittable click split pump Right (x + n_2 + 1) (y + n_2 + 1) n_2 init
 
-let process mouse_click click = 
-  signal mouse in 
+let process mouse_click click =
+  signal mouse in
   loop
     if Graphics.button_down() then emit mouse;
     pause
   end
   ||
   loop
-    present mouse then 
+    present mouse then
       pause
     else
       begin
-	await immediate mouse;
-	emit click (Graphics.mouse_pos());
-	pause
+        await immediate mouse;
+        emit click (Graphics.mouse_pos());
+        pause
       end
   end
-    
-let rec process resetable p s = 
-  do 
-    run p 
+
+let rec process resetable p s =
+  do
+    run p
   until s ->
     run (resetable p s)
   done
 
-let process read_keyboard split style reset quit = 
+let process read_keyboard split style reset quit =
   loop
     pause;
     if Graphics.key_pressed() then
@@ -129,16 +137,16 @@ let process read_keyboard split style reset quit =
       | 'q' -> emit quit
 
       | 'c' ->
-	  let p = last? style in
-	  let s = match p with
-	  | Black -> Color
-	  | Color -> Rand
-	  | Rand -> Black
-	  in
-	  emit style s
+          let p = last? style in
+          let s = match p with
+          | Black -> Color
+          | Color -> Rand
+          | Rand -> Black
+          in
+          emit style s
       | _ -> ()
   end
-    
+
 
 let process main =
   let n = 600 in
@@ -147,18 +155,18 @@ let process main =
   signal style default Black gather (fun x y -> x) in
   signal split, reset, quit in
   Graphics.open_graph (" "^s^"x"^s);
-  Graphics.set_window_title 
+  Graphics.set_window_title
     "A la Roger Vilder (click, space: split; q: quit, r: reset)";
   Graphics.auto_synchronize false;
   do
     loop
       pause;
       Graphics.synchronize ();
-      Graphics.clear_graph (); 
+      Graphics.clear_graph ();
     end
     |>
     run read_keyboard split style reset quit ||
-    run mouse_click click || 
+    run mouse_click click ||
     run (resetable (splittable click split (pump style) Up 0 0 n 0.0) reset)
   until quit -> exit 0 done
 

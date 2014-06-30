@@ -1,5 +1,5 @@
 # File to compile
-FILE=rogervilder_carres_noir_et_blanc
+FILE=rogervilder_carres_noir_et_blanc ala_rogervilder
 
 # ReactiveML compiler
 RMLC=rmlc -runtime Lco_n
