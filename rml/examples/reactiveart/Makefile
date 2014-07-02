@@ -1,5 +1,5 @@
 RMLC=rmlc
-RMLBUILD=rmlbuild -classic-display
+RMLBUILD=rmlbuild -classic-display -tags lco_n
 FLAGS=-lib graphics -no-links
 TARGET=native
 
@@ -15,8 +15,9 @@ ala_rogervilder.rml.$(TARGET):
 	cp _build/$@ .
 
 clean:
-	rmlbuild -clean	
+	rmlbuild -clean
 
-cleanall: clean
+realclean: clean
 	rm -rf rogervilder_carres_noir_et_blanc.rml.$(TARGET) \
 	       ala_rogervilder.rml.$(TARGET)
+cleanall: realclean

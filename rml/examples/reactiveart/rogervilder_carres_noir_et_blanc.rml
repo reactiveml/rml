@@ -135,4 +135,4 @@ let process main =
   run resetable reset (splittable split Up 0 0 size 0.0)
 
 (** Execution of the main. *)
-let () = run main
+(* let () = run main *)
