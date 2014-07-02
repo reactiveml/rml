@@ -1,0 +1,10 @@
+type state
+
+val check_escape : unit -> unit
+
+val init : unit -> (int -> int -> int -> int -> unit)
+val new_state : int * int * int * int -> state
+val move : (int -> int -> int -> int -> unit) -> state -> unit
+
+val p1 : int * int * int * int
+val p2 : int * int * int * int

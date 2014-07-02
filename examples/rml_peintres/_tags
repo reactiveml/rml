@@ -1,0 +1,3 @@
+<*.ml>: thread,package(sdl),package(sdl.sdlimage)
+<*.byte>: thread,package(sdl),package(sdl.sdlimage)
+<*.native>: thread, package(sdl),package(sdl.sdlimage)

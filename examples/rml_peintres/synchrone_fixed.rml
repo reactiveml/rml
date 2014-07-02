@@ -1,0 +1,14 @@
+open Misc
+
+let process brush draw p =
+  let st = new_state p in
+  loop
+    move draw st;
+    pause
+  end
+
+let process main =
+  let draw = init () in
+  run (brush draw p1)
+  ||
+  run (brush draw p2)

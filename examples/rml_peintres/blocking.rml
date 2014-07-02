@@ -1,0 +1,11 @@
+let process main =
+  loop
+    print_endline "Coucou";
+    pause
+  end
+  ||
+  loop
+    let i = read_int () in
+    print_endline ("i = "^string_of_int i);
+    pause
+  end
