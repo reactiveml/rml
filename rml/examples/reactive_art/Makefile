@@ -3,21 +3,21 @@ RMLBUILD=rmlbuild -classic-display -tags lco_n
 FLAGS=-lib graphics -no-links
 TARGET=native
 
-all:    rogervilder_carres_noir_et_blanc.rml.$(TARGET) \
-	ala_rogervilder.rml.$(TARGET)
+.PHONY: clean FORCE
 
-rogervilder_carres_noir_et_blanc.rml.$(TARGET):
+all: rogervilder_carres_noir_et_blanc.rml.$(TARGET) ala_rogervilder.rml.$(TARGET)
+
+
+%.rml.native: FORCE
+	rm -f $@
 	$(RMLBUILD) $(FLAGS) $@
 	cp _build/$@ .
 
-ala_rogervilder.rml.$(TARGET):
-	$(RMLBUILD) $(FLAGS) $@
-	cp _build/$@ .
+clean: 
+	rm -rf _build
+	rm -f *.byte *.native
 
-clean:
-	rmlbuild -clean
 
 realclean: clean
-	rm -rf rogervilder_carres_noir_et_blanc.rml.$(TARGET) \
-	       ala_rogervilder.rml.$(TARGET)
-cleanall: realclean
+
+cleanall: clean

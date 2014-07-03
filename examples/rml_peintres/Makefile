@@ -1,4 +1,4 @@
-RPMLBUILD=rmlbuild
+RPMLBUILD=rmlbuild -classic-display
 OCAMLBUILD=ocamlbuild
 SDLOPTS:=-cclib,$(shell sdl-config --libs | sed -e "s/,/,-cclib,/g" | sed -e "s/ /,-cclib,/g")
 
