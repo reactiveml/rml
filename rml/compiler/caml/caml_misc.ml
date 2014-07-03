@@ -159,7 +159,7 @@ let make_rml_exec_hook () =
   in
   let thread_hook =
     if !with_thread then
-      [ make_module_value "Async_body" "boi_hook" ]
+      [ make_module_value "Rml_async_body" "boi_hook" ]
     else
       []
   in

@@ -325,7 +325,7 @@ let compile_implementation module_name filename =
                 !Misc.rml_machine_module^".debug_hook;"
               else "")^
               (if !with_thread then
-                "Async_body.boi_hook; "
+                "Rml_async_body.boi_hook; "
               else "")^
               "] "
             in

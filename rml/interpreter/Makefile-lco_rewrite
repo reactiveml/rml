@@ -29,10 +29,10 @@ lco_rewrite/rml_list.cmo: OCAMLFLAGS += -rectypes
 lco_rewrite/rml_list.cmx: OCAMLOPTFLAGS += -rectypes
 lco_rewrite/rml_process_manager.cmo: OCAMLFLAGS += -rectypes
 lco_rewrite/rml_process_manager.cmx: OCAMLOPTFLAGS += -rectypes
-lco_rewrite/async_body.cmo: OCAMLFLAGS += -rectypes
-lco_rewrite/async_body.cmx: OCAMLOPTFLAGS += -rectypes
-lco_rewrite/async.cmo: OCAMLFLAGS += -rectypes
-lco_rewrite/async.cmx: OCAMLOPTFLAGS += -rectypes
+lco_rewrite/rml_async_body.cmo: OCAMLFLAGS += -rectypes
+lco_rewrite/rml_async_body.cmx: OCAMLOPTFLAGS += -rectypes
+lco_rewrite/rml_async.cmo: OCAMLFLAGS += -rectypes
+lco_rewrite/rml_async.cmx: OCAMLOPTFLAGS += -rectypes
 
 
 include Makefile-interpreter.common

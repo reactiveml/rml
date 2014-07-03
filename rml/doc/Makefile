@@ -2,7 +2,7 @@ include ../config
 include ../configure-tools/Makefile.common
 include ../stdlib/Makefile-stdlib.common
 
-STDLIB_MLI=$(patsubst %.rmli,stdlib/%.mli,$(STDLIB_SRC)) stdlib/async.mli
+STDLIB_MLI=$(patsubst %.rmli,stdlib/%.mli,$(STDLIB_SRC)) stdlib/rml_async.mli
 
 all: html
 
@@ -31,7 +31,7 @@ stdlib/%.mli: ../stdlib/%.rmli stdlib/rml_fake.cmi
 	echo "open Rml_fake;;" >> $@
 	cat $< >> $@
 
-stdlib/async.mli: ../stdlib/thread/async.rmli stdlib/rml_fake.cmi
+stdlib/rml_async.mli: ../stdlib/thread/rml_async.rmli stdlib/rml_fake.cmi
 	echo "(* This file is generated *)" > $@
 	echo "open Rml_fake;;" >> $@
 	cat $< >> $@

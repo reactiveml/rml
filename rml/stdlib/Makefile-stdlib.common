@@ -47,17 +47,17 @@ STDLIB_RML_SRC=rml_list.rml \
 
 STDLIB_ML_SRC=
 
-STDLIB_THREAD_SRC=thread/async_body.rmli \
-	thread/async.rmli \
+STDLIB_THREAD_SRC=thread/rml_async_body.rmli \
+	thread/rml_async.rmli \
 
 
-STDLIB_THREAD_RML_SRC=thread/async.rml \
+STDLIB_THREAD_RML_SRC=thread/rml_async.rml \
 
-STDLIB_THREAD_ML_SRC=thread/async_body.ml \
+STDLIB_THREAD_ML_SRC=thread/rml_async_body.ml \
 
 
 # extra dependencies
-$(RUNTIME_DIR)/async.cmo: $(RUNTIME_DIR)/async_body.cmo
-$(RUNTIME_DIR)/async.cmx: $(RUNTIME_DIR)/async_body.cmx
-$(RUNTIME_DIR)/async_body.cmo: OCAMLFLAGS += $(THEAD_TYPE)
-$(RUNTIME_DIR)/async_body.cmx: OCAMLOPTFLAGS += -thread
+$(RUNTIME_DIR)/rml_async.cmo: $(RUNTIME_DIR)/rml_async_body.cmo
+$(RUNTIME_DIR)/rml_async.cmx: $(RUNTIME_DIR)/rml_async_body.cmx
+$(RUNTIME_DIR)/rml_async_body.cmo: OCAMLFLAGS += $(THEAD_TYPE)
+$(RUNTIME_DIR)/rml_async_body.cmx: OCAMLOPTFLAGS += -thread

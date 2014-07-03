@@ -249,7 +249,7 @@ and doc_runtime =
    "\t Lco_ctrl_tree_n | Lco_n \n" ^
    "\t Lco_ctrl_tree_class\n" ^
    "\t Lk"
-and doc_thread = "Generate code that supports the async library"
+and doc_thread = "Generate code that supports the Rml_async library"
 and doc_debug = "Print instant numbers on the error output"
 
 and doc_dparse = "(undocumented)"
