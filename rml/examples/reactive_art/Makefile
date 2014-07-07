@@ -20,4 +20,4 @@ clean:
 realclean: clean
 	rm -f *.byte *.native
 
-cleanall: clean
+cleanall: realclean
