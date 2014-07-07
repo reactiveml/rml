@@ -5,19 +5,19 @@ TARGET=native
 
 .PHONY: clean FORCE
 
-all: rogervilder_carres_noir_et_blanc.rml.$(TARGET) ala_rogervilder.rml.$(TARGET)
+all: 	rogervilder_carres_noir_et_blanc.rml.$(TARGET) \
+	ala_rogervilder.rml.$(TARGET)
 
 
-%.rml.native: FORCE
+%.rml.$(TARGET): FORCE
 	rm -f $@
 	$(RMLBUILD) $(FLAGS) $@
 	cp _build/$@ .
 
-clean: 
+clean:
 	rm -rf _build
-	rm -f *.byte *.native
-
 
 realclean: clean
+	rm -f *.byte *.native
 
 cleanall: clean
