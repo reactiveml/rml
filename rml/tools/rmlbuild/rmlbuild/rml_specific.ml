@@ -227,45 +227,43 @@ let init () =
       rule "rml: rmlsim -> byte"
         ~prod:"%.rml.byte"
         ~dep:"%.rmlsim"
-        (link_rmlsim "byte");;
+        (link_rmlsim "byte");
 
       rule "rml: rmlsim -> d.byte"
         ~prod:"%.rml.d.byte"
         ~dep:"%.rmlsim"
-        (link_rmlsim "d.byte");;
+        (link_rmlsim "d.byte");
 
       rule "rml: rmlsim -> native"
         ~prod:"%.rml.native"
         ~dep:"%.rmlsim"
-        (link_rmlsim "native");;
+        (link_rmlsim "native");
 
       rule "rml: rmlsim -> p.native"
         ~prod:"%.rml.p.native"
         ~dep:"%.rmlsim"
-        (link_rmlsim "p.native");;
+        (link_rmlsim "p.native");
 
 
       rule "rml: rml -> byte"
         ~prod:"%.rml.byte"
         ~dep:"%.rml"
-        (link_rml "byte");;
+        (link_rml "byte");
 
       rule "rml: rml -> d.byte"
         ~prod:"%.rml.d.byte"
         ~dep:"%.rml"
-        (link_rml "d.byte");;
+        (link_rml "d.byte");
 
       rule "rml: rml -> native"
         ~prod:"%.rml.native"
         ~dep:"%.rml"
-        (link_rml "native");;
+        (link_rml "native");
 
       rule "rml: rml -> p.native"
         ~prod:"%.rml.p.native"
         ~dep:"%.rml"
-        (link_rml "p.native");;
-
-
+        (link_rml "p.native");
 
       rule "rml: rmllib -> mllib"
         ~prod:"%.mllib"
@@ -324,4 +322,3 @@ let rml_lib ?(byte=true) ?(native=true) ?dir ?tag_name libpath =
   | Some dir ->
     flag ["rml"; "compile"; tag_name] (S[A"-I"; P dir]);
     flag ["ocaml"; "compile"; tag_name] (S[A"-I"; P dir])
-
