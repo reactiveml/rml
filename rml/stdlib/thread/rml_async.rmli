@@ -36,7 +36,7 @@ val proc_of_fun : ('a -> 'b) -> 'a -> 'b process
 *)
 
 val exec : ('a, 'b) event -> ('c -> 'a) -> 'c -> unit
-(** [exec term f x] spawn the computation of [f x] in a thread and
+(** [exec term f x] spawns the computation of [f x] in a thread and
     terminates instantaneously. When the computation of [f x]
     terminates, the result is sent on the signal [term].
 *)
@@ -47,3 +47,8 @@ val safe_emit : ('a, 'b) event -> 'a -> unit
     be called from an external thread.
 *)
 
+val yield : unit -> unit
+(** [yield ()] re-schedules the calling thread without suspending
+   it. This function can be used to give scheduling hints, telling the
+   thread scheduler that now is a good time to switch to other threads.
+*)

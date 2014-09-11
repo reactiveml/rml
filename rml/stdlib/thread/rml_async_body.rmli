@@ -24,3 +24,4 @@
 val exec_boi : (unit -> unit) -> unit
 val boi_hook : unit -> unit
 val spawn : (unit -> unit) -> unit
+val yield : unit -> unit

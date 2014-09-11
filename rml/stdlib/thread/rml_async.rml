@@ -32,3 +32,5 @@ let process proc_of_fun (f: 'a -> 'b) (x : 'a) =
   exec term f x;
   await term (v) in
   v
+
+let yield = Rml_async_body.yield

@@ -46,3 +46,5 @@ let boi_hook () =
 
 let spawn f =
   ignore (Thread.create f ())
+
+let yield = Thread.yield
