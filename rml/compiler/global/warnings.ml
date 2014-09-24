@@ -76,8 +76,8 @@ let check c =
   with _ -> raise (Arg.Bad (Printf.sprintf "unknown warning option %c" c))
 ;;
 
-let active = Array.create 26 true;;
-let error = Array.create 26 false;;
+let active = Array.make 26 true;;
+let error = Array.make 26 false;;
 
 let translate c =
   check c;
