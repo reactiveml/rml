@@ -1,8 +1,12 @@
 Warning: incompatible changes with previous versions are marked with "*".
 
-ReactiveML 1.09.04 (XXXX-XX-XX):
+ReactiveML 1.09.04 (2016-03-23):
 --------------------------------
-
+ - rmlbuild: sim field not mandatory.
+ * rmllib: renamming Async -> Rml_async.
+ - new example: reactive_art.
+ - install: fix patch problem on recent Linux.
+ - install: fix install script for rmlbuild on OCaml 4.03.
 
 
 ReactiveML 1.09.03 (2014-06-21):
