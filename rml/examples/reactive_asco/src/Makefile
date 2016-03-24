@@ -47,7 +47,7 @@ ascolive.cma:
 	$(RMLBUILD) $(FLAGS) $@
 
 clean:
-	$(RMLBUILD) -clean
+	- $(RMLBUILD) -clean
 	find ../lib -iname *.rzi -exec rm {} \;
 	find ../lib -iname *.cmi -exec rm {} \;
 	find ../lib -iname *.cma -exec rm {} \;
