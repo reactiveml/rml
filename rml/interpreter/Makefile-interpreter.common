@@ -60,8 +60,9 @@ install: $(INSTALLFILE)
 	$(INSTALL) -m 644 $(STDLIB_THREAD_INTF) $(LIBDIR)/$(RUNTIME_DIR)/thread
 
 uninstall:
-	(cd $(LIBDIR)/$(RUNTIME_DIR); rm -f $(INSTALLFILE) )
-
+	(cd $(LIBDIR)/$(RUNTIME_DIR); rm -f $(notdir $(INSTALLFILE)))
+	(cd $(LIBDIR)/$(RUNTIME_DIR); rm -f $(notdir $(STDLIB_INTF)))
+	(cd $(LIBDIR)/$(RUNTIME_DIR)/thread; rm -f $(notdir $(STDLIB_THREAD_INTF)))
 
 # cleaning:
 clean:
