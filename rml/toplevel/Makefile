@@ -55,7 +55,7 @@ install.lib: lib
 
 uninstall:
 	rm -f $(BINDIR)/rmltop
-	rm -rf $(LIBDIR)/toplevel
+	rm -rf $(LIBDIR)/lco/toplevel
 
 test:
 	ledit ocaml -I +threads $(RMLLIB) unix.cma threads.cma \
