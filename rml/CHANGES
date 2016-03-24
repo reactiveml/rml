@@ -13,6 +13,7 @@ ReactiveML 1.09.04 (2016-03-23):
  - new example: reactive_art.
  - install: fix patch problem on recent Linux.
  - install: fix install script for rmlbuild on OCaml 4.03.
+ - install: fix uninstall
 
 
 ReactiveML 1.09.03 (2014-06-21):
