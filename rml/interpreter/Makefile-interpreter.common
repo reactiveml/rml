@@ -4,7 +4,7 @@ LIB=	$(RUNTIME_DIR)/rmllib.cma \
 	$(RUNTIME_DIR)/rmllib.cmxa \
 	$(RUNTIME_DIR)/rmllib.a \
 
-RMLLIB_CMX= lco_interpreter.cmi $(RMLLIB_OBJ:.cmo=.cmx)
+RMLLIB_CMX= $(RMLLIB_OBJ:.cmo=.cmx)
 
 INSTALLFILE= $(RMLLIB_INTF) $(LIB) $(RMLLIB_CMX)
 
