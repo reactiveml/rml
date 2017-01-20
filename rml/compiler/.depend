@@ -1,4 +1,3 @@
-global/rzi.cmi :
 global/asttypes.cmo :
 global/asttypes.cmx :
 global/def_modules.cmo : global/global.cmo typing/def_types.cmo
@@ -25,13 +24,13 @@ global/modules.cmx : global/rzi.cmx parsing/parse_ident.cmx global/misc.cmx \
     typing/def_types.cmx global/def_modules.cmx
 global/rzi.cmo : global/rzi.cmi
 global/rzi.cmx : global/rzi.cmi
+global/rzi.cmi :
 global/symbol_table.cmo :
 global/symbol_table.cmx :
 global/version.cmo :
 global/version.cmx :
 global/warnings.cmo :
 global/warnings.cmx :
-parsing/parser.cmi : parsing/parse_ast.cmo
 parsing/lexer.cmo : global/warnings.cmo parsing/parser.cmi global/misc.cmo \
     parsing/location.cmo
 parsing/lexer.cmx : global/warnings.cmx parsing/parser.cmx global/misc.cmx \
@@ -60,6 +59,7 @@ parsing/parser.cmo : parsing/syntaxerr.cmo parsing/parse_ident.cmo \
 parsing/parser.cmx : parsing/syntaxerr.cmx parsing/parse_ident.cmx \
     parsing/parse_ast.cmx parsing/location.cmx static/def_static.cmx \
     global/asttypes.cmx parsing/parser.cmi
+parsing/parser.cmi : parsing/parse_ast.cmo
 parsing/syntaxerr.cmo : parsing/location.cmo
 parsing/syntaxerr.cmx : parsing/location.cmx
 external/external.cmo : parsing/parse_ast.cmo external/lucky.cmo

@@ -356,6 +356,8 @@ module type OPTIONS = sig
   val include_dirs : string list ref
   val exclude_dirs : string list ref
   val nothing_should_be_rebuilt : bool ref
+  val rmlc : command_spec ref
+  val rmldep : command_spec ref
   val ocamlc : command_spec ref
   val ocamlopt : command_spec ref
   val ocamldep : command_spec ref

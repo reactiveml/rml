@@ -2,7 +2,7 @@ Warning: incompatible changes with previous versions are marked with "*".
 
 ReactiveML 1.09.05 (XXXX-XX-XX):
 --------------------------------
-
+ - rmlbuild: new -rmlc and -rmldep options
 
 
 
