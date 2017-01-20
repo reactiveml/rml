@@ -1,8 +1,6 @@
 open Ocamlbuild_plugin;;
 open Command;;
 
-let rmlc = A"rmlc";;
-let rmldep = A "rmldep";;
 let stdlib_dir = ref ""
 
 let rec input_backslash_lines inc s =
@@ -90,7 +88,7 @@ let mk_includes dir =
 let find_rml_stdlib_dir () =
   let path = !Options.build_dir / "rmlc.where" in
   if not (Pathname.exists path) then
-    (let cmd = Cmd (S [rmlc; A "-where"; Sh ">"; Px path]) in
+    (let cmd = Cmd (S [!Options.rmlc; A "-where"; Sh ">"; Px path]) in
     Command.execute cmd);
   let s = read_file (Pathname.to_string path) in
   stdlib_dir := String.sub s 0 (String.length s - 1)
@@ -117,7 +115,7 @@ let rmlbuild_after_rules () =
       begin fun env _build ->
         let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
+        Cmd(S ([!Options.rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
                @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
       end;
 
@@ -127,7 +125,7 @@ let rmlbuild_after_rules () =
       begin fun env _build ->
         let file = env "%.mli" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
+        Cmd(S ([!Options.rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
                @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
       end;
 
@@ -137,7 +135,7 @@ let rmlbuild_after_rules () =
       begin fun env _build ->
         let file = env "%.rmli" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
+        Cmd(S ([!Options.rmldep; A"-I"; A (Pathname.to_string Pathname.pwd)]
                @ includes @ [Px file; Sh ">"; Px(env "%.rmldepends")]))
       end;
 
@@ -152,7 +150,7 @@ let rmlbuild_after_rules () =
 
         let file = env "%.mli" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc] @ includes @ [P file]))
+        Cmd(S ([!Options.rmlc] @ includes @ [P file]))
       end;
 
       rule "rml: rmli -> rzi"
@@ -166,7 +164,7 @@ let rmlbuild_after_rules () =
 
         let file = env "%.rmli" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc] @ includes @ [P file]))
+        Cmd(S ([!Options.rmlc] @ includes @ [P file]))
       end;
 
       rule "rml: rml -> ml, rzi"
@@ -183,7 +181,7 @@ let rmlbuild_after_rules () =
 
         let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc]@includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
+        Cmd(S ([!Options.rmlc]@includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
       rule "rml: rmlsim -> byte"

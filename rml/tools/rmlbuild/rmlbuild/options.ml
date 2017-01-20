@@ -62,8 +62,10 @@ let mk_virtual_solvers =
 
 let () =
   mk_virtual_solvers
-    ["ocamlc"; "ocamlopt"; "ocamldep"; "ocamldoc";
+    ["rmlc"; "rmldep"; "ocamlc"; "ocamlopt"; "ocamldep"; "ocamldoc";
     "ocamlyacc"; "menhir"; "ocamllex"; "ocamlmklib"; "ocamlmktop"; "ocamlfind"]
+let rmlc = ref (V"RMLC")
+let rmldep = ref (V"RMLDEP")
 let ocamlc = ref (V"OCAMLC")
 let ocamlopt = ref (V"OCAMLOPT")
 let ocamldep = ref (V"OCAMLDEP")
@@ -192,6 +194,8 @@ let spec =
    "-install-bin-dir", Set_string Ocamlbuild_where.bindir, "<path> Set the install binary directory";
    "-where", Unit (fun () -> print_endline !Ocamlbuild_where.libdir; raise Exit_OK), " Display the install library directory";
 
+   "-rmlc", set_cmd rmlc, "<command> Set the ReactiveML compiler";
+   "-rmldep", set_cmd ocamldep, "<command> Set the ReactiveML dependency tool";
    "-ocamlc", set_cmd ocamlc, "<command> Set the OCaml bytecode compiler";
    "-ocamlopt", set_cmd ocamlopt, "<command> Set the OCaml native compiler";
    "-ocamldep", set_cmd ocamldep, "<command> Set the OCaml dependency tool";

@@ -8,8 +8,8 @@ open Tags.Operators
 open Tools
 open Rule.Common_commands
 
-let rmlc = A"rmlc";;
-let rmldep = A "rmldep";;
+(* let rmlc = A"rmlc";; *)
+(* let rmldep = A "rmldep";; *)
 let stdlib_dir = ref ""
 
 let rec input_backslash_lines inc s =
@@ -108,7 +108,7 @@ let mk_includes dir =
 let find_rml_stdlib_dir () =
   let path = "rmlc.where" in
     if not (Pathname.exists path) then
-      (let cmd = Cmd (S [rmlc; T (tags_of_pathname path++"rml"++"where");
+      (let cmd = Cmd (S [!Options.rmlc; T (tags_of_pathname path++"rml"++"where");
                          A "-where"; Sh ">"; Px path]) in
          Command.execute cmd);
     let s = My_std.read_file (Pathname.to_string path) in
@@ -150,7 +150,7 @@ let init () =
         ~dep:"%.mli"
       begin fun env _build ->
         let file = env "%.mli" in
-        Cmd(S ([rmldep; A "-modules"; T (tags_of_pathname file++"rml"++"depend");
+        Cmd(S ([!Options.rmldep; A "-modules"; T (tags_of_pathname file++"rml"++"depend");
                   Px file; Sh ">"; Px(env "%.rmli.depends")]))
       end;
 
@@ -159,7 +159,7 @@ let init () =
         ~dep:"%.rmli"
       begin fun env _build ->
         let file = env "%.rmli" in
-        Cmd(S ([rmldep; A "-modules"; T (tags_of_pathname file++"rml"++"depend");
+        Cmd(S ([!Options.rmldep; A "-modules"; T (tags_of_pathname file++"rml"++"depend");
                Px file; Sh ">"; Px(env "%.rmli.depends")]))
       end;
 
@@ -168,7 +168,7 @@ let init () =
         ~dep:"%.rml"
       begin fun env _build ->
         let file = env "%.rml" in
-        Cmd(S ([rmldep; A "-modules"; T (tags_of_pathname file++"rml"++"depend");
+        Cmd(S ([!Options.rmldep; A "-modules"; T (tags_of_pathname file++"rml"++"depend");
                   Px file; Sh ">"; Px(env "%.rml.depends")]))
       end;
 
@@ -179,7 +179,7 @@ let init () =
         let file = env "%.mli" in
         import_depends _build (env "%.rmli.depends") file;
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc] @ includes @ [T (tags_of_pathname file++"rml"++"compile"); P file]))
+        Cmd(S ([!Options.rmlc] @ includes @ [T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
       rule "rml: rmli -> rzi"
@@ -189,7 +189,7 @@ let init () =
         let file = env "%.rmli" in
         import_depends _build (env "%.rmli.depends") file;
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc] @ [A "-c"] @ includes
+        Cmd(S ([!Options.rmlc] @ [A "-c"] @ includes
                @ [T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
@@ -205,7 +205,7 @@ let init () =
         tag_file gen_file ["use_rmllib"];
 
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc]@includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
+        Cmd(S ([!Options.rmlc]@includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
       rule "rml: rml -> ml, rzi"
@@ -221,7 +221,7 @@ let init () =
 
         let file = env "%.rml" in
         let includes = mk_includes (Pathname.dirname file) in
-        Cmd(S ([rmlc]@includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
+        Cmd(S ([!Options.rmlc]@includes@[T (tags_of_pathname file++"rml"++"compile"); P file]))
       end;
 
       rule "rml: rmlsim -> byte"
