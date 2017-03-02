@@ -78,6 +78,7 @@ let print_immediate i =
       else pp_print_float !formatter f
 	(* patch because "x.0" is printed "x" by C for caml < 3.05 *)
 	(* if (fst (modf f)) = 0.0 then print_string ".0" *)
+  | Const_char('\'') -> pp_print_string !formatter "\'\\\'\'"
   | Const_char(c) -> pp_print_char !formatter '\''; pp_print_char !formatter c; pp_print_char !formatter '\''
   | Const_string(s) -> pp_print_string !formatter ("\""^(String.escaped s)^"\"")
 
