@@ -28,6 +28,7 @@ cleanall: realclean
 arg.rzi: pervasives.rzi
 array.rzi: pervasives.rzi
 buffer.rzi: pervasives.rzi
+bytes.rzi: pervasives.rzi
 callback.rzi: pervasives.rzi
 char.rzi: pervasives.rzi
 complex.rzi: pervasives.rzi
@@ -41,7 +42,7 @@ hashtbl.rzi: pervasives.rzi
 int32.rzi: pervasives.rzi
 int64.rzi: pervasives.rzi nativeint.rzi int32.rzi
 lazy.rzi: pervasives.rzi
-lexing.rzi: pervasives.rzi
+lexing.rzi: pervasives.rzi bytes.rzi
 list.rzi: pervasives.rzi
 luc4ocaml_nolbl.rzi: pervasives.rzi luc4ocaml.rzi
 luc4ocaml.rzi: pervasives.rzi

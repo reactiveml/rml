@@ -305,6 +305,9 @@ let rec make_dummy t =
 	  else if type_desc = Initialization.type_desc_string then
 	    Cexpr_constant (Const_string "?")
 
+	  else if type_desc = Initialization.type_desc_bytes then
+	    Cexpr_constant (Const_bytes "?")
+
 	  else if type_desc = Initialization.type_desc_unit then
 	    Cexpr_constant (Const_unit)
 

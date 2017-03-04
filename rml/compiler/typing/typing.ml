@@ -303,6 +303,7 @@ let type_of_immediate i =
   | Const_float(i) -> type_float
   | Const_char(c) -> type_char
   | Const_string(c) -> type_string
+  | Const_bytes(c) -> type_bytes
 
 (* Typing of type expressions *)
 let type_of_type_expression typ_vars react_vars typexp =

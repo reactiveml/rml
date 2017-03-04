@@ -81,6 +81,7 @@ let print_immediate i =
   | Const_char('\'') -> pp_print_string !formatter "\'\\\'\'"
   | Const_char(c) -> pp_print_char !formatter '\''; pp_print_char !formatter c; pp_print_char !formatter '\''
   | Const_string(s) -> pp_print_string !formatter ("\""^(String.escaped s)^"\"")
+  | Const_bytes(s) -> pp_print_string !formatter ("\""^(String.escaped s)^"\"")
 
 (** Prints a name. Infix chars are surrounded by parenthesis *)
 let print_name s =
@@ -101,7 +102,7 @@ let print_name s =
 (** Prints pervasives values *)
 let print_pervasives n =
   match n with
-  | "int" | "char" | "string" | "float" | "bool" | "unit" | "exn" |
+  | "int" | "char" | "string" | "bytes" | "float" | "bool" | "unit" | "exn" |
     "array" | "list" | "option" | "int32" | "int64" | "nativeint" |
     "format4" | "lazy_t" |
     "[]" | "::" |

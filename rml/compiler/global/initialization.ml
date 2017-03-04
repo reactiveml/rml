@@ -85,6 +85,11 @@ let string_ident = pervasives_type "string"
 let type_desc_string = type_desc string_ident
 let type_string = Types.constr_notabbrev string_ident []
 
+(* bytes *)
+let bytes_ident = pervasives_type "bytes"
+let type_desc_bytes = type_desc bytes_ident
+let type_bytes = Types.constr_notabbrev bytes_ident []
+
 (* unit *)
 let unit_ident = pervasives_type "unit"
 let type_desc_unit = type_desc unit_ident
@@ -191,6 +196,7 @@ let list_of_type_desc =
     type_desc_float;
     type_desc_char;
     type_desc_string;
+    type_desc_bytes;
     type_desc_unit;
     type_desc_exn;
     type_desc_array;
