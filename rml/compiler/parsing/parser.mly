@@ -1062,11 +1062,11 @@ simple_core_type2:
       { mkte(Ptype_constr($2, [$1])) }
   | LPAREN core_type_comma_list RPAREN type_longident
       { mkte(Ptype_constr($4, List.rev $2)) }
-  | simple_core_type2 PROCESS
+  | simple_core_type PROCESS
       { mkte(Ptype_process ($1, Def_static.Dontknow)) }
-  | simple_core_type2 PROCESS PLUS
+  | simple_core_type PROCESS PLUS
       { mkte(Ptype_process ($1, Def_static.Noninstantaneous)) }
-  | simple_core_type2 PROCESS MINUS
+  | simple_core_type PROCESS MINUS
       { mkte(Ptype_process ($1, Def_static.Instantaneous)) }
 ;
 simple_core_type_or_tuple:
