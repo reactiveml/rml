@@ -305,9 +305,6 @@ echo
 mv config ..
 touch ../config-stamp
 
-# Configure rmlbuild
-./mkmyocamlbuild_config.sh "$prefix" "$libdir" "$ocamllib"
-
 # Patch Caml files
 
 cd ../patch
