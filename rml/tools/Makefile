@@ -1,4 +1,4 @@
-DIRECTORIES=rmldep rmlbuild
+DIRECTORIES=rmldep
 
 TARGET=byte
 
