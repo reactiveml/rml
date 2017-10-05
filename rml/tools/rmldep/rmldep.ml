@@ -60,11 +60,11 @@ let raw_dependencies = ref false
 
 let fix_slash s =
   if Sys.os_type = "Unix" then s else begin
-    let r = String.copy s in
-    for i = 0 to String.length r - 1 do
-      if r.[i] = '\\' then r.[i] <- '/'
+    let r = Bytes.of_string s in
+    for i = 0 to Bytes.length r - 1 do
+      if Bytes.get r i = '\\' then Bytes.set r i '/'
     done;
-    r
+    Bytes.to_string r
   end
 
 let add_to_load_path dir =
@@ -136,20 +136,20 @@ let print_filename s =
       else count n (i+1)
     in
     let spaces = count 0 0 in
-    let result = String.create (String.length s + spaces) in
+    let result = Bytes.create (String.length s + spaces) in
     let rec loop i j =
       if i >= String.length s then ()
       else if s.[i] = ' ' then begin
-        result.[j] <- '\\';
-        result.[j+1] <- ' ';
+        Bytes.set result j '\\';
+        Bytes.set result (j+1) ' ';
         loop (i+1) (j+2);
       end else begin
-        result.[j] <- s.[i];
+        Bytes.set result j s.[i];
         loop (i+1) (j+1);
       end
     in
     loop 0 0;
-    print_string result;
+    print_string (Bytes.to_string result);
   end
 ;;
 
