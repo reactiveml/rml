@@ -30,4 +30,4 @@ let localhost = Unix.gethostbyname "localhost"
 let sendUDP msg sock out_port () =
   let addr = localhost.Unix.h_addr_list.(0) in
   let sockaddr = Unix.ADDR_INET (addr, out_port) in
-  ignore (Unix.sendto sock msg 0 (String.length msg) [] sockaddr)
+  ignore (Unix.sendto sock msg 0 (Bytes.length msg) [] sockaddr)

@@ -19,7 +19,7 @@ let process udp out_port perf =
   let send (i,d,a) sock_actions =
     match a with
     | Message m ->
-	Network.sendUDP m sock_actions out_port ()
+	Network.sendUDP (Bytes.of_string m) sock_actions out_port ()
     | Signal s ->
 	emit s
   in

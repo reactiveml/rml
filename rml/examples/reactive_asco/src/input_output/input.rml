@@ -70,10 +70,10 @@ let process udp in_port listen =
   let sock_event = Network.init_server in_port in
   print_endline ("waiting on port : "^(string_of_int in_port));
   let rec process max_server =
-    let newmsg = String.create maxlen in
+    let newmsg = Bytes.create maxlen in
     begin try
       let len,_ = Unix.recvfrom sock_event newmsg 0 maxlen [] in
-      let msg = String.sub newmsg 0 len in
+      let msg = String.sub (Bytes.to_string newmsg) 0 len in
       let s = Str.split (Str.regexp "[ \t]+") msg in
       let c = int_of_string (List.nth s 0) in
       let b = float_of_string (List.nth s 1) /. 60. in
