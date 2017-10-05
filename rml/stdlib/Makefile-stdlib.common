@@ -5,7 +5,9 @@ STDLIB_SRC= \
 	arg.rmli \
 	array.rmli \
 	buffer.rmli \
+	bytes.rmli \
 	callback.rmli \
+	camlinternalBigarray.rmli \
 	char.rmli \
 	complex.rmli \
 	digest.rmli \

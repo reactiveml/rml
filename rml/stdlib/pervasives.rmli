@@ -1,5 +1,11 @@
 (* Warning: This file has been modified to be ReactiveML compatible. *)
 
+type int32
+type int64
+type nativeint
+type int64
+type bytes
+
 (* file: pervasives.rmli *)
 (* created: 2004-05-09  *)
 (* author: Louis Mandel *)
