@@ -56,7 +56,7 @@ let process play sequence =
 
 let send_to_audio sock note =
   let m = string_of_note note in
-  Network.sendUDP m sock 7400 ()
+  Network.sendUDP (Bytes.of_string m) sock 7400 ()
 
 
 let process sender =
