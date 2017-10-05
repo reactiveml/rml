@@ -28,6 +28,7 @@ cleanall: realclean
 arg.rzi: pervasives.rzi
 array.rzi: pervasives.rzi
 buffer.rzi: pervasives.rzi
+bytes.rzi: pervasives.rzi
 callback.rzi: pervasives.rzi
 char.rzi: pervasives.rzi
 complex.rzi: pervasives.rzi
