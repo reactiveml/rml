@@ -1,7 +1,11 @@
 Warning: incompatible changes with previous versions are marked with "*".
 
-ReactiveML 1.09.05 (XXXX-XX-XX):
+ReactiveML 1.09.05 (2017-10-10):
 --------------------------------
+ - rmlc: bug fixes.
+ - stdlib: update of some modules.
+ * rmlbuild: distributed as an independent project
+   https://github.com/reactiveml/rmlbuild.
  - rmlbuild: new -rmlc and -rmldep options
 
 
