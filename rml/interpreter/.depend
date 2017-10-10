@@ -30,6 +30,10 @@ lk_threaded.cmo : sig_env.cmo lk_interpreter.cmi
 lk_threaded.cmx : sig_env.cmx lk_interpreter.cmi
 rml_machine.cmo :
 rml_machine.cmx :
+rml_machine_hook.cmo :
+rml_machine_hook.cmx :
+rml_machine_hook_unix.cmo :
+rml_machine_hook_unix.cmx :
 sig_env.cmo :
 sig_env.cmx :
 thread_implem.cmo : sig_env.cmo lk_threaded.cmo \

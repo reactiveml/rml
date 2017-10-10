@@ -10,11 +10,15 @@ SRC=	sig_env.ml \
 	lco_interpreter.mli \
 	lco_ctrl_tree.ml \
 	rml_machine.ml \
+	rml_machine_hook.ml \
+	rml_machine_hook_unix.ml \
 	implem_lco_ctrl_tree_record.ml \
 
 RMLLIB_OBJ=	sig_env.cmo \
 	lco_ctrl_tree.cmo \
 	rml_machine.cmo \
+	rml_machine_hook.cmo \
+	rml_machine_hook_unix.cmo \
 	implem_lco_ctrl_tree_record.cmo \
 
 RMLLIB_INTF = lco_interpreter.cmi $(RMLLIB_OBJ:.cmo=.cmi)

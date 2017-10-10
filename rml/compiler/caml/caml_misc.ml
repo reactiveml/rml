@@ -132,7 +132,7 @@ let make_rml_exec_hook () =
   let n_hook =
     if !number_of_instant >= 0 then
       let n_hook =
-        make_module_value !Misc.rml_machine_module "n_hook"
+        make_module_value "Rml_machine_hook" "n_hook"
       in
       let n =
         make_expr (Cexpr_constant (Const_int !number_of_instant)) Location.none
@@ -143,7 +143,7 @@ let make_rml_exec_hook () =
   let sampling_hook =
     if !sampling >= 0.0 then
       let sampling_hook =
-        make_module_value !Misc.rml_machine_module "sampling_hook"
+        make_module_value "Rml_machine_hook_unix" "sampling_hook"
       in
       let s =
         make_expr (Cexpr_constant (Const_float !sampling)) Location.none
@@ -153,7 +153,7 @@ let make_rml_exec_hook () =
   in
   let debug_hook =
     if !with_debug then
-      [ make_module_value !Misc.rml_machine_module "debug_hook" ]
+      [ make_module_value "Rml_machine_hook" "debug_hook" ]
     else
       []
   in
