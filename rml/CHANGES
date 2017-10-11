@@ -2,6 +2,7 @@ Warning: incompatible changes with previous versions are marked with "*".
 
 ReactiveML 1.09.06 (XXXX-XX-XX):
 --------------------------------
+- install: remove dependency to ocamlbuild.
 
 
 ReactiveML 1.09.05 (2017-10-10):
@@ -11,7 +12,6 @@ ReactiveML 1.09.05 (2017-10-10):
  * rmlbuild: distributed as an independent project
    https://github.com/reactiveml/rmlbuild.
  - rmlbuild: new -rmlc and -rmldep options
-
 
 
 ReactiveML 1.09.04 (2016-03-23):
