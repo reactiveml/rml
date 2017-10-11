@@ -1,5 +1,9 @@
 Warning: incompatible changes with previous versions are marked with "*".
 
+ReactiveML 1.09.06 (XXXX-XX-XX):
+--------------------------------
+
+
 ReactiveML 1.09.05 (2017-10-10):
 --------------------------------
  - rmlc: bug fixes.
