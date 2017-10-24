@@ -68,7 +68,7 @@
           "\\<\\(a\\(nd\\|s\\|wait\\)\\|c\\(onstraint\\|lass\\)"
           "\\|default\\|ex\\(ception\\|ternal\\)\\|fun\\(ct\\(ion\\|or\\)\\)?"
           "\\|gather\\|i\\(n\\(herit\\|itializer\\)?\\|mmediate\\)\\|let"
-          "\\|m\\(ethod\\|utable\\|odule\\)"
+          "\\|m\\(e\\(thod\\|mory\\)\\|utable\\|odule\\)"
           "\\|o\\(f\\|ne\\)\\|p\\(arser\\|r\\(ivate\\|oc\\(ess\\)?\\)\\)"
           "\\|rec\\|signal\\|type"
           "\\|v\\(al\\|irtual\\)\\)\\>")
