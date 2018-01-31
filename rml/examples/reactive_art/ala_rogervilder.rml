@@ -156,7 +156,7 @@ let process main =
   signal split, reset, quit in
   Graphics.open_graph (" "^s^"x"^s);
   Graphics.set_window_title
-    "A la Roger Vilder (click, space: split; q: quit, r: reset)";
+    "A la Roger Vilder (click, space: split; q: quit, r: reset, c: color)";
   Graphics.auto_synchronize false;
   do
     loop
