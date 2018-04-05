@@ -1,0 +1,472 @@
+(***************************************************************)
+(*                        ReactiveML                           *)
+(*                                                             *)
+(*                                                             *)
+(*  Authors: Guillaume Baudart (guillaume.baudart@ens.fr)      *)
+(*           Louis Mandel (louis.mandel@lri.fr)                *)
+(*                                                             *)
+(***************************************************************)
+
+(** {6 Data structures} *)
+
+type vect =
+    { x: float;
+      y: float; }
+
+type box =
+    { left: float;
+      right: float;
+      top: float;
+      bot: float; }
+
+let box =
+  { left = 0.; right = 600.;
+    bot = 0.; top = 600.; }
+
+type sprite =
+    { s_center : vect;
+      s_shape : shape;
+      s_radius : float;
+      s_color : Graphics.color; }
+
+and shape =
+  | Circle | Circle_fill
+  | Square | Square_fill
+  | Poly | Poly_fill
+  | Vect of vect
+
+(** {6 Utility functions} *)
+
+let random_pos () =
+  let x = box.left +. Random.float box.right in
+  let y = box.bot +. Random.float box.top in
+  { x = x; y = y; }
+
+let random_speed k =
+  let alpha = Random.float 7. in
+  { x = k *. cos alpha; y =  k *. sin alpha; }
+
+let distance2 pos1 pos2 =
+  ((pos2.x -. pos1.x) *. (pos2.x -. pos1.x)) +.
+    ((pos2.y -. pos1.y) *. (pos2.y -. pos1.y))
+
+let norme v = v.x *. v.x +. v.y *. v.y
+
+
+(** {6 Graphics} *)
+
+signal active default () gather (fun () () -> ())
+signal draw default [] gather (fun x y -> x :: y)
+signal click default { x = 0.; y = 0.; } gather (fun x y -> x)
+signal key default 'X' gather (fun x y -> x)
+
+let color_of_int n =
+  match n mod 12 with
+  | 0 -> Graphics.rgb 220 20 60
+  | 1 -> Graphics.blue
+  | 2 -> Graphics.rgb 34 139 34
+  | 3 -> Graphics.red
+  | 4 -> Graphics.rgb 150 150 150
+  | 5 -> Graphics.black
+  | 6 -> Graphics.magenta
+  | 7 -> Graphics.rgb 255  89  65
+  | 8 -> Graphics.rgb 150   0   0
+  | 9 -> Graphics.cyan
+  | 10 -> Graphics.yellow
+  | 11 -> Graphics.green
+  | _ -> assert false
+
+
+let shape_of_int n =
+  match n mod 6 with
+  | 0 -> Circle_fill
+  | 1 -> Square_fill
+  | 2 -> Poly_fill
+  | 3 -> Circle
+  | 4 -> Square
+  | 5 -> Poly
+  | _ -> assert false
+
+
+let draw_sprite s =
+  let { x = x; y = y; } = s.s_center in
+  Graphics.set_color s.s_color;
+  begin match s.s_shape with
+  | Circle_fill ->
+      let x, y = int_of_float x, int_of_float y in
+      Graphics.fill_circle x y (int_of_float s.s_radius)
+  | Circle ->
+      let x, y = int_of_float x, int_of_float y in
+      Graphics.draw_circle  x y (int_of_float s.s_radius)
+  | Square_fill ->
+      let x, y =
+        int_of_float (x -. s.s_radius), int_of_float (y -. s.s_radius)
+      in
+      let len = int_of_float (s.s_radius *. 2.) in
+      Graphics.fill_rect x y len len
+  | Square ->
+      let x, y =
+        int_of_float (x -. s.s_radius), int_of_float (y -. s.s_radius)
+      in
+      let len = int_of_float (s.s_radius *. 2.) in
+      Graphics.draw_rect x y len len
+  | Poly ->
+      let x, y =
+        int_of_float (x -. s.s_radius), int_of_float (y -. s.s_radius)
+      in
+      let len = int_of_float (s.s_radius *. 2.) in
+      Graphics.draw_poly_line
+        [| (x, y); (x+len, y); (x, y+len); (x, y); |]
+  | Poly_fill ->
+      let x, y =
+        int_of_float (x -. s.s_radius), int_of_float (y -. s.s_radius)
+      in
+      let len = int_of_float (s.s_radius *. 2.) in
+      Graphics.fill_poly
+        [| (x, y); (x+len, y); (x, y+len); (x, y); |]
+  | Vect { x = vx; y = vy; } ->
+      let x', y' = int_of_float (x +. vx), int_of_float (y +. vy) in
+      let x, y = int_of_float x, int_of_float y in
+      Graphics.moveto x y;
+      Graphics.lineto x' y'
+  end
+
+let get_mouse_pos status =
+  { x = float_of_int (status.Graphics.mouse_x) ;
+    y = float_of_int (status.Graphics.mouse_y) ; }
+
+let process read_inputs mouse_click key =
+  let click = ref false in
+  let pre_click =  ref false in
+  loop
+    pause;
+    let status = Graphics.wait_next_event [Graphics.Poll] in
+    if Graphics.key_pressed() then
+      begin match Graphics.read_key() with
+      | 'q' -> exit 0
+      | k -> emit key k
+      end;
+    begin
+      click := Graphics.button_down();
+      if !click && not !pre_click then emit mouse_click (get_mouse_pos status);
+      pre_click := !click;
+    end
+  end
+
+let process window =
+  let g =
+    " " ^
+    (string_of_int (int_of_float (box.right -. box.left))) ^
+    "x" ^
+    (string_of_int (int_of_float (box.top -. box.bot)))
+  in
+  Graphics.set_window_title "ReactiveAsco";
+  signal not_draw in
+  loop
+    await immediate draw;
+    Graphics.open_graph g;
+    do
+      Graphics.auto_synchronize false;
+      loop
+        Graphics.synchronize ();
+        await draw (all) in
+        Graphics.clear_graph();
+        List.iter draw_sprite all
+      end
+      ||
+      run (read_inputs click key)
+      ||
+      loop
+        present active then pause else emit not_draw
+      end
+      ||
+      loop
+        present draw then (emit active; pause);
+      end
+    until not_draw ->
+      Graphics.close_graph ()
+    done
+  end
+
+(* Data types *)
+
+type boid =
+    { id : int;
+      family : int;
+      pos : vect;
+      v : vect;
+      acc : vect;
+      color : Graphics.color;
+      shape : shape; }
+
+
+(* Constants *)
+let predator_id = -1
+let coef_sep_predator = 100.
+
+let coef_sep = 100.0
+let coef_cohes = 0.05
+let coef_alig = 75.0
+let coef_tempo_speed = 2.0
+let vision_sep2 = 400.0
+let vision_cohes2_min = 100.0
+let vision_cohes2 = 50000.0
+let vision_alig2 = 400.0
+let vmax = 175.0
+let dt = 0.1
+let max_wind = 3.
+let max_family = 3
+let number_of_boids = 200
+let bounds = (box.left, box.right, box.bot, box.top)
+
+
+(* Utility functions *)
+
+let compute_boid_color family =
+  color_of_int family
+
+let compute_shape family =
+  shape_of_int family
+
+let sprite_of_boids b =
+  { s_center = b.pos;
+    s_radius = 4.;
+    s_shape = b.shape;
+    s_color = b.color; }
+
+
+let in_bounds (min_x, max_x, min_y, max_y) b =
+  min_x <= b.pos.x && b.pos.x <= max_x &&
+  min_y <= b.pos.y && b.pos.y <= max_y
+
+let check_bounds (min_x, max_x, min_y, max_y) b =
+  let pos_x, v_x =
+    if b.pos.x < min_x then (min_x, abs_float b.v.x)
+    else if b.pos.x > max_x then (max_x, -. (abs_float b.v.x))
+    else (b.pos.x, b.v.x)
+  in
+  let pos_y, v_y =
+    if b.pos.y < min_y then (min_y, abs_float b.v.y)
+    else if b.pos.y > max_y then (max_y, -.(abs_float b.v.y))
+    else (b.pos.y, b.v.y)
+  in
+  { b with pos = { x = pos_x ; y = pos_y; };
+           v = { x = v_x; y = v_y; }; }
+
+let compute_acc =
+  let rec aux b1 all f_sep (cpt_coh, f_coh) (cpt_ali, f_ali) =
+    match all with
+    | [] -> (f_sep, (cpt_coh ,f_coh), (cpt_ali, f_ali))
+    | b2 :: all ->
+	let dist2 = distance2 b1.pos b2.pos in
+	let f_separation =
+	  if (epsilon_float <= dist2) && (dist2 < vision_sep2) then
+            let f_x = (b2.pos.x -. b1.pos.x) /. dist2 in
+            let f_y = (b2.pos.y -. b1.pos.y) /. dist2 in
+            if b2.id = predator_id then begin
+              emit draw
+                { s_center = b1.pos;
+                  s_shape = Vect { x = f_x *. coef_sep_predator;
+                                           y = f_y *. coef_sep_predator; };
+                  s_radius = 0.;
+                  s_color = Graphics.black; };
+              { x = f_sep.x -. f_x *. coef_sep_predator;
+	        y = f_sep.y -. f_y *. coef_sep_predator; }
+            end else
+	      { x = f_sep.x -. f_x;
+	        y = f_sep.y -. f_y; }
+	  else
+	    (* if (epsilon_float >= dist2) && (b1.id <> b2.id) then *)
+	    (*   { x = Random.float 0.5; *)
+	    (*     y = Random.float 0.5; } *)
+	    (* else *)
+	    f_sep
+	in
+	let f_cohesion =
+	  if (epsilon_float +. vision_cohes2_min <= dist2) && (dist2 < vision_cohes2)
+	      && (b1.family = b2.family) then
+	    (cpt_coh + 1,
+	     { x = f_coh.x +. b2.pos.x;
+	       y = f_coh.y +. b2.pos.y; })
+	  else
+	    (cpt_coh, f_coh)
+	in
+	let f_alignement =
+	  if (epsilon_float <= dist2) && (dist2 < vision_alig2)
+	      && (b1.family = b2.family) then
+	    let norme_v2 = norme b2.v in
+	    if (norme_v2 <> 0.0) then
+	      (cpt_ali + 1,
+	       { x = f_ali.x +. b2.v.x /. norme_v2;
+		 y = f_ali.y +. b2.v.y /. norme_v2; })
+	    else
+	      (cpt_ali, f_ali)
+	  else
+	    (cpt_ali, f_ali)
+	in
+	aux b1 all
+	  f_separation f_cohesion f_alignement
+  in
+  fun me all wind ->
+    let (f_separation, (cpt_coh, f_cohesion), (cpt_ali, f_alignement)) =
+      aux me all
+	{ x = 0.0; y = 0.0; }
+	(0, { x = 0.0; y = 0.0; })
+	(0, { x = 0.0; y = 0.0; })
+    in
+    let f_cohesion =
+      if cpt_coh <> 0 then
+	{ x = (f_cohesion.x /. (float_of_int cpt_coh)) -. me.pos.x;
+	  y = (f_cohesion.y /. (float_of_int cpt_coh)) -. me.pos.y; }
+      else
+	{ x = 0.0;
+	  y = 0.0; }
+    in
+    let f_alignement =
+      if cpt_ali <> 0 then
+	{ x = f_alignement.x /. (float_of_int cpt_ali);
+	  y = f_alignement.y /. (float_of_int cpt_ali); }
+      else
+	{ x = 0.0;
+	  y = 0.0; }
+    in
+    { x = Random.float
+	(f_separation.x *. coef_sep
+	   +. f_cohesion.x *. coef_cohes
+	   +. f_alignement.x *. coef_alig
+	   +. wind.x);
+      y = Random.float
+	(f_separation.y *. coef_sep
+	+. f_cohesion.y *. coef_cohes
+	+. f_alignement.y *. coef_alig
+	+. wind.y); }
+
+
+let compute_v b acc k =
+  let vx = acc.x *. dt +. b.v.x in
+  let vy = acc.y *. dt +. b.v.y in
+  let vx = (vx +. 3. *. b.v.x) /. 4. in
+  let vy = (vy +. 3. *. b.v.y) /. 4. in
+  let v = vx *. vx +. vy *. vy in
+  { x = (if v <= epsilon_float or v < vmax then vx else (vx /. v)) *. k;
+    y = (if v <= epsilon_float or v < vmax then vy else (vy /. v)) *. k; }
+
+
+let compute_pos b all wind k =
+  let acc = compute_acc b all wind in
+  let v = compute_v b acc k in
+  let pos =
+    { x = b.v.x *. dt +. b.pos.x;
+      y = b.v.y *. dt +. b.pos.y; }
+  in
+  let me = { b with pos = pos; v = v; }
+  in
+  check_bounds bounds me
+
+
+(* Boid *)
+
+let rec process boid_behavior boid_init step env wind k =
+  let me = ref boid_init in
+  loop
+    emit draw (sprite_of_boids !me);
+    await immediate step;
+    emit env !me;
+    await env (all) in
+    me := compute_pos !me all (pre ?wind) k
+  end
+
+
+let gen_id =
+  let cpt = ref 0 in
+  fun () ->
+    incr cpt;
+    !cpt
+
+let process boid id family pos_init step env wind =
+  let me = { id = id;
+	     pos = pos_init;
+             v = {x = 0.0; y = 0.0};
+             acc = {x = 0.0; y = 0.0};
+	     family = family;
+	     color = compute_boid_color family;
+	     shape = compute_shape family; }
+  in
+  run (boid_behavior me step env wind 1.)
+
+
+(* Wind *)
+
+let process wind max_w delta w =
+  let delta_2 = 2.0 *. delta in
+  let x = ref 0.0 in
+  let y = ref 0.0 in
+  loop
+    x := max (min (!x +. Random.float delta_2 -. delta) max_w) (-. max_w);
+    y := max (min (!y +. Random.float delta_2 -. delta) max_w) (-. max_w);
+    emit w { x = !x; y = !y; };
+    pause
+  end
+
+
+let rec process add new_boid step env w =
+  await new_boid (pos) in
+  run (add new_boid step env w)
+  ||
+  let family = Random.int max_family in
+  run (boid (gen_id ()) family pos step env w.(family))
+
+
+let process predator step env =
+  let predator_boid (x, y) =
+    { id = predator_id;
+      family = -1;
+      pos = { x = float x; y = float y; };
+      v = { x = 0.; y = 0.; };
+      acc = { x = 0.; y = 0.; };
+      color = Graphics.white;
+      shape = Circle_fill; }
+  in
+  loop
+    await immediate step;
+    let predator = predator_boid (Graphics.mouse_pos ()) in
+    if in_bounds bounds predator then emit env predator;
+    pause
+  end
+
+
+let process system n =
+  let w =
+    Array.init
+      max_family
+      (fun _ -> signal w default {x = 0.0; y = 0.0} gather fun x y -> x in w)
+  in
+  signal step, env, new_boid, suspend in
+  run window
+  ||
+  loop emit step; pause end
+  ||
+  for i = 0 to max_family - 1 dopar
+    run (wind max_wind 0.3 w.(i))
+  done
+  ||
+  for i = 1 to n dopar
+    let id = gen_id () in
+    let family = id mod max_family in
+    run (boid id family (random_pos()) step env w.(family))
+  done
+  ||
+  run (add click step env w)
+  ||
+  run (predator step env)
+  ||
+  loop
+    emit active; pause
+  end
+
+let process main =
+  Random.self_init();
+  run system number_of_boids
+;;
+
+run main
