@@ -1,4 +1,5 @@
 all:
+	(cd boids; $(MAKE))
 	(cd cellular_automata; $(MAKE))
 	(cd elip_v2; $(MAKE))
 	(cd fibo; $(MAKE))
@@ -9,6 +10,7 @@ all:
 	(cd reactive_asco; $(MAKE))
 
 clean:
+	(cd boids; $(MAKE) clean)
 	(cd cellular_automata; $(MAKE) clean)
 	(cd elip_v2; $(MAKE) clean)
 	(cd fibo; $(MAKE) clean)
@@ -19,6 +21,7 @@ clean:
 	(cd reactive_asco; $(MAKE) clean)
 
 realclean:
+	(cd boids; $(MAKE) realclean)
 	(cd cellular_automata; $(MAKE) realclean)
 	(cd elip_v2; $(MAKE) realclean)
 	(cd fibo; $(MAKE) realclean)
