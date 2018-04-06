@@ -52,7 +52,6 @@ let distance2 pos1 pos2 =
 
 let norme v = v.x *. v.x +. v.y *. v.y
 
-
 (** {6 Graphics} *)
 
 signal active default () gather (fun () () -> ())
@@ -204,10 +203,11 @@ type boid =
 let predator_id = -1
 let coef_sep_predator = 100.
 
-let coef_sep = 100.0
+let coef_sep = 5.0
 let coef_cohes = 0.05
-let coef_alig = 75.0
+let coef_alig = 7.0
 let coef_tempo_speed = 2.0
+let vision_angle = -0.9
 let vision_sep2 = 400.0
 let vision_cohes2_min = 100.0
 let vision_cohes2 = 50000.0
@@ -253,14 +253,26 @@ let check_bounds (min_x, max_x, min_y, max_y) b =
   { b with pos = { x = pos_x ; y = pos_y; };
            v = { x = v_x; y = v_y; }; }
 
+let cos_angle b1 b2 dist2 =
+  let vect1 = b1.v in
+  let vect2 =
+    { x = b2.pos.x -. b1.pos.x;
+      y = b2.pos.y -. b1.pos.y }
+  in
+  let n1 = sqrt (norme vect1) in
+  let n2 = sqrt dist2 in
+  (vect1.x *. vect2.x +. vect1.y *. vect2.y) /. (n1 *. n2)
+
 let compute_acc =
   let rec aux b1 all f_sep (cpt_coh, f_coh) (cpt_ali, f_ali) =
     match all with
     | [] -> (f_sep, (cpt_coh ,f_coh), (cpt_ali, f_ali))
     | b2 :: all ->
 	let dist2 = distance2 b1.pos b2.pos in
+        let a = cos_angle b1 b2 dist2 in
 	let f_separation =
-	  if (epsilon_float <= dist2) && (dist2 < vision_sep2) then
+	  if (a >= vision_angle) &&
+            (epsilon_float <= dist2) && (dist2 < vision_sep2) then
             let f_x = (b2.pos.x -. b1.pos.x) /. dist2 in
             let f_y = (b2.pos.y -. b1.pos.y) /. dist2 in
             if b2.id = predator_id then begin
@@ -283,7 +295,8 @@ let compute_acc =
 	    f_sep
 	in
 	let f_cohesion =
-	  if (epsilon_float +. vision_cohes2_min <= dist2) && (dist2 < vision_cohes2)
+	  if (a >= vision_angle) &&
+            (epsilon_float +. vision_cohes2_min <= dist2) && (dist2 < vision_cohes2)
 	      && (b1.family = b2.family) then
 	    (cpt_coh + 1,
 	     { x = f_coh.x +. b2.pos.x;
@@ -292,7 +305,8 @@ let compute_acc =
 	    (cpt_coh, f_coh)
 	in
 	let f_alignement =
-	  if (epsilon_float <= dist2) && (dist2 < vision_alig2)
+	  if (a >= vision_angle) &&
+            (epsilon_float <= dist2) && (dist2 < vision_alig2)
 	      && (b1.family = b2.family) then
 	    let norme_v2 = norme b2.v in
 	    if (norme_v2 <> 0.0) then
