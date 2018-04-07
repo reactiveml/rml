@@ -344,12 +344,12 @@ let compute_acc =
 	{ x = 0.0;
 	  y = 0.0; }
     in
-    { x = Random.float
+    { x = (* Random.float *)
 	(f_separation.x *. coef_sep
 	   +. f_cohesion.x *. coef_cohes
 	   +. f_alignement.x *. coef_alig
 	   +. wind.x);
-      y = Random.float
+      y = (* Random.float *)
 	(f_separation.y *. coef_sep
 	+. f_cohesion.y *. coef_cohes
 	+. f_alignement.y *. coef_alig
