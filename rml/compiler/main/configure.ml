@@ -145,6 +145,13 @@ let set_runtime s =
       set_rml_machine_module "Rml_machine";
       set_standard_lib "lco_n";
       set_translation Lco
+  | "Lco_ctrl_tree_n_proba" | "Lco_n_proba" | "Proba" ->
+      set_interpreter_intf "Lco_interpreter";
+      set_interpreter_impl "Implem_lco_ctrl_tree_n_proba_record";
+      set_interpreter_module "Lco_ctrl_tree_n_proba_record";
+      set_rml_machine_module "Rml_machine";
+      set_standard_lib "lco_n_proba";
+      set_translation Lco
 (*
   | "ctrl_tree_debug" ->
       set_interpreter_intf "Lco_interpreter";
