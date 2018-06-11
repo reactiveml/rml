@@ -19,51 +19,21 @@
 (**********************************************************************)
 
 (* author: Louis Mandel *)
-(* created: 2005-09-13  *)
-(* file: rml_machine.ml *)
+(* created: 2015-07-02  *)
+(* file: rml_machine_hook.ml *)
 
+let n_hook =
+  let first = ref true in
+  let cpt = ref 0 in
+  (fun n ->
+    if !first then (first := false; cpt := n);
+    let hook () =
+      if !cpt > 0 then decr cpt
+      else exit 0
+    in hook)
 
-
-module type Interpretor_type =
-  sig
-    type 'a process
-    val rml_make: 'a process -> (unit -> 'a option)
-  end
-
-
-module M =
-  functor (Interpretor: Interpretor_type) ->
-  struct
-
-    let rml_exec_first = ref true
-
-    let rml_exec boi_hook p =
-      let react = Interpretor.rml_make p in
-      match boi_hook with
-      | [] ->
-          let rec exec () =
-	    match react () with
-	    | None -> exec()
-	    | Some v -> v
-          in exec ()
-      | l ->
-          let hook =
-            match l with
-            | [] -> (fun () -> ())
-            | [f] -> f
-            | [f1; f2] -> (fun () -> f1 (); f2 ())
-            | [f1; f2; f3] -> (fun () -> f1 (); f2 (); f3 ())
-            | [f1; f2; f3; f4] -> (fun () -> f1 (); f2 (); f3 (); f4 ())
-            | l -> (fun () -> List.iter (fun f -> f ()) l)
-          in
-          let rec exec () =
-	    match react () with
-	    | None -> hook (); exec()
-	    | Some v -> v
-          in
-          if !rml_exec_first then (rml_exec_first := false; hook ());
-          exec ()
-
-
-  end
-
+let debug_hook =
+  let instant = ref 0 in
+  (fun () ->
+    incr instant;
+    Format.eprintf "************ Instant %d ************@." !instant)
