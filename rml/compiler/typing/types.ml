@@ -121,7 +121,7 @@ let type_distribution typ =
   let distribution_typeinfo = Hashtbl.find distrib_types "t" in
   let distribution_type = distribution_typeinfo.gi in
   constr_notabbrev distribution_type [typ]
-                          
+
 (* To take the canonical representative of a type.
    We do path compression there. *)
 

@@ -60,7 +60,7 @@ exception Error of error * Location.t;;
 
 (* The table of keywords *)
 
-let keyword_table = ((Hashtbl.create 152) : (string, token) Hashtbl.t);;
+let keyword_table = ((Hashtbl.create 149) : (string, token) Hashtbl.t);;
 
 List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
   [ "and", AND;
