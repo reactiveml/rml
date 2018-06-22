@@ -843,12 +843,12 @@ let rec type_of_expression env expr =
        type_expect_eps env e type_float;
        type_unit, react_epsilon()
 
-    (* TODO Avi: This is wrong!!! *)
     | Rexpr_sample e ->
        let typ = new_var() in
        type_expect_eps env e (type_distribution typ);
        typ, react_epsilon()
 
+    (* TODO Avi: This is wrong!!! *)
     | Rexpr_output e ->
        let actual_ty, k = type_of_expression env e in
        check_epsilon k;
