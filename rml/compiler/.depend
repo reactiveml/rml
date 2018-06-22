@@ -102,12 +102,12 @@ typing/reactivity_effects.cmo : typing/types_printer.cmo reac/reac_ast.cmo \
     global/misc.cmo global/ident.cmo typing/def_types.cmo global/asttypes.cmo
 typing/reactivity_effects.cmx : typing/types_printer.cmx reac/reac_ast.cmx \
     global/misc.cmx global/ident.cmx typing/def_types.cmx global/asttypes.cmx
-typing/types.cmo : typing/reactivity_effects.cmo global/misc.cmo \
-    global/ident.cmo global/global_ident.cmo global/global.cmo \
-    typing/def_types.cmo
-typing/types.cmx : typing/reactivity_effects.cmx global/misc.cmx \
-    global/ident.cmx global/global_ident.cmx global/global.cmx \
-    typing/def_types.cmx
+typing/types.cmo : typing/reactivity_effects.cmo global/modules.cmo \
+    global/misc.cmo global/ident.cmo global/global_ident.cmo \
+    global/global.cmo typing/def_types.cmo
+typing/types.cmx : typing/reactivity_effects.cmx global/modules.cmx \
+    global/misc.cmx global/ident.cmx global/global_ident.cmx \
+    global/global.cmx typing/def_types.cmx
 typing/types_printer.cmo : global/modules.cmo global/misc.cmo \
     global/ident.cmo global/global_ident.cmo global/global.cmo \
     typing/def_types.cmo global/asttypes.cmo
@@ -117,17 +117,17 @@ typing/types_printer.cmx : global/modules.cmx global/misc.cmx \
 typing/typing.cmo : typing/typing_errors.cmo typing/types_printer.cmo \
     typing/types.cmo global/symbol_table.cmo typing/reactivity_effects.cmo \
     typing/reactivity_check.cmo reac/reac_misc.cmo reac/reac_ast.cmo \
-    global/misc.cmo parsing/location.cmo global/initialization.cmo \
-    global/ident.cmo global/global_ident.cmo global/global.cmo \
-    typing/def_types.cmo static/def_static.cmo global/asttypes.cmo \
-    reac/annot.cmo
+    global/modules.cmo global/misc.cmo parsing/location.cmo \
+    global/initialization.cmo global/ident.cmo global/global_ident.cmo \
+    global/global.cmo typing/def_types.cmo static/def_static.cmo \
+    global/asttypes.cmo reac/annot.cmo
 typing/typing.cmx : typing/typing_errors.cmx typing/types_printer.cmx \
     typing/types.cmx global/symbol_table.cmx typing/reactivity_effects.cmx \
     typing/reactivity_check.cmx reac/reac_misc.cmx reac/reac_ast.cmx \
-    global/misc.cmx parsing/location.cmx global/initialization.cmx \
-    global/ident.cmx global/global_ident.cmx global/global.cmx \
-    typing/def_types.cmx static/def_static.cmx global/asttypes.cmx \
-    reac/annot.cmx
+    global/modules.cmx global/misc.cmx parsing/location.cmx \
+    global/initialization.cmx global/ident.cmx global/global_ident.cmx \
+    global/global.cmx typing/def_types.cmx static/def_static.cmx \
+    global/asttypes.cmx reac/annot.cmx
 typing/typing_errors.cmo : typing/types_printer.cmo typing/types.cmo \
     reac/reac_ast.cmo global/misc.cmo parsing/location.cmo global/ident.cmo \
     global/global_ident.cmo typing/def_types.cmo

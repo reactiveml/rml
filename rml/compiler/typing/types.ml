@@ -115,13 +115,12 @@ let forall l lr typ =
     ts_rbinders = lr;
     ts_desc = typ; }
 
-
-let distribution_type_name():qualified_ident =
-  { qual = Misc.distribution_module;
-    id = Ident.create Ident.gen_type "t" Ident.Type }
-
-let type_distribution typ = constr_notabbrev (distribution_type_name()) [typ]
-let sample_expected_type() = type_distribution (new_var())
+let type_distribution typ =
+  let distrib_module = Modules.find_module "Distribution" in
+  let distrib_types = distrib_module.mod_types in
+  let distribution_typeinfo = Hashtbl.find distrib_types "t" in
+  let distribution_type = distribution_typeinfo.gi in
+  constr_notabbrev distribution_type [typ]
                           
 (* To take the canonical representative of a type.
    We do path compression there. *)

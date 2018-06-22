@@ -41,6 +41,7 @@ open Global_ident
 open Reac_ast
 open Misc
 open Annot
+open Modules
 
 let unify_expr expr expected_ty actual_ty =
   try
@@ -844,26 +845,9 @@ let rec type_of_expression env expr =
 
     (* TODO Avi: This is wrong!!! *)
     | Rexpr_sample e ->
-(*
-       let typ = type_float in
-       type_expect_eps env e (type_distribution(typ));
- *)     
-       let ty_s, k_s = type_of_expression env e in
-       begin match (type_repr ty_s).type_desc with
-       | Type_arrow(_,_) ->
-          partial_apply_warning e.expr_loc
-         ; distribution_wrong_type_err "1" e.expr_loc ty_s (sample_expected_type())
-       | Type_constr (c_distr, typs) ->
-	  if false then
-            distribution_wrong_type_err "2" e.expr_loc ty_s (sample_expected_type())
-          else
-              begin match typs with
-              | typ::[] -> typ, react_epsilon()
-              | [] -> distribution_wrong_type_err "5" e.expr_loc ty_s (sample_expected_type())
-              | _ -> distribution_wrong_type_err "6" e.expr_loc ty_s (sample_expected_type())
-              end
-       | _ -> distribution_wrong_type_err "3" e.expr_loc ty_s (sample_expected_type())
-       end
+       let typ = new_var() in
+       type_expect_eps env e (type_distribution typ);
+       typ, react_epsilon()
 
     | Rexpr_output e ->
        let actual_ty, k = type_of_expression env e in
