@@ -316,6 +316,10 @@ and translate_proc p =
 
 	| Rexpr_halt kboi -> Coproc_halt kboi
 
+        | Rexpr_factor e -> Coproc_factor (translate_ml e)
+        | Rexpr_sample e -> Coproc_sample (translate_ml e)
+        | Rexpr_output e -> Coproc_output (translate_ml e)
+
 	| Rexpr_emit (s, None) -> Coproc_emit (translate_ml s)
 
 	| Rexpr_emit (s, Some e) ->

@@ -268,6 +268,15 @@ let expr_free_vars e =
 
     | Rexpr_halt _ -> ()
 
+    | Rexpr_factor e ->
+	expr_free_vars vars e
+
+    | Rexpr_sample e ->
+	expr_free_vars vars e
+
+    | Rexpr_output e ->
+	expr_free_vars vars e
+
     | Rexpr_emit (e, None) ->
 	expr_free_vars vars e
 

@@ -302,6 +302,10 @@ and translate_proc e k (ctrl: ident) =
 
 	| Rexpr_pause kboi -> Kproc_pause (kboi, k, ctrl)
 
+        | Rexpr_factor e -> Kproc_factor (translate_ml e, k)
+        | Rexpr_sample e -> Kproc_sample (translate_ml e, k)
+        | Rexpr_output e -> Kproc_output (translate_ml e, k)
+
 	| Rexpr_halt kboi -> Kproc_halt kboi
 
 	| Rexpr_emit (s, None) -> Kproc_emit (translate_ml s, k)

@@ -76,6 +76,9 @@ let rec check_patt_expr (patt, expr) =
     | Rexpr_pre _
     | Rexpr_last _
     | Rexpr_default _
+    | Rexpr_factor _
+    | Rexpr_sample _
+    | Rexpr_output _
     | Rexpr_emit _
     | Rexpr_loop _
     | Rexpr_fordopar _

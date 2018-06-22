@@ -67,5 +67,6 @@ rml_list.rzi: pervasives.rzi list.rzi
 rml_process_manager.rzi: pervasives.rzi
 thread/rml_async.rzi: pervasives.rzi thread/rml_async_body.rzi
 thread/rml_async_body.rzi: pervasives.rzi
+distribution.rzi: pervasives.rzi
 
 .PHONY:opt byte all install uninstall clean realclean

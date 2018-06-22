@@ -42,6 +42,7 @@ STDLIB_SRC= \
 	weak.rmli \
 	rml_list.rmli \
 	rml_process_manager.rmli \
+	distribution.rmli \
 
 STDLIB_RML_SRC=rml_list.rml \
 

@@ -321,6 +321,21 @@ let rec static_expr ctx e =
 	then Dynamic Noninstantaneous
 	else expr_wrong_static_err !Misc.err_fmt e
 
+    | Rexpr_factor e ->
+       if static_expr ML e = Static
+       then Dynamic Dontknow
+       else expr_wrong_static_err !Misc.err_fmt e
+
+    | Rexpr_sample e -> 
+       if static_expr ML e = Static
+       then Dynamic Dontknow
+       else expr_wrong_static_err !Misc.err_fmt e
+
+    | Rexpr_output e -> 
+       if static_expr ML e = Static
+       then Dynamic Dontknow
+       else expr_wrong_static_err !Misc.err_fmt e
+
     | Rexpr_emit (s, None) ->
 	if static_expr ML s = Static
 	then Static

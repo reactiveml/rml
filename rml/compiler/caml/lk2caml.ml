@@ -413,6 +413,24 @@ and translate_proc e =
               in e.cexpr_desc
         end
 
+    | Kproc_factor (expr,k) ->
+       Cexpr_apply
+	 (make_instruction "rml_factor",
+          [embed_ml expr;
+           translate_proc k])
+
+    | Kproc_sample (expr,k) ->
+       Cexpr_apply
+	 (make_instruction "rml_sample",
+          [embed_ml expr;
+           translate_proc k])
+
+    | Kproc_output (expr,k) ->
+       Cexpr_apply
+	 (make_instruction "rml_output",
+          [embed_ml expr;
+           translate_proc k])
+
     | Kproc_compute (expr, k) ->
         begin match !version with
           | Combinator ->

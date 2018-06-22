@@ -332,7 +332,22 @@ and translate_proc e =
 	(make_instruction "rml_halt").cexpr_desc
 
     | Coproc_halt K_boi ->
-	(make_instruction "rml_halt_kboi").cexpr_desc
+       (make_instruction "rml_halt_kboi").cexpr_desc
+
+    | Coproc_factor expr ->
+       Cexpr_apply
+         (make_instruction "rml_factor",
+          [embed_ml expr;])
+
+    | Coproc_sample expr ->
+       Cexpr_apply
+         (make_instruction "rml_sample",
+          [embed_ml expr;])
+
+    | Coproc_output expr ->
+       Cexpr_apply
+         (make_instruction "rml_output",
+          [embed_ml expr;])
 
     | Coproc_compute (expr) ->
 	Cexpr_apply

@@ -1,0 +1,33 @@
+open Distribution
+  
+type t = int Distribution.t
+let score a b = 3.0
+let speed = [3.0; 4.0]
+let noise = [4.0; 5.0]
+let output x = ()
+let rec bot () = bot ()
+
+let f (x: 'a Distribution.t) = 42
+    
+let rec process hmm obs last_pos =
+  await obs([o]) in
+  let new_pos = sample (sph_gaussian last_pos speed) in
+  factor (score (sph_gaussian new_pos noise) o);
+  poutput new_pos;
+  run hmm obs new_pos
+
+  
+let process p  =
+  loop
+    factor (0.1)
+  end
+
+let process g () =
+  loop
+    sample (bot ())
+  end
+
+let f () =
+  factor 0.1
+
+(* output: e : 't -> output e : unit *)

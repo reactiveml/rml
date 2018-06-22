@@ -34,6 +34,8 @@ open Misc
 open Def_types
 open Reactivity_effects
 open Global
+open Global_ident
+
 
 exception Unify
 
@@ -114,6 +116,13 @@ let forall l lr typ =
     ts_desc = typ; }
 
 
+let distribution_type_name():qualified_ident =
+  { qual = Misc.distribution_module;
+    id = Ident.create Ident.gen_type "t" Ident.Type }
+
+let type_distribution typ = constr_notabbrev (distribution_type_name()) [typ]
+let sample_expected_type() = type_distribution (new_var())
+                          
 (* To take the canonical representative of a type.
    We do path compression there. *)
 

@@ -223,6 +223,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token EXCEPTION           /* "exception" */
 %token EXTERNAL            /* "external" */
 %token FALSE               /* "false" */
+%token FACTOR              /* "factor" */
 %token <float> FLOAT
 %token FOR                 /* "for" */
 %token FUN                 /* "fun" */
@@ -279,6 +280,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token OPEN                /* "open" */
 %token <string> OPTLABEL
 %token OR                  /* "or" */
+%token OUTPUT              /* "poutput" */
 /* %token OUT */                 /* "out" */
 /* %token PARSER */
 %token PAUSE               /* "pause" */
@@ -297,6 +299,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token REC                 /* "rec" */
 %token RPAREN              /* "(" */
 %token RUN                 /* "run" */
+%token SAMPLE              /* "sample" */
 %token SEMI                /* ";" */
 %token SEMISEMI            /* ";;" */
 %token SHARP               /* "#" */
@@ -579,6 +582,12 @@ expr:
       { mkexpr(Pexpr_emit $2 ) }
   | EMIT simple_expr simple_expr
       { mkexpr(Pexpr_emit_val($2, $3)) }
+  | FACTOR simple_expr
+      { mkexpr(Pexpr_factor $2 ) }
+  | SAMPLE simple_expr
+    { mkexpr(Pexpr_sample $2 ) }
+  | OUTPUT simple_expr
+    { mkexpr(Pexpr_output $2 ) }
   | SIGNAL signal_comma_list IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr

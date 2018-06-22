@@ -1,0 +1,5 @@
+type 'a t
+
+val sph_gaussian : float list -> float list -> float list t
+
+

@@ -540,6 +540,15 @@ let instantaneous_loop_expr =
 
       | Rexpr_halt _ -> Env.empty
 
+      | Rexpr_factor e ->
+	  analyse vars e
+
+      | Rexpr_sample e ->
+	 analyse vars e
+
+      | Rexpr_output e ->
+	 analyse vars e
+
       | Rexpr_emit (e, None) ->
 	  analyse vars e
 

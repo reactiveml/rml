@@ -52,6 +52,7 @@ let print_DEBUG msg =
 
 (* standard module *)
 let pervasives_module = "Pervasives"
+let distribution_module = "Distribution"
 let interpreter_module = ref ""
 let interpreter_intf = ref ""
 let interpreter_impl = ref ""

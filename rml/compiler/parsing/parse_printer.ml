@@ -276,6 +276,15 @@ let rec expression i ppf x =
       line i ppf "Pexpr_pause\n";
   | Pexpr_halt ->
       line i ppf "Pexpr_halt\n";
+  | Pexpr_factor (e) ->
+      line i ppf "Pexpr_factor";
+      expression i ppf e;
+  | Pexpr_sample (e) ->
+      line i ppf "Pexpr_sample";
+      expression i ppf e;
+  | Pexpr_output (e) ->
+      line i ppf "Pexpr_output";
+      expression i ppf e;
   | Pexpr_emit (e) ->
       line i ppf "Pexpr_emit";
       expression i ppf e;

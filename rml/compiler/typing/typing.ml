@@ -250,6 +250,9 @@ let rec is_nonexpansive expr =
   | Rexpr_nothing -> true
   | Rexpr_pause _ -> true
   | Rexpr_halt _ -> true
+  | Rexpr_factor e -> is_nonexpansive e
+  | Rexpr_sample e -> is_nonexpansive e
+  | Rexpr_output e -> is_nonexpansive e
   | Rexpr_emit (e, None) -> is_nonexpansive e
   | Rexpr_emit (e1, Some e2) -> is_nonexpansive e1 && is_nonexpansive e2
   | Rexpr_present (e,e1,e2) ->
@@ -834,6 +837,38 @@ let rec type_of_expression env expr =
     | Rexpr_pause _ -> type_unit, react_pause()
 
     | Rexpr_halt _ -> new_var(), react_pause()
+
+    | Rexpr_factor e ->
+       type_expect_eps env e type_float;
+       type_unit, react_epsilon()
+
+    (* TODO Avi: This is wrong!!! *)
+    | Rexpr_sample e ->
+(*
+       let typ = type_float in
+       type_expect_eps env e (type_distribution(typ));
+ *)     
+       let ty_s, k_s = type_of_expression env e in
+       begin match (type_repr ty_s).type_desc with
+       | Type_arrow(_,_) ->
+          partial_apply_warning e.expr_loc
+         ; distribution_wrong_type_err "1" e.expr_loc ty_s (sample_expected_type())
+       | Type_constr (c_distr, typs) ->
+	  if false then
+            distribution_wrong_type_err "2" e.expr_loc ty_s (sample_expected_type())
+          else
+              begin match typs with
+              | typ::[] -> typ, react_epsilon()
+              | [] -> distribution_wrong_type_err "5" e.expr_loc ty_s (sample_expected_type())
+              | _ -> distribution_wrong_type_err "6" e.expr_loc ty_s (sample_expected_type())
+              end
+       | _ -> distribution_wrong_type_err "3" e.expr_loc ty_s (sample_expected_type())
+       end
+
+    | Rexpr_output e ->
+       let actual_ty, k = type_of_expression env e in
+       check_epsilon k;
+       type_unit, react_epsilon()
 
     | Rexpr_loop (None, p) ->
         push_type_level ();

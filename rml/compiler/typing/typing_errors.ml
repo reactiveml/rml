@@ -72,6 +72,16 @@ let emit_wrong_type_err loc actual_ty expected_ty =
     Types_printer.output expected_ty;
   raise Error
 
+let distribution_wrong_type_err v loc actual_ty expected_ty =
+  Format.fprintf !err_fmt
+    "%s: %aThe sampled expression has type %a,\n\
+     but is used with type %a.\n"
+    v
+    Location.print loc
+    Types_printer.output actual_ty
+    Types_printer.output expected_ty;
+  raise Error
+
 let run_wrong_type_err loc actual_ty expected_ty =
   Format.fprintf !err_fmt
     "%aThis expression has type %a,\n\

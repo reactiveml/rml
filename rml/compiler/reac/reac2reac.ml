@@ -228,7 +228,22 @@ let expr_map  =
 	  f expr
 
       | Rexpr_halt _ ->
-	  f expr
+	 f expr
+
+      | Rexpr_factor e ->
+	  let e' = expr_map f e in
+	  f (make_expr_all (Rexpr_factor e')
+	       typ static reactivity reactivity_effect loc)
+
+      | Rexpr_sample e ->
+	  let e' = expr_map f e in
+	  f (make_expr_all (Rexpr_sample e')
+	       typ static reactivity reactivity_effect loc)
+
+      | Rexpr_output e ->
+	  let e' = expr_map f e in
+	  f (make_expr_all (Rexpr_output e')
+	       typ static reactivity reactivity_effect loc)
 
       | Rexpr_emit (e, None) ->
 	  let e' = expr_map f e in
@@ -431,6 +446,9 @@ let translate_merge =
     | Rexpr_last _
     | Rexpr_default _
     | Rexpr_nothing
+    | Rexpr_factor _
+    | Rexpr_sample _
+    | Rexpr_output _
     | Rexpr_emit _
     | Rexpr_loop _
     | Rexpr_fordopar _

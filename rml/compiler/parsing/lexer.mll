@@ -60,7 +60,7 @@ exception Error of error * Location.t;;
 
 (* The table of keywords *)
 
-let keyword_table = ((Hashtbl.create 149) : (string, token) Hashtbl.t);;
+let keyword_table = ((Hashtbl.create 152) : (string, token) Hashtbl.t);;
 
 List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
   [ "and", AND;
@@ -81,6 +81,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "end", END;
     "exception", EXCEPTION;
     "external", EXTERNAL;
+    "factor", FACTOR;
     "false", FALSE;
     "for", FOR;
     "fun", FUN;
@@ -111,6 +112,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "one", ONE;
     "open", OPEN;
     "or", OR;
+    "poutput", OUTPUT;
 (*    "out", OUT;*)
 (*  "parser", PARSER; *)
     "pause", PAUSE;
@@ -120,6 +122,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "proc", PROC;
     "process", PROCESS;
     "rec", REC;
+    "sample", SAMPLE;
     "run", RUN;
     "sig", SIG;
     "signal", SIGNAL;
