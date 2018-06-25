@@ -7,7 +7,11 @@ RUNTIME=Lco_n_proba
 RUNTIME_DIR=lco_n_proba
 
 SRC=	sig_env.ml \
+	rml_types.ml \
+	sig_env_clock.ml \
 	lco_interpreter.mli \
+	runtime.ml \
+	seq_runtime.ml \
 	lco_ctrl_tree_n_proba.ml \
 	rml_machine.ml \
 	rml_machine_hook.ml \
@@ -15,6 +19,10 @@ SRC=	sig_env.ml \
 	implem_lco_ctrl_tree_n_proba_record.ml \
 
 RMLLIB_OBJ=	sig_env.cmo \
+	rml_types.cmo \
+	sig_env_clock.cmo \
+	runtime.cmo \
+	seq_runtime.cmo \
 	lco_ctrl_tree_n_proba.cmo \
 	rml_machine.cmo \
 	rml_machine_hook.cmo \
