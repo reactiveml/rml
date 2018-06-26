@@ -234,6 +234,7 @@ struct
             let cd = mk_clock_domain None in
             top_clock_ref := Some cd
         | Some _ -> () (* init already done *)
+    let () = init()
 
     let is_eoi cd = !(cd.cd_eoi)
     let control_tree cd = cd.cd_top

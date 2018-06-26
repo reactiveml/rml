@@ -2,9 +2,9 @@ implem_lco_ctrl_tree_class.cmo : sig_env.cmo rml_machine.cmo \
     lco_ctrl_tree.cmo
 implem_lco_ctrl_tree_class.cmx : sig_env.cmx rml_machine.cmx \
     lco_ctrl_tree.cmx
-implem_lco_ctrl_tree_n_proba_record.cmo : sig_env.cmo rml_machine.cmo \
+implem_lco_ctrl_tree_n_proba_record.cmo : seq_runtime.cmo rml_machine.cmo \
     lco_ctrl_tree_n_proba.cmo
-implem_lco_ctrl_tree_n_proba_record.cmx : sig_env.cmx rml_machine.cmx \
+implem_lco_ctrl_tree_n_proba_record.cmx : seq_runtime.cmx rml_machine.cmx \
     lco_ctrl_tree_n_proba.cmx
 implem_lco_ctrl_tree_n_record.cmo : sig_env.cmo rml_machine.cmo \
     lco_ctrl_tree_n.cmo
@@ -22,8 +22,8 @@ lco_ctrl_tree.cmo : sig_env.cmo lco_interpreter.cmi
 lco_ctrl_tree.cmx : sig_env.cmx lco_interpreter.cmi
 lco_ctrl_tree_n.cmo : sig_env.cmo lco_interpreter.cmi
 lco_ctrl_tree_n.cmx : sig_env.cmx lco_interpreter.cmi
-lco_ctrl_tree_n_proba.cmo : lco_interpreter.cmi
-lco_ctrl_tree_n_proba.cmx : lco_interpreter.cmi
+lco_ctrl_tree_n_proba.cmo : runtime.cmo rml_types.cmo
+lco_ctrl_tree_n_proba.cmx : runtime.cmx rml_types.cmx
 lco_ctrl_tree_thread_safe.cmo : sig_env.cmo
 lco_ctrl_tree_thread_safe.cmx : sig_env.cmx
 lco_interpreter.cmi : sig_env.cmo
@@ -40,8 +40,16 @@ rml_machine_hook.cmo :
 rml_machine_hook.cmx :
 rml_machine_hook_unix.cmo :
 rml_machine_hook_unix.cmx :
+rml_types.cmo :
+rml_types.cmx :
+runtime.cmo : rml_types.cmo
+runtime.cmx : rml_types.cmx
+seq_runtime.cmo : sig_env_clock.cmo runtime.cmo rml_types.cmo
+seq_runtime.cmx : sig_env_clock.cmx runtime.cmx rml_types.cmx
 sig_env.cmo :
 sig_env.cmx :
+sig_env_clock.cmo : rml_types.cmo
+sig_env_clock.cmx : rml_types.cmx
 thread_implem.cmo : sig_env.cmo lk_threaded.cmo \
     lco_ctrl_tree_thread_safe.cmo
 thread_implem.cmx : sig_env.cmx lk_threaded.cmx \

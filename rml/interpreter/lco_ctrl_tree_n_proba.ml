@@ -59,6 +59,9 @@ module Rml_interpreter =
     open R
     open Rml_types
 
+    let rml_top_clock = CkTop
+    let rml_base_clock = CkLocal
+
     let eval_clock_expr current_cd ce = match ce with
       | CkLocal -> R.clock current_cd
       | CkTop -> R.top_clock ()
@@ -103,7 +106,7 @@ module Rml_interpreter =
     let rml_global_signal_combine default combine =
       R.Event.new_evt_global Rml_types.Signal default combine
 
-    let rml_global_signal_memory_combine k default combine =
+    let rml_global_signal_memory_combine default combine =
       R.Event.new_evt_global Rml_types.Memory default combine
 
     let rml_global_signal () =
@@ -145,9 +148,14 @@ module Rml_interpreter =
         let pause_ck = eval_clock_expr cd pause_ce in
         R.on_eoi pause_ck (fun () -> R.on_next_instant ctrl f_k)
 
-    let rml_pause e =
+    (* let rml_pause e = *)
+    (*   fun f_k ctrl jp cd _ -> *)
+    (*     rml_pause' (e ()) f_k ctrl jp cd unit_value *)
+
+    let rml_pause =
       fun f_k ctrl jp cd _ ->
-        rml_pause' (e ()) f_k ctrl jp cd unit_value
+        rml_pause' rml_base_clock f_k ctrl jp cd ()
+
 
 (**************************************)
 (* weak pause                              *)
@@ -430,7 +438,7 @@ let rml_loop p =
 (**************************************)
 
 
-    let _rml_signal f_k ctrl jp cd  kind ce re default combine reset p =
+    let rml_signal_ f_k ctrl jp cd  kind ce re default combine reset p =
       let ck = eval_clock_expr cd ce in
       let r = R.Event.region_of_clock (eval_clock_expr cd re) in
       let reset =
@@ -441,13 +449,22 @@ let rml_loop p =
       let k evt = p evt f_k ctrl jp cd in
       R.Event.new_evt cd ck r kind default combine reset k ()
 
-    let rml_signal_combine kind ce re default combine reset p =
+    let rml_signal_combine default combine p =
       fun f_k ctrl jp cd _ ->
-        _rml_signal f_k ctrl jp cd kind ce re (default ()) (combine ()) reset p
+        rml_signal_ f_k ctrl jp cd
+          Rml_types.Signal rml_base_clock rml_base_clock
+          (default ()) (combine ()) None p
 
-    let rml_signal kind ce re reset p =
+    let rml_signal_memory_combine default combine p =
       fun f_k ctrl jp cd _ ->
-        _rml_signal f_k ctrl jp cd kind ce re default_default default_combine reset p
+        rml_signal_ f_k ctrl jp cd
+          Rml_types.Memory rml_base_clock rml_base_clock
+          (default ()) (combine ()) None p
+
+    let rml_signal p =
+      rml_signal_combine
+        (fun () -> default_default) (fun () -> default_combine)
+        p
 
 (**************************************)
 (* def                                *)
@@ -650,7 +667,8 @@ let rml_loop p =
 
     let true_cond _ = true
 
-    let rml_until pause_kind expr_evt p =
+    let rml_until expr_evt p =
+      let pause_kind = Rml_types.Strong in
       fun f_k ctrl jp cd ->
         let body f_k new_ctrl = p f_k new_ctrl None cd in
         let f = create_control (Kill (pause_kind, f_k)) body f_k ctrl cd in
@@ -658,12 +676,14 @@ let rml_loop p =
           let evt = expr_evt () in
           f evt true_cond ()
 
-    let rml_until' pause_kind evt p =
+    let rml_until' evt p =
+      let pause_kind = Rml_types.Strong in
       fun f_k ctrl jp cd ->
         let body f_k new_ctrl = p f_k new_ctrl None cd in
         create_control (Kill (pause_kind, f_k)) body f_k ctrl cd evt true_cond
 
-    let rml_until_conf pause_kind expr_cfg p =
+    let rml_until_conf expr_cfg p =
+      let pause_kind = Rml_types.Strong in
       fun f_k ctrl jp cd ->
         let body f_k new_ctrl = p f_k new_ctrl None cd in
         let f = create_control_evt_conf (Kill (pause_kind, f_k)) body f_k ctrl cd in
@@ -675,7 +695,8 @@ let rml_loop p =
 (* until handler                      *)
 (**************************************)
 
-    let rml_until_handler_local pause_kind expr_evt matching_opt p p_handler =
+    let rml_until_handler_local expr_evt matching_opt p p_handler =
+      let pause_kind = Rml_types.Strong in
       fun f_k ctrl jp cd ->
         let evt = ref (Obj.magic() : ('a, 'b) event) in
         let handler _ =
@@ -693,7 +714,8 @@ let rml_loop p =
           evt := expr_evt ();
           f !evt cond ()
 
-    let rml_until_handler_local' pause_kind evt matching_opt p p_handler =
+    let rml_until_handler_local' evt matching_opt p p_handler =
+      let pause_kind = Rml_types.Strong in
       fun f_k ctrl jp cd ->
         let handler _ =
           let x = R.Event.value evt in
@@ -708,17 +730,17 @@ let rml_loop p =
         in
         f evt cond
 
-    let rml_until_handler pause_kind expr_evt p p_handler =
-      rml_until_handler_local pause_kind expr_evt None p p_handler
+    let rml_until_handler (* pause_kind *) expr_evt p p_handler =
+      rml_until_handler_local (* pause_kind *) expr_evt None p p_handler
 
-    let rml_until_handler' pause_kind evt p p_handler =
-      rml_until_handler_local' pause_kind evt None p p_handler
+    let rml_until_handler' (* pause_kind *) evt p p_handler =
+      rml_until_handler_local' (* pause_kind *) evt None p p_handler
 
-    let rml_until_handler_match pause_kind expr_evt matching p p_handler =
-      rml_until_handler_local pause_kind expr_evt (Some matching) p p_handler
+    let rml_until_handler_match (* pause_kind *) expr_evt matching p p_handler =
+      rml_until_handler_local (* pause_kind *) expr_evt (Some matching) p p_handler
 
-    let rml_until_handler_match' pause_kind evt matching p p_handler =
-      rml_until_handler_local' pause_kind evt (Some matching) p p_handler
+    let rml_until_handler_match' (* pause_kind *) evt matching p p_handler =
+      rml_until_handler_local' (* pause_kind *) evt (Some matching) p p_handler
 
 
 (**************************************)
@@ -786,9 +808,6 @@ let rml_loop p =
         R.new_clock_domain cd ctrl
           (fun cd ctrl f_k -> p (CkExpr (R.clock cd)) f_k ctrl None cd) sch period f_k
 
-    let rml_top_clock = CkTop
-    let rml_base_clock = CkLocal
-
 (**************************************)
 (* rml_make                           *)
 (**************************************)
@@ -808,12 +827,14 @@ let rml_loop p =
       p () (join_end()) (control_tree cd) jp cd
 
     let rml_make p =
-      let cd =  R.get_top_clock_domain () in
+      let cd = R.get_top_clock_domain () in
       let result = ref None in
-      let f = rml_make cd result p in
+      let step = rml_make cd result p in
+      R.on_current_instant cd step;
       fun () ->
-        f ();
+        R.react cd;
         !result
+
 
     let rml_make_n cd result pl =
       let jp, join_end =
@@ -827,11 +848,6 @@ let rml_loop p =
           in f
       in
       List.map (fun p -> p () (join_end ()) (control_tree cd) jp cd) pl
-
-    let rml_make_n p =
-      let cd = R.get_top_clock_domain () in
-      let result = ref None in
-      rml_make_n cd result p
 
     module R = R
 
