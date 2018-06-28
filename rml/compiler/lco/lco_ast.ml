@@ -85,7 +85,7 @@ and process_desc =
   | Coproc_halt of continue_begin_of_instant
   | Coproc_factor of expression
   | Coproc_sample of expression
-  | Coproc_output of expression
+  | Coproc_propose of expression
   | Coproc_compute of expression
   | Coproc_emit of expression
   | Coproc_emit_val of expression * expression

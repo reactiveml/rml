@@ -331,7 +331,7 @@ let rec static_expr ctx e =
         then Dynamic Dontknow
         else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_output e ->
+    | Rexpr_propose e ->
         if ctx = Process && static_expr ML e = Static
         then Dynamic Dontknow
         else expr_wrong_static_err !Misc.err_fmt e

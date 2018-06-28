@@ -47,7 +47,8 @@ type expression =
     mutable expr_type: Def_types.type_expression;
     mutable expr_static: Def_static.context * Def_static.static;
     mutable expr_reactivity: (varpatt * int) list;
-    mutable expr_reactivity_effect: Def_types.reactivity_effect; }
+    mutable expr_reactivity_effect: Def_types.reactivity_effect;
+    mutable expr_propose_effect: Def_types.propose_effect; }
 
 and expression_desc =
   | Rexpr_local of ident
@@ -83,7 +84,7 @@ and expression_desc =
   | Rexpr_halt of continue_begin_of_instant
   | Rexpr_factor of expression
   | Rexpr_sample of expression
-  | Rexpr_output of expression
+  | Rexpr_propose of expression
   | Rexpr_emit of expression * expression option
   | Rexpr_loop of expression option * expression
   | Rexpr_fordopar of

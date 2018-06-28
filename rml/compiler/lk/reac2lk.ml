@@ -304,7 +304,7 @@ and translate_proc e k (ctrl: ident) =
 
         | Rexpr_factor e -> Kproc_factor (translate_ml e, k)
         | Rexpr_sample e -> Kproc_sample (translate_ml e, k)
-        | Rexpr_output e -> Kproc_output (translate_ml e, k)
+        | Rexpr_propose e -> Kproc_propose (translate_ml e, k)
 
 	| Rexpr_halt kboi -> Kproc_halt kboi
 

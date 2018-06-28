@@ -425,9 +425,9 @@ and translate_proc e =
           [embed_ml expr;
            translate_proc k])
 
-    | Kproc_output (expr,k) ->
+    | Kproc_propose (expr,k) ->
        Cexpr_apply
-	 (make_instruction "rml_output",
+	 (make_instruction "rml_propose",
           [embed_ml expr;
            translate_proc k])
 

@@ -35,6 +35,7 @@ open Def_types
 open Reactivity_effects
 open Global
 open Global_ident
+open Def_modules
 
 
 exception Unify
@@ -206,8 +207,12 @@ let rec copy ty =
 	ty
 
 and copy_proc_info info =
-  { proc_react = copy_react info.proc_react; }
+  { proc_react = copy_react info.proc_react;
+    proc_propose = copy_propose info.proc_propose;
+  }
 
+and copy_propose info =
+  { propose_effect = copy info.propose_effect; }
 
 (* instanciation *)
 let instance { ts_desc = ty } =
@@ -349,3 +354,6 @@ let rec filter_product arity ty =
       unify ty (product ty_list);
       ty_list
 
+(* propose effects *)
+let propose_any() = { propose_effect = new_var(); }
+let propose_unify pe1 pe2 = unify pe1.propose_effect pe2.propose_effect

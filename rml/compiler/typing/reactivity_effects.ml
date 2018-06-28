@@ -539,4 +539,3 @@ let check_epsilon k =
   match k.react_desc with
   | React_epsilon -> ()
   | _ -> () (* XXX TODO XXX *)
-

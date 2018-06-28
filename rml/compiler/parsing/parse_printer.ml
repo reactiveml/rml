@@ -282,8 +282,8 @@ let rec expression i ppf x =
   | Pexpr_sample (e) ->
       line i ppf "Pexpr_sample";
       expression i ppf e;
-  | Pexpr_output (e) ->
-      line i ppf "Pexpr_output";
+  | Pexpr_propose (e) ->
+      line i ppf "Pexpr_propose";
       expression i ppf e;
   | Pexpr_emit (e) ->
       line i ppf "Pexpr_emit";

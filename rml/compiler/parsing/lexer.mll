@@ -112,7 +112,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "one", ONE;
     "open", OPEN;
     "or", OR;
-    "poutput", OUTPUT;
+    "propose", PROPOSE;
 (*    "out", OUT;*)
 (*  "parser", PARSER; *)
     "pause", PAUSE;

@@ -104,10 +104,10 @@ typing/reactivity_effects.cmx : typing/types_printer.cmx reac/reac_ast.cmx \
     global/misc.cmx global/ident.cmx typing/def_types.cmx global/asttypes.cmx
 typing/types.cmo : typing/reactivity_effects.cmo global/modules.cmo \
     global/misc.cmo global/ident.cmo global/global_ident.cmo \
-    global/global.cmo typing/def_types.cmo
+    global/global.cmo typing/def_types.cmo global/def_modules.cmo
 typing/types.cmx : typing/reactivity_effects.cmx global/modules.cmx \
     global/misc.cmx global/ident.cmx global/global_ident.cmx \
-    global/global.cmx typing/def_types.cmx
+    global/global.cmx typing/def_types.cmx global/def_modules.cmx
 typing/types_printer.cmo : global/modules.cmo global/misc.cmo \
     global/ident.cmo global/global_ident.cmo global/global.cmo \
     typing/def_types.cmo global/asttypes.cmo

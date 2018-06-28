@@ -73,7 +73,7 @@ and expression_desc =
   | Pexpr_halt
   | Pexpr_factor of expression
   | Pexpr_sample of expression
-  | Pexpr_output of expression
+  | Pexpr_propose of expression
   | Pexpr_emit of expression
   | Pexpr_emit_val of expression * expression
   | Pexpr_loop of expression

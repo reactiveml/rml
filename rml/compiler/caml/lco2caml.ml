@@ -344,9 +344,9 @@ and translate_proc e =
          (make_instruction "rml_sample",
           [embed_ml expr;])
 
-    | Coproc_output expr ->
+    | Coproc_propose expr ->
        Cexpr_apply
-         (make_instruction "rml_output",
+         (make_instruction "rml_propose",
           [embed_ml expr;])
 
     | Coproc_compute (expr) ->

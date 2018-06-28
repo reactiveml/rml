@@ -546,7 +546,7 @@ let instantaneous_loop_expr =
       | Rexpr_sample e ->
 	 analyse vars e
 
-      | Rexpr_output e ->
+      | Rexpr_propose e ->
 	 analyse vars e
 
       | Rexpr_emit (e, None) ->
