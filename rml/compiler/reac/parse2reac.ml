@@ -426,6 +426,9 @@ let rec translate env e =
     | Pexpr_propose s ->
        Rexpr_propose (translate env s)
 
+    | Pexpr_infer (e1, e2) ->
+       Rexpr_infer (translate env e1, translate env e2)
+
     | Pexpr_emit s ->
 	Rexpr_emit (translate env s, None)
 

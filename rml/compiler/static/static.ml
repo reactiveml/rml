@@ -336,6 +336,11 @@ let rec static_expr ctx e =
         then Dynamic Dontknow
         else expr_wrong_static_err !Misc.err_fmt e
 
+    | Rexpr_infer (e1, e2) ->
+       	if static_expr ML e1 = Static && static_expr ML e2 = Static
+	then Dynamic Dontknow
+	else expr_wrong_static_err !Misc.err_fmt e
+
     | Rexpr_emit (s, None) ->
 	if static_expr ML s = Static
 	then Static

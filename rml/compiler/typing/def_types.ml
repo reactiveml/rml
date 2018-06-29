@@ -80,6 +80,7 @@ and reactivity_effect_desc =
   | React_raw of reactivity_effect * reactivity_effect (* k * var *)
   | React_rec of checked * reactivity_effect (* k *)
   | React_run of reactivity_effect
+  | React_infer of reactivity_effect
   | React_link of reactivity_effect
 
 and checked = bool

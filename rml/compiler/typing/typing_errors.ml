@@ -100,6 +100,24 @@ let run_wrong_type_err loc actual_ty expected_ty =
     Types_printer.output expected_ty;
   raise Error
 
+let infer_wrong_type_err loc actual_ty expected_ty =
+  Format.fprintf !err_fmt
+    "%aThis expression has type %a,\n\
+    but is used with type %a.\n"
+    Location.print loc
+    Types_printer.output actual_ty
+    Types_printer.output expected_ty;
+  raise Error
+
+let infer_signal_wrong_type_err loc1 actual_ty expected_ty =
+  Format.fprintf !err_fmt
+    "%aThis expression proposes type %a,\n\
+    but is used by infer with a signal of type %a.\n"
+    Location.print loc1
+    Types_printer.output actual_ty
+    Types_printer.output expected_ty;
+  raise Error
+
 let var_wrong_type_err loc actual_ty expected_ty =
   Format.fprintf !err_fmt
     "%aThis pattern has type %a,\n\

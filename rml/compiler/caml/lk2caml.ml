@@ -431,6 +431,41 @@ and translate_proc e =
           [embed_ml expr;
            translate_proc k])
 
+    | Kproc_infer (s, expr, k, ctrl) ->
+       if Lk_misc.is_value s then
+         if Lk_misc.is_value expr then
+	   Cexpr_apply
+	     (make_instruction "rml_infer_vv",
+	      [
+                translate_ml s;
+                translate_ml expr;
+	        translate_proc k;
+	        make_expr_var_local ctrl])
+         else
+            Cexpr_apply
+	     (make_instruction "rml_infer_ve",
+	      [
+                translate_ml s;
+                embed_ml expr;
+	        translate_proc k;
+	        make_expr_var_local ctrl])
+       else
+         if Lk_misc.is_value expr then
+	   Cexpr_apply
+	     (make_instruction "rml_infer_ev",
+	      [ embed_ml s;
+                translate_ml expr;
+	       translate_proc k;
+	       make_expr_var_local ctrl])
+         else
+	   Cexpr_apply
+	     (make_instruction "rml_infer_ee",
+	      [embed_ml s;
+               embed_ml expr;
+	       translate_proc k;
+	       make_expr_var_local ctrl])
+
+             
     | Kproc_compute (expr, k) ->
         begin match !version with
           | Combinator ->

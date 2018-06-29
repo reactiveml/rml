@@ -549,6 +549,15 @@ let instantaneous_loop_expr =
       | Rexpr_propose e ->
 	 analyse vars e
 
+      | Rexpr_infer (e1, e2) ->
+         let ty1 = analyse vars e1 in
+         if not (Env.equal Env.empty ty1) then rec_warning e1;
+         
+	 let ty2 = analyse vars e2 in
+	 let ty2' = Env.plus ty2 (-1) in
+	 if not (Env.positive ty2') then rec_warning expr;
+	 Env.remove_zero ty2'
+
       | Rexpr_emit (e, None) ->
 	  analyse vars e
 

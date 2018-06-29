@@ -322,11 +322,13 @@ let rec unify expected_ty actual_ty =
 	    unify expected_ty (expand_abbrev params body args)
       | Type_process(ty1, pi1), Type_process(ty2, pi2) ->
           begin try
-            unify_react_effect pi1.proc_react pi2.proc_react
+              unify_react_effect pi1.proc_react pi2.proc_react;
+              unify_propose pi1.proc_propose pi2.proc_propose
           with React_Unify -> raise Unify (* ne devrait pas arriver *)
           end;
 	  unify ty1 ty2
       | _ -> raise Unify
+and unify_propose pe1 pe2 = unify pe1.propose_effect pe2.propose_effect
 
 
 (* special cases of unification *)
@@ -356,4 +358,3 @@ let rec filter_product arity ty =
 
 (* propose effects *)
 let propose_any() = { propose_effect = new_var(); }
-let propose_unify pe1 pe2 = unify pe1.propose_effect pe2.propose_effect

@@ -290,7 +290,8 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token PRIVATE             /* "private" */
 %token PROC                /* "proc"  */
 %token PROCESS             /* "process" */
-%token PROPOSE              /* "propose" */
+%token PROPOSE             /* "propose" */
+%token INFER               /* "infer" */
 %token QUESTION            /* "?" */
 %token QUESTIONQUESTION    /* "??" */
 %token QUOTE               /* "'" */
@@ -588,6 +589,8 @@ expr:
     { mkexpr(Pexpr_sample $2 ) }
   | PROPOSE simple_expr
     { mkexpr(Pexpr_propose $2 ) }
+  | INFER simple_expr simple_expr
+    { mkexpr(Pexpr_infer($2, $3)) }
   | SIGNAL signal_comma_list IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr

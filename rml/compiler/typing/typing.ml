@@ -69,6 +69,16 @@ let unify_run loc expected_ty actual_ty =
     unify expected_ty actual_ty
   with Unify -> run_wrong_type_err loc actual_ty expected_ty
 
+let unify_infer loc expected_ty actual_ty =
+  try
+    unify expected_ty actual_ty
+  with Unify -> infer_wrong_type_err loc actual_ty expected_ty
+
+let unify_infer_signal loc1 expected_ty actual_ty =
+  try
+    unify expected_ty actual_ty
+  with Unify -> infer_signal_wrong_type_err loc1 actual_ty expected_ty
+
 let unify_var loc expected_ty actual_ty =
   try
     unify expected_ty actual_ty
@@ -138,6 +148,8 @@ let rec gen_react is_gen k =
         min generic
           (min (gen_react is_gen k1) (gen_react is_gen k2))
   | React_run k_body ->
+      k.react_level <- min generic (gen_react is_gen k_body)
+  | React_infer k_body ->
       k.react_level <- min generic (gen_react is_gen k_body)
   | React_rec (checked, k_body) ->
       if not (visited k) then (
@@ -869,13 +881,33 @@ let rec type_of_expression env expr =
        let pe = type_expect_eps_any env e (type_distribution typ) in
        typ, react_epsilon(), pe
 
-    (* TODO Avi: This is wrong!!! *)
     | Rexpr_propose e ->
        let actual_ty, k, pe = type_of_expression env e in
        check_epsilon k;
        unify_propose e pe {propose_effect = actual_ty};
        type_unit, react_epsilon(), pe
 
+    | Rexpr_infer (s, e) ->
+       let ty_s, k_s, pe_s = type_of_expression env s in
+        check_epsilon k_s;
+	let ty_out, _ =
+	  try
+	    filter_event ty_s
+	  with Unify ->
+	    non_event_err s
+	in
+	let ty_e, k_e, pe_e = type_of_expression env e in
+        check_epsilon k_e;
+        unify_propose e pe_s pe_e;
+        let ty_p = new_var() in
+        let k_p = new_react_var () in
+        let pe_p = propose_any() in
+        unify_infer e.expr_loc
+          (process ty_p { proc_react = (* raw *) k_p; proc_propose = pe_p; })
+          ty_e;
+        unify_infer_signal e.expr_loc ty_out (type_distribution pe_p.propose_effect);
+        type_distribution ty_p, react_infer k_p, pe_s
+        
     | Rexpr_loop (None, p) ->
         push_type_level ();
         let k, pe = type_statement_any env p in

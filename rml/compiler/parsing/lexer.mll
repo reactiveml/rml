@@ -93,6 +93,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "immediate", IMMEDIATE;
     "in", IN;
     "include", INCLUDE;
+    "infer", INFER;
     "inherit", INHERIT;
     "initializer", INITIALIZER;
 (*    "inout", INOUT;*)

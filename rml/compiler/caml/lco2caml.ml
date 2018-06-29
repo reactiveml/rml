@@ -349,6 +349,26 @@ and translate_proc e =
          (make_instruction "rml_propose",
           [embed_ml expr;])
 
+    | Coproc_infer (s,e) ->
+       if Lco_misc.is_value s then
+         if Lco_misc.is_value e then
+	   Cexpr_apply
+	     (make_instruction "rml_infer_vv",
+	      [translate_ml s; translate_ml e;])
+         else
+           Cexpr_apply
+	     (make_instruction "rml_infer_ve",
+	      [translate_ml s; embed_ml e;])
+	else
+         if Lco_misc.is_value e then
+	   Cexpr_apply
+	     (make_instruction "rml_infer_ev",
+	      [embed_ml s; translate_ml e;])
+         else
+           Cexpr_apply
+	     (make_instruction "rml_infer_ee",
+	      [embed_ml s; embed_ml e;])
+            
     | Coproc_compute (expr) ->
 	Cexpr_apply
 	  (make_instruction "rml_compute",

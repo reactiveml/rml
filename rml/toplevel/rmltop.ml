@@ -175,6 +175,9 @@ let usage = "Usage: rmltop <options> <object-files>"
 let set_dreactivity () =
   rmlc := !rmlc ^ " -dreactivity"
 
+let set_dpropose () =
+  rmlc := !rmlc ^ " -dpropose"
+
 let _ =
   Arg.parse (Arg.align
     [ "-sampling", Arg.Float (fun x -> if x >= 0.0 then sampling := Some x),
@@ -183,8 +186,9 @@ let _ =
       "-I", Arg.String set_dir,
       "<dir> Add <dir> to the list of include directories";
       "-i", Arg.Set show_help, " List known rml directives at startup ";
-      "-dreactivity", Arg.Unit set_dreactivity,
-      " Display reactivity effects in process types";
+      "-dreactivity", Arg.Unit set_dreactivity, " Display reactivity effects in process types";
+
+      "-dpropose", Arg.Unit set_dpropose, " Display propse effects in process types";
       "--", Arg.Rest (fun x -> ocaml := !ocaml ^ " " ^ x),
       " Sends all others options to the Ocaml toplevel"])
     (fun x -> ocaml := !ocaml ^ " " ^ x)
