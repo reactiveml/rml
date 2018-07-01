@@ -336,38 +336,53 @@ and translate_proc e =
        (make_instruction "rml_halt_kboi").cexpr_desc
 
     | Coproc_factor expr ->
-       Cexpr_apply
-         (make_instruction "rml_factor",
-          [embed_ml expr;])
+       if Lco_misc.is_value expr then
+         Cexpr_apply
+           (make_instruction "rml_factor_v",
+            [translate_ml expr;])
+       else
+         Cexpr_apply
+           (make_instruction "rml_factor",
+            [embed_ml expr;])
 
     | Coproc_sample expr ->
-       Cexpr_apply
-         (make_instruction "rml_sample",
-          [embed_ml expr;])
+       if Lco_misc.is_value expr then
+         Cexpr_apply
+           (make_instruction "rml_sample_v",
+            [translate_ml expr;])
+       else
+         Cexpr_apply
+           (make_instruction "rml_sample",
+            [embed_ml expr;])
 
     | Coproc_propose expr ->
-       Cexpr_apply
-         (make_instruction "rml_propose",
-          [embed_ml expr;])
-
+       if Lco_misc.is_value expr then
+         Cexpr_apply
+           (make_instruction "rml_propose_v",
+            [translate_ml expr;])
+       else
+         Cexpr_apply
+           (make_instruction "rml_propose",
+            [embed_ml expr;])
+         
     | Coproc_infer (s,e) ->
        if Lco_misc.is_value s then
          if Lco_misc.is_value e then
 	   Cexpr_apply
-	     (make_instruction "rml_infer_vv",
+	     (make_instruction "rml_infer_v_v",
 	      [translate_ml s; translate_ml e;])
          else
            Cexpr_apply
-	     (make_instruction "rml_infer_ve",
+	     (make_instruction "rml_infer_v_e",
 	      [translate_ml s; embed_ml e;])
 	else
          if Lco_misc.is_value e then
 	   Cexpr_apply
-	     (make_instruction "rml_infer_ev",
+	     (make_instruction "rml_infer_e_v",
 	      [embed_ml s; translate_ml e;])
          else
            Cexpr_apply
-	     (make_instruction "rml_infer_ee",
+	     (make_instruction "rml_infer",
 	      [embed_ml s; embed_ml e;])
             
     | Coproc_compute (expr) ->

@@ -415,28 +415,46 @@ and translate_proc e =
         end
 
     | Kproc_factor (expr,k) ->
-       Cexpr_apply
-	 (make_instruction "rml_factor",
-          [embed_ml expr;
-           translate_proc k])
+       if Lk_misc.is_value expr then
+         Cexpr_apply
+	   (make_instruction "rml_factor_v",
+            [translate_ml expr;
+             translate_proc k])
+       else
+         Cexpr_apply
+	   (make_instruction "rml_factor",
+            [embed_ml expr;
+             translate_proc k])
 
     | Kproc_sample (expr,k) ->
-       Cexpr_apply
-	 (make_instruction "rml_sample",
-          [embed_ml expr;
-           translate_proc k])
+       if Lk_misc.is_value expr then
+         Cexpr_apply
+	   (make_instruction "rml_sample_v",
+            [translate_ml expr;
+             translate_proc k])
+       else
+         Cexpr_apply
+	   (make_instruction "rml_sample",
+            [embed_ml expr;
+             translate_proc k])
 
     | Kproc_propose (expr,k) ->
-       Cexpr_apply
-	 (make_instruction "rml_propose",
-          [embed_ml expr;
-           translate_proc k])
+       if Lk_misc.is_value expr then
+         Cexpr_apply
+	   (make_instruction "rml_propose_v",
+            [translate_ml expr;
+             translate_proc k])
+       else
+         Cexpr_apply
+	   (make_instruction "rml_propose",
+            [embed_ml expr;
+             translate_proc k])
 
     | Kproc_infer (s, expr, k, ctrl) ->
        if Lk_misc.is_value s then
          if Lk_misc.is_value expr then
 	   Cexpr_apply
-	     (make_instruction "rml_infer_vv",
+	     (make_instruction "rml_infer_v_v",
 	      [
                 translate_ml s;
                 translate_ml expr;
@@ -444,7 +462,7 @@ and translate_proc e =
 	        make_expr_var_local ctrl])
          else
             Cexpr_apply
-	     (make_instruction "rml_infer_ve",
+	     (make_instruction "rml_infer_v_e",
 	      [
                 translate_ml s;
                 embed_ml expr;
@@ -453,14 +471,14 @@ and translate_proc e =
        else
          if Lk_misc.is_value expr then
 	   Cexpr_apply
-	     (make_instruction "rml_infer_ev",
+	     (make_instruction "rml_infer_e_v",
 	      [ embed_ml s;
                 translate_ml expr;
 	       translate_proc k;
 	       make_expr_var_local ctrl])
          else
 	   Cexpr_apply
-	     (make_instruction "rml_infer_ee",
+	     (make_instruction "rml_infer",
 	      [embed_ml s;
                embed_ml expr;
 	       translate_proc k;
