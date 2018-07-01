@@ -45,7 +45,8 @@ let rec translate_te typ =
 	Ctype_product (List.map translate_te typ_list)
     | Cotype_constr (cstr, te_list) ->
 	Ctype_constr (cstr, List.map translate_te te_list)
-    | Cotype_process t ->
+    | Cotype_process (t, pe) ->
+        (* Avi: We are throwing away the propose effect in the ocaml type *)
 	let proc_type = make_rml_type "process" [translate_te t] in
 	proc_type.cte_desc
   in

@@ -59,7 +59,6 @@ let rec non_instantaneous k =
       else
         true
   | React_run k_body -> non_instantaneous k_body
-  | React_infer k_body -> non_instantaneous k_body
   | React_link k_body -> non_instantaneous k_body
 
 let non_instantaneous k =
@@ -106,7 +105,6 @@ let well_formed =
         ) else
           not (Env.mem k.react_index env)
     | React_run k_body -> well_formed env k_body
-    | React_infer k_body -> well_formed env k_body
     | React_link k_body -> well_formed env k_body
   in
   fun k ->

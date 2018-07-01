@@ -175,7 +175,7 @@ and type_expression_desc =
   | Ktype_arrow of type_expression * type_expression
   | Ktype_product of type_expression list
   | Ktype_constr of type_description global * type_expression list
-  | Ktype_process of type_expression
+  | Ktype_process of type_expression * type_expression option
 
 and type_declaration =
   | Ktype_abstract

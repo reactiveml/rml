@@ -186,28 +186,27 @@ module Stypes =
 module Sstatic =
   Annot(struct
     type t =
-        Def_static.static * (varpatt * int) list * Def_types.reactivity_effect * Def_types.propose_effect option
+        Def_static.static * (varpatt * int) list * Def_types.reactivity_effect * Def_types.propose_effect
 
     let get_type ti =
       begin match ti with
-      | Ti_patt _ -> (Def_static.Static, [], Reactivity_effects.no_react, None)
+      | Ti_patt _ -> (Def_static.Static, [], Reactivity_effects.no_react, {Def_types.propose_effect = None})
       | Ti_expr {expr_static = (ctx, typ);
                  expr_reactivity = pi;
                  expr_reactivity_effect = k;
-                 expr_propose_effect = pe;} -> (typ, pi, k, Some pe)
+                 expr_propose_effect = pe;} -> (typ, pi, k, pe)
       end
 
-    let output oc (k, pi, r, ope) =
+    let output oc (k, pi, r, {Def_types.propose_effect = pe}) =
       Static_printer.output oc k;
       Printf.fprintf oc " / %s" (Instantaneous_loop.Env.string_of_t pi);
       Printf.fprintf oc " / %s"
         (Types_printer.print_to_string Types_printer.print_reactivity r);
-      begin match ope with
-      | None -> ()
-      | Some pe -> 
-         Printf.fprintf oc " / %s"
-           (Types_printer.print_to_string Types_printer.print_propose_effect pe)
-      end;
+      Misc.opt_iter
+        (function pe ->
+           Printf.fprintf oc " // %s"
+           (Types_printer.print_to_string Types_printer.print pe)
+        ) pe;
       flush oc
 
   end)

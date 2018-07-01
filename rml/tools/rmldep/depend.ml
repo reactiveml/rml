@@ -71,7 +71,7 @@ let rec add_type bv ty =
   | Ptype_arrow (t1, t2) -> add_type bv t1; add_type bv t2
   | Ptype_tuple tl -> List.iter (add_type bv) tl
   | Ptype_constr (id, tl) -> add bv id; List.iter (add_type bv) tl
-  | Ptype_process (t, _) ->  add_type bv t
+  | Ptype_process (t, pe, _) ->  add_type bv t; Misc.opt_iter (add_type bv) pe
 
 let add_type_declaration bv td =
   match td with

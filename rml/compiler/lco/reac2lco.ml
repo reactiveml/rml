@@ -89,8 +89,8 @@ let rec translate_te typ =
 	Cotype_product (List.map translate_te typ_list)
     | Rtype_constr (cstr, te_list) ->
 	Cotype_constr (cstr, List.map translate_te te_list)
-    | Rtype_process (t, _) ->
-	Cotype_process (translate_te t)
+    | Rtype_process (t, pe, _) ->
+	Cotype_process (translate_te t, opt_map translate_te pe)
   in
   make_te cotyp typ.te_loc
 

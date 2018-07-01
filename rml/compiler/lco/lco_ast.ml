@@ -86,7 +86,7 @@ and process_desc =
   | Coproc_factor of expression
   | Coproc_sample of expression
   | Coproc_propose of expression
-  | Coproc_infer of expression*expression
+  | Coproc_infer of expression * expression
   | Coproc_compute of expression
   | Coproc_emit of expression
   | Coproc_emit_val of expression * expression
@@ -155,7 +155,7 @@ and type_expression_desc =
   | Cotype_arrow of type_expression * type_expression
   | Cotype_product of type_expression list
   | Cotype_constr of type_description global * type_expression list
-  | Cotype_process of type_expression
+  | Cotype_process of type_expression * type_expression option
 
 and type_declaration =
   | Cotype_abstract

@@ -48,7 +48,7 @@ type expression =
     mutable expr_static: Def_static.context * Def_static.static;
     mutable expr_reactivity: (varpatt * int) list;
     mutable expr_reactivity_effect: Def_types.reactivity_effect;
-    mutable expr_propose_effect: Def_types.propose_effect; }
+    expr_propose_effect: Def_types.propose_effect; }
 
 and expression_desc =
   | Rexpr_local of ident
@@ -145,7 +145,7 @@ and type_expression_desc =
   | Rtype_arrow of type_expression * type_expression
   | Rtype_product of type_expression list
   | Rtype_constr of type_description global * type_expression list
-  | Rtype_process of type_expression * Def_static.instantaneous
+  | Rtype_process of type_expression * type_expression option * Def_static.instantaneous
 
 and type_declaration =
   | Rtype_abstract

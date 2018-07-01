@@ -85,8 +85,8 @@ let rec arrow_list ty_l ty_res =
   | [ty] -> arrow ty ty_res
   | ty :: ty_l -> arrow ty (arrow_list ty_l ty_res)
 
-let process ty k =
-  make_type (Type_process (ty, k))
+let process ty pe k =
+  make_type (Type_process (ty, pe, k))
 
 
 let no_type_expression =
@@ -154,9 +154,10 @@ let free_type_vars level ty =
 	List.iter free_vars ty_list
     | Type_link(link) ->
 	free_vars link
-    | Type_process(ty, proc_info) ->
-        free_vars ty;
-        frv := List.rev_append (free_react_vars level proc_info.proc_react) !frv
+    | Type_process(ty, {propose_effect = pe}, proc_info) ->
+       free_vars ty;
+       opt_iter free_vars pe;
+       frv := List.rev_append (free_react_vars level proc_info.proc_react) !frv
   in
   free_vars ty;
   (!fv, List.rev !frv)
@@ -199,20 +200,18 @@ let rec copy ty =
       then
 	constr name (List.map copy ty_list)
       else ty
-  | Type_process(ty, info) ->
+  | Type_process(ty, pe, info) ->
       if level = generic
       then
-	process (copy ty) (copy_proc_info info)
+	process (copy ty) (copy_propose pe) (copy_proc_info info)
       else
 	ty
 
 and copy_proc_info info =
-  { proc_react = copy_react info.proc_react;
-    proc_propose = copy_propose info.proc_propose;
-  }
+  { proc_react = copy_react info.proc_react; }
 
 and copy_propose info =
-  { propose_effect = copy info.propose_effect; }
+  { propose_effect = opt_map copy info.propose_effect; }
 
 (* instanciation *)
 let instance { ts_desc = ty } =
@@ -258,9 +257,10 @@ let rec occur_check level index ty =
     | Type_constr(name, ty_list) ->
  	List.iter check ty_list
     | Type_link(link) -> check link
-    | Type_process(ty, info) ->
-        check ty;
-        ignore (occur_check_react level no_react info.proc_react)
+    | Type_process(ty, {propose_effect = pe}, info) ->
+       check ty;
+       opt_iter check pe;
+       ignore (occur_check_react level no_react info.proc_react)
   in check ty
 
 
@@ -320,16 +320,21 @@ let rec unify expected_ty actual_ty =
 	Type_constr
 	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
 	    unify expected_ty (expand_abbrev params body args)
-      | Type_process(ty1, pi1), Type_process(ty2, pi2) ->
+      | Type_process(ty1, pe1, pi1), Type_process(ty2, pe2, pi2) ->
           begin try
               unify_react_effect pi1.proc_react pi2.proc_react;
-              unify_propose pi1.proc_propose pi2.proc_propose
+              unify_propose pe1 pe2
           with React_Unify -> raise Unify (* ne devrait pas arriver *)
           end;
 	  unify ty1 ty2
       | _ -> raise Unify
-and unify_propose pe1 pe2 = unify pe1.propose_effect pe2.propose_effect
-
+and unify_propose pe1 pe2 =
+  begin match pe1.propose_effect, pe2.propose_effect with
+  | None, None -> ()
+  | Some pet1, None -> pe2.propose_effect <- Some (make_type (Type_link(pet1)))
+  | None, Some pet2 -> pe1.propose_effect <- Some (make_type (Type_link(pet2)))
+  | Some pet1, Some pet2 -> unify pet1 pet2
+  end
 
 (* special cases of unification *)
 let rec filter_arrow ty =
@@ -357,4 +362,4 @@ let rec filter_product arity ty =
       ty_list
 
 (* propose effects *)
-let propose_any() = { propose_effect = new_var(); }
+let propose_any() = { propose_effect = None }

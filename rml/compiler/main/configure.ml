@@ -214,9 +214,6 @@ let set_dtime () = dtime := true
 (* sets the display of the reactivity effects *)
 let set_dreactivity () = dreactivity := true
 
-(* sets the display of the propose effects *)
-let set_dpropose () = dpropose := true
-
 (* sets the interactive mode *)
 let set_interactive () =
   interactive := true
@@ -247,7 +244,6 @@ and doc_verbose = "Print types"
 and doc_save_types = "Save type information in <filename>.?annot"
 and doc_no_reactivity_warning = "Remove reactivity analysis warnings"
 and doc_dreactivity = "Display reactivity effects in process types"
-and doc_dpropose = "Display propose effects in process types"
 and doc_no_reactivity_simpl = "Do not simplify reactivity effects"
 and doc_old_loop_warning = "Set the old instantaneous loop and recursion analysis"
 and doc_interactive = "Read programs on stdin and output on stdout"

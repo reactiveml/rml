@@ -65,7 +65,8 @@ let rec translate_te typ =
 	in
 	Rtype_constr (gcstr, List.map translate_te te_list)
 
-    | Ptype_process (t,k) -> Rtype_process ((translate_te t),k)
+    | Ptype_process (ts, ope, k) -> 
+       Rtype_process (translate_te ts, opt_map translate_te ope, k)
 
   in
   make_te rtyp typ.pte_loc

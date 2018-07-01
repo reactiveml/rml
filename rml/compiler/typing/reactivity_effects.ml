@@ -74,9 +74,6 @@ let react_raw k1 k2 =
 let react_run k =
   make_react (React_run k)
 
-let react_infer k =
-  make_react (React_infer k)
-
 let no_react =
   { react_desc = React_or [];
     react_level = generic;
@@ -143,9 +140,6 @@ let rec remove_local_react_var level k =
   | React_run k' ->
       let desc = React_run (remove_local_react_var level k') in
       { k with react_desc = desc; }
-  | React_infer k' ->
-      let desc = React_infer (remove_local_react_var level k') in
-      { k with react_desc = desc; }
   | React_link k' ->
       let desc = React_link (remove_local_react_var level k') in
       { k with react_desc = desc; }
@@ -168,7 +162,6 @@ let rec split_raw k =
   | React_par _ -> assert false
   | React_or _  -> assert false
   | React_run _ -> assert false
-  | React_infer _ -> assert false
 
 
 
@@ -244,12 +237,6 @@ let rec copy_react k =
         react_run (copy_react k1)
       else
 	k
-  | React_infer k1 ->
-      if level = generic
-      then
-        react_infer (copy_react k1)
-      else
-	k
 
 let copy_react k =
   copy_react k
@@ -288,7 +275,6 @@ let free_react_vars level k =
     | React_rec (_, k1) ->
        if not (visited k) then free_vars k1
     | React_run k -> free_vars k
-    | React_infer k -> free_vars k
     | React_link(link) -> free_vars link
   in
   visited_list := [];
@@ -345,13 +331,6 @@ let react_simplify =
         | React_epsilon -> { k with react_desc = React_epsilon }
         | _ -> { k with react_desc = React_run k_body }
         end
-    | React_infer k_body ->
-        let k_body = simplify k_body in
-        begin match k_body.react_desc with
-        | React_pause -> { k with react_desc = React_pause }
-        | React_epsilon -> { k with react_desc = React_epsilon }
-        | _ -> { k with react_desc = React_infer k_body }
-        end
     | React_link k -> simplify k
   and simplify_seq kl acc =
     match kl with
@@ -368,7 +347,6 @@ let react_simplify =
         | React_raw _
         | React_rec (_, _)
         | React_run _ -> simplify_seq kl (k' :: acc)
-        | React_infer _ -> simplify_seq kl (k' :: acc)
         | React_link k -> simplify_seq (k :: kl) acc
         end
   and simplify_par kl acc pause =
@@ -387,7 +365,6 @@ let react_simplify =
         | React_raw _
         | React_rec (_, _)
         | React_run _ -> simplify_par kl (k' :: acc) pause
-        | React_infer _ -> simplify_par kl (k' :: acc) pause
         | React_link k -> simplify_par (k :: kl) acc pause
         end
   and simplify_or kl acc epsilon =
@@ -418,7 +395,6 @@ let react_simplify =
         | React_par _
         | React_rec (_, _)
         | React_run _ -> simplify_or kl (k' :: acc) epsilon
-        | React_infer _ -> simplify_or kl (k' :: acc) epsilon
         | React_link k -> simplify_or (k :: kl) acc epsilon
         end
   in
@@ -447,7 +423,6 @@ let react_equal =
         v2.react_desc <- React_link v;
         react_equal k1 k2 *)
     | React_run k1, React_run k2 -> react_equal k1 k2
-    | React_infer k1, React_infer k2 -> react_equal k1 k2
     | _ -> false
 
   and react_equal_list kl1 kl2 =
@@ -483,7 +458,6 @@ let rec occur_check_react level index k =
         if not (visited k) then check k'
         else false
     | React_run k' -> check k'
-    | React_infer k' -> check k'
     | React_link link -> check link
   in
   visited_list := [];
@@ -554,7 +528,6 @@ let rec unify_react_effect expected_k actual_k =
       (*     List.iter2 unify_react_effect l1 l2 *)
       (* | React_rec _, React_rec _ -> assert false *)
       (* | React_run k1, React_run k2 -> unify_react_effect k1 k2 *)
-      (* | React_infer k1, React_infer k2 -> unify_react_effect k1 k2 *)
       | _ ->
           Format.eprintf "Failed to unify reactivities '%a' and '%a'\n"
             Types_printer.print_reactivity expected_k

@@ -77,6 +77,9 @@ let mkimpl d =
 let mkintf d =
   { pintf_desc = d; pintf_loc = symbol_rloc() }
 
+let mkprocess (a,b) c =
+  mkte(Ptype_process (a, b, c))
+
 let rec mkexpr_until body cfg_when_opt_expr_opt_list =
   match cfg_when_opt_expr_opt_list with
   | [] -> raise Parse_error
@@ -1065,6 +1068,15 @@ simple_core_type:
   | LPAREN core_type_comma_list RPAREN
       { match $2 with [sty] -> sty | _ -> raise Parse_error }
 
+simple_core_type1_2:
+    simple_core_type2
+      { ($1, None) }
+  | LPAREN core_type_comma_list RPAREN
+    { match $2 with
+      | [snd; fst] -> (fst, Some snd)
+      | [fst] -> (fst, None)
+      | _ -> raise Parse_error }
+
 simple_core_type2:
     QUOTE ident
       { mkte(Ptype_var $2) }
@@ -1074,12 +1086,12 @@ simple_core_type2:
       { mkte(Ptype_constr($2, [$1])) }
   | LPAREN core_type_comma_list RPAREN type_longident
       { mkte(Ptype_constr($4, List.rev $2)) }
-  | simple_core_type PROCESS
-      { mkte(Ptype_process ($1, Def_static.Dontknow)) }
-  | simple_core_type PROCESS PLUS
-      { mkte(Ptype_process ($1, Def_static.Noninstantaneous)) }
-  | simple_core_type PROCESS MINUS
-      { mkte(Ptype_process ($1, Def_static.Instantaneous)) }
+  | simple_core_type1_2 PROCESS
+      { mkprocess $1 Def_static.Dontknow }
+  | simple_core_type1_2 PROCESS PLUS
+      { mkprocess $1 Def_static.Noninstantaneous }
+  | simple_core_type1_2 PROCESS MINUS
+      { mkprocess $1 Def_static.Instantaneous }
 ;
 simple_core_type_or_tuple:
     simple_core_type                            { $1 }

@@ -86,7 +86,6 @@ let rec find_root check first k =
             | NoCycle -> NoCycle
             | Cycle | Rec _ -> Rec k)
       | React_run k -> find_root true first k
-      | React_infer k -> find_root true first k
       | React_link(link) -> find_root true first link
 
 let find_root k =
@@ -127,7 +126,6 @@ let rec print_reactivity ff k =
       ) else
         fprintf ff "'%s" (react_name#name k.react_index)
   | React_run k' -> fprintf ff "run %a" print_reactivity k'
-  | React_infer k' -> fprintf ff "infer %a" print_reactivity k'
 
 and print_reactivity_list sep ff l =
   let rec printrec ff l =
@@ -174,8 +172,17 @@ let rec print ff priority ty =
       print_qualified_ident ff name.gi
   | Type_link(link) ->
       print ff priority link
-  | Type_process(ty, proc_info) ->
-      print ff 2 ty;
+  | Type_process(ty, pe, proc_info) ->
+     begin match pe.propose_effect with
+     | None ->
+        print ff 2 ty
+     | Some pet ->
+        pp_print_string ff "(";
+        print ff 2 ty;
+        pp_print_string ff ", ";
+        print ff 2 pet;
+        pp_print_string ff ")"
+     end;
       pp_print_space ff ();
       pp_print_string ff "process";
       print_proc_info ff proc_info
@@ -191,9 +198,6 @@ and print_proc_info ff pi =
   begin if !Misc.dreactivity then
           fprintf ff "[%a]" print_reactivity pi.proc_react
   end;
-  begin if !Misc.dpropose then
-          fprintf ff "<%a>" print_propose_effect pi.proc_propose
-  end
 
 and print_list ff priority sep l =
   let rec printrec l =
@@ -209,17 +213,11 @@ and print_list ff priority sep l =
 	printrec rest in
   printrec l
 
-and print_propose_effect ff {propose_effect = pe} =
-  print ff 0 pe
-
 let print ff ty =
   type_name#reset;
   react_name#reset;
   print ff 0 ty;
   pp_print_flush ff ()
-
-let print_propose_effect ff {propose_effect = pe} =
-  print ff pe
 
 let print_scheme ff { ts_desc = ty } = print ff ty
 

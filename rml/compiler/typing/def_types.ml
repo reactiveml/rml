@@ -50,15 +50,13 @@ and type_expression_desc =
   | Type_product of type_expression list
   | Type_constr of type_constr global * type_expression list
   | Type_link of type_expression
-  | Type_process of type_expression * process_info
+  | Type_process of type_expression * propose_effect * process_info
 
 and process_info =
-  { mutable proc_react: reactivity_effect;
-    proc_propose: propose_effect
-  }
+  { mutable proc_react: reactivity_effect; }
 
 and propose_effect =
-  { propose_effect: type_expression; }
+  { mutable propose_effect: type_expression option; }
   
 and process_static =
   | Proc_def of Def_static.instantaneous ref
@@ -80,7 +78,6 @@ and reactivity_effect_desc =
   | React_raw of reactivity_effect * reactivity_effect (* k * var *)
   | React_rec of checked * reactivity_effect (* k *)
   | React_run of reactivity_effect
-  | React_infer of reactivity_effect
   | React_link of reactivity_effect
 
 and checked = bool

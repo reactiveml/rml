@@ -86,7 +86,7 @@ let unify_var loc expected_ty actual_ty =
 
 let unify_propose expr expected_ty actual_ty =
   try
-    unify expected_ty.propose_effect actual_ty.propose_effect
+    unify_propose expected_ty actual_ty
   with Unify -> expr_wrong_propose_err expr actual_ty expected_ty  
               
 (* special cases of unification *)
@@ -107,8 +107,7 @@ let filter_multi_event ty =
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
-  let unit_process = process type_unit { proc_react = new_react_var();
-                                         proc_propose = propose_any(); } in
+  let unit_process = process type_unit (propose_any()) { proc_react = new_react_var(); } in
   try
     unify unit_process ty;
     true
@@ -149,8 +148,6 @@ let rec gen_react is_gen k =
           (min (gen_react is_gen k1) (gen_react is_gen k2))
   | React_run k_body ->
       k.react_level <- min generic (gen_react is_gen k_body)
-  | React_infer k_body ->
-      k.react_level <- min generic (gen_react is_gen k_body)
   | React_rec (checked, k_body) ->
       if not (visited k) then (
         if not (Reactivity_check.well_formed k) then begin
@@ -187,8 +184,12 @@ let rec gen_ty is_gen ty =
 	  notgeneric ty_list
   | Type_link(link) ->
       ty.type_level <- gen_ty is_gen link
-  | Type_process(ty_body, proc_info) ->
-      ty.type_level <- min generic (gen_ty is_gen ty_body);
+  | Type_process(ty_body, {propose_effect = ope}, proc_info) ->
+     let pe_level = match ope with
+       | None -> generic
+       | Some pe -> min generic (gen_ty is_gen pe)
+     in
+      ty.type_level <- min pe_level (gen_ty is_gen ty_body);
       if generic = gen_react is_gen proc_info.proc_react then
         proc_info.proc_react <- react_simplify proc_info.proc_react
   end;
@@ -356,10 +357,11 @@ let type_of_type_expression typ_vars react_vars typexp =
 	in
 	constr name (List.map type_of ty_list)
 
-    | Rtype_process (ty,k) ->
-	process (type_of ty) { proc_react = react_raw (react_epsilon())
-                                              (get_react_var ());
-                               proc_propose = propose_any(); }
+    | Rtype_process (ty, ope, k) ->
+       process
+         (type_of ty)
+         { propose_effect = opt_map type_of ope; }
+         { proc_react = react_raw (react_epsilon()) (get_react_var ()); }
   in
   type_of typexp
 
@@ -375,10 +377,14 @@ let free_of_type ty =
 	List.fold_left vars (v, rv) t
     | Rtype_constr(_,t) ->
 	List.fold_left vars (v, rv) t
-    | Rtype_process (t, proc_info) ->
-        let v, rv = vars (v, rv) t in
-        let rv = react_vars rv proc_info in
-        (v, rv)
+    | Rtype_process (t, ope, proc_info) ->
+       let v, rv = vars (v, rv) t in
+       let v, rv = match ope with
+         | None -> (v, rv)
+         | Some pe -> vars (v, rv) pe
+       in
+       let rv = react_vars rv proc_info in
+       (v, rv)
   and react_vars rv k = (new_generic_react_var()) :: rv
   in vars ([], []) ty
 
@@ -544,8 +550,8 @@ let rec type_of_expression env expr =
         unify_propose e pe pe';
         ty, react_seq [ k; k' ], pe'
 
-    (* Avi: is this right? *)
     | Rexpr_function (matching)  ->
+        let pe = propose_any() in
 	let ty_arg = new_var() in
 	let ty_res = new_var() in
 	let ty = arrow ty_arg ty_res in
@@ -555,11 +561,11 @@ let rec type_of_expression env expr =
 	    assert (gl_env = []);
 	    let new_env = env_add loc_env env in
             opt_iter
-              (fun e_opt -> ignore (type_expect_eps_any new_env e_opt type_bool))
+              (fun e_opt -> type_expect_eps new_env e_opt type_bool pe)
               when_opt;
-	    ignore (type_expect_eps_any new_env e ty_res))
+	    type_expect_eps new_env e ty_res pe)
 	  matching;
-	ty, react_epsilon(), propose_any()
+	ty, react_epsilon(), pe
 
     | Rexpr_apply (fct, args) ->
 	let ty_fct, k_fct, pe = type_of_expression env fct in
@@ -645,6 +651,7 @@ let rec type_of_expression env expr =
 	ty_res, react_epsilon(), pe
 
     | Rexpr_record_with (e, l) ->
+        let pe = propose_any() in
         let ty = new_var() in
         let rec typing_record label_list label_expr_list =
 	match label_expr_list with
@@ -656,12 +663,12 @@ let rec type_of_expression env expr =
 	      (* check that the label appears only once *)
 	      if List.mem label label_list
 	      then non_linear_record_err label.gi expr.expr_loc;
-	      ignore (type_expect_eps_any env label_expr ty_res);
+	      type_expect_eps env label_expr ty_res pe;
 	      unify_expr expr ty ty_arg;
 	      typing_record (label :: label_list) label_expr_list
 	in
 	typing_record [] l;
-        let pe = type_expect_eps_any env e ty in
+        type_expect_eps env e ty pe;
 	ty, react_epsilon(), pe
 
     | Rexpr_record_update (e1, label, e2) ->
@@ -687,7 +694,7 @@ let rec type_of_expression env expr =
 	      assert (gl_env = []);
 	      let new_env = env_add loc_env env in
               opt_iter
-                (fun e_opt -> ignore (type_expect_eps_any new_env e_opt type_bool))
+                (fun e_opt -> type_expect_eps new_env e_opt type_bool pe)
                 when_opt;
 	      type_expect new_env e ty pe)
 	    matching
@@ -696,7 +703,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_assert e ->
        let pe = type_expect_eps_any env e type_bool in
-	new_var(), react_epsilon(), pe
+       new_var(), react_epsilon(), pe
 
     | Rexpr_ifthenelse (cond,e1,e2) ->
         let pe = type_expect_eps_any env cond type_bool in
@@ -769,7 +776,7 @@ let rec type_of_expression env expr =
 	let ty, k, pe = type_of_expression env e in
         pop_type_level ();
         let k = remove_local_react_var k in
-        process ty { proc_react = react_raw k (new_react_var()); proc_propose = pe;},
+        process ty pe { proc_react = react_raw k (new_react_var()); },
         react_epsilon(), propose_any()
 
     | Rexpr_pre (Status, s) ->
@@ -884,7 +891,7 @@ let rec type_of_expression env expr =
     | Rexpr_propose e ->
        let actual_ty, k, pe = type_of_expression env e in
        check_epsilon k;
-       unify_propose e pe {propose_effect = actual_ty};
+       unify_propose e pe {propose_effect = Some actual_ty};
        type_unit, react_epsilon(), pe
 
     | Rexpr_infer (s, e) ->
@@ -903,10 +910,15 @@ let rec type_of_expression env expr =
         let k_p = new_react_var () in
         let pe_p = propose_any() in
         unify_infer e.expr_loc
-          (process ty_p { proc_react = (* raw *) k_p; proc_propose = pe_p; })
+          (process ty_p pe_p { proc_react = (* raw *) k_p; })
           ty_e;
-        unify_infer_signal e.expr_loc ty_out (type_distribution pe_p.propose_effect);
-        type_distribution ty_p, react_infer k_p, pe_s
+        let propose_t =
+          match pe_p.propose_effect with
+          | None -> (new_var()) (* Avi: is this right? *)
+          | Some ty -> ty
+        in
+        unify_infer_signal e.expr_loc ty_out (type_distribution propose_t);
+        type_distribution ty_p, react_run k_p, pe_s
         
     | Rexpr_loop (None, p) ->
         push_type_level ();
@@ -948,7 +960,7 @@ let rec type_of_expression env expr =
         (*   react_raw k (new_react_var ()) *)
         (* in *)
         unify_run e.expr_loc
-          (process ty { proc_react = (* raw *) k; proc_propose = pe; })
+          (process ty pe { proc_react = (* raw *) k; })
           ty_e;
         ty, react_run (* raw *) k, pe
 
@@ -986,7 +998,7 @@ let rec type_of_expression env expr =
 
     | Rexpr_when (s,p) ->
         let pe = propose_any() in
-        let _loc_env = type_of_event_config env s, pe in
+        let _loc_env = type_of_event_config env s pe in
         let ty_s, k_s, pe2 = type_of_expression env p in
         unify_propose p pe pe2;
         ty_s, k_s, pe2
@@ -1083,7 +1095,7 @@ let rec type_of_expression env expr =
   in
   expr.expr_type <- t;
   expr.expr_reactivity_effect <- k;
-  expr.expr_propose_effect <- pe;
+  expr.expr_propose_effect.propose_effect <- pe.propose_effect;
   Stypes.record (Ti_expr expr);
   t, k, pe
 
