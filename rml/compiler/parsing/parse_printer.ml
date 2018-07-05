@@ -146,13 +146,11 @@ let rec type_expression i ppf x =
   | Ptype_constr (pi, l) ->
       line i ppf "Ptype_constr %a\n" fmt_ident pi;
       list i type_expression ppf l
-  | Ptype_process (ct,ope,k) ->
+  | Ptype_process (ct,pe,k) ->
       line i ppf "Ptype_process(%s)"
 	(Def_static.string_of_instantaneous k);
       type_expression i ppf ct;
-        match ope with
-        | None -> ()
-        | Some pe -> line i ppf "<"; type_expression i ppf pe; line i ppf ">";
+      line i ppf "<"; type_expression i ppf pe; line i ppf ">";
 ;;
 
 let rec pattern i ppf x =

@@ -50,7 +50,7 @@ and type_expression_desc =
   | Type_product of type_expression list
   | Type_constr of type_constr global * type_expression list
   | Type_link of type_expression
-  | Type_process of type_expression * propose_effect * process_info
+  | Type_process of type_expression * type_expression * process_info
 
 and process_info =
   { mutable proc_react: reactivity_effect; }

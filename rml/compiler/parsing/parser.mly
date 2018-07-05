@@ -77,8 +77,12 @@ let mkimpl d =
 let mkintf d =
   { pintf_desc = d; pintf_loc = symbol_rloc() }
 
-let mkprocess (a,b) c =
+let mkmodel (a,b) c =
   mkte(Ptype_process (a, b, c))
+
+let mkunit() = mkte (Ptype_constr(mkident_loc (Pident "unit") (symbol_gloc()), []))
+let mkprocess a c =
+  mkte(Ptype_process (a, mkunit(), c))
 
 let rec mkexpr_until body cfg_when_opt_expr_opt_list =
   match cfg_when_opt_expr_opt_list with
@@ -293,6 +297,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token PRIVATE             /* "private" */
 %token PROC                /* "proc"  */
 %token PROCESS             /* "process" */
+%token MODEL               /* "model" */
 %token PROPOSE             /* "propose" */
 %token INFER               /* "infer" */
 %token QUESTION            /* "?" */
@@ -1068,13 +1073,10 @@ simple_core_type:
   | LPAREN core_type_comma_list RPAREN
       { match $2 with [sty] -> sty | _ -> raise Parse_error }
 
-simple_core_type1_2:
-    simple_core_type2
-      { ($1, None) }
+simple_core_type_2:
   | LPAREN core_type_comma_list RPAREN
     { match $2 with
-      | [snd; fst] -> (fst, Some snd)
-      | [fst] -> (fst, None)
+      | [snd; fst] -> (fst, snd)
       | _ -> raise Parse_error }
 
 simple_core_type2:
@@ -1085,13 +1087,19 @@ simple_core_type2:
   | simple_core_type2 type_longident
       { mkte(Ptype_constr($2, [$1])) }
   | LPAREN core_type_comma_list RPAREN type_longident
-      { mkte(Ptype_constr($4, List.rev $2)) }
-  | simple_core_type1_2 PROCESS
+    { mkte(Ptype_constr($4, List.rev $2)) }
+  | simple_core_type PROCESS
       { mkprocess $1 Def_static.Dontknow }
-  | simple_core_type1_2 PROCESS PLUS
+  | simple_core_type PROCESS PLUS
       { mkprocess $1 Def_static.Noninstantaneous }
-  | simple_core_type1_2 PROCESS MINUS
+  | simple_core_type PROCESS MINUS
       { mkprocess $1 Def_static.Instantaneous }
+  | simple_core_type_2 MODEL
+      { mkmodel $1 Def_static.Dontknow }
+  | simple_core_type_2 MODEL PLUS
+      { mkmodel $1 Def_static.Noninstantaneous }
+  | simple_core_type_2 MODEL MINUS
+      { mkmodel $1 Def_static.Instantaneous }
 ;
 simple_core_type_or_tuple:
     simple_core_type                            { $1 }

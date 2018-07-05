@@ -154,9 +154,9 @@ let free_type_vars level ty =
 	List.iter free_vars ty_list
     | Type_link(link) ->
 	free_vars link
-    | Type_process(ty, {propose_effect = pe}, proc_info) ->
+    | Type_process(ty, pe, proc_info) ->
        free_vars ty;
-       opt_iter free_vars pe;
+       free_vars pe;
        frv := List.rev_append (free_react_vars level proc_info.proc_react) !frv
   in
   free_vars ty;
@@ -203,15 +203,12 @@ let rec copy ty =
   | Type_process(ty, pe, info) ->
       if level = generic
       then
-	process (copy ty) (copy_propose pe) (copy_proc_info info)
+	process (copy ty) (copy pe) (copy_proc_info info)
       else
 	ty
 
 and copy_proc_info info =
   { proc_react = copy_react info.proc_react; }
-
-and copy_propose info =
-  { propose_effect = opt_map copy info.propose_effect; }
 
 (* instanciation *)
 let instance { ts_desc = ty } =
@@ -257,9 +254,9 @@ let rec occur_check level index ty =
     | Type_constr(name, ty_list) ->
  	List.iter check ty_list
     | Type_link(link) -> check link
-    | Type_process(ty, {propose_effect = pe}, info) ->
+    | Type_process(ty, pe, info) ->
        check ty;
-       opt_iter check pe;
+       check pe;
        ignore (occur_check_react level no_react info.proc_react)
   in check ty
 
@@ -323,12 +320,13 @@ let rec unify expected_ty actual_ty =
       | Type_process(ty1, pe1, pi1), Type_process(ty2, pe2, pi2) ->
           begin try
               unify_react_effect pi1.proc_react pi2.proc_react;
-              unify_propose pe1 pe2
           with React_Unify -> raise Unify (* ne devrait pas arriver *)
           end;
-	  unify ty1 ty2
+	  unify ty1 ty2;
+          unify pe1 pe2
       | _ -> raise Unify
-and unify_propose pe1 pe2 =
+
+let unify_propose pe1 pe2 =
   begin match pe1.propose_effect, pe2.propose_effect with
   | None, None -> ()
   | Some pet1, None -> pe2.propose_effect <- Some (make_type (Type_link(pet1)))

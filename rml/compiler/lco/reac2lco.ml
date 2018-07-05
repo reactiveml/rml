@@ -90,7 +90,7 @@ let rec translate_te typ =
     | Rtype_constr (cstr, te_list) ->
 	Cotype_constr (cstr, List.map translate_te te_list)
     | Rtype_process (t, pe, _) ->
-	Cotype_process (translate_te t, opt_map translate_te pe)
+	Cotype_process (translate_te t, translate_te pe)
   in
   make_te cotyp typ.te_loc
 

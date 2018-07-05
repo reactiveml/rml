@@ -107,7 +107,7 @@ let filter_multi_event ty =
 let is_unit_process desc =
   let sch = desc.value_typ in
   let ty = instance sch in
-  let unit_process = process type_unit (propose_any()) { proc_react = new_react_var(); } in
+  let unit_process = process type_unit (new_var()) { proc_react = new_react_var(); } in
   try
     unify unit_process ty;
     true
@@ -184,12 +184,9 @@ let rec gen_ty is_gen ty =
 	  notgeneric ty_list
   | Type_link(link) ->
       ty.type_level <- gen_ty is_gen link
-  | Type_process(ty_body, {propose_effect = ope}, proc_info) ->
-     let pe_level = match ope with
-       | None -> generic
-       | Some pe -> min generic (gen_ty is_gen pe)
-     in
-      ty.type_level <- min pe_level (gen_ty is_gen ty_body);
+  | Type_process(ty_body, ty_pe, proc_info) ->
+     let pe_level = min generic (gen_ty is_gen ty_pe) in
+     ty.type_level <- min pe_level (gen_ty is_gen ty_body);
       if generic = gen_react is_gen proc_info.proc_react then
         proc_info.proc_react <- react_simplify proc_info.proc_react
   end;
@@ -357,10 +354,10 @@ let type_of_type_expression typ_vars react_vars typexp =
 	in
 	constr name (List.map type_of ty_list)
 
-    | Rtype_process (ty, ope, k) ->
+    | Rtype_process (ty, pe, k) ->
        process
          (type_of ty)
-         { propose_effect = opt_map type_of ope; }
+         (type_of pe)
          { proc_react = react_raw (react_epsilon()) (get_react_var ()); }
   in
   type_of typexp
@@ -377,12 +374,9 @@ let free_of_type ty =
 	List.fold_left vars (v, rv) t
     | Rtype_constr(_,t) ->
 	List.fold_left vars (v, rv) t
-    | Rtype_process (t, ope, proc_info) ->
+    | Rtype_process (t, pe, proc_info) ->
        let v, rv = vars (v, rv) t in
-       let v, rv = match ope with
-         | None -> (v, rv)
-         | Some pe -> vars (v, rv) pe
-       in
+       let v, rv = vars (v, rv) pe in
        let rv = react_vars rv proc_info in
        (v, rv)
   and react_vars rv k = (new_generic_react_var()) :: rv
@@ -774,9 +768,17 @@ let rec type_of_expression env expr =
     | Rexpr_process(e) ->
         push_type_level ();
 	let ty, k, pe = type_of_expression env e in
+        (* In the effect system, None is the same as 'a.
+           In a proces type, None means that no output is known.
+           Here we need to mediate between those two different views.
+         *)
+        let pe_ty = match pe.propose_effect with
+          | None -> new_var()
+          | Some p -> p
+        in
         pop_type_level ();
         let k = remove_local_react_var k in
-        process ty pe { proc_react = react_raw k (new_react_var()); },
+        process ty pe_ty { proc_react = react_raw k (new_react_var()); },
         react_epsilon(), propose_any()
 
     | Rexpr_pre (Status, s) ->
@@ -908,16 +910,11 @@ let rec type_of_expression env expr =
         unify_propose e pe_s pe_e;
         let ty_p = new_var() in
         let k_p = new_react_var () in
-        let pe_p = propose_any() in
+        let ty_pe = new_var() in
         unify_infer e.expr_loc
-          (process ty_p pe_p { proc_react = (* raw *) k_p; })
+          (process ty_p ty_pe { proc_react = (* raw *) k_p; })
           ty_e;
-        let propose_t =
-          match pe_p.propose_effect with
-          | None -> (new_var()) (* Avi: is this right? *)
-          | Some ty -> ty
-        in
-        unify_infer_signal e.expr_loc ty_out (type_distribution propose_t);
+        unify_infer_signal e.expr_loc ty_out (type_distribution ty_pe);
         type_distribution ty_p, react_run k_p, pe_s
         
     | Rexpr_loop (None, p) ->
@@ -955,12 +952,16 @@ let rec type_of_expression env expr =
         let ty_e, k_e, pe = type_of_expression env e in
         check_epsilon k_e;
         let ty = new_var() in
+        let ty_pe = new_var() in
         let k = new_react_var () in
         (* let raw = *)
         (*   react_raw k (new_react_var ()) *)
         (* in *)
         unify_run e.expr_loc
-          (process ty pe { proc_react = (* raw *) k; })
+          (* Avi todo: should this be ty_pe or pe.
+             When we run a process what happens to its propose effect, what happens to it?
+           *)
+          (process ty ty_pe { proc_react = (* raw *) k; })
           ty_e;
         ty, react_run (* raw *) k, pe
 

@@ -173,19 +173,15 @@ let rec print ff priority ty =
   | Type_link(link) ->
       print ff priority link
   | Type_process(ty, pe, proc_info) ->
-     begin match pe.propose_effect with
-     | None ->
-        print ff 2 ty
-     | Some pet ->
-        pp_print_string ff "(";
-        print ff 2 ty;
-        pp_print_string ff ", ";
-        print ff 2 pet;
-        pp_print_string ff ")"
-     end;
-      pp_print_space ff ();
-      pp_print_string ff "process";
-      print_proc_info ff proc_info
+     (* Avi: TODO: add process/model hack here *)
+     pp_print_string ff "(";
+     print ff 2 ty;
+     pp_print_string ff ", ";
+     print ff 2 pe;
+     pp_print_string ff ")";
+     pp_print_space ff ();
+     pp_print_string ff "model";
+     print_proc_info ff proc_info
   end;
   pp_close_box ff ()
 
