@@ -1,10 +1,10 @@
 open Distribution
-
+  
 type tttbad =
   | TTTbad1 of (int process)
       
 let mktttbad (x: int process):tttbad = TTTbad1 x
-let ttt1bad (TTTbad1 p) : (int, float) model = p
+(* let ttt1bad (TTTbad1 p) : (int, float) model = p *)
 
 type 'a ttt =
   | TTT1 of ((int, 'a) model)
@@ -42,7 +42,8 @@ let process main =
   run display pos_dist
   
 let z1() = fp hmm
-let z2() = fp2 hmm
+(* let z2() = fp2 hmm *)
+    
 let process p  =
   loop
     factor (0.1)

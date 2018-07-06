@@ -43,6 +43,7 @@ STDLIB_SRC= \
 	rml_list.rmli \
 	rml_process_manager.rmli \
 	distribution.rmli \
+	rml_empty.rmli \
 
 STDLIB_RML_SRC=rml_list.rml \
 

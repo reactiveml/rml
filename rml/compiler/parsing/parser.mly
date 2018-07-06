@@ -80,9 +80,9 @@ let mkintf d =
 let mkmodel (a,b) c =
   mkte(Ptype_process (a, b, c))
 
-let mkunit() = mkte (Ptype_constr(mkident_loc (Pident "unit") (symbol_gloc()), []))
+let mkempty() = mkte (Ptype_constr(mkident_loc (Pdot ("Rml_empty","t")) (symbol_gloc()), []))
 let mkprocess a c =
-  mkte(Ptype_process (a, mkunit(), c))
+  mkte(Ptype_process (a, mkempty(), c))
 
 let rec mkexpr_until body cfg_when_opt_expr_opt_list =
   match cfg_when_opt_expr_opt_list with
