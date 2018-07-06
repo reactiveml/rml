@@ -958,11 +958,9 @@ let rec type_of_expression env expr =
         (*   react_raw k (new_react_var ()) *)
         (* in *)
         unify_run e.expr_loc
-          (* Avi todo: should this be ty_pe or pe.
-             When we run a process what happens to its propose effect, what happens to it?
-           *)
           (process ty ty_pe { proc_react = (* raw *) k; })
           ty_e;
+        unify_propose e {propose_effect = Some ty_pe} pe;
         ty, react_run (* raw *) k, pe
 
     | Rexpr_until (p,[conf,when_opt,None]) ->
