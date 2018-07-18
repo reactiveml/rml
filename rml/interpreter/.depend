@@ -14,6 +14,10 @@ implem_lco_ctrl_tree_record.cmo : sig_env.cmo rml_machine.cmo \
     lco_ctrl_tree.cmo
 implem_lco_ctrl_tree_record.cmx : sig_env.cmx rml_machine.cmx \
     lco_ctrl_tree.cmx
+implem_lco_rewrite_proba_record.cmo : sig_env.cmo rml_machine.cmo \
+    lco_rewrite_proba.cmo
+implem_lco_rewrite_proba_record.cmx : sig_env.cmx rml_machine.cmx \
+    lco_rewrite_proba.cmx
 implem_lco_rewrite_record.cmo : sig_env.cmo rml_machine.cmo lco_rewrite.cmo
 implem_lco_rewrite_record.cmx : sig_env.cmx rml_machine.cmx lco_rewrite.cmx
 implem_lk_record.cmo : sig_env.cmo rml_machine.cmo lk_implem.cmo
@@ -29,6 +33,8 @@ lco_ctrl_tree_thread_safe.cmx : sig_env.cmx
 lco_interpreter.cmi : sig_env.cmo
 lco_rewrite.cmo : sig_env.cmo lco_interpreter.cmi
 lco_rewrite.cmx : sig_env.cmx lco_interpreter.cmi
+lco_rewrite_proba.cmo : sig_env.cmo lco_interpreter.cmi
+lco_rewrite_proba.cmx : sig_env.cmx lco_interpreter.cmi
 lk_implem.cmo : sig_env.cmo lk_interpreter.cmi
 lk_implem.cmx : sig_env.cmx lk_interpreter.cmi
 lk_interpreter.cmi : sig_env.cmo

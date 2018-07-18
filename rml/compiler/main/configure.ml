@@ -117,6 +117,13 @@ let set_runtime s =
       set_rml_machine_module "Rml_machine";
       set_standard_lib "lco_rewrite";
       set_translation Lco
+  | "Lco_rewrite_proba" ->
+      set_interpreter_intf "Lco_interpreter";
+      set_interpreter_impl "Implem_lco_rewrite_proba_record";
+      set_interpreter_module "Lco_rewrite_proba_record";
+      set_rml_machine_module "Rml_machine";
+      set_standard_lib "lco_rewrite_proba";
+      set_translation Lco
   | "Lco_ctrl_tree" | "Lco" ->
       set_interpreter_intf "Lco_interpreter";
       set_interpreter_impl "Implem_lco_ctrl_tree_record";

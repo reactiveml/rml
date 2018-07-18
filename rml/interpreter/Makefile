@@ -7,6 +7,7 @@ all:
 	$(MAKE) -f Makefile-lco_n_proba all
 	$(MAKE) -f Makefile-lco_class all
 	$(MAKE) -f Makefile-lco_rewrite all
+	$(MAKE) -f Makefile-lco_rewrite_proba all
 	$(MAKE) -f Makefile-lk all
 
 install:
@@ -15,6 +16,7 @@ install:
 	$(MAKE) -f Makefile-lco_n_proba install
 	$(MAKE) -f Makefile-lco_class install
 	$(MAKE) -f Makefile-lco_rewrite install
+	$(MAKE) -f Makefile-lco_rewrite_proba install
 	$(MAKE) -f Makefile-lk install
 
 uninstall:
@@ -23,6 +25,7 @@ uninstall:
 	$(MAKE) -f Makefile-lco_n_proba uninstall
 	$(MAKE) -f Makefile-lco_class uninstall
 	$(MAKE) -f Makefile-lco_rewrite uninstall
+	$(MAKE) -f Makefile-lco_rewrite_proba uninstall
 	$(MAKE) -f Makefile-lk uninstall
 
 clean:
@@ -31,6 +34,7 @@ clean:
 	$(MAKE) -f Makefile-lco_n_proba clean
 	$(MAKE) -f Makefile-lco_class clean
 	$(MAKE) -f Makefile-lco_rewrite clean
+	$(MAKE) -f Makefile-lco_rewrite_proba clean
 	$(MAKE) -f Makefile-lk clean
 
 realclean:
@@ -40,6 +44,7 @@ realclean:
 	$(MAKE) -f Makefile-lco_n_proba realclean
 	$(MAKE) -f Makefile-lco_class realclean
 	$(MAKE) -f Makefile-lco_rewrite realclean
+	$(MAKE) -f Makefile-lco_rewrite_proba realclean
 	$(MAKE) -f Makefile-lk realclean
 cleanall: realclean
 
