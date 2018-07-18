@@ -937,20 +937,20 @@ module Rml_interpreter : Lco_interpreter.S =
 (* for                                *)
 (**************************************)
     let rml_for e1 e2 dir p =
-      let (incr, cmp) = if dir then incr, (<=) else decr, (>=) in
+      let (succ, cmp) = if dir then succ, (<=) else pred, (>=) in
       let rec f_for i v2 =
 	fun () ->
-	  incr i;
-	  if cmp !i v2
-	  then rml_seq (p !i) (f_for i v2) ()
+	  let i = succ i in
+	  if cmp i v2
+	  then rml_seq (p i) (f_for i v2) ()
 	  else TERM (), rml_nothing
       in
       let f_for_init =
 	fun () ->
-	  let i = ref (e1()) in
+	  let i = e1() in
 	  let v2 = e2() in
-	  if cmp !i v2
-	  then rml_seq (p !i) (f_for i v2) ()
+	  if cmp i v2
+	  then rml_seq (p i) (f_for i v2) ()
 	  else TERM (), rml_nothing
       in
       f_for_init
@@ -967,43 +967,43 @@ module Rml_interpreter : Lco_interpreter.S =
       | TERM _, TERM _ -> TERM ()
       | _ -> STOP
 
-    let par_body body_array =
-      let rec self =
-	fun () ->
-	  let par_status = ref (TERM ()) in
-	  for i = 0 to Array.length body_array - 1 do
-	    let status, p = body_array.(i) in
-	    match status with
-	    | SUSP ->
-		let (alpha, p') as body = p() in
-		body_array.(i) <- body;
-		par_status := gamma !par_status alpha
-	    | _ ->
-		par_status := gamma !par_status status
-	  done;
-	  match !par_status with
-	  | TERM _ -> TERM (), rml_nothing
-	  | SUSP -> SUSP, self
-	  | STOP ->
-	      for i = 0 to Array.length body_array - 1 do
-		match body_array.(i) with
-		| SUSP, _ -> assert false
-		| STOP, p ->  body_array.(i) <- SUSP, p
-		| TERM _, _ -> ()
-	      done;
-	      STOP, self
-      in self
+    let rec par_body body_list =
+      fun () ->
+        let par_status = ref (TERM ()) in
+        let body_list =
+          List.map
+            (fun ((status, p) as body) ->
+               match status with
+               | SUSP ->
+                 let (alpha, p') as body = p() in
+                 par_status := gamma !par_status alpha;
+                 body
+               | _ ->
+                 par_status := gamma !par_status status;
+                 body)
+            body_list
+        in
+        match !par_status with
+        | TERM _ -> TERM (), rml_nothing
+        | SUSP -> SUSP, par_body body_list
+        | STOP ->
+          let body_list =
+            List.map
+              (fun body ->
+                 match body with
+                 | SUSP, _ -> assert false
+                 | STOP, p ->  SUSP, p
+                 | TERM _, _ -> body)
+              body_list
+          in
+          STOP, par_body body_list
 
     let rml_par_n p_list =
       fun () ->
-	let n = List.length p_list in
-	let tab =
-	  Array.make n (Obj.magic())
-	in
-	let _ =
-	  List.fold_left (fun i p -> tab.(i) <- (SUSP, p); i+1) 0 p_list
-	in
-	par_body tab ()
+        let body_list =
+          List.map (fun p -> (SUSP, p)) p_list
+        in
+        par_body body_list ()
 
 (**************************************)
 (* for_dopar                          *)
@@ -1013,16 +1013,12 @@ module Rml_interpreter : Lco_interpreter.S =
       fun () ->
 	let i = ref (e1()) in
 	let v2 = e2() in
-	let tab =
-	  Array.make (if dir then v2 - !i + 1 else !i - v2 + 1) (Obj.magic())
-	in
-	let j = ref 0 in
+	let body_list = ref [] in
 	while (cmp !i v2) do
-	  tab.(!j) <- (SUSP, (p !i));
-	  incr i;
-	  j := !j + 1
+	  body_list := (SUSP, (p !i)) :: !body_list;
+	  incr i
 	done;
-	par_body tab ()
+	par_body (List.rev !body_list) ()
 
 
 (* ------------------------------------------------------------------------ *)
