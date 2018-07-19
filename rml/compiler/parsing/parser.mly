@@ -80,6 +80,9 @@ let mkintf d =
 let mkmodel (a,b) c =
   mkte(Ptype_process (a, b, c))
 
+let check_infer_particle_id lid =
+  if lid <> "particles" then raise Parse_error
+    
 let mkempty() = mkte (Ptype_constr(mkident_loc (Pdot ("Rml_empty","t")) (symbol_gloc()), []))
 let mkprocess a c =
   mkte(Ptype_process (a, mkempty(), c))
@@ -598,7 +601,11 @@ expr:
   | PROPOSE simple_expr
     { mkexpr(Pexpr_propose $2 ) }
   | INFER simple_expr simple_expr
-    { mkexpr(Pexpr_infer($2, $3)) }
+    { mkexpr(Pexpr_infer($2, $3, None)) }
+  | INFER LABEL simple_expr simple_expr simple_expr
+    { check_infer_particle_id $2; mkexpr(Pexpr_infer($4, $5, Some ($3))) }
+  | INFER simple_expr LABEL simple_expr simple_expr
+    { check_infer_particle_id $3; mkexpr(Pexpr_infer($2, $5, Some ($4))) }
   | SIGNAL signal_comma_list IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr

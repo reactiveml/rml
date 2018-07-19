@@ -93,6 +93,19 @@ let make_patt_var_local id =
 let make_expr_var_local id =
   make_expr (Cexpr_local id) Location.none
 
+let make_none =
+  make_expr (Cexpr_construct (Initialization.none_constr_desc, None))
+    Location.none
+
+let make_some e =
+  make_expr (Cexpr_construct (Initialization.some_constr_desc, Some e))
+    Location.none
+
+let make_optional_expr oe =
+  match oe with
+  | Some e -> make_some e
+  | None -> make_none
+  
 let make_list c_list =
   List.fold_right
     (fun e acc ->

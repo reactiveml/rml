@@ -50,9 +50,11 @@ parsing/parse_ast.cmx : parsing/parse_ident.cmx parsing/location.cmx \
 parsing/parse_ident.cmo :
 parsing/parse_ident.cmx :
 parsing/parse_printer.cmo : parsing/parse_ident.cmo parsing/parse_ast.cmo \
-    parsing/location.cmo static/def_static.cmo global/asttypes.cmo
+    global/misc.cmo parsing/location.cmo static/def_static.cmo \
+    global/asttypes.cmo
 parsing/parse_printer.cmx : parsing/parse_ident.cmx parsing/parse_ast.cmx \
-    parsing/location.cmx static/def_static.cmx global/asttypes.cmx
+    global/misc.cmx parsing/location.cmx static/def_static.cmx \
+    global/asttypes.cmx
 parsing/parser.cmo : parsing/syntaxerr.cmo parsing/parse_ident.cmo \
     parsing/parse_ast.cmo parsing/location.cmo static/def_static.cmo \
     global/asttypes.cmo parsing/parser.cmi

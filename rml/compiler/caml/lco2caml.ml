@@ -365,25 +365,26 @@ and translate_proc e =
            (make_instruction "rml_propose",
             [embed_ml expr;])
          
-    | Coproc_infer (s,e) ->
+    | Coproc_infer (s,e, oe3) ->
+       let e3' = make_optional_expr (Misc.opt_map embed_ml oe3) in
        if Lco_misc.is_value s then
          if Lco_misc.is_value e then
 	   Cexpr_apply
 	     (make_instruction "rml_infer_v_v",
-	      [translate_ml s; translate_ml e;])
+	      [translate_ml s; translate_ml e; e3'])
          else
            Cexpr_apply
 	     (make_instruction "rml_infer_v_e",
-	      [translate_ml s; embed_ml e;])
+	      [translate_ml s; embed_ml e; e3'])
 	else
          if Lco_misc.is_value e then
 	   Cexpr_apply
 	     (make_instruction "rml_infer_e_v",
-	      [embed_ml s; translate_ml e;])
+	      [embed_ml s; translate_ml e; e3'])
          else
            Cexpr_apply
 	     (make_instruction "rml_infer",
-	      [embed_ml s; embed_ml e;])
+	      [embed_ml s; embed_ml e; e3'])
             
     | Coproc_compute (expr) ->
 	Cexpr_apply

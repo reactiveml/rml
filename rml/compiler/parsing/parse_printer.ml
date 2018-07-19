@@ -286,10 +286,11 @@ let rec expression i ppf x =
   | Pexpr_propose (e) ->
       line i ppf "Pexpr_propose";
       expression i ppf e;
-  | Pexpr_infer (e1, e2) ->
+  | Pexpr_infer (e1, e2, oe3) ->
       line i ppf "Pexpr_infer";
       expression i ppf e1;
       expression i ppf e2;
+      Misc.opt_iter (expression i ppf) oe3;
   | Pexpr_emit (e) ->
       line i ppf "Pexpr_emit";
       expression i ppf e;

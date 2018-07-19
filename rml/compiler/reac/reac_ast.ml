@@ -85,7 +85,7 @@ and expression_desc =
   | Rexpr_factor of expression
   | Rexpr_sample of expression
   | Rexpr_propose of expression
-  | Rexpr_infer of expression * expression
+  | Rexpr_infer of expression * expression * expression option
   | Rexpr_emit of expression * expression option
   | Rexpr_loop of expression option * expression
   | Rexpr_fordopar of

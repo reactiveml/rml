@@ -896,7 +896,7 @@ let rec type_of_expression env expr =
        unify_propose e pe {propose_effect = Some actual_ty};
        type_unit, react_epsilon(), pe
 
-    | Rexpr_infer (s, e) ->
+    | Rexpr_infer (s, e, oe3) ->
        let ty_s, k_s, pe_s = type_of_expression env s in
         check_epsilon k_s;
 	let ty_out, _ =
@@ -915,6 +915,11 @@ let rec type_of_expression env expr =
           (process ty_p ty_pe { proc_react = (* raw *) k_p; })
           ty_e;
         unify_infer_signal e.expr_loc ty_out (type_distribution ty_pe);
+
+        begin match oe3 with
+        | Some e3 -> type_expect_eps env e3 type_int pe_s
+        | None -> ()
+        end;
         type_distribution ty_p, react_run k_p, pe_s
         
     | Rexpr_loop (None, p) ->

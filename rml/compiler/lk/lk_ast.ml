@@ -87,7 +87,7 @@ and process_desc =
   | Kproc_factor of expression * process
   | Kproc_sample of expression * process
   | Kproc_propose of expression * process
-  | Kproc_infer of expression  * expression * process * ident
+  | Kproc_infer of expression  * expression * expression option * process * ident 
   | Kproc_emit of expression * process
   | Kproc_emit_val of expression * expression * process
   | Kproc_loop of ident * process

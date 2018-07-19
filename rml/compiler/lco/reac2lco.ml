@@ -319,7 +319,7 @@ and translate_proc p =
         | Rexpr_factor e -> Coproc_factor (translate_ml e)
         | Rexpr_sample e -> Coproc_sample (translate_ml e)
         | Rexpr_propose e -> Coproc_propose (translate_ml e)
-        | Rexpr_infer (s,e) -> Coproc_infer (translate_ml s, translate_ml e)
+        | Rexpr_infer (s,e, oe3) -> Coproc_infer (translate_ml s, translate_ml e, Misc.opt_map translate_ml oe3)
 
 	| Rexpr_emit (s, None) -> Coproc_emit (translate_ml s)
 
