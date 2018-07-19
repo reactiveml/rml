@@ -65,7 +65,8 @@ let rec translate_te typ =
 	in
 	Rtype_constr (gcstr, List.map translate_te te_list)
 
-    | Ptype_process (t,k) -> Rtype_process ((translate_te t),k)
+    | Ptype_process (ts, pe, k) -> 
+       Rtype_process (translate_te ts, translate_te pe, k)
 
   in
   make_te rtyp typ.pte_loc
@@ -416,6 +417,18 @@ let rec translate env e =
 
     | Pexpr_default expr ->
 	Rexpr_default (translate env expr)
+
+    | Pexpr_factor s ->
+       Rexpr_factor (translate env s)
+
+    | Pexpr_sample s ->
+       Rexpr_sample (translate env s)
+
+    | Pexpr_propose s ->
+       Rexpr_propose (translate env s)
+
+    | Pexpr_infer (e1, e2) ->
+       Rexpr_infer (translate env e1, translate env e2)
 
     | Pexpr_emit s ->
 	Rexpr_emit (translate env s, None)

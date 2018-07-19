@@ -144,7 +144,6 @@ let print_reactivity ff k =
   visited_list := [];
   print_reactivity ff (*(find_root k)*) k
 
-
 let rec print ff priority ty =
   pp_open_box ff 0;
   begin match ty.type_desc with
@@ -173,11 +172,16 @@ let rec print ff priority ty =
       print_qualified_ident ff name.gi
   | Type_link(link) ->
       print ff priority link
-  | Type_process(ty, proc_info) ->
-      print ff 2 ty;
-      pp_print_space ff ();
-      pp_print_string ff "process";
-      print_proc_info ff proc_info
+  | Type_process(ty, pe, proc_info) ->
+     (* Avi: TODO: add process/model hack here *)
+     pp_print_string ff "(";
+     print ff 2 ty;
+     pp_print_string ff ", ";
+     print ff 2 pe;
+     pp_print_string ff ")";
+     pp_print_space ff ();
+     pp_print_string ff "model";
+     print_proc_info ff proc_info
   end;
   pp_close_box ff ()
 
@@ -187,8 +191,9 @@ and print_proc_info ff pi =
 (*   | Some(Def_static.Instantaneous) -> pp_print_string ff "-" *)
 (*   | Some(Def_static.Noninstantaneous) -> pp_print_string ff "+" *)
 (*   end *)
-  if !Misc.dreactivity then
-    fprintf ff "[%a]" print_reactivity pi.proc_react
+  begin if !Misc.dreactivity then
+          fprintf ff "[%a]" print_reactivity pi.proc_react
+  end;
 
 and print_list ff priority sep l =
   let rec printrec l =
@@ -209,6 +214,7 @@ let print ff ty =
   react_name#reset;
   print ff 0 ty;
   pp_print_flush ff ()
+
 let print_scheme ff { ts_desc = ty } = print ff ty
 
 let print_value_type_declaration ff global =

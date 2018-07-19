@@ -81,6 +81,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "end", END;
     "exception", EXCEPTION;
     "external", EXTERNAL;
+    "factor", FACTOR;
     "false", FALSE;
     "for", FOR;
     "fun", FUN;
@@ -92,6 +93,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "immediate", IMMEDIATE;
     "in", IN;
     "include", INCLUDE;
+    "infer", INFER;
     "inherit", INHERIT;
     "initializer", INITIALIZER;
 (*    "inout", INOUT;*)
@@ -111,6 +113,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "one", ONE;
     "open", OPEN;
     "or", OR;
+    "propose", PROPOSE;
 (*    "out", OUT;*)
 (*  "parser", PARSER; *)
     "pause", PAUSE;
@@ -119,7 +122,9 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok)
     "private", PRIVATE;
     "proc", PROC;
     "process", PROCESS;
+    "model", MODEL;	
     "rec", REC;
+    "sample", SAMPLE;
     "run", RUN;
     "sig", SIG;
     "signal", SIGNAL;

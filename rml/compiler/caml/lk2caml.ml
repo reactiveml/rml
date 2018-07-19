@@ -79,7 +79,8 @@ let rec translate_te typ =
     | Ktype_constr (cstr, te_list) ->
 	Ctype_constr (cstr, List.map translate_te te_list)
 
-    | Ktype_process t ->
+    | Ktype_process (t,pe) ->
+        (* Avi: We are throwing away the propose effect in the ocaml type *)
 	let proc_type = make_rml_type "process" [translate_te t] in
 	proc_type.cte_desc
 
@@ -413,6 +414,77 @@ and translate_proc e =
               in e.cexpr_desc
         end
 
+    | Kproc_factor (expr,k) ->
+       if Lk_misc.is_value expr then
+         Cexpr_apply
+	   (make_instruction "rml_factor_v",
+            [translate_ml expr;
+             translate_proc k])
+       else
+         Cexpr_apply
+	   (make_instruction "rml_factor",
+            [embed_ml expr;
+             translate_proc k])
+
+    | Kproc_sample (expr,k) ->
+       if Lk_misc.is_value expr then
+         Cexpr_apply
+	   (make_instruction "rml_sample_v",
+            [translate_ml expr;
+             translate_proc k])
+       else
+         Cexpr_apply
+	   (make_instruction "rml_sample",
+            [embed_ml expr;
+             translate_proc k])
+
+    | Kproc_propose (expr,k) ->
+       if Lk_misc.is_value expr then
+         Cexpr_apply
+	   (make_instruction "rml_propose_v",
+            [translate_ml expr;
+             translate_proc k])
+       else
+         Cexpr_apply
+	   (make_instruction "rml_propose",
+            [embed_ml expr;
+             translate_proc k])
+
+    | Kproc_infer (s, expr, k, ctrl) ->
+       if Lk_misc.is_value s then
+         if Lk_misc.is_value expr then
+	   Cexpr_apply
+	     (make_instruction "rml_infer_v_v",
+	      [
+                translate_ml s;
+                translate_ml expr;
+	        translate_proc k;
+	        make_expr_var_local ctrl])
+         else
+            Cexpr_apply
+	     (make_instruction "rml_infer_v_e",
+	      [
+                translate_ml s;
+                embed_ml expr;
+	        translate_proc k;
+	        make_expr_var_local ctrl])
+       else
+         if Lk_misc.is_value expr then
+	   Cexpr_apply
+	     (make_instruction "rml_infer_e_v",
+	      [ embed_ml s;
+                translate_ml expr;
+	       translate_proc k;
+	       make_expr_var_local ctrl])
+         else
+	   Cexpr_apply
+	     (make_instruction "rml_infer",
+	      [embed_ml s;
+               embed_ml expr;
+	       translate_proc k;
+	       make_expr_var_local ctrl])
+
+             
     | Kproc_compute (expr, k) ->
         begin match !version with
           | Combinator ->

@@ -1,0 +1,60 @@
+open Distribution
+  
+type tttbad =
+  | TTTbad1 of (int process)
+      
+let mktttbad (x: int process):tttbad = TTTbad1 x
+(* let ttt1bad (TTTbad1 p) : (int, float) model = p *)
+
+type 'a ttt =
+  | TTT1 of ((int, 'a) model)
+      
+let mkttt (x: (int, int) model):int ttt = TTT1 x
+let ttt1 (TTT1 p) : (int, float) model = p
+
+(* let ttt_ttt x = mkttt (ttt1 x) *)
+    
+let score a b = 3.0
+let speed = [3.0; 4.0]
+let noise = [4.0; 5.0]
+let process sensor a = ()
+let process display d = ()
+let rec bot () = bot()
+
+let f (x: 'a Distribution.t) = 42
+let fp (x:'b -> 'c -> ('a, float list) model) = x
+let fp2 (x:'b -> 'c -> 'a process) = x
+
+    
+let rec process hmm obs last_pos =
+  await obs([o]) in
+  let new_pos = sample (sph_gaussian last_pos speed) in
+  factor (score (sph_gaussian new_pos noise) o);
+  propose new_pos;
+  run hmm obs new_pos
+
+      
+let process main =
+  signal obs in
+  signal pos_dist in
+  infer pos_dist (hmm obs [0.; 0.]) ||
+  run sensor obs ||
+  run display pos_dist
+  
+let z1() = fp hmm
+(* let z2() = fp2 hmm *)
+    
+let process p  =
+  loop
+    factor (0.1)
+  end
+
+let process g () =
+  loop
+    sample (bot ())
+  end
+
+let process f () =
+  factor 0.1
+
+(* output: e : 't -> output e : unit *)

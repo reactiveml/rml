@@ -146,10 +146,11 @@ let rec type_expression i ppf x =
   | Ptype_constr (pi, l) ->
       line i ppf "Ptype_constr %a\n" fmt_ident pi;
       list i type_expression ppf l
-  | Ptype_process (ct,k) ->
-      line i ppf "Ptype_process(%s)\n"
+  | Ptype_process (ct,pe,k) ->
+      line i ppf "Ptype_process(%s)"
 	(Def_static.string_of_instantaneous k);
-      type_expression i ppf ct
+      type_expression i ppf ct;
+      line i ppf "<"; type_expression i ppf pe; line i ppf ">";
 ;;
 
 let rec pattern i ppf x =
@@ -276,6 +277,19 @@ let rec expression i ppf x =
       line i ppf "Pexpr_pause\n";
   | Pexpr_halt ->
       line i ppf "Pexpr_halt\n";
+  | Pexpr_factor (e) ->
+      line i ppf "Pexpr_factor";
+      expression i ppf e;
+  | Pexpr_sample (e) ->
+      line i ppf "Pexpr_sample";
+      expression i ppf e;
+  | Pexpr_propose (e) ->
+      line i ppf "Pexpr_propose";
+      expression i ppf e;
+  | Pexpr_infer (e1, e2) ->
+      line i ppf "Pexpr_infer";
+      expression i ppf e1;
+      expression i ppf e2;
   | Pexpr_emit (e) ->
       line i ppf "Pexpr_emit";
       expression i ppf e;

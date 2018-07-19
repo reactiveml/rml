@@ -45,7 +45,8 @@ let rec translate_te typ =
 	Ctype_product (List.map translate_te typ_list)
     | Cotype_constr (cstr, te_list) ->
 	Ctype_constr (cstr, List.map translate_te te_list)
-    | Cotype_process t ->
+    | Cotype_process (t, pe) ->
+        (* Avi: We are throwing away the propose effect in the ocaml type *)
 	let proc_type = make_rml_type "process" [translate_te t] in
 	proc_type.cte_desc
   in
@@ -332,8 +333,58 @@ and translate_proc e =
 	(make_instruction "rml_halt").cexpr_desc
 
     | Coproc_halt K_boi ->
-	(make_instruction "rml_halt_kboi").cexpr_desc
+       (make_instruction "rml_halt_kboi").cexpr_desc
 
+    | Coproc_factor expr ->
+       if Lco_misc.is_value expr then
+         Cexpr_apply
+           (make_instruction "rml_factor_v",
+            [translate_ml expr;])
+       else
+         Cexpr_apply
+           (make_instruction "rml_factor",
+            [embed_ml expr;])
+
+    | Coproc_sample expr ->
+       if Lco_misc.is_value expr then
+         Cexpr_apply
+           (make_instruction "rml_sample_v",
+            [translate_ml expr;])
+       else
+         Cexpr_apply
+           (make_instruction "rml_sample",
+            [embed_ml expr;])
+
+    | Coproc_propose expr ->
+       if Lco_misc.is_value expr then
+         Cexpr_apply
+           (make_instruction "rml_propose_v",
+            [translate_ml expr;])
+       else
+         Cexpr_apply
+           (make_instruction "rml_propose",
+            [embed_ml expr;])
+         
+    | Coproc_infer (s,e) ->
+       if Lco_misc.is_value s then
+         if Lco_misc.is_value e then
+	   Cexpr_apply
+	     (make_instruction "rml_infer_v_v",
+	      [translate_ml s; translate_ml e;])
+         else
+           Cexpr_apply
+	     (make_instruction "rml_infer_v_e",
+	      [translate_ml s; embed_ml e;])
+	else
+         if Lco_misc.is_value e then
+	   Cexpr_apply
+	     (make_instruction "rml_infer_e_v",
+	      [embed_ml s; translate_ml e;])
+         else
+           Cexpr_apply
+	     (make_instruction "rml_infer",
+	      [embed_ml s; embed_ml e;])
+            
     | Coproc_compute (expr) ->
 	Cexpr_apply
 	  (make_instruction "rml_compute",

@@ -183,8 +183,8 @@ let _ =
       "-I", Arg.String set_dir,
       "<dir> Add <dir> to the list of include directories";
       "-i", Arg.Set show_help, " List known rml directives at startup ";
-      "-dreactivity", Arg.Unit set_dreactivity,
-      " Display reactivity effects in process types";
+      "-dreactivity", Arg.Unit set_dreactivity, " Display reactivity effects in process types";
+
       "--", Arg.Rest (fun x -> ocaml := !ocaml ^ " " ^ x),
       " Sends all others options to the Ocaml toplevel"])
     (fun x -> ocaml := !ocaml ^ " " ^ x)

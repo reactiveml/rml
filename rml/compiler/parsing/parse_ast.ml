@@ -71,6 +71,10 @@ and expression_desc =
   | Pexpr_nothing
   | Pexpr_pause
   | Pexpr_halt
+  | Pexpr_factor of expression
+  | Pexpr_sample of expression
+  | Pexpr_propose of expression
+  | Pexpr_infer of expression * expression
   | Pexpr_emit of expression
   | Pexpr_emit_val of expression * expression
   | Pexpr_loop of expression
@@ -131,7 +135,7 @@ and type_expression_desc =
   | Ptype_arrow of type_expression * type_expression
   | Ptype_tuple of type_expression list
   | Ptype_constr of ident * type_expression list
-  | Ptype_process of type_expression * Def_static.instantaneous
+  | Ptype_process of type_expression * type_expression * Def_static.instantaneous
 
 and type_declaration =
   | Ptype_abstract

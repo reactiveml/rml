@@ -45,6 +45,37 @@ let expr_wrong_type_err exp actual_ty expected_ty =
     Types_printer.output expected_ty;
   raise Error
 
+let expr_wrong_propose_err exp {propose_effect = actual_ty} {propose_effect = expected_ty} =
+  begin match actual_ty, expected_ty with
+  | None, None ->
+     Format.fprintf !err_fmt
+       "%aThis expression does not propose a value and is used in a context that does \
+        not expect a value.  Why is this an error?.\n"
+       Location.print exp.expr_loc
+  | Some actual, None ->
+     Format.fprintf !err_fmt
+       "%aThis expression proposes a value of type %a \
+        and is used in a context that does \
+        not propose any values. Why is this an error?.\n"
+       Location.print exp.expr_loc
+       Types_printer.output actual
+  | None, Some expected ->
+     Format.fprintf !err_fmt
+       "%aThis expression does not propose a value \
+        and is used in a context that proposes \
+        values of type %a. Why is this an error?.\n"
+       Location.print exp.expr_loc
+    Types_printer.output expected
+  | Some actual, Some expected ->
+     Format.fprintf !err_fmt
+       "%aThis expression proposes a value of type %a,\n\
+        but is used in a context that proposes values of type %a.\n"
+       Location.print exp.expr_loc
+       Types_printer.output actual
+       Types_printer.output expected
+  end;
+  raise Error
+
 let patt_wrong_type_err patt actual_ty expected_ty =
   Format.fprintf !err_fmt
     "%aThis pattern has type %a,\n\
@@ -72,11 +103,39 @@ let emit_wrong_type_err loc actual_ty expected_ty =
     Types_printer.output expected_ty;
   raise Error
 
+let distribution_wrong_type_err v loc actual_ty expected_ty =
+  Format.fprintf !err_fmt
+    "%s: %aThe sampled expression has type %a,\n\
+     but is used with type %a.\n"
+    v
+    Location.print loc
+    Types_printer.output actual_ty
+    Types_printer.output expected_ty;
+  raise Error
+
 let run_wrong_type_err loc actual_ty expected_ty =
   Format.fprintf !err_fmt
     "%aThis expression has type %a,\n\
     but is used with type %a.\n"
     Location.print loc
+    Types_printer.output actual_ty
+    Types_printer.output expected_ty;
+  raise Error
+
+let infer_wrong_type_err loc actual_ty expected_ty =
+  Format.fprintf !err_fmt
+    "%aThis expression has type %a,\n\
+    but is used with type %a.\n"
+    Location.print loc
+    Types_printer.output actual_ty
+    Types_printer.output expected_ty;
+  raise Error
+
+let infer_signal_wrong_type_err loc1 actual_ty expected_ty =
+  Format.fprintf !err_fmt
+    "%aThis expression proposes values of type %a,\n\
+    but is used by infer with a signal of type %a.\n"
+    Location.print loc1
     Types_printer.output actual_ty
     Types_printer.output expected_ty;
   raise Error

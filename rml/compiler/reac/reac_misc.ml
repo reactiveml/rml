@@ -31,13 +31,14 @@ open Def_types
 open Types
 open Reactivity_effects
 
-let make_expr_all e typ static reactivity reactivity_effect loc =
+let make_expr_all e typ static reactivity reactivity_effect propose_effect loc =
   { expr_desc = e;
     expr_loc = loc;
     expr_type = typ;
     expr_static = static;
     expr_reactivity = reactivity;
-    expr_reactivity_effect = reactivity_effect; }
+    expr_reactivity_effect = reactivity_effect;
+    expr_propose_effect = propose_effect; }
 
 let make_expr e loc =
   { expr_desc = e;
@@ -45,7 +46,8 @@ let make_expr e loc =
     expr_type = no_type_expression;
     expr_static = Def_static.Process, Def_static.Dynamic Def_static.Dontknow;
     expr_reactivity = [];
-    expr_reactivity_effect = no_react; }
+    expr_reactivity_effect = no_react;
+    expr_propose_effect = propose_any(); }
 
 let make_patt p loc =
   { patt_desc = p;
@@ -267,6 +269,19 @@ let expr_free_vars e =
     | Rexpr_pause _ -> ()
 
     | Rexpr_halt _ -> ()
+
+    | Rexpr_factor e ->
+	expr_free_vars vars e
+
+    | Rexpr_sample e ->
+	expr_free_vars vars e
+
+    | Rexpr_propose e ->
+	expr_free_vars vars e
+
+    | Rexpr_infer (e1, e2) ->
+       expr_free_vars vars e1;
+       expr_free_vars vars e2
 
     | Rexpr_emit (e, None) ->
 	expr_free_vars vars e

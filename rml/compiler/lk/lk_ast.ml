@@ -84,6 +84,10 @@ and process_desc =
   | Kproc_halt of continue_begin_of_instant
   | Kproc_compute of expression * process
   | Kproc_seq of expression * process
+  | Kproc_factor of expression * process
+  | Kproc_sample of expression * process
+  | Kproc_propose of expression * process
+  | Kproc_infer of expression  * expression * process * ident
   | Kproc_emit of expression * process
   | Kproc_emit_val of expression * expression * process
   | Kproc_loop of ident * process
@@ -171,7 +175,7 @@ and type_expression_desc =
   | Ktype_arrow of type_expression * type_expression
   | Ktype_product of type_expression list
   | Ktype_constr of type_description global * type_expression list
-  | Ktype_process of type_expression
+  | Ktype_process of type_expression * type_expression
 
 and type_declaration =
   | Ktype_abstract

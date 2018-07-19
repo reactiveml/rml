@@ -77,6 +77,13 @@ let mkimpl d =
 let mkintf d =
   { pintf_desc = d; pintf_loc = symbol_rloc() }
 
+let mkmodel (a,b) c =
+  mkte(Ptype_process (a, b, c))
+
+let mkempty() = mkte (Ptype_constr(mkident_loc (Pdot ("Rml_empty","t")) (symbol_gloc()), []))
+let mkprocess a c =
+  mkte(Ptype_process (a, mkempty(), c))
+
 let rec mkexpr_until body cfg_when_opt_expr_opt_list =
   match cfg_when_opt_expr_opt_list with
   | [] -> raise Parse_error
@@ -223,6 +230,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token EXCEPTION           /* "exception" */
 %token EXTERNAL            /* "external" */
 %token FALSE               /* "false" */
+%token FACTOR              /* "factor" */
 %token <float> FLOAT
 %token FOR                 /* "for" */
 %token FUN                 /* "fun" */
@@ -289,6 +297,9 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token PRIVATE             /* "private" */
 %token PROC                /* "proc"  */
 %token PROCESS             /* "process" */
+%token MODEL               /* "model" */
+%token PROPOSE             /* "propose" */
+%token INFER               /* "infer" */
 %token QUESTION            /* "?" */
 %token QUESTIONQUESTION    /* "??" */
 %token QUOTE               /* "'" */
@@ -297,6 +308,7 @@ let unclosed opening_name opening_num closing_name closing_num =
 %token REC                 /* "rec" */
 %token RPAREN              /* "(" */
 %token RUN                 /* "run" */
+%token SAMPLE              /* "sample" */
 %token SEMI                /* ";" */
 %token SEMISEMI            /* ";;" */
 %token SHARP               /* "#" */
@@ -579,6 +591,14 @@ expr:
       { mkexpr(Pexpr_emit $2 ) }
   | EMIT simple_expr simple_expr
       { mkexpr(Pexpr_emit_val($2, $3)) }
+  | FACTOR simple_expr
+      { mkexpr(Pexpr_factor $2 ) }
+  | SAMPLE simple_expr
+    { mkexpr(Pexpr_sample $2 ) }
+  | PROPOSE simple_expr
+    { mkexpr(Pexpr_propose $2 ) }
+  | INFER simple_expr simple_expr
+    { mkexpr(Pexpr_infer($2, $3)) }
   | SIGNAL signal_comma_list IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr
@@ -1053,6 +1073,12 @@ simple_core_type:
   | LPAREN core_type_comma_list RPAREN
       { match $2 with [sty] -> sty | _ -> raise Parse_error }
 
+simple_core_type_2:
+  | LPAREN core_type_comma_list RPAREN
+    { match $2 with
+      | [snd; fst] -> (fst, snd)
+      | _ -> raise Parse_error }
+
 simple_core_type2:
     QUOTE ident
       { mkte(Ptype_var $2) }
@@ -1061,13 +1087,19 @@ simple_core_type2:
   | simple_core_type2 type_longident
       { mkte(Ptype_constr($2, [$1])) }
   | LPAREN core_type_comma_list RPAREN type_longident
-      { mkte(Ptype_constr($4, List.rev $2)) }
+    { mkte(Ptype_constr($4, List.rev $2)) }
   | simple_core_type PROCESS
-      { mkte(Ptype_process ($1, Def_static.Dontknow)) }
+      { mkprocess $1 Def_static.Dontknow }
   | simple_core_type PROCESS PLUS
-      { mkte(Ptype_process ($1, Def_static.Noninstantaneous)) }
+      { mkprocess $1 Def_static.Noninstantaneous }
   | simple_core_type PROCESS MINUS
-      { mkte(Ptype_process ($1, Def_static.Instantaneous)) }
+      { mkprocess $1 Def_static.Instantaneous }
+  | simple_core_type_2 MODEL
+      { mkmodel $1 Def_static.Dontknow }
+  | simple_core_type_2 MODEL PLUS
+      { mkmodel $1 Def_static.Noninstantaneous }
+  | simple_core_type_2 MODEL MINUS
+      { mkmodel $1 Def_static.Instantaneous }
 ;
 simple_core_type_or_tuple:
     simple_core_type                            { $1 }

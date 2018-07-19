@@ -170,6 +170,10 @@ let rec check_expr_one expr =
   | Rexpr_nothing
   | Rexpr_pause _
   | Rexpr_halt _
+  | Rexpr_factor _
+  | Rexpr_sample _ 
+  | Rexpr_propose _ 
+  | Rexpr_infer _ 
   | Rexpr_emit (_, _)
   | Rexpr_fordopar (_, _, _, _, _)
   | Rexpr_par _

@@ -71,7 +71,7 @@ let rec add_type bv ty =
   | Ptype_arrow (t1, t2) -> add_type bv t1; add_type bv t2
   | Ptype_tuple tl -> List.iter (add_type bv) tl
   | Ptype_constr (id, tl) -> add bv id; List.iter (add_type bv) tl
-  | Ptype_process (t, _) ->  add_type bv t
+  | Ptype_process (t, pe, _) ->  add_type bv t; add_type bv pe
 
 let add_type_declaration bv td =
   match td with
@@ -132,6 +132,10 @@ let rec add_expr bv exp =
   | Pexpr_nothing -> ()
   | Pexpr_pause -> ()
   | Pexpr_halt -> ()
+  | Pexpr_factor(e1) -> add_expr bv e1
+  | Pexpr_sample(e1) -> add_expr bv e1
+  | Pexpr_propose(e1) -> add_expr bv e1
+  | Pexpr_infer(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_emit(e1) -> add_expr bv e1
   | Pexpr_emit_val(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_loop(e1) -> add_expr bv e1

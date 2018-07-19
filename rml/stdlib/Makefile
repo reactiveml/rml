@@ -63,9 +63,11 @@ sys.rzi: pervasives.rzi
 unix.rzi: pervasives.rzi
 weak.rzi: pervasives.rzi
 
-rml_list.rzi: pervasives.rzi list.rzi
+rml_list.rzi: pervasives.rzi list.rzi rml_empty.rzi
 rml_process_manager.rzi: pervasives.rzi
 thread/rml_async.rzi: pervasives.rzi thread/rml_async_body.rzi
 thread/rml_async_body.rzi: pervasives.rzi
+distribution.rzi: pervasives.rzi
+rml_empty.rzi: pervasives.rzi
 
 .PHONY:opt byte all install uninstall clean realclean

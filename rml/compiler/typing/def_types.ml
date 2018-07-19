@@ -50,11 +50,14 @@ and type_expression_desc =
   | Type_product of type_expression list
   | Type_constr of type_constr global * type_expression list
   | Type_link of type_expression
-  | Type_process of type_expression * process_info
+  | Type_process of type_expression * type_expression * process_info
 
 and process_info =
-    { mutable proc_react: reactivity_effect; }
+  { mutable proc_react: reactivity_effect; }
 
+and propose_effect =
+  { mutable propose_effect: type_expression option; }
+  
 and process_static =
   | Proc_def of Def_static.instantaneous ref
   | Proc_link of process_static

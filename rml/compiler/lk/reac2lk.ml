@@ -73,8 +73,8 @@ let rec translate_te typ =
 	Ktype_product (List.map translate_te typ_list)
     | Rtype_constr (cstr, te_list) ->
 	Ktype_constr (cstr, List.map translate_te te_list)
-    | Rtype_process (t, _) ->
-	Ktype_process (translate_te t)
+    | Rtype_process (t, pe, _) ->
+	Ktype_process (translate_te t, translate_te pe)
   in
   make_te ktyp typ.te_loc
 
@@ -301,6 +301,12 @@ and translate_proc e k (ctrl: ident) =
 	| Rexpr_nothing -> k.kproc_desc
 
 	| Rexpr_pause kboi -> Kproc_pause (kboi, k, ctrl)
+
+        | Rexpr_factor e -> Kproc_factor (translate_ml e, k)
+        | Rexpr_sample e -> Kproc_sample (translate_ml e, k)
+        | Rexpr_propose e -> Kproc_propose (translate_ml e, k)
+	| Rexpr_infer (s, e) ->
+	    Kproc_infer (translate_ml s, translate_ml e, k, ctrl)
 
 	| Rexpr_halt kboi -> Kproc_halt kboi
 

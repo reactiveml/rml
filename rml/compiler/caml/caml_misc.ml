@@ -258,7 +258,8 @@ let rec ctype_expr_of_type_expr typ =
 	in
 	Ctype_constr (cstr_desc, List.map ctype_expr_of_type_expr te_list)
 
-    | Type_process (t, _) ->
+    | Type_process (t, pe, _) ->
+       (* Avi: We are throwing away the propose effect in the ocaml type *)
 	let proc_type = make_rml_type "process" [ctype_expr_of_type_expr t] in
 	proc_type.cte_desc
 
