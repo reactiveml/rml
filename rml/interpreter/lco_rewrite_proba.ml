@@ -117,7 +117,7 @@ module Distribution = struct
 
 end
 
-module Rml_interpreter : Lco_interpreter.S =
+module Rml_interpreter (* : Lco_interpreter.S *) =
   functor (Event: Sig_env.S) ->
   struct
     exception RML
@@ -145,7 +145,7 @@ module Rml_interpreter : Lco_interpreter.S =
         st_id = id; }
 
     let cp_state src id =
-      { st_resample = src.st_resample;
+      { st_resample = false;
         st_score = src.st_score;
         st_id = id; }
 
@@ -478,7 +478,9 @@ module Rml_interpreter : Lco_interpreter.S =
     let rec rml_seq (p1 : 'a expr) (p2 : 'b expr) : 'b expr =
       fun state ->
         match p1 state with
-        | TERM _, _ -> SUSP, p2
+        | TERM _, _ ->
+          move := true;
+          SUSP, p2
         | (SUSP | STOP) as alpha, p1' -> (alpha, rml_seq p1' p2)
 
 
@@ -1207,8 +1209,14 @@ module Rml_interpreter : Lco_interpreter.S =
 
     let rml_factor_v score =
       fun state ->
+        let state =
+          match state with
+          | Some s -> s
+          | None -> make_state (-1)
+        in
         state.st_score <- state.st_score +. score;
         state.st_resample <- true;
+        move := true;
         TERM (), rml_nothing
 
     let rml_factor score_expr =
@@ -1233,6 +1241,16 @@ module Rml_interpreter : Lco_interpreter.S =
       else
         loop 0
 
+    let rec list_replace_assoc x f l =
+      begin match l with
+      | [] -> [ (x, f None) ]
+      | (y, v) :: l ->
+          if x = y then
+            (x, f (Some v)) :: l
+          else
+            (y, v) :: list_replace_assoc x f l
+      end
+
     let do_resample body_list =
       let at_least_one = ref false in
       let susp =
@@ -1240,8 +1258,8 @@ module Rml_interpreter : Lco_interpreter.S =
           (fun (status, _, state) ->
              match status with
              | SUSP ->
-               at_least_one := !at_least_one && state.st_resample;
-               state.st_resample
+                 at_least_one := !at_least_one || state.st_resample;
+                 state.st_resample
              | STOP | TERM _ -> true)
           body_list
       in
@@ -1260,6 +1278,7 @@ module Rml_interpreter : Lco_interpreter.S =
           Distribution.Dist_support
             (List.map (fun (b, w) -> (b, w /. norm)) weights)
         in
+        move := true;
         List.map
           (fun (_, _, old_state) ->
              let (status, p, state) = Distribution.draw dist in
@@ -1267,6 +1286,24 @@ module Rml_interpreter : Lco_interpreter.S =
           particules
       else
         particules
+
+    let normalize particules =
+      let norm = float (List.length particules) in
+      let return_histogram =
+        List.fold_left
+          (fun acc (status, _, _) ->
+             begin match status with
+             | TERM v ->
+               list_replace_assoc v
+                 (function None -> 1
+                         | Some n -> n + 1)
+                 acc
+             | SUSP | STOP -> raise RML
+             end)
+          [] particules
+      in
+      Distribution.Dist_support
+        (List.map (fun (v, n) -> (v, float n /. norm)) return_histogram)
 
     let rec rml_infer_body particules =
       fun state ->
@@ -1276,7 +1313,7 @@ module Rml_interpreter : Lco_interpreter.S =
             (fun i body ->
                match body with
                | SUSP, p, ({ st_resample = false} as sample_state) ->
-                 let alpha, p' = p sample_state in
+                 let alpha, p' = p (Some sample_state) in
                  infer_status := gamma !infer_status alpha;
                  alpha, p', sample_state
                | _, _, _ ->
@@ -1286,7 +1323,22 @@ module Rml_interpreter : Lco_interpreter.S =
         let particules =
           resample particules
         in
-        !infer_status, rml_infer_body particules
+        match !infer_status with
+        | TERM _ ->
+          let v = normalize particules in
+          TERM v, rml_compute (fun () -> v)
+        | SUSP -> SUSP, rml_infer_body particules
+        | STOP ->
+          let particules =
+            List.map
+              (fun body ->
+                 match body with
+                 | SUSP, _, _ -> assert false
+                 | STOP, p, state ->  SUSP, p, state
+                 | TERM _, _, state -> body)
+              particules
+          in
+          STOP, rml_infer_body particules
 
     let rml_infer_v_v propose_s p =
       fun state ->
@@ -1294,7 +1346,7 @@ module Rml_interpreter : Lco_interpreter.S =
         let particules =
           list_init nb_particules (fun i -> (SUSP, f, make_state i))
         in
-        rml_infer_body particules
+        rml_infer_body particules state
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
