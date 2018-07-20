@@ -6,7 +6,8 @@ THEAD_TYPE=-thread
 RUNTIME=Lco_rewrite_proba
 RUNTIME_DIR=lco_rewrite_proba
 
-SRC=	sig_env.ml \
+SRC=	distribution.ml \
+	sig_env.ml \
 	lco_interpreter.mli \
 	lco_rewrite_proba.ml \
 	rml_machine.ml \
@@ -14,7 +15,8 @@ SRC=	sig_env.ml \
 	rml_machine_hook_unix.ml \
 	implem_lco_rewrite_proba_record.ml \
 
-RMLLIB_OBJ=	sig_env.cmo \
+RMLLIB_OBJ=	distribution.cmo \
+	sig_env.cmo \
 	lco_rewrite_proba.cmo \
 	rml_machine.cmo \
 	rml_machine_hook.cmo \
@@ -37,6 +39,9 @@ lco_rewrite_proba/rml_async_body.cmo: OCAMLFLAGS += -rectypes
 lco_rewrite_proba/rml_async_body.cmx: OCAMLOPTFLAGS += -rectypes
 lco_rewrite_proba/rml_async.cmo: OCAMLFLAGS += -rectypes
 lco_rewrite_proba/rml_async.cmx: OCAMLOPTFLAGS += -rectypes
+distribution.cmo: OCAMLFLAGS += -rectypes
+distribution.cmx: OCAMLOPTFLAGS += -rectypes
+distribution.cmi: OCAMLFLAGS += -rectypes
 
 
 include Makefile-interpreter.common

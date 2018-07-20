@@ -1,5 +1,40 @@
-type 'a t
+(**********************************************************************)
+(*                                                                    *)
+(*                           ReactiveML                               *)
+(*                    http://reactiveML.org                           *)
+(*                    http://rml.inria.fr                             *)
+(*                                                                    *)
+(*                          Louis Mandel                              *)
+(*                                                                    *)
+(*  Copyright 2002, 2007 Louis Mandel.  All rights reserved.          *)
+(*  This file is distributed under the terms of the GNU Library       *)
+(*  General Public License, with the special exception on linking     *)
+(*  described in file ../LICENSE.                                     *)
+(*                                                                    *)
+(*  ReactiveML has been done in the following labs:                   *)
+(*  - theme SPI, Laboratoire d'Informatique de Paris 6 (2002-2005)    *)
+(*  - Verimag, CNRS Grenoble (2005-2006)                              *)
+(*  - projet Moscova, INRIA Rocquencourt (2006-2007)                  *)
+(*                                                                    *)
+(**********************************************************************)
+
+type proba = float
+type log_proba = float
+
+type 'a t =
+    Dist_sampler of ((unit -> 'a) * ('a -> log_proba))
+  | Dist_support of ('a * proba) list
+
+val draw : 'a t -> 'a
+
+val score : 'a t -> 'a -> log_proba
+
+val draw_and_score : 'a t -> 'a * log_proba
+
+val bernoulli : proba -> bool t
+
+val gaussian : float -> float -> float t
+
+val multivariate : 'a t list -> 'a list t
 
 val sph_gaussian : float list -> float list -> float list t
-
-
