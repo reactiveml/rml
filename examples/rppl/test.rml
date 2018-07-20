@@ -1,0 +1,30 @@
+let process p =
+  signal x in
+  signal s in
+  for i = 1 to 10 do pause done;
+  emit s 0.5
+  ||
+  let dist =
+    infer x
+      (process (
+       await s([t]) in
+       let b = sample (Distribution.bernoulli t) in
+       if b then
+         (factor (-0.1); pause; 1)
+       else
+         (factor 0.; pause; 2)))
+  in
+  begin match dist with
+  | Distribution.Dist_support l ->
+      List.iter
+        (fun (n,p) ->
+          print_int n; print_string ": "; print_float p; print_endline "")
+        l
+  | _ -> assert false
+  end;
+  ()
+
+
+let () =
+  run p;
+
