@@ -8,6 +8,7 @@ RUNTIME_DIR=lco_n_proba
 
 SRC=	sig_env.ml \
 	rml_types.ml \
+	rml_empty.ml \
 	sig_env_clock.ml \
 	lco_interpreter.mli \
 	runtime.ml \
@@ -20,6 +21,7 @@ SRC=	sig_env.ml \
 
 RMLLIB_OBJ=	sig_env.cmo \
 	rml_types.cmo \
+	rml_empty.cmo \
 	sig_env_clock.cmo \
 	runtime.cmo \
 	seq_runtime.cmo \

@@ -68,7 +68,8 @@ module Rml_interpreter : Lco_interpreter.S =
     and current = unit step list
     and join_point = int ref option
     and 'a expr = 'a step -> control_tree -> join_point -> unit step
-    and 'a process = unit -> 'a expr
+    and 'a process = ('a, unit) model
+    and ('a, 'b) model = unit -> 'a expr
 
 
     let rec rev_app x1 x2 =

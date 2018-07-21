@@ -7,6 +7,7 @@ RUNTIME=Lco_n
 RUNTIME_DIR=lco_n
 
 SRC=	sig_env.ml \
+	rml_empty.ml \
 	lco_interpreter.mli \
 	lco_ctrl_tree_n.ml \
 	rml_machine.ml \
@@ -15,6 +16,7 @@ SRC=	sig_env.ml \
 	implem_lco_ctrl_tree_n_record.ml \
 
 RMLLIB_OBJ=	sig_env.cmo \
+	rml_empty.cmo \
 	lco_ctrl_tree_n.cmo \
 	rml_machine.cmo \
 	rml_machine_hook.cmo \

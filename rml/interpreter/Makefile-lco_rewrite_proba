@@ -7,6 +7,7 @@ RUNTIME=Lco_rewrite_proba
 RUNTIME_DIR=lco_rewrite_proba
 
 SRC=	distribution.ml \
+	rml_empty.ml \
 	sig_env.ml \
 	lco_interpreter.mli \
 	lco_rewrite_proba.ml \
@@ -16,6 +17,7 @@ SRC=	distribution.ml \
 	implem_lco_rewrite_proba_record.ml \
 
 RMLLIB_OBJ=	distribution.cmo \
+	rml_empty.cmo \
 	sig_env.cmo \
 	lco_rewrite_proba.cmo \
 	rml_machine.cmo \

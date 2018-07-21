@@ -42,7 +42,8 @@ module Rml_interpreter : Lco_interpreter.S =
 
     and 'a expr = unit -> 'a status * 'a expr
 
-    and 'a process = unit -> 'a expr
+    and 'a process = ('a, unit) model
+    and ('a, 'b) model = unit -> 'a expr
 
 
 (* Flag pour le calcul de point fix *)

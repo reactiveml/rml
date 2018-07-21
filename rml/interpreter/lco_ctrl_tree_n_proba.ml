@@ -47,7 +47,8 @@ module Rml_interpreter =
       'a step ->
       R.state_frame ->
       unit step
-    and 'a process = unit -> 'a expr
+    and 'a process = ('a, unit) model
+    and ('a, 'b) model = unit -> 'a expr
 
     type ('a, 'b) event = ('a, 'b) R.event
     type 'a memory = ('a -> 'a, 'a) R.event
