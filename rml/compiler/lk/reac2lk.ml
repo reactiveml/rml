@@ -305,8 +305,8 @@ and translate_proc e k (ctrl: ident) =
         | Rexpr_factor e -> Kproc_factor (translate_ml e, k)
         | Rexpr_sample e -> Kproc_sample (translate_ml e, k)
         | Rexpr_propose e -> Kproc_propose (translate_ml e, k)
-	| Rexpr_infer (s, e, oe3) ->
-	    Kproc_infer (translate_ml s, translate_ml e, Misc.opt_map translate_ml oe3, k, ctrl)
+	| Rexpr_infer (c, s, e) ->
+	    Kproc_infer (Misc.infer_config_map translate_ml c, translate_ml s, translate_ml e, k, ctrl)
 
 	| Rexpr_halt kboi -> Kproc_halt kboi
 

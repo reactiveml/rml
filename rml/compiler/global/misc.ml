@@ -23,6 +23,8 @@
 
 (* $Id$ *)
 
+open Asttypes
+   
 (* version of the compiler *)
 let version = Version.version
 
@@ -158,6 +160,12 @@ let opt_map f = function
 let opt_iter f = function
     Some x -> f x
   | None -> ()
+
+let infer_config_map f {infer_particles = p; infer_gather = g; } =
+  {infer_particles = opt_map f p; infer_gather = opt_map f g; }
+
+let infer_config_iter f {infer_particles = p; infer_gather = g; } =
+  opt_iter f p; opt_iter f g
 
 (* association table with memoization *)
 class name_assoc_table f =

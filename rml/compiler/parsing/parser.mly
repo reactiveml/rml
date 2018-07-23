@@ -80,8 +80,25 @@ let mkintf d =
 let mkmodel (a,b) c =
   mkte(Ptype_process (a, b, c))
 
-let check_infer_particle_id lid =
-  if lid <> "particles" then raise Parse_error
+let infer_arg p (x,y) =
+  if x = "pgather"
+  then if p.infer_gather = None
+       then {p with infer_gather = Some y}
+       else raise Parse_error
+  else if x = "particles"
+  then if p.infer_gather = None
+       then {p with infer_particles = Some y}
+       else raise Parse_error
+  else raise Parse_error
+  
+let rec infer_args_acc p = function
+  | [] -> p
+  | x::l -> infer_args_acc (infer_arg p x) l
+
+let infer_args = infer_args_acc ({ infer_particles = None; infer_gather = None})
+  
+let mkinfer (a,b,c) =
+  mkexpr(Pexpr_infer(infer_args c, a,b))
     
 let mkempty() = mkte (Ptype_constr(mkident_loc (Pdot ("Rml_empty","t")) (symbol_gloc()), []))
 let mkprocess a c =
@@ -505,6 +522,12 @@ seq_expr:
   | expr SEMI                     { reloc_expr $1 }
   | expr SEMI seq_expr            { mkexpr(Pexpr_seq($1, $3)) }
 ;
+labeled_expr:
+  LABEL simple_expr             { ($1, $2) }
+labeled_expr_list:
+   /* empty */                     { [] }
+  | labeled_expr_list labeled_expr { $2 :: $1 }
+
 expr:
     simple_expr %prec below_SHARP
       { $1 }
@@ -600,12 +623,8 @@ expr:
     { mkexpr(Pexpr_sample $2 ) }
   | PROPOSE simple_expr
     { mkexpr(Pexpr_propose $2 ) }
-  | INFER simple_expr simple_expr
-    { mkexpr(Pexpr_infer($2, $3, None)) }
-  | INFER LABEL simple_expr simple_expr simple_expr
-    { check_infer_particle_id $2; mkexpr(Pexpr_infer($4, $5, Some ($3))) }
-  | INFER simple_expr LABEL simple_expr simple_expr
-    { check_infer_particle_id $3; mkexpr(Pexpr_infer($2, $5, Some ($4))) }
+  | INFER labeled_expr_list simple_expr labeled_expr_list simple_expr
+    { mkinfer($3, $5, List.rev_append $2 (List.rev $4)) }
   | SIGNAL signal_comma_list IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr

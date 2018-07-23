@@ -549,7 +549,7 @@ let instantaneous_loop_expr =
       | Rexpr_propose e ->
 	 analyse vars e
 
-      | Rexpr_infer (e1, e2, oe3) ->
+      | Rexpr_infer (c, e1, e2) ->
          let ty1 = analyse vars e1 in
          if not (Env.equal Env.empty ty1) then rec_warning e1;
 
@@ -557,7 +557,12 @@ let instantaneous_loop_expr =
 	 let ty2' = Env.plus ty2 (-1) in
 	 if not (Env.positive ty2') then rec_warning expr;
 
-         begin match oe3 with
+         begin match c.infer_particles with
+         | Some e3 -> let ty3 = analyse vars e3 in
+                      if not (Env.equal Env.empty ty3) then rec_warning e3
+         | None -> ()
+         end;
+         begin match c.infer_gather with
          | Some e3 -> let ty3 = analyse vars e3 in
                       if not (Env.equal Env.empty ty3) then rec_warning e3
          | None -> ()

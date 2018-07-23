@@ -279,10 +279,10 @@ let expr_free_vars e =
     | Rexpr_propose e ->
 	expr_free_vars vars e
 
-    | Rexpr_infer (e1, e2, oe3) ->
+    | Rexpr_infer (c, e1, e2) ->
+       Misc.infer_config_iter (expr_free_vars vars) c;
        expr_free_vars vars e1;
        expr_free_vars vars e2;
-       Misc.opt_iter (expr_free_vars vars) oe3
 
     | Rexpr_emit (e, None) ->
 	expr_free_vars vars e

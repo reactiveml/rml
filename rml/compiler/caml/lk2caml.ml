@@ -450,8 +450,13 @@ and translate_proc e =
             [embed_ml expr;
              translate_proc k])
 
-    | Kproc_infer (s, expr, oe3, k, ctrl) ->
-       let e3' = make_optional_expr (Misc.opt_map embed_ml oe3) in
+    | Kproc_infer (c, s, expr, k, ctrl) ->
+              let particles = make_optional_expr
+                         (Misc.opt_map embed_ml c.infer_particles)
+       in
+       let defgath = make_optional_expr
+                       (Misc.opt_map embed_ml c.infer_gather)
+       in
        if Lk_misc.is_value s then
          if Lk_misc.is_value expr then
 	   Cexpr_apply
@@ -459,7 +464,8 @@ and translate_proc e =
 	      [
                 translate_ml s;
                 translate_ml expr;
-                e3';
+                particles;
+                defgath;
 	        translate_proc k;
 	        make_expr_var_local ctrl])
          else
@@ -468,7 +474,8 @@ and translate_proc e =
 	      [
                 translate_ml s;
                 embed_ml expr;
-                e3';
+                particles;
+                defgath;
 	        translate_proc k;
 	        make_expr_var_local ctrl])
        else
@@ -477,7 +484,8 @@ and translate_proc e =
 	     (make_instruction "rml_infer_e_v",
 	      [ embed_ml s;
                 translate_ml expr;
-                e3';
+                particles;
+                defgath;
 	       translate_proc k;
 	       make_expr_var_local ctrl])
          else
@@ -485,7 +493,8 @@ and translate_proc e =
 	     (make_instruction "rml_infer",
 	      [embed_ml s;
                embed_ml expr;
-               e3';
+                particles;
+                defgath;
 	       translate_proc k;
 	       make_expr_var_local ctrl])
 

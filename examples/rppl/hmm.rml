@@ -1,5 +1,23 @@
 open Distribution
-  
+
+let rec bernoulli a = bernoulli a
+let process p =
+  let b = sample (bernoulli 0.5) in
+  if b then propose 42
+  else ()
+      
+let process main =
+  signal s in
+  infer s p
+
+let process main2 =
+  signal s in
+  infer s ~particles:400 ~pgather:([], (fun x y -> List.sort compare (x :: y))) p
+
+let process main3 =
+  signal s in
+  infer ~particles:400 s ~pgather:(0, (+)) p
+
 type tttbad =
   | TTTbad1 of (int process)
       

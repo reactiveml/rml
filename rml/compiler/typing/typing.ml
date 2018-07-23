@@ -896,7 +896,7 @@ let rec type_of_expression env expr =
        unify_propose e pe {propose_effect = Some actual_ty};
        type_unit, react_epsilon(), pe
 
-    | Rexpr_infer (s, e, oe3) ->
+    | Rexpr_infer (c, s, e) ->
        let ty_s, k_s, pe_s = type_of_expression env s in
         check_epsilon k_s;
 	let ty_out, _ =
@@ -905,21 +905,34 @@ let rec type_of_expression env expr =
 	  with Unify ->
 	    non_event_err s
 	in
+        begin match c.infer_particles with
+        | Some e3 -> type_expect_eps env e3 type_int pe_s
+        | None -> ()
+        end;
+
 	let ty_e, k_e, pe_e = type_of_expression env e in
         check_epsilon k_e;
         unify_propose e pe_s pe_e;
         let ty_p = new_var() in
         let k_p = new_react_var () in
-        let ty_pe = new_var() in
-        unify_infer e.expr_loc
-          (process ty_p ty_pe { proc_react = (* raw *) k_p; })
-          ty_e;
-        unify_infer_signal e.expr_loc ty_out (type_distribution ty_pe);
+        let ty_pe_in = new_var() in
+        let ty_pe_out = new_var() in
 
-        begin match oe3 with
-        | Some e3 -> type_expect_eps env e3 type_int pe_s
-        | None -> ()
-        end;
+        begin match c.infer_gather with
+	  | None ->
+	      unify_infer e.expr_loc
+		ty_pe_out (constr_notabbrev list_ident [ty_pe_in])
+	  | Some (defaultcomb) ->
+	     type_expect_eps env defaultcomb (
+                 product [ ty_pe_out;
+	                   (arrow ty_pe_in (arrow ty_pe_out ty_pe_out))]) pe_s
+	end;
+
+        unify_infer e.expr_loc
+          (process ty_p ty_pe_in { proc_react = (* raw *) k_p; })
+          ty_e;
+        unify_infer_signal e.expr_loc ty_out (type_distribution (Types.constr_notabbrev option_ident [ty_pe_out]));
+
         type_distribution ty_p, react_run k_p, pe_s
         
     | Rexpr_loop (None, p) ->

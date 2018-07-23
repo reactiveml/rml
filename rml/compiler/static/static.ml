@@ -336,9 +336,10 @@ let rec static_expr ctx e =
         then Dynamic Dontknow
         else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_infer (e1, e2, oe3) ->
+    | Rexpr_infer (c, e1, e2) ->
        if static_expr ML e1 = Static && static_expr ML e2 = Static &&
-            (match oe3 with | Some e3 -> static_expr ML e3 = Static | None -> true)
+            (match c.infer_particles with | Some e3 -> static_expr ML e3 = Static | None -> true) && 
+              (match c.infer_gather with | Some e3 -> static_expr ML e3 = Static | None -> true)
 	then Dynamic Dontknow
 	else expr_wrong_static_err !Misc.err_fmt e
 
