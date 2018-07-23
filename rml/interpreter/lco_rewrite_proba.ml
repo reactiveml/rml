@@ -34,46 +34,65 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
   struct
     exception RML
 
-    type ('a, 'b) event = ('a, 'b) Event.t
+    type ('a, 'b) event =
+      { evt_n: ('a, 'b) Event.t;
+        evt_move: bool ref; }
 
     and 'a event_cfg = unit -> (unit -> bool) * (unit -> 'a)
 
     and 'a status = SUSP | STOP | TERM of 'a
 
-    and ('a, 'b) expr = 'b state option -> 'a status * ('a, 'b) expr
+    and ('a, 'b) expr = 'b state -> 'a status * ('a, 'b) expr
 
     and 'b state =
-      { mutable st_proposition: 'b list;
+      { st_move: bool ref;
+        st_particle: 'b particle_state; }
+    and 'b particle_state =
+      { st_particle_id: int;
+        mutable st_propositions: 'b list;
         mutable st_resample: bool;
-        mutable st_score: float;
-        st_id: int; }
+        mutable st_score: float; }
+    (* and 'b immutable_particle_state = *)
+    (*   { im_st_particle_id: int; *)
+    (*     mutable im_st_propositions: 'b list; *)
+    (*     mutable im_st_resample: bool; *)
+    (*     mutable im_st_score: float; } *)
 
     and ('a, 'b) model = unit -> ('a, 'b) expr
 
-    and 'a process = ('a, unit) model
+    and 'a process = ('a, Rml_empty.t) model
 
 (* manipulation de l'état *)
-    let make_state id =
-      { st_proposition = [];
+    let make_particle_state particle_id =
+      { st_particle_id = particle_id;
+        st_propositions = [];
         st_resample = false;
-        st_score = 0.;
-        st_id = id; }
+        st_score = 0.; }
 
-    let cp_state src id =
-      { st_proposition = src.st_proposition;
+    let make_state move particle_id =
+      { st_move = move;
+        st_particle = make_particle_state particle_id; }
+
+    let cp_particle_state src particle_id =
+      { st_particle_id = particle_id;
+        st_propositions = src.st_propositions;
         st_resample = false;
-        st_score = src.st_score;
-        st_id = id; }
+        st_score = src.st_score; }
+
 
 (* Flag pour le calcul de point fixe *)
-    let move = ref false
+    let global_state = make_state (ref false) (-1)
     let eoi = ref false
 
 
 (* creation d'evenements *)
-    let new_evt_combine = Event.create
+    let new_evt_combine default gather =
+      { evt_n = Event.create default gather;
+        evt_move = global_state.st_move; }
 
-    let new_evt_memory_combine = Event.create_memory
+    let new_evt_memory_combine default gather =
+      { evt_n = Event.create_memory default gather;
+        evt_move = global_state.st_move; }
 
     let new_evt() =
       new_evt_combine [] (fun x y -> x :: y)
@@ -81,13 +100,17 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 
 
 (* ------------------------------------------------------------------------ *)
-    let rml_pre_status = Event.pre_status
+    let rml_pre_status evt =
+      Event.pre_status evt.evt_n
 
-    let rml_pre_value = Event.pre_value
+    let rml_pre_value evt =
+      Event.pre_value evt.evt_n
 
-    let rml_last = Event.last
+    let rml_last evt =
+      Event.last evt.evt_n
 
-    let rml_default = Event.default
+    let rml_default evt =
+      Event.default evt.evt_n
 
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal = new_evt
@@ -102,8 +125,8 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (**************************************)
     let cfg_present' evt =
       fun () ->
-        (fun () -> Event.status evt),
-        (fun () -> Event.value evt)
+        (fun () -> Event.status evt.evt_n),
+        (fun () -> Event.value evt.evt_n)
 
     let cfg_present evt_expr =
       fun () ->
@@ -176,16 +199,20 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (**************************************)
 (* emit                               *)
 (**************************************)
+    let set_emit state evt v =
+      state.st_move := true;
+      evt.evt_move := true;
+      Event.emit evt.evt_n v
+
     let rml_emit_val' evt e =
       fun state ->
-	move := true;
-	Event.emit evt (e());
-	(TERM (), rml_nothing)
+        set_emit state evt (e());
+        (TERM (), rml_nothing)
 
     let rml_emit_val expr_evt e =
       fun state ->
 	let evt = expr_evt () in
-	rml_emit_val' evt e ()
+	rml_emit_val' evt e state
 
     let rml_emit' evt =
       rml_emit_val' evt (fun () -> ())
@@ -193,11 +220,10 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
     let rml_emit expr_evt =
       fun state ->
 	let evt = expr_evt () in
-	rml_emit_val' evt (fun () -> ()) ()
+	rml_emit_val' evt (fun () -> ()) state
 
     let rml_expr_emit_val evt v =
-      move := true;
-      Event.emit evt v
+      set_emit global_state evt v
 
     let rml_expr_emit evt =
       rml_expr_emit_val evt ()
@@ -212,7 +238,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	  then
 	    (STOP, self)
 	  else
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
 	      (TERM (), rml_nothing)
 	    else
@@ -255,9 +281,9 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	  if !eoi
 	  then
 	    let x =
-	      if Event.status evt
-	      then Event.value evt
-	      else Event.default evt
+	      if Event.status evt.evt_n
+	      then Event.value evt.evt_n
+	      else Event.default evt.evt_n
 	    in
 	    let f_body = p x in
 	    (STOP, f_body)
@@ -280,9 +306,9 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	  then
 	    (STOP, self)
 	  else
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
-	      let x = Event.one evt in
+	      let x = Event.one evt.evt_n in
 	      let f_body = p x in
 	      f_body state
 	    else
@@ -297,13 +323,13 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (**************************************)
 (* await_all_match                    *)
 (**************************************)
-    let rml_await_all_match' evt matching p =
+    let rml_await_all_match' evt matching p : _ expr=
       let rec self =
 	fun state ->
 	  if !eoi
 	  then
-	    let v = Event.value evt in
-	    if (Event.status evt) && (matching v)
+	    let v = Event.value evt.evt_n in
+	    if (Event.status evt.evt_n) && (matching v)
 	    then
 	      let x = v in
 	      let f_body = p x in
@@ -354,7 +380,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	  then
 	    (STOP, p2)
 	  else
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
 	      p1 state
 	    else
@@ -395,7 +421,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
       fun state ->
         match p1 state with
         | TERM _, _ ->
-          move := true;
+          state.st_move := true;
           SUSP, p2
         | (SUSP | STOP) as alpha, p1' -> (alpha, rml_seq p1' p2)
 
@@ -612,7 +638,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	fun state ->
 	  if !eoi
 	  then
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
 	      (STOP, rml_nothing)
 	    else
@@ -668,9 +694,9 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	fun state ->
 	  if !eoi
 	  then
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
-	      let f = hdl (Event.value evt) in
+	      let f = hdl (Event.value evt.evt_n) in
 	      (STOP, f)
 	    else
 	      (STOP, until evt p hdl)
@@ -694,11 +720,11 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	  | SUSP, p' -> SUSP, until evt matching p' hdl
 	  | STOP, p' -> until_star evt matching p' hdl state
       and until_star evt matching p hdl =
-	fun state ->
+        fun state ->
 	  if !eoi
 	  then
-	    let v = Event.value evt in
-	    if Event.status evt && matching v
+	    let v = Event.value evt.evt_n in
+	    if Event.status evt.evt_n && matching v
 	    then
 	      let f = hdl v in
 	      (STOP, f)
@@ -803,7 +829,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
       in active
 
     let rml_control' evt p =
-      rml_control_aux (fun evt -> Event.status evt) evt p
+      rml_control_aux (fun evt -> Event.status evt.evt_n) evt p
 
     let rml_control expr_evt p =
       fun state ->
@@ -816,7 +842,8 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (**************************************)
     let rml_control_match' evt matching p =
       rml_control_aux
-	(fun evt -> Event.status evt && matching (Event.value evt)) evt p
+        (fun evt -> Event.status evt.evt_n && matching (Event.value evt.evt_n))
+        evt p
 
     let rml_control_match expr_evt matching p =
       fun state ->
@@ -892,7 +919,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
     let rec rml_when' evt p =
       let rec self =
 	fun state ->
-	  if Event.status evt
+	  if Event.status evt.evt_n
 	  then
 	    match p state with
 	    | TERM v, _ -> TERM v, rml_compute (fun () -> v)
@@ -1125,14 +1152,9 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 
     let rml_factor_v score =
       fun state ->
-        let state =
-          match state with
-          | Some s -> s
-          | None -> make_state (-1)
-        in
-        state.st_score <- state.st_score +. score;
-        state.st_resample <- true;
-        move := true;
+        state.st_particle.st_score <- state.st_particle.st_score +. score;
+        state.st_particle.st_resample <- true;
+        state.st_move := true;
         TERM (), rml_nothing
 
     let rml_factor score_expr =
@@ -1144,17 +1166,20 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* propose                            *)
 (**************************************)
 
-    let rml_propose_v v =
+    let rml_propose_v v : _ expr=
       fun state ->
-        move := true;
-        state.st_proposition <- v :: state.st_proposition;
+        state.st_particle.st_propositions <-
+          v :: state.st_particle.st_propositions;
 	(TERM (), rml_nothing)
 
 (**************************************)
 (* infer                              *)
 (**************************************)
 
-    let nb_particules = 10
+    let nb_particles = 10
+
+    let propose_default = []
+    let propose_gather x y = List.sort compare (x :: y)
 
     let list_init n f =
       let rec loop i =
@@ -1192,106 +1217,163 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
       in
       !at_least_one && susp
 
-    let resample particules =
-      if do_resample particules then
-        let weights, norm =
-          List.fold_left
-            (fun (acc, sum) ((status, p, state) as body) ->
-               let w = max (exp state.st_score) epsilon_float in
-               ((body, w) :: acc, sum +. w))
-            ([], 0.) particules
-        in
-        let dist =
-          Distribution.Dist_support
-            (List.map (fun (b, w) -> (b, w /. norm)) weights)
-        in
-        move := true;
-        List.map
-          (fun (_, _, old_state) ->
-             let (status, p, state) = Distribution.draw dist in
-             (status, p, cp_state state old_state.st_id))
-          particules
-      else
-        particules
+    let resample particles =
+      let weights, norm =
+        List.fold_left
+          (fun (acc, sum) ((status, p, state) as body) ->
+             let w = max (exp state.st_score) epsilon_float in
+             ((body, w) :: acc, sum +. w))
+          ([], 0.) particles
+      in
+      let dist =
+        Distribution.Dist_support
+          (List.map (fun (b, w) -> (b, w /. norm)) weights)
+      in
+      List.map
+        (fun (_, _, old_state) ->
+           let (status, p, state) = Distribution.draw dist in
+           (status, p, cp_particle_state state old_state.st_particle_id))
+        particles
 
-    let normalize particules =
-      let norm = float (List.length particules) in
+    let normalize values =
+      let norm = float (List.length values) in
       let return_histogram =
         List.fold_left
-          (fun acc (status, _, _) ->
-             begin match status with
-             | TERM v ->
-               list_replace_assoc v
-                 (function None -> 1
-                         | Some n -> n + 1)
-                 acc
-             | SUSP | STOP -> raise RML
-             end)
-          [] particules
+          (fun acc v ->
+             list_replace_assoc v
+               (function None -> 1
+                       | Some n -> n + 1)
+               acc)
+          [] values
       in
       Distribution.Dist_support
         (List.map (fun (v, n) -> (v, float n /. norm)) return_histogram)
 
-    let rec rml_infer_body particules =
+    let emit_propose state propose_s particles =
+      let values =
+        List.map
+          (fun (_, _, state) ->
+             let acc =
+               List.fold_left
+                 (fun acc proposition ->
+                    match acc with
+                    | None -> Some (propose_gather proposition propose_default)
+                    | Some y -> Some (propose_gather proposition y))
+                 None state.st_propositions
+             in
+             state.st_propositions <- [];
+             acc)
+          particles
+      in
+      let dist = normalize values in
+      set_emit state propose_s dist;
+      particles
+
+    let step_particles particles =
       fun state ->
         let infer_status = ref (TERM ()) in
-        let particules =
-          List.mapi
-            (fun i body ->
+        state.st_move := false;
+        let particles =
+          List.map
+            (fun body ->
                match body with
                | SUSP, p, ({ st_resample = false } as sample_state) ->
-                 let alpha, p' = p (Some sample_state) in
+                 let alpha, p' = p { state with st_particle = sample_state } in
                  infer_status := gamma !infer_status alpha;
                  alpha, p', sample_state
                | _, _, _ ->
                  body)
-            particules
+            particles
         in
-        let particules =
-          resample particules
-        in
-        match !infer_status with
-        | TERM _ ->
-          let v = normalize particules in
-          TERM v, rml_compute (fun () -> v)
-        | SUSP -> SUSP, rml_infer_body particules
-        | STOP ->
-          let particules =
-            List.map
-              (fun body ->
-                 match body with
-                 | SUSP, _, _ -> assert false
-                 | STOP, p, state ->  SUSP, p, state
-                 | TERM _, _, state -> body)
-              particules
-          in
-          STOP, rml_infer_body particules
+        !infer_status, particles
 
-    let rml_infer_v_v propose_s p =
+    let rec rml_infer_body infer_move propose_s particles =
+      fun state ->
+        let infer_state = { state with st_move = infer_move } in
+        let infer_status, particles = step_particles particles infer_state in
+        let particles =
+          if do_resample particles then
+            (state.st_move := true;
+             resample particles)
+          else
+            particles
+        in
+        match !infer_move, infer_status with
+        | true, SUSP ->
+          rml_infer_body infer_move propose_s particles state
+        | false, SUSP | _, STOP | _, TERM () ->
+          let particles = emit_propose state propose_s particles in
+          SUSP, rml_infer_eoi infer_status infer_move propose_s particles
+
+    and rml_infer_eoi infer_status infer_move propose_s particles =
+      let rec self =
+        fun state ->
+          match infer_status with
+          | TERM _ ->
+            let values =
+              List.map
+                (fun (status, _, _) ->
+                   match status with
+                   | TERM v -> v
+                   | SUSP | STOP -> raise RML)
+                particles
+            in
+            let v = normalize values in
+            TERM v, rml_compute (fun () -> v)
+          | SUSP ->
+            if !eoi then
+              let infer_state = { state with st_move = infer_move } in
+              let infer_status, particles =
+                step_particles particles infer_state
+              in
+              let particles = resample particles in
+              rml_infer_eoi infer_status infer_move propose_s particles state
+            else
+              SUSP, self
+          | STOP ->
+            if !eoi then
+              let particles =
+                List.map
+                  (fun body ->
+                     match body with
+                     | SUSP, _, _ -> assert false
+                     | STOP, p, state ->  SUSP, p, state
+                     | TERM _, _, state -> body)
+                  particles
+              in
+              STOP, rml_infer_body infer_move propose_s particles
+            else
+              STOP, self
+      in
+      self
+
+    let rml_infer_v_v propose_s (p : (_, _) model) : _ expr=
       fun state ->
         let f = p () in
-        let particules =
-          list_init nb_particules (fun i -> (SUSP, f, make_state i))
+        let infer_move = ref false in
+        let particles =
+          list_init nb_particles
+            (fun i -> (SUSP, f, make_particle_state i))
         in
-        rml_infer_body particules state
+        rml_infer_body infer_move propose_s particles state
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
 (* sched                              *)
 (**************************************)
     let rec sched p =
-      match p None with
+      match p global_state with
       | SUSP, p' ->
-	  if !move then
-	    begin
-	      move := false;
-	      sched p'
-	    end
-	  else
-	    begin
-	      eoi := true;
-	      sched p'
-	    end
+          if !(global_state.st_move) then
+            begin
+              global_state.st_move := false;
+              sched p'
+            end
+          else
+            begin
+              eoi := true;
+              sched p'
+            end
       | res -> res
 
 
@@ -1306,7 +1388,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	    Event.next ();
 	    current := p';
 	    eoi := false;
-	    move := false;
+	    global_state.st_move := false;
 	    None
 	| TERM v, _ -> Some v
 	| SUSP, _ -> assert false
@@ -1323,7 +1405,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	    Event.next ();
 	    current := p';
 	    eoi := false;
-	    move := false;
+	    global_state.st_move := false;
 	    None
 	| TERM v, _ -> Some v
 	| SUSP, _ -> assert false
@@ -1348,7 +1430,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	    Event.next ();
 	    current := p';
 	    eoi := false;
-	    move := false;
+	    global_state.st_move := false;
 	    None
 	| TERM v, _ -> Some ()
 	| SUSP, _ -> assert false
