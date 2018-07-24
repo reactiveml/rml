@@ -71,6 +71,7 @@
           "\\|m\\(e\\(thod\\|mory\\)\\|utable\\|odule\\)"
           "\\|o\\(f\\|ne\\)\\|p\\(arser\\|r\\(ivate\\|oc\\(ess\\)?\\)\\)"
           "\\|rec\\|signal\\|type"
+	  "\\|propose\\|infer\\|factor\\|sample"
           "\\|v\\(al\\|irtual\\)\\)\\>")
          'font-lock-type-face)
 ;builtin
