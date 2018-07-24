@@ -1176,7 +1176,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* infer                              *)
 (**************************************)
 
-    let nb_particles = 10
+    let nb_particles = 1000
 
     let propose_default = []
     let propose_gather x y = List.sort compare (x :: y)
@@ -1356,6 +1356,23 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
             (fun i -> (SUSP, f, make_particle_state i))
         in
         rml_infer_body infer_move propose_s particles state
+
+    let rml_infer_v_e propose_s p_expr : _ expr=
+      fun state ->
+        let p = p_expr () in
+        rml_infer_v_v propose_s p state
+
+    let rml_infer_e_v propose_s_expr p : _ expr=
+      fun state ->
+        let propose_s = propose_s_expr () in
+        rml_infer_v_v propose_s p state
+
+    let rml_infer propose_s_expr p_expr : _ expr=
+      fun state ->
+        let propose_s = propose_s_expr () in
+        let p = p_expr () in
+        rml_infer_v_v propose_s p state
+
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
