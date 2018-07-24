@@ -6,10 +6,10 @@ run: $(TEST)
 	./$(TEST)
 
 $(TEST): $(TEST).ml
-	ocamlc -o $(TEST) -I `rmlc -runtime Lco_rewrite_proba -where` rmllib.cma -rectypes $(TEST).ml
+	ocamlc -o $(TEST) -I `rmlc -runtime Lco_rewrite_proba -where` unix.cma graphics.cma rmllib.cma -rectypes $(TEST).ml
 
 $(TEST).ml: $(TEST).rml
-	rmlc -runtime Lco_rewrite_proba $(TEST).rml
+	rmlc -dtypes -debug -runtime Lco_rewrite_proba $(TEST).rml
 
 
 

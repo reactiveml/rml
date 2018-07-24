@@ -1,24 +1,102 @@
-(* The code used in our paper *)
-
 open Distribution
 
-let score a b = 3.0
-let speed = [3.0; 4.0]
-let noise = [4.0; 5.0]
-let process sensor a = ()
-let process display d = ()
-    
-let rec process hmm obs last_pos : ('a, float list) model =
+let () = Random.self_init()
+let speed = [3.0; 3.0]
+let noise = [1.0; 1.0]
+
+(* Input/Output *)
+
+let () =
+  Graphics.open_graph " 400x400";
+  Graphics.auto_synchronize false
+
+
+let observe_state (x, y) =
+  [ Distribution.draw (Distribution.gaussian x 5.);
+    Distribution.draw (Distribution.gaussian y 5.) ]
+
+let process sensor obs =
+  loop
+    ignore (Graphics.wait_next_event [Graphics.Poll]);
+    let (x, y) = Graphics.mouse_pos () in
+    if 0 < x && x < 400 && 0 < y && y < 400 then begin
+      let o = observe_state (float x, float y) in
+      emit obs o
+    end;
+    pause
+  end
+
+let process draw_point color pos =
+  begin match pos with
+  | [ x ; y ] ->
+      for i = 1 to 1 do
+        Graphics.set_color color;
+        Graphics.draw_circle (int_of_float x) (int_of_float y) 2;
+        pause
+      done
+  | _ -> assert false
+  end
+
+let process draw_point_dist dist =
+  begin match dist with
+  | Dist_sampler (_, _) -> assert false
+  | Dist_support support ->
+      run Rml_list.par_iter
+        (proc (pos_l, prob) ->
+          begin match pos_l with
+          | Some [pos] ->
+              let color =
+                let n = int_of_float (255. *. (1. -. max 0.4 prob)) in
+                if prob > 0.003 then begin
+                  print_float prob;
+                  print_newline ()
+                end;
+                Graphics.rgb n n n
+              in
+              run draw_point color pos
+          | None -> ()
+          | _ -> assert false
+          end)
+        support
+  end
+
+let process display obs pos_dist =
+  let rec process display_obs =
+    await obs([o]) in
+    run draw_point Graphics.red o ||
+    run display_obs
+  in
+  let rec process display_estimate =
+    await pos_dist([d]) in
+    run draw_point_dist d ||
+    run display_estimate
+  in
+  loop
+    Graphics.synchronize ();
+    Graphics.clear_graph ();
+    pause
+  end
+  |>
+  run display_obs
+  ||
+  run display_estimate
+
+
+(* The code used in the paper *)
+
+let rec process hmm obs last_pos =
   await obs([o]) in
   let new_pos = sample (sph_gaussian last_pos speed) in
   factor (score (sph_gaussian new_pos noise) o);
   propose new_pos;
   run hmm obs new_pos
-  
+
 let process main =
   signal obs in
-  signal pos_dist : (float list Distribution.t, 'a) event in
-  infer pos_dist (hmm obs [0.; 0.]) ||
+  signal pos_dist in
+  infer pos_dist (hmm obs [200.; 200.]) ||
   run sensor obs ||
-  run display pos_dist
-  
+  run display obs pos_dist
+
+let () =
+  run main
