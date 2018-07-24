@@ -1303,7 +1303,9 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
           rml_infer_body infer_move propose_s particles state
         | false, SUSP | _, STOP | _, TERM () ->
           let particles = emit_propose state propose_s particles in
-          SUSP, rml_infer_eoi infer_status infer_move propose_s particles
+          state.st_move := true;
+          infer_state.st_move := true;
+          (SUSP, rml_infer_eoi infer_status infer_move propose_s particles)
 
     and rml_infer_eoi infer_status infer_move propose_s particles =
       let rec self =
@@ -1331,19 +1333,16 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
             else
               SUSP, self
           | STOP ->
-            if !eoi then
-              let particles =
-                List.map
-                  (fun body ->
-                     match body with
-                     | SUSP, _, _ -> assert false
-                     | STOP, p, state ->  SUSP, p, state
-                     | TERM _, _, state -> body)
-                  particles
-              in
-              STOP, rml_infer_body infer_move propose_s particles
-            else
-              STOP, self
+            let particles =
+              List.map
+                (fun body ->
+                   match body with
+                   | SUSP, _, _ -> assert false
+                   | STOP, p, state ->  SUSP, p, state
+                   | TERM _, _, state -> body)
+                particles
+            in
+            STOP, rml_infer_body infer_move propose_s particles
       in
       self
 
