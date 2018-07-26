@@ -1075,20 +1075,16 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* await                              *)
 (**************************************)
     let rml_await expr_evt =
-      fun state ->
-	let evt = expr_evt () in
-	rml_seq (rml_await_immediate' evt) rml_pause state
+      rml_await_all_match expr_evt (fun _ -> true) (fun _ -> rml_nothing)
 
     let rml_await' evt =
-      rml_seq (rml_await_immediate' evt) rml_pause
+      rml_await_all_match' evt (fun _ -> true) (fun _ -> rml_nothing)
 
     let rml_await_all expr_evt p =
-      fun state ->
-	let evt = expr_evt () in
-	rml_seq (rml_await_immediate' evt) (rml_get' evt p) state
+      rml_await_all_match expr_evt (fun _ -> true) p
 
     let rml_await_all' evt p : _ expr =
-      rml_seq (rml_await_immediate' evt) (rml_get' evt p)
+      rml_await_all_match' evt (fun _ -> true) p
 
     let rml_await_all_conf expr_cfg p =
       rml_until_handler_conf expr_cfg rml_halt p
