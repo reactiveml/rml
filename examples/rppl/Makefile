@@ -9,7 +9,7 @@ $(TEST): $(TEST).ml
 	ocamlc -o $(TEST) -I `rmlc -runtime Lco_rewrite_proba -where` unix.cma graphics.cma rmllib.cma -rectypes $(TEST).ml
 
 $(TEST).ml: $(TEST).rml
-	rmlc -dtypes -n 10 -debug -runtime Lco_rewrite_proba $(TEST).rml
+	rmlc -dtypes -debug -runtime Lco_rewrite_proba $(TEST).rml
 
 
 

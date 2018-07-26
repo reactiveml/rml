@@ -49,9 +49,11 @@ let process draw_point_dist dist =
                 let n = int_of_float (255. *. (1. -. max 0.4 prob)) in
                 if prob > 0.003 then begin
                   print_float prob;
-                  print_newline ()
-                end;
-                Graphics.rgb n n n
+                  print_newline ();
+                  Graphics.black
+                end
+                else
+                  Graphics.rgb n n n
               in
               run draw_point color pos
           | None -> ()

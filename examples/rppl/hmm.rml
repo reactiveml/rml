@@ -153,10 +153,9 @@ let process possible_next_step prev_states obs =
 
 let process semi_markov_walk_constrained true_obs =
   let rec process loop_ prev_states =
-    let obs = last? true_obs in
+    await true_obs(obs) in
     let trace = run (possible_next_step prev_states obs) in
     propose trace;
-    pause;
     run (loop_ trace)
   in
   await true_obs(obs0) in
