@@ -79,6 +79,9 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
         st_resample = false;
         st_score = src.st_score; }
 
+    let reset_score state =
+      state.st_score <- 0.;
+      state
 
 (* Flag pour le calcul de point fixe *)
     let global_state = make_state (ref false) (-1)
@@ -1172,7 +1175,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* infer                              *)
 (**************************************)
 
-    let nb_particles = 1000
+    let nb_particles = 200
 
     let propose_default = []
     let propose_gather x y = List.sort compare (x :: y)
@@ -1289,7 +1292,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
         let infer_status, particles = step_particles particles infer_state in
         let particles =
           if do_resample particles then
-            (state.st_move := true;
+            (infer_state.st_move := true;
              resample particles)
           else
             particles
@@ -1301,7 +1304,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
           let particles = emit_propose state propose_s particles in
           state.st_move := true;
           infer_state.st_move := true;
-          (SUSP, rml_infer_eoi infer_status infer_move propose_s particles)
+          rml_infer_eoi infer_status infer_move propose_s particles state
 
     and rml_infer_eoi infer_status infer_move propose_s particles =
       let rec self =
@@ -1324,7 +1327,6 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
               let infer_status, particles =
                 step_particles particles infer_state
               in
-              let particles = resample particles in
               rml_infer_eoi infer_status infer_move propose_s particles state
             else
               SUSP, self
@@ -1333,8 +1335,8 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
               List.map
                 (fun body ->
                    match body with
-                   | SUSP, _, _ -> assert false
-                   | STOP, p, state ->  SUSP, p, state
+                   | SUSP, _, _ -> raise RML
+                   | STOP, p, state -> SUSP, p, reset_score state
                    | TERM _, _, state -> body)
                 particles
             in
