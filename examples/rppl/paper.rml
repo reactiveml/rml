@@ -81,18 +81,18 @@ let process display obs pos_dist =
 
 (* The code used in the paper *)
 
-let rec process hmm obs last_pos =
-  await obs([o]) in
-  let new_pos = sample (sph_gaussian last_pos speed) in
-  factor (score (sph_gaussian new_pos noise) o);
-  propose new_pos;
-  run hmm obs new_pos
+let rec process hmm obs p_prev =
+  await obs([o_t]) in
+  let p_t = sample (sph_gaussian p_prev speed) in
+  factor (score (sph_gaussian p_t noise) o_t);
+  propose p_t;
+  run hmm obs p_t
 
 let process main =
   signal obs in
   signal pos_dist in
-  infer pos_dist (hmm obs [200.; 200.]) ||
   run sensor obs ||
+  infer pos_dist (hmm obs [200.; 200.]) ||
   run display obs pos_dist
 
 let () =
