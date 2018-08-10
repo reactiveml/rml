@@ -77,11 +77,8 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
       { st_particle_id = particle_id;
         st_propositions = src.st_propositions;
         st_resample = false;
-        st_score = src.st_score; }
+        st_score = 0.; }
 
-    let reset_score state =
-      state.st_score <- 0.;
-      state
 
 (* Flag pour le calcul de point fixe *)
     let global_state = make_state (ref false) (-1)
@@ -1175,7 +1172,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* infer                              *)
 (**************************************)
 
-    let nb_particles = 200
+    let nb_particles = 1000
 
     let propose_default = []
     let propose_gather x y = List.sort compare (x :: y)
@@ -1336,7 +1333,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
                 (fun body ->
                    match body with
                    | SUSP, _, _ -> raise RML
-                   | STOP, p, state -> SUSP, p, reset_score state
+                   | STOP, p, state -> SUSP, p, state
                    | TERM _, _, state -> body)
                 particles
             in
