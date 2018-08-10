@@ -42,18 +42,13 @@ let process draw_point_dist dist =
   | Dist_sampler (_, _) -> assert false
   | Dist_support support ->
       run Rml_list.par_iter
-        (proc (pos_l, prob) ->
-          begin match pos_l with
-          | Some [pos] ->
-              let color =
-                let n = int_of_float (255. *. (1. -. max 0.4 prob)) in
-                if prob > 0.003 then Graphics.black
-                else Graphics.rgb n n n
-              in
-              run draw_point color pos
-          | None -> ()
-          | _ -> assert false
-          end)
+        (proc (pos, prob) ->
+          let color =
+            let n = int_of_float (255. *. (1. -. max 0.4 prob)) in
+            if prob > 0.003 then Graphics.black
+            else Graphics.rgb n n n
+          in
+          run draw_point color pos)
         support
   end
 
@@ -81,17 +76,24 @@ let process display obs pos_dist =
 
 (* The code used in the paper *)
 
-let rec process hmm obs last_pos =
-  await obs([o]) in
-  let new_pos = sample (sph_gaussian last_pos speed) in
-  factor (score (sph_gaussian new_pos noise) o);
-  propose new_pos;
-  run hmm obs new_pos
+let rec process hmm' obs pos_dist last_dist =
+  signal dummy in
+  await obs([o_t]) in
+  let dist =
+    infer dummy
+      (process (
+         let p_prev = sample (last_dist) in
+         let p_t = sample (sph_gaussian p_prev speed) in
+         factor (score (sph_gaussian p_t noise) o_t);
+         p_t))
+  in
+  emit pos_dist dist;
+  run hmm' obs pos_dist dist
 
 let process main =
   signal obs in
   signal pos_dist in
-  infer pos_dist (hmm obs [200.; 200.]) ||
+  run hmm' obs pos_dist (Dist_support [[200.; 200.], 1.0]) ||
   run sensor obs ||
   run display obs pos_dist
 
