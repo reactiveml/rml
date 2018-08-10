@@ -32,7 +32,8 @@ module type S =
     type ('a, 'b) event
     and 'a event_cfg
     and 'a expr
-    and 'a process = unit -> 'a expr
+    and 'a process = ('a, Rml_empty.t) model
+    and ('a, 'b) model = unit -> 'a expr
 
     val rml_make: 'a process -> (unit -> 'a option)
     val rml_make_unit:

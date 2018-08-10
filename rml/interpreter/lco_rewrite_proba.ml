@@ -29,32 +29,70 @@
 (* $Id: lco_rewrite.ml,v 1.1 2005/04/30 16:49:15 mandel Exp $ *)
 
 
-module Rml_interpreter : Lco_interpreter.S =
+module Rml_interpreter (* : Lco_interpreter.S *) =
   functor (Event: Sig_env.S) ->
   struct
     exception RML
 
-    type ('a, 'b) event = ('a, 'b) Event.t
+    type ('a, 'b) event =
+      { evt_n: ('a, 'b) Event.t;
+        evt_move: bool ref; }
 
     and 'a event_cfg = unit -> (unit -> bool) * (unit -> 'a)
 
     and 'a status = SUSP | STOP | TERM of 'a
 
-    and 'a expr = unit -> 'a status * 'a expr
+    and ('a, 'b) expr = 'b state -> 'a status * ('a, 'b) expr
 
-    and 'a process = ('a, unit) model
-    and ('a, 'b) model = unit -> 'a expr
+    and 'b state =
+      { st_move: bool ref;
+        st_particle: 'b particle_state; }
+    and 'b particle_state =
+      { st_particle_id: int;
+        mutable st_propositions: 'b list;
+        mutable st_resample: bool;
+        mutable st_score: float; }
+    (* and 'b immutable_particle_state = *)
+    (*   { im_st_particle_id: int; *)
+    (*     mutable im_st_propositions: 'b list; *)
+    (*     mutable im_st_resample: bool; *)
+    (*     mutable im_st_score: float; } *)
+
+    and ('a, 'b) model = unit -> ('a, 'b) expr
+
+    and 'a process = ('a, Rml_empty.t) model
+
+(* manipulation de l'état *)
+    let make_particle_state particle_id =
+      { st_particle_id = particle_id;
+        st_propositions = [];
+        st_resample = false;
+        st_score = 0.; }
+
+    let make_state move particle_id =
+      { st_move = move;
+        st_particle = make_particle_state particle_id; }
+
+    let cp_particle_state src particle_id =
+      { st_particle_id = particle_id;
+        st_propositions = src.st_propositions;
+        st_resample = false;
+        st_score = 0.; }
 
 
-(* Flag pour le calcul de point fix *)
-    let move = ref false
+(* Flag pour le calcul de point fixe *)
+    let global_state = make_state (ref false) (-1)
     let eoi = ref false
 
 
 (* creation d'evenements *)
-    let new_evt_combine = Event.create
+    let new_evt_combine default gather =
+      { evt_n = Event.create default gather;
+        evt_move = global_state.st_move; }
 
-    let new_evt_memory_combine = Event.create_memory
+    let new_evt_memory_combine default gather =
+      { evt_n = Event.create_memory default gather;
+        evt_move = global_state.st_move; }
 
     let new_evt() =
       new_evt_combine [] (fun x y -> x :: y)
@@ -62,13 +100,17 @@ module Rml_interpreter : Lco_interpreter.S =
 
 
 (* ------------------------------------------------------------------------ *)
-    let rml_pre_status = Event.pre_status
+    let rml_pre_status evt =
+      Event.pre_status evt.evt_n
 
-    let rml_pre_value = Event.pre_value
+    let rml_pre_value evt =
+      Event.pre_value evt.evt_n
 
-    let rml_last = Event.last
+    let rml_last evt =
+      Event.last evt.evt_n
 
-    let rml_default = Event.default
+    let rml_default evt =
+      Event.default evt.evt_n
 
 (* ------------------------------------------------------------------------ *)
     let rml_global_signal = new_evt
@@ -83,8 +125,8 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
     let cfg_present' evt =
       fun () ->
-        (fun () -> Event.status evt),
-        (fun () -> Event.value evt)
+        (fun () -> Event.status evt.evt_n),
+        (fun () -> Event.value evt.evt_n)
 
     let cfg_present evt_expr =
       fun () ->
@@ -120,13 +162,13 @@ module Rml_interpreter : Lco_interpreter.S =
 (* nothing                            *)
 (**************************************)
     let rec rml_nothing =
-      fun () -> TERM (), rml_nothing
+      fun state -> TERM (), rml_nothing
 
 (**************************************)
 (* compute                            *)
 (**************************************)
     let rec rml_compute e =
-      fun () ->
+      fun state ->
 	let v = e() in
 	(TERM v, rml_compute (fun () -> v))
 
@@ -134,7 +176,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* pause                              *)
 (**************************************)
     let rml_pause =
-      fun () ->
+      fun state ->
 	STOP, rml_nothing
 
 (**************************************)
@@ -146,7 +188,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* halt                               *)
 (**************************************)
     let rec rml_halt =
-      fun () ->
+      fun state ->
 	STOP, rml_halt
 
 (**************************************)
@@ -157,28 +199,31 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* emit                               *)
 (**************************************)
+    let set_emit state evt v =
+      state.st_move := true;
+      evt.evt_move := true;
+      Event.emit evt.evt_n v
+
     let rml_emit_val' evt e =
-      fun () ->
-	move := true;
-	Event.emit evt (e());
-	(TERM (), rml_nothing)
+      fun state ->
+        set_emit state evt (e());
+        (TERM (), rml_nothing)
 
     let rml_emit_val expr_evt e =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_emit_val' evt e ()
+	rml_emit_val' evt e state
 
     let rml_emit' evt =
       rml_emit_val' evt (fun () -> ())
 
     let rml_emit expr_evt =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_emit_val' evt (fun () -> ()) ()
+	rml_emit_val' evt (fun () -> ()) state
 
     let rml_expr_emit_val evt v =
-      move := true;
-      Event.emit evt v
+      set_emit global_state evt v
 
     let rml_expr_emit evt =
       rml_expr_emit_val evt ()
@@ -186,14 +231,14 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* await_immediate                    *)
 (**************************************)
-    let rml_await_immediate' evt =
+    let rml_await_immediate' evt : _ expr =
       let rec self =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
 	    (STOP, self)
 	  else
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
 	      (TERM (), rml_nothing)
 	    else
@@ -201,16 +246,16 @@ module Rml_interpreter : Lco_interpreter.S =
       in self
 
     let rml_await_immediate expr_evt =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_await_immediate' evt ()
+	rml_await_immediate' evt state
 
 (**************************************)
 (* await_immediate_conf               *)
 (**************************************)
     let rml_await_immediate_conf' (cfg_status, _) =
       let rec self =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
 	    (STOP, self)
@@ -223,22 +268,22 @@ module Rml_interpreter : Lco_interpreter.S =
       in self
 
     let rml_await_immediate_conf expr_cfg =
-      fun () ->
+      fun state ->
 	let cfg = expr_cfg () in
-	rml_await_immediate_conf' cfg ()
+	rml_await_immediate_conf' cfg state
 
 (**************************************)
 (* get                                *)
 (**************************************)
-    let rml_get' evt p =
+    let rml_get' evt p : _ expr =
       let rec self =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
 	    let x =
-	      if Event.status evt
-	      then Event.value evt
-	      else Event.default evt
+	      if Event.status evt.evt_n
+	      then Event.value evt.evt_n
+	      else Event.default evt.evt_n
 	    in
 	    let f_body = p x in
 	    (STOP, f_body)
@@ -247,44 +292,44 @@ module Rml_interpreter : Lco_interpreter.S =
       in self
 
     let rml_get expr_evt p =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_get' evt p ()
+	rml_get' evt p state
 
 (**************************************)
 (* await_immediate_one                *)
 (**************************************)
     let rml_await_immediate_one' evt p =
       let rec self =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
 	    (STOP, self)
 	  else
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
-	      let x = Event.one evt in
+	      let x = Event.one evt.evt_n in
 	      let f_body = p x in
-	      f_body ()
+	      f_body state
 	    else
 	      (SUSP, self)
       in self
 
     let rml_await_immediate_one expr_evt p =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_await_immediate_one' evt p ()
+	rml_await_immediate_one' evt p state
 
 (**************************************)
 (* await_all_match                    *)
 (**************************************)
-    let rml_await_all_match' evt matching p =
+    let rml_await_all_match' evt matching p : _ expr=
       let rec self =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
-	    let v = Event.value evt in
-	    if (Event.status evt) && (matching v)
+	    let v = Event.value evt.evt_n in
+	    if (Event.status evt.evt_n) && (matching v)
 	    then
 	      let x = v in
 	      let f_body = p x in
@@ -296,16 +341,16 @@ module Rml_interpreter : Lco_interpreter.S =
       in self
 
     let rml_await_all_match expr_evt matching p =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_await_all_match' evt matching p ()
+	rml_await_all_match' evt matching p state
 
 (**************************************)
 (* await_all_match_conf               *)
 (**************************************)
     let rml_await_all_match_conf' (cfg_status, cfg_value) matching p =
       let rec self =
-        fun () ->
+        fun state ->
           if !eoi
           then
             let v = cfg_value () in
@@ -321,62 +366,64 @@ module Rml_interpreter : Lco_interpreter.S =
       in self
 
     let rml_await_all_match_conf expr_cfg matching p =
-      fun () ->
+      fun state ->
         let cfg = expr_cfg () in
-        rml_await_all_match_conf' cfg matching p ()
+        rml_await_all_match_conf' cfg matching p state
 
 (**************************************)
 (* present                            *)
 (**************************************)
     let rml_present' evt p1 p2 =
       let rec self =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
 	    (STOP, p2)
 	  else
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
-	      p1 ()
+	      p1 state
 	    else
 	      (SUSP, self)
       in self
 
     let rml_present expr_evt p1 p2 =
-      fun () ->
+      fun state ->
 	let evt = expr_evt() in
-	rml_present' evt p1 p2 ()
+	rml_present' evt p1 p2 state
 
 (**************************************)
 (* present_conf                       *)
 (**************************************)
     let rml_present_conf' (cfg_status, _) p1 p2 =
       let rec self =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
 	    (STOP, p2)
 	  else
 	    if cfg_status()
 	    then
-	      p1 ()
+	      p1 state
 	    else
 	      (SUSP, self)
       in self
 
     let rml_present_conf expr_cfg p1 p2 =
-      fun () ->
+      fun state ->
 	let cfg = expr_cfg() in
-	rml_present_conf' cfg p1 p2 ()
+	rml_present_conf' cfg p1 p2 state
 
 (**************************************)
 (* seq                                *)
 (**************************************)
     let rec rml_seq p1 p2 =
-      fun () ->
-	match p1 () with
-	| TERM _, _ -> p2 ()
-	| (SUSP | STOP) as alpha, p1' -> (alpha, rml_seq p1' p2)
+      fun state ->
+        match p1 state with
+        | TERM _, _ ->
+          state.st_move := true;
+          SUSP, p2
+        | (SUSP | STOP) as alpha, p1' -> (alpha, rml_seq p1' p2)
 
 
 (**************************************)
@@ -409,21 +456,21 @@ module Rml_interpreter : Lco_interpreter.S =
 	| TERM _, TERM _ -> rml_nothing
 	| _ ->  raise RML
       and par_SUSP_SUSP p1 p2 =
-	fun () ->
-	  let alpha, p1' = p1 () in
-	  let beta, p2' = p2 () in
+	fun state ->
+	  let alpha, p1' = p1 state in
+	  let beta, p2' = p2 state in
 	  (gamma alpha beta,
 	   par (delta_1 alpha beta) (delta_2 alpha beta) p1' p2')
 
       and par_SUSP_beta beta p1 p2 =
-	fun () ->
-	  let alpha, p1' = p1 () in
+	fun state ->
+	  let alpha, p1' = p1 state in
 	  (gamma alpha beta,
 	   par (delta_1 alpha beta) (delta_2 alpha beta) p1' p2)
 
       and par_alpha_SUSP alpha p1 p2 =
-	fun () ->
-	  let beta, p2' = p2 () in
+	fun state ->
+	  let beta, p2' = p2 state in
 	  (gamma alpha beta,
 	   par (delta_1 alpha beta) (delta_2 alpha beta) p1 p2')
       in par_SUSP_SUSP
@@ -438,8 +485,8 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
     let rml_loop p =
       let rec self =
-	fun () ->
-	  match p () with
+	fun state ->
+	  match p state with
 	  | (SUSP | STOP) as alpha, p' ->
 	      (alpha, rml_seq p' self)
 	  | _ -> failwith "Instantaneous loop !"
@@ -450,54 +497,54 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
     let rml_loop_n e p =
       let rec self n =
-	fun () ->
+	fun state ->
 	  if n > 0 then
-	    match p () with
+	    match p state with
 	    | (SUSP | STOP) as alpha, p' ->
 		(alpha, rml_seq p' (self (n-1)))
 	    | _ -> failwith "Instantaneous loop !"
 	  else
 	    (TERM (), rml_nothing)
       in
-      fun () ->
-	self (e()) ()
+      fun state ->
+	self (e()) state
 
 (**************************************)
 (* signal                             *)
 (**************************************)
     let rml_signal p =
-      fun () ->
+      fun state ->
 	let evt = new_evt() in
 	let f = p evt  in
-	f ()
+	f state
 
     let rml_signal_combine default comb p =
-      fun () ->
+      fun state ->
 	let evt = new_evt_combine (default()) (comb()) in
 	let f = p evt in
-	f ()
+	f state
 
     let rml_signal_memory_combine default comb p =
-      fun () ->
+      fun state ->
         let evt = new_evt_memory_combine (default()) (comb()) in
         let f = p evt in
-        f ()
+        f state
 
 (**************************************)
 (* def                                *)
 (**************************************)
     let rml_def e p =
-      fun () ->
+      fun state ->
 	let f = p (e()) in
-	f()
+	f state
 
 (**************************************)
 (* def_dyn                            *)
 (**************************************)
     let rec rml_def_dyn p1 p2 =
-      fun () ->
-	match p1 () with
-	| TERM v, _ -> p2 v ()
+      fun state ->
+	match p1 state with
+	| TERM v, _ -> p2 v state
 	| (SUSP | STOP) as alpha, p1' -> alpha, rml_def_dyn p1' p2
 
 
@@ -514,13 +561,13 @@ module Rml_interpreter : Lco_interpreter.S =
       in
       let f body_array p3 =
 	let rec self =
-	  fun () ->
+	  fun state ->
 	    let par_status = ref (TERM ()) in
 	    for i = 0 to Array.length body_array - 1 do
 	      let status, p = body_array.(i) in
 	      match status with
 	      | SUSP ->
-		  let (alpha, p') as body = p() in
+		  let (alpha, p') as body = p state in
 		  body_array.(i) <- body;
 		  par_status := gamma !par_status alpha
 	      | _ ->
@@ -537,7 +584,7 @@ module Rml_interpreter : Lco_interpreter.S =
 		  | _ -> assert false
 		done;
 		let f = p3 value_array in
-		f ()
+		f state
 	    | SUSP -> SUSP, self
 	    | STOP ->
 		for i = 0 to Array.length body_array - 1 do
@@ -553,11 +600,11 @@ module Rml_interpreter : Lco_interpreter.S =
 	let tab =
 	  Array.make (Array.length p_array) (Obj.magic())
 	in
-	fun () ->
+	fun state ->
 	  for i = 0 to Array.length p_array - 1 do
 	    tab.(i) <- (SUSP, p_array.(i))
 	  done;
-	  f tab p ()
+	  f tab p state
 
 
 
@@ -565,33 +612,33 @@ module Rml_interpreter : Lco_interpreter.S =
 (* match                              *)
 (**************************************)
     let rml_match e p =
-      fun () ->
+      fun state ->
 	let f = p (e()) in
-	f()
+	f state
 
 (**************************************)
 (* run                                *)
 (**************************************)
     let rml_run e =
-      fun () ->
+      fun state ->
 	let f = e () () in
-	f ()
+	f state
 
 (**************************************)
 (* until                              *)
 (**************************************)
     let rml_until' =
       let rec until evt p =
-	fun () ->
-	  match p() with
+	fun state ->
+	  match p state with
 	  | TERM v, _ -> TERM v, rml_nothing
 	  | SUSP, p' -> SUSP, until evt p'
-	  | STOP, p' -> until_star evt p' ()
+	  | STOP, p' -> until_star evt p' state
       and until_star evt p =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
 	      (STOP, rml_nothing)
 	    else
@@ -601,22 +648,22 @@ module Rml_interpreter : Lco_interpreter.S =
       in until
 
     let rml_until expr_evt p =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_until' evt p ()
+	rml_until' evt p state
 
 (**************************************)
 (* until_conf                         *)
 (**************************************)
     let rml_until_conf' =
       let rec until cfg p =
-	fun () ->
-	  match p() with
+	fun state ->
+	  match p state with
 	  | TERM v, _ -> TERM v, rml_nothing
 	  | SUSP, p' -> SUSP, until cfg p'
-	  | STOP, p' -> until_star cfg p' ()
+	  | STOP, p' -> until_star cfg p' state
       and until_star ((cfg_status, _) as cfg) p =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
 	    if cfg_status()
@@ -629,27 +676,27 @@ module Rml_interpreter : Lco_interpreter.S =
       in until
 
     let rml_until_conf expr_cfg p =
-      fun () ->
+      fun state ->
 	let cfg = expr_cfg () in
-	rml_until_conf' cfg p ()
+	rml_until_conf' cfg p state
 
 (**************************************)
 (* until handler                      *)
 (**************************************)
     let rml_until_handler' =
       let rec until evt p hdl =
-	fun () ->
-	  match p() with
+	fun state ->
+	  match p state with
 	  | TERM v, _ -> TERM v, rml_compute (fun _ -> v)
 	  | SUSP, p' -> SUSP, until evt p' hdl
-	  | STOP, p' -> until_star evt p' hdl ()
+	  | STOP, p' -> until_star evt p' hdl state
       and until_star evt p hdl =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
-	    if Event.status evt
+	    if Event.status evt.evt_n
 	    then
-	      let f = hdl (Event.value evt) in
+	      let f = hdl (Event.value evt.evt_n) in
 	      (STOP, f)
 	    else
 	      (STOP, until evt p hdl)
@@ -658,26 +705,26 @@ module Rml_interpreter : Lco_interpreter.S =
       in until
 
     let rml_until_handler expr_evt p hdl =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_until_handler' evt p hdl ()
+	rml_until_handler' evt p hdl state
 
 (**************************************)
 (* until handler match                *)
 (**************************************)
     let rml_until_handler_match' =
       let rec until evt matching p hdl =
-	fun () ->
-	  match p() with
+	fun state ->
+	  match p state with
 	  | TERM v, _ -> TERM v, rml_compute (fun _ -> v)
 	  | SUSP, p' -> SUSP, until evt matching p' hdl
-	  | STOP, p' -> until_star evt matching p' hdl ()
+	  | STOP, p' -> until_star evt matching p' hdl state
       and until_star evt matching p hdl =
-	fun () ->
+        fun state ->
 	  if !eoi
 	  then
-	    let v = Event.value evt in
-	    if Event.status evt && matching v
+	    let v = Event.value evt.evt_n in
+	    if Event.status evt.evt_n && matching v
 	    then
 	      let f = hdl v in
 	      (STOP, f)
@@ -688,20 +735,20 @@ module Rml_interpreter : Lco_interpreter.S =
       in until
 
     let rml_until_handler_match expr_evt matching p hdl =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_until_handler_match' evt matching p hdl ()
+	rml_until_handler_match' evt matching p hdl state
 
 
     let rml_until_handler_match_conf' =
       let rec until cfg matching p hdl =
-        fun () ->
-          match p() with
+        fun state ->
+          match p state with
           | TERM v, _ -> TERM v, rml_compute (fun _ -> v)
           | SUSP, p' -> SUSP, until cfg matching p' hdl
-          | STOP, p' -> until_star cfg matching p' hdl ()
+          | STOP, p' -> until_star cfg matching p' hdl state
       and until_star ((cfg_status, cfg_value) as cfg) matching p hdl =
-        fun () ->
+        fun state ->
           if !eoi
           then
             let v = cfg_value () in
@@ -716,14 +763,14 @@ module Rml_interpreter : Lco_interpreter.S =
       in until
 
     let rml_until_handler_conf expr_cfg p hdl =
-      fun () ->
+      fun state ->
         let cfg = expr_cfg () in
-        rml_until_handler_match_conf' cfg (fun _ -> true) p hdl ()
+        rml_until_handler_match_conf' cfg (fun _ -> true) p hdl state
 
     let rml_until_handler_match_conf expr_cfg matching p hdl =
-      fun () ->
+      fun state ->
         let cfg = expr_cfg () in
-        rml_until_handler_match_conf' cfg matching p hdl ()
+        rml_until_handler_match_conf' cfg matching p hdl state
 
     let rml_until_match expr_evt matching p =
       rml_until_handler_match expr_evt matching p (fun _ -> rml_nothing)
@@ -740,8 +787,8 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
     let rml_control_aux cond =
       let rec active evt p =
-	fun () ->
-	  match p () with
+	fun state ->
+	  match p state with
 	  | TERM v, _ -> TERM v, rml_compute (fun () -> v)
 	  | SUSP, p' ->
 	      if !eoi then
@@ -762,7 +809,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	      else
 		(SUSP, active_await evt p')
       and active_await evt p =
-	fun () ->
+	fun state ->
 	  if !eoi then
 	    if cond evt
 	    then
@@ -771,7 +818,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	      (STOP, active evt p)
 	  else (SUSP, active_await evt p)
       and suspended evt p =
-	fun () ->
+	fun state ->
 	  if !eoi then
 	    if cond evt
 	    then
@@ -782,12 +829,12 @@ module Rml_interpreter : Lco_interpreter.S =
       in active
 
     let rml_control' evt p =
-      rml_control_aux (fun evt -> Event.status evt) evt p
+      rml_control_aux (fun evt -> Event.status evt.evt_n) evt p
 
     let rml_control expr_evt p =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_control' evt p ()
+	rml_control' evt p state
 
 
 (**************************************)
@@ -795,12 +842,13 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
     let rml_control_match' evt matching p =
       rml_control_aux
-	(fun evt -> Event.status evt && matching (Event.value evt)) evt p
+        (fun evt -> Event.status evt.evt_n && matching (Event.value evt.evt_n))
+        evt p
 
     let rml_control_match expr_evt matching p =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_control_match' evt matching p ()
+	rml_control_match' evt matching p state
 
     let rml_control_match_conf' cfg matching p =
       rml_control_aux
@@ -809,17 +857,17 @@ module Rml_interpreter : Lco_interpreter.S =
         cfg p
 
     let rml_control_match_conf expr_cfg matching p =
-      fun () ->
+      fun state ->
         let cfg = expr_cfg () in
-        rml_control_match_conf' cfg matching p ()
+        rml_control_match_conf' cfg matching p state
 
 (**************************************)
 (* control_conf                       *)
 (**************************************)
     let rml_control_conf' =
       let rec active ((cfg_status, _) as cfg) p =
-	fun () ->
-	  match p () with
+	fun state ->
+	  match p state with
 	  | TERM v, _ -> TERM v, rml_compute (fun () -> v)
 	  | SUSP, p' ->
 	      if !eoi then
@@ -840,7 +888,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	      else
 		(SUSP, active_await cfg p')
       and active_await ((cfg_status, _) as cfg) p =
-	fun () ->
+	fun state ->
 	  if !eoi then
 	    if cfg_status ()
 	    then
@@ -849,7 +897,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	      (STOP, active cfg p)
 	  else (SUSP, active_await cfg p)
       and suspended ((cfg_status, _) as cfg) p =
-	fun () ->
+	fun state ->
 	  if !eoi then
 	    if cfg_status ()
 	    then
@@ -861,19 +909,19 @@ module Rml_interpreter : Lco_interpreter.S =
 
 
     let rml_control_conf expr_cfg p =
-      fun () ->
+      fun state ->
 	let cfg = expr_cfg () in
-	rml_control_conf' cfg p ()
+	rml_control_conf' cfg p state
 
 (**************************************)
 (* when                               *)
 (**************************************)
     let rec rml_when' evt p =
       let rec self =
-	fun () ->
-	  if Event.status evt
+	fun state ->
+	  if Event.status evt.evt_n
 	  then
-	    match p() with
+	    match p state with
 	    | TERM v, _ -> TERM v, rml_compute (fun () -> v)
 	    | alpha, p' -> alpha, rml_when' evt p'
 	  else
@@ -885,23 +933,23 @@ module Rml_interpreter : Lco_interpreter.S =
       in self
 
     let rml_when expr_evt p =
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_when' evt p ()
+	rml_when' evt p state
 
 (**************************************)
 (* when_conf                          *)
 (**************************************)
     let rec rml_when_conf' ((cfg_status, _) as cfg) p =
       let rec self =
-	fun () ->
+	fun state ->
 	  if !eoi
 	  then
 	    (STOP, self)
 	  else
 	    if cfg_status()
 	    then
-	      match p() with
+	      match p state with
 	      | TERM v, _ -> TERM v, rml_compute (fun () -> v)
 	      | alpha, p' -> alpha, rml_when_conf' cfg p'
 	    else
@@ -909,27 +957,27 @@ module Rml_interpreter : Lco_interpreter.S =
       in self
 
     let rml_when_conf expr_cfg p =
-      fun () ->
+      fun state ->
 	let cfg = expr_cfg () in
-	rml_when_conf' cfg p ()
+	rml_when_conf' cfg p state
 
 (**************************************)
 (* if                                 *)
 (**************************************)
     let rml_if e p1 p2 =
-      fun () ->
+      fun state ->
 	if e() then
-	  p1 ()
+	  p1 state
 	else
-	  p2 ()
+	  p2 state
 
 (**************************************)
 (* while                              *)
 (**************************************)
     let rec rml_while e p =
-      fun () ->
+      fun state ->
 	if e() then
-	  rml_seq p (rml_while e p) ()
+	  rml_seq p (rml_while e p) state
 	else
 	  TERM (), rml_nothing
 
@@ -938,20 +986,20 @@ module Rml_interpreter : Lco_interpreter.S =
 (* for                                *)
 (**************************************)
     let rml_for e1 e2 dir p =
-      let (incr, cmp) = if dir then incr, (<=) else decr, (>=) in
+      let (succ, cmp) = if dir then succ, (<=) else pred, (>=) in
       let rec f_for i v2 =
-	fun () ->
-	  incr i;
-	  if cmp !i v2
-	  then rml_seq (p !i) (f_for i v2) ()
+	fun state ->
+	  let i = succ i in
+	  if cmp i v2
+	  then rml_seq (p i) (f_for i v2) state
 	  else TERM (), rml_nothing
       in
       let f_for_init =
-	fun () ->
-	  let i = ref (e1()) in
+	fun state ->
+	  let i = e1() in
 	  let v2 = e2() in
-	  if cmp !i v2
-	  then rml_seq (p !i) (f_for i v2) ()
+	  if cmp i v2
+	  then rml_seq (p i) (f_for i v2) state
 	  else TERM (), rml_nothing
       in
       f_for_init
@@ -968,62 +1016,58 @@ module Rml_interpreter : Lco_interpreter.S =
       | TERM _, TERM _ -> TERM ()
       | _ -> STOP
 
-    let par_body body_array =
-      let rec self =
-	fun () ->
-	  let par_status = ref (TERM ()) in
-	  for i = 0 to Array.length body_array - 1 do
-	    let status, p = body_array.(i) in
-	    match status with
-	    | SUSP ->
-		let (alpha, p') as body = p() in
-		body_array.(i) <- body;
-		par_status := gamma !par_status alpha
-	    | _ ->
-		par_status := gamma !par_status status
-	  done;
-	  match !par_status with
-	  | TERM _ -> TERM (), rml_nothing
-	  | SUSP -> SUSP, self
-	  | STOP ->
-	      for i = 0 to Array.length body_array - 1 do
-		match body_array.(i) with
-		| SUSP, _ -> assert false
-		| STOP, p ->  body_array.(i) <- SUSP, p
-		| TERM _, _ -> ()
-	      done;
-	      STOP, self
-      in self
+    let rec par_body body_list =
+      fun state ->
+        let par_status = ref (TERM ()) in
+        let body_list =
+          List.map
+            (fun ((status, p) as body) ->
+               match status with
+               | SUSP ->
+                 let (alpha, p') as body = p state in
+                 par_status := gamma !par_status alpha;
+                 body
+               | _ ->
+                 par_status := gamma !par_status status;
+                 body)
+            body_list
+        in
+        match !par_status with
+        | TERM _ -> TERM (), rml_nothing
+        | SUSP -> SUSP, par_body body_list
+        | STOP ->
+          let body_list =
+            List.map
+              (fun body ->
+                 match body with
+                 | SUSP, _ -> assert false
+                 | STOP, p ->  SUSP, p
+                 | TERM _, _ -> body)
+              body_list
+          in
+          STOP, par_body body_list
 
     let rml_par_n p_list =
-      fun () ->
-	let n = List.length p_list in
-	let tab =
-	  Array.make n (Obj.magic())
-	in
-	let _ =
-	  List.fold_left (fun i p -> tab.(i) <- (SUSP, p); i+1) 0 p_list
-	in
-	par_body tab ()
+      fun state ->
+        let body_list =
+          List.map (fun p -> (SUSP, p)) p_list
+        in
+        par_body body_list state
 
 (**************************************)
 (* for_dopar                          *)
 (**************************************)
     let rml_fordopar e1 e2 dir p =
       let (incr, cmp) = if dir then incr, (<=) else decr, (>=) in
-      fun () ->
+      fun state ->
 	let i = ref (e1()) in
 	let v2 = e2() in
-	let tab =
-	  Array.make (if dir then v2 - !i + 1 else !i - v2 + 1) (Obj.magic())
-	in
-	let j = ref 0 in
+	let body_list = ref [] in
 	while (cmp !i v2) do
-	  tab.(!j) <- (SUSP, (p !i));
-	  incr i;
-	  j := !j + 1
+	  body_list := (SUSP, (p !i)) :: !body_list;
+	  incr i
 	done;
-	par_body tab ()
+	par_body (List.rev !body_list) state
 
 
 (* ------------------------------------------------------------------------ *)
@@ -1031,20 +1075,16 @@ module Rml_interpreter : Lco_interpreter.S =
 (* await                              *)
 (**************************************)
     let rml_await expr_evt =
-      fun () ->
-	let evt = expr_evt () in
-	rml_seq (rml_await_immediate' evt) rml_pause ()
+      rml_await_all_match expr_evt (fun _ -> true) (fun _ -> rml_nothing)
 
     let rml_await' evt =
-      rml_seq (rml_await_immediate' evt) rml_pause
+      rml_await_all_match' evt (fun _ -> true) (fun _ -> rml_nothing)
 
     let rml_await_all expr_evt p =
-      fun () ->
-	let evt = expr_evt () in
-	rml_seq (rml_await_immediate' evt) (rml_get' evt p) ()
+      rml_await_all_match expr_evt (fun _ -> true) p
 
-    let rml_await_all' evt p =
-      rml_seq (rml_await_immediate' evt) (rml_get' evt p)
+    let rml_await_all' evt p : _ expr =
+      rml_await_all_match' evt (fun _ -> true) p
 
     let rml_await_all_conf expr_cfg p =
       rml_until_handler_conf expr_cfg rml_halt p
@@ -1053,9 +1093,9 @@ module Rml_interpreter : Lco_interpreter.S =
       let pause_p x =
 	rml_seq rml_pause (p x)
       in
-      fun () ->
+      fun state ->
 	let evt = expr_evt () in
-	rml_await_immediate_one' evt pause_p ()
+	rml_await_immediate_one' evt pause_p state
 
     let rml_await_one' evt p =
       let pause_p x =
@@ -1064,9 +1104,9 @@ module Rml_interpreter : Lco_interpreter.S =
       rml_await_immediate_one' evt pause_p
 
     let rml_await_conf expr_cfg =
-      fun () ->
+      fun state ->
 	let cfg = expr_cfg () in
-	rml_seq (rml_await_immediate_conf' cfg) rml_pause ()
+	rml_seq (rml_await_immediate_conf' cfg) rml_pause state
 
     let rml_await_one_match expr_evt matching p =
       rml_await_all_match expr_evt
@@ -1086,24 +1126,265 @@ module Rml_interpreter : Lco_interpreter.S =
             p v
           with Not_found -> raise RML)
 
+(* ------------------------------------------------------------------------ *)
+
+(**************************************)
+(* sample                             *)
+(**************************************)
+
+    let rml_sample_v dist =
+      fun state ->
+        let v = Distribution.draw dist in
+        TERM v, rml_compute (fun _ -> v)
+
+    let rml_sample dist_expr =
+      fun state ->
+        let dist = dist_expr () in
+        rml_sample_v dist state
+
+(**************************************)
+(* factor                             *)
+(**************************************)
+
+    let rml_factor_v score =
+      fun state ->
+        state.st_particle.st_score <- state.st_particle.st_score +. score;
+        state.st_particle.st_resample <- true;
+        state.st_move := true;
+        TERM (), rml_nothing
+
+    let rml_factor score_expr =
+      fun state ->
+        let score = score_expr () in
+        rml_factor_v score state
+
+(**************************************)
+(* propose                            *)
+(**************************************)
+
+    let rml_propose_v v : _ expr=
+      fun state ->
+        state.st_particle.st_propositions <-
+          v :: state.st_particle.st_propositions;
+	(TERM (), rml_nothing)
+
+(**************************************)
+(* infer                              *)
+(**************************************)
+
+    let nb_particles = 1000
+
+    let propose_default = []
+    let propose_gather x y = List.sort compare (x :: y)
+
+    let list_init n f =
+      let rec loop i =
+        if i < n then
+          f i :: loop (i + 1)
+        else
+          []
+      in
+      if n < 0 then
+        raise (Invalid_argument "list_init")
+      else
+        loop 0
+
+    let rec list_replace_assoc x f l =
+      begin match l with
+      | [] -> [ (x, f None) ]
+      | (y, v) :: l ->
+          if x = y then
+            (x, f (Some v)) :: l
+          else
+            (y, v) :: list_replace_assoc x f l
+      end
+
+    let do_resample body_list =
+      let at_least_one = ref false in
+      let susp =
+        List.for_all
+          (fun (status, _, state) ->
+             match status with
+             | SUSP ->
+                 at_least_one := !at_least_one || state.st_resample;
+                 state.st_resample
+             | STOP | TERM _ -> true)
+          body_list
+      in
+      !at_least_one && susp
+
+    let resample particles =
+      let weights, norm =
+        List.fold_left
+          (fun (acc, sum) ((status, p, state) as body) ->
+             let w = max (exp state.st_score) epsilon_float in
+             ((body, w) :: acc, sum +. w))
+          ([], 0.) particles
+      in
+      let dist =
+        Distribution.Dist_support
+          (List.map (fun (b, w) -> (b, w /. norm)) weights)
+      in
+      List.map
+        (fun (_, _, old_state) ->
+           let (status, p, state) = Distribution.draw dist in
+           (status, p, cp_particle_state state old_state.st_particle_id))
+        particles
+
+    let normalize values =
+      let norm = float (List.length values) in
+      let return_histogram =
+        List.fold_left
+          (fun acc v ->
+             list_replace_assoc v
+               (function None -> 1
+                       | Some n -> n + 1)
+               acc)
+          [] values
+      in
+      Distribution.Dist_support
+        (List.map (fun (v, n) -> (v, float n /. norm)) return_histogram)
+
+    let emit_propose state propose_s particles =
+      let values =
+        List.map
+          (fun (_, _, state) ->
+             let acc =
+               List.fold_left
+                 (fun acc proposition ->
+                    match acc with
+                    | None -> Some (propose_gather proposition propose_default)
+                    | Some y -> Some (propose_gather proposition y))
+                 None state.st_propositions
+             in
+             state.st_propositions <- [];
+             acc)
+          particles
+      in
+      let dist = normalize values in
+      set_emit state propose_s dist;
+      particles
+
+    let step_particles particles =
+      fun state ->
+        let infer_status = ref (TERM ()) in
+        state.st_move := false;
+        let particles =
+          List.map
+            (fun body ->
+               match body with
+               | SUSP, p, ({ st_resample = false } as sample_state) ->
+                 let alpha, p' = p { state with st_particle = sample_state } in
+                 infer_status := gamma !infer_status alpha;
+                 alpha, p', sample_state
+               | _, _, _ ->
+                 body)
+            particles
+        in
+        !infer_status, particles
+
+    let rec rml_infer_body infer_move propose_s particles =
+      fun state ->
+        let infer_state = { state with st_move = infer_move } in
+        let infer_status, particles = step_particles particles infer_state in
+        let particles =
+          if do_resample particles then
+            (infer_state.st_move := true;
+             resample particles)
+          else
+            particles
+        in
+        match !infer_move, infer_status with
+        | true, SUSP ->
+          rml_infer_body infer_move propose_s particles state
+        | false, SUSP | _, STOP | _, TERM () ->
+          let particles = emit_propose state propose_s particles in
+          state.st_move := true;
+          infer_state.st_move := true;
+          rml_infer_eoi infer_status infer_move propose_s particles state
+
+    and rml_infer_eoi infer_status infer_move propose_s particles =
+      let rec self =
+        fun state ->
+          match infer_status with
+          | TERM _ ->
+            let values =
+              List.map
+                (fun (status, _, _) ->
+                   match status with
+                   | TERM v -> v
+                   | SUSP | STOP -> raise RML)
+                particles
+            in
+            let v = normalize values in
+            TERM v, rml_compute (fun () -> v)
+          | SUSP ->
+            if !eoi then
+              let infer_state = { state with st_move = infer_move } in
+              let infer_status, particles =
+                step_particles particles infer_state
+              in
+              rml_infer_eoi infer_status infer_move propose_s particles state
+            else
+              SUSP, self
+          | STOP ->
+            let particles =
+              List.map
+                (fun body ->
+                   match body with
+                   | SUSP, _, _ -> raise RML
+                   | STOP, p, state -> SUSP, p, state
+                   | TERM _, _, state -> body)
+                particles
+            in
+            STOP, rml_infer_body infer_move propose_s particles
+      in
+      self
+
+    let rml_infer_v_v propose_s (p : (_, _) model) : _ expr=
+      fun state ->
+        let f = p () in
+        let infer_move = ref false in
+        let particles =
+          list_init nb_particles
+            (fun i -> (SUSP, f, make_particle_state i))
+        in
+        rml_infer_body infer_move propose_s particles state
+
+    let rml_infer_v_e propose_s p_expr : _ expr=
+      fun state ->
+        let p = p_expr () in
+        rml_infer_v_v propose_s p state
+
+    let rml_infer_e_v propose_s_expr p : _ expr=
+      fun state ->
+        let propose_s = propose_s_expr () in
+        rml_infer_v_v propose_s p state
+
+    let rml_infer propose_s_expr p_expr : _ expr=
+      fun state ->
+        let propose_s = propose_s_expr () in
+        let p = p_expr () in
+        rml_infer_v_v propose_s p state
+
 
 (* ------------------------------------------------------------------------ *)
 (**************************************)
 (* sched                              *)
 (**************************************)
     let rec sched p =
-      match p () with
+      match p global_state with
       | SUSP, p' ->
-	  if !move then
-	    begin
-	      move := false;
-	      sched p'
-	    end
-	  else
-	    begin
-	      eoi := true;
-	      sched p'
-	    end
+          if !(global_state.st_move) then
+            begin
+              global_state.st_move := false;
+              sched p'
+            end
+          else
+            begin
+              eoi := true;
+              sched p'
+            end
       | res -> res
 
 
@@ -1118,7 +1399,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	    Event.next ();
 	    current := p';
 	    eoi := false;
-	    move := false;
+	    global_state.st_move := false;
 	    None
 	| TERM v, _ -> Some v
 	| SUSP, _ -> assert false
@@ -1135,13 +1416,13 @@ module Rml_interpreter : Lco_interpreter.S =
 	    Event.next ();
 	    current := p';
 	    eoi := false;
-	    move := false;
+	    global_state.st_move := false;
 	    None
 	| TERM v, _ -> Some v
 	| SUSP, _ -> assert false
       in
       let rml_add_process p =
-	current := rml_par (p()) !current
+        current := rml_par (p()) !current
       in
       rml_react, rml_add_process
 
@@ -1160,7 +1441,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	    Event.next ();
 	    current := p';
 	    eoi := false;
-	    move := false;
+	    global_state.st_move := false;
 	    None
 	| TERM v, _ -> Some ()
 	| SUSP, _ -> assert false

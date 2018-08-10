@@ -1,0 +1,29 @@
+open Distribution
+
+let int_of_bool b =
+  if b then 1 else 0
+
+let process m =
+  let a = sample (bernoulli 0.5) in
+  let b = sample (bernoulli 0.5) in
+  let c = sample (bernoulli 0.5) in
+  factor (if a or b then -1. else 0.);
+  int_of_bool a + int_of_bool b + int_of_bool c
+
+let process main =
+  signal s in
+  let dist = infer s m in
+  begin match dist with
+  | Dist_sampler _ -> assert false
+  | Dist_support l ->
+      List.iter
+        (fun (n, p) ->
+          print_int n;
+          print_string ": ";
+          print_float p;
+          print_newline ();
+          ())
+        (List.sort compare l)
+  end
+
+let () = run main

@@ -18,23 +18,11 @@
 (*                                                                    *)
 (**********************************************************************)
 
-type proba = float
-type log_proba = float
+(* author: Louis Mandel *)
+(* created: 2013-07-07  *)
+(* file: lco/implem_lco_rewrite_record.ml *)
 
-type 'a t =
-    Dist_sampler of ((unit -> 'a) * ('a -> log_proba))
-  | Dist_support of ('a * proba) list
 
-val draw : 'a t -> 'a
+module Lco_rewrite_proba_record = Lco_rewrite_proba.Rml_interpreter(Sig_env.Record)
 
-val score : 'a t -> 'a -> log_proba
-
-val draw_and_score : 'a t -> 'a * log_proba
-
-val bernoulli : proba -> bool t
-
-val gaussian : float -> float -> float t
-
-val multivariate : 'a t list -> 'a list t
-
-val sph_gaussian : float list -> float list -> float list t
+module Rml_machine = Rml_machine.M(Lco_rewrite_proba_record)

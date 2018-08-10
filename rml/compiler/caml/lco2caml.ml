@@ -233,7 +233,8 @@ let rec translate_ml e =
 	  (make_expr
 	     (Cexpr_function [make_patt_unit(), None, translate_proc p])
 	     e.coexpr_loc,
-	   make_rml_type "process" [make_te Ctype_any Location.none])
+	   make_rml_type "model" [make_te Ctype_any Location.none;
+				  make_te Ctype_any Location.none])
 
 
     | Coexpr_pre(flag, s) ->

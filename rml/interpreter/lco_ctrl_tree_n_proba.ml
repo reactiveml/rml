@@ -20,7 +20,7 @@
 
 (* author: Louis Mandel *)
 (* created: 2009-03-03  *)
-(* file: lco_ctrl_tree_n_proba *)
+(* file: lco_ctrl_tree_n *)
 
 (* Remark: taken from                                         *)
 (*            interpreter_without_scope_extrusion_control.ml  *)
@@ -37,350 +37,174 @@
 (*   Suppression de exec                                              *)
 (*   Gestion du parallele n-aire                                      *)
 
-module Rml_interpreter : Lco_interpreter.S =
-  functor (Event: Sig_env.S) ->
+(* open Runtime_options *)
+open Runtime
+
+module Rml_interpreter =
+  functor (R : Runtime.CONTROL_TREE_R) ->
   struct
+    type 'a expr =
+      'a step ->
+      R.state_frame ->
+      unit step
+    and 'a process = ('a, unit) model
+    and ('a, 'b) model = unit -> 'a expr
 
-    exception RML
-
-    type ('a, 'b) event =
-	('a,'b) Event.t * unit step list ref * unit step list ref
-    and 'a event_cfg =
-        bool -> (unit -> bool) * (unit -> 'a) * unit step list ref list
-
-    and control_tree =
-	{ kind: control_type;
-	  mutable alive: bool;
-	  mutable susp: bool;
-	  mutable cond: (unit -> bool);
-	  mutable children: control_tree list;
-	  mutable next: next;
-	  mutable next_boi: next; }
-    and control_type =
-	Top
-      | Kill of unit step
-      | Kill_handler of (unit -> unit step)
-      | Susp
-      | When of unit step ref
-
-    and 'a step = 'a -> unit
-    and next = unit step list
-    and current = unit step list
-    and join_point = int ref option
-    and 'a expr = 'a step -> control_tree -> join_point -> unit step
-    and 'a process = unit -> 'a expr
-
-
-    let rec rev_app x1 x2 =
-      match x1 with
-      | [] -> x2
-      | f :: x1' -> rev_app x1' (f::x2)
-
-(* liste des processus a executer dans l'instant *)
-    let current = ref []
-
-(* liste des listes de processus a revillier a la fin d'instant *)
-    let toWakeUp = ref []
-    let wakeUpAll () =
-      List.iter
-	(fun wp ->
-	  current := rev_app !wp !current;
-	  wp := [])
-	!toWakeUp;
-      toWakeUp := []
-
-(* racine de l'arbre de control *)
-    let top =
-      { kind = Top;
-	alive = true;
-	susp = false;
-	children = [];
-	cond = (fun () -> false);
-	next = [];
-	next_boi = []; }
-
-(* tuer un arbre p *)
-    let rec set_kill p =
-      p.alive <- true;
-      p.susp <- false;
-      p.next <- [];
-      p.next_boi <- [];
-      List.iter set_kill p.children;
-      p.children <- []
-
-(* calculer le nouvel etat de l'arbre de control *)
-(* et deplacer dans la liste current les processus qui sont dans  *)
-(* les listes next *)
-    let eval_control_and_next_to_current =
-      let rec eval pere p active =
-	if p.alive then
-	  match p.kind with
-	  | Top -> raise RML
-	  | Kill f_k ->
-	      if p.cond()
-	      then
-		(pere.next <- f_k :: pere.next;
-		 set_kill p;
-		 false)
-	      else
-		(p.children <- eval_children p p.children active [];
-		 if active then next_to_current p
-		 else next_to_father pere p;
-		 true)
-	  | Kill_handler handler ->
-	      if p.cond()
-	      then
-		(pere.next <- (handler()) :: pere.next;
-		 set_kill p;
-		 false)
-	      else
-		(p.children <- eval_children p p.children active [];
-		 if active then next_to_current p
-		 else next_to_father pere p;
-		 true)
-	  | Susp ->
-	      let pre_susp = p.susp in
-	      if p.cond() then p.susp <- not pre_susp;
-	      let active = active && not p.susp in
-	      if pre_susp
-	      then
-		(if active then next_to_current p;
-		 true)
-	      else
-		(p.children <- eval_children p p.children active [];
-		 if active then next_to_current p
-		 else if not p.susp then next_to_father pere p;
-		 true)
-	  | When f_when ->
-	      if p.susp
-	      then true
-	      else
-		(p.susp <- true;
-		 pere.next <- !f_when :: pere.next;
-		 p.children <- eval_children p p.children false [];
-		 true)
-	else
-	  (set_kill p;
-	   false)
-
-      and eval_children p nodes active acc =
-	match nodes with
-	| [] -> acc
-	| node :: nodes ->
-	    if eval p node active
-	    then eval_children p nodes active (node :: acc)
-	    else eval_children p nodes active acc
-
-      and next_to_current node =
-	current := rev_app node.next !current;
-	node.next <- [];
-	current := rev_app node.next_boi !current;
-	node.next_boi <- []
-      and next_to_father pere node =
-	pere.next <- rev_app node.next pere.next;
-	node.next <- [];
-	pere.next_boi <- List.append pere.next_boi node.next_boi;
-	node.next_boi <- []
-      in
-      fun () ->
-	top.children <- eval_children top top.children true [];
-	next_to_current top
-
-(* deplacer dans la liste current les processus qui sont dans  *)
-(* les listes next *)
-    let rec next_to_current p =
-      if p.alive && not p.susp then
-	(current := rev_app p.next !current;
-	 p.next <- [];
-	 List.iter next_to_current p.children;
-	 current := rev_app p.next_boi !current;
-	 p.next_boi <- [];)
-      else ()
-
-(* debloquer les processus en attent d'un evt *)
-    let wakeUp w =
-      current := rev_app !w !current;
-      w := []
-
-
-(* creation d'evenements *)
-    let new_evt_combine default combine =
-      (Event.create default combine,
-       ref ([]: unit step list), ref ([]: unit step list))
-
-    let new_evt_memory_combine default combine =
-      (Event.create_memory default combine,
-       ref ([]: unit step list), ref ([]: unit step list))
-
-    let new_evt() =
-      new_evt_combine [] (fun x y -> x :: y)
-
-    let eoi = ref false
-    let weoi = ref []
+    type ('a, 'b) event = ('a, 'b) R.event
+    type 'a memory = ('a -> 'a, 'a) R.event
+    type event_cfg_gen = unit -> R.event_cfg
+    type clock_expr = R.clock Rml_types.clock
+    type region_expr = clock_expr
 
     let unit_value = ()
-    let dummy_step _ = ()
+    let dummy_step _ _ = ()
 
+    open R
+    open Rml_types
 
-(**************************************************)
-(* sched                                          *)
-(**************************************************)
-    let rec sched =
-      fun () ->
-	match !current with
-	| f :: c ->
-	    current := c;
-	    f unit_value
-	| [] -> ()
+    let rml_top_clock = CkTop
+    let rml_base_clock = CkLocal
+    let toplevel_id = -1
 
-(* ------------------------------------------------------------------------ *)
-    let rml_pre_status (n, _, _) = Event.pre_status n
+    let eval_clock_expr current_cd ce = match ce with
+      | CkLocal -> R.clock current_cd
+      | CkTop -> R.top_clock ()
+      | CkExpr e -> e
 
-    let rml_pre_value (n, _, _) = Event.pre_value n
+    let ensure_clock_expr ce = match ce with
+      | CkExpr e -> e
+      | CkTop -> R.top_clock ()
+      | CkLocal -> (* should be rejected by compiler *)
+          (* print_debug "Error: Unexpected local clock@."; *)
+          raise Rml_types.RML
 
-    let rml_last (n, _, _) = Event.last n
+    let rec on_event_at_eoi evt ctrl f =
+      let eoi_work id _ =
+        try
+          f id ()
+        with
+        | R.Wait_again -> on_event_at_eoi evt ctrl f id
+      in
+      R.on_event evt ctrl
+        (fun id () -> R.on_eoi (R.Event.clock id evt) eoi_work id)
 
-    let rml_default (n, _, _) = Event.default n
-
-(* ------------------------------------------------------------------------ *)
-    let rml_global_signal = new_evt
-
-    let rml_global_signal_combine = new_evt_combine
-
-    let rml_global_signal_memory_combine = new_evt_memory_combine
-
-(* ------------------------------------------------------------------------ *)
-(**************************************)
-(* configurations                     *)
-(**************************************)
-    let cfg_present' (n,wa,wp) =
-      fun is_long_wait ->
-	(fun () -> Event.status n),
-	(fun () -> Event.value n),
-	[ if is_long_wait then wa else wp ]
-
-    let cfg_present evt_expr =
-      fun is_long_wait ->
-	let evt = evt_expr() in
-	cfg_present' evt is_long_wait
-
-    let cfg_and c1 c2 =
-      fun is_long_wait ->
-	let is_true1, get1, evt_list1 = c1 is_long_wait in
-	let is_true2, get2, evt_list2 = c2 is_long_wait in
-	(fun () -> is_true1() && is_true2()),
-        (fun () -> get1(), get2()),
-	rev_app evt_list1 evt_list2
-
-    let cfg_or c1 c2 =
-      fun is_long_wait ->
-	let is_true1, get1, evt_list1 = c1 is_long_wait in
-	let is_true2, get2, evt_list2 = c2 is_long_wait in
-	(fun () -> is_true1() || is_true2()),
-        (fun () -> if is_true1() then get1() else get2()),
-	rev_app evt_list1 evt_list2
-
-    let cfg_or_option c1 c2 =
-      fun is_long_wait ->
-        let is_true1, get1, evt_list1 = c1 is_long_wait in
-        let is_true2, get2, evt_list2 = c2 is_long_wait in
-        (fun () -> is_true1() || is_true2()),
-        (fun () ->
-          (if is_true1() then Some (get1()) else None),
-          (if is_true2() then Some (get2()) else None)),
-        rev_app evt_list1 evt_list2
-
+    let on_event_cfg_at_eoi evt_cfg ctrl f = ()
 
 (* ------------------------------------------------------------------------ *)
+    let rml_pre_status evt = R.Event.pre_status toplevel_id evt
+
+    let rml_pre_value evt = R.Event.pre_value toplevel_id evt
+
+    let rml_last evt = R.Event.last toplevel_id evt
+
+    let rml_default evt = R.Event.default toplevel_id evt
+
+    let rml_last_mem evt = R.Event.last toplevel_id evt
+
+    let rml_clock evt = CkExpr (R.Event.clock toplevel_id evt)
+
+(* ------------------------------------------------------------------------ *)
+
+    let default_combine x y = x :: y
+    let default_default = []
+
+    let rml_global_signal_combine default combine =
+      R.Event.new_evt_global toplevel_id Rml_types.Signal default combine
+
+    let rml_global_signal_memory_combine default combine =
+      R.Event.new_evt_global toplevel_id Rml_types.Memory default combine
+
+    let rml_global_signal () =
+      rml_global_signal_combine default_default default_combine
+
+(* ------------------------------------------------------------------------ *)
+
+    let cfg_present' evt _ =
+      R.Event.cfg_present evt
+    let cfg_present expr_evt _ =
+      let evt = expr_evt () in
+      R.Event.cfg_present evt
+    let cfg_and ev1 ev2 _ =
+      R.Event.cfg_and (ev1 ()) (ev2 ())
+    let cfg_or ev1 ev2 _ =
+      R.Event.cfg_or (ev1 ()) (ev2 ())
 
 (**************************************)
 (* nothing                            *)
 (**************************************)
     let rml_nothing =
-      fun f_k ctrl jp ->
-	let f_nothing =
-	  fun _ ->
-	    f_k unit_value
-	in f_nothing
+      fun f_k frame id _ ->
+        f_k id unit_value
+
 
 (**************************************)
 (* compute                            *)
 (**************************************)
     let rml_compute e =
-      fun f_k ctrl jp ->
-	let f_compute =
-	  fun _ ->
-	    let v = e() in
-	    f_k v
-	in f_compute
+      fun f_k frame id _ ->
+        let v = e () in
+        f_k id v
 
 (**************************************)
 (* pause                              *)
 (**************************************)
+
+    let rml_pause' pause_ce =
+      fun f_k frame id _ ->
+        let pause_ck = eval_clock_expr frame.st_cd pause_ce in
+        R.on_eoi pause_ck
+          (fun id () -> R.on_next_instant frame.st_ctrl f_k id)
+          id
+
+    (* let rml_pause e = *)
+    (*   fun f_k ctrl jp cd _ -> *)
+    (*     rml_pause' (e ()) f_k ctrl jp cd unit_value *)
+
     let rml_pause =
-      fun f_k ctrl jp ->
-	let f_pause =
-	  fun _ ->
-	    ctrl.next <- f_k :: ctrl.next;
-	    sched ()
-	in f_pause
+      fun f_k frame id _ ->
+        rml_pause' rml_base_clock f_k frame id ()
+
 
 (**************************************)
-(* pause_kboi                         *)
+(* weak pause                              *)
 (**************************************)
-    let rml_pause_kboi =
-      fun f_k ctrl jp ->
-	let f_pause =
-	  fun _ ->
-	    ctrl.next_boi <- f_k :: ctrl.next_boi;
-	    sched ()
-	in f_pause
+
+    let rml_weak_pause' pause_ce =
+      fun f_k frame id _ ->
+        let pause_ck = eval_clock_expr frame.st_cd pause_ce in
+        R.on_eoi pause_ck
+          (fun id () -> R.on_next_instant ~kind:Weak frame.st_ctrl f_k id)
+          id
+
+    let rml_weak_pause e =
+      fun f_k frame id _ ->
+        rml_weak_pause' (e ()) f_k frame id unit_value
 
 (**************************************)
 (* halt                               *)
 (**************************************)
     let rml_halt =
-      fun f_k ctrl jp ->
-	let f_halt =
-	  fun _ ->
-	    sched ()
-	in f_halt
-
-(**************************************)
-(* halt_kboi                          *)
-(**************************************)
-    let rml_halt_kboi = rml_halt
+      fun f_k frame id _ ->
+        ()
 
 (**************************************)
 (* emit                               *)
 (**************************************)
-    let step_emit f_k ctrl (n,wa,wp) e _ =
-      Event.emit n (e());
-      wakeUp wa;
-      wakeUp wp;
-      f_k unit_value
+    let rml_emit_val' evt e =
+      fun f_k frame id _ ->
+        R.Event.emit id evt (e());
+        f_k id unit_value
 
     let rml_emit_val expr_evt e =
-      fun f_k ctrl jp ->
-	let f_emit_val =
-	  fun _ ->
-	    let evt = expr_evt() in
-	    step_emit f_k ctrl evt e unit_value
-	in f_emit_val
-
-    let rml_emit_val' evt e =
-      fun f_k ctrl jp ->
-	let f_emit_val =
-	  step_emit f_k ctrl evt e
-	in f_emit_val
+      fun f_k frame id _ ->
+        let evt = expr_evt() in
+        rml_emit_val' evt e f_k frame id unit_value
 
     let rml_emit expr_evt = rml_emit_val expr_evt (fun() -> ())
     let rml_emit' evt = rml_emit_val' evt (fun() -> ())
 
-    let rml_expr_emit_val (n,wa,wp) v =
-      Event.emit n v;
-      wakeUp wa;
-      wakeUp wp
+    let rml_expr_emit_val evt v =
+      R.Event.emit toplevel_id evt v
 
     let rml_expr_emit evt =
       rml_expr_emit_val evt ()
@@ -388,453 +212,159 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* await_immediate                    *)
 (**************************************)
-    let step_await_immediate f_k ctrl (n,wa,wp) =
-      let w = if ctrl.kind = Top then wa else wp in
-      if ctrl.kind = Top then
-	let rec f_await_top =
-	  fun _ ->
-	    if Event.status n
-	    then
-	      f_k unit_value
-	    else
-	      (w := f_await_top :: !w;
-	       sched ())
-	in f_await_top
-      else
-	let rec f_await_not_top =
-	  fun _ ->
-	    if Event.status n
-	    then
-	      f_k unit_value
-	    else
-	      if !eoi
-	      then
-		(ctrl.next <- f_await_not_top :: ctrl.next;
-		 sched())
-	      else
-		(w := f_await_not_top :: !w;
-		 toWakeUp := w :: !toWakeUp;
-		 sched())
-	in f_await_not_top
-
-    let rml_await_immediate expr_evt =
-      fun f_k ctrl jp ->
-	let f_await =
-	  fun _ ->
-	    let evt = expr_evt() in
-	    step_await_immediate f_k ctrl evt unit_value
-	in f_await
 
     let rml_await_immediate' evt =
-      fun f_k ctrl jp ->
-	let f_await =
-	  step_await_immediate f_k ctrl evt
-	in f_await
+      fun f_k frame id _ ->
+        R.on_event evt frame.st_ctrl f_k id
+
+    let rml_await_immediate expr_evt =
+      fun f_k frame id _ ->
+        let evt = expr_evt() in
+        rml_await_immediate' evt f_k frame id unit_value
 
 (**************************************)
 (* await_immediate_conf               *)
 (**************************************)
+
     let rml_await_immediate_conf expr_cfg =
-      fun f_k ctrl jp ->
-	if ctrl.kind = Top then
-	  let f_await_top =
-	    fun _ ->
-	      let is_true, _, w_list = expr_cfg true in
-	      if is_true() then
-		f_k unit_value
-	      else
-		let ref_f = ref None in
-		let f w step_wake_up =
-		  if is_true() then
-		    (ref_f := None;
-		     f_k unit_value)
-		  else
-		    (w := step_wake_up :: !w;
-		     sched ())
-		in
-		let gen_step w =
-		  let rec step_wake_up _ =
-		    match !ref_f with
-		    | None -> sched ()
-		    | Some f -> f w step_wake_up
-		  in step_wake_up
-		in
-		ref_f := Some f;
-		List.iter
-		  (fun w -> w := (gen_step w) :: !w)
-		  w_list;
-		sched()
-	  in f_await_top
-	else
-	  let f_await_not_top =
-	    fun _ ->
-	      let is_true, _, w_list = expr_cfg false in
-	      if is_true() then
-		f_k unit_value
-	      else
-		let ref_f = ref None in
-		let rec f w step_wake_up =
-		  if is_true() then
-		    (ref_f := None;
-		     f_k unit_value)
-		  else
-		    if !eoi
-		    then
-		      (ctrl.next <- step_wake_up :: ctrl.next;
-		       sched())
-		    else
-		      (w := step_wake_up :: !w;
-		       toWakeUp := w :: !toWakeUp;
-		       sched ())
-		in
-		let gen_step w =
-		  let rec step_wake_up _ =
-		    match !ref_f with
-		    | None -> sched ()
-		    | Some f -> f w step_wake_up
-		  in step_wake_up
-		in
-		ref_f := Some f;
-		List.iter
-		  (fun w ->
-		    w := (gen_step w) :: !w;
-		    toWakeUp := w :: !toWakeUp)
-		  w_list;
-		sched()
-	  in f_await_not_top
+      fun f_k frame id _ ->
+        R.on_event_cfg (expr_cfg ()) frame.st_ctrl f_k id
 
 (**************************************)
 (* get                                *)
 (**************************************)
-    let step_get f_k ctrl jp (n,_,_) p =
-      let rec f_get =
-	fun _ ->
-	  if !eoi
-	  then
-	    let x =
-	      if Event.status n
-	      then Event.value n
-	      else Event.default n
-	    in
-	    let f_body = p x f_k ctrl jp in
-	    ctrl.next <- f_body :: ctrl.next;
-	    sched()
-	  else
-	    (weoi := f_get :: !weoi;
-	     sched ())
-      in f_get
+    let rml_get' evt p =
+      fun f_k frame id _ ->
+        let f_get id _ =
+          let x =
+            if R.Event.status id evt then
+              R.Event.value id evt
+            else
+              R.Event.default id evt
+          in
+          let f_body = p x f_k frame in
+          R.on_next_instant frame.st_ctrl f_body id
+        in
+        R.on_eoi (R.Event.clock id evt) f_get id
 
     let rml_get expr_evt p =
-      fun f_k ctrl jp ->
-	let f_get =
-	  fun _ ->
-	    let evt = expr_evt() in
-	    step_get f_k ctrl jp evt p unit_value
-	in f_get
-
-    let rml_get' evt p =
-      fun f_k ctrl jp ->
-	let f_get =
-	    step_get f_k ctrl jp evt p
-	in f_get
-
-
-
+      let evt = expr_evt() in
+      rml_get' evt p
 
 (**************************************)
 (* await_immediate_one                *)
 (**************************************)
-    let step_await_immediate_one f_k ctrl jp (n,wa,wp) p =
-      let w = if ctrl.kind = Top then wa else wp in
-      let f_await_one =
-	if ctrl.kind = Top then
-	  let rec f_await_one_top =
-	    fun _ ->
-	      if Event.status n
-	      then
-		let x = Event.one n in
-		p x f_k ctrl jp unit_value
-	      else
-		(w := f_await_one_top :: !w;
-		 sched ())
-	  in f_await_one_top
-	else
-	  let rec f_await_one_not_top =
-	    fun _ ->
-	      if Event.status n
-	      then
-		let x = Event.one n in
-		p x f_k ctrl jp unit_value
-	      else
-		if !eoi
-		then
-		  (ctrl.next <- f_await_one_not_top :: ctrl.next;
-		   sched())
-		else
-		  (w := f_await_one_not_top :: !w;
-		   toWakeUp := w :: !toWakeUp;
-		   sched())
-	  in f_await_one_not_top
-      in f_await_one
-
-     let rml_await_immediate_one expr_evt p =
-      fun f_k ctrl jp ->
-      let f_await_one =
-	fun _ ->
-	  let evt = expr_evt() in
-	  step_await_immediate_one f_k ctrl jp evt p unit_value
-      in f_await_one
 
     let rml_await_immediate_one' evt p =
-      fun f_k ctrl jp ->
- 	step_await_immediate_one f_k ctrl jp evt p
+      fun f_k frame id _ ->
+        let f id _ =
+          let x = R.Event.one id evt in
+          p x f_k frame id unit_value
+        in
+        R.on_event evt frame.st_ctrl f id
 
+     let rml_await_immediate_one expr_evt p =
+       fun f_k frame id _ ->
+         let evt = expr_evt() in
+         rml_await_immediate_one' evt p f_k frame id unit_value
 
 (**************************************)
 (* await_all_match                    *)
 (**************************************)
-    let step_await_all_match f_k ctrl jp (n,wa,wp) matching p =
-      let w = if ctrl.kind = Top then wa else wp in
-      let f_await_all_match =
-	if ctrl.kind = Top then
-	  let rec f_await_top =
-	    fun _ ->
-	      if !eoi
-	      then
-		let v = Event.value n in
-		if Event.status n && matching v
-		then
-		  let x = v in
-		  let f_body = p x f_k ctrl jp in
-		  ctrl.next <- f_body :: ctrl.next;
-		  sched()
-		else
-		  (w := f_await_top :: !w;
-		   sched ())
-	      else
-		if Event.status n
-		then
-		  (weoi := f_await_top :: !weoi;
-		   sched ())
-		else
-		  (w := f_await_top :: !w;
-		   sched ())
-	  in f_await_top
-	else
-	  let rec f_await_not_top =
-	    fun _ ->
-	      if !eoi
-	      then
-		let v = Event.value n in
-		if Event.status n && matching v
-		then
-		  let x = v in
-		  let f_body = p x f_k ctrl jp in
-		  ctrl.next <- f_body :: ctrl.next;
-		  sched()
-		else
-		    (ctrl.next <- f_await_not_top :: ctrl.next;
-		     sched ())
-	      else
-		(w := f_await_not_top :: !w;
-		 toWakeUp := w :: !toWakeUp;
-		 sched ())
-	  in f_await_not_top
-      in f_await_all_match
 
+     let rml_await_all_match' evt matching p =
+       fun f_k frame id _ ->
+         let await_eoi id _ =
+           let v = R.Event.value id evt in
+           if matching v then
+             R.on_next_instant frame.st_ctrl (p v f_k frame) id
+           else
+             raise Wait_again
+         in
+         on_event_at_eoi evt frame.st_ctrl await_eoi id
 
     let rml_await_all_match expr_evt matching p =
-      fun f_k ctrl jp ->
-	let f_await_all_match =
-	  fun _ ->
-	    let evt = expr_evt() in
-	    step_await_all_match f_k ctrl jp evt matching p unit_value
-	in f_await_all_match
-
-    let rml_await_all_match' evt matching p =
-      fun f_k ctrl jp ->
- 	step_await_all_match f_k ctrl jp evt matching p
+      fun f_k frame id _ ->
+        let evt = expr_evt() in
+        rml_await_all_match' evt matching p f_k frame id unit_value
 
 (**************************************)
-(* await_all_match_conf               *)
+(* await                              *)
 (**************************************)
 
-    let step_await_all_match_conf f_k ctrl jp expr_cfg matching p =
-      let is_true, get, w_list = expr_cfg (ctrl.kind = Top) in
-      let gen_step_wake_up ref_f =
-        let rec step_wake_up w _ =
-          match !ref_f with
-          | None -> sched ()
-          | Some f -> f w step_wake_up
-        in step_wake_up
-      in
-      let f_await_all_match =
-	if ctrl.kind = Top then
-	  let gen_f_await_top ref_f =
-            let f_await_top w step_wake_up =
-	      if !eoi
-	      then
-		let v = get () in
-		if is_true () && matching v
-		then
-                  (ref_f := None;
-		   let x = v in
-		   let f_body = p x f_k ctrl jp in
-		   ctrl.next <- f_body :: ctrl.next;
-		   sched())
-		else
-		  (w := (step_wake_up w) :: !w;
-		   sched ())
-	      else
-		if is_true ()
-		then
-		  (weoi := (step_wake_up w) :: !weoi;
-		   sched ())
-		else
-		  (w := (step_wake_up w) :: !w;
-		   sched ())
-            in f_await_top
-	  in
-          fun () ->
-            let ref_f = ref None in
-            let f_await_top = gen_f_await_top ref_f in
-            let step_wake_up = gen_step_wake_up ref_f in
-            ref_f := Some f_await_top;
-            List.iter
-              (fun w ->
-                w := (step_wake_up w) :: !w;
-		toWakeUp := w :: !toWakeUp)
-              w_list;
-            sched ()
-	else
-	  let gen_f_await_not_top ref_f =
-	    let f_await_not_top w step_wake_up =
-	      if !eoi
-	      then
-		let v = get () in
-		if is_true() && matching v
-		then
-                  (ref_f := None;
-		   let x = v in
-		   let f_body = p x f_k ctrl jp in
-		   ctrl.next <- f_body :: ctrl.next;
-		   sched())
-		else
-		    (ctrl.next <- (step_wake_up w) :: ctrl.next;
-		     sched ())
-	      else
-		(w := (step_wake_up w) :: !w;
-		 toWakeUp := w :: !toWakeUp;
-		 sched ())
-            in f_await_not_top
-          in
-          fun () ->
-            let ref_f = ref None in
-            let f_await_not_top = gen_f_await_not_top ref_f in
-            let step_wake_up = gen_step_wake_up ref_f in
-            ref_f := Some f_await_not_top;
-            List.iter
-              (fun w ->
-                w := (step_wake_up w) :: !w;
-		toWakeUp := w :: !toWakeUp)
-              w_list;
-            sched ()
-      in f_await_all_match
+    let rml_await' evt =
+      fun f_k frame id _ ->
+        let await_eoi id _ = R.on_next_instant frame.st_ctrl f_k id in
+        on_event_at_eoi evt frame.st_ctrl await_eoi id
 
-    let rml_await_all_match_conf expr_cfg matching p =
-      fun f_k ctrl jp ->
- 	step_await_all_match_conf f_k ctrl jp expr_cfg matching p
+    let rml_await expr_evt =
+      fun f_k frame id _ ->
+        let evt = expr_evt () in
+        rml_await' evt f_k frame id unit_value
 
+    let rml_await_all' evt p =
+      rml_await_all_match' evt (fun _ -> true) p
+
+    let rml_await_all expr_evt p =
+      fun f_k frame id _ ->
+        let evt = expr_evt () in
+        rml_await_all_match' evt (fun _ -> true) p
+          f_k frame id unit_value
+
+    let rml_await_one' evt p =
+       fun f_k frame id _ ->
+         let await_eoi id _ =
+           let v = R.Event.one id evt in
+           R.on_next_instant frame.st_ctrl (p v f_k frame) id
+         in
+         on_event_at_eoi evt frame.st_ctrl await_eoi id
+
+    let rml_await_one expr_evt p =
+      fun f_k frame id _ ->
+        let evt = expr_evt () in
+        rml_await_one' evt p f_k frame id unit_value
+
+    let rml_await_conf expr_cfg =
+      fun f_k frame id _ ->
+        on_event_cfg_at_eoi (expr_cfg ())
+          frame.st_ctrl (fun id () -> R.on_next_instant frame.st_ctrl f_k id)
 
 (**************************************)
 (* present                            *)
 (**************************************)
 
-    let step_present f_k ctrl (n,_,wp) f_1 f_2 =
-      let rec f_present =
-	fun _ ->
-	  if Event.status n
-	  then
-	    f_1 unit_value
-	  else
-	    if !eoi
-	    then
-	      (ctrl.next <- f_2 :: ctrl.next;
-	       sched ())
-	    else
-	      (wp := f_present :: !wp;
-	       toWakeUp := wp :: !toWakeUp;
-	       sched ())
-      in f_present
+    let rml_present' evt p_1 p_2 =
+      fun f_k frame ->
+        let f_1 = p_1 f_k frame in
+        let f_2 = p_2 f_k frame in
+        fun id () ->
+          R.on_event_or_next evt f_1 frame.st_cd frame.st_ctrl f_2 id
 
     let rml_present expr_evt p_1 p_2 =
-      fun f_k ctrl jp ->
-	let f_1 = p_1 f_k ctrl jp in
-	let f_2 = p_2 f_k ctrl jp in
-	let rec f_present =
-	  fun _ ->
-	    let evt = expr_evt () in
-	    step_present f_k ctrl evt f_1 f_2 unit_value
-	in f_present
-
-    let rml_present' evt p_1 p_2 =
-      fun f_k ctrl jp ->
-	let f_1 = p_1 f_k ctrl jp in
-	let f_2 = p_2 f_k ctrl jp in
-	step_present f_k ctrl evt f_1 f_2
+      fun f_k frame id _ ->
+        let evt = expr_evt () in
+        rml_present' evt p_1 p_2 f_k frame id unit_value
 
 (**************************************)
 (* present_conf                       *)
 (**************************************)
+
     let rml_present_conf expr_cfg p_1 p_2 =
-      fun f_k ctrl jp ->
-	fun _ ->
-	  let f_1 = p_1 f_k ctrl jp in
-	  let f_2 = p_2 f_k ctrl jp in
-	  let is_true, _, w_list = expr_cfg false in
-	  if is_true ()
-	  then
-	    f_1 unit_value
-	  else
-	    let ref_f = ref None in
-	    let f w step_wake_up =
-	      if is_true() then
-		(ref_f := None;
-		 f_1 unit_value)
-	      else
-		if !eoi
-		then
-		  (ctrl.next <- f_2 :: ctrl.next;
-		   sched())
-		else
-		  (w := step_wake_up :: !w;
-		   toWakeUp := w :: !toWakeUp;
-		   sched ())
-	    in
-	    let gen_step w =
-	      let rec step_wake_up _ =
-	      match !ref_f with
-	      | None -> sched ()
-	      | Some f -> f w step_wake_up
-	      in step_wake_up
-	    in
-	    ref_f := Some f;
-	    List.iter
-	      (fun w ->
-		w := (gen_step w) :: !w;
-		toWakeUp := w :: !toWakeUp)
-	      w_list;
-	    sched()
+      fun f_k frame ->
+        let f_1 = p_1 f_k frame in
+        let f_2 = p_2 f_k frame in
+        fun id () ->
+          R.on_event_cfg_or_next (expr_cfg ()) f_1 frame.st_cd frame.st_ctrl f_2 id
 
 (**************************************)
 (* seq                                *)
 (**************************************)
 
     let rml_seq p_1 p_2 =
-      fun f_k ctrl jp ->
-	let f_2 = p_2 f_k ctrl jp in
-	let f_1 = p_1 (fun x -> f_2 ()) ctrl None in
-	f_1
+      fun f_k frame ->
+        let f_2 = p_2 f_k frame in
+        let f_1 = p_1 (fun id _ -> f_2 id ()) { frame with st_jp = None } in
+        f_1
 
 (**************************************)
 (* par                                *)
@@ -843,41 +373,29 @@ module Rml_interpreter : Lco_interpreter.S =
 (* applications partielles.                                     *)
 
     let join_n cpt =
-      fun f_k ctrl ->
-	let f_join_n =
-	  fun _ ->
-	    decr cpt;
-	    if !cpt = 0 then
-	      f_k unit_value
-	    else
-	      sched ()
-	in f_join_n
+      fun f_k frame id _ ->
+        if R.Join.decr cpt then
+          f_k id unit_value
+
+    let rml_ignore f_k id _ =
+      f_k id ()
 
     let rml_par p_1 p_2 =
-      fun f_k ctrl jp ->
-	let cpt, j =
-	  match jp with
-	  | None -> let cpt = ref 1 in cpt, join_n cpt f_k ctrl
-	  | Some cpt -> cpt, f_k
-	in
-	let f_1 = p_1 (Obj.magic j: 'a step) ctrl (Some cpt) in
-	let f_2 = p_2 (Obj.magic j: 'b step) ctrl (Some cpt) in
-	let f_par =
-	  fun _ ->
-	    cpt := !cpt + 1;
-	    current := f_2 :: !current;
-	    f_1 unit_value
-	in f_par
-
-(**************************************)
-(* merge                              *)
-(**************************************)
-
-    let rml_merge = rml_par
-(*     let rml_merge p_1 p_2 = *)
-(*       fun f_k ctrl jp -> *)
-(* 	fun _ -> raise RML *)
-
+      fun f_k frame ->
+        let i = match frame.st_jp with None -> 2 | Some _ -> 1 in
+        let cpt, j =
+          match frame.st_jp with
+            | None ->
+                let cpt = R.Join.new_join_point 0 in
+                cpt, join_n cpt f_k frame
+            | Some cpt -> cpt, f_k
+        in
+        let f_1 = p_1 (rml_ignore j) { frame with st_jp = Some cpt } in
+        let f_2 = p_2 (rml_ignore j) { frame with st_jp = Some cpt } in
+        fun id () ->
+          R.Join.incr cpt i;
+          R.on_current_instant frame.st_cd f_2 id;
+          f_1 id unit_value
 
 (**************************************)
 (* loop                               *)
@@ -893,148 +411,143 @@ let rml_loop p =
     let rec f_1 = lazy (p f ctrl)
     and f =
       fun _ ->
-	Lazy.force f_1 unit_value
+        Lazy.force f_1 unit_value
     in
     f
 *)
 
     let rml_loop p =
-      fun f_k ctrl jp ->
-	let f_1 = ref dummy_step in
-	let f_loop = p (fun _ -> !f_1 unit_value) ctrl None in
-	f_1 := f_loop;
-	f_loop
+      fun _ frame ->
+        let f_1 = ref dummy_step in
+        let f_loop =
+          p (fun id _ -> !f_1 id unit_value) { frame with st_jp = None }
+        in
+        f_1 := f_loop;
+        f_loop
 
 (**************************************)
 (* loop_n                             *)
 (**************************************)
 
     let rml_loop_n e p =
-      fun f_k ctrl jp ->
-	let cpt = ref 0 in
-	let f_1 = ref dummy_step in
-	let f_loop =
-	  p
-	    (fun _ ->
-	      if !cpt > 0 then
-		(decr cpt; !f_1 unit_value)
-	      else
-		f_k unit_value)
-	    ctrl None
-	in
-	f_1 := f_loop;
-	fun _ ->
-	  let n = e() in
-	  if n > 0 then
-	    (cpt := n - 1;
-	     f_loop unit_value)
-	  else
-	    f_k unit_value
+      fun f_k frame ->
+        let cpt = R.Join.new_join_point 0 in
+        let f_1 = ref dummy_step in
+        let f_loop =
+          p
+            (fun id _ ->
+              if R.Join.decr cpt then
+                f_k id unit_value
+              else
+                !f_1 id unit_value)
+            { frame with st_jp = None }
+        in
+        f_1 := f_loop;
+        fun id _ ->
+          let n = e() in
+          if n > 0 then
+            (R.Join.incr cpt (n - 1);
+             f_loop id unit_value)
+          else
+            f_k id unit_value
 
 
 (**************************************)
 (* signal                             *)
 (**************************************)
 
+
+    let rml_signal_ f_k frame kind ce re default combine reset p id =
+      let ck = eval_clock_expr frame.st_cd ce in
+      let r = R.Event.region_of_clock id (eval_clock_expr frame.st_cd re) in
+      let reset =
+        match reset with
+          | None -> None
+          | Some r -> Some (eval_clock_expr frame.st_cd r)
+      in
+      let k evt = p evt f_k frame in
+      R.Event.new_evt id frame.st_cd ck r kind default combine reset k id ()
+
+    let rml_signal_combine default combine p =
+      fun f_k frame id _ ->
+        rml_signal_ f_k frame
+          Rml_types.Signal rml_base_clock rml_base_clock
+          (default ()) (combine ()) None p
+          id
+
+    let rml_signal_memory_combine default combine p =
+      fun f_k frame id _ ->
+        rml_signal_ f_k frame
+          Rml_types.Memory rml_base_clock rml_base_clock
+          (default ()) (combine ()) None p
+          id
+
     let rml_signal p =
-      fun f_k ctrl jp ->
-	let f_signal =
-	  fun _ ->
-	    let evt = new_evt() in
-	    let f = p evt f_k ctrl jp in
-	    f unit_value
-	in f_signal
-
-    let rml_signal_combine default comb p =
-      fun f_k ctrl jp ->
-	let f_signal =
-	  fun _ ->
-	    let evt = new_evt_combine (default()) (comb()) in
-	    let f = p evt f_k ctrl jp in
-	    f unit_value
-	in f_signal
-
-    let rml_signal_memory_combine default comb p =
-      fun f_k ctrl jp ->
-        let f_signal =
-          fun _ ->
-            let evt = new_evt_memory_combine (default()) (comb()) in
-            let f = p evt f_k ctrl jp in
-            f unit_value
-        in f_signal
+      rml_signal_combine
+        (fun () -> default_default) (fun () -> default_combine)
+        p
 
 (**************************************)
 (* def                                *)
 (**************************************)
 
     let rml_def e p =
-      fun f_k ctrl jp ->
-	let f_def =
-	  fun _ ->
-	    let f = p (e()) f_k ctrl jp in
-	    f unit_value
-	in f_def
+      fun f_k frame id _ ->
+        p (e()) f_k frame id unit_value
 
 (**************************************)
 (* def_dyn                            *)
 (**************************************)
 
     let rml_def_dyn p1 p2 =
-      fun f_k ctrl jp ->
-	let f_def =
-	  p1
-	    (fun v ->
-	      let f = p2 v f_k ctrl None in
-	      f unit_value)
-	    ctrl jp
-	in f_def
+      fun f_k frame ->
+        p1
+          (fun id v -> p2 v f_k { frame with st_jp = None } id unit_value)
+          frame
 
 (**************************************)
 (* def_and_dyn                        *)
 (**************************************)
-
+(*
     let rml_def_and_dyn =
       let join_n cpt value_array p3 i =
-	fun f_k ctrl jp ->
-	  fun x ->
-	    value_array.(i) <- x;
-	    decr cpt;
-	    if !cpt = 0 then
-	      let f = p3 value_array f_k ctrl jp in
-	      f unit_value
-	    else
-	      sched()
+        fun f_k frame ->
+          fun x ->
+            value_array.(i) <- x;
+            decr cpt;
+            if !cpt = 0 then
+              let f = p3 value_array f_k frame in
+              f unit_value
+            else
+              sched()
       in
       fun p_array p3 ->
-	fun f_k ctrl jp ->
-	  let n = Array.length p_array in
-	  let cpt = ref n in
-	  let value_array = Array.make n (Obj.magic()) in
-	  let step_init =
-	    fun _ ->
-	      cpt := n;
-	      for i = 0 to n - 1 do
-		let f =
-		  p_array.(i)
-		    (join_n cpt value_array p3 i f_k ctrl jp)
-		    ctrl (Some cpt)
-		in
-		current := f :: !current
-	      done;
-	      sched()
-	  in step_init
+        fun f_k frame ->
+          let n = Array.length p_array in
+          let cpt = ref n in
+          let value_array = Array.make n (Obj.magic()) in
+          let step_init =
+            fun _ ->
+              cpt := n;
+              for i = 0 to n - 1 do
+                let f =
+                  p_array.(i)
+                    (join_n cpt value_array p3 i f_k frame)
+                    ctrl (Some cpt)
+                in
+                current := f :: !current
+               done;
+              sched()
+          in step_init
+*)
 
 (**************************************)
 (* match                              *)
 (**************************************)
 
     let rml_match e p =
-      fun f_k ctrl jp ->
-	let f_match =
-	  fun _ ->
-	    let f = p (e()) f_k ctrl jp in
-	    f unit_value
-	in f_match
+      fun f_k frame id _ ->
+        p (e()) f_k frame id unit_value
 
 
 (**************************************)
@@ -1042,343 +555,8 @@ let rml_loop p =
 (**************************************)
 
     let rml_run e =
-      fun f_k ctrl jp ->
-	let f_run =
-	  fun _ ->
-	    let f_1 = (e ()) () f_k ctrl jp in
-	    f_1 unit_value
-	in f_run
-
-
-(**************************************)
-(* until                              *)
-(**************************************)
-(* ---------- Misc functions for until, control and when ---------- *)
-    let new_ctrl kind =
-      { kind = kind;
-	alive = true;
-	susp = false;
-	children = [];
-	cond = (fun () -> false);
-	next = [];
-	next_boi = []; }
-
-    let start_ctrl f_k ctrl f new_ctrl =
-      let f_ctrl =
-	fun _ ->
-	  if new_ctrl.alive
-	  then
-	    (ctrl.children <- new_ctrl :: ctrl.children)
-	  else
-	    (new_ctrl.alive <- true;
-	     new_ctrl.susp <- false;
-	     new_ctrl.next <- [];
-	     new_ctrl.next_boi <- []);
-	  f unit_value
-      in f_ctrl
-
-    let end_ctrl f_k new_ctrl =
-      fun x ->
-	set_kill new_ctrl;
-	new_ctrl.alive <- false;
-	f_k x
-(* ---------------------------------------------------------------- *)
-
-    let rml_until expr_evt p =
-      fun f_k ctrl jp ->
-	let new_ctrl = new_ctrl (Kill f_k) in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	let f_until =
-	  fun _ ->
-	    let (n,_,_) = expr_evt () in
-	    new_ctrl.cond <- (fun () -> Event.status n);
-	    start_ctrl f_k ctrl f new_ctrl unit_value
-	in f_until
-
-    let rml_until' (n,_,_) p =
-      fun f_k ctrl jp ->
-	let new_ctrl = new_ctrl (Kill f_k) in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	new_ctrl.cond <- (fun () -> Event.status n);
-	start_ctrl f_k ctrl f new_ctrl
-
-(**************************************)
-(* until_conf                         *)
-(**************************************)
-
-    let rml_until_conf expr_cfg p =
-      fun f_k ctrl jp ->
-	let new_ctrl = new_ctrl (Kill f_k) in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	let f_until =
-	  fun _ ->
-	    let cond, _, _ = expr_cfg true in
-	    new_ctrl.cond <- cond;
-	    start_ctrl f_k ctrl f new_ctrl unit_value
-	in f_until
-
-
-
-(**************************************)
-(* until handler                      *)
-(**************************************)
-
-    let rml_until_handler_local
-	(expr_evt: unit -> ('a, 'b) event) matching_opt p p_handler =
-      fun f_k ctrl jp ->
-	let evt = ref (Obj.magic() : ('a, 'b) event) in
-	let handler =
-	  fun () ->
-	    let x =
-	      let n, _, _ = !evt in
-	      if Event.status n
-	      then Event.value n
-	      else raise RML
-	    in
-	    let f_handler = p_handler x f_k ctrl jp in
-	    f_handler
-	in
-	let new_ctrl = new_ctrl (Kill_handler handler) in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	let f_until =
-	  fun _ ->
-	    let (n, _, _) as e = expr_evt () in
-	    evt := e;
-	    begin match matching_opt with
-	    | None ->
-		new_ctrl.cond <- (fun () -> Event.status n);
-	    | Some matching ->
-		new_ctrl.cond <-
-		  (fun () -> Event.status n && matching (Event.value n));
-	    end;
-	    start_ctrl f_k ctrl f new_ctrl unit_value
-	in f_until
-
-    let rml_until_handler_local' (n,_,_) matching_opt p p_handler =
-      fun f_k ctrl jp ->
-	let handler =
-	  fun () ->
-	    let x =
-	      if Event.status n
-	      then Event.value n
-	      else raise RML
-	    in
-	    let f_handler = p_handler x f_k ctrl jp in
-	    f_handler
-	in
-	let new_ctrl = new_ctrl (Kill_handler handler) in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	begin match matching_opt with
-	| None ->
-	    new_ctrl.cond <- (fun () -> Event.status n);
-	| Some matching ->
-	    new_ctrl.cond <-
-	      (fun () -> Event.status n && matching (Event.value n));
-	end;
-	start_ctrl f_k ctrl f new_ctrl
-
-    let rml_until_handler_conf_local expr_cfg matching_opt p p_handler =
-      fun f_k ctrl jp ->
-        let ref_get = ref (fun () -> raise RML) in
-        let handler =
-          fun () ->
-            let x = (!ref_get) () in
-            let f_handler = p_handler x f_k ctrl jp in
-            f_handler
-        in
-        let new_ctrl = new_ctrl (Kill_handler handler) in
-        let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-        let f_until =
-          fun _ ->
-            let (is_true, get, _) = expr_cfg true in
-            ref_get := get;
-            begin match matching_opt with
-            | None ->
-                new_ctrl.cond <- is_true;
-            | Some matching ->
-                new_ctrl.cond <- (fun () -> is_true() && matching (get ()));
-            end;
-            start_ctrl f_k ctrl f new_ctrl unit_value
-        in f_until
-
-    let rml_until_handler expr_evt p p_handler =
-      rml_until_handler_local expr_evt None p p_handler
-
-    let rml_until_handler' evt p p_handler =
-      rml_until_handler_local' evt None p p_handler
-
-    let rml_until_handler_match expr_evt matching p p_handler =
-      rml_until_handler_local expr_evt (Some matching) p p_handler
-
-    let rml_until_handler_match' evt matching p p_handler =
-      rml_until_handler_local' evt (Some matching) p p_handler
-
-    let rml_until_handler_conf expr_cfg p p_handler =
-      rml_until_handler_conf_local expr_cfg None p p_handler
-
-    let rml_until_handler_match_conf expr_cfg matching p p_handler =
-      rml_until_handler_conf_local expr_cfg (Some matching) p p_handler
-
-    let rml_until_match expr_evt matching p =
-      rml_until_handler_local expr_evt (Some matching) p (fun _ -> rml_nothing)
-
-    let rml_until_match' evt matching p =
-      rml_until_handler_local' evt (Some matching) p (fun _ -> rml_nothing)
-
-    let rml_until_match_conf expr_cfg matching p =
-      rml_until_handler_conf_local expr_cfg (Some matching) p (fun _ -> rml_nothing)
-
-
-(**************************************)
-(* control                            *)
-(**************************************)
-    let rml_control expr_evt p =
-      fun f_k ctrl jp ->
-	let new_ctrl = new_ctrl Susp in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	let f_control =
-	  fun _ ->
-	    let (n, _, _) = expr_evt () in
-	    new_ctrl.cond <- (fun () -> Event.status n);
-	    start_ctrl f_k ctrl f new_ctrl ()
-	in f_control
-
-    let rml_control' (n, _, _) p =
-      fun f_k ctrl jp ->
-	let new_ctrl = new_ctrl Susp in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	new_ctrl.cond <- (fun () -> Event.status n);
-	start_ctrl f_k ctrl f new_ctrl
-
-(**************************************)
-(* control_match                      *)
-(**************************************)
-    let rml_control_match expr_evt matching p =
-      fun f_k ctrl jp ->
-	let new_ctrl = new_ctrl Susp in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	let f_control =
-	  fun _ ->
-	    let (n, _, _) = expr_evt () in
-	    new_ctrl.cond <-
-	      (fun () -> Event.status n && matching (Event.value n));
-	    start_ctrl f_k ctrl f new_ctrl ()
-	in f_control
-
-    let rml_control_match' (n, _, _) matching p =
-      fun f_k ctrl jp ->
-	let new_ctrl = new_ctrl Susp in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	new_ctrl.cond <- (fun () -> Event.status n && matching (Event.value n));
-	start_ctrl f_k ctrl f new_ctrl
-
-    let rml_control_match_conf expr_cfg matching p =
-      fun f_k ctrl jp ->
-	let new_ctrl = new_ctrl Susp in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	let f_control =
-	  fun _ ->
-	    let cond, get, _ = expr_cfg true in
-	    new_ctrl.cond <- (fun () -> cond () && matching (get ()));
-	    start_ctrl f_k ctrl f new_ctrl ()
-	in f_control
-
-
-(**************************************)
-(* control_conf                       *)
-(**************************************)
-
-    let rml_control_conf expr_cfg p =
-      fun f_k ctrl jp ->
-	let new_ctrl = new_ctrl Susp in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	let f_control =
-	  fun _ ->
-	    let cond, _, _ = expr_cfg true in
-	    new_ctrl.cond <- cond;
-	    start_ctrl f_k ctrl f new_ctrl ()
-	in f_control
-
-
-(**************************************)
-(* when                               *)
-(**************************************)
-
-    let step_when f_k ctrl (n,wa,wp) f new_ctrl dummy =
-      let w = if ctrl.kind = Top then wa else wp in
-      new_ctrl.cond <- (fun () -> Event.status n);
-      let rec f_when =
-	fun _ ->
-	  if Event.status n
-	  then
-	    (new_ctrl.susp <- false;
-	     next_to_current new_ctrl;
-	     sched())
-	  else
-	    if !eoi
-	    then
-	      (ctrl.next <- f_when :: ctrl.next;
-	       sched())
-	    else
-	      (w := f_when :: !w;
-	       if ctrl.kind <> Top then toWakeUp := w :: !toWakeUp;
-	       sched())
-      in
-      let start_when =
-	fun _ ->
-	  if new_ctrl.alive
-	  then
-	    (ctrl.children <- new_ctrl :: ctrl.children)
-	  else
-	    (new_ctrl.alive <- true;
-	     new_ctrl.susp <- false;
-	     new_ctrl.next <- [];
-	     new_ctrl.next_boi <- []);
-	  if Event.status n
-	  then
-	    (new_ctrl.susp <- false;
-	     new_ctrl.next <- [];
-	     new_ctrl.next_boi <- [];
-	     f unit_value)
-	  else
-	    (new_ctrl.susp <- true;
-	     new_ctrl.next <- [f];
-	     new_ctrl.next_boi <- [];
-	     w := f_when :: !w;
-	     if ctrl.kind <> Top then toWakeUp := w :: !toWakeUp;
-	     sched())
-      in
-      dummy := f_when;
-      start_when
-
-      let rml_when expr_evt p =
-      fun f_k ctrl jp ->
-	let dummy = ref dummy_step in
-	let new_ctrl = new_ctrl (When dummy) in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	let start_when =
-	  fun _ ->
-	    let evt = expr_evt () in
-	    step_when f_k ctrl evt f new_ctrl dummy unit_value
-	in
-	start_when
-
-    let rml_when' evt p =
-      fun f_k ctrl jp ->
-	let dummy = ref dummy_step in
-	let new_ctrl = new_ctrl (When dummy) in
-	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
-	let start_when =
-	  step_when f_k ctrl evt f new_ctrl dummy
-	in
-	start_when
-
-(**************************************)
-(* when_conf                          *)
-(**************************************)
-    let rml_when_conf expr_cfg =
-      fun f_k ctrl ->
-	fun _ -> raise RML
+      fun f_k frame id _ ->
+        (e ()) () f_k frame id unit_value
 
 
 (**************************************)
@@ -1386,33 +564,29 @@ let rml_loop p =
 (**************************************)
 
     let rml_if e p_1 p_2 =
-      fun f_k ctrl jp ->
-	let f_1 = p_1 f_k ctrl jp in
-	let f_2 = p_2 f_k ctrl jp in
-	let f_if =
-	  fun _ ->
-	    if e() then
-	      f_1 unit_value
-	    else
-	      f_2 unit_value
-	in f_if
-
+      fun f_k frame ->
+        let f_1 = p_1 f_k frame in
+        let f_2 = p_2 f_k frame in
+        fun id () ->
+          if e() then
+            f_1 id unit_value
+          else
+            f_2 id unit_value
 
 (**************************************)
 (* while                              *)
 (**************************************)
 
     let rml_while e p =
-      fun f_k ctrl jp ->
-	let f_body = ref dummy_step in
-	let f_while =
-	  fun _ ->
-	    if e()
-	    then !f_body unit_value
-	    else f_k unit_value
-	in
-	f_body := p f_while ctrl None;
-	f_while
+      fun f_k frame ->
+        let f_body = ref dummy_step in
+        let f_while id _ =
+          if e()
+          then !f_body id unit_value
+          else f_k id unit_value
+        in
+        f_body := p f_while { frame with st_jp = None };
+        f_while
 
 
 (**************************************)
@@ -1421,23 +595,21 @@ let rml_loop p =
 
     let rml_for e1 e2 dir p =
       let (incr, cmp) = if dir then incr, (<=) else decr, (>=) in
-      fun f_k ctrl jp ->
-	let rec f_for i v2 =
-	  fun _ ->
-	    incr i;
-	    if cmp !i v2
-	    then p !i (f_for i v2) ctrl None unit_value
-	    else f_k unit_value
-	in
-	let f_for_init =
-	  fun _ ->
-	    let i = ref (e1()) in
-	    let v2 = e2() in
-	    if cmp !i v2
-	    then p !i (f_for i v2) ctrl None unit_value
-	    else f_k unit_value
-	in
-	f_for_init
+      fun f_k frame ->
+        let rec f_for i v2 id _ =
+          incr i;
+          if cmp !i v2
+          then p !i (f_for i v2) { frame with st_jp = None } id unit_value
+          else f_k id unit_value
+        in
+        let f_for_init id _ =
+          let i = ref (e1()) in
+          let v2 = e2() in
+          if cmp !i v2
+          then p !i (f_for i v2) { frame with st_jp = None } id unit_value
+          else f_k id unit_value
+        in
+        f_for_init
 
 
 (**************************************)
@@ -1445,304 +617,314 @@ let rml_loop p =
 (**************************************)
 
     let rml_fordopar e1 e2 dir p =
-      fun f_k ctrl jp ->
-	let cpt = ref 0 in
-	let j = join_n cpt f_k ctrl in
-	let f_fordopar =
-	  fun _ ->
-	    if dir then
-	      begin
-		let min = e1() in
-		let max = e2() in
-		cpt := max - min + 1;
-		if !cpt <= 0 then
-		  f_k unit_value
-		else
-		  begin
-		    for i = max downto min do
-		      let f = p i j ctrl (Some cpt) in
-		      current := f :: !current
-		    done;
-		    sched()
-		  end
-	      end
-	    else
-	      begin
-		let max = e1() in
-		let min = e2() in
-		cpt := max - min + 1;
-		if !cpt <= 0 then
-		  f_k unit_value
-		else
-		  begin
-		    for i = min to max do
-		      let f = p i j ctrl (Some cpt) in
-		      current := f :: !current
-		    done;
-		    sched ()
-		  end
-	      end
-	in
-	f_fordopar
+      fun f_k frame ->
+        let cpt = R.Join.new_join_point 0 in
+        let j = join_n cpt f_k frame in
+        let f_fordopar id _ =
+          if dir then
+            begin
+              let min = e1() in
+              let max = e2() in
+              let n = max - min + 1 in
+              R.Join.incr cpt n;
+              if n <= 0 then
+                f_k id unit_value
+              else
+                for i = max downto min do
+                  let f = p i j { frame with st_jp = Some cpt } in
+                  R.on_current_instant frame.st_cd f id
+                done
+            end
+          else
+            begin
+              let max = e1() in
+              let min = e2() in
+              let n = max - min + 1 in
+              R.Join.incr cpt n;
+              if n <= 0 then
+                f_k id unit_value
+              else
+                for i = min to max do
+                  let f = p i j { frame with st_jp = Some cpt } in
+                  R.on_current_instant frame.st_cd f id
+                done
+            end
+        in
+        f_fordopar
 
-
-(* ------------------------------------------------------------------------ *)
-(**************************************)
-(* await                              *)
-(**************************************)
-
-    let rml_await expr_evt =
-      fun f_k ctrl jp ->
-	fun _ ->
-	  let evt = expr_evt () in
-	  rml_await_immediate' evt (rml_pause f_k ctrl jp) ctrl None unit_value
-
-    let rml_await' evt =
-      fun f_k ctrl jp ->
-	rml_await_immediate' evt (rml_pause f_k ctrl jp) ctrl None
-
-    let rml_await_all expr_evt p =
-      fun f_k ctrl jp ->
-	fun _ ->
-	  let evt = expr_evt () in
-	  rml_await_immediate' evt (rml_get' evt p f_k ctrl jp)
-	    ctrl None unit_value
-
-    let rml_await_all' evt p =
-      fun f_k ctrl jp ->
-	rml_await_immediate' evt (rml_get' evt p f_k ctrl jp) ctrl None
-
-    let step_get_cfg f_k ctrl jp get p =
-      let f_get_cfg_eoi _ =
-        let x = get () in
-        let f_body = p x f_k ctrl jp in
-        ctrl.next <- f_body :: ctrl.next;
-        sched ()
-      in
-      fun _ ->
-        weoi := f_get_cfg_eoi :: !weoi;
-        sched ()
-
-    let rml_await_all_conf expr_cfg p =
-      fun f_k ctrl jp ->
-	fun _ ->
-	  let (_, get, _) as cfg = expr_cfg true in
-	  rml_await_immediate_conf (fun _ -> cfg)
-            (step_get_cfg f_k ctrl jp get p) ctrl jp unit_value
-
-    let rml_await_one expr_evt p =
-      let pause_p x =
-	fun f_k ctrl jp ->
-	  rml_pause (p x f_k ctrl jp) ctrl None
-      in
-      fun f_k ctrl jp ->
-	fun _ ->
-	  let evt = expr_evt () in
-	  rml_await_immediate_one' evt pause_p f_k ctrl jp unit_value
-
-    let rml_await_one' evt p =
-      let pause_p x =
-	fun f_k ctrl jp ->
-	  rml_pause (p x f_k ctrl jp) ctrl None
-      in
-      fun f_k ctrl jp ->
-	rml_await_immediate_one' evt pause_p f_k ctrl jp
-
-    let rml_await_one_match expr_evt matching p =
-      rml_await_all_match expr_evt
-        (fun x -> List.exists matching x)
-        (fun l ->
-          try
-            let v = List.find matching l in
-            p v
-          with Not_found -> raise RML)
-
-    let rml_await_one_match' evt matching p =
-      rml_await_all_match' evt
-        (fun x -> List.exists matching x)
-        (fun l ->
-          try
-            let v = List.find matching l in
-            p v
-          with Not_found -> raise RML)
-
-    let rml_await_conf expr_cfg =
-      fun f_k ctrl jp ->
-	rml_await_immediate_conf expr_cfg (rml_pause f_k ctrl jp) ctrl None
-
-(* ------------------------------------------------------------------------ *)
-(*
-    let join_n cpt =
-      fun f_k ctrl ->
-	let f_join_n =
-	  fun() ->
-	    decr cpt;
-	    if !cpt = 0 then
-	      f_k()
-	    else
-	      sched()
-	in f_join_n
-*)
     let rml_par_n p_list =
-      fun f_k ctrl jp ->
-	let nb = List.length p_list in
-	let cpt =
-	  match jp with
-	  | None -> ref 0
-	  | Some cpt -> cpt
-	in
-	let j = join_n cpt f_k ctrl in
-	let f_list = List.rev_map (fun p -> p j ctrl (Some cpt)) p_list in
-	let f_par_n =
-	  fun _ ->
-	    cpt := !cpt + nb;
-	    current := rev_app f_list !current;
-	    sched()
-	in f_par_n
+      fun f_k frame ->
+        let nb = List.length p_list in
+        let i = match frame.st_jp with None -> nb | Some _ -> nb - 1 in
+        let cpt, j =
+          match frame.st_jp with
+            | None ->
+                let cpt = R.Join.new_join_point 0 in
+                cpt, join_n cpt f_k frame
+            | Some cpt -> cpt, f_k
+        in
+        let f_list =
+          List.rev_map (fun p -> p j { frame with st_jp = Some cpt }) p_list
+        in
+        fun id _ ->
+          R.Join.incr cpt i;
+          R.on_current_instant_list frame.st_cd f_list id
 
     let rml_seq_n =
-      let rec fold p_list k ctrl jp =
-	match p_list with
-	| [] -> k
-	| [ p ] -> p k ctrl jp
-	| p::p_list -> p (fold p_list k ctrl jp) ctrl None
+      let rec fold p_list k frame =
+        match p_list with
+        | [] -> k
+        | [ p ] -> p k frame
+        | p::p_list -> p (fold p_list k frame) { frame with st_jp = None }
       in
       fun p_list ->
-	fun f_k ctrl jp ->
-	  let f =
-	    (* List.fold_right (fun p -> fun k -> p k ctrl None) p_list f_k  *)
-	    fold p_list f_k ctrl jp
-	  in f
-
-(* ------------------------------------------------------------------------ *)
-    exception End
+        fun f_k frame ->
+          let f =
+            (* List.fold_right (fun p -> fun k -> p k ctrl None) p_list f_k  *)
+            fold p_list f_k frame
+          in f
 
 
-(**************************************************)
-(* rml_make                                       *)
-(**************************************************)
+
+(**************************************)
+(* until                              *)
+(**************************************)
+
+    let true_cond _ = true
+
+    let rml_until expr_evt (p : _ expr)  : _ expr =
+      let pause_kind = Rml_types.Strong in
+      fun f_k frame ->
+        let body f_k new_ctrl =
+          p f_k { frame with st_ctrl = new_ctrl;
+                             st_jp = None; }
+        in
+        let f =
+          create_control (Kill (pause_kind, f_k))
+            body f_k frame.st_ctrl frame.st_cd
+        in
+        fun id () ->
+          let evt = expr_evt () in
+          f id evt true_cond id ()
+
+    let rml_until' evt p =
+      rml_until (fun () -> evt) p
+
+    let rml_until_conf expr_cfg p =
+      let pause_kind = Rml_types.Strong in
+      fun f_k frame ->
+        let body f_k new_ctrl =
+          p f_k { frame with st_ctrl = new_ctrl;
+                             st_jp = None; }
+        in
+        let f =
+          create_control_evt_conf (Kill (pause_kind, f_k))
+            body f_k frame.st_ctrl frame.st_cd
+        in
+        fun id () ->
+          let evt_cfg = expr_cfg () in
+          f evt_cfg id ()
+
+(**************************************)
+(* until handler                      *)
+(**************************************)
+
+    let rml_until_handler_local expr_evt matching_opt p p_handler =
+      p (* XXX TODO XXX *)
+      (* let pause_kind = Rml_types.Strong in *)
+      (* fun f_k frame -> *)
+      (*   let evt = ref (Obj.magic() : ('a, 'b) event) in *)
+      (*   let handler _ id x = *)
+      (*     let x = R.Event.value id !evt in *)
+      (*     p_handler x f_k frame id x *)
+      (*   in *)
+      (*   let body f_k new_ctrl = *)
+      (*     p f_k { frame with st_ctrl = new_ctrl; *)
+      (*                        st_jp = None; } *)
+      (*   in *)
+      (*   let f = *)
+      (*     create_control (Kill_handler (pause_kind, handler)) *)
+      (*       body f_k frame.st_ctrl frame.st_cd *)
+      (*   in *)
+      (*   let cond = *)
+      (*     match matching_opt with *)
+      (*       | None -> true_cond *)
+      (*       | Some cond -> cond *)
+      (*   in *)
+      (*   fun id () -> *)
+      (*     evt := expr_evt (); *)
+      (*     f id !evt cond id () *)
+
+    let rml_until_handler_local' evt matching_opt p p_handler =
+      rml_until_handler_local (fun () -> evt) matching_opt p p_handler
+
+    let rml_until_handler (* pause_kind *) expr_evt p p_handler =
+      rml_until_handler_local (* pause_kind *) expr_evt None p p_handler
+
+    let rml_until_handler' (* pause_kind *) evt p p_handler =
+      rml_until_handler_local' (* pause_kind *) evt None p p_handler
+
+    let rml_until_handler_match (* pause_kind *) expr_evt matching p p_handler =
+      rml_until_handler_local (* pause_kind *) expr_evt (Some matching) p p_handler
+
+    let rml_until_handler_match' (* pause_kind *) evt matching p p_handler =
+      rml_until_handler_local' (* pause_kind *) evt (Some matching) p p_handler
+
+    let rml_until_handler_match_conf expr_cfg matching p p_handler =
+      let pause_kind = Rml_types.Strong in
+      fun f_k frame ->
+        let body f_k new_ctrl =
+          p f_k { frame with st_ctrl = new_ctrl;
+                             st_jp = None; }
+        in
+        let f =
+          create_control_evt_conf (Kill (pause_kind, f_k))
+            body f_k frame.st_ctrl frame.st_cd
+        in
+        fun id () ->
+          let evt_cfg = expr_cfg () in
+          f evt_cfg id ()
+
+
+
+(**************************************)
+(* control                            *)
+(**************************************)
+
+    let step_control_static evt cond p =
+      p (* XXX TODO XXX *)
+    (*   fun f_k frame -> *)
+    (*     let body f_k new_ctrl = *)
+    (*       p f_k { frame with st_ctrl = new_ctrl; *)
+    (*                          st_jp = None; } *)
+    (*     in *)
+    (*     create_control Susp body f_k frame.st_ctrl frame.st_cd evt cond *)
+
+    let step_control expr_evt cond p =
+      p (* XXX TODO XXX *)
+    (*   fun f_k frame -> *)
+    (*     let body f_k new_ctrl = *)
+    (*       p f_k { frame with st_ctrl = new_ctrl; *)
+    (*                          st_jp = None; } *)
+    (*     in *)
+    (*     let f = create_control Susp body f_k frame.st_ctrl frame.st_cd in *)
+    (*     fun id () -> *)
+    (*       let evt = expr_evt () in *)
+    (*       f id evt cond id () *)
+
+    let rml_control' evt p = step_control_static evt true_cond p
+
+    let rml_control expr_evt p = step_control expr_evt true_cond p
+
+    let rml_control_match' evt matching p = step_control_static evt matching p
+
+    let rml_control_match expr_evt matching p = step_control expr_evt matching p
+
+    (* let rml_control_conf expr_cfg p = *)
+    (*   fun f_k frame -> *)
+    (*     let body f_k new_ctrl = *)
+    (*       p f_k { frame with st_ctrl = new_ctrl; *)
+    (*                          st_jp = None; } *)
+    (*     in *)
+    (*     let f = *)
+    (*       create_control_evt_conf Susp body f_k frame.st_ctrl frame.st_cd *)
+    (*     in *)
+    (*     fun id () -> *)
+    (*       let evt_cfg = expr_cfg () in *)
+    (*       f evt_cfg id () *)
+
+(**************************************)
+(* when                               *)
+(**************************************)
+
+    (* let rml_when expr_evt p = *)
+    (*   fun f_k frame -> *)
+    (*    let body f_k new_ctrl = *)
+    (*       p f_k { frame with st_ctrl = new_ctrl; *)
+    (*                          st_jp = None; } *)
+    (*    in *)
+    (*     let f = create_control When body f_k frame.st_ctrl frame.st_cd in *)
+    (*     fun id () -> *)
+    (*       let evt = expr_evt () in *)
+    (*       f evt true_cond id () *)
+
+    (* let rml_when' evt p = *)
+    (*   fun f_k frame -> *)
+    (*     let body f_k new_ctrl = *)
+    (*       p f_k { frame with st_ctrl = new_ctrl; *)
+    (*                          st_jp = None; } *)
+    (*     in *)
+    (*     R.create_control When body f_k frame.st_ctrl frame.st_cd evt true_cond *)
+
+    (* let rml_when_conf expr_cfg = *)
+    (*   fun f_k ctrl -> *)
+    (*     fun id _ -> *)
+    (*       (\* print_debug "Unimplemented when_conf@."; *\) *)
+    (*       raise Rml_types.RML *)
+
+(**************************************)
+(* clock domain                       *)
+(**************************************)
+
+    let rml_newclock sch period p =
+      fun f_k frame ->
+        R.new_clock_domain toplevel_id frame.st_cd frame.st_ctrl
+          (fun cd ctrl f_k ->
+             p (CkExpr (R.clock cd)) f_k { frame with st_ctrl = ctrl;
+                                                      st_jp = None;
+                                                      st_cd = cd; })
+          sch period f_k
+
+(**************************************)
+(* rml_make                           *)
+(**************************************)
+
+    let rml_make cd result p =
+     (* Function to create the last continuation of a toplevel process *)
+      let jp, join_end =
+        let term_cpt = R.Join.new_join_point 0 in
+        Some term_cpt,
+        fun () ->
+          R.Join.incr term_cpt 1;
+          let f id x =
+            if R.Join.decr term_cpt then
+              result := Some x
+          in f
+      in
+      p () (join_end()) { st_ctrl = (control_tree cd);
+                          st_jp = jp;
+                          st_cd = cd;
+                          st_prob = None; }
+
     let rml_make p =
+      let cd = R.get_top_clock_domain () in
       let result = ref None in
-      (* the main step function *)
-      let f = p () (fun x -> result := Some x; raise End) top None in
-      current := [f];
-      (* the react function *)
-      let rml_react () =
-	try
-	  sched ();
-	  eoi := true;
-	  wakeUp weoi;
-	  wakeUpAll ();
-	  sched ();
-	  eval_control_and_next_to_current ();
-	  Event.next ();
-	  eoi := false;
-	  None
-	with
-	| End -> !result
-      in
-      rml_react
+      let step = rml_make cd result p in
+      R.on_current_instant cd step toplevel_id;
+      fun () ->
+        R.react cd toplevel_id;
+        !result
 
 
-(**************************************************)
-(* rml_make_unit                                  *)
-(**************************************************)
-
-    let rml_make_unit (p: unit process) =
-
-      (* Function to create the last continuation of a toplevel process *)
+    let rml_make_n cd result pl =
       let jp, join_end =
-	let term_cpt = ref 0 in
-	Some term_cpt,
-	fun () ->
-	  incr term_cpt;
-	  let f x =
-	    decr term_cpt;
-	    if !term_cpt > 0 then
-	      sched()
-	    else
-	      raise End
-	  in f
+        let term_cpt = R.Join.new_join_point 0 in
+        Some term_cpt,
+        fun () ->
+          R.Join.incr term_cpt (List.length pl);
+          let f x =
+            if R.Join.decr term_cpt then
+              result := Some x
+          in f
       in
+      List.map (fun p -> p () (join_end ()) (control_tree cd) jp cd) pl
 
-      (* the main step function *)
-      let f = p () (join_end()) top jp in
-      current := [f];
+    module R = R
 
-      (* the react function *)
-      let rml_react () =
-	try
-	  sched ();
-	  eoi := true;
-	  wakeUp weoi;
-	  wakeUpAll ();
-	  sched ();
-	  eval_control_and_next_to_current ();
-	  Event.next ();
-	  eoi := false;
-	  None
-	with
-	| End -> Some ()
-      in
+  end  (* Module Rml_interpreter *)
 
-      (* the add_process function*)
-      let add_process p =
-	let f =  p () (join_end()) top jp in
-	current := f :: !current
-      in
-
-      rml_react, add_process
-
-(**************************************************)
-(* rml_make_exec_process                          *)
-(**************************************************)
-
-    let rml_make_exec_process (p: unit process) =
-
-      (* Function to create the last continuation of a toplevel process *)
-      let jp, join_end =
-	let term_cpt = ref 0 in
-	Some term_cpt,
-	fun () ->
-	  incr term_cpt;
-	  let f x =
-	    decr term_cpt;
-	    if !term_cpt > 0 then
-	      sched()
-	    else
-	      raise End
-	  in f
-      in
-
-      (* the add_process function*)
-      let add_process p =
-	let f =  p () (join_end()) top jp in
-	current := f :: !current
-      in
-
-      (* the main step function *)
-      let f = p () (join_end()) top jp in
-      current := [f];
-
-      (* the react function *)
-      let rml_react proc_list =
-	try
-	  List.iter add_process proc_list;
-	  sched ();
-	  eoi := true;
-	  wakeUp weoi;
-	  wakeUpAll ();
-	  sched ();
-	  eval_control_and_next_to_current ();
-	  Event.next ();
-	  eoi := false;
-	  None
-	with
-	| End -> Some ()
-      in
-
-      rml_react
-
-
-
-  end (* Module Rml_interpreter *)
+(* This module declaration is only used to check that the module is compatible
+   with the signature Lco_interpreter.S. It should not be used. *)
+(* module Fake = *)
+(*   (Rml_interpreter : *)
+(*      (functor (R : Runtime.CONTROL_TREE_R) -> Lco_interpreter.S)) *)

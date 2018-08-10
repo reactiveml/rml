@@ -1,0 +1,64 @@
+let print_dist dist =
+  begin match dist with
+  | Distribution.Dist_support l ->
+      List.iter
+        (fun (n, p) ->
+          print_int n; print_string ": "; print_float p; print_endline "")
+        l
+  | _ -> assert false
+  end
+
+let print_dist_opt dist =
+  begin match dist with
+  | Distribution.Dist_support l ->
+      List.iter
+        (fun (n_opt, p) ->
+          begin match n_opt with
+          | Some [ n ] ->
+              print_string "Some "; print_int n; print_string ": ";
+              print_float p; print_endline ""
+          | Some _ ->
+              print_string "Some [...] "; print_string ": ";
+              print_float p; print_endline ""
+          | None ->
+              print_string "None "; print_string ": ";
+              print_float p; print_endline ""
+          end)
+        l
+  | _ -> assert false
+  end
+
+let process p =
+  signal x in
+  signal s in
+  (* for i = 1 to 10 do pause done; *)
+  (* emit s 0.5 *)
+  (* || *)
+  let dist =
+    infer x
+      (process (
+       (* await s([t]) in *)
+       let t = 0.5 in
+       let b = sample (Distribution.bernoulli t) in
+       if b then
+         (factor (-0.1);
+          propose 1;
+          pause;
+          1)
+       else
+         (factor 0.;
+          propose 2;
+          pause;
+          2)))
+  and () =
+    await x([dist]) in
+    print_endline "propose:";
+    print_dist_opt dist
+  in
+  print_endline "result:";
+  print_dist dist;
+  ()
+
+let () =
+  run p;
+

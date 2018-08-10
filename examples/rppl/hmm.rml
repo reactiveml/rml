@@ -1,78 +1,224 @@
-open Distribution
+(* Example based on http://dippl.org/chapters/05-particlefilter.html *)
 
-let rec bernoulli a = bernoulli a
-let process p =
-  let b = sample (bernoulli 0.5) in
-  if b then propose 42
-  else ()
-      
-let process main =
-  signal s in
-  infer s p
+let (>>=) f k = f k
 
-let process main2 =
-  signal s in
-  infer s ~particles:400 ~pgather:([], (fun x y -> List.sort compare (x :: y))) p
+type trace = (float * float) list
 
-let process main3 =
-  signal s in
-  infer ~particles:400 s ~pgather:(0, (+)) p
-
-type tttbad =
-  | TTTbad1 of (int process)
-      
-let mktttbad (x: int process):tttbad = TTTbad1 x
-(* let ttt1bad (TTTbad1 p) : (int, float) model = p *)
-
-type 'a ttt =
-  | TTT1 of ((int, 'a) model)
-      
-let mkttt (x: (int, int) model):int ttt = TTT1 x
-let ttt1 (TTT1 p) : (int, float) model = p
-
-(* let ttt_ttt x = mkttt (ttt1 x) *)
-    
-let score a b = 3.0
-let speed = [3.0; 4.0]
-let noise = [4.0; 5.0]
-let process sensor a = ()
-let process display d = ()
-let rec bot () = bot()
-
-let f (x: 'a Distribution.t) = 42
-let fp (x:'b -> 'c -> ('a, float list) model) = x
-let fp2 (x:'b -> 'c -> 'a process) = x
-
-    
-let rec process hmm obs last_pos =
-  await obs([o]) in
-  let new_pos = sample (sph_gaussian last_pos speed) in
-  factor (score (sph_gaussian new_pos noise) o);
-  propose new_pos;
-  run hmm obs new_pos
-
-      
-let process main =
-  signal obs in
-  signal pos_dist in
-  infer pos_dist (hmm obs [0.; 0.]) ||
-  run sensor obs ||
-  run display pos_dist
-  
-let z1() = fp hmm
-(* let z2() = fp2 hmm *)
-    
-let process p  =
-  loop
-    factor (0.1)
+let last_ l =
+  begin match l with
+  | [] -> assert false
+  | x :: _ -> x
   end
 
-let process g () =
-  loop
-    sample (bot ())
+let second_last l =
+  begin match l with
+  | [] | [ _ ] -> assert false
+  | _ :: x :: _  -> x
   end
 
-let process f () =
-  factor 0.1
+let draw_line color (p1, p2) =
+  Graphics.set_color color;
+  (* Graphics.set_line_width 2; *)
+  Graphics.draw_poly_line [| p1; p2; |]
 
-(* output: e : 't -> output e : unit *)
+let draw_lines color positions =
+  let positions =
+    List.map (fun (x, y) -> int_of_float x, int_of_float y) positions
+  in
+  Graphics.set_color color;
+  (* Graphics.set_line_width 2; *)
+  Graphics.draw_poly_line (Array.of_list positions)
+
+let draw_points positions =
+  let positions =
+    List.map (fun (x, y) -> int_of_float x, int_of_float y) positions
+  in
+  List.iter
+    (fun (x, y) ->
+       Graphics.set_color Graphics.red;
+       Graphics.draw_circle x y 2)
+    positions
+
+let draw_trace_dist dist =
+  let points = ref [] in
+  let lines = Hashtbl.create 150 in
+  let add_line line p =
+    let line =
+      let (x1, y1), (x2, y2) = line in
+      ((int_of_float x1, int_of_float y1), (int_of_float x2, int_of_float y2))
+    in
+    try
+      let p' = Hashtbl.find lines line in
+      Hashtbl.replace lines line (p +. p')
+    with Not_found -> Hashtbl.add lines line p
+  in
+  let rec add_trace t p =
+    begin match t with
+    | [] -> ()
+    | [ pos ] -> add_line (pos, pos) p
+    |  pos1 :: pos2 :: t ->
+        add_line (pos1, pos2) p;
+        add_trace (pos2 :: t) p
+    end
+  in
+  begin match dist with
+  | Distribution.Dist_sampler (_, _) -> assert false
+  | Distribution.Dist_support support ->
+      List.iter
+        (fun (trace_opt, p) ->
+          begin match trace_opt with
+          | Some [trace] ->
+              points := last_ trace :: !points;
+              add_trace trace p
+          | Some _ -> ()
+          | None -> ()
+          end)
+        support
+  end;
+  Hashtbl.iter
+    (fun line p ->
+      let color =
+        let n = int_of_float (255. *. (1. -. max 0.5 p)) in
+        Graphics.rgb n n n
+      in
+      draw_line color line)
+    lines;
+  (* let (c_x, c_y), r = Welzl.circle !points in *)
+  (* Graphics.set_color Graphics.black; *)
+  (* Graphics.draw_circle (int_of_float c_x) (int_of_float c_y) (int_of_float r); *)
+  ()
+
+
+let observe_state (x, y) =
+  (Distribution.draw (Distribution.gaussian x 5.),
+   Distribution.draw (Distribution.gaussian y 5.))
+
+let init () =
+  let state1 =
+    (Distribution.draw (Distribution.gaussian 200. 1.),
+     Distribution.draw (Distribution.gaussian 200. 1.))
+  in
+  let state2 =
+    (Distribution.draw (Distribution.gaussian 200. 1.),
+     Distribution.draw (Distribution.gaussian 200. 1.))
+  in
+  let states = [ state2; state1 ] in
+  states
+
+let transition (last_x, last_y) (second_last_x, second_last_y) =
+  let momentum_x = (last_x -. second_last_x) *. 0.7 in
+  let momentum_y = (last_y -. second_last_y) *. 0.7 in
+  let x =
+    Distribution.draw (Distribution.gaussian (last_x +. momentum_x) 3.)
+  in
+  let y =
+    Distribution.draw (Distribution.gaussian (last_y +. momentum_y) 3.)
+  in
+  (x, y)
+
+let process semi_markov_walk true_obs =
+  let rec process loop_ prev_states =
+    let new_state = transition (last_ prev_states) (second_last prev_states) in
+    let new_observation = observe_state new_state in
+    emit true_obs new_observation;
+    pause;
+    run loop_ (new_state :: prev_states)
+  in
+  run loop_ (init ())
+
+let process observe_constrained pos true_obs =
+  let p_x, p_y = pos in
+  let o_x, o_y = true_obs in
+  factor
+    (Distribution.score (Distribution.gaussian p_x 5.) o_x);
+  factor
+    (Distribution.score (Distribution.gaussian p_y 5.) o_y)
+
+let process sample_state (obs_x, obs_y) =
+  let x = sample (Distribution.gaussian obs_x 1.) in
+  let y = sample (Distribution.gaussian obs_y 1.) in
+  (x, y)
+
+let process init_constrained true_obs0 true_obs1 =
+  let state1 = run (sample_state true_obs0) in
+  let obs1 = run (observe_constrained state1 true_obs0) in
+  let state2 = run (sample_state true_obs1) in
+  let obs2 = run (observe_constrained state2 true_obs1) in
+  [ state2; state1; ]
+
+let process possible_next_step prev_states obs =
+  let new_state = transition (last_ prev_states) (second_last prev_states) in
+  run (observe_constrained new_state obs);
+  (new_state :: prev_states)
+
+let process semi_markov_walk_constrained true_obs =
+  let rec process loop_ prev_states =
+    await true_obs(obs) in
+    let trace = run (possible_next_step prev_states obs) in
+    propose trace;
+    run (loop_ trace)
+  in
+  await true_obs(obs0) in
+  await true_obs(obs1) in
+  let trace = run (init_constrained obs0 obs1) in
+  propose trace;
+  pause;
+  run (loop_ trace)
+
+
+(* Run model using particle filter *)
+
+let () = Random.self_init()
+(* let () = Random.init 1 *)
+
+let process mouse_obs true_obs =
+  loop
+    ignore (Graphics.wait_next_event [Graphics.Poll]);
+    let (x, y) = Graphics.mouse_pos () in
+    if 0 < x && x < 400 && 0 < y && y < 400 then begin
+      let obs = observe_state (float x, float y) in
+      emit true_obs obs
+    end;
+    pause
+  end
+
+
+let process display draw_multi_traces true_obs estimate =
+  let observations = ref [] in
+  loop
+    await true_obs(obs) in
+    observations := obs :: !observations
+  end
+  ||
+  loop
+    await estimate([traces]) in
+    draw_trace_dist traces;
+    draw_points !observations;
+    Graphics.synchronize ();
+    Graphics.clear_graph ();
+  end
+
+
+let process main =
+  let follow_mouse = ref false in
+  let draw_multi_traces = ref false in
+  Arg.parse
+    [ "-mouse", Arg.Set follow_mouse, " follow mouse positions";
+      "-multi", Arg.Set draw_multi_traces, " draw multiple possible traces"; ]
+    (fun _ -> ())
+    "Available options:";
+  Graphics.open_graph " 400x400";
+  Graphics.auto_synchronize false;
+  signal true_obs default (0., 0.) gather (fun x y -> x) in
+  signal estimate default [] gather (fun x y -> x :: y) in
+  if !follow_mouse then
+    run mouse_obs true_obs
+  else
+    run semi_markov_walk true_obs
+  ||
+  infer estimate (semi_markov_walk_constrained true_obs)
+  ||
+  run display !draw_multi_traces true_obs estimate
+
+let () =
+  run main

@@ -24,6 +24,6 @@
 
 
 module Lco_ctrl_tree_n_proba_record =
-  Lco_ctrl_tree_n_proba.Rml_interpreter(Sig_env.Record)
+  Lco_ctrl_tree_n_proba.Rml_interpreter(Seq_runtime.SeqRuntime)
 
 module Rml_machine = Rml_machine.M(Lco_ctrl_tree_n_proba_record)

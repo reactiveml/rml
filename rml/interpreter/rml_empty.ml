@@ -18,23 +18,4 @@
 (*                                                                    *)
 (**********************************************************************)
 
-type proba = float
-type log_proba = float
-
-type 'a t =
-    Dist_sampler of ((unit -> 'a) * ('a -> log_proba))
-  | Dist_support of ('a * proba) list
-
-val draw : 'a t -> 'a
-
-val score : 'a t -> 'a -> log_proba
-
-val draw_and_score : 'a t -> 'a * log_proba
-
-val bernoulli : proba -> bool t
-
-val gaussian : float -> float -> float t
-
-val multivariate : 'a t list -> 'a list t
-
-val sph_gaussian : float list -> float list -> float list t
+type t
