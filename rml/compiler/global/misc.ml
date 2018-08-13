@@ -153,19 +153,34 @@ let find_in_path filename =
           if Sys.file_exists b then Some b else find rest
     in find !load_path
 
-let opt_map f = function
-    Some x -> Some (f x)
+let opt_map f o =
+  match o with
+  | Some x -> Some (f x)
   | None -> None
 
-let opt_iter f = function
-    Some x -> f x
+let opt_iter f o =
+  match o with
+  | Some x -> f x
   | None -> ()
 
-let infer_config_map f {infer_particles = p; infer_gather = g; } =
-  {infer_particles = opt_map f p; infer_gather = opt_map f g; }
+let opt_forall p o =
+  match o with
+  | Some x -> p x
+  | None -> true
 
-let infer_config_iter f {infer_particles = p; infer_gather = g; } =
-  opt_iter f p; opt_iter f g
+let opt_exist p o =
+  match o with
+  | Some x -> p x
+  | None -> false
+
+
+let infer_config_map f { infer_particles = p; infer_gather = g; infer_propose = d } =
+  { infer_particles = opt_map f p;
+    infer_gather = opt_map f g;
+    infer_propose = f d; }
+
+let infer_config_iter f {infer_particles = p; infer_gather = g; infer_propose = d} =
+  opt_iter f p; opt_iter f g; f d
 
 (* association table with memoization *)
 class name_assoc_table f =

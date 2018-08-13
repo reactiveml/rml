@@ -544,31 +544,25 @@ let instantaneous_loop_expr =
 	  analyse vars e
 
       | Rexpr_sample e ->
-	 analyse vars e
+	  analyse vars e
 
       | Rexpr_propose e ->
-	 analyse vars e
+	  analyse vars e
 
-      | Rexpr_infer (c, e1, e2) ->
-         let ty1 = analyse vars e1 in
-         if not (Env.equal Env.empty ty1) then rec_warning e1;
-
-	 let ty2 = analyse vars e2 in
-	 let ty2' = Env.plus ty2 (-1) in
-	 if not (Env.positive ty2') then rec_warning expr;
-
-         begin match c.infer_particles with
-         | Some e3 -> let ty3 = analyse vars e3 in
-                      if not (Env.equal Env.empty ty3) then rec_warning e3
-         | None -> ()
-         end;
-         begin match c.infer_gather with
-         | Some e3 -> let ty3 = analyse vars e3 in
-                      if not (Env.equal Env.empty ty3) then rec_warning e3
-         | None -> ()
-         end;
-
-	 Env.remove_zero ty2'
+      | Rexpr_infer (c, e) ->
+		let analyse_opt = Misc.opt_iter
+		(fun e ->
+			let ty = analyse vars e in
+			if not (Env.equal Env.empty ty) then rec_warning e)
+		in
+		analyse_opt c.infer_particles;
+		analyse_opt c.infer_gather;
+		let typ = analyse vars c.infer_propose in
+		if not (Env.equal Env.empty typ) then rec_warning e;
+		let ty = analyse vars e in
+		let ty' = Env.plus ty (-1) in
+		if not (Env.positive ty') then rec_warning expr;
+		Env.remove_zero ty'
 
       | Rexpr_emit (e, None) ->
 	  analyse vars e

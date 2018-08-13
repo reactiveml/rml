@@ -450,15 +450,16 @@ and translate_proc e =
             [embed_ml expr;
              translate_proc k])
 
-    | Kproc_infer (c, s, expr, k, ctrl) ->
-              let particles = make_optional_expr
-                         (Misc.opt_map embed_ml c.infer_particles)
-       in
-       let defgath = make_optional_expr
-                       (Misc.opt_map embed_ml c.infer_gather)
-       in
-       if Lk_misc.is_value s then
-         if Lk_misc.is_value expr then
+		| Kproc_infer (c, expr, k, ctrl) ->
+		  	let s = c.infer_propose in
+        let particles = make_optional_expr
+                   (Misc.opt_map embed_ml c.infer_particles)
+       	in
+       	let defgath = make_optional_expr
+       	                (Misc.opt_map embed_ml c.infer_gather)
+       	in
+       	if Lk_misc.is_value s then
+       	  if Lk_misc.is_value expr then
 	   Cexpr_apply
 	     (make_instruction "rml_infer_v_v",
 	      [

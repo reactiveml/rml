@@ -229,7 +229,7 @@ let expr_map  =
 	  f expr
 
       | Rexpr_halt _ ->
-	 f expr
+	  f expr
 
       | Rexpr_factor e ->
 	  let e' = expr_map f e in
@@ -246,12 +246,11 @@ let expr_map  =
 	  f (make_expr_all (Rexpr_propose e')
 	       typ static reactivity reactivity_effect propose_effect loc)
 
-      | Rexpr_infer (c, e1, e2) ->
-         let c' = Misc.infer_config_map f c in
-	 let e1' = expr_map f e1 in
-         let e2' = expr_map f e2 in
-	  f (make_expr_all (Rexpr_infer(c', e1', e2'))
-	       typ static reactivity reactivity_effect propose_effect loc)
+      | Rexpr_infer (c, e) ->
+    let c' = Misc.infer_config_map f c in
+    let e' = expr_map f e in
+    f (make_expr_all (Rexpr_infer(c', e'))
+          typ static reactivity reactivity_effect propose_effect loc)
 
       | Rexpr_emit (e, None) ->
 	  let e' = expr_map f e in

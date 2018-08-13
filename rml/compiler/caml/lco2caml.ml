@@ -365,8 +365,9 @@ and translate_proc e =
          Cexpr_apply
            (make_instruction "rml_propose",
             [embed_ml expr;])
-         
-    | Coproc_infer (c, s,e) ->
+
+		| Coproc_infer (c, e) ->
+		   let s = c.infer_propose in
        let particles = make_optional_expr
                          (Misc.opt_map embed_ml c.infer_particles)
        in

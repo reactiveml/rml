@@ -419,16 +419,17 @@ let rec translate env e =
 	Rexpr_default (translate env expr)
 
     | Pexpr_factor s ->
-       Rexpr_factor (translate env s)
+    Rexpr_factor (translate env s)
 
     | Pexpr_sample s ->
-       Rexpr_sample (translate env s)
+    Rexpr_sample (translate env s)
 
     | Pexpr_propose s ->
-       Rexpr_propose (translate env s)
+    Rexpr_propose (translate env s)
 
-    | Pexpr_infer (c, e1, e2) ->
-       Rexpr_infer (Misc.infer_config_map (translate env) c, translate env e1, translate env e2)
+	| Pexpr_infer (c, e) ->
+	let conf = Misc.infer_config_map (translate env) c in
+	Rexpr_infer (conf, translate env e)
 
     | Pexpr_emit s ->
 	Rexpr_emit (translate env s, None)

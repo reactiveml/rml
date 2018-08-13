@@ -68,5 +68,6 @@ type immediate =
 
 type 'expr infer_config =
   { infer_particles: 'expr option;
-    infer_gather: 'expr option; }
+    infer_gather: 'expr option;
+    infer_propose: 'expr; }
 

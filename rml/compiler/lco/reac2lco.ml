@@ -316,10 +316,14 @@ and translate_proc p =
 
 	| Rexpr_halt kboi -> Coproc_halt kboi
 
-        | Rexpr_factor e -> Coproc_factor (translate_ml e)
-        | Rexpr_sample e -> Coproc_sample (translate_ml e)
-        | Rexpr_propose e -> Coproc_propose (translate_ml e)
-        | Rexpr_infer (c, s, e) -> Coproc_infer (Misc.infer_config_map translate_ml c, translate_ml s, translate_ml e)
+	| Rexpr_factor e -> Coproc_factor (translate_ml e)
+
+	| Rexpr_sample e -> Coproc_sample (translate_ml e)
+
+	| Rexpr_propose e -> Coproc_propose (translate_ml e)
+
+	| Rexpr_infer (c, e) ->
+			Coproc_infer (Misc.infer_config_map translate_ml c, translate_ml e)
 
 	| Rexpr_emit (s, None) -> Coproc_emit (translate_ml s)
 

@@ -896,37 +896,38 @@ let rec type_of_expression env expr =
        unify_propose e pe {propose_effect = Some actual_ty};
        type_unit, react_epsilon(), pe
 
-    | Rexpr_infer (c, s, e) ->
-       let ty_s, k_s, pe_s = type_of_expression env s in
-        check_epsilon k_s;
-	let ty_out, _ =
-	  try
-	    filter_event ty_s
-	  with Unify ->
-	    non_event_err s
-	in
-        begin match c.infer_particles with
-        | Some e3 -> type_expect_eps env e3 type_int pe_s
-        | None -> ()
-        end;
+    | Rexpr_infer (c, e) ->
+        let s = c.infer_propose in
+        let ty_s, k_s, pe_s = type_of_expression env s in
+         check_epsilon k_s;
+	      let ty_out, _ =
+	        try
+	          filter_event ty_s
+	        with Unify ->
+	          non_event_err s
+	      in
+              begin match c.infer_particles with
+              | Some e3 -> type_expect_eps env e3 type_int pe_s
+              | None -> ()
+              end;
 
-	let ty_e, k_e, pe_e = type_of_expression env e in
-        check_epsilon k_e;
-        unify_propose e pe_s pe_e;
-        let ty_p = new_var() in
-        let k_p = new_react_var () in
-        let ty_pe_in = new_var() in
-        let ty_pe_out = new_var() in
+	      let ty_e, k_e, pe_e = type_of_expression env e in
+              check_epsilon k_e;
+              unify_propose e pe_s pe_e;
+              let ty_p = new_var() in
+              let k_p = new_react_var () in
+              let ty_pe_in = new_var() in
+              let ty_pe_out = new_var() in
 
-        begin match c.infer_gather with
-	  | None ->
-	      unify_infer e.expr_loc
-		ty_pe_out (constr_notabbrev list_ident [ty_pe_in])
-	  | Some (defaultcomb) ->
-	     type_expect_eps env defaultcomb (
-                 product [ ty_pe_out;
-	                   (arrow ty_pe_in (arrow ty_pe_out ty_pe_out))]) pe_s
-	end;
+              begin match c.infer_gather with
+	        | None ->
+	            unify_infer e.expr_loc
+	      	ty_pe_out (constr_notabbrev list_ident [ty_pe_in])
+	        | Some (defaultcomb) ->
+	           type_expect_eps env defaultcomb (
+                       product [ ty_pe_out;
+	                         (arrow ty_pe_in (arrow ty_pe_out ty_pe_out))]) pe_s
+	      end;
 
         unify_infer e.expr_loc
           (process ty_p ty_pe_in { proc_react = (* raw *) k_p; })

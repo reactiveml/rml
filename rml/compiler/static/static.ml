@@ -322,24 +322,26 @@ let rec static_expr ctx e =
 	else expr_wrong_static_err !Misc.err_fmt e
 
     | Rexpr_factor e ->
-        if ctx = Process && static_expr ML e = Static
-        then Dynamic Dontknow
-        else expr_wrong_static_err !Misc.err_fmt e
+    if ctx = Process && static_expr ML e = Static
+    then Dynamic Dontknow
+    else expr_wrong_static_err !Misc.err_fmt e
 
     | Rexpr_sample e ->
-        if ctx = Process && static_expr ML e = Static
-        then Dynamic Dontknow
-        else expr_wrong_static_err !Misc.err_fmt e
+    if ctx = Process && static_expr ML e = Static
+    then Dynamic Dontknow
+    else expr_wrong_static_err !Misc.err_fmt e
 
     | Rexpr_propose e ->
-        if ctx = Process && static_expr ML e = Static
-        then Dynamic Dontknow
-        else expr_wrong_static_err !Misc.err_fmt e
+    if ctx = Process && static_expr ML e = Static
+    then Dynamic Dontknow
+    else expr_wrong_static_err !Misc.err_fmt e
 
-    | Rexpr_infer (c, e1, e2) ->
-       if static_expr ML e1 = Static && static_expr ML e2 = Static &&
-            (match c.infer_particles with | Some e3 -> static_expr ML e3 = Static | None -> true) && 
-              (match c.infer_gather with | Some e3 -> static_expr ML e3 = Static | None -> true)
+    | Rexpr_infer (c, e) ->
+	let static_opt = Misc.opt_forall (fun e -> static_expr ML e = Static) in
+	if static_expr ML e = Static &&
+	  static_opt c.infer_particles &&
+	  static_opt c.infer_gather &&
+	  static_expr ML c.infer_propose = Static
 	then Dynamic Dontknow
 	else expr_wrong_static_err !Misc.err_fmt e
 

@@ -62,6 +62,10 @@ let mksimple_loc id loc =
   { psimple_id = id;
     psimple_loc = loc; }
 
+let mkpident_loc id loc =
+  { pident_id = Pident id;
+    pident_loc = loc; }
+
 let mkte d =
   { pte_desc = d; pte_loc = symbol_rloc() }
 let mkpatt d =
@@ -80,27 +84,42 @@ let mkintf d =
 let mkmodel (a,b) c =
   mkte(Ptype_process (a, b, c))
 
+let mksignal s_id =
+  let signal = mksimple_loc s_id Location.none in
+  let signal_expr =
+    mkexpr (Pexpr_ident (mkpident_loc s_id Location.none))
+  in
+  mkexpr (Pexpr_signal ([ signal, None ], None, signal_expr))
+
 let infer_arg p (x,y) =
-  if x = "pgather"
-  then if p.infer_gather = None
-       then {p with infer_gather = Some y}
-       else raise Parse_error
-  else if x = "particles"
-  then if p.infer_gather = None
-       then {p with infer_particles = Some y}
-       else raise Parse_error
-  else raise Parse_error
-  
-let rec infer_args_acc p = function
+  match x with
+  | "pgather" -> {p with infer_gather = Some y}
+  | "particles" -> {p with infer_particles = Some y}
+  | "proposition" -> {p with infer_propose = y}
+  | _ -> raise Parse_error
+
+let rec infer_args_acc p l =
+  match l with
   | [] -> p
   | x::l -> infer_args_acc (infer_arg p x) l
 
-let infer_args = infer_args_acc ({ infer_particles = None; infer_gather = None})
-  
-let mkinfer (a,b,c) =
-  mkexpr(Pexpr_infer(infer_args c, a,b))
-    
-let mkempty() = mkte (Ptype_constr(mkident_loc (Pdot ("Rml_empty","t")) (symbol_gloc()), []))
+let infer_args l =
+  let s =  mksignal "s_propose" in
+  infer_args_acc
+    ({ infer_particles = None;
+       infer_gather = None;
+       infer_propose = s; })
+    l
+
+let mkinfer args p =
+  mkexpr(Pexpr_infer(infer_args args, p))
+
+let mkempty() =
+  mkte (Ptype_constr
+          (mkident_loc
+             (Pdot ("Rml_empty","t"))
+             (symbol_gloc()), []))
+
 let mkprocess a c =
   mkte(Ptype_process (a, mkempty(), c))
 
@@ -623,8 +642,8 @@ expr:
     { mkexpr(Pexpr_sample $2 ) }
   | PROPOSE simple_expr
     { mkexpr(Pexpr_propose $2 ) }
-  | INFER labeled_expr_list simple_expr labeled_expr_list simple_expr
-    { mkinfer($3, $5, List.rev_append $2 (List.rev $4)) }
+  | INFER labeled_expr_list simple_expr
+    { mkinfer $2 $3 }
   | SIGNAL signal_comma_list IN par_expr
       { mkexpr(Pexpr_signal(List.rev $2, None, $4)) }
   | SIGNAL signal_comma_list DEFAULT par_expr GATHER par_expr IN par_expr
