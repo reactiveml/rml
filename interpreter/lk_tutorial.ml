@@ -26,7 +26,6 @@ module Lk_interpreter: Lk_interpreter.S  =
 
     type ('a, 'b) event =
 	('a,'b) Event.t * unit step list ref * unit step list ref
-    (* and event_cfg = bool -> (unit -> bool) * unit step list ref list *)
 
     and control_tree =
 	{ kind: control_type;
@@ -262,46 +261,48 @@ module Lk_interpreter: Lk_interpreter.S  =
 
     let rml_emit_pure = rml_emit_pure_e
 
-    let rml_expr_emit = set_emit
+    let rml_expr_emit s v =
+      rml_emit_v_v s v (fun () -> ()) ()
 
     let rml_expr_emit_pure evt = rml_expr_emit evt ()
 
 
 (**************************************)
-(* await_immediate                    *)
+(* present                            *)
 (**************************************)
-    let step_await_immediate_top (n,wa,_) k =
-      let rec self _ =
+    let step_present ctrl (n,_,wp) k_1 k_2 =
+      let rec self = fun _ ->
 	if Event.status n
 	then
-	  k ()
-	else
-	  (wa := k :: !wa;
-	   sched ())
-      in self
-
-    let step_await_immediate (n,_,wp) k ctrl =
-      let rec self _ =
-	if Event.status n
-	then
-	  k ()
+	  k_1 ()
 	else
 	  if !eoi
 	  then
-	    (ctrl.next <- self :: ctrl.next;
-	     sched())
+	    (ctrl.next <- k_2 :: ctrl.next;
+	     sched ())
 	  else
 	    (wp := self :: !wp;
 	     toWakeUp := wp :: !toWakeUp;
-	     sched())
-      in self
+	     sched ())
+      in
+      fun _ -> self ()
 
+    let rml_present_v = step_present
+
+    let rml_present ctrl expr_evt k_1 k_2 _ =
+      let evt = expr_evt () in
+      step_present ctrl evt k_1 k_2 ()
+
+
+(**************************************)
+(* await_immediate                    *)
+(**************************************)
 
     let rml_await_immediate_v evt k ctrl _ =
-      if ctrl.kind = Top then
-	step_await_immediate_top evt k ()
-      else
-	step_await_immediate evt k ctrl ()
+      let rec self _ =
+        rml_present_v ctrl evt k self ()
+      in
+      self ()
 
     let rml_await_immediate expr_evt k ctrl _ =
       let evt = expr_evt() in
@@ -328,9 +329,62 @@ module Lk_interpreter: Lk_interpreter.S  =
     let rml_get expr_evt f ctrl _ =
       step_get (expr_evt()) f ctrl ()
 
+
+(**************************************)
+(* await                              *)
+(**************************************)
+
+    let rml_await_v evt k ctrl _ =
+      rml_await_immediate_v evt (rml_pause k ctrl) ctrl ()
+
+    let rml_await expr_evt k ctrl _ =
+      let evt = expr_evt () in
+      rml_await_v evt k ctrl ()
+
+
+(**************************************)
+(* await_all                          *)
+(**************************************)
+
+    let rml_await_all_v evt p ctrl _ =
+      rml_await_immediate_v evt (step_get evt p ctrl) ctrl ()
+
+    let rml_await_all expr_evt p ctrl _ =
+      let evt = expr_evt () in
+      rml_await_all_v evt p ctrl ()
+
+
+(**************************************)
+(* await_all_match                    *)
+(**************************************)
+
+    let rml_await_all_match_v evt matching k ctrl _ =
+      let rec self _ =
+        rml_await_all_v evt
+          (fun v () ->
+             if matching v then k v ()
+             else self ())
+          ctrl ()
+      in
+      self ()
+
+    let rml_await_all_match expr_evt matching k ctrl _ =
+      let evt = expr_evt () in
+      rml_await_all_match_v evt matching k ctrl ()
+
+
 (**************************************)
 (* await_immediate_one                *)
 (**************************************)
+
+    let rml_await_immediate_one_v evt f ctrl _ =
+      rml_await_immediate_v evt
+        (fun _ ->
+           let (n, _, _) = evt in
+	   assert (Event.status n);
+           let v = Event.one n in
+	   f v ())
+
     let step_await_immediate_one_top (n, wa, _) f =
       let rec self _ =
 	if Event.status n
@@ -371,96 +425,40 @@ module Lk_interpreter: Lk_interpreter.S  =
       else
 	step_await_immediate_one evt f ctrl ()
 
-
 (**************************************)
-(* present                            *)
+(* await_one                          *)
 (**************************************)
-    let step_present ctrl (n,_,wp) k_1 k_2 =
-      let rec self (* : 'a. 'a -> unit *) = fun _ ->
-	if Event.status n
-	then
-	  k_1 ()
-	else
-	  if !eoi
-	  then
-	    (ctrl.next <- k_2 :: ctrl.next;
-	     sched ())
-	  else
-	    (wp := self :: !wp;
-	     (*wp := (Obj.magic self: unit step)::!wp;*)(*Polymiphic recursion*)
-	     toWakeUp := wp :: !toWakeUp;
-	     sched ())
-      in (*self*)
-      fun _ -> self ()
 
-    let rml_present_v = step_present
+    let rml_await_one expr_evt p ctrl _ =
+      let pause_p x =
+	rml_pause (fun () -> p x ()) ctrl
+      in
+      rml_await_immediate_one expr_evt pause_p ctrl ()
 
-    let rml_present ctrl expr_evt k_1 k_2 _ =
-      let evt = expr_evt () in
-      step_present ctrl evt k_1 k_2 ()
+    let rml_await_one_v evt p ctrl _ =
+      let pause_p x =
+	rml_pause (fun () -> p x ()) ctrl
+      in
+      rml_await_immediate_one_v evt pause_p ctrl ()
 
+    let rml_await_one_match expr_evt matching p =
+      rml_await_all_match expr_evt
+        (fun x -> List.exists matching x)
+        (fun l ->
+          try
+            let v = List.find matching l in
+            p v
+          with Not_found -> raise RML)
 
-(**************************************)
-(* await_all_match                    *)
-(**************************************)
-    let step_await_all_match_top (n, wa, _) matching f ctrl =
-      let rec self _ =
-	if !eoi then
-	  let v = Event.value n in
-	  if Event.status n && matching v
-	  then
-	    let f_body = f v in
-	    ctrl.next <- f_body :: ctrl.next;
-	    sched()
-	  else
-	    (wa := self :: !wa;
-	     sched ())
-	else
-	  if Event.status n
-	  then
-	    (weoi := self :: !weoi;
-	     sched ())
-	  else
-	    (wa := self :: !wa;
-	     sched ())
-      in self
+    let rml_await_one_match_v evt matching p =
+      rml_await_all_match_v evt
+        (fun x -> List.exists matching x)
+        (fun l ->
+          try
+            let v = List.find matching l in
+            p v
+          with Not_found -> raise RML)
 
-
-    let step_await_all_match (n,_,wp) matching f ctrl =
-      let rec self _ =
-	if !eoi then
-	  let v = Event.value n in
-	  if Event.status n && matching v
-	  then
-	    let f_body = f v in
-	    ctrl.next <- f_body :: ctrl.next;
-	    sched()
-	  else
-	    (ctrl.next <- self :: ctrl.next;
-	     sched())
-	else
-	  if Event.status n
-	  then
-	    (weoi := self :: !weoi;
-	     sched ())
-	  else
-	    (wp := self :: !wp;
-	     toWakeUp := wp :: !toWakeUp;
-	     sched())
-      in self
-
-    let rml_await_all_match_v evt matching k ctrl _ =
-      if ctrl.kind = Top then
-	step_await_all_match_top evt matching k ctrl ()
-      else
-	step_await_all_match evt matching k ctrl ()
-
-    let rml_await_all_match expr_evt matching k ctrl _ =
-      let evt = expr_evt () in
-      if ctrl.kind = Top then
-	step_await_all_match_top evt matching k ctrl ()
-      else
-	step_await_all_match evt matching k ctrl ()
 
 
 (**************************************)
@@ -772,55 +770,7 @@ module Lk_interpreter: Lk_interpreter.S  =
       k x
 
 
-
 (* ------------------------------------------------------------------------ *)
-(**************************************)
-(* await                              *)
-(**************************************)
-
-    let rml_await expr_evt k ctrl _ =
-      rml_await_immediate expr_evt (rml_pause k ctrl) ctrl ()
-
-    let rml_await_v evt k ctrl _ =
-      rml_await_immediate_v evt (rml_pause k ctrl) ctrl ()
-
-    let rml_await_all expr_evt p ctrl _ =
-      let evt = expr_evt () in
-      rml_await_immediate_v evt (step_get evt p ctrl) ctrl ()
-
-    let rml_await_all_v evt p ctrl _ =
-      rml_await_immediate_v evt (step_get evt p ctrl) ctrl ()
-
-    let rml_await_one expr_evt p ctrl _ =
-      let pause_p x =
-	rml_pause (fun () -> p x ()) ctrl
-      in
-      rml_await_immediate_one expr_evt pause_p ctrl ()
-
-    let rml_await_one_v evt p ctrl _ =
-      let pause_p x =
-	rml_pause (fun () -> p x ()) ctrl
-      in
-      rml_await_immediate_one_v evt pause_p ctrl ()
-
-    let rml_await_one_match expr_evt matching p =
-      rml_await_all_match expr_evt
-        (fun x -> List.exists matching x)
-        (fun l ->
-          try
-            let v = List.find matching l in
-            p v
-          with Not_found -> raise RML)
-
-    let rml_await_one_match_v evt matching p =
-      rml_await_all_match_v evt
-        (fun x -> List.exists matching x)
-        (fun l ->
-          try
-            let v = List.find matching l in
-            p v
-          with Not_found -> raise RML)
-
 
 (* ------------------------------------------------------------------------ *)
     exception End
@@ -851,3 +801,4 @@ module Lk_interpreter: Lk_interpreter.S  =
       rml_react
 
   end
+
