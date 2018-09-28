@@ -1,0 +1,10 @@
+let process p =
+  signal s in
+  print_endline "waiting";
+  await immediate s;
+  print_endline "received"
+  ||
+  pause;
+  emit s
+
+let () = run p

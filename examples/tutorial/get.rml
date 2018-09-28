@@ -1,0 +1,11 @@
+let process p =
+  signal s default "" gather (^) in
+  pause;
+  emit s "Hello"
+  ||
+  let s<x> in
+  print_endline x;
+  let s<y> in
+  print_endline y
+
+let () = run p
