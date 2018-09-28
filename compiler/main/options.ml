@@ -25,7 +25,7 @@ open Misc
 open Configure
 
 let _ =
-  let runtime = ref "Lk_tutorial" in
+  let runtime = ref "Lco" in
   let v = ref false in
   let version = ref false in
   let where = ref false in
