@@ -1,0 +1,10 @@
+signal s1 in
+signal s2 in
+print_endline "waiting";
+await s1;
+print_endline "received";
+emit s2
+||
+emit s1;
+present s2 then print_endline "present" else print_endline "absent"
+    

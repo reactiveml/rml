@@ -1,0 +1,9 @@
+let rec fact n res =
+  if n <= 0 then res else fact (n-1) (n * res)
+
+let () =
+  print_endline "one";
+  print_endline "two";
+  print_endline "three";
+  print_endline (string_of_int (fact 10 1))
+

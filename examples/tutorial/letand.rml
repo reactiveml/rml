@@ -1,0 +1,72 @@
+(* a combinatorial function *)
+let rec fact n res =
+  if n <= 0 then res else fact (n-1) (n * res)
+
+(* the same, represented as an instantaneous recursive process *)
+(* note that the RML compiler warns about a possible instantaneous recursion *)
+let rec process fact_process n res =
+  if n <= 0 then res
+  else run (fact_process (n-1) (n * res))
+
+(* the same, but with a pause inserted before the recursive call *)
+let rec process fact_process_with_steps n res =
+  if n <= 0 then res
+  else (pause; run (fact_process_with_steps (n-1) (n * res)))
+
+let () =
+  print_endline "one";
+  pause;
+  print_endline "two";
+  pause;
+  print_endline "tree";
+  pause;
+  let r = fact 10 1 in
+  print_endline (string_of_int r);
+  pause;
+  let r = run (fact_process 10 1) in
+  print_endline (string_of_int r);
+  pause;
+  let r = run (fact_process_with_steps 10 1) in
+  print_endline (string_of_int r);
+  pause
+
+(* a recursive function with two recursive calls *)
+let rec fibo n =
+  if n <= 1 then 1 else fibo (n-1) + fibo (n-2)
+
+let rec process fibo_process n =
+  if n <= 1 then 1 else
+  (pause;
+   let r1 = run (fibo_process (n-1)) in
+   pause;
+   let r2 = run (fibo_process (n-2)) in
+   r1 + r2)
+
+let rec process fibo_process_by_steps n =
+  if n <= 1 then 1 else
+  let r1 = pause; run (fibo_process_by_steps (n-1))
+  and r2 = pause; run (fibo_process_by_steps (n-2)) in
+  r1 + r2
+
+let () =
+  let r1 = fibo 10 in
+  print_int r1; print_newline ();
+  pause;
+  let r2 = run (fibo_process 10) in
+  print_int r2; print_newline ();
+  let r3 = run (fibo_process_by_steps 10) in
+  print_int r3; print_newline ()
+
+(* await two valued signal. When both have been present, sum their *)
+(* arguments and print it*)
+let process two a b =
+  let v1 = await a(v) in v
+  and v2 = await b(w) in w in
+  print_int (v1 + v2);
+  print_newline()
+
+let () =
+  signal a default 0 gather (+) in
+  signal b  default 0 gather (+) in
+  (pause; pause; emit a 42 || pause; emit b 42) ||
+  run (two a b)

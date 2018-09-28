@@ -1,0 +1,9 @@
+signal s1 in
+signal s2 in
+signal s3 in
+emit s1;
+present s1 then (print_endline "one"; emit s2);
+present s2 then print_endline "two";
+present s3 then print_endline "three";
+emit s3
+

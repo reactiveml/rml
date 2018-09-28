@@ -1,0 +1,5 @@
+print_endline "one";
+pause;
+print_endline "two";
+pause;
+print_endline "tree"
