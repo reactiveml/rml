@@ -2,7 +2,7 @@
 FILE=await_immediate
 
 # ReactiveML compiler
-RMLC=rmlc -debug -runtime Lk_tutorial
+RMLC=rmlc -dtypes -debug -runtime Lk_tutorial
 N=-1
 SAMPLING=-1.0
 RMLFLAGS=
