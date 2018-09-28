@@ -1,0 +1,26 @@
+include ../config
+include ../configure-tools/Makefile.common
+
+THEAD_TYPE=-thread
+
+RUNTIME=Lk
+RUNTIME_DIR=lk_tutorial
+
+SRC=	sig_env.ml \
+	lk_interpreter.mli \
+	lk_tutorial.ml \
+	rml_machine.ml \
+	rml_machine_hook.ml \
+	rml_machine_hook_unix.ml \
+	implem_lk_tutorial_record.ml \
+
+RMLLIB_OBJ=	sig_env.cmo \
+	lk_tutorial.cmo \
+	rml_machine.cmo \
+	rml_machine_hook.cmo \
+	rml_machine_hook_unix.cmo \
+	implem_lk_tutorial_record.cmo \
+
+RMLLIB_INTF = lk_interpreter.cmi $(RMLLIB_OBJ:.cmo=.cmi)
+
+include Makefile-interpreter.common

@@ -158,6 +158,14 @@ let set_runtime s =
       set_rml_machine_module "Rml_machine";
       set_standard_lib "lk";
       set_translation Lk
+  | "Lk_tutorial" | "Lk_tuto" ->
+      set_interpreter_intf "Lk_interpreter";
+      set_interpreter_impl "Implem_lk_tutorial_record";
+      set_interpreter_module "Lk_tutorial_record";
+      set_rml_machine_module "Rml_machine";
+      set_standard_lib "lk_tutorial";
+      set_translation Lk
+
 (*
   | "Lk_threaded" ->
       set_interpreter_intf "Lk_interpreter";
@@ -248,7 +256,8 @@ and doc_runtime =
    "\t Lco_ctrl_tree | Lco (default)\n" ^
    "\t Lco_ctrl_tree_n | Lco_n \n" ^
    "\t Lco_ctrl_tree_class\n" ^
-   "\t Lk"
+   "\t Lk" ^
+   "\t Lk_tutorial | Lk_tuto"
 and doc_thread = "Generate code that supports the Rml_async library"
 and doc_debug = "Print instant numbers on the error output"
 
