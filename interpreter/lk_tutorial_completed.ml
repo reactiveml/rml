@@ -264,7 +264,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* present                            *)
 (**************************************)
-    let step_present ctrl (n,_,wp) k_1 k_2 =
+    let rml_present_v (n,_,wp) k_1 k_2 =
       let rec self = fun _ ->
 	if Event.status n
 	then
@@ -281,11 +281,9 @@ module Lk_interpreter: Lk_interpreter.S  =
       in
       fun _ -> self ()
 
-    let rml_present_v = step_present
-
     let rml_present ctrl expr_evt k_1 k_2 _ =
       let evt = expr_evt () in
-      step_present ctrl evt k_1 k_2 ()
+      rml_present_v ctrl evt k_1 k_2 ()
 
 
 (**************************************)
@@ -314,15 +312,13 @@ module Lk_interpreter: Lk_interpreter.S  =
       ctrl.next <- (f v) :: ctrl.next;
       sched()
 
-    let step_get (n,_,_) f ctrl _ =
+    let rml_get_v (n,_,_) f ctrl _ =
       weoi := (step_get_eoi n f ctrl) :: !weoi;
       toWakeUp := weoi :: !toWakeUp;
       sched ()
 
-    let rml_get_v = step_get
-
     let rml_get expr_evt f ctrl _ =
-      step_get (expr_evt()) f ctrl ()
+      rml_get_v (expr_evt()) f ctrl ()
 
 
 (**************************************)
@@ -342,7 +338,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (**************************************)
 
     let rml_await_all_v evt p ctrl _ =
-      rml_await_immediate_v evt (step_get evt p ctrl) ctrl ()
+      rml_await_immediate_v evt (rml_get_v evt p ctrl) ctrl ()
 
     let rml_await_all expr_evt p ctrl _ =
       let evt = expr_evt () in
