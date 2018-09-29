@@ -3,7 +3,7 @@ include ../configure-tools/Makefile.common
 
 THEAD_TYPE=-thread
 
-RUNTIME=Lk
+RUNTIME=Lk_tutorial
 RUNTIME_DIR=lk_tutorial
 
 SRC=	sig_env.ml \
