@@ -1,0 +1,32 @@
+let process srun p s =
+  do
+    run p
+  when s done
+      
+let process p =
+  print_string "one"; print_newline ();
+  pause;
+  print_string "two"; print_newline ();
+  pause;
+  print_string "three"; print_newline ();
+  pause;
+  print_string "four"; print_newline ();
+  pause;
+  print_string "five"; print_newline ()
+    
+let () =
+  signal half in
+  (emit half;
+  pause;
+  pause;
+  emit half;
+  pause;
+  pause;
+  emit half;
+  pause;
+  pause;
+  emit half;
+  pause;
+  pause;
+   emit half)
+  || run (srun p half)

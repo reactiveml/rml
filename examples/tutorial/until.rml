@@ -1,0 +1,20 @@
+type event = Double | Simple
+
+(* count n occurrences of signal top; then terminate *)
+let rec process counting n top =
+  if n = 0 then ()
+  else
+    await top;
+    run (counting (n-1) top)
+     
+(* detect two clicks in less than four tops; emit an answer accordingly *)
+let process double click top answer =
+  loop
+    await immediate click;
+    do
+      run (counting 4 top);
+      emit answer Simple
+    until
+      click -> emit answer Double done
+  end
+
