@@ -25,7 +25,7 @@ module Lk_interpreter: Lk_interpreter.S  =
     exception RML
 
     type ('a, 'b) event =
-	('a,'b) Event.t * unit step list ref * unit step list ref
+	('a,'b) Event.t * waiting ref * waiting ref
 
     and control_tree =
 	{ kind: control_type;
@@ -48,27 +48,32 @@ module Lk_interpreter: Lk_interpreter.S  =
     and join_point = int ref
 
 
-(* liste des processus a executer dans l'instant *)
+(* list of processes to execute in the current instant *)
     let current = ref ([]: current)
 
-(* liste des listes de processus a revillier a la fin d'instant *)
-    let toWakeUp = ref []
-    let wakeUpAll () =
-      List.iter
-	(fun wp ->
-	  current := List.rev_append !wp !current;
-	  wp := [])
-	!toWakeUp;
-      toWakeUp := []
+(* End of instant flag *)
+    let eoi = ref false
+
+(* End of instant waiting list *)
+    let weoi = ref ([]: waiting)
+
+(* Dummy step function *)
+    let dummy_step _ = ()
 
 
-(* debloquer les processus en attent d'un evt *)
+(* wake up processes waiting on an event *)
     let wakeUp w =
       current := List.rev_append !w !current;
       w := []
 
+(* list of lists of processes to wake up at the end of instant *)
+    let toWakeUp = ref []
+    let wakeUpAll () =
+      List.iter (fun wp -> wakeUp wp) !toWakeUp;
+      toWakeUp := []
 
-(* racine de l'arbre de control *)
+
+(* root of the control tree *)
     let top =
       { kind = Top;
 	alive = true;
@@ -78,14 +83,9 @@ module Lk_interpreter: Lk_interpreter.S  =
 	next = []; }
 
 
-    let rec rev_app x1 x2 =
-      match x1 with
-      | [] -> x2
-      | f :: x1' -> rev_app x1' (f::x2)
-
-(* calculer le nouvel etat de l'arbre de control *)
-(* et deplacer dans la liste current les processus qui sont dans  *)
-(* les listes next *)
+(* compute the new state of the control tree *)
+(* and move in the list [current] the processes that are *)
+(* in the [next] lists. *)
     let eval_control_and_next_to_current =
       let rec eval pere p active =
 	if p.alive then
@@ -134,19 +134,17 @@ module Lk_interpreter: Lk_interpreter.S  =
 	    else eval_children p nodes active acc
 
       and next_to_current node =
-	current := rev_app node.next !current;
+	current := List.rev_append node.next !current;
 	node.next <- []
       and next_to_father pere node =
-	pere.next <- rev_app node.next pere.next;
+	pere.next <- List.rev_append node.next pere.next;
 	node.next <- []
       in
       fun () ->
 	top.children <- eval_children top top.children true [];
 	next_to_current top
 
-
-(* deplacer dans la liste current les processus qui sont dans  *)
-(* les listes next *)
+(* Move in the [current] list the processes that are in the [next] lists *)
     let rec next_to_current p =
       if p.alive && not p.susp then
 	(current := List.rev_append p.next !current;
@@ -154,7 +152,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 	 List.iter next_to_current p.children)
       else ()
 
-(* creation d'evenements *)
+(* Create new events *)
     let new_evt_combine default combine =
       (Event.create default combine, ref [], ref [])
 
@@ -164,10 +162,6 @@ module Lk_interpreter: Lk_interpreter.S  =
     let new_evt() =
       new_evt_combine [] (fun x y -> x :: y)
 
-    let eoi = ref false
-    let weoi = ref ([]: waiting)
-
-    let dummy_step _ = ()
 
 (* ------------------------------------------------------------------------ *)
     let sched () =
@@ -322,6 +316,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 
     let step_get (n,_,_) f ctrl _ =
       weoi := (step_get_eoi n f ctrl) :: !weoi;
+      toWakeUp := weoi :: !toWakeUp;
       sched ()
 
     let rml_get_v = step_get
@@ -385,45 +380,9 @@ module Lk_interpreter: Lk_interpreter.S  =
            let v = Event.one n in
 	   f v ())
 
-    let step_await_immediate_one_top (n, wa, _) f =
-      let rec self _ =
-	if Event.status n
-	then
-	  let v = Event.one n in
-	  f v ()
-	else
-	  (wa := self :: !wa;
-	   sched ())
-      in self
-
-    let step_await_immediate_one (n, _, wp) f ctrl =
-      let rec self _ =
-	if Event.status n
-	then
-	  let v = Event.one n in
-	  f v ()
-	else
-	  if !eoi
-	  then
-	    (ctrl.next <- self :: ctrl.next;
-	     sched())
-	  else
-	    (wp := self :: !wp;
-	     toWakeUp := wp :: !toWakeUp;
-	     sched())
-      in self
-
     let rml_await_immediate_one expr_evt f ctrl _ =
-      if ctrl.kind = Top then
-	step_await_immediate_one_top (expr_evt()) f ()
-      else
-	step_await_immediate_one (expr_evt()) f ctrl ()
-
-    let rml_await_immediate_one_v evt f ctrl _ =
-      if ctrl.kind = Top then
-	step_await_immediate_one_top evt f ()
-      else
-	step_await_immediate_one evt f ctrl ()
+      let evt = expr_evt() in
+      rml_await_immediate_one_v evt f ctrl ()
 
 (**************************************)
 (* await_one                          *)
@@ -788,7 +747,6 @@ module Lk_interpreter: Lk_interpreter.S  =
 	try
 	  sched ();
 	  eoi := true;
-	  wakeUp weoi;
 	  wakeUpAll ();
 	  sched ();
 	  eval_control_and_next_to_current ();
