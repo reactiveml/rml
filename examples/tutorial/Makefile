@@ -1,5 +1,7 @@
 # File to compile
 FILE=await_immediate
+FILES := $(shell ls *.rml)
+NFILES := $(shell ls *.rml | wc -l)
 
 # ReactiveML compiler
 RMLC=rmlc -dtypes -debug -runtime Lk_tutorial
@@ -54,6 +56,8 @@ $(FILE).opt: $(FILE).cmx
 .mli.rzi:
 	$(RMLC) -c $<
 
+
+%: %.ml ;
 
 clean :
 	rm -f *.cm* *.o *.annot *.rzi $(FILE).ml
