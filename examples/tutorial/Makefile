@@ -4,10 +4,10 @@ FILES := $(shell ls *.rml)
 NFILES := $(shell ls *.rml | wc -l)
 
 # ReactiveML compiler
-RMLC=rmlc -dtypes -debug -runtime Lk_tutorial
-N=-1
+RMLC=rmlc
+N=100
 SAMPLING=-1.0
-RMLFLAGS=
+RMLFLAGS=-dtypes -debug
 
 OCAMLC=ocamlc
 OCAMLFLAGS=
@@ -60,8 +60,9 @@ $(FILE).opt: $(FILE).cmx
 %: %.ml ;
 
 clean :
-	rm -f *.cm* *.o *.annot *.rzi $(FILE).ml
+	rm -f *.cm* *.o *.annot *.rzi $(FILE).ml $(FILE) $(FILE).opt \
+		$(FILE).tannot $(FILE).sannot
 
 realclean: clean
-	rm -f $(FILE) $(FILE).opt *~
+	rm -f *~
 cleanall: realclean
