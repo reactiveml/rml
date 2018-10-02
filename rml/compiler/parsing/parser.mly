@@ -95,7 +95,7 @@ let infer_arg p (x,y) =
   match x with
   | "pgather" -> {p with infer_gather = Some y}
   | "particles" -> {p with infer_particles = Some y}
-  | "proposition" -> {p with infer_propose = y}
+  | "output" -> {p with infer_output = y}
   | _ -> raise Parse_error
 
 let rec infer_args_acc p l =
@@ -108,7 +108,7 @@ let infer_args l =
   infer_args_acc
     ({ infer_particles = None;
        infer_gather = None;
-       infer_propose = s; })
+       infer_output = s; })
     l
 
 let mkinfer args p =

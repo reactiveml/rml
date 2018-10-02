@@ -92,7 +92,7 @@ let process main =
   signal obs in
   signal pos_dist in
   run sensor obs ||
-  infer pos_dist (hmm obs [200.; 200.]) ||
+  infer ~output:pos_dist (hmm obs [200.; 200.]) ||
   run display obs pos_dist
 
 let () =

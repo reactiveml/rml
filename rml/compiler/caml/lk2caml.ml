@@ -451,7 +451,7 @@ and translate_proc e =
              translate_proc k])
 
 		| Kproc_infer (c, expr, k, ctrl) ->
-		  	let s = c.infer_propose in
+		  	let s = c.infer_output in
         let particles = make_optional_expr
                    (Misc.opt_map embed_ml c.infer_particles)
        	in

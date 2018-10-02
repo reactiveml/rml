@@ -557,7 +557,7 @@ let instantaneous_loop_expr =
 		in
 		analyse_opt c.infer_particles;
 		analyse_opt c.infer_gather;
-		let typ = analyse vars c.infer_propose in
+		let typ = analyse vars c.infer_output in
 		if not (Env.equal Env.empty typ) then rec_warning e;
 		let ty = analyse vars e in
 		let ty' = Env.plus ty (-1) in

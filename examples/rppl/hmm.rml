@@ -216,7 +216,7 @@ let process main =
   else
     run semi_markov_walk true_obs
   ||
-  infer estimate (semi_markov_walk_constrained true_obs)
+  infer ~output:estimate (semi_markov_walk_constrained true_obs)
   ||
   run display !draw_multi_traces true_obs estimate
 

@@ -367,7 +367,7 @@ and translate_proc e =
             [embed_ml expr;])
 
 		| Coproc_infer (c, e) ->
-		   let s = c.infer_propose in
+		   let s = c.infer_output in
        let particles = make_optional_expr
                          (Misc.opt_map embed_ml c.infer_particles)
        in

@@ -174,12 +174,12 @@ let opt_exist p o =
   | None -> false
 
 
-let infer_config_map f { infer_particles = p; infer_gather = g; infer_propose = d } =
+let infer_config_map f { infer_particles = p; infer_gather = g; infer_output = d } =
   { infer_particles = opt_map f p;
     infer_gather = opt_map f g;
-    infer_propose = f d; }
+    infer_output = f d; }
 
-let infer_config_iter f {infer_particles = p; infer_gather = g; infer_propose = d} =
+let infer_config_iter f {infer_particles = p; infer_gather = g; infer_output = d} =
   opt_iter f p; opt_iter f g; f d
 
 (* association table with memoization *)

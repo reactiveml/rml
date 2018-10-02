@@ -341,7 +341,7 @@ let rec static_expr ctx e =
 	if static_expr ML e = Static &&
 	  static_opt c.infer_particles &&
 	  static_opt c.infer_gather &&
-	  static_expr ML c.infer_propose = Static
+	  static_expr ML c.infer_output = Static
 	then Dynamic Dontknow
 	else expr_wrong_static_err !Misc.err_fmt e
 

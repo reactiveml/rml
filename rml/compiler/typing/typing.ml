@@ -897,7 +897,7 @@ let rec type_of_expression env expr =
        type_unit, react_epsilon(), pe
 
     | Rexpr_infer (c, e) ->
-        let s = c.infer_propose in
+        let s = c.infer_output in
         let ty_s, k_s, pe_s = type_of_expression env s in
          check_epsilon k_s;
 	      let ty_out, _ =

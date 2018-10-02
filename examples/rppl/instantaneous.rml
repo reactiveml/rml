@@ -12,7 +12,7 @@ let process m =
 
 let process main =
   signal s in
-  let dist = infer s m in
+  let dist = infer ~output:s m in
   begin match dist with
   | Dist_sampler _ -> assert false
   | Dist_support l ->

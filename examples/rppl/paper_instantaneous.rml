@@ -77,10 +77,9 @@ let process display obs pos_dist =
 (* The code used in the paper *)
 
 let rec process hmm' obs pos_dist last_dist =
-  signal dummy in
   await obs([o_t]) in
   let dist =
-    infer dummy
+    infer
       (process (
          let p_prev = sample (last_dist) in
          let p_t = sample (sph_gaussian p_prev speed) in
