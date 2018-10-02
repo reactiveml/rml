@@ -366,33 +366,32 @@ and translate_proc e =
            (make_instruction "rml_propose",
             [embed_ml expr;])
 
-		| Coproc_infer (c, e) ->
-		   let s = c.infer_output in
-       let particles = make_optional_expr
-                         (Misc.opt_map embed_ml c.infer_particles)
+    | Coproc_infer (c, e) ->
+       let s = c.infer_output in
+       let particles =
+         make_optional_expr (Misc.opt_map embed_ml c.infer_particles)
        in
-       let defgath = make_optional_expr
-                       (Misc.opt_map embed_ml c.infer_gather)
+       let defgath =
+         make_optional_expr (Misc.opt_map embed_ml c.infer_gather)
        in
-       if Lco_misc.is_value s then
-         if Lco_misc.is_value e then
-	   Cexpr_apply
-	     (make_instruction "rml_infer_v_v",
-	      [translate_ml s; translate_ml e; particles; defgath])
-         else
-           Cexpr_apply
-	     (make_instruction "rml_infer_v_e",
-	      [translate_ml s; embed_ml e; particles; defgath])
-	else
-         if Lco_misc.is_value e then
-	   Cexpr_apply
-	     (make_instruction "rml_infer_e_v",
-	      [embed_ml s; translate_ml e; particles; defgath])
-         else
-           Cexpr_apply
-	     (make_instruction "rml_infer",
-	      [embed_ml s; embed_ml e; particles; defgath])
-            
+       begin match Lco_misc.is_value s, Lco_misc.is_value e with
+       | true, true ->
+         Cexpr_apply
+           (make_instruction "rml_infer_v_v",
+            [ particles; defgath; translate_ml s; translate_ml e; ])
+       | true, false ->
+         Cexpr_apply
+           (make_instruction "rml_infer_v_e",
+            [ particles; defgath; translate_ml s; embed_ml e; ])
+       | false, true ->
+         Cexpr_apply
+           (make_instruction "rml_infer_e_v",
+            [ particles; defgath; embed_ml s; translate_ml e; ])
+       | false, false ->
+         Cexpr_apply
+           (make_instruction "rml_infer",
+            [ particles; defgath; embed_ml s; embed_ml e; ])
+       end
     | Coproc_compute (expr) ->
 	Cexpr_apply
 	  (make_instruction "rml_compute",

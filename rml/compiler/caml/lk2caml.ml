@@ -450,56 +450,52 @@ and translate_proc e =
             [embed_ml expr;
              translate_proc k])
 
-		| Kproc_infer (c, expr, k, ctrl) ->
-		  	let s = c.infer_output in
-        let particles = make_optional_expr
-                   (Misc.opt_map embed_ml c.infer_particles)
-       	in
-       	let defgath = make_optional_expr
-       	                (Misc.opt_map embed_ml c.infer_gather)
-       	in
-       	if Lk_misc.is_value s then
-       	  if Lk_misc.is_value expr then
-	   Cexpr_apply
-	     (make_instruction "rml_infer_v_v",
-	      [
-                translate_ml s;
-                translate_ml expr;
-                particles;
-                defgath;
-	        translate_proc k;
-	        make_expr_var_local ctrl])
-         else
-            Cexpr_apply
-	     (make_instruction "rml_infer_v_e",
-	      [
-                translate_ml s;
-                embed_ml expr;
-                particles;
-                defgath;
-	        translate_proc k;
-	        make_expr_var_local ctrl])
-       else
-         if Lk_misc.is_value expr then
-	   Cexpr_apply
-	     (make_instruction "rml_infer_e_v",
-	      [ embed_ml s;
-                translate_ml expr;
-                particles;
-                defgath;
-	       translate_proc k;
-	       make_expr_var_local ctrl])
-         else
-	   Cexpr_apply
-	     (make_instruction "rml_infer",
-	      [embed_ml s;
-               embed_ml expr;
-                particles;
-                defgath;
-	       translate_proc k;
-	       make_expr_var_local ctrl])
-
-             
+    | Kproc_infer (c, expr, k, ctrl) ->
+       let s = c.infer_output in
+       let particles =
+         make_optional_expr (Misc.opt_map embed_ml c.infer_particles)
+       in
+       let defgath =
+         make_optional_expr (Misc.opt_map embed_ml c.infer_gather)
+       in
+       begin match Lk_misc.is_value s, Lk_misc.is_value expr with
+       | true, true ->
+         Cexpr_apply
+           (make_instruction "rml_infer_v_v",
+            [ particles;
+              defgath;
+              translate_ml s;
+              translate_ml expr;
+              translate_proc k;
+              make_expr_var_local ctrl; ])
+       | true, false ->
+         Cexpr_apply
+           (make_instruction "rml_infer_v_e",
+            [ particles;
+              defgath;
+              translate_ml s;
+              embed_ml expr;
+              translate_proc k;
+              make_expr_var_local ctrl; ])
+       | false, true ->
+         Cexpr_apply
+           (make_instruction "rml_infer_e_v",
+            [ particles;
+              defgath;
+              embed_ml s;
+              translate_ml expr;
+              translate_proc k;
+              make_expr_var_local ctrl; ])
+       | false, false ->
+         Cexpr_apply
+           (make_instruction "rml_infer",
+            [ particles;
+              defgath;
+              embed_ml s;
+              embed_ml expr;
+              translate_proc k;
+              make_expr_var_local ctrl; ])
+       end
     | Kproc_compute (expr, k) ->
         begin match !version with
           | Combinator ->

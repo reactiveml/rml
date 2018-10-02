@@ -1172,8 +1172,6 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* infer                              *)
 (**************************************)
 
-    let nb_particles = 1000
-
     let propose_default = []
     let propose_gather x y = List.sort compare (x :: y)
 
@@ -1245,7 +1243,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
       Distribution.Dist_support
         (List.map (fun (v, n) -> (v, float n /. norm)) return_histogram)
 
-    let emit_propose state propose_s particles =
+    let emit_propose state output_s particles =
       let values =
         List.map
           (fun (_, _, state) ->
@@ -1262,7 +1260,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
           particles
       in
       let dist = normalize values in
-      set_emit state propose_s dist;
+      set_emit state output_s dist;
       particles
 
     let step_particles particles =
@@ -1283,7 +1281,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
         in
         !infer_status, particles
 
-    let rec rml_infer_body infer_move propose_s particles =
+    let rec rml_infer_body infer_move output_s particles =
       fun state ->
         let infer_state = { state with st_move = infer_move } in
         let infer_status, particles = step_particles particles infer_state in
@@ -1296,14 +1294,14 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
         in
         match !infer_move, infer_status with
         | true, SUSP ->
-          rml_infer_body infer_move propose_s particles state
+          rml_infer_body infer_move output_s particles state
         | false, SUSP | _, STOP | _, TERM () ->
-          let particles = emit_propose state propose_s particles in
+          let particles = emit_propose state output_s particles in
           state.st_move := true;
           infer_state.st_move := true;
-          rml_infer_eoi infer_status infer_move propose_s particles state
+          rml_infer_eoi infer_status infer_move output_s particles state
 
-    and rml_infer_eoi infer_status infer_move propose_s particles =
+    and rml_infer_eoi infer_status infer_move output_s particles =
       let rec self =
         fun state ->
           match infer_status with
@@ -1324,7 +1322,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
               let infer_status, particles =
                 step_particles particles infer_state
               in
-              rml_infer_eoi infer_status infer_move propose_s particles state
+              rml_infer_eoi infer_status infer_move output_s particles state
             else
               SUSP, self
           | STOP ->
@@ -1337,35 +1335,49 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
                    | TERM _, _, state -> body)
                 particles
             in
-            STOP, rml_infer_body infer_move propose_s particles
+            STOP, rml_infer_body infer_move output_s particles
       in
       self
 
-    let rml_infer_v_v propose_s (p : (_, _) model) : _ expr=
+    let rml_infer_v_v nb_particles_opt propose_default_gather_opt output_s
+        (p : (_, _) model)
+      : _ expr=
       fun state ->
+        let nb_particles =
+          begin match nb_particles_opt with
+          | None -> 1000
+          | Some n -> n
+          end
+        in
         let f = p () in
         let infer_move = ref false in
         let particles =
           list_init nb_particles
             (fun i -> (SUSP, f, make_particle_state i))
         in
-        rml_infer_body infer_move propose_s particles state
+        rml_infer_body infer_move output_s particles state
 
-    let rml_infer_v_e propose_s p_expr : _ expr=
+    let rml_infer_v_e nb_particles_opt propose_default_gather_opt output_s
+        p_expr : _ expr=
       fun state ->
         let p = p_expr () in
-        rml_infer_v_v propose_s p state
+        rml_infer_v_v
+          nb_particles_opt propose_default_gather_opt output_s p state
 
-    let rml_infer_e_v propose_s_expr p : _ expr=
+    let rml_infer_e_v nb_particles_opt propose_default_gather_opt output_s_expr
+        p : _ expr=
       fun state ->
-        let propose_s = propose_s_expr () in
-        rml_infer_v_v propose_s p state
+        let output_s = output_s_expr () in
+        rml_infer_v_v
+          nb_particles_opt propose_default_gather_opt output_s p state
 
-    let rml_infer propose_s_expr p_expr : _ expr=
+    let rml_infer nb_particles_opt propose_default_gather_opt output_s_expr
+        p_expr : _ expr=
       fun state ->
-        let propose_s = propose_s_expr () in
+        let output_s = output_s_expr () in
         let p = p_expr () in
-        rml_infer_v_v propose_s p state
+        rml_infer_v_v
+          nb_particles_opt propose_default_gather_opt output_s p state
 
 
 (* ------------------------------------------------------------------------ *)
