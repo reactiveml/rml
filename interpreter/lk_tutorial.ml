@@ -25,7 +25,7 @@ module Lk_interpreter: Lk_interpreter.S  =
     exception RML
 
     type ('a, 'b) event =
-	('a,'b) Event.t * waiting ref * waiting ref
+      { evt_n : ('a,'b) Event.t }
 
     and control_tree =
 	{ kind: control_type;
@@ -143,10 +143,10 @@ module Lk_interpreter: Lk_interpreter.S  =
 
 (* Create new events *)
     let new_evt_combine default combine =
-      (Event.create default combine, ref [], ref [])
+      { evt_n = Event.create default combine; }
 
     let new_evt_memory_combine default combine =
-      (Event.create_memory default combine, ref [], ref [])
+      { evt_n = Event.create_memory default combine; }
 
     let new_evt() =
       new_evt_combine [] (fun x y -> x :: y)
@@ -161,13 +161,13 @@ module Lk_interpreter: Lk_interpreter.S  =
       | [] -> ()
 
 (* ------------------------------------------------------------------------ *)
-    let rml_pre_status (n, _, _) = Event.pre_status n
+    let rml_pre_status evt = Event.pre_status evt.evt_n
 
-    let rml_pre_value (n, _, _) = Event.pre_value n
+    let rml_pre_value evt = Event.pre_value evt.evt_n
 
-    let rml_last (n, _, _) = Event.last n
+    let rml_last evt = Event.last evt.evt_n
 
-    let rml_default (n, _, _) = Event.default n
+    let rml_default evt = Event.default evt.evt_n
 
 
 (* ------------------------------------------------------------------------ *)
@@ -249,7 +249,8 @@ module Lk_interpreter: Lk_interpreter.S  =
 (* present                            *)
 (**************************************)
 
-    let rml_present_v ctrl (n,_,wp) k_1 k_2 _ =
+    let rml_present_v ctrl evt k_1 k_2 _ =
+      let n = evt.evt_n in
       (* TODO *)
       k_1 ()
 
@@ -275,7 +276,8 @@ module Lk_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* get                                *)
 (**************************************)
-    let rml_get_v (n,_,_) f ctrl _ =
+    let rml_get_v evt f ctrl _ =
+      let n = evt.evt_n in
       (* TODO *)
       f (Event.default n) ()
 
@@ -333,7 +335,7 @@ module Lk_interpreter: Lk_interpreter.S  =
     let rml_await_immediate_one_v evt f ctrl _ =
       rml_await_immediate_v evt
         (fun _ ->
-           let (n, _, _) = evt in
+           let n = evt.evt_n in
 	   assert (Event.status n);
            let v = Event.one n in
 	   f v ())
@@ -598,7 +600,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (* until                              *)
 (**************************************)
 
-    let rml_start_until_v ctrl (n,_,_) p k _ =
+    let rml_start_until_v ctrl { evt_n = n } p k _ =
       (* TODO *)
       p ctrl ()
 
@@ -612,7 +614,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* control                            *)
 (**************************************)
-   let rml_start_control_v ctrl (n, _, _) p _ =
+   let rml_start_control_v ctrl { evt_n = n } p _ =
       let new_ctrl =
 	new_ctrl
 	  Susp
@@ -632,7 +634,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* when                               *)
 (**************************************)
-    let rml_start_when_v ctrl (n,wa,wp) p _ =
+    let rml_start_when_v ctrl evt p _ =
       (* TODO *)
       p ctrl ()
 
