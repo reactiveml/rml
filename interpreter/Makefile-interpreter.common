@@ -19,6 +19,7 @@ STDLIB_INTF = ../stdlib/stdlib.rzi \
 
 STDLIB_THREAD_INTF = $(patsubst thread/%.rmli,../stdlib/thread/%.rzi,$(STDLIB_THREAD_SRC))
 
+RMLLIB_OBJ_OPT = $(RMLLIB_OBJ:.cmo=.cmx)
 OBJ=$(RMLLIB_OBJ) $(STDLIB_OBJ)
 OBJ_OPT = $(OBJ:.cmo=.cmx)
 
@@ -34,9 +35,9 @@ $(RUNTIME_DIR)/%.ml:../stdlib/thread/%.rml
 $(RUNTIME_DIR)/%.ml:../stdlib/thread/%.ml
 	cp $< $@
 
-$(RUNTIME_DIR)/%.cmo:$(RUNTIME_DIR)/%.ml
+$(RUNTIME_DIR)/%.cmo:$(RUNTIME_DIR)/%.ml $(RMLLIB_OBJ)
 	$(OCAMLC) $(OCAMLFLAGS) -c $(INCLUDES) -I $(RUNTIME_DIR) -o $@ $<
-$(RUNTIME_DIR)/%.cmx:$(RUNTIME_DIR)/%.ml
+$(RUNTIME_DIR)/%.cmx:$(RUNTIME_DIR)/%.ml $(RMLLIB_OBJ_OPT)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $(INCLUDES) -I $(RUNTIME_DIR) -o $@ $<
 
 # library
