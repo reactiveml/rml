@@ -1,25 +1,14 @@
 (* Prority rules: P || Q; R = P || (Q;R) *)
 let () =
   (print_endline "one";
-   pause;
+   pause; pause;
    print_endline "two";
-   pause;
+   pause; pause;
    print_endline "tree")
   ||
-   (print_endline "prime";
-    pause;
+   (pause;
     print_endline "prime";
-    pause;
-    print_endline "prime");
-  pause
-
-let () =
-  (print_endline "one";
-   print_endline "two";
-   pause;
-   print_endline "tree")
-  ||
-   (print_endline "prime";
-    pause;
+    pause; pause;
     print_endline "prime";
-    print_endline "prime") 
+    pause; pause;
+    print_endline "prime")

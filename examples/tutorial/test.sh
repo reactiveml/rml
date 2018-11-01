@@ -9,7 +9,7 @@ for file in *.rml; do
     if [ -f ./$f ]; then
 	./$f > $f.output 2>&1
 	if [ -f $f.result ]; then
-	    diff $f.output $f.result;
+	    diff $f.output $f.result
 	    if [ $? ]; then
 		echo Test of $f: OK
 	    else

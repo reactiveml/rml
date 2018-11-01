@@ -7,4 +7,3 @@ emit s2
 ||
 emit s1;
 present s2 then print_endline "present" else print_endline "absent"
-    

@@ -6,7 +6,7 @@ let rec process counting n top =
   else
     await top;
     run (counting (n-1) top)
-     
+
 (* detect two clicks in less than four tops; emit an answer accordingly *)
 let process double click top answer =
   loop
@@ -15,6 +15,6 @@ let process double click top answer =
       run (counting 4 top);
       emit answer Simple
     until
-      click -> emit answer Double done
+      click -> emit answer Double
+    done
   end
-
