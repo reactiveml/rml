@@ -26,15 +26,23 @@ type 'a t =
   | Dist_support of ('a * proba) list
 
 val draw : 'a t -> 'a
-
 val score : 'a t -> 'a -> log_proba
-
 val draw_and_score : 'a t -> 'a * log_proba
-
-val bernoulli : proba -> bool t
-
-val gaussian : float -> float -> float t
 
 val multivariate : 'a t list -> 'a list t
 
+val stats_float : float t -> float * float
+val mean_float : float t -> float
+
+val split : ('a * 'b) t -> 'a t * 'b t
+val split_array : 'a array t -> 'a t array
+
+val bernoulli : float -> bool t
+val gaussian : float -> float -> float t
+val beta : float -> float -> float t
 val sph_gaussian : float list -> float list -> float list t
+val uniform_int : int -> int -> int t
+val uniform_float : float -> float -> float t
+val uniform_list : 'a list -> 'a t
+val weighted_list : (float * 'a) list -> 'a t
+val exponential : float -> float t
