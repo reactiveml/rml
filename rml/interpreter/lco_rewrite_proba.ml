@@ -1346,7 +1346,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
         let nb_particles =
           begin match nb_particles_opt with
           | None -> 1000
-          | Some n -> n
+          | Some n -> n ()
           end
         in
         let f = p () in
