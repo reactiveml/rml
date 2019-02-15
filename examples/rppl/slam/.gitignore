@@ -1,0 +1,9 @@
+*.rzi
+*.cmi
+*.cmo
+*.cmx
+*.o
+*.byte
+*.opt
+slam
+slam.ml

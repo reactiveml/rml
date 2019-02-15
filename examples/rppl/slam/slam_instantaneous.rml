@@ -1,0 +1,120 @@
+type direction = Left | Right
+
+let max_pos = Array_misc.max_pos
+let mt_prior = log 0.5
+let mf_prior = log 0.5
+let macc_likelihood = log 0.9
+let minacc_likelihood = log 0.1
+
+let log_sum_exp (a, b) =
+  let max_exp = max a b in
+  let sum = exp (a -. max_exp) +. exp (b -. max_exp) in
+  log sum +. max_exp
+
+
+let process sample_x dir last_x =
+  let wheel_slip = sample (Distribution.bernoulli 0.1) in
+  begin match dir with
+  | Right -> min max_pos (if wheel_slip then last_x else last_x + 1)
+  | Left -> max 0 (if wheel_slip then last_x else last_x - 1)
+  end
+
+let update map obs x =
+  let (ntrue, nfalse) = Array_misc.get map x in
+  Array_misc.set map x
+    (if obs then (ntrue +. 1., nfalse) else (ntrue, nfalse +. 1.))
+
+let update_weight map x_new obs_new =
+  let (filtersum_true, filtersum_false) =
+    Array_misc.get map x_new
+  in
+
+  (* Pr(m[x[t0]], y{t: t < t0 && x[t] == x[t0]} |  x{t: t < t0}) *)
+  let mjoint_true =
+    mt_prior +. macc_likelihood *. filtersum_true
+      +. minacc_likelihood *. filtersum_false
+  in
+  let mjoint_false =
+    mf_prior +. macc_likelihood *. filtersum_false
+      +. minacc_likelihood *. filtersum_true
+  in
+
+  (* Pr(y{t: t < t0 && x[t] == x[t0]} |  x{t: t < t0}) *)
+  let mmarg = log_sum_exp (mjoint_true, mjoint_false) in
+
+  (* Pr(m[x[t0]] | y{t: t < t0 && x[t] == x[t0]}, x{t: t < t0}) *)
+  let mpost_true = mjoint_true -. mmarg in
+  let mpost_false = mjoint_false -. mmarg in
+
+  (* Pr(y[t0] | y{t: t < t0 && x[t] == x[t0]}, x{t: t < t0}) *)
+  let ypred_true =
+    log_sum_exp
+      (mpost_true +. macc_likelihood,
+       mpost_false +. minacc_likelihood)
+  in
+  let ypred_false =
+    log_sum_exp
+      (mpost_true +. minacc_likelihood,
+       mpost_false +. macc_likelihood)
+  in
+  if obs_new then ypred_true else ypred_false
+
+
+let process slam inputs =
+  let rec process loop_ inputs map x =
+    begin match inputs with
+    | (dir, obs) :: inputs ->
+        let x = run sample_x dir x in
+        let map = update map obs x in
+        factor (update_weight map x obs);
+        run loop_ inputs map x
+    | [] -> (map, x)
+    end
+  in
+  let map = Array_misc.make (max_pos + 1) (0., 0.) in
+  run loop_ inputs map 0
+
+let generate_inputs real_map n =
+  let rec loop_ last_dir last_x acc n =
+    if n <= 0 then (last_x, acc)
+    else
+      let dir =
+        if last_x = 0 then Right
+        else if last_x = Array.length real_map - 1 then Left
+        else last_dir
+      in
+      let wheel_slip = Distribution.draw (Distribution.bernoulli 0.1) in
+      let x =
+        begin match dir with
+        | Right -> min max_pos (if wheel_slip then last_x else last_x + 1)
+        | Left -> max 0 (if wheel_slip then last_x else last_x - 1)
+        end
+      in
+      let sensor_error = Distribution.draw (Distribution.bernoulli 0.1) in
+      let b = Array_misc.get real_map x in
+      let obs = if sensor_error then not b else b in
+      loop_ dir x ((dir, obs) :: acc) (n - 1)
+  in
+  let last_x, rinputs = loop_ Right 0 [] n in
+  last_x, List.rev rinputs
+
+let real_map =
+  (* Array_misc.of_list *)
+  (*   [ true; false; *)
+  (*     true; false; *)
+  (*     true; false; *)
+  (*     true; false; *)
+  (*     true; false; true ] *)
+  Array_misc.random (max_pos + 1) 0.6
+
+let process main =
+  Random.self_init ();
+  let last_x, inputs = generate_inputs real_map 10000 in
+  let dist = infer ~particles:1000 (slam inputs) in
+  let map_dist, pos_dist = Distribution.split dist in
+  if Array_misc.with_graphics then begin
+    Array_misc.output real_map last_x true map_dist pos_dist;
+    ignore (read_line())
+  end
+
+let () = run main
