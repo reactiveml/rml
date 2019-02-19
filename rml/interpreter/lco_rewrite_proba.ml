@@ -502,7 +502,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	    match p state with
 	    | (SUSP | STOP) as alpha, p' ->
 		(alpha, rml_seq p' (self (n-1)))
-	    | _ -> failwith "Instantaneous loop !"
+	    | TERM _, _ -> self (n-1) state
 	  else
 	    (TERM (), rml_nothing)
       in
