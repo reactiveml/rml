@@ -1151,7 +1151,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
         state.st_particle.st_score <- state.st_particle.st_score +. score;
         state.st_particle.st_resample <- true;
         state.st_move := true;
-        TERM (), rml_nothing
+        SUSP, rml_nothing
 
     let rml_factor score_expr =
       fun state ->
