@@ -60,19 +60,19 @@ let update_weight map x_new obs_new =
   if obs_new then ypred_true else ypred_false
 
 
-let process slam inputs =
-  let rec process loop_ inputs map x =
-    begin match inputs with
-    | (dir, obs) :: inputs ->
+let process slam n inputs =
+  let rec process loop_ n inputs map x =
+    begin match n, inputs with
+    | 0, _ | _, [] -> (map, x)
+    | _, (dir, obs) :: inputs ->
         let x = run sample_x dir x in
         let map = update map obs x in
         factor (update_weight map x obs);
-        run loop_ inputs map x
-    | [] -> (map, x)
+        run loop_ (n - 1) inputs map x
     end
   in
   let map = Array_misc.make (max_pos + 1) (0., 0.) in
-  run loop_ inputs map 0
+  run loop_ n inputs map 0
 
 let generate_inputs real_map n =
   let rec loop_ last_dir last_x acc n =
@@ -109,12 +109,29 @@ let real_map =
 
 let process main =
   Random.self_init ();
-  let last_x, inputs = generate_inputs real_map 10000 in
-  let dist = infer ~particles:1000 (slam inputs) in
+  let n = 10000 in
+  let last_x, inputs = generate_inputs real_map n in
+  let dist = infer ~particles:1000 (slam n inputs) in
   let map_dist, pos_dist = Distribution.split dist in
   if Array_misc.with_graphics then begin
     Array_misc.output real_map last_x true map_dist pos_dist;
     ignore (read_line())
   end
+
+(* let process main = *)
+(*   Random.self_init (); *)
+(*   let n = 100 in *)
+(*   let last_x, inputs = generate_inputs real_map n in *)
+(*   for i = 1 to n - 1 do *)
+(*     let _ = infer ~particles:1000 (slam n inputs) in *)
+(*     () *)
+(*   done; *)
+(*   let dist = infer ~particles:1000 (slam n inputs) in *)
+(*   let map_dist, pos_dist = Distribution.split dist in *)
+(*   if Array_misc.with_graphics then begin *)
+(*     Array_misc.output real_map last_x true map_dist pos_dist; *)
+(*     ignore (read_line()) *)
+(*   end *)
+
 
 let () = run main
