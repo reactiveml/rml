@@ -1,3 +1,4 @@
+OCAMLFIND=ocamlfind
 OCAMLC = ocamlc
 OCAMLOPT = ocamlopt
 RMLC = rmlc
@@ -122,28 +123,28 @@ main.ml:main.rml
 
 
 $(EXEC): $(OBJS)
-	$(OCAMLC) $(OCAMLCFLAGS) \
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLCFLAGS) \
 		-o $(EXEC) $(LIBPATH) \
-		unix.cma graphics.cma rmllib.cma \
+		-linkpkg -package graphics unix.cma rmllib.cma \
 		$(LUC4OCAML_CMA) \
 		$(OBJS)
 
 
 $(EXECOPT): $(OBJSOPT)
-	$(OCAMLOPT) -o $(EXECOPT) $(OCAMLOPTFLAGS) \
+	$(OCAMLFIND) $(OCAMLOPT) -o $(EXECOPT) $(OCAMLOPTFLAGS) \
 		$(LIBPATH) \
-		 unix.cmxa graphics.cmxa rmllib.cmxa\
+		-linkpkg -package graphics unix.cmxa rmllib.cmxa\
 		$(LUC4OCAML_CMXA) \
 		$(OBJSOPT)
 
 
 glonemo.cma: $(OBJS)
 	$(RMLC) -dtypes $(RMLCFLAGS) main.rml
-	$(OCAMLC) -c $(OCAMLCFLAGS) $(LIBPATH) main.ml
+	$(OCAMLFIND) $(OCAMLC) -c -package graphics $(OCAMLCFLAGS) $(LIBPATH) main.ml
 	rm main.ml
-	$(OCAMLC) -a $(OCAMLCFLAGS) \
+	$(OCAMLFIND) $(OCAMLC) -a $(OCAMLCFLAGS) \
 		-o glonemo.cma $(LIBPATH) \
-		graphics.cma \
+		-linkpkg -package graphics \
 		$(LUC4OCAML_CMA) \
 		$(OBJS)
 
@@ -166,7 +167,6 @@ realclean : cleanall
 
 
 
-
 %.ml: %.rml
 	$(RMLC) $(RMLCFLAGS) -dtypes $<
 
@@ -174,10 +174,10 @@ realclean : cleanall
 	$(RMLC) $(RMLCFLAGS) $<
 
 %.cmi: %.ml
-	$(OCAMLC) $(OCAMLCFLAGS) -c $(LIBPATH) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLCFLAGS) -c -package graphics $(LIBPATH) $<
 
 %.cmx: %.ml
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $(LIBPATH) $<
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLOPTFLAGS) -c -package graphics $(LIBPATH) $<
 
 %.cmo: %.ml
-	$(OCAMLC) $(OCAMLCFLAGS) -c $(LIBPATH) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLCFLAGS) -c -package graphics $(LIBPATH) $<

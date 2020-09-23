@@ -5,6 +5,7 @@ SAMPLING=0.01
 INTERPRETERDIR=`rmlc -where`
 INTERPRETER=rmllib.cma
 INTERPRETERX=rmllib.cmxa
+OCAMLFIND=ocamlfind
 OCAMLC=ocamlc
 OCAMLOPT=ocamlopt
 OCAMLFLAGS=
@@ -14,10 +15,10 @@ all : planets
 opt : planets.opt
 
 planets : planets.cmo
-	 $(OCAMLC) $(FLAGS) -o planets -I $(INTERPRETERDIR) unix.cma graphics.cma $(INTERPRETER) planets.cmo
+	 $(OCAMLFIND) $(OCAMLC) $(FLAGS) -o planets -I $(INTERPRETERDIR) -linkpkg -package graphics unix.cma $(INTERPRETER) planets.cmo
 
 planets.opt : planets.cmx
-	 $(OCAMLOPT) $(FLAGS) -o planets.opt -I $(INTERPRETERDIR) unix.cmxa graphics.cmxa $(INTERPRETERX) planets.cmx
+	 $(OCAMLFIND) $(OCAMLOPT) $(FLAGS) -o planets.opt -I $(INTERPRETERDIR) -linkpkg -package graphics unix.cmxa $(INTERPRETERX) planets.cmx
 
 clean :
 	rm -f *.cm* *.annot *.rzi *.?annot *.o \
@@ -33,13 +34,13 @@ cleanall: realclean
 .rml.ml:
 	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) $<
 .ml.cmo:
-	$(OCAMLC) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) -package graphics $(INCLUDES) $<
 
 .ml.cmx:
-	$(OCAMLOPT) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) -package graphics $(INCLUDES) $<
 
 .mli.cmi:
-	$(OCAMLC) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) -package graphics $(INCLUDES) $<
 
 .mli.rzi:
 	$(RMLC) -c $<

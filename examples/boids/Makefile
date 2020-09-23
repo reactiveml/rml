@@ -4,6 +4,7 @@ N=-1
 SAMPLING=-1.0
 INTERPRETERDIR=`$(RMLC) -where`
 INTERPRETER=rmllib.cma
+OCAMLFIND=ocamlfind
 OCAMLC=ocamlc
 OCAMLFLAGS=
 
@@ -15,19 +16,19 @@ all : boids
 .rml.ml:
 	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) -s $(MAIN) $<
 .ml.cmo:
-	$(OCAMLC) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c -package graphics -I $(INTERPRETERDIR) $(INCLUDES) $<
 
 .mli.cmi:
-	$(OCAMLC) $(OCAMLFLAGS) -c -I $(INTERPRETERDIR) $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c -package graphics -I $(INTERPRETERDIR) $(INCLUDES) $<
 
 .mli.rzi:
 	$(RMLC) -c $<
 
-boids.ml: boids.rml 
-	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) -s main $< 
-boids.cmo: boids.ml 
-boids : boids.cmo 
-	 $(OCAMLC) $(FLAGS) -o boids -I $(INTERPRETERDIR) unix.cma graphics.cma $(INTERPRETER) boids.cmo 
+boids.ml: boids.rml
+	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) -s main $<
+boids.cmo: boids.ml
+boids : boids.cmo
+	 $(OCAMLFIND) $(OCAMLC) $(FLAGS) -o boids -I $(INTERPRETERDIR) -linkpkg -package graphics unix.cma $(INTERPRETER) boids.cmo
 
 clean :
 	rm -f *.cm* *.annot *.rzi \

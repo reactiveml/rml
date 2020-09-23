@@ -8,10 +8,10 @@ SAMPLING=-1.0
 RMLFLAGS=
 MAIN=main
 
-OCAMLC=ocamlc
+OCAMLC=ocamlfind ocamlc -package graphics
 OCAMLFLAGS=
 
-OCAMLOPT=ocamlopt
+OCAMLOPT=ocamlfind ocamlopt -package graphics
 OCAMLOPTFLAGS=
 
 EXEC = $(FILE)
@@ -34,7 +34,7 @@ draw.ml draw.rzi: draw.rml global.rzi rml_graphics.rzi
 draw.cmo: draw.ml rml_graphics.cmo
 draw.cmx: draw.ml rml_graphics.cmx
 
-pos_tbl.ml pos_tbl.rzi: pos_tbl.rml global.rzi 
+pos_tbl.ml pos_tbl.rzi: pos_tbl.rml global.rzi
 
 area.ml area.rzi: area.rml global.rzi
 
@@ -54,11 +54,11 @@ simul.ml simul.rzi: simul.rml global.rzi pos_tbl.rzi area.rzi move.rzi msg.rzi r
 
 simul.cmo: simul.ml global.cmo pos_tbl.cmo area.cmo move.cmo msg.cmo routage.cmo draw.cmo stat.cmo
 simul: simul.cmo global.cmo pos_tbl.cmo area.cmo move.cmo msg.cmo routage.cmo draw.cmo stat.cmo
-	$(OCAMLC) $(OCAMLFLAGS) -o simul unix.cma graphics.cma -I `$(RMLC) -where` rmllib.cma global.cmo rml_graphics.cmo draw.cmo stat.cmo pos_tbl.cmo area.cmo move.cmo msg.cmo routage.cmo simul.cmo 
+	$(OCAMLC) $(OCAMLFLAGS) -linkpkg -o simul unix.cma graphics.cma -I `$(RMLC) -where` rmllib.cma global.cmo rml_graphics.cmo draw.cmo stat.cmo pos_tbl.cmo area.cmo move.cmo msg.cmo routage.cmo simul.cmo
 
 simul.cmx: simul.ml global.cmx pos_tbl.cmx area.cmx move.cmx msg.cmx routage.cmx draw.cmx stat.cmx
 simul.opt: simul.cmx global.cmx pos_tbl.cmx area.cmx move.cmx msg.cmx routage.cmx draw.cmx stat.cmx
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o simul.opt unix.cmxa graphics.cmxa -I `$(RMLC) -where` rmllib.cmxa global.cmx rml_graphics.cmx draw.cmx stat.cmx pos_tbl.cmx area.cmx move.cmx msg.cmx routage.cmx simul.cmx 
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -linkpkg -o simul.opt unix.cmxa graphics.cmxa -I `$(RMLC) -where` rmllib.cmxa global.cmx rml_graphics.cmx draw.cmx stat.cmx pos_tbl.cmx area.cmx move.cmx msg.cmx routage.cmx simul.cmx
 
 # implicit rules
 .SUFFIXES: .rml .mli .ml .cmi .cmo .cmx .o .rzi
@@ -88,7 +88,7 @@ clean:
 	rm -f *.cm* *.o *.annot *.?annot *.rzi \
 	      simul.ml \
 	      global.ml area.ml pos_tbl.ml routage.ml move.ml msg.ml draw.ml \
-	      stat.ml rml_graphics.ml 
+	      stat.ml rml_graphics.ml
 
 realclean: clean
 	rm -f simul simul.opt *~

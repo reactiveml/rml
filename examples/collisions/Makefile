@@ -1,5 +1,5 @@
-CAMLC = ocamlc
-OCAMLOPT = ocamlopt
+CAMLC = ocamlfind ocamlc
+OCAMLOPT = ocamlfind ocamlopt
 RMLC = rmlc
 INTERPRETER=rmllib
 INTERPRETERDIR=`$(RMLC) -where`
@@ -27,9 +27,9 @@ EXEC    = balle
 EXECOPT = $(EXEC).opt
 
 
-LIBS = unix.cma graphics.cma $(INTERPRETERDIR)/$(INTERPRETER).cma
+LIBS = -linkpkg -package graphics unix.cma $(INTERPRETERDIR)/$(INTERPRETER).cma
 
-LIBSOPT = unix.cmxa graphics.cmxa $(INTERPRETERDIR)/$(INTERPRETER).cmxa
+LIBSOPT = -linkpkg -package graphics unix.cmxa $(INTERPRETERDIR)/$(INTERPRETER).cmxa
 
 
 
@@ -78,7 +78,7 @@ main.ml:main.rml
 
 
 moteur.cmi moteur.cmo: moteur.ml
-	$(CAMLC)  -I $(INTERPRETERDIR) -c $<
+	$(CAMLC) -package graphics -I $(INTERPRETERDIR) -c $<
 
 balle.cmx: balle.ml calcul.cmx
 
@@ -95,13 +95,13 @@ balle.cmx: balle.ml calcul.cmx
 
 
 .ml.cmo:
-	$(CAMLC) -c $(OCAMLOPTS) $<
+	$(CAMLC) -c -package graphics $(OCAMLOPTS) $<
 
 .ml.cmi:
-	$(CAMLC) -c $(OCAMLOPTS) $< 
+	$(CAMLC) -c -package graphics $(OCAMLOPTS) $< 
 
 .ml.cmx:
-	$(OCAMLOPT) -c $(OCAMLOPTS) $<
+	$(OCAMLOPT) -c -package graphics $(OCAMLOPTS) $<
 
 
 

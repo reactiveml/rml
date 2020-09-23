@@ -39,44 +39,44 @@ rml: $(SRC)
 	rmlc $(RMLCFLAGS) -s main -n $(N) -sampling $(SAMPLING) simul.rml
 
 cmo: rml link
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) init.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) position.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) pos_tbl.mli
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) pos_tbl.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) global.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) area.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) rml_graphics.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) draw.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) move.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) msg.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) search_best_age.mli
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) search_best_age.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) routing.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) node.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) dynamic.ml
-	ocamlc -c -I `rmlc -where` $(OCAMLCFLAGS) simul.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) init.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) position.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) pos_tbl.mli
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) pos_tbl.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) global.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) area.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) rml_graphics.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) draw.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) move.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) msg.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) search_best_age.mli
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) search_best_age.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) routing.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) node.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) dynamic.ml
+	ocamlfind ocamlc -c -I `rmlc -where` -package graphics $(OCAMLCFLAGS) simul.ml
 
 cmx: rml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) init.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) position.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) pos_tbl.mli
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) pos_tbl.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) global.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) area.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) rml_graphics.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) draw.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) move.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) msg.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) search_best_age.mli
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) search_best_age.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) routing.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) node.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) dynamic.ml
-	ocamlopt -c -I `rmlc -where` $(OCAMLOPTFLAGS) simul.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) init.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) position.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) pos_tbl.mli
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) pos_tbl.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) global.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) area.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) rml_graphics.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) draw.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) move.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) msg.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) search_best_age.mli
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) search_best_age.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) routing.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) node.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) dynamic.ml
+	ocamlfind ocamlopt -c -I `rmlc -where` -package graphics $(OCAMLOPTFLAGS) simul.ml
 
 elip: cmo
-	ocamlc $(OCAMLCFLAGS) -o elip \
-		unix.cma graphics.cma \
+	ocamlfind ocamlc $(OCAMLCFLAGS) -o elip \
+		-linkpkg -package graphics unix.cma \
 		-I `rmlc -where` rmllib.cma \
 		init.cmo \
 		position.cmo \
@@ -91,11 +91,11 @@ elip: cmo
 		routing.cmo \
 		node.cmo \
 		dynamic.cmo \
-		simul.cmo 
+		simul.cmo
 
 elip.opt: cmx
-	ocamlopt $(OCAMLOPTFLAGS) -o elip.opt \
-		unix.cmxa graphics.cmxa \
+	ocamlfind ocamlopt $(OCAMLOPTFLAGS) -o elip.opt \
+		-linkpkg -package graphics unix.cmxa \
 		-I `rmlc -where` rmllib.cmxa \
 		init.cmx \
 		position.cmx \
@@ -110,7 +110,7 @@ elip.opt: cmx
 		routing.cmx \
 		node.cmx \
 		dynamic.cmx \
-		simul.cmx 
+		simul.cmx
 
 clean:
 	rm -f *.rzi *.annot *.?annot *.cmo *.cmx *.cmi *.o \
@@ -127,7 +127,7 @@ clean:
 	routing.ml \
 	node.ml \
 	dynamic.ml \
-	simul.ml 
+	simul.ml
 
 cleanall: clean
 	rm -f elip elip.opt pos_tbl.ml *~

@@ -14,8 +14,8 @@ all:
 	(cd rubik; make)
 	(cd sin_cos; make)
 	(cd spirale; make)
-	(cd icobjs; make)
-	(cd pacman; make)
+	-(cd icobjs; make)
+	-(cd pacman; make)
 
 clean:
 	(cd boids; make clean)

@@ -1,5 +1,5 @@
-CAMLC = ocamlc
-OCAMLOPT = ocamlopt
+CAMLC = ocamlfind ocamlc -package graphics
+OCAMLOPT = ocamlfind ocamlopt -package graphics
 RMLC = rmlc
 INTERPRETER=rmllib
 INTERPRETERDIR=`$(RMLC) -where`
@@ -10,7 +10,7 @@ SAMPLING=0.01
 
 # Options :
 RMLOPTS =-I libgraph
-OCAMLOPTS = -I $(INTERPRETERDIR) -I libgraph 
+OCAMLOPTS = -I $(INTERPRETERDIR) -I libgraph
 
 
 
@@ -49,15 +49,15 @@ clean :
 	rm -f *.rzi *.?annot
 
 cleanall : clean
-	rm -f $(EXEC) $(EXECOPT) 
+	rm -f $(EXEC) $(EXECOPT)
 realclean: cleanall
 
 $(EXEC): $(OBJS)
-	$(CAMLC) -o $(EXEC) $(OCAMLOPTS) $(LIBS) rml_Graphics.cma $(OBJS) 
+	$(CAMLC) -linkpkg -o $(EXEC) $(OCAMLOPTS) $(LIBS) rml_Graphics.cma $(OBJS)
 
 
 $(EXECOPT): $(OBJSOPT)
-	$(OCAMLOPT) -o $(EXECOPT) $(LIBSOPT) rml_Graphics.cmxa $(OBJSOPT)  -cclib -lunix 
+	$(OCAMLOPT) -linkpkg -o $(EXECOPT) $(LIBSOPT) rml_Graphics.cmxa $(OBJSOPT)  -cclib -lunix
 
 
 scene.ml: icobj.cmo entities.cmo
@@ -91,10 +91,7 @@ main.ml:main.rml
 	$(CAMLC) -I libgraph -c $(OCAMLOPTS) $<
 
 .ml.cmi:
-	$(CAMLC) -I libgraph -c $(OCAMLOPTS) $< 
+	$(CAMLC) -I libgraph -c $(OCAMLOPTS) $<
 
 .ml.cmx:
 	$(OCAMLOPT) -c $(OCAMLOPTS) $<
-
-
-

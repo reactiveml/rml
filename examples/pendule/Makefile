@@ -1,5 +1,5 @@
-CAMLC = ocamlc
-OCAMLOPT = ocamlopt
+CAMLC = ocamlfind ocamlc -package graphics
+OCAMLOPT = ocamlfind ocamlopt -package graphics
 RMLC = rmlc
 INTERPRETERPATH=`$(RMLC) -where`
 
@@ -43,11 +43,11 @@ cleanall : clean
 realclean: cleanall
 
 $(EXEC): $(OBJS)
-	$(CAMLC) -o $(EXEC) -I $(INTERPRETERPATH) $(LIBS) $(OBJS) 
+	$(CAMLC) -linkpkg -o $(EXEC) -I $(INTERPRETERPATH) $(LIBS) $(OBJS)
 
 
 $(EXECOPT): $(OBJSOPT)
-	$(OCAMLOPT) -o $(EXECOPT) -I $(INTERPRETERPATH) $(LIBSOPT) $(OBJSOPT) -cclib -lunix 
+	$(OCAMLOPT) -linkpkg -o $(EXECOPT) -I $(INTERPRETERPATH) $(LIBSOPT) $(OBJSOPT) -cclib -lunix
 
 
 pendule.cmo: pendule.ml moteur.cmi
@@ -80,6 +80,3 @@ main.ml:main.rml
 
 .ml.cmx:
 	$(OCAMLOPT) -c -I $(INTERPRETERPATH) $<
-
-
-

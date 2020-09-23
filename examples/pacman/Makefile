@@ -1,11 +1,11 @@
-OCAMLC = ocamlc
-OCAMLOPT = ocamlopt
+OCAMLC = ocamlfind ocamlc -package graphics
+OCAMLOPT = ocamlfind ocamlopt -package graphics
 CAMLDEP = ocamldep
 CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
 RMLC = rmlc
 INTERPRETERDIR=`$(RMLC) -where`
-CAMLIMAGESDIR=-I +camlimages
+CAMLIMAGESDIR=-package camlimages
 # CAMLIMAGESDIR=-I $(HOME)/Ocaml/camlimages-2.2/ps \
 # -I $(HOME)/Ocaml/camlimages-2.2/bmp \
 # -I $(HOME)/Ocaml/camlimages-2.2/gif \

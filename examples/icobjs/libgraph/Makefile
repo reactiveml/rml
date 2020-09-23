@@ -1,11 +1,11 @@
 PREFIX=
 RMLC=rmlc
 RMLFLAGS=
-OCAMLC=ocamlc
-OCAMLOPT=ocamlopt
+OCAMLC=ocamlfind ocamlc -package graphics
+OCAMLOPT=ocamlfind ocamlopt -package graphics
 INTERPRETERPATH=`rmlc -where`
 OCAMLOPTS=-I $(INTERPRETERPATH)
-CAMLIMAGESDIR=-I +camlimages
+CAMLIMAGESDIR=-package camlimages
 # CAMLIMAGESDIR=-I $(HOME)/Ocaml/camlimages-2.2/ps \
 # -I $(HOME)/Ocaml/camlimages-2.2/bmp \
 # -I $(HOME)/Ocaml/camlimages-2.2/gif \
@@ -27,10 +27,10 @@ all:rml_Graphics.cma
 opt:rml_Graphics.cmxa
 
 rml_Graphics.cma:rml_Graphics.cmo misc.cmo
-	$(OCAMLC) $(CAMLIMAGESDIR) -a -o rml_Graphics.cma ci_core.cma ci_graphics.cma ci_gif.cma misc.cmo rml_Graphics.cmo 
+	$(OCAMLC) $(CAMLIMAGESDIR) -a -linkpkg -o rml_Graphics.cma ci_core.cma ci_graphics.cma ci_gif.cma misc.cmo rml_Graphics.cmo 
 
 rml_Graphics.cmxa:rml_Graphics.cmx misc.cmx
-	$(OCAMLOPT) $(CAMLIMAGESDIR) -a -o rml_Graphics.cmxa ci_core.a ci_graphics.a ci_gif.a misc.o rml_Graphics.o
+	$(OCAMLOPT) $(CAMLIMAGESDIR) -a  -linkpkg -o rml_Graphics.cmxa ci_core.a ci_graphics.a ci_gif.a misc.o rml_Graphics.o
 
 clean:
 	rm -f rml_Graphics.cmo rml_Graphics.ml misc.cmo rml_Graphics.cma

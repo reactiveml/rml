@@ -7,6 +7,7 @@ N=-1
 SAMPLING=-1.0
 RMLFLAGS=-dtypes
 
+OCAMLFIND=ocamlfind
 OCAMLC=ocamlc
 OCAMLFLAGS=
 
@@ -27,11 +28,11 @@ $(FILE).ml: $(FILE).rml
 
 $(FILE).cmo: $(FILE).ml
 $(FILE): $(FILE).cmo
-	$(OCAMLC) $(OCAMLFLAGS) -o $(FILE) unix.cma graphics.cma -I `$(RMLC) -where` rmllib.cma $(FILE).cmo
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -o $(FILE) -linkpkg -package graphics unix.cma -I `$(RMLC) -where` rmllib.cma $(FILE).cmo
 
 $(FILE).cmx: $(FILE).ml
 $(FILE).opt: $(FILE).cmx
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FILE).opt unix.cmxa graphics.cmxa -I `$(RMLC) -where` rmllib.cmxa $(FILE).cmx
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FILE).opt -linkpkg -package graphics unix.cmxa -I `$(RMLC) -where` rmllib.cmxa $(FILE).cmx
 
 
 # implicit rules
@@ -41,16 +42,16 @@ $(FILE).opt: $(FILE).cmx
 	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) $<
 
 .ml.cmo:
-	$(OCAMLC) $(OCAMLFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c -package graphics -I `$(RMLC) -where` $(INCLUDES) $<
 
 .mli.cmi:
-	$(OCAMLC) $(OCAMLFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c -package graphics -I `$(RMLC) -where` $(INCLUDES) $<
 
 .ml.cmx:
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLOPTFLAGS) -c -package graphics -I `$(RMLC) -where` $(INCLUDES) $<
 
 .ml.o:
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLOPTFLAGS) -c -package graphics -I `$(RMLC) -where` $(INCLUDES) $<
 
 .mli.rzi:
 	$(RMLC) -c $<

@@ -1,3 +1,4 @@
+OCAMLFIND=ocamlfind
 OCAMLC = ocamlc
 OCAMLOPT = ocamlopt
 RMLC = rmlc
@@ -26,10 +27,10 @@ byte: $(EXEC)
 opt: $(EXECOPT)
 
 $(EXEC): $(OBJS)
-	$(OCAMLC) -o $(EXEC) -I $(INTERPRETERPATH) unix.cma graphics.cma rmllib.cma $(OBJS) 
+	$(OCAMLFIND) $(OCAMLC) -o $(EXEC) -I $(INTERPRETERPATH) -linkpkg -package graphics unix.cma rmllib.cma $(OBJS)
 
 $(EXECOPT): $(OBJSOPT)
-	$(OCAMLOPT) -o $(EXECOPT) -I $(INTERPRETERPATH) unix.cmxa graphics.cmxa rmllib.cmxa $(OBJSOPT) 
+	$(OCAMLFIND) $(OCAMLOPT) -o $(EXECOPT) -I $(INTERPRETERPATH) -linkpkg -package graphics unix.cmxa rmllib.cmxa $(OBJSOPT)
 
 
 cube.cmo: cube.ml moteur.cmi
@@ -70,13 +71,13 @@ realclean:cleanall
 	$(RMLC) $(RMLFLAGS) $<
 
 .ml.cmo:
-	$(OCAMLC) -c -I $(INTERPRETERPATH) $<
+	$(OCAMLFIND) $(OCAMLC) -c -package graphics -I $(INTERPRETERPATH) $<
 
 .ml.cmi:
-	$(OCAMLC) -c -I $(INTERPRETERPATH) $<
+	$(OCAMLFIND) $(OCAMLC) -c -package graphics -I $(INTERPRETERPATH) $<
 
 .ml.cmx:
-	$(OCAMLOPT) -c -I $(INTERPRETERPATH) $<
+	$(OCAMLFIND) $(OCAMLOPT) -c -package graphics -I $(INTERPRETERPATH) $<
 
 .ml.o:
-	$(OCAMLOPT) -c -I $(INTERPRETERPATH) $<
+	$(OCAMLFIND) $(OCAMLOPT) -c -package graphics -I $(INTERPRETERPATH) $<

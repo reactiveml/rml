@@ -6,8 +6,8 @@ all:
 	(cd planets; $(MAKE))
 	(cd primes; $(MAKE))
 	(cd reflex; $(MAKE))
-	(cd reactive_art; $(MAKE))
-	(cd reactive_asco; $(MAKE))
+	-(cd reactive_art; $(MAKE))
+	-(cd reactive_asco; $(MAKE))
 
 clean:
 	(cd boids; $(MAKE) clean)

@@ -8,6 +8,7 @@ SAMPLING=-1.0
 RMLFLAGS=-dtypes
 MAIN=main
 
+OCAMLFIND=ocamlfind
 OCAMLC=ocamlc
 OCAMLFLAGS=
 
@@ -27,21 +28,21 @@ opt: $(EXECOPT)
 $(FILE).ml: $(FILE).rml
 
 $(FILE).cmo: $(FILE).ml
-$(FILE): $(FILE).cmo 
-	$(OCAMLC) $(OCAMLFLAGS) -o $(FILE) unix.cma graphics.cma -I `$(RMLC) -where` rmllib.cma $(FILE).cmo 
+$(FILE): $(FILE).cmo
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -o $(FILE) -linkpkg -package graphics unix.cma -I `$(RMLC) -where` rmllib.cma $(FILE).cmo
 
 $(FILE).cmx: $(FILE).ml
-$(FILE).opt: $(FILE).cmx 
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FILE).opt unix.cmxa graphics.cmxa -I `$(RMLC) -where` rmllib.cmxa $(FILE).cmx 
+$(FILE).opt: $(FILE).cmx
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FILE).opt -linkpkg -package graphics unix.cmxa -I `$(RMLC) -where` rmllib.cmxa $(FILE).cmx
 
 
 caml_cellular_automata.cmo: caml_cellular_automata.ml
-caml_cellular_automata: caml_cellular_automata.cmo 
-	$(OCAMLC) $(OCAMLFLAGS) -o caml_cellular_automata unix.cma graphics.cma caml_cellular_automata.cmo 
+caml_cellular_automata: caml_cellular_automata.cmo
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -o caml_cellular_automata -linkpkg -package graphics unix.cma caml_cellular_automata.cmo
 
 caml_cellular_automata.cmx: caml_cellular_automata.ml
-caml_cellular_automata.opt: caml_cellular_automata.cmx 
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o caml_cellular_automata.opt unix.cmxa graphics.cmxa caml_cellular_automata.cmx 
+caml_cellular_automata.opt: caml_cellular_automata.cmx
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLOPTFLAGS) -o caml_cellular_automata.opt -linkpkg -package graphics unix.cmxa caml_cellular_automata.cmx
 
 
 # implicit rules
@@ -51,16 +52,16 @@ caml_cellular_automata.opt: caml_cellular_automata.cmx
 	$(RMLC) $(RMLFLAGS) -n $(N) -sampling $(SAMPLING) -s $(MAIN) $<
 
 .ml.cmo:
-	$(OCAMLC) $(OCAMLFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c -package graphics -I `$(RMLC) -where` $(INCLUDES) $<
 
 .mli.cmi:
-	$(OCAMLC) $(OCAMLFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLC) $(OCAMLFLAGS) -c -package graphics -I `$(RMLC) -where` $(INCLUDES) $<
 
 .ml.cmx:
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLOPTFLAGS) -c -package graphics -I `$(RMLC) -where` $(INCLUDES) $<
 
 .ml.o:
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c -I `$(RMLC) -where` $(INCLUDES) $<
+	$(OCAMLFIND) $(OCAMLOPT) $(OCAMLOPTFLAGS) -c -package graphics -I `$(RMLC) -where` $(INCLUDES) $<
 
 .mli.rzi:
 	$(RMLC) -c $<
@@ -69,7 +70,7 @@ caml_cellular_automata.opt: caml_cellular_automata.cmx
 clean:
 	rm -f *.cm* *.o *.annot *.?annot *.rzi \
 		$(FILE).ml \
-		cellular_automata_par.ml 
+		cellular_automata_par.ml
 
 realclean: clean
 	rm -f 	$(FILE) $(FILE).opt \

@@ -1,11 +1,11 @@
-CAMLC = ocamlc
-OCAMLOPT = ocamlopt
+CAMLC = ocamlfind ocamlc -package graphics
+OCAMLOPT = ocamlfind ocamlopt -package graphics
 RMLC = rmlc
 INTERPRETERPATH=`$(RMLC) -where`
 
 RMLCOPTS=
 
-#  Ne pas modifier apres (et pendant) cette ligne 
+#  Ne pas modifier apres (et pendant) cette ligne
 
 
 OBJS = moteur.cmo \
@@ -30,11 +30,11 @@ opt: $(EXECOPT)
 
 
 $(EXEC): $(OBJS)
-	$(CAMLC) -o $(EXEC) -I  $(INTERPRETERPATH) unix.cma graphics.cma rmllib.cma $(OBJS) 
+	$(CAMLC) -linkpkg -o $(EXEC) -I  $(INTERPRETERPATH) unix.cma graphics.cma rmllib.cma $(OBJS)
 
 
 $(EXECOPT): $(OBJSOPT)
-	$(OCAMLOPT) -o $(EXECOPT) -I $(INTERPRETERPATH) unix.cmxa graphics.cmxa rmllib.cmxa $(OBJSOPT) -cclib -lunix 
+	$(OCAMLOPT) -linkpkg -o $(EXECOPT) -I $(INTERPRETERPATH) unix.cmxa graphics.cmxa rmllib.cmxa $(OBJSOPT) -cclib -lunix
 
 main.ml:main.rml
 	$(RMLC) -s main $(RMLCOPTS)  $<
