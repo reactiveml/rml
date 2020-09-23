@@ -101,7 +101,7 @@ STDLIB_MODULES=\
   obj \
   oo \
   parsing \
-  pervasives \
+  stdlib \
   printexc \
   printf \
   queue \

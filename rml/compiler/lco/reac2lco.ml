@@ -595,13 +595,13 @@ and translate_proc_let =
           (*    | _ -> assert false                        *)
           (*  in e                                         *)
 	  let ref_global =
-	    Modules.find_value_desc (Initialization.pervasives_val "ref")
+	    Modules.find_value_desc (Initialization.stdlib_val "ref")
 	  in
 	  let set_global =
-	    Modules.find_value_desc (Initialization.pervasives_val ":=")
+	    Modules.find_value_desc (Initialization.stdlib_val ":=")
 	  in
 	  let deref_global =
-	    Modules.find_value_desc (Initialization.pervasives_val "!")
+	    Modules.find_value_desc (Initialization.stdlib_val "!")
 	  in
 	  let id_array =
 	    Array.init (List.length patt_expr_list)

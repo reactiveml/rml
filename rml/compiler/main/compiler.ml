@@ -238,7 +238,7 @@ let compile_implementation module_name filename =
   and obj_name = make_output_filename (filename ^ ".ml")
   and tannot_name = make_output_filename (filename ^ ".tannot")
   and sannot_name = make_output_filename (filename ^ ".sannot")
-  and module_name = String.capitalize (Filename.basename filename)  in
+  and module_name = String.capitalize_ascii (Filename.basename filename)  in
 
   let ic = open_in source_name in
   let itf =
@@ -425,7 +425,7 @@ let compile_interface parse module_name filename filename_end =
   let source_name = filename ^ filename_end
   and obj_interf_name = make_output_filename (filename ^ ".rzi")
   and obj_name = make_output_filename (filename ^ ".mli")
-  and module_name = String.capitalize (Filename.basename filename)  in
+  and module_name = String.capitalize_ascii (Filename.basename filename)  in
 
   let ic = open_in source_name in
   let itf = open_out_bin obj_interf_name in

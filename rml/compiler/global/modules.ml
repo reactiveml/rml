@@ -73,7 +73,7 @@ let read_module basename filename =
 
 
 let load_module modname =
-  let name = String.uncapitalize modname in
+  let name = String.uncapitalize_ascii modname in
   let rzi = find_in_path (name ^ ".rzi") in
   match rzi with
   | Some rzi ->

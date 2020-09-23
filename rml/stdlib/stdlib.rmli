@@ -100,7 +100,7 @@ exception Undefined_recursive_module of (string * int * int)
 
    This module is automatically opened at the beginning of each compilation.
    All components of this module can therefore be referred by their short
-   name, without prefixing them by [Pervasives].
+   name, without prefixing them by [Stdlib].
 *)
 
 (** {6 Exceptions} *)
@@ -131,16 +131,16 @@ val ( = ) : 'a -> 'a -> bool
    Equality between cyclic data structures may not terminate. *)
 
 val ( <> ) : 'a -> 'a -> bool
-(** Negation of {!Pervasives.(=)}. *)
+(** Negation of {!Stdlib.(=)}. *)
 
 val ( < ) : 'a -> 'a -> bool
-(** See {!Pervasives.(>=)}. *)
+(** See {!Stdlib.(>=)}. *)
 
 val ( > ) : 'a -> 'a -> bool
-(** See {!Pervasives.(>=)}. *)
+(** See {!Stdlib.(>=)}. *)
 
 val ( <= ) : 'a -> 'a -> bool
-(** See {!Pervasives.(>=)}. *)
+(** See {!Stdlib.(>=)}. *)
 
 val ( >= ) : 'a -> 'a -> bool
 (** Structural ordering functions. These functions coincide with
@@ -174,7 +174,7 @@ val ( == ) : 'a -> 'a -> bool
    [e1 == e2] implies [e1 = e2]. *)
 
 val ( != ) : 'a -> 'a -> bool
-(** Negation of {!Pervasives.(==)}. *)
+(** Negation of {!Stdlib.(==)}. *)
 
 
 (** {6 Boolean operations} *)
@@ -189,7 +189,7 @@ val ( && ) : bool -> bool -> bool
    [e2] is not evaluated at all. *)
 
 val ( & ) : bool -> bool -> bool
-(** @deprecated {!Pervasives.(&&)} should be used instead. *)
+(** @deprecated {!Stdlib.(&&)} should be used instead. *)
 
 (*
 val ( || ) : bool -> bool -> bool
@@ -330,37 +330,37 @@ val log10 : float -> float
 (** Base 10 logarithm. *)
 
 val cos : float -> float
-(** See {!Pervasives.atan2}. *)
+(** See {!Stdlib.atan2}. *)
 
 val sin : float -> float
-(** See {!Pervasives.atan2}. *)
+(** See {!Stdlib.atan2}. *)
 
 val tan : float -> float
-(** See {!Pervasives.atan2}. *)
+(** See {!Stdlib.atan2}. *)
 
 val acos : float -> float
-(** See {!Pervasives.atan2}. *)
+(** See {!Stdlib.atan2}. *)
 
 val asin : float -> float
-(** See {!Pervasives.atan2}. *)
+(** See {!Stdlib.atan2}. *)
 
 val atan : float -> float
-(** See {!Pervasives.atan2}. *)
+(** See {!Stdlib.atan2}. *)
 
 val atan2 : float -> float -> float
 (** The usual trigonometric functions. *)
 
 val cosh : float -> float
-(** See {!Pervasives.tanh}. *)
+(** See {!Stdlib.tanh}. *)
 
 val sinh : float -> float
-(** See {!Pervasives.tanh}. *)
+(** See {!Stdlib.tanh}. *)
 
 val tanh : float -> float
 (** The usual hyperbolic trigonometric functions. *)
 
 val ceil : float -> float
-(** See {!Pervasives.floor}. *)
+(** See {!Stdlib.floor}. *)
 
 val floor : float -> float
 (** Round the given float to an integer value.
@@ -392,13 +392,13 @@ val modf : float -> float * float
    part of [f]. *)
 
 val float : int -> float
-(** Same as {!Pervasives.float_of_int}. *)
+(** Same as {!Stdlib.float_of_int}. *)
 
 val float_of_int : int -> float
 (** Convert an integer to floating-point. *)
 
 val truncate : float -> int
-(** Same as {!Pervasives.int_of_float}. *)
+(** Same as {!Stdlib.int_of_float}. *)
 
 val int_of_float : float -> int
 (** Truncate the given floating-point number to an integer.
@@ -432,7 +432,7 @@ type fpclass =
   | FP_infinite         (** Number is positive or negative infinity *)
   | FP_nan              (** Not a number: result of an undefined operation *)
 (** The five classes of floating-point numbers, as determined by
-   the {!Pervasives.classify_float} function. *)
+   the {!Stdlib.classify_float} function. *)
 
 val classify_float : float -> fpclass
 (** Return the class of the given floating-point number:
@@ -617,7 +617,7 @@ type open_flag =
   | Open_binary      (** open in binary mode (no conversion). *)
   | Open_text        (** open in text mode (may perform conversions). *)
   | Open_nonblock    (** open in non-blocking mode. *)
-(** Opening modes for {!Pervasives.open_out_gen} and {!Pervasives.open_in_gen}. *)
+(** Opening modes for {!Stdlib.open_out_gen} and {!Stdlib.open_in_gen}. *)
 
 val open_out : string -> out_channel
 (** Open the named file for writing, and return a new output channel
@@ -627,16 +627,16 @@ val open_out : string -> out_channel
    Raise [Sys_error] if the file could not be opened. *)
 
 val open_out_bin : string -> out_channel
-(** Same as {!Pervasives.open_out}, but the file is opened in binary mode,
+(** Same as {!Stdlib.open_out}, but the file is opened in binary mode,
    so that no translation takes place during writes. On operating
    systems that do not distinguish between text mode and binary
-   mode, this function behaves like {!Pervasives.open_out}. *)
+   mode, this function behaves like {!Stdlib.open_out}. *)
 
 val open_out_gen : open_flag list -> int -> string -> out_channel
 (** Open the named file for writing, as above. The extra argument [mode]
    specify the opening mode. The extra argument [perm] specifies
    the file permissions, in case the file must be created.
-   {!Pervasives.open_out} and {!Pervasives.open_out_bin} are special
+   {!Stdlib.open_out} and {!Stdlib.open_out_bin} are special
    cases of this function. *)
 
 val flush : out_channel -> unit
@@ -668,15 +668,15 @@ val output_byte : out_channel -> int -> unit
 val output_binary_int : out_channel -> int -> unit
 (** Write one integer in binary format on the given output channel.
    The only reliable way to read it back is through the
-   {!Pervasives.input_binary_int} function. The format is compatible across
+   {!Stdlib.input_binary_int} function. The format is compatible across
    all machines for a given version of Objective Caml. *)
 
 val output_value : out_channel -> 'a -> unit
 (** Write the representation of a structured value of any type
    to a channel. Circularities and sharing inside the value
    are detected and preserved. The object can be read back,
-   by the function {!Pervasives.input_value}. See the description of module
-   {!Marshal} for more information. {!Pervasives.output_value} is equivalent
+   by the function {!Stdlib.input_value}. See the description of module
+   {!Marshal} for more information. {!Stdlib.output_value} is equivalent
    to {!Marshal.to_channel} with an empty list of flags. *)
 
 val seek_out : out_channel -> int -> unit
@@ -723,15 +723,15 @@ val open_in : string -> in_channel
    Raise [Sys_error] if the file could not be opened. *)
 
 val open_in_bin : string -> in_channel
-(** Same as {!Pervasives.open_in}, but the file is opened in binary mode,
+(** Same as {!Stdlib.open_in}, but the file is opened in binary mode,
    so that no translation takes place during reads. On operating
    systems that do not distinguish between text mode and binary
-   mode, this function behaves like {!Pervasives.open_in}. *)
+   mode, this function behaves like {!Stdlib.open_in}. *)
 
 val open_in_gen : open_flag list -> int -> string -> in_channel
 (** Open the named file for reading, as above. The extra arguments
    [mode] and [perm] specify the opening mode and file permissions.
-   {!Pervasives.open_in} and {!Pervasives.open_in_bin} are special
+   {!Stdlib.open_in} and {!Stdlib.open_in_bin} are special
    cases of this function. *)
 
 val input_char : in_channel -> char
@@ -757,7 +757,7 @@ val input : in_channel -> string -> int -> int -> int
    no more characters were available at that time, or because
    the implementation found it convenient to do a partial read;
    [input] must be called again to read the remaining characters,
-   if desired.  (See also {!Pervasives.really_input} for reading
+   if desired.  (See also {!Stdlib.really_input} for reading
    exactly [len] characters.)
    Exception [Invalid_argument "input"] is raised if [pos] and [len]
    do not designate a valid substring of [buf]. *)
@@ -771,19 +771,19 @@ val really_input : in_channel -> string -> int -> int -> unit
    [pos] and [len] do not designate a valid substring of [buf]. *)
 
 val input_byte : in_channel -> int
-(** Same as {!Pervasives.input_char}, but return the 8-bit integer representing
+(** Same as {!Stdlib.input_char}, but return the 8-bit integer representing
    the character.
    Raise [End_of_file] if an end of file was reached. *)
 
 val input_binary_int : in_channel -> int
 (** Read an integer encoded in binary format from the given input
-   channel. See {!Pervasives.output_binary_int}.
+   channel. See {!Stdlib.output_binary_int}.
    Raise [End_of_file] if an end of file was reached while reading the
    integer. *)
 
 val input_value : in_channel -> 'a
 (** Read the representation of a structured value, as produced
-   by {!Pervasives.output_value}, and return the corresponding value.
+   by {!Stdlib.output_value}, and return the corresponding value.
    This function is identical to {!Marshal.from_channel};
    see the description of module {!Marshal} for more information,
    in particular concerning the lack of type safety. *)
@@ -910,7 +910,7 @@ val exit : int -> 'a
 val at_exit : (unit -> unit) -> unit
 (** Register the given function to be called at program
    termination time. The functions registered with [at_exit]
-   will be called when the program executes {!Pervasives.exit},
+   will be called when the program executes {!Stdlib.exit},
    or terminates, either normally or because of an uncaught exception.
    The functions are called in ``last in, first out'' order:
    the function most recently added with [at_exit] is called first. *)

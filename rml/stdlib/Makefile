@@ -12,7 +12,7 @@ include Makefile-stdlib.common
 .rmli.rzi:
 	$(RMLC) -c $<
 
-all: pervasives.rzi $(STDLIB_SRC:.rmli=.rzi) $(STDLIB_THREAD_SRC:.rmli=.rzi)
+all: stdlib.rzi $(STDLIB_SRC:.rmli=.rzi) $(STDLIB_THREAD_SRC:.rmli=.rzi)
 
 install:
 
@@ -25,47 +25,47 @@ realclean: clean
 	rm -f *~
 cleanall: realclean
 
-arg.rzi: pervasives.rzi
-array.rzi: pervasives.rzi
-buffer.rzi: pervasives.rzi
-bytes.rzi: pervasives.rzi
-callback.rzi: pervasives.rzi
-char.rzi: pervasives.rzi
-complex.rzi: pervasives.rzi
-digest.rzi: pervasives.rzi
-filename.rzi: pervasives.rzi
-format.rzi: pervasives.rzi buffer.rzi
-gc.rzi: pervasives.rzi
-genlex.rzi: pervasives.rzi stream.rzi
-graphics.rzi: pervasives.rzi
-hashtbl.rzi: pervasives.rzi
-int32.rzi: pervasives.rzi
-int64.rzi: pervasives.rzi nativeint.rzi int32.rzi
-lazy.rzi: pervasives.rzi
-lexing.rzi: pervasives.rzi
-list.rzi: pervasives.rzi
-luc4ocaml_nolbl.rzi: pervasives.rzi luc4ocaml.rzi
-luc4ocaml.rzi: pervasives.rzi
-marshal.rzi: pervasives.rzi
-nativeint.rzi: pervasives.rzi int32.rzi
-obj.rzi: pervasives.rzi
-parsing.rzi: pervasives.rzi obj.rzi lexing.rzi
-printexc.rzi: pervasives.rzi
-printf.rzi: pervasives.rzi buffer.rzi
-queue.rzi: pervasives.rzi
-random.rzi: pervasives.rzi
-sort.rzi: pervasives.rzi
-stack.rzi: pervasives.rzi
-stream.rzi: pervasives.rzi
-string.rzi: pervasives.rzi
-str.rzi: pervasives.rzi
-sys.rzi: pervasives.rzi
-unix.rzi: pervasives.rzi
-weak.rzi: pervasives.rzi
+arg.rzi: stdlib.rzi
+array.rzi: stdlib.rzi
+buffer.rzi: stdlib.rzi
+bytes.rzi: stdlib.rzi
+callback.rzi: stdlib.rzi
+char.rzi: stdlib.rzi
+complex.rzi: stdlib.rzi
+digest.rzi: stdlib.rzi
+filename.rzi: stdlib.rzi
+format.rzi: stdlib.rzi buffer.rzi
+gc.rzi: stdlib.rzi
+genlex.rzi: stdlib.rzi stream.rzi
+graphics.rzi: stdlib.rzi
+hashtbl.rzi: stdlib.rzi
+int32.rzi: stdlib.rzi
+int64.rzi: stdlib.rzi nativeint.rzi int32.rzi
+lazy.rzi: stdlib.rzi
+lexing.rzi: stdlib.rzi
+list.rzi: stdlib.rzi
+luc4ocaml_nolbl.rzi: stdlib.rzi luc4ocaml.rzi
+luc4ocaml.rzi: stdlib.rzi
+marshal.rzi: stdlib.rzi
+nativeint.rzi: stdlib.rzi int32.rzi
+obj.rzi: stdlib.rzi
+parsing.rzi: stdlib.rzi obj.rzi lexing.rzi
+printexc.rzi: stdlib.rzi
+printf.rzi: stdlib.rzi buffer.rzi
+queue.rzi: stdlib.rzi
+random.rzi: stdlib.rzi
+sort.rzi: stdlib.rzi
+stack.rzi: stdlib.rzi
+stream.rzi: stdlib.rzi
+string.rzi: stdlib.rzi
+str.rzi: stdlib.rzi
+sys.rzi: stdlib.rzi
+unix.rzi: stdlib.rzi
+weak.rzi: stdlib.rzi
 
-rml_list.rzi: pervasives.rzi list.rzi
-rml_process_manager.rzi: pervasives.rzi
-thread/rml_async.rzi: pervasives.rzi thread/rml_async_body.rzi
-thread/rml_async_body.rzi: pervasives.rzi
+rml_list.rzi: stdlib.rzi list.rzi
+rml_process_manager.rzi: stdlib.rzi
+thread/rml_async.rzi: stdlib.rzi thread/rml_async_body.rzi
+thread/rml_async_body.rzi: stdlib.rzi
 
 .PHONY:opt byte all install uninstall clean realclean

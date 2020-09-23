@@ -1,6 +1,6 @@
 RMLC := ../compiler/rmlc
 
-# pervasives.rmli
+# stdlib.rmli
 STDLIB_SRC= \
 	arg.rmli \
 	array.rmli \

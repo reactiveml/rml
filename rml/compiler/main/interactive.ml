@@ -36,7 +36,7 @@ let compile_decl_list module_name itf info_chan out_chan decl_list =
     intermediate_code
 
 let filename = "rml_toplevel"
-let module_name () = String.capitalize filename
+let module_name () = String.capitalize_ascii filename
 
 let init () =
   Configure.configure ();

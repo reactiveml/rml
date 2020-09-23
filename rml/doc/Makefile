@@ -8,16 +8,16 @@ all: html
 
 html: html/index.html
 
-html/index.html: stdlib/pervasives.mli \
+html/index.html: stdlib/stdlib.mli \
 		$(STDLIB_MLI) $(patsubst %.mli,%.cmi,$(STDLIB_MLI))
 	ocamldoc -I stdlib -hide-warnings \
 		 -d html -html \
 		 -sort -hide Rml_fake \
-		 stdlib/pervasives.mli \
+		 stdlib/stdlib.mli \
 		 $(STDLIB_MLI)
 
 clean:
-	rm -f stdlib/pervasives.mli $(STDLIB_MLI) stdlib/*.cmi
+	rm -f stdlib/stdlib.mli $(STDLIB_MLI) stdlib/*.cmi
 realclean: clean
 	rm -f html/*.html */*~ *~
 cleanall: realclean

@@ -40,17 +40,18 @@ let compile file =
   then
     let filename = Filename.chop_suffix file ".rml" in
     let modname = Filename.basename filename in
-    compile_implementation (String.capitalize modname) filename;
+    compile_implementation (String.capitalize_ascii modname) filename;
     object_files := modname::!object_files
   else if Filename.check_suffix file ".rmli"
   then
     let filename = Filename.chop_suffix file ".rmli" in
-    compile_interface (String.capitalize (Filename.basename filename)) filename
+    compile_interface (String.capitalize_ascii (Filename.basename filename))
+      filename
   else if Filename.check_suffix file ".mli"
   then
     let filename = Filename.chop_suffix file ".mli" in
     compile_scalar_interface
-      (String.capitalize (Filename.basename filename)) filename
+      (String.capitalize_ascii (Filename.basename filename)) filename
   else
     raise (Arg.Bad ("don't know what to do with " ^ file))
 

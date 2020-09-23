@@ -51,7 +51,7 @@ let print_DEBUG msg =
   prerr_string ">> DEBUG: "; prerr_endline msg
 
 (* standard module *)
-let pervasives_module = "Pervasives"
+let stdlib_module = "Stdlib"
 let interpreter_module = ref ""
 let interpreter_intf = ref ""
 let interpreter_impl = ref ""

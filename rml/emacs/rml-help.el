@@ -202,7 +202,7 @@
   (if (listp rml-visible-modules) nil
     (progn
       (setq rml-visible-modules
-            (list (rml-get-or-make-module "Pervasives")))
+            (list (rml-get-or-make-module "Stdlib")))
       (save-excursion
         (goto-char (point-min))
         (while (re-search-forward "^ *open  *\\([A-Z][a-zA-Z'_0-9]*\\)"

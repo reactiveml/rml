@@ -53,7 +53,7 @@ let _ =
         "-debug", Arg.Set with_debug, doc_debug;
 	"-interactive", Arg.Unit set_interactive, doc_interactive;
         "-d", Arg.String set_output_dir, doc_d;
-	"-nopervasives", Arg.Unit set_no_pervasives, doc_no_pervasives;
+	"-nostdlib", Arg.Unit set_no_stdlib, doc_no_stdlib;
 	"-no_nary_opt", Arg.Unit set_no_nary, doc_no_nary;
 	"-no_static_opt", Arg.Unit set_no_static, doc_no_static;
 	"-no_for_opt", Arg.Unit set_no_for, doc_no_for;

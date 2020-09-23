@@ -85,7 +85,7 @@ let add_to_synonym_list synonyms suffix =
   end
 
 let find_file name =
-  let uname = String.uncapitalize name in
+  let uname = String.uncapitalize_ascii name in
   let rec find_in_array a pos =
     if pos >= Array.length a then None else begin
       let s = a.(pos) in
@@ -189,7 +189,7 @@ let preprocess sourcefile =
   match !preprocessor with
     None -> sourcefile
   | Some pp ->
-      flush Pervasives.stdout;
+      flush Stdlib.stdout;
       let tmpfile = Filename.temp_file "camlpp" "" in
       let comm = Printf.sprintf "%s %s > %s" pp sourcefile tmpfile in
       if Sys.command comm <> 0 then begin

@@ -289,7 +289,7 @@ let equal cmp m1 m2 =
     | (End, _)  -> false
     | (_, End) -> false
     | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
-        Pervasives.compare v1 v2 = 0 && cmp d1 d2 &&
+        Stdlib.compare v1 v2 = 0 && cmp d1 d2 &&
         equal_aux (cons_enum r1 e1) (cons_enum r2 e2)
   in equal_aux (cons_enum m1 End) (cons_enum m2 End)
 
@@ -320,7 +320,7 @@ let nearest =
         if d <= x then res
         else raise Not_found
     | Node(l, v, d, r, _) ->
-        begin match Pervasives.compare x d with
+        begin match Stdlib.compare x d with
         | 0 -> (v, d)
         | c when c < 0 -> nearest x l res
         | c -> nearest x r (v, d)

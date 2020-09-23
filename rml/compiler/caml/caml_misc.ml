@@ -114,7 +114,7 @@ let make_raise_RML () =
     (Cexpr_apply
        (make_expr
 	  (Cexpr_global
-	     { gi = { qual = pervasives_module;
+	     { gi = { qual = stdlib_module;
 		      id = Ident.create Ident.gen_var "raise" Ident.Val_ML };
 	       info = no_info(); })
 	  Location.none,
@@ -184,7 +184,7 @@ let make_ref e =
     (Cexpr_apply
        (make_expr
 	  (Cexpr_global
-	     { gi = { qual = "Pervasives";
+	     { gi = { qual = "Stdlib";
 		      id = Ident.create Ident.gen_var "ref" Ident.Internal };
 	       info = no_info(); })
 	  Location.none,
@@ -197,7 +197,7 @@ let deref vref =
     (Cexpr_apply
        (make_expr
 	  (Cexpr_global
-	     { gi = { qual = "Pervasives";
+	     { gi = { qual = "Stdlib";
 		      id = Ident.create Ident.gen_var "!" Ident.Internal };
 	       info = no_info(); })
 	  Location.none,
@@ -222,7 +222,7 @@ let make_magic_expr () =
 (* Creates the pattern "None" *)
 let make_patt_none () =
   let none =
-    { gi = { qual="Pervasives";
+    { gi = { qual="Stdlib";
              id=Ident.create Ident.gen_var "None" Ident.Internal; };
       info = no_info(); }
   in
@@ -232,7 +232,7 @@ let make_patt_none () =
 (* Creates the pattern "Some p" *)
 let make_patt_some p =
   let some =
-    { gi = { qual="Pervasives";
+    { gi = { qual="Stdlib";
              id=Ident.create Ident.gen_var "Some" Ident.Internal; };
       info = no_info(); }
   in

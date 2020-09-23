@@ -19,7 +19,7 @@ let () = List.iter
     if Filename.check_suffix file ".rzi" then
     let fh = open_in file in
     let md = (input_value fh : Def_modules.module0) in
-    let modname = Filename.basename (String.uncapitalize (Filename.chop_suffix file ".rzi")) in
+    let modname = Filename.basename (String.uncapitalize_ascii (Filename.chop_suffix file ".rzi")) in
     Buffer.add_string buf
       (Printf.sprintf " \"%s\", \"%s\";\n"
         modname

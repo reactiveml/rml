@@ -37,7 +37,7 @@ let set_output_dir dir =
 let set_standard_lib dir =
   standard_lib := Version.stdlib ^ "/" ^ dir
 
-let set_init_stdlib () =
+let set_init_rmllib () =
   let standard_lib = try Sys.getenv "RMLLIB" with Not_found -> !standard_lib in
   load_path := standard_lib :: !load_path
 
@@ -53,11 +53,11 @@ let locate_stdlib () =
   with
     Not_found -> !standard_lib
 
-(* standard pervasives module *)
-let set_init_pervasives () =
-  default_used_modules := [pervasives_module]
+(* standard stdlib module *)
+let set_init_stdlib () =
+  default_used_modules := [stdlib_module]
 
-let set_no_pervasives () =
+let set_no_stdlib () =
   default_used_modules := []
 
 let add_stdlib_thread () =
@@ -223,7 +223,7 @@ let doc_v = "Print compiler version and location of standard library and exit"
 and doc_version = "Print compiler version and exit"
 and doc_where = "Print location of standard library and exit"
 and doc_stdlib = "<dir> Directory for the standard library"
-and doc_no_pervasives = "(undocumented)"
+and doc_no_stdlib = "(undocumented)"
 and doc_no_const_opt = "(undocumented)"
 and doc_no_nary = "(undocumented)"
 and doc_no_static = "(undocumented)"
@@ -267,6 +267,6 @@ Options are:"
 
 (* the main function: parse the command line *)
 let configure () =
-  set_init_stdlib ();
-  set_init_pervasives ()
+  set_init_rmllib ();
+  set_init_stdlib ()
 

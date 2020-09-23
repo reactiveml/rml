@@ -98,8 +98,8 @@ let print_name s =
   in
   pp_print_string !formatter s
 
-(** Prints pervasives values *)
-let print_pervasives n =
+(** Prints stdlib values *)
+let print_stdlib n =
   match n with
   | "int" | "char" | "string" | "float" | "bool" | "unit" | "exn" |
     "array" | "list" | "option" | "int32" | "int64" | "nativeint" |
@@ -112,11 +112,11 @@ let print_pervasives n =
     "Undefined_recursive_module" ->
       print_name n
   | "or" ->
-      pp_print_string !formatter  "Pervasives";
+      pp_print_string !formatter  "Stdlib";
       pp_print_string !formatter  ".";
       pp_print_string !formatter  "(||)"
   | _ ->
-      pp_print_string !formatter  "Pervasives";
+      pp_print_string !formatter  "Stdlib";
       pp_print_string !formatter  ".";
       print_name n
 
@@ -130,9 +130,9 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
       pp_print_string !formatter ".";
       print_name (Ident.name n)
     end
-  else if q = pervasives_module then
+  else if q = stdlib_module then
     (* special case for values imported from the standard library *)
-    print_pervasives (Ident.name n)
+    print_stdlib (Ident.name n)
   else if q = !current_module || q = "" then
     print_name (Ident.name n)
   else
