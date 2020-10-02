@@ -4,13 +4,13 @@ type event = Double | Simple
 let rec process counting n top =
   if n = 0 then ()
   else
-    await top;
-    run (counting (n-1) top)
+    (await top;
+     run (counting (n-1) top))
 
 (* detect two clicks in less than four tops; emit an answer accordingly *)
 let process double click top answer =
   loop
-    await immediate click;
+    await click;
     do
       run (counting 4 top);
       emit answer Simple
@@ -18,3 +18,30 @@ let process double click top answer =
       click -> emit answer Double
     done
   end
+
+let () =
+  signal stop, click, top in
+  signal answer default Simple gather (fun x y -> x) in
+  do
+    run double click top answer
+    ||
+    loop
+      await answer(x) in
+      match x with
+      | Simple -> print_endline "simple"
+      | Double -> print_endline "double"
+    end
+    ||
+    loop
+      emit top; pause; pause
+    end
+    ||
+    pause;
+    emit click; print_endline "click";
+    for i = 1 to 12 do pause done;
+    emit click; print_endline "click";
+    for i = 1 to 6 do pause done;
+    emit click; print_endline "click"
+  until stop done
+  ||
+  for i = 1 to 25 do pause done; emit stop

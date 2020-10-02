@@ -1,7 +1,6 @@
 #!/bin/sh
 
-# RUNTIME=Lk_tutorial
-RUNTIME=Lk
+RUNTIME=Lk_tutorial
 
 for file in *.rml; do
     f=`basename $file .rml`
@@ -10,7 +9,7 @@ for file in *.rml; do
 	./$f > $f.output 2>&1
 	if [ -f $f.result ]; then
 	    diff $f.output $f.result
-	    if [ $? ]; then
+	    if [ $? -eq 0 ]; then
 		echo Test of $f: OK
 	    else
 		echo Test of $f: NOK
