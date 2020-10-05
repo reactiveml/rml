@@ -25,7 +25,8 @@ module Lk_interpreter: Lk_interpreter.S  =
     exception RML
 
     type ('a, 'b) event =
-      { evt_n : ('a,'b) Event.t }
+      { evt_n : ('a,'b) Event.t;
+        evt_wp : waiting ref; }
 
     and control_tree =
 	{ kind: control_type;
@@ -143,10 +144,12 @@ module Lk_interpreter: Lk_interpreter.S  =
 
 (* Create new events *)
     let new_evt_combine default combine =
-      { evt_n = Event.create default combine; }
+      { evt_n = Event.create default combine;
+        evt_wp = ref []; }
 
     let new_evt_memory_combine default combine =
-      { evt_n = Event.create_memory default combine; }
+      { evt_n = Event.create_memory default combine;
+        evt_wp = ref []; }
 
     let new_evt() =
       new_evt_combine [] (fun x y -> x :: y)
@@ -155,10 +158,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (* ------------------------------------------------------------------------ *)
     let sched () =
       match !current with
-      | f :: c ->
-	  current := c;
-	  f ()
-      | [] -> ()
+      | _ -> () (* TODO *)
 
 (* ------------------------------------------------------------------------ *)
     let rml_pre_status evt = Event.pre_status evt.evt_n
@@ -250,7 +250,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (**************************************)
 
     let rml_present_v ctrl evt k_1 k_2 _ =
-      let n = evt.evt_n in
+      let _n = evt.evt_n in
       (* TODO *)
       k_1 ()
 
