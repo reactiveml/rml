@@ -36,9 +36,11 @@ jobs:
           ./configure --prefix $HOME/local
           make
           make install
-          export PATH=$HOME/local/bin:$PATH
 
       - name: Build all examples
         run: |
+          export PATH=$HOME/local/bin:$PATH
+          ls $HOME/local/bin
+          $HOME/local/bin/rmlc -v
           cd examples
           make
