@@ -1,0 +1,45 @@
+name: Build
+
+on:
+  - push
+  - pull_request
+  - workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ocaml-version:
+          - 4.12.0
+
+    steps:
+      - name: Install external dependencies
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install gcc wget cmake
+
+      - name: Use OCaml ${{ matrix.ocaml-version }}
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: ${{ matrix.ocaml-version }}
+
+      - name: Install OCaml dependencies
+        run: |
+          opam update
+          opam install -y graphics num
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install ReactiveML
+        run: |
+          ./configure
+          make
+          make install
+
+      - name: Build all examples
+        run: |
+          cd examples
+          make
