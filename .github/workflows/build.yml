@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         ocaml-version:
-          - 4.12.0
+          - 4.12.x
 
     steps:
       - name: Install external dependencies
@@ -20,10 +20,10 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install gcc wget cmake
 
-      - name: Use OCaml ${{ matrix.ocaml-version }}
-        uses: avsm/setup-ocaml@v1
+      - name: Use OCaml ${{ matrix.ocaml-compiler }}
+        uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-version: ${{ matrix.ocaml-version }}
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
       - name: Install OCaml dependencies
         run: |
