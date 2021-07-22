@@ -42,7 +42,8 @@ jobs:
           echo XXXXXXXXXXX $PATH
           eval $(opam env)
           echo XXXXXXXXXXX $PATH
-          which ocamlc
+          opam --version
+          export PATH=/home/runner/work/rml/rml/_opam/bin:$PATH
           ocamlc -v
           ./configure
           make
