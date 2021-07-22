@@ -29,13 +29,21 @@ jobs:
         run: |
           opam update
           opam install -y graphics num
+          eval $(opam env)
+          echo XXXXXXXXXXX $PATH
+          which ocamlc
+          ocamlc -v
 
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Install ReactiveML
         run: |
+          echo XXXXXXXXXXX $PATH
           eval $(opam env)
+          echo XXXXXXXXXXX $PATH
+          which ocamlc
+          ocamlc -v
           ./configure
           make
           make install
