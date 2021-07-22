@@ -40,12 +40,12 @@ jobs:
           echo XXXX $HOME
           echo XXX OPAM:
           opam env
-	  echo XXXXXXXX
+          echo XXXXXXXX
           echo "OPAM_SWITCH_PREFIX=$HOME/.opam/${{ matrix.ocaml-compiler }}"
           echo "CAML_LD_LIBRARY_PATH=$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/stublibs:$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/ocaml/stublibs:$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/ocam"
           echo "$HOME/.opam/${{ matrix.ocaml-compiler }}/bin"
           echo "/home/opam/.opam/${{ matrix.ocaml-compiler }}/bin"
-	  echo XXXXXXXX
+          echo XXXXXXXX
           ocamlfind
 
       - name: Install ReactiveML
