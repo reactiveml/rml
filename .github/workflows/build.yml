@@ -33,20 +33,16 @@ jobs:
           opam switch create ${{ matrix.ocaml-compiler }}
           opam update
           opam install -y ocamlfind graphics num
-          echo "OPAM_SWITCH_PREFIX=$HOME/.opam/${{ matrix.ocaml-compiler }}" >> $GITHUB_ENV
-          echo "CAML_LD_LIBRARY_PATH=$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/stublibs:$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/ocaml/stublibs:$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/ocam" >> $GITHUB_ENV
+          eval $(opam env)
+          echo "OPAM_SWITCH_PREFIX=$OPAM_SWITCH_PREFIX" >> $GITHUB_ENV
+          echo "CAML_LD_LIBRARY_PATH=$CAML_LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "OCAML_TOPLEVEL_PATH=$OCAML_TOPLEVEL_PATH" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" >> $GITHUB_ENV
           echo "$HOME/.opam/${{ matrix.ocaml-compiler }}/bin" >> $GITHUB_PATH
-          echo "/home/opam/.opam/${{ matrix.ocaml-compiler }}/bin" >> $GITHUB_PATH
-          echo XXXX $HOME
-          echo XXX OPAM:
-          opam env
           echo XXXXXXXX
-          echo "OPAM_SWITCH_PREFIX=$HOME/.opam/${{ matrix.ocaml-compiler }}"
-          echo "CAML_LD_LIBRARY_PATH=$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/stublibs:$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/ocaml/stublibs:$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/ocam"
-          echo "$HOME/.opam/${{ matrix.ocaml-compiler }}/bin"
-          echo "/home/opam/.opam/${{ matrix.ocaml-compiler }}/bin"
+          ocamlc -v
+          which ocamlfind
           echo XXXXXXXX
-          ocamlfind
 
       - name: Install ReactiveML
         run: |
@@ -54,10 +50,17 @@ jobs:
           make
           make install
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo XXXXXXXX
+          ocamlc -v
+          which ocamlfind
+          echo XXXXXXXX
 
       - name: Build all examples
         run: |
-          ls $HOME/.local/bin
+          echo XXXXXXXX
+          ocamlc -v
+          which ocamlfind
           $HOME/.local/bin/rmlc -v
+          echo XXXXXXXX
           cd examples
           make
