@@ -28,27 +28,14 @@ jobs:
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
-      - name: Install OCaml dependencies
+      - name: Install ReactiveML
         run: |
           opam update
           opam install -y graphics num
           eval $(opam env)
-          echo XXXXXXXXXXX $PATH
-          which ocamlc
-          ocamlc -v
-
-      - name: Install ReactiveML
-        run: |
-          echo XXXXXXXXXXX $PATH
-          . ~/.profile
-          echo XXXXXXXXXXX $PATH
-          opam --version
-          opam switch ${{ matrix.ocaml-compiler }}
-          eval $(opam env)
-          opam exec -- ocamlc -v
-          opam exec -- ./configure
-          opam exec -- make
-          opam exec -- make install
+          ./configure
+          make
+          make install
 
       - name: Build all examples
         run: |

@@ -3,9 +3,8 @@ Installation procedure for ReactiveML:
 . Requirement:
   -----------
 
-You'll need Objective Caml >= 3.06 in order to build ReactiveML
-from source. You can get it from http://reactiveML.org/ or
-http://rml.inria.fr/.
+You'll need Objective Caml >= 4.07 in order to build ReactiveML
+from source. You can get it from http://reactiveML.org/.
 
 . Quick installation:
   ------------------
