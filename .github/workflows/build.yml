@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         ocaml-version:
-          - 4.12.x
+          - 4.12.0
 
     steps:
       - name: Install external dependencies
@@ -41,6 +41,8 @@ jobs:
         run: |
           echo XXXXXXXXXXX $PATH
           opam --version
+          opam switch ${{ matrix.ocaml-compiler }}
+          eval $(opam env)
           opam exec -- ocamlc -v
           opam exec -- ./configure
           opam exec -- make
