@@ -28,11 +28,20 @@ jobs:
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
+      - name: Setup opam switch
+        run: |
+          opam switch create ${{ matrix.ocaml-compiler }}
+          opam update
+          opam install -y ocamlfind graphics num
+          echo "OPAM_SWITCH_PREFIX=$HOME/.opam/${{ matrix.ocaml-compiler }}" >> $GITHUB_ENV
+          echo "CAML_LD_LIBRARY_PATH=$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/stublibs:$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/ocaml/stublibs:$HOME/.opam/${{ matrix.ocaml-compiler }}/lib/ocam" >> $GITHUB_ENV
+          echo "$HOME/.opam/${{ matrix.ocaml-compiler }}/bin" >> $GITHUB_PATH
+          echo "/home/opam/.opam/${{ matrix.ocaml-compiler }}/bin" >> $GITHUB_PATH
+          echo XXXX $HOME
+          echo XXX OPAM: opam env
+
       - name: Install ReactiveML
         run: |
-          opam update
-          opam install -y graphics num
-          eval $(opam env)
           ./configure --prefix $HOME/.local
           make
           make install
