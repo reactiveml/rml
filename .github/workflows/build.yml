@@ -43,10 +43,10 @@ jobs:
           eval $(opam env)
           echo XXXXXXXXXXX $PATH
           opam --version
-          opam exec ocamlc -- -v
-          ./configure
-          make
-          make install
+          opam exec -- ocamlc -v
+          opam exec -- ./configure
+          opam exec -- make
+          opam exec -- make install
 
       - name: Build all examples
         run: |
