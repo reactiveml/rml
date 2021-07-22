@@ -30,20 +30,15 @@ jobs:
 
       - name: Setup opam switch
         run: |
-          opam switch create ${{ matrix.ocaml-compiler }}
+          eval $(opam env)
           opam update
           opam install -y ocamlfind graphics num
-          eval $(opam env)
           echo "OPAM_SWITCH_PREFIX=$OPAM_SWITCH_PREFIX" >> $GITHUB_ENV
           echo "CAML_LD_LIBRARY_PATH=$CAML_LD_LIBRARY_PATH" >> $GITHUB_ENV
           echo "OCAML_TOPLEVEL_PATH=$OCAML_TOPLEVEL_PATH" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" >> $GITHUB_ENV
           echo "$HOME/.opam/${{ matrix.ocaml-compiler }}/bin" >> $GITHUB_PATH
           echo "$HOME/work/rml/rml/_opam/bin" >> $GITHUB_PATH
-          echo XXXXXXXX
-          ocamlc -v
-          which ocamlfind
-          echo XXXXXXXX
 
       - name: Install ReactiveML
         run: |
@@ -51,17 +46,8 @@ jobs:
           make
           make install
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-          echo XXXXXXXX
-          ocamlc -v
-          which ocamlfind
-          echo XXXXXXXX
 
       - name: Build all examples
         run: |
-          echo XXXXXXXX
-          ocamlc -v
-          which ocamlfind
-          $HOME/.local/bin/rmlc -v
-          echo XXXXXXXX
           cd examples
           make
