@@ -40,7 +40,7 @@ jobs:
       - name: Install ReactiveML
         run: |
           echo XXXXXXXXXXX $PATH
-	  . ~/.profile
+          . ~/.profile
           echo XXXXXXXXXXX $PATH
           opam --version
           opam switch ${{ matrix.ocaml-compiler }}
