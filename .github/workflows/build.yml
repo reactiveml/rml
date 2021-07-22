@@ -40,8 +40,6 @@ jobs:
       - name: Install ReactiveML
         run: |
           echo XXXXXXXXXXX $PATH
-          eval $(opam env)
-          echo XXXXXXXXXXX $PATH
           opam --version
           opam exec -- ocamlc -v
           opam exec -- ./configure
