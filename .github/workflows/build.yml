@@ -29,6 +29,7 @@ jobs:
         run: |
           opam update
           opam install -y graphics num
+	  eval $(opam env)
 
       - name: Checkout code
         uses: actions/checkout@v2
