@@ -33,9 +33,10 @@ jobs:
           opam update
           opam install -y graphics num
           eval $(opam env)
-          ./configure
+          ./configure --prefix $HOME/local
           make
           make install
+          export PATH=$HOME/local/bin:$PATH
 
       - name: Build all examples
         run: |
