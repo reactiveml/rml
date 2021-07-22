@@ -39,6 +39,7 @@ jobs:
           echo "OCAML_TOPLEVEL_PATH=$OCAML_TOPLEVEL_PATH" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" >> $GITHUB_ENV
           echo "$HOME/.opam/${{ matrix.ocaml-compiler }}/bin" >> $GITHUB_PATH
+          echo "$HOME/work/rml/rml/_opam/bin" >> $GITHUB_PATH
           echo XXXXXXXX
           ocamlc -v
           which ocamlfind
