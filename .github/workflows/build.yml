@@ -20,6 +20,9 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install gcc wget cmake
 
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Use OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v2
         with:
@@ -33,9 +36,6 @@ jobs:
           echo XXXXXXXXXXX $PATH
           which ocamlc
           ocamlc -v
-
-      - name: Checkout code
-        uses: actions/checkout@v2
 
       - name: Install ReactiveML
         run: |
