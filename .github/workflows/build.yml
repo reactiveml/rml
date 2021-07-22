@@ -33,14 +33,14 @@ jobs:
           opam update
           opam install -y graphics num
           eval $(opam env)
-          ./configure --prefix $HOME/local
+          ./configure --prefix $HOME/.local
           make
           make install
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Build all examples
         run: |
-          export PATH=$HOME/local/bin:$PATH
-          ls $HOME/local/bin
-          $HOME/local/bin/rmlc -v
+          ls $HOME/.local/bin
+          $HOME/.local/bin/rmlc -v
           cd examples
           make
