@@ -1,6 +1,0 @@
-(* abro *)
-let process two a b ab =
-  loop
-    (await immediate a || await immediate b); emit ab;
-    pause
-  end
