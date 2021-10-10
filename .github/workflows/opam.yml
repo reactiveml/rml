@@ -1,0 +1,32 @@
+name: Opam
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install external dependencies
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install gcc wget cmake
+
+      - name: Use OCaml
+        uses: avsm/setup-ocaml@v2
+        with:
+          ocaml-version: 4.12.0
+
+      - name: Install OCaml dependencies
+        run: opam install -y graphics rml
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build all examples
+        run: |
+          cd examples
+          make
