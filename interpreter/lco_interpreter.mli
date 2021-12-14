@@ -101,7 +101,7 @@ module type S =
           ('b -> bool) -> ('b -> 'c expr) -> 'c expr
     val rml_present': ('a, 'b) event -> 'c expr -> 'c expr -> 'c expr
     val rml_present: (unit -> ('a, 'b) event) -> 'c expr -> 'c expr -> 'c expr
-    val rml_present_conf: 'a event_cfg -> 'a expr -> 'a expr -> 'a expr
+    val rml_present_conf: 'a event_cfg -> 'b expr -> 'b expr -> 'b expr
     val rml_seq: 'a expr -> 'b expr -> 'b expr
     val rml_par: 'a expr -> 'b expr -> unit expr
     val rml_merge: 'a expr -> 'b expr -> unit expr
