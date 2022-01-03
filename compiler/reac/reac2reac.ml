@@ -25,7 +25,7 @@
 
 (* Source to source transformations *)
 
-open Asttypes
+open Rml_asttypes
 open Reac_ast
 open Def_types
 open Reac_misc
@@ -72,7 +72,7 @@ let expr_map  =
       | Rexpr_function patt_expr_list ->
 	  let patt_expr_list' =
 	    List.map (fun (p, when_opt, e) ->
-              (p, Misc.opt_map (expr_map f) when_opt , expr_map f e))
+              (p, Rml_misc.opt_map (expr_map f) when_opt , expr_map f e))
               patt_expr_list
 	  in
 	  f (make_expr_all
@@ -151,7 +151,7 @@ let expr_map  =
 	  let e' = expr_map f e in
 	  let patt_expr_list' =
 	    List.map (fun (p, when_opt, e) ->
-              (p, Misc.opt_map (expr_map f) when_opt , expr_map f e))
+              (p, Rml_misc.opt_map (expr_map f) when_opt , expr_map f e))
               patt_expr_list
 	  in
 	  f (make_expr_all
@@ -176,7 +176,7 @@ let expr_map  =
 	  let e' = expr_map f e in
 	  let patt_expr_list' =
 	    List.map (fun (p, when_opt, e) ->
-              (p, Misc.opt_map (expr_map f) when_opt , expr_map f e))
+              (p, Rml_misc.opt_map (expr_map f) when_opt , expr_map f e))
               patt_expr_list
 	  in
 	  f (make_expr_all
@@ -243,7 +243,7 @@ let expr_map  =
                typ static reactivity reactivity_effect loc)
 
       | Rexpr_loop (n_opt, e) ->
-	  let n_opt' = Misc.opt_map (expr_map f) n_opt in
+	  let n_opt' = Rml_misc.opt_map (expr_map f) n_opt in
 	  let e' = expr_map f e in
 	  f (make_expr_all (Rexpr_loop (n_opt', e'))
                typ static reactivity reactivity_effect loc)
@@ -289,8 +289,8 @@ let expr_map  =
             List.map
               (fun (config, when_opt, e_opt) ->
 	        let config' = config_map f config in
-                let when_opt' = Misc.opt_map (expr_map f) when_opt in
-	        let e_opt' = Misc.opt_map (expr_map f) e_opt in
+                let when_opt' = Rml_misc.opt_map (expr_map f) when_opt in
+	        let e_opt' = Rml_misc.opt_map (expr_map f) e_opt in
                 (config', when_opt', e_opt'))
               config_when_opt_e_opt_list
           in
@@ -339,7 +339,7 @@ let expr_map  =
 
       | Rexpr_await_val (immediate, kind, config, when_opt, e1) ->
 	  let config' = config_map f config in
-          let when_opt' = Misc.opt_map (expr_map f) when_opt in
+          let when_opt' = Rml_misc.opt_map (expr_map f) when_opt in
 	  let e1' = expr_map f e1 in
 	  f (make_expr_all
                (Rexpr_await_val (immediate, kind, config', when_opt', e1'))
@@ -383,7 +383,7 @@ let impl_map f impl =
 
 (* Print static information *)
 let print_static e =
-  Format.fprintf !Misc.err_fmt
+  Format.fprintf !Rml_misc.err_fmt
     "%a%s@."
     Location.print e.expr_loc
     (Def_static.string_of_static (snd e.expr_static));
@@ -393,10 +393,10 @@ let print_static e =
 (* Check left branche of |> operator and annotate pause statement *)
 let translate_merge =
   let merge_error exp =
-    Format.fprintf !Misc.err_fmt
+    Format.fprintf !Rml_misc.err_fmt
       "%aThis expression is not allowed on the left of a |> operator.\n"
       Location.print exp.expr_loc;
-    raise Misc.Error
+    raise Rml_misc.Error
   in
 
   let annotate_pause expr =

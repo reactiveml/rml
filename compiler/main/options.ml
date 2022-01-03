@@ -21,7 +21,7 @@
 (* created: 2006-08-07  *)
 (* author: Louis Mandel *)
 
-open Misc
+open Rml_misc
 open Configure
 
 let _ =

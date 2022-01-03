@@ -35,11 +35,11 @@ open Types
 open Reactivity_effects
 open Typing_errors
 open Initialization
-open Asttypes
+open Rml_asttypes
 open Global
 open Global_ident
 open Reac_ast
-open Misc
+open Rml_misc
 open Annot
 
 let unify_expr expr expected_ty actual_ty =

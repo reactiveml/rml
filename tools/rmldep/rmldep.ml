@@ -69,7 +69,7 @@ let fix_slash s =
 
 let add_to_load_path dir =
   try
-    let dir = Misc.expand_directory Version.stdlib dir in
+    let dir = Rml_misc.expand_directory Version.stdlib dir in
     let contents = Sys.readdir dir in
     load_path := !load_path @ [dir, contents]
   with Sys_error msg ->
@@ -193,7 +193,7 @@ let preprocess sourcefile =
       let tmpfile = Filename.temp_file "camlpp" "" in
       let comm = Printf.sprintf "%s %s > %s" pp sourcefile tmpfile in
       if Sys.command comm <> 0 then begin
-        Misc.remove_file tmpfile;
+        Rml_misc.remove_file tmpfile;
         raise Preprocessing_error
       end;
       tmpfile
@@ -201,7 +201,7 @@ let preprocess sourcefile =
 let remove_preprocessed inputfile =
   match !preprocessor with
     None -> ()
-  | Some _ -> Misc.remove_file inputfile
+  | Some _ -> Rml_misc.remove_file inputfile
 
 (* Parse a file or get a dumped syntax tree in it *)
 

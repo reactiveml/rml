@@ -30,7 +30,7 @@
 
 (* The abstract syntax for the reac language *)
 
-open Asttypes
+open Rml_asttypes
 open Def_types
 
 type ident = Ident.t

@@ -30,7 +30,7 @@
 
 (* Printing of error messages during typing *)
 
-open Misc
+open Rml_misc
 open Def_types
 open Types
 open Reac_ast

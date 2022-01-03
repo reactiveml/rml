@@ -30,10 +30,10 @@
 
 (** Printing [Caml] code *)
 
-open Misc
+open Rml_misc
 open Format
 open Caml_ast
-open Asttypes
+open Rml_asttypes
 open Global
 open Global_ident
 

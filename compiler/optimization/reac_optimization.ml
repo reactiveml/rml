@@ -19,7 +19,7 @@
 
 (* file: reac_optimization.ml *)
 
-open Asttypes
+open Rml_asttypes
 open Reac_ast
 open Def_types
 open Reac_misc

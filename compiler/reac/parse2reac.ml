@@ -25,8 +25,8 @@
 
 (* The translation of Parse to Reac *)
 
-open Misc
-open Asttypes
+open Rml_misc
+open Rml_asttypes
 open Global
 open Parse_ast
 open Binding_errors

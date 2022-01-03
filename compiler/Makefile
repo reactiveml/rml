@@ -3,12 +3,12 @@ BIN = rmlc
 DIRECTORIES = global parsing external static typing other_analysis reac lco lk caml optimization main
 
 
-GLOBAL = global/asttypes.ml \
+GLOBAL = global/rml_asttypes.ml \
 	global/global.ml \
 	global/global_ident.ml \
 	global/ident.ml \
 	global/initialization.ml \
-	global/misc.ml \
+	global/rml_misc.ml \
 	global/modules.ml \
 	global/def_modules.ml \
 	global/rzi.ml \
@@ -22,7 +22,7 @@ PARSING = parsing/lexer.mll \
 	parsing/parse_ident.ml \
 	parsing/parse.ml \
 	parsing/parse_printer.ml \
-	parsing/parser.mly \
+	parsing/rml_parser.mly \
 	parsing/syntaxerr.ml \
 
 EXTERNAL = external/lucky.ml \
@@ -81,11 +81,11 @@ SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(OTHER_ANALYSIS) $(EXTERNAL) $(STA
 
 
 OBJ =	global/version.cmo \
-	global/asttypes.cmo \
+	global/rml_asttypes.cmo \
 	global/warnings.cmo \
 	parsing/linenum.cmo \
 	parsing/location.cmo \
-	global/misc.cmo \
+	global/rml_misc.cmo \
 	global/ident.cmo \
 	global/global_ident.cmo \
 	global/global.cmo \
@@ -102,7 +102,7 @@ OBJ =	global/version.cmo \
 	main/options.cmo \
 	parsing/parse_ast.cmo \
 	parsing/parse_ident.cmo \
-	parsing/parser.cmo \
+	parsing/rml_parser.cmo \
 	parsing/parse.cmo \
 	parsing/parse_printer.cmo \
 	external/lucky_errors.cmo \
@@ -148,7 +148,7 @@ OBJ_OPT = $(OBJ:.cmo=.cmx)
 
 INCLUDES = $(DIRECTORIES:%=-I %)
 
-GENSOURCES = global/version.ml parsing/parser.mli parsing/lexer.ml parsing/parser.ml \
+GENSOURCES = global/version.ml parsing/rml_parser.mli parsing/lexer.ml parsing/rml_parser.ml \
 	parsing/linenum.ml
 
 include ../config
@@ -197,7 +197,7 @@ realclean: clean
 	(for d in $(DIRECTORIES); \
 	 do rm -f $$d/*~; \
 	 done)
-	rm -f $(BIN).byte $(BIN).opt $(GENSOURCES) parsing/parser.output
+	rm -f $(BIN).byte $(BIN).opt $(GENSOURCES) parsing/rml_parser.output
 	rm -f rmlc global/version.ml global/rzi.ml *~
 
 cleanall: realclean
@@ -213,9 +213,9 @@ wc:
 	wc -l $(SRC)
 
 # dependencies
-parsing/parser.mli parsing/parser.ml: parsing/parser.mly
-	$(OCAMLYACC) -v parsing/parser.mly
-lexer.cmx: parser.cmi
+parsing/rml_parser.mli parsing/rml_parser.ml: parsing/rml_parser.mly
+	$(OCAMLYACC) -v parsing/rml_parser.mly
+lexer.cmx: rml_parser.cmi
 
 #.PHONY: global/rzi.ml
 global/rzi.ml: global/rzi.cmi global/def_modules.cmo

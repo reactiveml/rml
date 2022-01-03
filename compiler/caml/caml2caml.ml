@@ -25,8 +25,8 @@
 
 (* Source to source transformations *)
 
-open Misc
-open Asttypes
+open Rml_misc
+open Rml_asttypes
 open Caml_ast
 open Caml_misc
 

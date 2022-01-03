@@ -25,13 +25,13 @@
 
 (* The translation of Reac to Lco *)
 
-open Asttypes
+open Rml_asttypes
 open Def_static
 open Reac_ast
 open Lco_ast
 open Global
 open Global_ident
-open Misc
+open Rml_misc
 
 
 let make_expr e loc =

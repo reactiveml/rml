@@ -30,7 +30,7 @@
 
 (* The abstract syntax for the parsed language *)
 
-open Asttypes
+open Rml_asttypes
 
 type ident =
     { pident_id: Parse_ident.t;

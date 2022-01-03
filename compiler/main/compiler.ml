@@ -28,7 +28,7 @@
 
 (* $Id$ *)
 
-open Misc
+open Rml_misc
 open Errors
 
 
@@ -145,7 +145,7 @@ let compile_implementation_front_end info_fmt filename itf impl_list =
   end else begin
 
     (* write interface *)
-    Misc.opt_iter Modules.write_compiled_interface itf;
+    Rml_misc.opt_iter Modules.write_compiled_interface itf;
   end;
 
   (* we return the rml code *)
@@ -246,7 +246,7 @@ let compile_implementation module_name filename =
     then None
     else Some (open_out_bin obj_interf_name)
   in
-  let info_fmt = !Misc.std_fmt in
+  let info_fmt = !Rml_misc.std_fmt in
 
   try
 (*    Front_end_timer.start();*)
@@ -272,7 +272,7 @@ let compile_implementation module_name filename =
     let intermediate_code =
       compile_implementation_front_end info_fmt filename itf decl_list
     in
-    Misc.opt_iter close_out itf;
+    Rml_misc.opt_iter close_out itf;
 
     if Sys.file_exists (filename ^ ".rmli")
        ||  Sys.file_exists (filename ^ ".mli")
@@ -330,7 +330,7 @@ let compile_implementation module_name filename =
               "] "
             in
 	    output_string out_chan
-	      ("let _ = "^(!Misc.rml_machine_module)^".rml_exec "^
+	      ("let _ = "^(!Rml_misc.rml_machine_module)^".rml_exec "^
                boi_hook^
                main_id^"\n")
 	  end;

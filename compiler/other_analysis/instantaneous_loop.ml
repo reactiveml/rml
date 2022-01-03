@@ -27,8 +27,8 @@
 (* an instantaneous recursion.                                           *)
 (* This analysis must be used after the static analysis.                 *)
 
-open Misc
-open Asttypes
+open Rml_misc
+open Rml_asttypes
 open Reac_ast
 open Reac_misc
 open Def_static
@@ -595,8 +595,8 @@ let instantaneous_loop_expr =
           List.fold_left
             (fun acc (conf, when_opt, expr_opt) ->
               let ty_config = config_analyse vars conf in
-	      let _ = Misc.opt_map (analyse Env.empty) when_opt in
-	      let _ = Misc.opt_map (analyse Env.empty) expr_opt in
+	      let _ = Rml_misc.opt_map (analyse Env.empty) when_opt in
+	      let _ = Rml_misc.opt_map (analyse Env.empty) expr_opt in
 	      Env.append ty_config acc)
             ty
             conf_when_opt_expr_opt_list
@@ -636,7 +636,7 @@ let instantaneous_loop_expr =
 	  Env.append ty ty1
       | Rexpr_await_val (immediate, kind, e, when_opt, e1) ->
 	  let ty = config_analyse vars e in
-          let _ = Misc.opt_map (analyse Env.empty) when_opt in
+          let _ = Rml_misc.opt_map (analyse Env.empty) when_opt in
 	  let _ = analyse Env.empty e1 in
 	  ty
       end

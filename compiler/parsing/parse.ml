@@ -49,7 +49,7 @@ open Location
 let rec skip_phrase lexbuf =
   try
     match Lexer.token lexbuf with
-      Parser.SEMISEMI | Parser.EOF -> ()
+      Rml_parser.SEMISEMI | Rml_parser.EOF -> ()
     | _ -> skip_phrase lexbuf
   with
     | Lexer.Error (Lexer.Unterminated_comment, _) -> ()
@@ -59,8 +59,8 @@ let rec skip_phrase lexbuf =
 ;;
 
 let maybe_skip_phrase lexbuf =
-  if Parsing.is_current_lookahead Parser.SEMISEMI
-  || Parsing.is_current_lookahead Parser.EOF
+  if Parsing.is_current_lookahead Rml_parser.SEMISEMI
+  || Parsing.is_current_lookahead Rml_parser.EOF
   then ()
   else skip_phrase lexbuf
 
@@ -86,6 +86,6 @@ let wrap parsing_fun lexbuf =
       raise(Syntaxerr.Error(Syntaxerr.Other loc))
 ;;
 
-let implementation = wrap Parser.implementation
-and interface = wrap Parser.interface
-and interactive = wrap Parser.interactive
+let implementation = wrap Rml_parser.implementation
+and interface = wrap Rml_parser.interface
+and interactive = wrap Rml_parser.interactive

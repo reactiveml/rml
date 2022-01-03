@@ -25,7 +25,7 @@
 
 (* The abstract syntax for CAML *)
 
-open Asttypes
+open Rml_asttypes
 open Def_types
 
 type signal = Ident.t

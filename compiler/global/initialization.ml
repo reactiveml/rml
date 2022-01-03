@@ -30,7 +30,7 @@
 
 (* the initial module *)
 
-open Misc
+open Rml_misc
 open Ident
 open Global_ident
 open Def_types

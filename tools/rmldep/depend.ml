@@ -139,7 +139,7 @@ let rec add_expr bv exp =
   | Pexpr_merge(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_signal(ioel, koee, e) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
-      Misc.opt_iter (fun (_, e1, e2) -> add_expr bv e1; add_expr bv e2) koee;
+      Rml_misc.opt_iter (fun (_, e1, e2) -> add_expr bv e1; add_expr bv e2) koee;
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
   | Pexpr_run(e1) -> add_expr bv e1
@@ -148,13 +148,13 @@ let rec add_expr bv exp =
       List.iter
         (fun (cfg, when_opt, oe) ->
           add_config bv cfg;
-          Misc.opt_iter (add_expr bv) when_opt;
-          Misc.opt_iter (fun e -> add_expr bv e) oe)
+          Rml_misc.opt_iter (add_expr bv) when_opt;
+          Rml_misc.opt_iter (fun e -> add_expr bv e) oe)
         cfg_when_opt_oe_list
   | Pexpr_when(cfg, e1) -> add_config bv cfg; add_expr bv e1
   | Pexpr_control(cfg, oe, e1) ->
       add_config bv cfg;
-      Misc.opt_iter (fun e -> add_expr bv e) oe;
+      Rml_misc.opt_iter (fun e -> add_expr bv e) oe;
       add_expr bv e1
   | Pexpr_get(e1) -> add_expr bv e1
   | Pexpr_present(cfg, e1, e2) ->
@@ -163,7 +163,7 @@ let rec add_expr bv exp =
   | Pexpr_await_val(_, _, cfg, when_opt, e1) ->
       add_config bv cfg;
       add_config bv cfg;
-      Misc.opt_iter (add_expr bv) when_opt;
+      Rml_misc.opt_iter (add_expr bv) when_opt;
       add_expr bv e1
   | Pexpr_pre(_, e1) -> add_expr bv e1
   | Pexpr_last(e1) -> add_expr bv e1
@@ -172,7 +172,7 @@ let rec add_expr bv exp =
 and add_config bv conf =
   match conf.pconf_desc with
   | Pconf_present(e1, op) ->
-      add_expr bv e1; Misc.opt_iter (fun p -> add_pattern bv p) op
+      add_expr bv e1; Rml_misc.opt_iter (fun p -> add_pattern bv p) op
   | Pconf_and(e1, e2) -> add_config bv e1; add_config bv e2
   | Pconf_or(e1, e2) -> add_config bv e1; add_config bv e2
 
@@ -183,7 +183,7 @@ and add_pat_when_opt_expr_list bv pel =
   List.iter
     (fun (p, when_opt, e) ->
       add_pattern bv p;
-      Misc.opt_iter (add_expr bv) when_opt;
+      Rml_misc.opt_iter (add_expr bv) when_opt;
       add_expr bv e)
     pel
 
@@ -215,7 +215,7 @@ and add_struct_item bv item =
       add_pat_expr_list bv pel; bv
   | Pimpl_signal(ioel, koee) ->
       List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
-      Misc.opt_iter (fun (_,e1, e2) -> add_expr bv e1; add_expr bv e2) koee;
+      Rml_misc.opt_iter (fun (_,e1, e2) -> add_expr bv e1; add_expr bv e2) koee;
       bv
   | Pimpl_type dcls ->
       List.iter (fun (_, _, td) -> add_type_declaration bv td) dcls; bv

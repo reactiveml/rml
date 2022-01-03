@@ -28,7 +28,7 @@
 
 (* $Id$ *)
 
-open Misc
+open Rml_misc
 open Global_ident
 open Def_types
 open Global

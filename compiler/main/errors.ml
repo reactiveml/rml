@@ -50,8 +50,8 @@ let report_error ppf exn =
     | Syntaxerr.Error err ->
 	Syntaxerr.report_error ppf err
 
-    | Misc.Error -> ()
-    | Misc.Internal (loc,msg) ->
+    | Rml_misc.Error -> ()
+    | Rml_misc.Internal (loc,msg) ->
 	if loc = Location.none
       	then fprintf ppf "@.Internal error: %s. \nPlease report it." msg
 	else
@@ -65,17 +65,17 @@ let report_error ppf exn =
 
 let unbound_main main =
   eprintf "The main process \"%s\" is unbound" main;
-  raise Misc.Error
+  raise Rml_misc.Error
 
 let bad_type_main main main_ty =
   eprintf
     "The main process \"%s\" must have type unit process.\n"
 	  main;
 (*   Types_printer.output main_ty.Def_types.value_typ.Def_types.ts_desc; *)
-  raise Misc.Error
+  raise Rml_misc.Error
 
 let no_compile_itf filename =
   eprintf "Error: Could not find the .rzi file for interface %s.rmli."
     filename;
-  raise Misc.Error
+  raise Rml_misc.Error
 

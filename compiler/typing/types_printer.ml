@@ -32,8 +32,8 @@
 
 open Format
 open Def_types
-open Asttypes
-open Misc
+open Rml_asttypes
+open Rml_misc
 open Ident
 open Modules
 open Global_ident
@@ -187,7 +187,7 @@ and print_proc_info ff pi =
 (*   | Some(Def_static.Instantaneous) -> pp_print_string ff "-" *)
 (*   | Some(Def_static.Noninstantaneous) -> pp_print_string ff "+" *)
 (*   end *)
-  if !Misc.dreactivity then
+  if !Rml_misc.dreactivity then
     fprintf ff "[%a]" print_reactivity pi.proc_react
 
 and print_list ff priority sep l =

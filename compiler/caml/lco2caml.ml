@@ -30,8 +30,8 @@ open Caml_ast
 open Caml_misc
 open Global
 open Global_ident
-open Asttypes
-open Misc
+open Rml_asttypes
+open Rml_misc
 
 
 (* Translation of type expressions *)
@@ -303,7 +303,7 @@ let rec translate_ml e =
     | Coexpr_exec p ->
         let hook = make_rml_exec_hook () in
         Cexpr_apply
-          (make_module_value !Misc.rml_machine_module "rml_exec",
+          (make_module_value !Rml_misc.rml_machine_module "rml_exec",
            [hook;
             translate_ml p])
 

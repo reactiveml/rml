@@ -30,7 +30,7 @@
 
 (* The abstract syntax for the types *)
 
-open Asttypes
+open Rml_asttypes
 open Global
 
 (* types *)

@@ -44,7 +44,7 @@
 
 %{
 open Location
-open Asttypes
+open Rml_asttypes
 open Parse_ident
 open Parse_ast
 

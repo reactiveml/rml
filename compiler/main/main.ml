@@ -28,7 +28,7 @@
 
 (* $Id$ *)
 
-open Misc
+open Rml_misc
 open Modules
 open Compiler
 

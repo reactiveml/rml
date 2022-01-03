@@ -54,16 +54,16 @@ let translate_phrase phrase =
     let decl_list = List.map External.expend decl_list in
     (* front-end *)
     let intermediate_code =
-      Compiler.compile_implementation_front_end !Misc.err_fmt "" None decl_list
+      Compiler.compile_implementation_front_end !Rml_misc.err_fmt "" None decl_list
     in
     (* the implementation *)
     let ocaml_code =
-      Compiler.compile_implementation_back_end_buf !Misc.err_fmt module_name
+      Compiler.compile_implementation_back_end_buf !Rml_misc.err_fmt module_name
         intermediate_code
     in
     None, ocaml_code
   with x ->
-    let () = Errors.report_error !Misc.err_fmt x in
+    let () = Errors.report_error !Rml_misc.err_fmt x in
     Some "", [ phrase ]
 
 (* the main function *)
@@ -71,7 +71,7 @@ let compile () =
   let module_name = module_name () in
   let ic = stdin in
   let itf = open_out_bin "/dev/null" in
-  let info_fmt = !Misc.err_fmt in
+  let info_fmt = !Rml_misc.err_fmt in
   let out_chan = stdout in
 
   (* Initialization *)

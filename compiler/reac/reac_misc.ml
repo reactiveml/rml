@@ -25,7 +25,7 @@
 
 (* Functions on Reac AST *)
 
-open Asttypes
+open Rml_asttypes
 open Reac_ast
 open Def_types
 open Types
@@ -175,7 +175,7 @@ let expr_free_vars e =
 	List.iter
 	  (fun (p,when_opt,e) ->
 	    let vars' = (vars_of_patt p) @ vars in
-            Misc.opt_iter (expr_free_vars vars') when_opt;
+            Rml_misc.opt_iter (expr_free_vars vars') when_opt;
 	    expr_free_vars vars' e)
 	  patt_expr_list
 
@@ -216,7 +216,7 @@ let expr_free_vars e =
 	List.iter
 	  (fun (p,when_opt,e) ->
 	    let vars' = (vars_of_patt p) @ vars in
-            Misc.opt_iter (expr_free_vars vars') when_opt;
+            Rml_misc.opt_iter (expr_free_vars vars') when_opt;
 	    expr_free_vars vars' e)
 	  patt_expr_list
 
@@ -233,7 +233,7 @@ let expr_free_vars e =
 	List.iter
 	  (fun (p,when_opt,e) ->
 	    let vars' = (vars_of_patt p) @ vars in
-            Misc.opt_iter (expr_free_vars vars') when_opt;
+            Rml_misc.opt_iter (expr_free_vars vars') when_opt;
 	    expr_free_vars vars' e)
 	  patt_expr_list
 
@@ -276,7 +276,7 @@ let expr_free_vars e =
 	expr_free_vars vars e2
 
     | Rexpr_loop (n_opt, e) ->
-	Misc.opt_iter (expr_free_vars vars) n_opt;
+	Rml_misc.opt_iter (expr_free_vars vars) n_opt;
 	expr_free_vars vars e
 
     | Rexpr_fordopar (ident, e1, e2, direction_flag, e) ->
@@ -310,8 +310,8 @@ let expr_free_vars e =
           (fun (config, when_opt, e_opt) ->
             config_free_vars vars config;
             let vars' = (vars_of_config config) @ vars in
-            Misc.opt_iter (expr_free_vars vars') when_opt;
-            Misc.opt_iter (expr_free_vars vars') e_opt)
+            Rml_misc.opt_iter (expr_free_vars vars') when_opt;
+            Rml_misc.opt_iter (expr_free_vars vars') e_opt)
           config_when_opt_e_opt_list
 
     | Rexpr_when (config, e) ->
@@ -343,7 +343,7 @@ let expr_free_vars e =
     | Rexpr_await_val (immediate, kind, config, when_opt, e1) ->
 	config_free_vars vars config;
 	let vars' = (vars_of_config config) @ vars in
-        Misc.opt_iter (expr_free_vars vars') when_opt;
+        Rml_misc.opt_iter (expr_free_vars vars') when_opt;
 	expr_free_vars vars' e1
 
     end

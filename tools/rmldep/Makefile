@@ -7,7 +7,7 @@ DIRECTORIES = ../../compiler/global ../../compiler/parsing
 INCLUDES=-I ../../compiler/global -I ../../compiler/parsing
 
 OBJ =	../../compiler/global/version.cmo \
-	../../compiler/global/misc.cmo \
+	../../compiler/global/rml_misc.cmo \
 	../../compiler/global/warnings.cmo \
 	../../compiler/global/ident.cmo \
 	../../compiler/parsing/linenum.cmo \
@@ -16,7 +16,7 @@ OBJ =	../../compiler/global/version.cmo \
 	../../compiler/parsing/location.cmo \
 	../../compiler/parsing/syntaxerr.cmo \
 	../../compiler/parsing/lexer.cmo \
-	../../compiler/parsing/parser.cmo \
+	../../compiler/parsing/rml_parser.cmo \
 	../../compiler/parsing/parse.cmo \
 	depend.cmo \
 	rmldep.cmo

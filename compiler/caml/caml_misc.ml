@@ -25,12 +25,12 @@
 
 (* Functions on Caml AST *)
 
-open Asttypes
+open Rml_asttypes
 open Def_types
 open Caml_ast
 open Global
 open Global_ident
-open Misc
+open Rml_misc
 
 (* Building functions *)
 

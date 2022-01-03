@@ -25,11 +25,11 @@
 
 (* The translation of Reac to Lk *)
 
-open Asttypes
+open Rml_asttypes
 open Def_static
 open Reac_ast
 open Lk_ast
-open Misc
+open Rml_misc
 
 
 let make_expr e loc =
@@ -554,7 +554,7 @@ and translate_proc e k (ctrl: ident) =
 		 Location.none)
 
 	| Rexpr_control (s, Some _, proc) ->
-	    Misc.not_yet_implemented "Reac2lk.translate_proc Rexpr_control"
+	    Rml_misc.not_yet_implemented "Reac2lk.translate_proc Rexpr_control"
 
 (* C_k[let s<x> in p] =                                                    *)
 (*   bind K = k in let s<x> in C_K[p]                                      *)

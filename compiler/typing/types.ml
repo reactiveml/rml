@@ -30,7 +30,7 @@
 
 (* Basic operations over types *)
 
-open Misc
+open Rml_misc
 open Def_types
 open Reactivity_effects
 open Global
