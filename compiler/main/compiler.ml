@@ -292,6 +292,7 @@ let compile_implementation module_name filename =
 	   "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
 	   "*)\n\n");
         (* selection of the interpreter *)
+  output_string out_chan ("open Rmllib;;\n");
 	output_string out_chan ("open "^ !interpreter_impl ^";;\n");
 
         (* the implementation *)
@@ -452,6 +453,7 @@ let compile_interface parse module_name filename filename_end =
       begin
 	let out_chan = open_out obj_name in
         (* selection of the interpreter *)
+  output_string out_chan ("open Rmllib;;\n");
 	output_string out_chan ("open "^ !interpreter_impl ^";;\n");
 
         (* the interface *)

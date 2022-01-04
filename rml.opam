@@ -1,0 +1,26 @@
+version: "rml-0.0.06-653-gc4043f8-dirty"
+opam-version: "0.0.1"
+maintainer: "Louis Mandel <louis.mandel@reactiveml.org>"
+authors: [ "Louis Mandel <louis.mandel@reactiveml.org>" ]
+license: "QPL"
+dev-repo: "git+https://github.com/reactiveml/rml"
+tags: [ "syntax" ]
+build: [
+  ["./configure" "--prefix" "%{prefix}%"]
+  [make "-j" jobs]
+]
+
+install: [
+  ["dune" "install" "-j" jobs]
+]
+
+depends: [
+  "ocaml" {>= "4.13.0"}
+  "dune" {>= "1.6.3"}
+  "menhir"
+]
+
+synopsis: "Reactive ML"
+description: """
+ReactiveML: a programming language for implementing interactive systems.
+"""

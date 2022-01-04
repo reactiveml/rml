@@ -32,6 +32,8 @@ open Rml_misc
 open Modules
 open Compiler
 
+let () = Options.set_options ()
+
 (* list of object files passed on the command line *)
 let object_files = ref []
 

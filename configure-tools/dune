@@ -1,0 +1,11 @@
+(rule (target rml_asttypes.ml) (action (copy ../compiler/global/rml_asttypes.ml rml_asttypes.ml))) 
+(rule (target def_modules.ml) (action (copy ../compiler/global/def_modules.ml def_modules.ml)))
+(rule (target global.ml) (action (copy ../compiler/global/global.ml global.ml)))
+(rule (target global_ident.ml) (action (copy ../compiler/global/global_ident.ml global_ident.ml)))
+(rule (target rml_ident.ml) (action (copy ../compiler/global/rml_ident.ml rml_ident.ml)))
+(rule (target def_types.ml) (action (copy ../compiler/typing/def_types.ml def_types.ml)))
+(rule (target def_static.ml) (action (copy ../compiler/static/def_static.ml def_static.ml)))
+
+
+(executable
+ (name embedrzi))
