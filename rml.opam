@@ -7,7 +7,7 @@ dev-repo: "git+https://github.com/reactiveml/rml"
 tags: [ "syntax" ]
 build: [
   ["./configure" "--prefix" "%{prefix}%"]
-  [make "-j" jobs]
+  ["dune" "build" "-j" jobs]
 ]
 
 install: [
