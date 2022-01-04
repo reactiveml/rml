@@ -44,11 +44,11 @@ open Format
 
 let report_error ppf exn =
   let report ppf = function
-    | Lexer.Error(err, loc) ->
+    | Rml_lexer.Error(err, loc) ->
 	Location.print ppf loc;
-	Lexer.report_error ppf err
-    | Syntaxerr.Error err ->
-	Syntaxerr.report_error ppf err
+	Rml_lexer.report_error ppf err
+    | Rml_syntaxerr.Error err ->
+	Rml_syntaxerr.report_error ppf err
 
     | Rml_misc.Error -> ()
     | Rml_misc.Internal (loc,msg) ->

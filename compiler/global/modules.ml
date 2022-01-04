@@ -162,7 +162,7 @@ let defined_global name desc =
 
 let add_global_info sel_fct glob =
   let tbl = sel_fct !defined_module in
-  Hashtbl.add tbl (Ident.name glob.gi.id) glob
+  Hashtbl.add tbl (Rml_ident.name glob.gi.id) glob
 
 let add_global_info_list sel_fct glob_list =
   List.iter (add_global_info sel_fct) glob_list
@@ -209,7 +209,7 @@ and pfind_type_desc = pfind_desc types_of_module
 
 let find_desc sel_fct gident =
   try
-    Hashtbl.find (sel_fct (find_module gident.qual)) (Ident.name gident.id)
+    Hashtbl.find (sel_fct (find_module gident.qual)) (Rml_ident.name gident.id)
   with Not_found ->
     raise Desc_not_found
 

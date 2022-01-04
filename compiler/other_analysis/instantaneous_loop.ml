@@ -70,7 +70,7 @@ module Env :
     let same key1 key2 =
       begin match key1, key2 with
       | Varpatt_local id1, Varpatt_local id2 ->
-	  Ident.same id1 id2
+	  Rml_ident.same id1 id2
       | Varpatt_global gl1, Varpatt_global gl2 ->
 	  Global_ident.same gl1.Global.gi gl2.Global.gi
       | _ -> false

@@ -33,7 +33,7 @@ config
 Makefile.common
 compiler/global/version.ml
 compiler/global/rzi.ml
-compiler/parsing/lexer.ml
+compiler/parsing/rml_lexer.ml
 compiler/parsing/linenum.ml
 compiler/parsing/rml_parser.ml
 compiler/parsing/rml_parser.mli

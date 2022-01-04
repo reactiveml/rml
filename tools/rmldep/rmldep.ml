@@ -208,12 +208,12 @@ let remove_preprocessed inputfile =
 let parse_use_file ic =
     seek_in ic 0;
     let lb = Lexing.from_channel ic in
-    Parse.implementation lb
+    Rml_parse.implementation lb
 
 let parse_interface ic =
     seek_in ic 0;
     let lb = Lexing.from_channel ic in
-    Parse.interface lb
+    Rml_parse.interface lb
 
 (* Process one file *)
 
@@ -273,12 +273,12 @@ let file_dependencies_as kind source_file =
     end
   with x ->
     let report_err = function
-    | Lexer.Error(err, range) ->
+    | Rml_lexer.Error(err, range) ->
         fprintf Format.err_formatter "@[%a%a@]@."
-        Location.print range  Lexer.report_error err
-    | Syntaxerr.Error err ->
+        Location.print range  Rml_lexer.report_error err
+    | Rml_syntaxerr.Error err ->
         fprintf Format.err_formatter "@[%a@]@."
-        Syntaxerr.report_error err
+        Rml_syntaxerr.report_error err
     | Sys_error msg ->
         fprintf Format.err_formatter "@[I/O error:@ %s@]@." msg
     | Preprocessing_error ->

@@ -60,7 +60,7 @@ let make_intf it loc =
   { kintf_desc = it;
     kintf_loc = loc; }
 
-let make_var s = Ident.create Ident.gen_var s Ident.Internal
+let make_var s = Rml_ident.create Rml_ident.gen_var s Rml_ident.Internal
 
 (* Translation of type expressions *)
 let rec translate_te typ =

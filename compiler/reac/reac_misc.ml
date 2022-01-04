@@ -28,7 +28,7 @@
 open Rml_asttypes
 open Reac_ast
 open Def_types
-open Types
+open Rml_types
 open Reactivity_effects
 
 let make_expr_all e typ static reactivity reactivity_effect loc =
@@ -71,7 +71,7 @@ let make_intf it loc =
 
 let string_of_varpatt x =
   begin match x with
-  | Varpatt_local id -> Ident.unique_name id
+  | Varpatt_local id -> Rml_ident.unique_name id
   | Varpatt_global x -> Global.little_name_of_global x
   end
 
@@ -125,7 +125,7 @@ let rec is_free x vars =
   | x' :: vars' ->
       begin match x, x' with
       | Varpatt_local id1, Varpatt_local id2 ->
-	  if Ident.same id1 id2 then
+	  if Rml_ident.same id1 id2 then
 	    false
 	  else
 	    is_free x vars'

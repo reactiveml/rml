@@ -39,7 +39,7 @@ exception Unify
 
 
 (* generating fresh names *)
-let names = new Ident.name_generator
+let names = new Rml_ident.name_generator
 
 
 (* The current nesting level of lets *)

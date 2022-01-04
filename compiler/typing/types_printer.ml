@@ -34,7 +34,7 @@ open Format
 open Def_types
 open Rml_asttypes
 open Rml_misc
-open Ident
+open Rml_ident
 open Modules
 open Global_ident
 open Global
@@ -47,7 +47,7 @@ let print_qualified_ident ff q =
     (stdlib_module <> q.qual) &&
     (!interpreter_module <> q.qual)
   then begin pp_print_string ff q.qual;pp_print_string ff "." end;
-  pp_print_string ff (Ident.name q.id)
+  pp_print_string ff (Rml_ident.name q.id)
 
 (* type variables are printed 'a, 'b,... *)
 let type_name = new name_assoc_table int_to_alpha
@@ -253,7 +253,7 @@ let print_type_name ff tc ta =
     pp_print_string ff ")";
     pp_print_space ff ()
   end;
-  pp_print_string ff (Ident.name tc.id)
+  pp_print_string ff (Rml_ident.name tc.id)
 
 (* prints one variant *)
 let print_one_variant ff global =

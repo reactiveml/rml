@@ -32,7 +32,7 @@ open Caml_misc
 
 
 
-module Env = Symbol_table.Make (Ident)
+module Env = Symbol_table.Make (Rml_ident)
 
 (* Constant propagation *)
 let constant_propagation =

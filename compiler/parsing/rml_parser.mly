@@ -176,10 +176,10 @@ let rec mkrangepatt c1 c2 =
   reloc_patt (deep_mkrangepatt c1 c2)
 
 let syntax_error () =
-  raise Syntaxerr.Escape_error
+  raise Rml_syntaxerr.Escape_error
 
 let unclosed opening_name opening_num closing_name closing_num =
-  raise(Syntaxerr.Error(Syntaxerr.Unclosed(rhs_loc opening_num, opening_name,
+  raise(Rml_syntaxerr.Error(Rml_syntaxerr.Unclosed(rhs_loc opening_num, opening_name,
                                            rhs_loc closing_num, closing_name)))
 
 %}
@@ -454,7 +454,7 @@ structure_item:
       { match $3 with
         | "luc" ->
 	    mkimpl(Pimpl_lucky(mksimple $4 4, List.rev $5, List.rev $6, $8))
-	| _ -> raise (Syntaxerr.Error(Syntaxerr.Other (rhs_loc 1)))
+	| _ -> raise (Rml_syntaxerr.Error(Rml_syntaxerr.Other (rhs_loc 1)))
       }
 ;
 
@@ -601,15 +601,15 @@ expr:
       { mkexpr(Pexpr_present($2, ghexpr(Pexpr_nothing), $4)) }
   | AWAIT await_flag event_config %prec above_IN
       { if (snd $2) = One
-        then raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
+        then raise(Rml_syntaxerr.Error(Rml_syntaxerr.Other (rhs_loc 2)))
         else mkexpr(Pexpr_await(fst $2, $3)) }
   | AWAIT await_flag event_config IN par_expr
       { match $2 with
-        | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
+        | Immediate, All -> raise(Rml_syntaxerr.Error(Rml_syntaxerr.Other (rhs_loc 2)))
 	| im, k -> mkexpr(Pexpr_await_val(im, k, $3, None, $5)) }
   | AWAIT await_flag event_config WHEN par_expr IN par_expr
       { match $2 with
-        | Immediate, All -> raise(Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2)))
+        | Immediate, All -> raise(Rml_syntaxerr.Error(Rml_syntaxerr.Other (rhs_loc 2)))
 	| im, k ->
 	    mkexpr(Pexpr_await_val(im, k, $3, Some $5, $7)) }
   | PROCESS proc_def
@@ -699,7 +699,7 @@ simple_expr:
 			[mkexpr (Pexpr_constant Const_unit)])),
 		  mkexpr Pexpr_pause))
 !!!!!!!!!! *)
-	| _ -> raise (Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2))) }
+	| _ -> raise (Rml_syntaxerr.Error(Rml_syntaxerr.Other (rhs_loc 2))) }
 ;
 very_simple_expr: /* simple_expr without "LPAREN expr RPAREN" */
     val_longident
@@ -772,7 +772,7 @@ very_simple_expr: /* simple_expr without "LPAREN expr RPAREN" */
 			[mkexpr (Pexpr_constant Const_unit)])),
 		  mkexpr Pexpr_pause))
 !!!!!!!!!! *)
-	| _ -> raise (Syntaxerr.Error(Syntaxerr.Other (rhs_loc 2))) }
+	| _ -> raise (Rml_syntaxerr.Error(Rml_syntaxerr.Other (rhs_loc 2))) }
 ;
 pre_expr:
     simple_expr

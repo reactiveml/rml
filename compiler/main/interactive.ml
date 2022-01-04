@@ -49,7 +49,7 @@ let translate_phrase phrase =
   Location.reset ();
 
   try
-    let decl_list = Parse.interactive (Lexing.from_string phrase) in
+    let decl_list = Rml_parse.interactive (Lexing.from_string phrase) in
     (* expend externals *)
     let decl_list = List.map External.expend decl_list in
     (* front-end *)
@@ -63,7 +63,7 @@ let translate_phrase phrase =
     in
     None, ocaml_code
   with x ->
-    let () = Errors.report_error !Rml_misc.err_fmt x in
+    let () = Rml_errors.report_error !Rml_misc.err_fmt x in
     Some "", [ phrase ]
 
 (* the main function *)
@@ -84,11 +84,11 @@ let compile () =
     begin
       try
 	Location.init lexbuf "";
-	Lexer.update_loc lexbuf None 1 true 0;
-	let decl_list = Parse.interactive lexbuf in
+	Rml_lexer.update_loc lexbuf None 1 true 0;
+	let decl_list = Rml_parse.interactive lexbuf in
 	compile_decl_list module_name (Some itf) info_fmt out_chan decl_list
       with x ->
-	Errors.report_error Format.err_formatter x;
+	Rml_errors.report_error Format.err_formatter x;
 	output_string out_chan "let () = ();;\n"
     end;
     flush out_chan;

@@ -60,7 +60,7 @@ let main () =
   try
     List.iter compile !to_compile
   with x ->
-    Errors.report_error !err_fmt x;
+    Rml_errors.report_error !err_fmt x;
     Format.pp_print_flush !std_fmt ();
     Format.pp_print_flush !err_fmt ();
     exit 2

@@ -28,8 +28,8 @@
 open Rml_asttypes
 open Def_types
 
-type signal = Ident.t
-type ident = Ident.t
+type signal = Rml_ident.t
+type ident = Rml_ident.t
 type 'a global = 'a Global.global
 
 (* Expressions *)

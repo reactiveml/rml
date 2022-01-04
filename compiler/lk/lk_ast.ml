@@ -28,7 +28,7 @@
 open Rml_asttypes
 open Def_types
 
-type ident = Ident.t
+type ident = Rml_ident.t
 
 type 'a global = 'a Global.global
 

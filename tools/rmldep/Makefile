@@ -9,15 +9,15 @@ INCLUDES=-I ../../compiler/global -I ../../compiler/parsing
 OBJ =	../../compiler/global/version.cmo \
 	../../compiler/global/rml_misc.cmo \
 	../../compiler/global/warnings.cmo \
-	../../compiler/global/ident.cmo \
+	../../compiler/global/rml_ident.cmo \
 	../../compiler/parsing/linenum.cmo \
 	../../compiler/parsing/parse_ident.cmo \
 	../../compiler/parsing/parse_ast.cmo \
 	../../compiler/parsing/location.cmo \
-	../../compiler/parsing/syntaxerr.cmo \
-	../../compiler/parsing/lexer.cmo \
+	../../compiler/parsing/rml_syntaxerr.cmo \
+	../../compiler/parsing/rml_lexer.cmo \
 	../../compiler/parsing/rml_parser.cmo \
-	../../compiler/parsing/parse.cmo \
+	../../compiler/parsing/rml_parse.cmo \
 	depend.cmo \
 	rmldep.cmo
 
