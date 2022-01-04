@@ -75,7 +75,7 @@ MAIN = 	main/compiler.ml \
 	main/options.ml \
 	main/rml_errors.ml \
 	main/interactive.ml \
-	main/main.ml \
+	main/rmlc.ml \
 
 SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(OTHER_ANALYSIS) $(EXTERNAL) $(STATIC) $(LCO) $(LK) $(CAML) $(MAIN)
 
@@ -141,7 +141,7 @@ OBJ =	global/version.cmo \
 	optimization/reac_optimization.cmo \
 	main/compiler.cmo \
 	main/interactive.cmo \
-	main/main.cmo \
+	main/rmlc.cmo \
 
 
 OBJ_OPT = $(OBJ:.cmo=.cmx)
@@ -175,7 +175,7 @@ uninstall: uninstall.$(TARGET)
 	rm -f $(BINDIR)/$(BIN)
 
 
-C_OBJ_BYTE = $(filter-out main/options.cmo main/main.cmo,$(OBJ))
+C_OBJ_BYTE = $(filter-out main/options.cmo main/rmlc.cmo,$(OBJ))
 C_OBJ_OPT  = $(C_OBJ_BYTE:.cmo=.cmx)
 
 rmlcompiler.cmo: $(C_OBJ_BYTE)

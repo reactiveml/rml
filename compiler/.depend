@@ -773,18 +773,6 @@ main/interactive.cmx : \
     external/external.cmx \
     main/configure.cmx \
     main/compiler.cmx
-main/main.cmo : \
-    global/rml_misc.cmo \
-    main/rml_errors.cmo \
-    global/modules.cmo \
-    main/interactive.cmo \
-    main/compiler.cmo
-main/main.cmx : \
-    global/rml_misc.cmx \
-    main/rml_errors.cmx \
-    global/modules.cmx \
-    main/interactive.cmx \
-    main/compiler.cmx
 main/options.cmo : \
     global/rml_misc.cmo \
     main/rml_errors.cmo \
@@ -805,3 +793,15 @@ main/rml_errors.cmx : \
     global/rml_misc.cmx \
     parsing/rml_lexer.cmx \
     parsing/location.cmx
+main/rmlc.cmo : \
+    global/rml_misc.cmo \
+    main/rml_errors.cmo \
+    global/modules.cmo \
+    main/interactive.cmo \
+    main/compiler.cmo
+main/rmlc.cmx : \
+    global/rml_misc.cmx \
+    main/rml_errors.cmx \
+    global/modules.cmx \
+    main/interactive.cmx \
+    main/compiler.cmx
