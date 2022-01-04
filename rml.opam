@@ -1,4 +1,4 @@
-version: "rml-0.0.06-653-gc4043f8-dirty"
+version: "rml-1.09.08-dev"
 opam-version: "0.0.1"
 maintainer: "Louis Mandel <louis.mandel@reactiveml.org>"
 authors: [ "Louis Mandel <louis.mandel@reactiveml.org>" ]
