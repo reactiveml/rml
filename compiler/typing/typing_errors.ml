@@ -31,7 +31,6 @@
 (* Printing of error messages during typing *)
 
 open Rml_misc
-open Def_types
 open Rml_types
 open Reac_ast
 

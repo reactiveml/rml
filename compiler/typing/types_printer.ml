@@ -32,9 +32,7 @@
 
 open Format
 open Def_types
-open Rml_asttypes
 open Rml_misc
-open Rml_ident
 open Modules
 open Global_ident
 open Global
@@ -65,7 +63,7 @@ let max r1 r2 = match r1, r2 with
 | Cycle, _ | _, Cycle -> Cycle
 | NoCycle, NoCycle -> NoCycle
 
-let rec max_list rl =
+let max_list rl =
   List.fold_left max NoCycle rl
 
 let rec find_root check first k =
@@ -111,7 +109,7 @@ let rec print_reactivity ff k =
   | React_seq l -> fprintf ff "(%a)" (print_reactivity_list "; ") l
   | React_par l -> fprintf ff "(%a)" (print_reactivity_list " || ") l
   | React_or l -> fprintf ff "(%a)" (print_reactivity_list " + ") l
-  | React_raw (k1, { react_desc = React_var }) ->
+  | React_raw (k1, { react_desc = React_var; _ }) ->
       fprintf ff "(%a + ..)"
         print_reactivity k1
   | React_raw (k1, k2) ->
@@ -209,7 +207,7 @@ let print ff ty =
   react_name#reset;
   print ff 0 ty;
   pp_print_flush ff ()
-let print_scheme ff { ts_desc = ty } = print ff ty
+let print_scheme ff { ts_desc = ty; _ } = print ff ty
 
 let print_value_type_declaration ff global =
   let prefix = "val" in
@@ -297,7 +295,7 @@ let rec print_label_list ff = function
 let print_type_declaration ff gl =
   let q = Global.gi gl in
   let { type_kind = td;
-	type_arity = ta; } = Global.info gl in
+	type_arity = ta; _ } = Global.info gl in
   pp_open_box ff 2;
   print_type_name ff q ta;
   begin match td with

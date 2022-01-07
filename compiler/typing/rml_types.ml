@@ -141,7 +141,7 @@ let free_type_vars level ty =
 	free_vars t1; free_vars t2
     | Type_product(ty_list) ->
 	List.iter free_vars ty_list
-    | Type_constr(c, ty_list) ->
+    | Type_constr(_c, ty_list) ->
 	List.iter free_vars ty_list
     | Type_link(link) ->
 	free_vars link
@@ -202,7 +202,7 @@ and copy_proc_info info =
 
 
 (* instanciation *)
-let instance { ts_desc = ty } =
+let instance { ts_desc = ty; _ } =
   let ty_i = copy ty in
   cleanup ();
   ty_i
@@ -232,7 +232,7 @@ let label_instance { lbl_arg = ty_arg; lbl_res = ty_res; lbl_mut = mut } =
 
 
 (* the occur check *)
-let rec occur_check level index ty =
+let occur_check level index ty =
   let rec check ty =
     let ty = type_repr ty in
     match ty.type_desc with
@@ -242,7 +242,7 @@ let rec occur_check level index ty =
 	else if ty.type_level > level then ty.type_level <- level
     | Type_arrow(ty1,ty2) -> check ty1; check ty2
     | Type_product(ty_list) -> List.iter check ty_list
-    | Type_constr(name, ty_list) ->
+    | Type_constr(_name, ty_list) ->
  	List.iter check ty_list
     | Type_link(link) -> check link
     | Type_process(ty, info) ->
@@ -300,12 +300,12 @@ let rec unify expected_ty actual_ty =
 	  | Invalid_argument _ -> raise Unify
 	  end
       | Type_constr
-	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } }, args),
+	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) }; _ }, args),
 	_ ->
 	  unify (expand_abbrev params body args) actual_ty
       | _,
 	Type_constr
-	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) } },args) ->
+	  ({ info = Some { constr_abbr=Constr_abbrev(params,body) }; _ },args) ->
 	    unify expected_ty (expand_abbrev params body args)
       | Type_process(ty1, pi1), Type_process(ty2, pi2) ->
           begin try
@@ -321,7 +321,7 @@ let rec filter_arrow ty =
   let ty = type_repr ty in
   match ty.type_desc with
     Type_arrow(ty1, ty2) -> ty1, ty2
-  | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
+  | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}; _},args) ->
       filter_arrow (expand_abbrev params body args)
   | _ ->
       let ty1 = new_var () in
@@ -334,7 +334,7 @@ let rec filter_product arity ty =
   match ty.type_desc with
     Type_product(l) ->
       if List.length l = arity then l else raise Unify
-  | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}},args) ->
+  | Type_constr({info=Some{constr_abbr=Constr_abbrev(params,body)}; _},args) ->
       filter_product arity (expand_abbrev params body args)
   | _ ->
       let ty_list = new_var_list arity in

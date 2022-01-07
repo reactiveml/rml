@@ -132,7 +132,7 @@ let rec gen_react is_gen k =
           (min (gen_react is_gen k1) (gen_react is_gen k2))
   | React_run k_body ->
       k.react_level <- min generic (gen_react is_gen k_body)
-  | React_rec (checked, k_body) ->
+  | React_rec (_checked, k_body) ->
       if not (visited k) then (
         if not (Reactivity_check.well_formed k) then begin
           k.react_desc <- React_rec (true, k_body)
@@ -161,7 +161,7 @@ let rec gen_ty is_gen ty =
       ty.type_level <-
 	List.fold_left (fun level ty -> min level (gen_ty is_gen ty))
 	  notgeneric ty_list
-  | Type_constr(name, ty_list) ->
+  | Type_constr(_name, ty_list) ->
       ty.type_level <-
 	List.fold_left
 	  (fun level ty -> min level (gen_ty is_gen ty))
@@ -208,11 +208,11 @@ let check_type_constr_defined loc gl arity =
   ty_desc.type_constr
 
 (* find the type of the constructor C *)
-let get_type_of_constructor c loc =
+let get_type_of_constructor c _loc =
   constr_instance (Global.info c)
 
 (* find the type of a label *)
-let get_type_of_label label loc =
+let get_type_of_label label _loc =
   label_instance (Global.info label)
 
 (* tests if an expression is expansive *)
@@ -224,8 +224,8 @@ let rec is_nonexpansive expr =
   | Rexpr_tuple l -> List.for_all is_nonexpansive l
   | Rexpr_construct (_, None) -> true
   | Rexpr_construct(_, Some e) -> is_nonexpansive e
-  | Rexpr_let(rec_flag, bindings, body) ->
-      List.for_all (fun (pat, expr) -> is_nonexpansive expr) bindings &&
+  | Rexpr_let(_rec_flag, bindings, body) ->
+      List.for_all (fun (_pat, expr) -> is_nonexpansive expr) bindings &&
       is_nonexpansive body
   | Rexpr_function _ -> true
 (*
@@ -234,15 +234,15 @@ let rec is_nonexpansive expr =
       List.for_all (fun (pat, expr) -> is_nonexpansive expr) pat_expr_list
   | Rexpr_seq(e1, e2) -> is_nonexpansive e2
 *)
-  | Rexpr_ifthenelse(cond, ifso, ifnot) ->
+  | Rexpr_ifthenelse(_cond, ifso, ifnot) ->
       is_nonexpansive ifso && is_nonexpansive ifnot
-  | Rexpr_constraint(e, ty) -> is_nonexpansive e
+  | Rexpr_constraint(e, _ty) -> is_nonexpansive e
   | Rexpr_array [] -> true
   | Rexpr_record lbl_expr_list ->
       List.for_all (fun (lbl, expr) ->
         (Global.info lbl).lbl_mut == Immutable && is_nonexpansive expr)
         lbl_expr_list
-  | Rexpr_record_access(e, lbl) -> is_nonexpansive e
+  | Rexpr_record_access(e, _lbl) -> is_nonexpansive e
   | Rexpr_process _ -> true
   | Rexpr_pre (_, e) -> is_nonexpansive e
   | Rexpr_last e -> is_nonexpansive e
@@ -299,10 +299,10 @@ let type_of_immediate i =
   match i with
   | Const_unit -> type_unit
   | Const_bool _ -> type_bool
-  | Const_int(i) -> type_int
-  | Const_float(i) -> type_float
-  | Const_char(c) -> type_char
-  | Const_string(c) -> type_string
+  | Const_int(_i) -> type_int
+  | Const_float(_i) -> type_float
+  | Const_char(_c) -> type_char
+  | Const_string(_c) -> type_string
 
 (* Typing of type expressions *)
 let type_of_type_expression typ_vars react_vars typexp =
@@ -334,7 +334,7 @@ let type_of_type_expression typ_vars react_vars typexp =
 	in
 	constr name (List.map type_of ty_list)
 
-    | Rtype_process (ty,k) ->
+    | Rtype_process (ty,_k) ->
 	process (type_of ty) { proc_react = react_raw (react_epsilon())
                                                       (get_react_var ()); }
   in
@@ -356,7 +356,7 @@ let free_of_type ty =
         let v, rv = vars (v, rv) t in
         let rv = react_vars rv proc_info in
         (v, rv)
-  and react_vars rv k = (new_generic_react_var()) :: rv
+  and react_vars rv _k = (new_generic_react_var()) :: rv
   in vars ([], []) ty
 
 (* translating a declared type expression into an internal type *)
@@ -449,9 +449,9 @@ let rec type_of_pattern global_env local_env patt ty =
 	global_env1;
       List.iter
 	(fun (x1,ty1) ->
-	  let (x2,ty2) =
+	  let (_x2,ty2) =
 	    try
-	      List.find (fun (x,ty) -> (x1 = x)) local_env2
+	      List.find (fun (x,_ty) -> (x1 = x)) local_env2
 	    with
 	    | Not_found -> orpat_vars p2.patt_loc (Rml_ident.name x1)
 	  in
@@ -466,7 +466,7 @@ let rec type_of_pattern global_env local_env patt ty =
 	  [] -> global_env, local_env
 	| (label,label_pat) :: label_pat_list ->
 	    let { lbl_arg = ty_arg;
-		  lbl_res = ty_res } = get_type_of_label label patt.patt_loc
+		  lbl_res = ty_res; _ } = get_type_of_label label patt.patt_loc
 	    in
 	    (* check that the label appears only once *)
 	    if List.mem label label_list
@@ -514,7 +514,7 @@ let rec type_of_expression env expr =
 	instance (Global.info n).value_typ, react_epsilon()
 
     | Rexpr_let (flag, patt_expr_list, e) ->
-	let gl_env, new_env, k =
+	let _gl_env, new_env, k =
           type_let (flag = Recursive) env patt_expr_list
         in
 	let ty, k' = type_of_expression new_env e in
@@ -570,7 +570,7 @@ let rec type_of_expression env expr =
 	  in
 	  match ty_arg_opt with
 	  | None -> ty, react_epsilon()
-	  | Some ty_arg -> constr_arity_err c.gi expr.expr_loc
+	  | Some _ty_arg -> constr_arity_err c.gi expr.expr_loc
 	end
     | Rexpr_construct (c, Some arg) ->
 	begin
@@ -596,7 +596,7 @@ let rec type_of_expression env expr =
 	    [] -> ()
 	  | (label,label_expr) :: label_expr_list ->
 	      let { lbl_arg = ty_arg;
-		    lbl_res = ty_res } = get_type_of_label label expr.expr_loc
+		    lbl_res = ty_res; _ } = get_type_of_label label expr.expr_loc
 	      in
 	      (* check that the label appears only once *)
 	      if List.mem label label_list
@@ -609,7 +609,7 @@ let rec type_of_expression env expr =
 	ty, react_epsilon()
 
     | Rexpr_record_access (e, label) ->
-	let { lbl_arg = ty_arg; lbl_res = ty_res } =
+	let { lbl_arg = ty_arg; lbl_res = ty_res; _ } =
 	  get_type_of_label label expr.expr_loc
 	in
 	type_expect_eps env e ty_arg;
@@ -622,7 +622,7 @@ let rec type_of_expression env expr =
 	    [] -> ()
 	  | (label,label_expr) :: label_expr_list ->
 	      let { lbl_arg = ty_arg;
-		    lbl_res = ty_res } = get_type_of_label label expr.expr_loc
+		    lbl_res = ty_res; _ } = get_type_of_label label expr.expr_loc
 	      in
 	      (* check that the label appears only once *)
 	      if List.mem label label_list
@@ -708,7 +708,7 @@ let rec type_of_expression env expr =
 	    type_unit, react_or [ react_epsilon (); react_loop k ]
         end
 
-    | Rexpr_for(i,e1,e2,flag,e3) ->
+    | Rexpr_for(i,e1,e2,_flag,e3) ->
 	type_expect_eps env e1 type_int;
 	type_expect_eps env e2 type_int;
 	let k = type_statement (Env.add i (forall [] [] type_int) env) e3 in
@@ -823,7 +823,7 @@ let rec type_of_expression env expr =
 		(constr_notabbrev event_ident
 		   [ty_emit; (constr_notabbrev list_ident [ty_emit])])
 		ty_s
-	  | Some (kind,default,comb) ->
+	  | Some (_kind,default,comb) ->
 	      type_expect_eps env default ty_get;
 	      type_expect_eps env comb (arrow ty_emit (arrow ty_get ty_get))
 	end;
@@ -850,7 +850,7 @@ let rec type_of_expression env expr =
         let k = remove_local_react_var k in
         type_unit, k
 
-    | Rexpr_fordopar(i,e1,e2,flag,p) ->
+    | Rexpr_fordopar(i,e1,e2,_flag,p) ->
         type_expect_eps env e1 type_int;
         type_expect_eps env e2 type_int;
         let k = type_statement (Env.add i (forall [] [] type_int) env) p in
@@ -968,7 +968,7 @@ let rec type_of_expression env expr =
         | Rconf_present (s, Some patt) ->
             let ty_s, k_s = type_of_expression env s in
             check_epsilon k_s;
-            let ty_emit, ty_get =
+            let ty_emit, _ty_get =
               try
                 filter_event ty_s
               with Unify ->
@@ -1020,7 +1020,7 @@ and type_of_event_config env conf =
   | Rconf_present (s, Some patt) ->
       let ty, k = type_of_expression env s in
       check_epsilon k;
-      let ty_emit, ty_get =
+      let _ty_emit, ty_get =
         try
           filter_event ty
         with Unify ->
@@ -1045,9 +1045,9 @@ and type_of_event_config env conf =
       let loc_env2 = type_of_event_config env c2 in
       List.iter
         (fun (x1,ty1) ->
-          let (x2,ty2) =
+          let (_x2,ty2) =
             try
-              List.find (fun (x,ty) -> (x1 = x)) loc_env2
+              List.find (fun (x,_ty) -> (x1 = x)) loc_env2
             with
             | Not_found -> orconfig_vars c2.conf_loc (Rml_ident.name x1)
           in
@@ -1070,7 +1070,7 @@ and type_let is_rec env patt_expr_list =
   in
   let kl =
     List.map2
-      (fun (patt,expr) ty -> type_expect let_env expr ty)
+      (fun (_patt,expr) ty -> type_expect let_env expr ty)
       patt_expr_list
       ty_list
   in
@@ -1126,7 +1126,7 @@ let check_no_repeated_constructor loc l =
   let rec checkrec cont l =
     match l with
       [] -> ()
-    | ({ gi = name }, _) :: l ->
+    | ({ gi = name; _ }, _) :: l ->
 	if List.mem name.id.Rml_ident.id cont
 	then repeated_constructor_definition_err name.id.Rml_ident.name loc
 	else checkrec (name.id.Rml_ident.id :: cont) l
@@ -1137,7 +1137,7 @@ let check_no_repeated_label loc l =
   let rec checkrec cont l =
     match l with
       [] -> ()
-    | ({ gi = name },_ , _) :: l ->
+    | ({ gi = name; _ },_ , _) :: l ->
 	if List.mem name.id.Rml_ident.id cont
 	then repeated_label_definition_err name.id.Rml_ident.name loc
 	else checkrec (name.id.Rml_ident.id :: cont) l
@@ -1213,7 +1213,7 @@ let check_nongen_values impl_item_list =
     (fun impl_item ->
       match impl_item.impl_desc with
       | Rimpl_let (_, patt_expr_list) ->
-	  List.iter (fun (patt,expr) ->
+	  List.iter (fun (_patt,expr) ->
 	    if fst (free_type_vars notgeneric expr.expr_type) <> []
 	    then
               cannot_generalize_err expr)
@@ -1240,7 +1240,7 @@ let type_impl_item info_fmt item =
       Reactivity_check.check_expr e
 
   | Rimpl_let (flag, patt_expr_list) ->
-      let global_env, local_env, k =
+      let global_env, _local_env, k =
 	type_let (flag = Recursive) Env.empty patt_expr_list
       in
       check_epsilon k;
@@ -1265,7 +1265,7 @@ let type_impl_item info_fmt item =
 		unify_event s.gi.id
 		  (constr_notabbrev list_ident [ty_emit])
 		  ty_get
-	    | Some (kind,default,comb) ->
+	    | Some (_kind,default,comb) ->
 		let k_default = type_expect Env.empty default ty_get in
                 check_epsilon k_default;
 		let k_gather =

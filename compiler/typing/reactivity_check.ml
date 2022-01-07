@@ -20,12 +20,11 @@
 (* file: reactivity_effects.ml *)
 
 open Rml_misc
-open Rml_asttypes
 open Reac_ast
 open Def_types
 
 (* Warnings *)
-let rec_warning expr k =
+let rec_warning expr _k =
   if !Rml_misc.reactivity_warning then (
     Format.fprintf !err_fmt
       "%aWarning: This expression may produce an instantaneous recursion.@."
@@ -33,7 +32,7 @@ let rec_warning expr k =
   )
 (* (Types_printer.print_to_string Types_printer.print_reactivity k) *)
 
-let loop_warning expr k =
+let loop_warning expr _k =
   if !Rml_misc.reactivity_warning then (
     Format.fprintf !err_fmt
       "%aWarning: This expression may be an instantaneous loop.@."
@@ -112,7 +111,7 @@ let well_formed =
     well_formed Env.empty k
 
 
-let rec check_expr_one expr =
+let check_expr_one expr =
   let k = expr.expr_reactivity_effect in
   begin match expr.expr_desc with
   | Rexpr_loop _ ->
@@ -124,19 +123,19 @@ let rec check_expr_one expr =
             loop_warning expr k;
             k.react_desc <- React_rec (true, k_body)
           end
-      | React_rec (true, k_body) -> ()
+      | React_rec (true, _k_body) -> ()
       | _ -> assert false
       end
   | Rexpr_while _ ->
       begin match k.react_desc with
-      | React_or [ { react_desc = React_epsilon }; k' ] ->
+      | React_or [ { react_desc = React_epsilon; _ }; k' ] ->
           begin match k'.react_desc with
           | React_rec (false, k_body) ->
               if not (well_formed k) then begin
                 loop_warning expr k;
                 k.react_desc <- React_rec (true, k_body)
               end
-          | React_rec (true, k_body) -> ()
+          | React_rec (true, _k_body) -> ()
           | _ -> assert false
           end
       | React_epsilon -> ()

@@ -20,8 +20,6 @@
 (* file: reactivity_effects.ml *)
 
 open Rml_misc
-open Rml_asttypes
-open Reac_ast
 open Def_types
 
 exception React_Unify
@@ -50,7 +48,7 @@ let react_pause () =
 let react_epsilon () =
   make_react React_epsilon
 
-let rec react_seq kl =
+let react_seq kl =
   match kl with
   | [] -> react_epsilon ()
   | [k]  -> k
@@ -306,7 +304,7 @@ let react_simplify =
         | [ k' ] -> k'
         | kl -> { k with react_desc = React_or kl; }
         end
-    | React_raw(k1, { react_desc = React_pause }) ->
+    | React_raw(k1, { react_desc = React_pause; _ }) ->
         simplify k1
     | React_raw (k1, k2) ->
         { k with react_desc = React_raw(simplify k1, simplify k2) }
@@ -441,7 +439,7 @@ let react_equal =
 
 (* the occur check *)
 let visited_list, visited = mk_visited ()
-let rec occur_check_react level index k =
+let occur_check_react level index k =
   let rec check k =
     let k = react_effect_repr k in
     match k.react_desc with
