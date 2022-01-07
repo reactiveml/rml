@@ -49,7 +49,7 @@ let rec is_value e =
   | Coexpr_trywith (expr, _) ->
       (is_value expr)
 
-  | Coexpr_assert expr -> false
+  | Coexpr_assert _expr -> false
 
   | Coexpr_ifthenelse (e1, e2, e3) ->
       (is_value e1) && (is_value e2) && (is_value e3)
