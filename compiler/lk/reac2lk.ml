@@ -25,7 +25,6 @@
 
 (* The translation of Reac to Lk *)
 
-open Rml_asttypes
 open Def_static
 open Reac_ast
 open Lk_ast
@@ -80,7 +79,7 @@ let rec translate_te typ =
 
 
 (* Translation of type declatations *)
-let rec translate_type_decl typ =
+let translate_type_decl typ =
   match typ with
   | Rtype_abstract -> Ktype_abstract
   | Rtype_rebind typ -> Ktype_rebind (translate_te typ)
@@ -371,7 +370,7 @@ and translate_proc e k (ctrl: ident) =
 		match l with
 		| [] -> assert false
 		| [p] -> translate_proc p k ctrl
-                | ({ expr_static = (ctx, Def_static.Static) } as p)::l' ->
+                | ({ expr_static = (_ctx, Def_static.Static); _ } as p)::l' ->
                     let k' = f l' in
                       make_proc (Kproc_seq (translate_ml p, k')) Location.none
 		| p::l' ->
@@ -438,7 +437,7 @@ and translate_proc e k (ctrl: ident) =
 		 Location.none)
 
 
-	| Rexpr_merge (p1, p2) ->
+	| Rexpr_merge (_p1, _p2) ->
 	    not_yet_implemented "merge"
 
 (* C_k[signal s in p] =                                                    *)
@@ -470,7 +469,7 @@ and translate_proc e k (ctrl: ident) =
 (*   bind K = k in                                                         *)
 (*   start ctrl C[s] (fun ctrl' -> C_(end.k, ctrl')[p]) (x -> C_k[p'])     *)
 	| Rexpr_until (proc,
-                       [ {conf_desc = Rconf_present (_, patt_opt) } as s,
+                       [ {conf_desc = Rconf_present (_, patt_opt); _ } as s,
                          when_opt, proc_opt; ]) ->
      (* | Rexpr_until (s, proc, patt_proc_opt) -> *)
             let patt_proc_opt =
@@ -480,7 +479,7 @@ and translate_proc e k (ctrl: ident) =
               | None, Some proc ->
                   let patt = Reac_misc.make_patt Rpatt_any Location.none in
                   Some (patt, proc)
-              | Some patt, None -> assert false
+              | Some _patt, None -> assert false
             in
             let k_id = make_var "k" in
 	    let k_var = make_proc (Kproc_var k_id) Location.none in
@@ -507,7 +506,7 @@ and translate_proc e k (ctrl: ident) =
 			  translate_proc proc' k_var ctrl)
 		     end))
 		 Location.none)
-	| Rexpr_until (proc, conf_when_opt_expr_opt_list) ->
+	| Rexpr_until (_proc, _conf_when_opt_expr_opt_list) ->
             not_yet_implemented "Reac2lk.translate_proc(until)"
 
 (* C_k[do p when s] =                                                      *)
@@ -553,7 +552,7 @@ and translate_proc e k (ctrl: ident) =
 		     (ctrl_id, translate_proc proc end_control ctrl_id)))
 		 Location.none)
 
-	| Rexpr_control (s, Some _, proc) ->
+	| Rexpr_control (_s, Some _, _proc) ->
 	    Rml_misc.not_yet_implemented "Reac2lk.translate_proc Rexpr_control"
 
 (* C_k[let s<x> in p] =                                                    *)
@@ -682,7 +681,7 @@ and translate_proc e k (ctrl: ident) =
 
 (* Translation of let definitions in a PROCESS context *)
 and translate_proc_let =
-  let rec is_static =
+  let is_static =
     List.for_all (fun (_, expr) -> snd expr.expr_static = Def_static.Static)
   in
   fun flag patt_expr_list proc k ctrl ->
@@ -800,7 +799,7 @@ let translate_expr_or_process e =
       in
       make_expr (Kexpr_exec p) Location.none
 
-let translate_impl_item info_chan item =
+let translate_impl_item _info_chan item =
   let kitem =
     match item.impl_desc with
     | Rimpl_expr e -> Kimpl_expr (translate_expr_or_process e)
@@ -836,7 +835,7 @@ let translate_impl_item info_chan item =
   make_impl kitem item.impl_loc
 
 
-let translate_intf_item info_chan item =
+let translate_intf_item _info_chan item =
   let kitem =
     match item.intf_desc with
     | Rintf_val (gl, typ) -> Kintf_val (gl, translate_te typ)
