@@ -108,7 +108,7 @@ let get_inputs =
       List.map get_input inputs
 
 let make_step inputs =
-  let input_to_string_val (n,id,ty) =
+  let input_to_string_val (n,id,_ty) =
     make_expr
       (Pexpr_tuple
 	 [make_expr (Pexpr_constant (Const_string id.psimple_id));
@@ -219,7 +219,7 @@ let patt_of_in_out_puts patt_of_in_out_put inputs =
 	      inputs))
 
 let patt_of_inputs =
-  let patt_of_input (n,id,ty) =
+  let patt_of_input (n,id,_ty) =
     make_var_patt ("evt_"^
 		   id.psimple_id^
 		   "_in_"^(string_of_int n))
@@ -227,7 +227,7 @@ let patt_of_inputs =
   patt_of_in_out_puts patt_of_input
 
 let patt_of_outputs =
-  let patt_of_output (n,id,ty) =
+  let patt_of_output (n,id,_ty) =
     make_var_patt ("evt_"^
 		   id.psimple_id^
 		   "_out_"^(string_of_int n))
