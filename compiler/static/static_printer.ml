@@ -23,8 +23,6 @@
 
 (* $Id$ *)
 
-open Rml_asttypes
-open Reac_ast
 open Def_static
 
 let print ty =

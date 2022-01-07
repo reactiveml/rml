@@ -114,11 +114,11 @@ let static_patt_when_opt_expr_list static_expr combine ctx l =
 let rec static_expr ctx e =
   let t =
     match e.expr_desc with
-    | Rexpr_local x -> Static
+    | Rexpr_local _x -> Static
 
-    | Rexpr_global x -> Static
+    | Rexpr_global _x -> Static
 
-    | Rexpr_constant im -> Static
+    | Rexpr_constant _im -> Static
 
     | Rexpr_let (Recursive, patt_expr_list, e1) ->
 	if static_expr_list static_expr max snd ML patt_expr_list = Static
@@ -387,7 +387,7 @@ let rec static_expr ctx e =
     | Rexpr_signal (_, None, p) ->
 	static_expr ctx p
 
-    | Rexpr_signal (_, Some(k,e1,e2), p) ->
+    | Rexpr_signal (_, Some(_k,e1,e2), p) ->
 	let typ1 = static_expr ML e1 in
 	let typ2 = static_expr ML e2 in
 	let typ3 = static_expr ctx p in
@@ -550,7 +550,7 @@ let static impl =
 	List.iter
 	  (fun (_, combine) ->
 	    match combine with
-	    | Some(k,e1,e2) ->
+	    | Some(_k,e1,e2) ->
 		if (static_expr ML e1) <> Static
 		then expr_wrong_static_err !Rml_misc.err_fmt e1
 		else
