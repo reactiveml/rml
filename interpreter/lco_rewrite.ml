@@ -23,7 +23,7 @@
 (* created: 2005-04-29  *)
 
 (* Description :                                                      *)
-(*   Implantation à la Rewrite de Junior pour lco.                    *)
+(*   Implantation Ã  la Rewrite de Junior pour lco.                    *)
 (*   Ajout des valeurs pour traiter def_dyn et def_and_dyn            *)
 
 (* $Id: lco_rewrite.ml,v 1.1 2005/04/30 16:49:15 mandel Exp $ *)
@@ -151,7 +151,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* halt_kboi                          *)
 (**************************************)
-    let rec rml_halt_kboi = rml_halt
+    let rml_halt_kboi = rml_halt
 
 (**************************************)
 (* emit                               *)
@@ -519,7 +519,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	      let status, p = body_array.(i) in
 	      match status with
 	      | SUSP ->
-		  let (alpha, p') as body = p() in
+		  let (alpha, _p') as body = p() in
 		  body_array.(i) <- body;
 		  par_status := gamma !par_status alpha
 	      | _ ->
@@ -975,7 +975,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	    let status, p = body_array.(i) in
 	    match status with
 	    | SUSP ->
-		let (alpha, p') as body = p() in
+		let (alpha, _p') as body = p() in
 		body_array.(i) <- body;
 		par_status := gamma !par_status alpha
 	    | _ ->
@@ -1161,7 +1161,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	    eoi := false;
 	    move := false;
 	    None
-	| TERM v, _ -> Some ()
+	| TERM _v, _ -> Some ()
 	| SUSP, _ -> assert false
       in
       rml_react

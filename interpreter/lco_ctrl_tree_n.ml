@@ -65,7 +65,7 @@ module Rml_interpreter : Lco_interpreter.S =
 
     and 'a step = 'a -> unit
     and next = unit step list
-    and current = unit step list
+    (*and current = unit step list*)
     and join_point = int ref option
     and 'a expr = 'a step -> control_tree -> join_point -> unit step
     and 'a process = unit -> 'a expr
@@ -225,7 +225,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************************)
 (* sched                                          *)
 (**************************************************)
-    let rec sched =
+    let sched =
       fun () ->
 	match !current with
 	| f :: c ->
@@ -297,7 +297,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* nothing                            *)
 (**************************************)
     let rml_nothing =
-      fun f_k ctrl jp ->
+      fun f_k _ctrl _jp ->
 	let f_nothing =
 	  fun _ ->
 	    f_k unit_value
@@ -307,7 +307,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* compute                            *)
 (**************************************)
     let rml_compute e =
-      fun f_k ctrl jp ->
+      fun f_k _ctrl _jp ->
 	let f_compute =
 	  fun _ ->
 	    let v = e() in
@@ -318,7 +318,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* pause                              *)
 (**************************************)
     let rml_pause =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let f_pause =
 	  fun _ ->
 	    ctrl.next <- f_k :: ctrl.next;
@@ -329,7 +329,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* pause_kboi                         *)
 (**************************************)
     let rml_pause_kboi =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let f_pause =
 	  fun _ ->
 	    ctrl.next_boi <- f_k :: ctrl.next_boi;
@@ -340,7 +340,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* halt                               *)
 (**************************************)
     let rml_halt =
-      fun f_k ctrl jp ->
+      fun _f_k _ctrl _jp ->
 	let f_halt =
 	  fun _ ->
 	    sched ()
@@ -354,14 +354,14 @@ module Rml_interpreter : Lco_interpreter.S =
 (**************************************)
 (* emit                               *)
 (**************************************)
-    let step_emit f_k ctrl (n,wa,wp) e _ =
+    let step_emit f_k _ctrl (n,wa,wp) e _ =
       Event.emit n (e());
       wakeUp wa;
       wakeUp wp;
       f_k unit_value
 
     let rml_emit_val expr_evt e =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let f_emit_val =
 	  fun _ ->
 	    let evt = expr_evt() in
@@ -369,7 +369,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	in f_emit_val
 
     let rml_emit_val' evt e =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let f_emit_val =
 	  step_emit f_k ctrl evt e
 	in f_emit_val
@@ -418,7 +418,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	in f_await_not_top
 
     let rml_await_immediate expr_evt =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let f_await =
 	  fun _ ->
 	    let evt = expr_evt() in
@@ -426,7 +426,7 @@ module Rml_interpreter : Lco_interpreter.S =
 	in f_await
 
     let rml_await_immediate' evt =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let f_await =
 	  step_await_immediate f_k ctrl evt
 	in f_await
@@ -435,7 +435,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* await_immediate_conf               *)
 (**************************************)
     let rml_await_immediate_conf expr_cfg =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	if ctrl.kind = Top then
 	  let f_await_top =
 	    fun _ ->
@@ -473,7 +473,7 @@ module Rml_interpreter : Lco_interpreter.S =
 		f_k unit_value
 	      else
 		let ref_f = ref None in
-		let rec f w step_wake_up =
+		let f w step_wake_up =
 		  if is_true() then
 		    (ref_f := None;
 		     f_k unit_value)
@@ -750,7 +750,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* present                            *)
 (**************************************)
 
-    let step_present f_k ctrl (n,_,wp) f_1 f_2 =
+    let step_present _f_k ctrl (n,_,wp) f_1 f_2 =
       let rec f_present =
 	fun _ ->
 	  if Event.status n
@@ -771,7 +771,7 @@ module Rml_interpreter : Lco_interpreter.S =
       fun f_k ctrl jp ->
 	let f_1 = p_1 f_k ctrl jp in
 	let f_2 = p_2 f_k ctrl jp in
-	let rec f_present =
+	let f_present =
 	  fun _ ->
 	    let evt = expr_evt () in
 	    step_present f_k ctrl evt f_1 f_2 unit_value
@@ -833,7 +833,7 @@ module Rml_interpreter : Lco_interpreter.S =
     let rml_seq p_1 p_2 =
       fun f_k ctrl jp ->
 	let f_2 = p_2 f_k ctrl jp in
-	let f_1 = p_1 (fun x -> f_2 ()) ctrl None in
+	let f_1 = p_1 (fun _x -> f_2 ()) ctrl None in
 	f_1
 
 (**************************************)
@@ -843,7 +843,7 @@ module Rml_interpreter : Lco_interpreter.S =
 (* applications partielles.                                     *)
 
     let join_n cpt =
-      fun f_k ctrl ->
+      fun f_k _ctrl ->
 	let f_join_n =
 	  fun _ ->
 	    decr cpt;
@@ -899,7 +899,7 @@ let rml_loop p =
 *)
 
     let rml_loop p =
-      fun f_k ctrl jp ->
+      fun _f_k ctrl _jp ->
 	let f_1 = ref dummy_step in
 	let f_loop = p (fun _ -> !f_1 unit_value) ctrl None in
 	f_1 := f_loop;
@@ -910,7 +910,7 @@ let rml_loop p =
 (**************************************)
 
     let rml_loop_n e p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let cpt = ref 0 in
 	let f_1 = ref dummy_step in
 	let f_loop =
@@ -1063,7 +1063,7 @@ let rml_loop p =
 	next = [];
 	next_boi = []; }
 
-    let start_ctrl f_k ctrl f new_ctrl =
+    let start_ctrl _f_k ctrl f new_ctrl =
       let f_ctrl =
 	fun _ ->
 	  if new_ctrl.alive
@@ -1085,7 +1085,7 @@ let rml_loop p =
 (* ---------------------------------------------------------------- *)
 
     let rml_until expr_evt p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let new_ctrl = new_ctrl (Kill f_k) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	let f_until =
@@ -1096,7 +1096,7 @@ let rml_loop p =
 	in f_until
 
     let rml_until' (n,_,_) p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let new_ctrl = new_ctrl (Kill f_k) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	new_ctrl.cond <- (fun () -> Event.status n);
@@ -1107,7 +1107,7 @@ let rml_loop p =
 (**************************************)
 
     let rml_until_conf expr_cfg p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let new_ctrl = new_ctrl (Kill f_k) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	let f_until =
@@ -1233,7 +1233,7 @@ let rml_loop p =
 (* control                            *)
 (**************************************)
     let rml_control expr_evt p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let new_ctrl = new_ctrl Susp in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	let f_control =
@@ -1244,7 +1244,7 @@ let rml_loop p =
 	in f_control
 
     let rml_control' (n, _, _) p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let new_ctrl = new_ctrl Susp in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	new_ctrl.cond <- (fun () -> Event.status n);
@@ -1254,7 +1254,7 @@ let rml_loop p =
 (* control_match                      *)
 (**************************************)
     let rml_control_match expr_evt matching p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let new_ctrl = new_ctrl Susp in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	let f_control =
@@ -1266,14 +1266,14 @@ let rml_loop p =
 	in f_control
 
     let rml_control_match' (n, _, _) matching p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let new_ctrl = new_ctrl Susp in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	new_ctrl.cond <- (fun () -> Event.status n && matching (Event.value n));
 	start_ctrl f_k ctrl f new_ctrl
 
     let rml_control_match_conf expr_cfg matching p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let new_ctrl = new_ctrl Susp in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	let f_control =
@@ -1289,7 +1289,7 @@ let rml_loop p =
 (**************************************)
 
     let rml_control_conf expr_cfg p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let new_ctrl = new_ctrl Susp in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
 	let f_control =
@@ -1304,7 +1304,7 @@ let rml_loop p =
 (* when                               *)
 (**************************************)
 
-    let step_when f_k ctrl (n,wa,wp) f new_ctrl dummy =
+    let step_when _f_k ctrl (n,wa,wp) f new_ctrl dummy =
       let w = if ctrl.kind = Top then wa else wp in
       new_ctrl.cond <- (fun () -> Event.status n);
       let rec f_when =
@@ -1352,7 +1352,7 @@ let rml_loop p =
       start_when
 
       let rml_when expr_evt p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let dummy = ref dummy_step in
 	let new_ctrl = new_ctrl (When dummy) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
@@ -1364,7 +1364,7 @@ let rml_loop p =
 	start_when
 
     let rml_when' evt p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let dummy = ref dummy_step in
 	let new_ctrl = new_ctrl (When dummy) in
 	let f = p (end_ctrl f_k new_ctrl) new_ctrl None in
@@ -1376,8 +1376,8 @@ let rml_loop p =
 (**************************************)
 (* when_conf                          *)
 (**************************************)
-    let rml_when_conf expr_cfg =
-      fun f_k ctrl ->
+    let rml_when_conf _expr_cfg =
+      fun _f_k _ctrl ->
 	fun _ -> raise RML
 
 
@@ -1403,7 +1403,7 @@ let rml_loop p =
 (**************************************)
 
     let rml_while e p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let f_body = ref dummy_step in
 	let f_while =
 	  fun _ ->
@@ -1421,7 +1421,7 @@ let rml_loop p =
 
     let rml_for e1 e2 dir p =
       let (incr, cmp) = if dir then incr, (<=) else decr, (>=) in
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let rec f_for i v2 =
 	  fun _ ->
 	    incr i;
@@ -1445,7 +1445,7 @@ let rml_loop p =
 (**************************************)
 
     let rml_fordopar e1 e2 dir p =
-      fun f_k ctrl jp ->
+      fun f_k ctrl _jp ->
 	let cpt = ref 0 in
 	let j = join_n cpt f_k ctrl in
 	let f_fordopar =
@@ -1656,7 +1656,7 @@ let rml_loop p =
 	Some term_cpt,
 	fun () ->
 	  incr term_cpt;
-	  let f x =
+	  let f _x =
 	    decr term_cpt;
 	    if !term_cpt > 0 then
 	      sched()
@@ -1705,7 +1705,7 @@ let rml_loop p =
 	Some term_cpt,
 	fun () ->
 	  incr term_cpt;
-	  let f x =
+	  let f _x =
 	    decr term_cpt;
 	    if !term_cpt > 0 then
 	      sched()
