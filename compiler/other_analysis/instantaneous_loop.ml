@@ -92,7 +92,7 @@ module Env :
 
     let get env x =
       try
-	let (x', n) = List.find (fun (y,_) -> same x y) env in
+	let (_x', n) = List.find (fun (y,_) -> same x y) env in
 	Some n
       with Not_found -> None
 
@@ -361,7 +361,7 @@ let instantaneous_loop_expr =
 	  | _ ->
 	      let vars_right =
 		List.fold_left
-		  (fun vars (p_list, ty, n_opt) ->
+		  (fun vars (p_list, _ty, n_opt) ->
 		    begin match n_opt with
 		    | None -> vars
 		    | Some n ->
@@ -427,9 +427,9 @@ let instantaneous_loop_expr =
       | Rexpr_tuple expr_list ->
 	  instantaneous_loop_expr_list analyse id vars expr_list
 
-      | Rexpr_construct (const, None) -> Env.empty
+      | Rexpr_construct (_const, None) -> Env.empty
 
-      | Rexpr_construct (const, Some e) -> analyse vars e
+      | Rexpr_construct (_const, Some e) -> analyse vars e
 
       | Rexpr_array expr_list ->
 	  instantaneous_loop_expr_list analyse id vars expr_list
@@ -437,7 +437,7 @@ let instantaneous_loop_expr =
       | Rexpr_record lbl_expr_list ->
 	  instantaneous_loop_expr_list analyse snd vars lbl_expr_list
 
-      | Rexpr_record_access (e, lbl) ->
+      | Rexpr_record_access (e, _lbl) ->
 	  analyse vars e
 
       | Rexpr_record_with (e, lbl_expr_list) ->
@@ -445,13 +445,13 @@ let instantaneous_loop_expr =
 	  let ty' = instantaneous_loop_expr_list analyse snd vars lbl_expr_list in
           Env.append ty' ty
 
-      | Rexpr_record_update (e1, lbl, e2) ->
+      | Rexpr_record_update (e1, _lbl, e2) ->
 	  let ty1 = analyse vars e1 in
 	  let ty2 = analyse vars e2 in
 	  if not (Env.equal Env.empty ty2) then rec_warning expr;
 	  Env.append ty1 ty2
 
-      | Rexpr_constraint (e, ty) ->
+      | Rexpr_constraint (e, _ty) ->
 	  analyse vars e
 
       | Rexpr_trywith (e, patt_when_opt_expr_list) ->
@@ -502,7 +502,7 @@ let instantaneous_loop_expr =
 	  let ty2 = analyse vars e2 in
 	  Env.append ty1 ty2
 
-      | Rexpr_for (ident, e1, e2, direction_flag, e) ->
+      | Rexpr_for (_ident, e1, e2, _direction_flag, e) ->
 	  let ty1 = analyse vars e1 in
 	  let ty2 = analyse vars e2 in
 	  let ty = analyse vars e in
@@ -525,7 +525,7 @@ let instantaneous_loop_expr =
       | Rexpr_process e ->
 	  analyse (Env.plus vars 1) e
 
-      | Rexpr_pre (pre_kind, e) ->
+      | Rexpr_pre (_pre_kind, e) ->
 	  analyse vars e
 
       | Rexpr_last e ->
@@ -559,7 +559,7 @@ let instantaneous_loop_expr =
 	  let ty = analyse vars e in
 	  Env.append ty_n ty
 
-      | Rexpr_fordopar (ident, e1, e2, direction_flag, e) ->
+      | Rexpr_fordopar (_ident, e1, e2, _direction_flag, e) ->
 	  let ty1 = analyse vars e1 in
 	  let ty2 = analyse vars e2 in
 	  let ty = analyse vars e in
@@ -573,9 +573,9 @@ let instantaneous_loop_expr =
 	  let ty2 = analyse vars e2 in
 	  Env.append ty1 ty2
 
-      | Rexpr_signal ((ident, tyexpr_opt), None, e) ->
+      | Rexpr_signal ((_ident, _tyexpr_opt), None, e) ->
 	  analyse vars e
-      | Rexpr_signal ((ident, tyexpr_opt), Some(k,e1,e2), e) ->
+      | Rexpr_signal ((_ident, _tyexpr_opt), Some(_k,e1,e2), e) ->
 	  let ty1 = analyse vars e1 in
 	  let ty2 = analyse vars e2 in
 	  let ty2' = Env.plus ty2 (-2) in
@@ -616,7 +616,7 @@ let instantaneous_loop_expr =
 	  let _ = analyse Env.empty e1 in
 	  Env.append ty_config ty
 
-      | Rexpr_get (e,patt,e1) ->
+      | Rexpr_get (e,_patt,e1) ->
 	  let ty = analyse vars e in
 	  let _ = analyse Env.empty e1 in
 	  ty
@@ -627,14 +627,14 @@ let instantaneous_loop_expr =
 	  let _ = analyse Env.empty e2 in
 	  Env.append ty_config ty1
 
-      | Rexpr_await (immediate_flag, config) ->
+      | Rexpr_await (_immediate_flag, config) ->
 	  config_analyse vars config
 
       | Rexpr_await_val (Immediate, One, e, None, e1) ->
 	  let ty = config_analyse vars e in
 	  let ty1 = analyse vars e1 in
 	  Env.append ty ty1
-      | Rexpr_await_val (immediate, kind, e, when_opt, e1) ->
+      | Rexpr_await_val (_immediate, _kind, e, when_opt, e1) ->
 	  let ty = config_analyse vars e in
           let _ = Rml_misc.opt_map (analyse Env.empty) when_opt in
 	  let _ = analyse Env.empty e1 in
@@ -696,7 +696,7 @@ let instantaneous_loop impl =
       List.iter
 	(fun (_, combine) ->
 	  match combine with
-	  | Some(k,e1,e2) ->
+	  | Some(_k,e1,e2) ->
 	      let _ty1 = instantaneous_loop_expr Env.empty e1 in
 	      let _ty2 = instantaneous_loop_expr Env.empty e2 in
 	      ()
