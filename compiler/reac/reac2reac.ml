@@ -27,7 +27,6 @@
 
 open Rml_asttypes
 open Reac_ast
-open Def_types
 open Reac_misc
 
 (* Generic source to source transformation for Reac_ast *)
@@ -96,7 +95,7 @@ let expr_map  =
 	       (Rexpr_tuple expr_list')
                typ static reactivity reactivity_effect loc)
 
-      | Rexpr_construct (const, None) ->
+      | Rexpr_construct (_const, None) ->
 	  f expr
       | Rexpr_construct (const, Some e) ->
 	  let e' = expr_map f e in

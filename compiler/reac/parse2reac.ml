@@ -34,7 +34,6 @@ open Reac_ast
 open Reac_misc
 open Parse_ident
 open Def_types
-open Rml_types
 
 module Env =
   Symbol_table.Make
@@ -71,7 +70,7 @@ let rec translate_te typ =
   make_te rtyp typ.pte_loc
 
 (* Translation of type declatations *)
-let rec translate_type_decl typ =
+let translate_type_decl typ =
   match typ with
   | Ptype_abstract -> Rtype_abstract
 
@@ -272,7 +271,7 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
 (* Translation of identifier *)
 let translate_ident env x =
   match x.pident_id with
-  | Pdot (mod_name,s) ->
+  | Pdot (_mod_name,_s) ->
       Rexpr_global (Modules.pfind_value_desc x.pident_id)
 
   | Pident s ->
@@ -296,7 +295,7 @@ let rec translate env e =
 
     | Pexpr_constant im -> Rexpr_constant im
 
-    | Pexpr_let (_, [patt, {pexpr_desc= Pexpr_get s;}], expr) ->
+    | Pexpr_let (_, [patt, {pexpr_desc = Pexpr_get s;_}], expr) ->
 	let vars, rpatt = translate_pattern false patt in
 	let new_env = add_varpatt env vars in
 	Rexpr_get(translate env s,
@@ -657,13 +656,13 @@ let translate_type_declaration l =
     l_rename
 
 (* Translation of implementation item *)
-let translate_impl_item info_fmt item =
+let translate_impl_item _info_fmt item =
   let ritem =
     match item.pimpl_desc with
     | Pimpl_expr expr -> Rimpl_expr (translate Env.empty expr)
 
     | Pimpl_let (flag, patt_expr_list) ->
-	let env, rpatt_rexpr_list =
+	let _env, rpatt_rexpr_list =
 	  translate_let true Env.empty flag patt_expr_list
 	in
 	Rimpl_let (flag, rpatt_rexpr_list)
@@ -717,7 +716,7 @@ let translate_impl_item info_fmt item =
   make_impl ritem item.pimpl_loc
 
 (* Translation of interfacr item *)
-let translate_intf_item info_fmt item =
+let translate_intf_item _info_fmt item =
   let ritem =
     match item.pintf_desc with
     | Pintf_val (s, t) ->

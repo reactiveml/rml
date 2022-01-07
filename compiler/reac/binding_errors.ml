@@ -24,7 +24,6 @@
 (* $Id$ *)
 
 open Rml_misc
-open Parse_ast
 open Parse_ident
 
 let unbound_variable_err x loc =

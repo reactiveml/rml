@@ -27,7 +27,6 @@
 
 open Rml_asttypes
 open Reac_ast
-open Def_types
 open Rml_types
 open Reactivity_effects
 
@@ -110,9 +109,9 @@ let rec vars_of_patt p =
 (* Compute the list of variables introduce in an event configuration *)
 let rec vars_of_config config =
   match config.conf_desc with
-  | Rconf_present (e, None) -> []
+  | Rconf_present (_e, None) -> []
 
-  | Rconf_present (e, Some p) -> vars_of_patt p
+  | Rconf_present (_e, Some p) -> vars_of_patt p
 
   | Rconf_and (cfg1, cfg2) -> (vars_of_config cfg1) @ (vars_of_config cfg2)
 
@@ -186,9 +185,9 @@ let expr_free_vars e =
     | Rexpr_tuple expr_list ->
 	List.iter (expr_free_vars vars) expr_list
 
-    | Rexpr_construct (const, None) -> ()
+    | Rexpr_construct (_const, None) -> ()
 
-    | Rexpr_construct (const, Some e) ->
+    | Rexpr_construct (_const, Some e) ->
 	expr_free_vars vars e
 
     | Rexpr_array expr_list ->
@@ -197,18 +196,18 @@ let expr_free_vars e =
     | Rexpr_record lbl_expr_list ->
 	List.iter (fun (_,e) -> expr_free_vars vars e) lbl_expr_list
 
-    | Rexpr_record_access (e, lbl) ->
+    | Rexpr_record_access (e, _lbl) ->
 	expr_free_vars vars e
 
     | Rexpr_record_with (e, lbl_expr_list) ->
         expr_free_vars vars e;
         List.iter (fun (_,e) -> expr_free_vars vars e) lbl_expr_list
 
-    | Rexpr_record_update (e1, lbl, e2) ->
+    | Rexpr_record_update (e1, _lbl, e2) ->
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
 
-    | Rexpr_constraint (e, ty) ->
+    | Rexpr_constraint (e, _ty) ->
 	expr_free_vars vars e
 
     | Rexpr_trywith (e, patt_expr_list) ->
@@ -241,7 +240,7 @@ let expr_free_vars e =
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
 
-    | Rexpr_for (ident, e1, e2, direction_flag, e) ->
+    | Rexpr_for (ident, e1, e2, _direction_flag, e) ->
 	let vars' = (Varpatt_local ident) :: vars in
 	expr_free_vars vars' e1;
 	expr_free_vars vars' e2;
@@ -253,7 +252,7 @@ let expr_free_vars e =
     | Rexpr_process e ->
 	expr_free_vars vars e
 
-    | Rexpr_pre (pre_kind, e) ->
+    | Rexpr_pre (_pre_kind, e) ->
 	expr_free_vars vars e
 
     | Rexpr_last e ->
@@ -279,7 +278,7 @@ let expr_free_vars e =
 	Rml_misc.opt_iter (expr_free_vars vars) n_opt;
 	expr_free_vars vars e
 
-    | Rexpr_fordopar (ident, e1, e2, direction_flag, e) ->
+    | Rexpr_fordopar (ident, e1, e2, _direction_flag, e) ->
 	let vars' = (Varpatt_local ident) :: vars in
 	expr_free_vars vars' e1;
 	expr_free_vars vars' e2;
@@ -292,10 +291,10 @@ let expr_free_vars e =
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
 
-    | Rexpr_signal ((ident, tyexpr_opt), None, e) ->
+    | Rexpr_signal ((ident, _tyexpr_opt), None, e) ->
 	let vars' = (Varpatt_local ident) :: vars in
 	expr_free_vars vars' e
-    | Rexpr_signal ((ident, tyexpr_opt), Some(kind, e1,e2), e) ->
+    | Rexpr_signal ((ident, _tyexpr_opt), Some(_kind, e1,e2), e) ->
 	let vars' = (Varpatt_local ident) :: vars in
 	expr_free_vars vars' e1;
 	expr_free_vars vars' e2;
@@ -337,10 +336,10 @@ let expr_free_vars e =
 	expr_free_vars vars e1;
 	expr_free_vars vars e2
 
-    | Rexpr_await (immediate_flag, config) ->
+    | Rexpr_await (_immediate_flag, config) ->
 	config_free_vars vars config
 
-    | Rexpr_await_val (immediate, kind, config, when_opt, e1) ->
+    | Rexpr_await_val (_immediate, _kind, config, when_opt, e1) ->
 	config_free_vars vars config;
 	let vars' = (vars_of_config config) @ vars in
         Rml_misc.opt_iter (expr_free_vars vars') when_opt;

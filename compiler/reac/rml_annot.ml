@@ -129,8 +129,8 @@ let rec printtyp_reset_maybe loc =
 
     let print_info oc pp ti =
       match ti with
-      | Ti_patt {patt_loc = loc;}
-      | Ti_expr {expr_loc = loc;} ->
+      | Ti_patt {patt_loc = loc; _ }
+      | Ti_expr {expr_loc = loc; _ } ->
 	  let typ = T.get_type ti in
 	  print_position pp loc.loc_start;
 	  Format.fprintf pp " ";
@@ -171,8 +171,8 @@ module Stypes =
 
     let get_type ti =
       begin match ti with
-      | Ti_patt {patt_type = typ;}
-      | Ti_expr {expr_type = typ;} -> typ
+      | Ti_patt {patt_type = typ; _ }
+      | Ti_expr {expr_type = typ; _ } -> typ
       end
 
 (*     let output = Types_printer.output *)
@@ -191,9 +191,9 @@ module Sstatic =
     let get_type ti =
       begin match ti with
       | Ti_patt _ -> (Def_static.Static, [], Reactivity_effects.no_react)
-      | Ti_expr {expr_static = (ctx, typ);
+      | Ti_expr {expr_static = (_ctx, typ);
                  expr_reactivity = pi;
-                 expr_reactivity_effect = k; } -> (typ, pi, k)
+                 expr_reactivity_effect = k; _ } -> (typ, pi, k)
       end
 
     let output oc (k, pi, r) =
