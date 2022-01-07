@@ -41,8 +41,6 @@
 
 (* $Id$ *)
 
-open Format
-open Location
 open Parse_ident
 open Parse_ast
 
@@ -52,7 +50,7 @@ module StringSet = Set.Make(struct type t = string let compare = compare end)
 
 let free_structure_names = ref StringSet.empty
 
-let rec addmodule bv lid =
+let addmodule bv lid =
   match lid with
     Pdot (s,_) ->
       if not (StringSet.mem s bv)
@@ -78,9 +76,9 @@ let add_type_declaration bv td =
   | Ptype_abstract -> ()
   | Ptype_rebind te -> add_type bv te
   | Ptype_variant cstrs ->
-      List.iter (fun (c, args) -> add_opt add_type bv args) cstrs
+      List.iter (fun (_c, args) -> add_opt add_type bv args) cstrs
   | Ptype_record lbls ->
-      List.iter (fun (l, mut, ty) -> add_type bv ty) lbls
+      List.iter (fun (_l, _mut, ty) -> add_type bv ty) lbls
 
 let rec add_pattern bv pat =
   match pat.ppatt_desc with
@@ -138,7 +136,7 @@ let rec add_expr bv exp =
   | Pexpr_par(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_merge(e1, e2) -> add_expr bv e1; add_expr bv e2
   | Pexpr_signal(ioel, koee, e) ->
-      List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
+      List.iter (fun (_i, oe) -> add_opt add_type bv oe) ioel;
       Rml_misc.opt_iter (fun (_, e1, e2) -> add_expr bv e1; add_expr bv e2) koee;
       add_expr bv e
   | Pexpr_process(e1) -> add_expr bv e1
@@ -193,11 +191,11 @@ and add_signature bv = function
 
 and add_sig_item bv item =
   match item.pintf_desc with
-    Pintf_val(id, vd) ->
+    Pintf_val(_id, vd) ->
       add_type bv vd; bv
   | Pintf_type dcls ->
       List.iter (fun (_, _, td) -> add_type_declaration bv td) dcls; bv
-  | Pintf_exn(id, oty) ->
+  | Pintf_exn(_id, oty) ->
       add_opt add_type bv oty; bv
   | Pintf_open s ->
       if not (StringSet.mem s bv)
@@ -214,14 +212,14 @@ and add_struct_item bv item =
   | Pimpl_let(_, pel) ->
       add_pat_expr_list bv pel; bv
   | Pimpl_signal(ioel, koee) ->
-      List.iter (fun (i, oe) -> add_opt add_type bv oe) ioel;
+      List.iter (fun (_i, oe) -> add_opt add_type bv oe) ioel;
       Rml_misc.opt_iter (fun (_,e1, e2) -> add_expr bv e1; add_expr bv e2) koee;
       bv
   | Pimpl_type dcls ->
       List.iter (fun (_, _, td) -> add_type_declaration bv td) dcls; bv
-  | Pimpl_exn(id, oty) ->
+  | Pimpl_exn(_id, oty) ->
       add_opt add_type bv oty; bv
-  | Pimpl_exn_rebind(id, l) ->
+  | Pimpl_exn_rebind(_id, l) ->
       add bv l; bv
   | Pimpl_open s ->
       if not (StringSet.mem s bv)

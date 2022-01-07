@@ -41,9 +41,6 @@
 (* $Id$ *)
 
 open Format
-open Location
-open Parse_ast
-
 
 (* Print the dependencies *)
 
@@ -232,7 +229,7 @@ let ml_file_dependencies source_file =
         if List.exists (fun ext -> Sys.file_exists (basename ^ ext)) !mli_synonyms
         then let cmi_name = basename ^ ".rzi" in ([cmi_name], [cmi_name])
         else ([], []) in
-      let (byt_deps, opt_deps) =
+      let (byt_deps, _opt_deps) =
         Depend.StringSet.fold find_dependency
                               !Depend.free_structure_names init_deps in
       print_dependencies (basename ^ ".ml") byt_deps
@@ -252,7 +249,7 @@ let mli_file_dependencies source_file =
       print_raw_dependencies source_file !Depend.free_structure_names
     end else begin
       let basename = Filename.chop_extension source_file in
-      let (byt_deps, opt_deps) =
+      let (byt_deps, _opt_deps) =
         Depend.StringSet.fold find_dependency
                               !Depend.free_structure_names ([], []) in
       print_dependencies (basename ^ ".rzi") byt_deps
