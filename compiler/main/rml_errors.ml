@@ -67,7 +67,7 @@ let unbound_main main =
   eprintf "The main process \"%s\" is unbound" main;
   raise Rml_misc.Error
 
-let bad_type_main main main_ty =
+let bad_type_main main _main_ty =
   eprintf
     "The main process \"%s\" must have type unit process.\n"
 	  main;

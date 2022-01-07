@@ -231,7 +231,7 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
   List.iter (output_string out_chan) strings
 
 (* the main functions *)
-let compile_implementation module_name filename =
+let compile_implementation _module_name filename =
   (* input and output files *)
   let source_name = filename ^ ".rml"
   and obj_interf_name = make_output_filename (filename ^ ".rzi")
@@ -421,7 +421,7 @@ let compile_interface_back_end info_fmt out_chan module_name rml_table =
 
 
 (* the main functions *)
-let compile_interface parse module_name filename filename_end =
+let compile_interface parse _module_name filename filename_end =
   (* input and output files *)
   let source_name = filename ^ filename_end
   and obj_interf_name = make_output_filename (filename ^ ".rzi")

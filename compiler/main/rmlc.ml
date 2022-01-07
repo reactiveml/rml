@@ -29,7 +29,6 @@
 (* $Id$ *)
 
 open Rml_misc
-open Modules
 open Compiler
 
 let () = Options.set_options ()
