@@ -25,13 +25,13 @@
 
 (* The translation of Reac to Lco *)
 
-open Asttypes
+open Rml_asttypes
 open Def_static
 open Reac_ast
 open Lco_ast
 open Global
 open Global_ident
-open Misc
+open Rml_misc
 
 
 let make_expr e loc =
@@ -74,7 +74,7 @@ let make_rmltop_instruction s =
   make_expr
     (Coexpr_global
        { gi = { qual = "Rmltop_global";
-		id = Ident.create Ident.gen_var s Ident.Internal };
+		id = Rml_ident.create Rml_ident.gen_var s Rml_ident.Internal };
 	 info = no_info(); })
     Location.none
 
@@ -95,7 +95,7 @@ let rec translate_te typ =
   make_te cotyp typ.te_loc
 
 (* Translation of type declatations *)
-let rec translate_type_decl typ =
+let translate_type_decl typ =
   match typ with
   | Rtype_abstract -> Cotype_abstract
   | Rtype_rebind typ -> Cotype_rebind (translate_te typ)
@@ -540,7 +540,7 @@ and translate_proc_let =
 	    | Varpatt_local id ->
 		Reac_misc.make_expr (Rexpr_local id) Location.none,
 		make_patt (Copatt_var (Covarpatt_local id)) Location.none
-	    | Varpatt_global gl -> assert false
+	    | Varpatt_global _gl -> assert false
 	  in
 	  let rexpr_of_vars, copatt_of_vars =
 	    List.fold_left
@@ -605,15 +605,15 @@ and translate_proc_let =
 	  in
 	  let id_array =
 	    Array.init (List.length patt_expr_list)
-	      (fun i -> Ident.create Ident.gen_var ("v"^(string_of_int i))
-		  Ident.Internal)
+	      (fun i -> Rml_ident.create Rml_ident.gen_var ("v"^(string_of_int i))
+		  Rml_ident.Internal)
 	  in
 	  let par =
 	    Coproc_par
 	      (List.fold_right2
 		 (fun id (_, expr) expr_list ->
 		   let local_id =
-		     Ident.create Ident.gen_var "x" Ident.Internal
+		     Rml_ident.create Rml_ident.gen_var "x" Rml_ident.Internal
 		   in
 		   make_proc
 		     (Coproc_def_dyn
@@ -721,7 +721,7 @@ and translate_proc_let =
 	      make_expr
 		(Coexpr_tuple
 		   (Array.fold_left
-		      (fun expr_list id ->
+		      (fun expr_list _id ->
 			(make_expr
 			   (Coexpr_apply
 			      (make_expr
@@ -750,7 +750,7 @@ let translate_expr_or_process e =
         make_expr (Coexpr_exec p) Location.none
 
 
-let translate_impl_item info_chan item =
+let translate_impl_item _info_chan item =
   let coitem =
     match item.impl_desc with
     | Rimpl_expr e -> Coimpl_expr (translate_expr_or_process e)
@@ -785,7 +785,7 @@ let translate_impl_item info_chan item =
   in
   make_impl coitem item.impl_loc
 
-let translate_intf_item info_chan item =
+let translate_intf_item _info_chan item =
   let coitem =
     match item.intf_desc with
     | Rintf_val (gl, typ) -> Cointf_val (gl, translate_te typ)

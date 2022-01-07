@@ -44,8 +44,8 @@
 
 {
 open Lexing
-open Misc
-open Parser
+open Rml_misc
+open Rml_parser
 
 type error =
   | Illegal_character of char
@@ -194,7 +194,7 @@ let char_for_backslash =
       | 't' -> '\009'
       | c   -> c
       end
-  | x -> fatal_error "Lexer: unknown system type"
+  | _x -> fatal_error "Lexer: unknown system type"
 
 let char_for_decimal_code lexbuf i =
   let c = 100 * (Char.code(Lexing.lexeme_char lexbuf i) - 48) +
@@ -443,7 +443,7 @@ and comment = parse
   | "*)"
       { match !comment_start_loc with
         | [] -> assert false
-        | [x] -> comment_start_loc := [];
+        | [_x] -> comment_start_loc := [];
         | _ :: l -> comment_start_loc := l;
                     comment lexbuf;
        }

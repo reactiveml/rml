@@ -159,7 +159,7 @@ let tr =
 
       | Rexpr_process e ->
 	  let id =
-	    Ident.create Initialization.gen_ident "__ctrl" Ident.Internal
+	    Rml_ident.create Initialization.gen_ident "__ctrl" Rml_ident.Internal
 	  in
 	  let c =
 	    make_conf

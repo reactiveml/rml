@@ -134,7 +134,7 @@ let const_optimization = ref true
 let remove_file filename =
   try
     Sys.remove filename
-  with Sys_error msg ->
+  with Sys_error _msg ->
     ()
 
 let find_in_path filename =
@@ -168,7 +168,7 @@ class name_assoc_table f =
       try
         List.assq var assoc_table
       with
-        not_found ->
+        _not_found ->
           let n = f counter in
           counter <- counter + 1;
           assoc_table <- (var,n) :: assoc_table;

@@ -24,12 +24,12 @@
 (* Remark: taken from lco_ctrl_tree.ml *)
 
 (* Description :                                                      *)
-(*   Gestion de plusieur scheduler executé dans des threads           *)
+(*   Gestion de plusieur scheduler executÃ© dans des threads           *)
 (*   differents.                                                      *)
 (*                                                                    *)
 (*  A FAIRE:                                                          *)
-(*  - Vérifier qu'un processus ne peut pas changer de ctrl en cours   *)
-(*    d'exécution (cf pb de pause par exemple).                       *)
+(*  - VÃ©rifier qu'un processus ne peut pas changer de ctrl en cours   *)
+(*    d'exÃ©cution (cf pb de pause par exemple).                       *)
 
 
 module Rml_interpreter (* : Lco_interpreter.S *) =
@@ -88,7 +88,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 	  alive = true;
 	  susp = false;
 	  children = [];
-	  cond = (fun sched -> false);
+	  cond = (fun _sched -> false);
 	  next = []; }
       in
       let sched =
@@ -105,7 +105,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
       sched
 
 
-(* récuperer le scheduler courrant *)
+(* rÃ©cuperer le scheduler courrant *)
     let get_current_sched () =
       let self = Thread.id (Thread.self()) in
       Mutex.lock m_sched;
@@ -252,7 +252,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (**************************************************)
 (* sched                                          *)
 (**************************************************)
-    let rec schedule sched =
+    let schedule sched =
 	match sched.current with
 	| f :: c ->
 	    sched.current <- c;
@@ -331,7 +331,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* nothing                            *)
 (**************************************)
     let rml_nothing =
-      fun f_k ctrl ->
+      fun f_k _ctrl ->
 	let f_nothing =
 	  fun sched _ ->
 	    f_k sched unit_value
@@ -341,7 +341,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* compute                            *)
 (**************************************)
     let rml_compute e =
-      fun f_k ctrl ->
+      fun f_k _ctrl ->
 	let f_compute =
 	  fun sched _ ->
 	    let v = e() in
@@ -363,7 +363,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* halt                               *)
 (**************************************)
     let rml_halt =
-      fun f_k ctrl ->
+      fun _f_k _ctrl ->
 	let f_halt =
 	  fun sched _ ->
 	    schedule sched
@@ -372,7 +372,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (**************************************)
 (* emit                               *)
 (**************************************)
-    let step_emit f_k ctrl (sid,n,wa,wp) e sched _ =
+    let step_emit f_k _ctrl (sid,n,wa,wp) e sched _ =
       if sid = sched.id then
 	(Event.emit n (e());
 	 wakeUp sched wa;
@@ -504,7 +504,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 		f_k sched unit_value
 	      else
 		let ref_f = ref None in
-		let rec f w step_wake_up sched _ =
+		let f w step_wake_up sched _ =
 		  if is_true sched then
 		    (ref_f := None;
 		     f_k sched unit_value)
@@ -704,7 +704,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* present                            *)
 (**************************************)
 
-    let step_present f_k ctrl (sid,n,_,wp) f_1 f_2 =
+    let step_present _f_k ctrl (sid,n,_,wp) f_1 f_2 =
       let rec f_present =
 	fun sched _ ->
 	  if sid = sched.id then
@@ -726,7 +726,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
       fun f_k ctrl ->
 	let f_1 = p_1 f_k ctrl in
 	let f_2 = p_2 f_k ctrl in
-	let rec f_present =
+	let f_present =
 	  fun sched _ ->
 	    let evt = expr_evt () in
 	    step_present f_k ctrl evt f_1 f_2 sched unit_value
@@ -788,7 +788,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
     let rml_seq p_1 p_2 =
       fun f_k ctrl ->
 	let f_2 = p_2 f_k ctrl in
-	let f_1 = p_1 (fun sched x -> f_2 sched ()) ctrl in
+	let f_1 = p_1 (fun sched _x -> f_2 sched ()) ctrl in
 	f_1
 
 (**************************************)
@@ -798,7 +798,7 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* applications partielles.                                     *)
 
     let join cpt =
-      fun f_k ctrl ->
+      fun f_k _ctrl ->
 	let f_join =
 	  fun sched _ ->
 	    incr cpt;
@@ -828,9 +828,9 @@ module Rml_interpreter (* : Lco_interpreter.S *) =
 (* merge                              *)
 (**************************************)
 
-    let rml_merge p_1 p_2 =
-      fun f_k ctrl ->
-	fun sched _ -> raise RML
+    let rml_merge _p_1 _p_2 =
+      fun _f_k _ctrl ->
+	fun _sched _ -> raise RML
 
 
 (**************************************)
@@ -853,7 +853,7 @@ let rml_loop p =
 *)
 
     let rml_loop p =
-      fun f_k ctrl ->
+      fun _f_k ctrl ->
 	let f_1 = ref dummy_step in
 	let f_loop = p (fun sched _ -> !f_1 sched unit_value) ctrl in
 	f_1 := f_loop;
@@ -999,10 +999,10 @@ let rml_loop p =
 	alive = true;
 	susp = false;
 	children = [];
-	cond = (fun sched -> false);
+	cond = (fun _sched -> false);
 	next = [] }
 
-    let start_ctrl f_k ctrl f new_ctrl =
+    let start_ctrl _f_k ctrl f new_ctrl =
       let f_ctrl =
 	fun sched _ ->
 	  if new_ctrl.alive
@@ -1205,7 +1205,7 @@ let rml_loop p =
 (* when                               *)
 (**************************************)
 
-    let step_when f_k ctrl (sid,n,wa,wp) f new_ctrl dummy =
+    let step_when _f_k ctrl (sid,n,wa,wp) f new_ctrl dummy =
       let w = if ctrl.kind = Top then wa else wp in
       new_ctrl.cond <-
 	(fun sched ->
@@ -1283,9 +1283,9 @@ let rml_loop p =
 (**************************************)
 (* when_conf                          *)
 (**************************************)
-    let rml_when_conf expr_cfg =
-      fun f_k ctrl ->
-	fun sched _ -> raise RML
+    let rml_when_conf _expr_cfg =
+      fun _f_k _ctrl ->
+	fun _sched _ -> raise RML
 
 
 (**************************************)
@@ -1351,7 +1351,7 @@ let rml_loop p =
 (* for_dopar                          *)
 (**************************************)
     let join_n cpt =
-      fun f_k ctrl ->
+      fun f_k _ctrl ->
 	let f_join_n =
 	  fun sched _ ->
 	    decr cpt;
@@ -1529,7 +1529,7 @@ let rml_loop p =
 	let term_cpt = ref 0 in
 	fun () ->
 	  incr term_cpt;
-	  let f sched x =
+	  let f sched _x =
 	    decr term_cpt;
 	    if !term_cpt > 0 then
 	      schedule sched
@@ -1581,7 +1581,7 @@ let rml_loop p =
 	let term_cpt = ref 0 in
 	fun () ->
 	  incr term_cpt;
-	  let f sched x =
+	  let f sched _x =
 	    decr term_cpt;
 	    if !term_cpt > 0 then
 	      schedule sched

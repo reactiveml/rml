@@ -28,9 +28,10 @@
 
 (* $Id$ *)
 
-open Misc
-open Modules
+open Rml_misc
 open Compiler
+
+let () = Options.set_options ()
 
 (* list of object files passed on the command line *)
 let object_files = ref []
@@ -60,7 +61,7 @@ let main () =
   try
     List.iter compile !to_compile
   with x ->
-    Errors.report_error !err_fmt x;
+    Rml_errors.report_error !err_fmt x;
     Format.pp_print_flush !std_fmt ();
     Format.pp_print_flush !err_fmt ();
     exit 2

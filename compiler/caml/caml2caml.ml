@@ -25,14 +25,14 @@
 
 (* Source to source transformations *)
 
-open Misc
-open Asttypes
+open Rml_misc
+open Rml_asttypes
 open Caml_ast
 open Caml_misc
 
 
 
-module Env = Symbol_table.Make (Ident)
+module Env = Symbol_table.Make (Rml_ident)
 
 (* Constant propagation *)
 let constant_propagation =
@@ -46,9 +46,9 @@ let constant_propagation =
 	    expr.cexpr_desc
 	  end
 
-      | Cexpr_global gl -> expr.cexpr_desc
+      | Cexpr_global _gl -> expr.cexpr_desc
 
-      | Cexpr_constant c -> expr.cexpr_desc
+      | Cexpr_constant _c -> expr.cexpr_desc
 
       | Cexpr_let (Nonrecursive, patt_expr_list, expression) ->
 	  let patt_expr_list' =

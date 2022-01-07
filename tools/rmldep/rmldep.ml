@@ -41,9 +41,6 @@
 (* $Id$ *)
 
 open Format
-open Location
-open Parse_ast
-
 
 (* Print the dependencies *)
 
@@ -69,7 +66,7 @@ let fix_slash s =
 
 let add_to_load_path dir =
   try
-    let dir = Misc.expand_directory Version.stdlib dir in
+    let dir = Rml_misc.expand_directory Version.stdlib dir in
     let contents = Sys.readdir dir in
     load_path := !load_path @ [dir, contents]
   with Sys_error msg ->
@@ -193,7 +190,7 @@ let preprocess sourcefile =
       let tmpfile = Filename.temp_file "camlpp" "" in
       let comm = Printf.sprintf "%s %s > %s" pp sourcefile tmpfile in
       if Sys.command comm <> 0 then begin
-        Misc.remove_file tmpfile;
+        Rml_misc.remove_file tmpfile;
         raise Preprocessing_error
       end;
       tmpfile
@@ -201,19 +198,19 @@ let preprocess sourcefile =
 let remove_preprocessed inputfile =
   match !preprocessor with
     None -> ()
-  | Some _ -> Misc.remove_file inputfile
+  | Some _ -> Rml_misc.remove_file inputfile
 
 (* Parse a file or get a dumped syntax tree in it *)
 
 let parse_use_file ic =
     seek_in ic 0;
     let lb = Lexing.from_channel ic in
-    Parse.implementation lb
+    Rml_parse.implementation lb
 
 let parse_interface ic =
     seek_in ic 0;
     let lb = Lexing.from_channel ic in
-    Parse.interface lb
+    Rml_parse.interface lb
 
 (* Process one file *)
 
@@ -232,7 +229,7 @@ let ml_file_dependencies source_file =
         if List.exists (fun ext -> Sys.file_exists (basename ^ ext)) !mli_synonyms
         then let cmi_name = basename ^ ".rzi" in ([cmi_name], [cmi_name])
         else ([], []) in
-      let (byt_deps, opt_deps) =
+      let (byt_deps, _opt_deps) =
         Depend.StringSet.fold find_dependency
                               !Depend.free_structure_names init_deps in
       print_dependencies (basename ^ ".ml") byt_deps
@@ -252,7 +249,7 @@ let mli_file_dependencies source_file =
       print_raw_dependencies source_file !Depend.free_structure_names
     end else begin
       let basename = Filename.chop_extension source_file in
-      let (byt_deps, opt_deps) =
+      let (byt_deps, _opt_deps) =
         Depend.StringSet.fold find_dependency
                               !Depend.free_structure_names ([], []) in
       print_dependencies (basename ^ ".rzi") byt_deps
@@ -273,12 +270,12 @@ let file_dependencies_as kind source_file =
     end
   with x ->
     let report_err = function
-    | Lexer.Error(err, range) ->
+    | Rml_lexer.Error(err, range) ->
         fprintf Format.err_formatter "@[%a%a@]@."
-        Location.print range  Lexer.report_error err
-    | Syntaxerr.Error err ->
+        Location.print range  Rml_lexer.report_error err
+    | Rml_syntaxerr.Error err ->
         fprintf Format.err_formatter "@[%a@]@."
-        Syntaxerr.report_error err
+        Rml_syntaxerr.report_error err
     | Sys_error msg ->
         fprintf Format.err_formatter "@[I/O error:@ %s@]@." msg
     | Preprocessing_error ->

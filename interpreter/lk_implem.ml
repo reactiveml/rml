@@ -222,7 +222,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (**************************************)
 (* pause_kboi                         *)
 (**************************************)
-    let rml_pause_kboi k ctrl _ =
+    let rml_pause_kboi _k _ctrl _ =
       raise RML
 
 (**************************************)
@@ -277,7 +277,7 @@ module Lk_interpreter: Lk_interpreter.S  =
 (* await_immediate                    *)
 (**************************************)
     let step_await_immediate_top (n,wa,_) k =
-      let rec self _ =
+      let self _ =
 	if Event.status n
 	then
 	  k ()

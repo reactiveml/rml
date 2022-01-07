@@ -32,9 +32,7 @@
 
 open Format
 open Def_types
-open Asttypes
-open Misc
-open Ident
+open Rml_misc
 open Modules
 open Global_ident
 open Global
@@ -47,7 +45,7 @@ let print_qualified_ident ff q =
     (stdlib_module <> q.qual) &&
     (!interpreter_module <> q.qual)
   then begin pp_print_string ff q.qual;pp_print_string ff "." end;
-  pp_print_string ff (Ident.name q.id)
+  pp_print_string ff (Rml_ident.name q.id)
 
 (* type variables are printed 'a, 'b,... *)
 let type_name = new name_assoc_table int_to_alpha
@@ -65,7 +63,7 @@ let max r1 r2 = match r1, r2 with
 | Cycle, _ | _, Cycle -> Cycle
 | NoCycle, NoCycle -> NoCycle
 
-let rec max_list rl =
+let max_list rl =
   List.fold_left max NoCycle rl
 
 let rec find_root check first k =
@@ -111,7 +109,7 @@ let rec print_reactivity ff k =
   | React_seq l -> fprintf ff "(%a)" (print_reactivity_list "; ") l
   | React_par l -> fprintf ff "(%a)" (print_reactivity_list " || ") l
   | React_or l -> fprintf ff "(%a)" (print_reactivity_list " + ") l
-  | React_raw (k1, { react_desc = React_var }) ->
+  | React_raw (k1, { react_desc = React_var; _ }) ->
       fprintf ff "(%a + ..)"
         print_reactivity k1
   | React_raw (k1, k2) ->
@@ -187,7 +185,7 @@ and print_proc_info ff pi =
 (*   | Some(Def_static.Instantaneous) -> pp_print_string ff "-" *)
 (*   | Some(Def_static.Noninstantaneous) -> pp_print_string ff "+" *)
 (*   end *)
-  if !Misc.dreactivity then
+  if !Rml_misc.dreactivity then
     fprintf ff "[%a]" print_reactivity pi.proc_react
 
 and print_list ff priority sep l =
@@ -209,7 +207,7 @@ let print ff ty =
   react_name#reset;
   print ff 0 ty;
   pp_print_flush ff ()
-let print_scheme ff { ts_desc = ty } = print ff ty
+let print_scheme ff { ts_desc = ty; _ } = print ff ty
 
 let print_value_type_declaration ff global =
   let prefix = "val" in
@@ -253,7 +251,7 @@ let print_type_name ff tc ta =
     pp_print_string ff ")";
     pp_print_space ff ()
   end;
-  pp_print_string ff (Ident.name tc.id)
+  pp_print_string ff (Rml_ident.name tc.id)
 
 (* prints one variant *)
 let print_one_variant ff global =
@@ -297,7 +295,7 @@ let rec print_label_list ff = function
 let print_type_declaration ff gl =
   let q = Global.gi gl in
   let { type_kind = td;
-	type_arity = ta; } = Global.info gl in
+	type_arity = ta; _ } = Global.info gl in
   pp_open_box ff 2;
   print_type_name ff q ta;
   begin match td with

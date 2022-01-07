@@ -28,8 +28,8 @@
 
 (* $Id$ *)
 
-open Misc
-open Errors
+open Rml_misc
+open Rml_errors
 
 
 (* compiling a file. Two steps. *)
@@ -113,7 +113,7 @@ let compile_implementation_front_end info_fmt filename itf impl_list =
 
     ignore
       (Reac2reac.impl_map
-	 (fun e ->  Annot.Sstatic.record (Annot.Ti_expr e); e)
+	 (fun e ->  Rml_annot.Sstatic.record (Rml_annot.Ti_expr e); e)
 	 rml_code);
 
     (* for option *)
@@ -145,7 +145,7 @@ let compile_implementation_front_end info_fmt filename itf impl_list =
   end else begin
 
     (* write interface *)
-    Misc.opt_iter Modules.write_compiled_interface itf;
+    Rml_misc.opt_iter Modules.write_compiled_interface itf;
   end;
 
   (* we return the rml code *)
@@ -231,7 +231,7 @@ let compile_implementation_back_end info_chan out_chan module_name rml_table =
   List.iter (output_string out_chan) strings
 
 (* the main functions *)
-let compile_implementation module_name filename =
+let compile_implementation _module_name filename =
   (* input and output files *)
   let source_name = filename ^ ".rml"
   and obj_interf_name = make_output_filename (filename ^ ".rzi")
@@ -246,7 +246,7 @@ let compile_implementation module_name filename =
     then None
     else Some (open_out_bin obj_interf_name)
   in
-  let info_fmt = !Misc.std_fmt in
+  let info_fmt = !Rml_misc.std_fmt in
 
   try
 (*    Front_end_timer.start();*)
@@ -260,7 +260,7 @@ let compile_implementation module_name filename =
 
     (* parsing of the file *)
     Parse_timer.start();
-    let decl_list = Parse.implementation lexbuf in
+    let decl_list = Rml_parse.implementation lexbuf in
     Parse_timer.time();
 
     (* expend externals *)
@@ -272,7 +272,7 @@ let compile_implementation module_name filename =
     let intermediate_code =
       compile_implementation_front_end info_fmt filename itf decl_list
     in
-    Misc.opt_iter close_out itf;
+    Rml_misc.opt_iter close_out itf;
 
     if Sys.file_exists (filename ^ ".rmli")
        ||  Sys.file_exists (filename ^ ".mli")
@@ -292,6 +292,7 @@ let compile_implementation module_name filename =
 	   "(* "^(Array.fold_right (fun s cmd -> s^" "^cmd) Sys.argv " ")^
 	   "*)\n\n");
         (* selection of the interpreter *)
+  output_string out_chan ("open Rmllib;;\n");
 	output_string out_chan ("open "^ !interpreter_impl ^";;\n");
 
         (* the implementation *)
@@ -310,7 +311,7 @@ let compile_implementation module_name filename =
 	    in
  	    if not (Typing.is_unit_process (Global.info main)) then
 	      bad_type_main !simulation_process (Global.info main);
-	    let main_id = Ident.name main.Global.gi.Global_ident.id in
+	    let main_id = Rml_ident.name main.Global.gi.Global_ident.id in
             let boi_hook =
               "["^
               (if !number_of_instant >= 0 then
@@ -330,7 +331,7 @@ let compile_implementation module_name filename =
               "] "
             in
 	    output_string out_chan
-	      ("let _ = "^(!Misc.rml_machine_module)^".rml_exec "^
+	      ("let _ = "^(!Rml_misc.rml_machine_module)^".rml_exec "^
                boi_hook^
                main_id^"\n")
 	  end;
@@ -340,14 +341,14 @@ let compile_implementation module_name filename =
       end;
 
    (* write types annotation *)
-    Annot.Stypes.dump tannot_name;
-    Annot.Sstatic.dump sannot_name;
+    Rml_annot.Stypes.dump tannot_name;
+    Rml_annot.Sstatic.dump sannot_name;
 
     close_in ic;
   with
     x ->
-      Annot.Stypes.dump tannot_name;
-      Annot.Sstatic.dump sannot_name;
+      Rml_annot.Stypes.dump tannot_name;
+      Rml_annot.Sstatic.dump sannot_name;
       close_in ic;
       raise x
 
@@ -420,7 +421,7 @@ let compile_interface_back_end info_fmt out_chan module_name rml_table =
 
 
 (* the main functions *)
-let compile_interface parse module_name filename filename_end =
+let compile_interface parse _module_name filename filename_end =
   (* input and output files *)
   let source_name = filename ^ filename_end
   and obj_interf_name = make_output_filename (filename ^ ".rzi")
@@ -452,6 +453,7 @@ let compile_interface parse module_name filename filename_end =
       begin
 	let out_chan = open_out obj_name in
         (* selection of the interpreter *)
+  output_string out_chan ("open Rmllib;;\n");
 	output_string out_chan ("open "^ !interpreter_impl ^";;\n");
 
         (* the interface *)
@@ -472,10 +474,10 @@ let compile_interface parse module_name filename filename_end =
 let compile_scalar_interface module_name filename =
   let no_link_save = !no_link in
   no_link := true;
-  compile_interface Parse.interface module_name filename ".mli";
+  compile_interface Rml_parse.interface module_name filename ".mli";
   no_link := no_link_save
 
 (* compiling a ReactiveML interface *)
 let compile_interface module_name filename =
-  compile_interface Parse.interface module_name filename ".rmli"
+  compile_interface Rml_parse.interface module_name filename ".rmli"
 

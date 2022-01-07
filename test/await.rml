@@ -1,0 +1,27 @@
+
+let ratio = 1000000
+
+signal s default 0 gather fun x y -> x + y;;
+signal s2 default 1 gather fun x y -> x * y;;
+signal s3 default (0, 0) gather fun x _ -> x;;
+signal s4 default [] gather fun x y -> x :: y;;
+
+let process spam n = 
+  for i = 1 to n dopar
+    emit s i;
+    emit s2 i;
+    pause;
+    emit s (i * 2);
+  done
+
+let process catch p =
+  (* Here, both s3 and s4 won't ever be present (never emitted) but it shows the macro works :tm: *)
+  await ((s(i1) /\ s2(i2)) \/ s3((i1, i2)) \/ s4([i1; i2])) when (i1 + i2 >= 0)  in
+  await s(i3) in
+  p := (i1 * ratio * ratio + i2 * ratio + i3)
+
+
+let process compare n =
+  let p = ref 0 in
+  let () = run (spam n) || run (catch p)
+  in !p

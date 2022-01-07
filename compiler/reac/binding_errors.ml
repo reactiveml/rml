@@ -23,8 +23,7 @@
 
 (* $Id$ *)
 
-open Misc
-open Parse_ast
+open Rml_misc
 open Parse_ident
 
 let unbound_variable_err x loc =

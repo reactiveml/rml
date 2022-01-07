@@ -3,27 +3,27 @@ BIN = rmlc
 DIRECTORIES = global parsing external static typing other_analysis reac lco lk caml optimization main
 
 
-GLOBAL = global/asttypes.ml \
+GLOBAL = global/rml_asttypes.ml \
 	global/global.ml \
 	global/global_ident.ml \
-	global/ident.ml \
+	global/rml_ident.ml \
 	global/initialization.ml \
-	global/misc.ml \
+	global/rml_misc.ml \
 	global/modules.ml \
 	global/def_modules.ml \
 	global/rzi.ml \
 	global/symbol_table.ml \
 	global/warnings.ml \
 
-PARSING = parsing/lexer.mll \
+PARSING = parsing/rml_lexer.mll \
 	parsing/linenum.mll \
 	parsing/location.ml \
 	parsing/parse_ast.ml \
 	parsing/parse_ident.ml \
-	parsing/parse.ml \
+	parsing/rml_parse.ml \
 	parsing/parse_printer.ml \
-	parsing/parser.mly \
-	parsing/syntaxerr.ml \
+	parsing/rml_parser.mly \
+	parsing/rml_syntaxerr.ml \
 
 EXTERNAL = external/lucky.ml \
 	external/lucky_errors.ml \
@@ -34,7 +34,7 @@ STATIC = static/def_static.ml \
 	static/static_errors.ml \
 	static/static_printer.ml \
 
-REAC =	reac/annot.ml \
+REAC =	reac/rml_annot.ml \
 	reac/binding_errors.ml \
 	reac/parse2reac.ml \
 	reac/reac2reac.ml \
@@ -44,7 +44,7 @@ REAC =	reac/annot.ml \
 TYPING = typing/def_types.ml \
 	typing/reactivity_effects.ml \
 	typing/reactivity_check.cmo \
-	typing/types.ml \
+	typing/rml_types.ml \
 	typing/types_printer.ml \
 	typing/typing.ml \
 	typing/typing_errors.ml \
@@ -73,20 +73,20 @@ OPTIMIZATION = optimization/reac_optimization.ml \
 MAIN = 	main/compiler.ml \
 	main/configure.ml \
 	main/options.ml \
-	main/errors.ml \
+	main/rml_errors.ml \
 	main/interactive.ml \
-	main/main.ml \
+	main/rmlc.ml \
 
 SRC = $(GLOBAL) $(PARSING) $(REAC) $(TYPING) $(OTHER_ANALYSIS) $(EXTERNAL) $(STATIC) $(LCO) $(LK) $(CAML) $(MAIN)
 
 
 OBJ =	global/version.cmo \
-	global/asttypes.cmo \
+	global/rml_asttypes.cmo \
 	global/warnings.cmo \
 	parsing/linenum.cmo \
 	parsing/location.cmo \
-	global/misc.cmo \
-	global/ident.cmo \
+	global/rml_misc.cmo \
+	global/rml_ident.cmo \
 	global/global_ident.cmo \
 	global/global.cmo \
 	static/def_static.cmo \
@@ -95,15 +95,15 @@ OBJ =	global/version.cmo \
 	global/def_modules.cmo \
 	global/modules.cmo \
 	global/symbol_table.cmo \
-	parsing/lexer.cmo \
-	parsing/syntaxerr.cmo \
-	main/errors.cmo \
+	parsing/rml_lexer.cmo \
+	parsing/rml_syntaxerr.cmo \
+	main/rml_errors.cmo \
 	main/configure.cmo \
 	main/options.cmo \
 	parsing/parse_ast.cmo \
 	parsing/parse_ident.cmo \
-	parsing/parser.cmo \
-	parsing/parse.cmo \
+	parsing/rml_parser.cmo \
+	parsing/rml_parse.cmo \
 	parsing/parse_printer.cmo \
 	external/lucky_errors.cmo \
 	external/lucky.cmo \
@@ -112,7 +112,7 @@ OBJ =	global/version.cmo \
 	reac/binding_errors.cmo \
 	typing/types_printer.cmo \
 	typing/reactivity_effects.cmo \
-	typing/types.cmo \
+	typing/rml_types.cmo \
 	reac/reac_misc.cmo \
 	reac/reac2reac.cmo \
 	typing/reactivity_check.cmo \
@@ -123,7 +123,7 @@ OBJ =	global/version.cmo \
 	static/static.cmo \
 	other_analysis/wf_rec.cmo \
 	other_analysis/instantaneous_loop.cmo \
-	reac/annot.cmo \
+	reac/rml_annot.cmo \
 	typing/typing_errors.cmo \
 	typing/typing.cmo \
 	lco/lco_ast.cmo \
@@ -141,14 +141,14 @@ OBJ =	global/version.cmo \
 	optimization/reac_optimization.cmo \
 	main/compiler.cmo \
 	main/interactive.cmo \
-	main/main.cmo \
+	main/rmlc.cmo \
 
 
 OBJ_OPT = $(OBJ:.cmo=.cmx)
 
 INCLUDES = $(DIRECTORIES:%=-I %)
 
-GENSOURCES = global/version.ml parsing/parser.mli parsing/lexer.ml parsing/parser.ml \
+GENSOURCES = global/version.ml parsing/rml_parser.mli parsing/rml_lexer.ml parsing/rml_parser.ml \
 	parsing/linenum.ml
 
 include ../config
@@ -175,7 +175,7 @@ uninstall: uninstall.$(TARGET)
 	rm -f $(BINDIR)/$(BIN)
 
 
-C_OBJ_BYTE = $(filter-out main/options.cmo main/main.cmo,$(OBJ))
+C_OBJ_BYTE = $(filter-out main/options.cmo main/rmlc.cmo,$(OBJ))
 C_OBJ_OPT  = $(C_OBJ_BYTE:.cmo=.cmx)
 
 rmlcompiler.cmo: $(C_OBJ_BYTE)
@@ -197,7 +197,7 @@ realclean: clean
 	(for d in $(DIRECTORIES); \
 	 do rm -f $$d/*~; \
 	 done)
-	rm -f $(BIN).byte $(BIN).opt $(GENSOURCES) parsing/parser.output
+	rm -f $(BIN).byte $(BIN).opt $(GENSOURCES) parsing/rml_parser.output
 	rm -f rmlc global/version.ml global/rzi.ml *~
 
 cleanall: realclean
@@ -213,9 +213,9 @@ wc:
 	wc -l $(SRC)
 
 # dependencies
-parsing/parser.mli parsing/parser.ml: parsing/parser.mly
-	$(OCAMLYACC) -v parsing/parser.mly
-lexer.cmx: parser.cmi
+parsing/rml_parser.mli parsing/rml_parser.ml: parsing/rml_parser.mly
+	$(OCAMLYACC) -v parsing/rml_parser.mly
+rml_lexer.cmx: rml_parser.cmi
 
 #.PHONY: global/rzi.ml
 global/rzi.ml: global/rzi.cmi global/def_modules.cmo

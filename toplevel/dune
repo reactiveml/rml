@@ -1,0 +1,40 @@
+(rule (target rmltop_machine_body.ml) (action (run ../compiler/rmlc.exe -I ../stdlib -runtime Lco_ctrl_tree rmltop_machine_body.rml)))
+(rule (target rmltop_global.rzi) (action (run ../compiler/rmlc.exe -c -I ../stdlib rmltop_global.rmli)))
+(rule (target rmltop_reactive_machine.rzi) (deps rmltop_global.rzi) (action (run ../compiler/rmlc.exe -c -I ../stdlib rmltop_reactive_machine.rmli)))
+(rule (targets rmltop_controller.ml rmltop_controller.rzi) (deps rmltop_reactive_machine.rzi rmltop_global.rzi) (action (run ../compiler/rmlc.exe -I ../stdlib -runtime Rmltop rmltop_controller.rml)))
+
+(ocamllex rmltop_lexer)
+
+(library
+ (name rmltop_lexer)
+ (modules rmltop_lexer))
+
+(library (name rmltop_global) (modules rmltop_global) (libraries rmllib) (flags (:standard -rectypes)))
+(library (name rmltop_machine_body) (modules rmltop_machine_body) (libraries rmllib) (flags (:standard -rectypes)))
+(library (name rmltop_implem) (modules rmltop_implem) (libraries rmllib) (flags (:standard -rectypes)))
+(library (name rmltop_reactive_machine) (modules rmltop_reactive_machine) (libraries rmltop_machine_body rmltop_global rmllib) (flags (:standard -rectypes)))
+(library (name rmltop_controller) (modules rmltop_controller) (libraries rmllib rmltop_reactive_machine rmltop_global rmltop_implem) (flags (:standard -rectypes)))
+(library (name rmltop_directives) (modules rmltop_directives) (libraries rmllib rmltop_global) (flags (:standard -rectypes)))
+
+
+(library
+ (name rmltop_main)
+ (flags (:standard -rectypes))
+ (libraries rmllib rmltop_lexer rmltop_global rmltop_implem rmltop_controller)
+ (modules rmltop_main))
+
+
+(executables
+ (names rmltop)
+ (flags (:standard -rectypes))
+ (libraries rmllib rmltop_main rmltop_lexer)
+ (modules rmltop))
+
+(install
+ (files rmltop)
+ (section bin))
+
+(install
+ (files rmltop_global.a rmltop_machine_body.a rmltop_reactive_machine.a
+  rmltop_controller.a rmltop_lexer.a rmltop_directives.a rmltop_implem.a rmltop_main.a  rmltop_global.rzi rmltop_controller.rzi)
+ (section lib))

@@ -17,14 +17,14 @@
 (*                                                                    *)
 (**********************************************************************)
 
-(* file: errors.ml *)
+(* file: parse.ml *)
 
 (* Warning: *)
-(* This file is based on the original version of errors.ml *)
-(* from the Objective Caml 3.07 distribution, INRIA        *)
+(* This file is based on the original version of parse.ml *)
+(* from the Objective Caml 3.07 distribution, INRIA       *)
 
-(* first modification: 2004-05-08  *)
-(* modified by: Louis Mandel *)
+(* first modification: 2004-05-06 *)
+(* modified by: Louis Mandel      *)
 
 (***********************************************************************)
 (*                                                                     *)
@@ -40,42 +40,50 @@
 
 (* $Id$ *)
 
-open Format
+(* Entry points in the parser *)
 
-let report_error ppf exn =
-  let report ppf = function
-    | Lexer.Error(err, loc) ->
-	Location.print ppf loc;
-	Lexer.report_error ppf err
-    | Syntaxerr.Error err ->
-	Syntaxerr.report_error ppf err
+(* Skip tokens to the end of the phrase *)
 
-    | Misc.Error -> ()
-    | Misc.Internal (loc,msg) ->
-	if loc = Location.none
-      	then fprintf ppf "@.Internal error: %s. \nPlease report it." msg
-	else
-	  fprintf ppf "@.%aInternal error: %s. \nPlease report it."
-	    Location.print loc msg
-    | Warnings.Errors (n) ->
-	fprintf ppf "@.Error: %d error-enabled warnings occurred." n
-    | x -> fprintf ppf "@]"; raise x
-  in
-  fprintf ppf "@[%a@]@." report exn
+let rec skip_phrase lexbuf =
+  try
+    match Rml_lexer.token lexbuf with
+      Rml_parser.SEMISEMI | Rml_parser.EOF -> ()
+    | _ -> skip_phrase lexbuf
+  with
+    | Rml_lexer.Error (Rml_lexer.Unterminated_comment, _) -> ()
+    | Rml_lexer.Error (Rml_lexer.Unterminated_string, _) -> ()
+    | Rml_lexer.Error (Rml_lexer.Unterminated_string_in_comment, _) -> ()
+    | Rml_lexer.Error (Rml_lexer.Illegal_character _, _) -> skip_phrase lexbuf
+;;
 
-let unbound_main main =
-  eprintf "The main process \"%s\" is unbound" main;
-  raise Misc.Error
+let maybe_skip_phrase lexbuf =
+  if Parsing.is_current_lookahead Rml_parser.SEMISEMI
+  || Parsing.is_current_lookahead Rml_parser.EOF
+  then ()
+  else skip_phrase lexbuf
 
-let bad_type_main main main_ty =
-  eprintf
-    "The main process \"%s\" must have type unit process.\n"
-	  main;
-(*   Types_printer.output main_ty.Def_types.value_typ.Def_types.ts_desc; *)
-  raise Misc.Error
+let wrap parsing_fun lexbuf =
+  try
+    let ast = parsing_fun Rml_lexer.token lexbuf in
+    Parsing.clear_parser();
+    ast
+  with
+  | Rml_lexer.Error(Rml_lexer.Unterminated_comment, _) as err -> raise err
+  | Rml_lexer.Error(Rml_lexer.Unterminated_string, _) as err -> raise err
+  | Rml_lexer.Error(Rml_lexer.Unterminated_string_in_comment, _) as err -> raise err
+  | Rml_lexer.Error(Rml_lexer.Illegal_character _, _) as err ->
+      if !Location.input_name = "" then skip_phrase lexbuf;
+      raise err
+  | Rml_syntaxerr.Error _ as err ->
+      if !Location.input_name = "" then maybe_skip_phrase lexbuf;
+      raise err
+  | Parsing.Parse_error | Rml_syntaxerr.Escape_error ->
+      let loc = Location.curr lexbuf in
+      if !Location.input_name = ""
+      then maybe_skip_phrase lexbuf;
+      raise(Rml_syntaxerr.Error(Rml_syntaxerr.Other loc))
+;;
 
-let no_compile_itf filename =
-  eprintf "Error: Could not find the .rzi file for interface %s.rmli."
-    filename;
-  raise Misc.Error
-
+let implementation = wrap Rml_parser.implementation
+and interface = wrap Rml_parser.interface
+and interactive = wrap Rml_parser.interactive

@@ -25,8 +25,8 @@
 
 (* The translation of Parse to Reac *)
 
-open Misc
-open Asttypes
+open Rml_misc
+open Rml_asttypes
 open Global
 open Parse_ast
 open Binding_errors
@@ -34,7 +34,6 @@ open Reac_ast
 open Reac_misc
 open Parse_ident
 open Def_types
-open Types
 
 module Env =
   Symbol_table.Make
@@ -71,7 +70,7 @@ let rec translate_te typ =
   make_te rtyp typ.pte_loc
 
 (* Translation of type declatations *)
-let rec translate_type_decl typ =
+let translate_type_decl typ =
   match typ with
   | Ptype_abstract -> Rtype_abstract
 
@@ -81,7 +80,7 @@ let rec translate_type_decl typ =
       let l =
 	List.map
 	  (fun (c, typ) ->
-	    let id = Ident.create Ident.gen_constr c.psimple_id Ident.Constr in
+	    let id = Rml_ident.create Rml_ident.gen_constr c.psimple_id Rml_ident.Constr in
 	    let g = Modules.defined_global id (no_info()) in
 	    let _ = Modules.add_constr g in
 	    let typ =
@@ -98,7 +97,7 @@ let rec translate_type_decl typ =
       let l =
 	List.map
 	  (fun (lab, flag, typ) ->
-	    let id = Ident.create Ident.gen_label lab.psimple_id Ident.Label in
+	    let id = Rml_ident.create Rml_ident.gen_label lab.psimple_id Rml_ident.Label in
 	    let g = Modules.defined_global id (no_info()) in
 	    let _ = Modules.add_label g in
 	    (g, flag, translate_te typ))
@@ -125,7 +124,7 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
 	  with
 	  | Not_found ->
 	      let id =
-		Ident.create Ident.gen_var x.psimple_id Ident.Val_RML
+		Rml_ident.create Rml_ident.gen_var x.psimple_id Rml_ident.Val_RML
 	      in
 	      if is_global
 	      then
@@ -148,7 +147,7 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
 	    with
 	    | Not_found ->
 		let id =
-		  Ident.create Ident.gen_var x.psimple_id Ident.Val_RML
+		  Rml_ident.create Rml_ident.gen_var x.psimple_id Rml_ident.Val_RML
 		in
 		if is_global
 		then
@@ -272,7 +271,7 @@ let translate_pattern, translate_pattern_list, translate_pattern_record =
 (* Translation of identifier *)
 let translate_ident env x =
   match x.pident_id with
-  | Pdot (mod_name,s) ->
+  | Pdot (_mod_name,_s) ->
       Rexpr_global (Modules.pfind_value_desc x.pident_id)
 
   | Pident s ->
@@ -296,7 +295,7 @@ let rec translate env e =
 
     | Pexpr_constant im -> Rexpr_constant im
 
-    | Pexpr_let (_, [patt, {pexpr_desc= Pexpr_get s;}], expr) ->
+    | Pexpr_let (_, [patt, {pexpr_desc = Pexpr_get s;_}], expr) ->
 	let vars, rpatt = translate_pattern false patt in
 	let new_env = add_varpatt env vars in
 	Rexpr_get(translate env s,
@@ -388,7 +387,7 @@ let rec translate env e =
 	Rexpr_while(tr_e1, tr_e2)
 
     | Pexpr_for (i,e1,e2,flag,e3) ->
-	let id = Ident.create Ident.gen_var i.psimple_id Ident.Val_ML in
+	let id = Rml_ident.create Rml_ident.gen_var i.psimple_id Rml_ident.Val_ML in
 	let env = Env.add i.psimple_id id env in
 	let tr_e1 = translate env e1 in
 	let tr_e2 = translate env e2 in
@@ -431,7 +430,7 @@ let rec translate env e =
 	(translate_signal env sig_typ_list comb expr).expr_desc
 
     | Pexpr_fordopar (i, e1, e2, flag, e3) ->
-	let id = Ident.create Ident.gen_var i.psimple_id Ident.Val_RML in
+	let id = Rml_ident.create Rml_ident.gen_var i.psimple_id Rml_ident.Val_RML in
 	let env = Env.add i.psimple_id id env in
 	Rexpr_fordopar(id,
 		       translate env e1,
@@ -612,7 +611,7 @@ and translate_signal env sig_typ_list comb expr =
   | [] -> translate env expr
   | (s,typ) :: sig_typ_list ->
       let (id, rtyp) =
-	Ident.create Ident.gen_var s.psimple_id Ident.Sig,
+	Rml_ident.create Rml_ident.gen_var s.psimple_id Rml_ident.Sig,
 	opt_map translate_te typ
       in
       let env = Env.add s.psimple_id id env in
@@ -637,7 +636,7 @@ let translate_type_declaration l =
   let l_rename =
     List.map
       (fun (name, param, typ) ->
-	let id = Ident.create Ident.gen_type name.psimple_id Ident.Type in
+	let id = Rml_ident.create Rml_ident.gen_type name.psimple_id Rml_ident.Type in
 	let gl = Modules.defined_global id (no_info()) in
 	let info = { type_constr = { gi = gl.gi;
 				     info =
@@ -657,13 +656,13 @@ let translate_type_declaration l =
     l_rename
 
 (* Translation of implementation item *)
-let translate_impl_item info_fmt item =
+let translate_impl_item _info_fmt item =
   let ritem =
     match item.pimpl_desc with
     | Pimpl_expr expr -> Rimpl_expr (translate Env.empty expr)
 
     | Pimpl_let (flag, patt_expr_list) ->
-	let env, rpatt_rexpr_list =
+	let _env, rpatt_rexpr_list =
 	  translate_let true Env.empty flag patt_expr_list
 	in
 	Rimpl_let (flag, rpatt_rexpr_list)
@@ -672,7 +671,7 @@ let translate_impl_item info_fmt item =
 	Rimpl_signal
 	  (List.map
 	     (fun (s,ty_opt) ->
-	       let id = Ident.create Ident.gen_var s.psimple_id Ident.Sig in
+	       let id = Rml_ident.create Rml_ident.gen_var s.psimple_id Rml_ident.Sig in
 	       let gl = Modules.defined_global id (no_info()) in
 	       let _ = Modules.add_value gl in
 	       let rty_opt = opt_map translate_te ty_opt in
@@ -690,13 +689,13 @@ let translate_impl_item info_fmt item =
 	Rimpl_type l_translate
 
     | Pimpl_exn (name, typ) ->
-	let id = Ident.create Ident.gen_constr name.psimple_id Ident.Exn in
+	let id = Rml_ident.create Rml_ident.gen_constr name.psimple_id Rml_ident.Exn in
 	let gl = Modules.defined_global id (no_info()) in
 	let _ = Modules.add_constr gl in
 	Rimpl_exn (gl, opt_map translate_te typ)
 
     | Pimpl_exn_rebind (name, gl_name) ->
-	let id = Ident.create Ident.gen_constr name.psimple_id Ident.Exn in
+	let id = Rml_ident.create Rml_ident.gen_constr name.psimple_id Rml_ident.Exn in
 	let gl = Modules.defined_global id (no_info()) in
 	let _ = Modules.add_constr gl in
 	let gtype = try Modules.pfind_constr_desc gl_name.pident_id with
@@ -717,11 +716,11 @@ let translate_impl_item info_fmt item =
   make_impl ritem item.pimpl_loc
 
 (* Translation of interfacr item *)
-let translate_intf_item info_fmt item =
+let translate_intf_item _info_fmt item =
   let ritem =
     match item.pintf_desc with
     | Pintf_val (s, t) ->
-	let id = Ident.create Ident.gen_var s.psimple_id Ident.Val_ML in
+	let id = Rml_ident.create Rml_ident.gen_var s.psimple_id Rml_ident.Val_ML in
 	let gl = Modules.defined_global id (no_info()) in
 	let _ = Modules.add_value gl in
 	Rintf_val (gl, translate_te t)
@@ -731,7 +730,7 @@ let translate_intf_item info_fmt item =
 	Rintf_type l_translate
 
     | Pintf_exn (name, typ) ->
-	let id = Ident.create Ident.gen_constr name.psimple_id Ident.Exn in
+	let id = Rml_ident.create Rml_ident.gen_constr name.psimple_id Rml_ident.Exn in
 	let gl = Modules.defined_global id (no_info()) in
 	let _ = Modules.add_constr gl in
 	Rintf_exn (gl, opt_map translate_te typ)

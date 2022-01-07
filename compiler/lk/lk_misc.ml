@@ -45,10 +45,10 @@ let rec is_value e =
   | Kexpr_construct (_, Some expr) -> is_value expr
 
   | Kexpr_constraint (expr, _) -> is_value expr
-  | Kexpr_trywith (expr, patt_expr_list) ->
+  | Kexpr_trywith (expr, _patt_expr_list) ->
       (is_value expr)
 
-  | Kexpr_assert expr -> false
+  | Kexpr_assert _expr -> false
   | Kexpr_ifthenelse  (e1, e2, e3) ->
       (is_value e1) && (is_value e2) && (is_value e3)
 

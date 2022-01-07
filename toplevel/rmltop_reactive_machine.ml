@@ -20,7 +20,7 @@
 (* file: rmltop_reactive_machine.ml *)
 (* created: 2007-12-03  *)
 (* author: Louis Mandel *)
-
+open Rmllib;;
 module Interpretor = Implem_lco_ctrl_tree_record.Lco_ctrl_tree_record
 
 let rml_react_unsafe =
@@ -42,8 +42,8 @@ let rml_react x =
   Rmltop_global.unlock()
 
 
-let sampling_hook min () = ()
-let n_hook n () = ()
+let sampling_hook _min () = ()
+let n_hook _n () = ()
 let debug_hook () = ()
 
 let rml_exec boi_hook p =

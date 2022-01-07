@@ -32,7 +32,7 @@
 open Format
 open Lexing
 open Parse_ast
-open Asttypes
+open Rml_asttypes
 open Location
 
 let fmt_position f l =
@@ -49,7 +49,7 @@ let fmt_location f loc =
   if loc.loc_ghost then fprintf f " ghost";
 ;;
 
-let rec fmt_parseident_aux f x =
+let fmt_parseident_aux f x =
   match x with
   | Parse_ident.Pident (s) -> fprintf f "%s" s;
   | Parse_ident.Pdot (m, s) -> fprintf f "%s.%s" m s;
@@ -391,7 +391,7 @@ and expression_x_expression i ppf (e1, e2) =
   expression i ppf e1;
   expression i ppf e2
 
-and signal_kind_x_expression_x_expression i ppf (kind, e1, e2) =
+and signal_kind_x_expression_x_expression i ppf (_kind, e1, e2) =
   expression i ppf e1;
   expression i ppf e2
 ;;
@@ -447,7 +447,7 @@ let rec impl_item i ppf x =
       ident i ppf id;
   | Pimpl_open (s) ->
       line i ppf "Pimpl_open %s\n" s;
-  | Pimpl_lucky (id, in_ty_list, out_ty_list, files) ->
+  | Pimpl_lucky (_id, _in_ty_list, _out_ty_list, _files) ->
       line i ppf "Pimpl_lucky ... A FAIRE ...\n";
 
 

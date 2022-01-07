@@ -23,17 +23,17 @@
 
 (* $Id$ *)
 
-open Asttypes
+open Rml_asttypes
 open Reac_ast
 open Reac_misc
 
 (* Checks that expression as right-hand side of `let rec' are well formed *)
 
 let error e =
-  Format.fprintf !Misc.err_fmt
+  Format.fprintf !Rml_misc.err_fmt
    "%aThis kind of expression is not allowed as right-hand side of `let rec'.\n"
    Location.print e.expr_loc;
-  raise Misc.Error
+  raise Rml_misc.Error
 
 let rec empty_intersection l1 l2 =
   match l1 with

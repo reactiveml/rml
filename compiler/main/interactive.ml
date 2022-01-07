@@ -49,21 +49,21 @@ let translate_phrase phrase =
   Location.reset ();
 
   try
-    let decl_list = Parse.interactive (Lexing.from_string phrase) in
+    let decl_list = Rml_parse.interactive (Lexing.from_string phrase) in
     (* expend externals *)
     let decl_list = List.map External.expend decl_list in
     (* front-end *)
     let intermediate_code =
-      Compiler.compile_implementation_front_end !Misc.err_fmt "" None decl_list
+      Compiler.compile_implementation_front_end !Rml_misc.err_fmt "" None decl_list
     in
     (* the implementation *)
     let ocaml_code =
-      Compiler.compile_implementation_back_end_buf !Misc.err_fmt module_name
+      Compiler.compile_implementation_back_end_buf !Rml_misc.err_fmt module_name
         intermediate_code
     in
     None, ocaml_code
   with x ->
-    let () = Errors.report_error !Misc.err_fmt x in
+    let () = Rml_errors.report_error !Rml_misc.err_fmt x in
     Some "", [ phrase ]
 
 (* the main function *)
@@ -71,7 +71,7 @@ let compile () =
   let module_name = module_name () in
   let ic = stdin in
   let itf = open_out_bin "/dev/null" in
-  let info_fmt = !Misc.err_fmt in
+  let info_fmt = !Rml_misc.err_fmt in
   let out_chan = stdout in
 
   (* Initialization *)
@@ -84,11 +84,11 @@ let compile () =
     begin
       try
 	Location.init lexbuf "";
-	Lexer.update_loc lexbuf None 1 true 0;
-	let decl_list = Parse.interactive lexbuf in
+	Rml_lexer.update_loc lexbuf None 1 true 0;
+	let decl_list = Rml_parse.interactive lexbuf in
 	compile_decl_list module_name (Some itf) info_fmt out_chan decl_list
       with x ->
-	Errors.report_error Format.err_formatter x;
+	Rml_errors.report_error Format.err_formatter x;
 	output_string out_chan "let () = ();;\n"
     end;
     flush out_chan;

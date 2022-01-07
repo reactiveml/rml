@@ -19,9 +19,8 @@
 
 (* file: reac_optimization.ml *)
 
-open Asttypes
+open Rml_asttypes
 open Reac_ast
-open Def_types
 open Reac_misc
 
 
@@ -32,7 +31,7 @@ let binary2nary e =
     | Rexpr_seq e_list ->
 	let rec f left l =
 	  match l with
-	  | { expr_desc = Rexpr_seq e_list' } :: l' ->
+	  | { expr_desc = Rexpr_seq e_list'; _ } :: l' ->
 	      let left' = left @ e_list' in
 	      f left' l'
 	  | x :: l' ->
@@ -44,7 +43,7 @@ let binary2nary e =
     | Rexpr_par e_list ->
 	let rec f left l =
 	  match l with
-	  | { expr_desc = Rexpr_par e_list' } :: l' ->
+	  | { expr_desc = Rexpr_par e_list'; _ } :: l' ->
 	      let left' = left @ e_list' in
 	      f left' l'
 	  | x :: l' ->
@@ -64,8 +63,8 @@ let dynamic2static e =
     | Rexpr_seq e_list ->
 	let rec f left l =
 	  match l with
-	  | ({ expr_static = ctx1, Def_static.Static } as e1)
-	    :: ({ expr_static = ctx2, Def_static.Static } as e2) :: l' ->
+	  | ({ expr_static = ctx1, Def_static.Static; _ } as e1)
+	    :: ({ expr_static = ctx2, Def_static.Static; _ } as e2) :: l' ->
 	      let e' =
 		make_expr
 		  (Rexpr_seq [e1;e2])
@@ -75,16 +74,16 @@ let dynamic2static e =
 	      e'.expr_static <- ctx1, Def_static.Static;
 	      f left (e'::l')
 
-	  | ({ expr_desc = Rexpr_emit _ } as e1)
-	    :: ({ expr_static = ctx2, Def_static.Dynamic _ } as e2) :: l' ->
+	  | ({ expr_desc = Rexpr_emit _; _ } as e1)
+	    :: ({ expr_static = _ctx2, Def_static.Dynamic _; _ } as e2) :: l' ->
               let ctx1 = fst e1.expr_static in
               let k1 = Def_static.Dynamic Def_static.Instantaneous in
 	      e1.expr_static <- (ctx1, k1);
 	      f (left@[e1]) (e2::l')
 
 
-	  | [ { expr_static = ctx1, Def_static.Dynamic _ } as e1;
-	      { expr_desc = Rexpr_emit _ } as e2 ] ->
+	  | [ { expr_static = _ctx1, Def_static.Dynamic _; _ } as e1;
+	      { expr_desc = Rexpr_emit _; _ } as e2 ] ->
               let ctx2 = fst e2.expr_static in
               let k2 = Def_static.Dynamic Def_static.Instantaneous in
 	      e2.expr_static <- (ctx2, k2);
@@ -104,7 +103,7 @@ let dynamic2static e =
 	    e'.expr_static <- e.expr_static;
 	    e'
 	end
-    | Rexpr_when(_, ({ expr_desc = Rexpr_emit _ } as e2)) ->
+    | Rexpr_when(_, ({ expr_desc = Rexpr_emit _; _ } as e2)) ->
         let ctx2 = fst e2.expr_static in
         let k2 = Def_static.Dynamic Def_static.Instantaneous in
 	e2.expr_static <- (ctx2, k2);
@@ -131,9 +130,9 @@ let for2loop_n expr =
 	    in
 	    minus.expr_static <- (Def_static.Process, Def_static.Static);
 	    minus.expr_type <-
-	      Types.arrow
+	      Rml_types.arrow
 		Initialization.type_int
-		(Types.arrow
+		(Rml_types.arrow
 		   Initialization.type_int
 		   Initialization.type_int);
             let e' =
@@ -157,9 +156,9 @@ let for2loop_n expr =
 	    in
 	    plus.expr_static <- (Def_static.Process, Def_static.Static);
 	    plus.expr_type <-
-	      Types.arrow
+	      Rml_types.arrow
 		Initialization.type_int
-		(Types.arrow
+		(Rml_types.arrow
 		   Initialization.type_int
 		   Initialization.type_int);
             let one =
