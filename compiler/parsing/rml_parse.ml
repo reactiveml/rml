@@ -42,8 +42,6 @@
 
 (* Entry points in the parser *)
 
-open Location
-
 (* Skip tokens to the end of the phrase *)
 
 let rec skip_phrase lexbuf =
