@@ -28,8 +28,6 @@
 open Lk_ast
 open Caml_ast
 open Caml_misc
-open Global
-open Global_ident
 open Rml_asttypes
 open Rml_misc
 
@@ -103,7 +101,7 @@ let pattern_of_signal_global (s,t) =
       make_patt (Cpatt_constraint(ps, translate_te t)) Location.none
 
 (* Translation of type declatations *)
-let rec translate_type_decl typ =
+let translate_type_decl typ =
   match typ with
   | Ktype_abstract -> Ctype_abstract
 
@@ -838,7 +836,7 @@ and translate_proc e =
 	end
 
 
-    | Kproc_start_until(ctrl, {kconf_desc = Kconf_present s}, None,
+    | Kproc_start_until(ctrl, {kconf_desc = Kconf_present s; _}, None,
 			(ctrl', k1), (patt,k2)) ->
 	if Lk_misc.is_value s then
 	  Cexpr_apply
@@ -872,7 +870,7 @@ and translate_proc e =
 	   [make_expr_var_local ctrl;
 	    translate_proc k])
 
-    | Kproc_start_when(ctrl, {kconf_desc = Kconf_present s}, (ctrl', k)) ->
+    | Kproc_start_when(ctrl, {kconf_desc = Kconf_present s; _}, (ctrl', k)) ->
 	if Lk_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_start_when_v",
@@ -901,7 +899,7 @@ and translate_proc e =
 	    translate_proc k])
 
 
-    | Kproc_start_control(ctrl, {kconf_desc = Kconf_present s}, (ctrl', k)) ->
+    | Kproc_start_control(ctrl, {kconf_desc = Kconf_present s; _}, (ctrl', k)) ->
 	if Lk_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_start_control_v",
@@ -949,7 +947,7 @@ and translate_proc e =
 		Location.none;
 	      make_expr_var_local ctrl])
 
-    | Kproc_present (ctrl, {kconf_desc = Kconf_present s}, k1, k2) ->
+    | Kproc_present (ctrl, {kconf_desc = Kconf_present s; _}, k1, k2) ->
 	if Lk_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_present_v",
@@ -1042,7 +1040,7 @@ and translate_proc e =
 		(Cexpr_match
 		   (translate_ml expr,
 		    List.map
-		      (fun (p,when_opt,k) ->
+		      (fun (p,_when_opt,k) ->
 			(translate_pattern p,
                          None,
 			 make_expr
@@ -1055,7 +1053,7 @@ and translate_proc e =
 
 
 
-    | Kproc_await (flag, {kconf_desc = Kconf_present s}, k, ctrl) ->
+    | Kproc_await (flag, {kconf_desc = Kconf_present s; _}, k, ctrl) ->
 	let _immediate =
 	  match flag with
 	  | Nonimmediate -> ""
@@ -1191,7 +1189,7 @@ and translate_conf c =
   make_expr cexpr c.kconf_loc
 
 
-let translate_impl_item info_chan item =
+let translate_impl_item _info_chan item =
   let citem =
     match item.kimpl_desc with
     | Kimpl_expr e -> Cimpl_expr (translate_ml e)
@@ -1252,7 +1250,7 @@ let translate_impl_item info_chan item =
   in
   make_impl citem item.kimpl_loc
 
-let translate_intf_item info_chan item =
+let translate_intf_item _info_chan item =
   let citem =
     match item.kintf_desc with
     | Kintf_val (gl, typ) -> Cintf_val (gl, translate_te typ)

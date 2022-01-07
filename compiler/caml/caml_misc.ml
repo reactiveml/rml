@@ -287,7 +287,7 @@ let rec make_dummy t =
     | Type_product te_list ->
 	Cexpr_tuple (List.map make_dummy te_list)
 
-    | Type_constr (cstr, te_list)  ->
+    | Type_constr (cstr, _te_list)  ->
 	begin try
 	  let type_desc = Modules.find_type_desc cstr.gi in
 	  if type_desc = Initialization.type_desc_int then
@@ -397,10 +397,10 @@ let rec is_value e =
 
   | Cexpr_constraint (expr, _) -> is_value expr
 
-  | Cexpr_trywith (expr, patt_expr_list) ->
+  | Cexpr_trywith (expr, _patt_expr_list) ->
       (is_value expr)
 
-  | Cexpr_assert expr -> false
+  | Cexpr_assert _expr -> false
 
   | Cexpr_ifthenelse (e1, e2, e3) ->
       (is_value e1) && (is_value e2) && (is_value e3)

@@ -46,9 +46,9 @@ let constant_propagation =
 	    expr.cexpr_desc
 	  end
 
-      | Cexpr_global gl -> expr.cexpr_desc
+      | Cexpr_global _gl -> expr.cexpr_desc
 
-      | Cexpr_constant c -> expr.cexpr_desc
+      | Cexpr_constant _c -> expr.cexpr_desc
 
       | Cexpr_let (Nonrecursive, patt_expr_list, expression) ->
 	  let patt_expr_list' =

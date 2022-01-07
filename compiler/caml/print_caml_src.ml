@@ -122,7 +122,7 @@ let print_stdlib n =
 
 
 (** Prints a global name *)
-let print_global ({ gi = {qual=q; id=n} } as gl) =
+let print_global ({ gi = {qual=q; id=n}; _ } as gl) =
   if gl.gi = Initialization.event_ident then
     (* special case for event type *)
     begin
@@ -217,7 +217,7 @@ let rec print pri e =
       pp_print_string !formatter "->";
       pp_print_space !formatter ();
       print 0 e1
-  | Cexpr_let(flag, [patt, { cexpr_desc = Cexpr_fun (param_list, e1) }], e) ->
+  | Cexpr_let(flag, [patt, { cexpr_desc = Cexpr_fun (param_list, e1); _ }], e) ->
       pp_print_string !formatter (if flag = Recursive then "let rec " else "let ");
       print_pattern 0 patt;
       pp_print_space !formatter ();
@@ -548,7 +548,7 @@ let print_impl_item item =
       print 0 e;
       pp_print_string !formatter ";;";
       pp_close_box !formatter ()
-  | Cimpl_let(flag, [patt, { cexpr_desc = Cexpr_fun (param_list, e1) }]) ->
+  | Cimpl_let(flag, [patt, { cexpr_desc = Cexpr_fun (param_list, e1); _ }]) ->
       pp_print_string !formatter (if flag = Recursive then "let rec " else "let ");
       print_pattern 0 patt;
       pp_print_space !formatter ();

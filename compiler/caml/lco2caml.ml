@@ -28,8 +28,6 @@
 open Lco_ast
 open Caml_ast
 open Caml_misc
-open Global
-open Global_ident
 open Rml_asttypes
 open Rml_misc
 
@@ -71,7 +69,7 @@ let pattern_of_signal_global (s,t) =
 
 
 (* Translation of type declatations *)
-let rec translate_type_decl typ =
+let translate_type_decl typ =
   match typ with
   | Cotype_abstract -> Ctype_abstract
   | Cotype_rebind t -> Ctype_rebind (translate_te t)
@@ -511,7 +509,7 @@ and translate_proc e =
 	   [embed_ml expr;])
 
     | Coproc_until (k,
-                    [{coconf_desc = Coconf_present (s, None)}, None, None]) ->
+                    [{coconf_desc = Coconf_present (s, None); _}, None, None]) ->
 	if Lco_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_until'",
@@ -660,7 +658,7 @@ and translate_proc e =
                   [(make_patt_any(), None, make_raise_RML())]))
               Location.none])
 
-    | Coproc_when ({coconf_desc = Coconf_present (s, None)}, k) ->
+    | Coproc_when ({coconf_desc = Coconf_present (s, None); _}, k) ->
 	if Lco_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_when'",
@@ -679,7 +677,7 @@ and translate_proc e =
 	   [cconf;
 	    translate_proc k])
 
-    | Coproc_control ({coconf_desc = Coconf_present (s, None)}, None, k) ->
+    | Coproc_control ({coconf_desc = Coconf_present (s, None); _}, None, k) ->
 	if Lco_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_control'",
@@ -690,7 +688,7 @@ and translate_proc e =
 	    (make_instruction "rml_control",
 	     [embed_ml s;
 	      translate_proc k])
-    | Coproc_control ({coconf_desc = Coconf_present(s, patt_opt)}, Some e, k) ->
+    | Coproc_control ({coconf_desc = Coconf_present(s, patt_opt); _}, Some e, k) ->
         let cpatt =
           match patt_opt with
           | None -> make_patt_any()
@@ -750,7 +748,7 @@ and translate_proc e =
 	      (Cexpr_function [translate_pattern patt, None, translate_proc k])
 	      Location.none])
 
-    | Coproc_present ({coconf_desc = Coconf_present (s, None)}, k1, k2) ->
+    | Coproc_present ({coconf_desc = Coconf_present (s, None); _}, k1, k2) ->
 	if Lco_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_present'",
@@ -792,7 +790,7 @@ and translate_proc e =
 		    patt_proc_list))
 	      Location.none])
 
-    | Coproc_await (Nonimmediate, {coconf_desc = Coconf_present (s, None)}) ->
+    | Coproc_await (Nonimmediate, {coconf_desc = Coconf_present (s, None); _}) ->
 	if Lco_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_await'",
@@ -806,7 +804,7 @@ and translate_proc e =
 	Cexpr_apply
           (make_instruction "rml_await_conf",
            [cconf])
-    | Coproc_await (Immediate, {coconf_desc = Coconf_present (s, None)}) ->
+    | Coproc_await (Immediate, {coconf_desc = Coconf_present (s, None); _}) ->
 	if Lco_misc.is_value s then
 	  Cexpr_apply
 	    (make_instruction "rml_await_immediate'",
@@ -927,7 +925,7 @@ and translate_conf c =
   make_expr cexpr c.coconf_loc, cpatt
 
 
-let translate_impl_item info_chan item =
+let translate_impl_item _info_chan item =
   let citem =
     match item.coimpl_desc with
     | Coimpl_expr e -> Cimpl_expr (translate_ml e)
@@ -983,7 +981,7 @@ let translate_impl_item info_chan item =
   in
   make_impl citem item.coimpl_loc
 
-let translate_intf_item info_chan item =
+let translate_intf_item _info_chan item =
   let citem =
     match item.cointf_desc with
     | Cointf_val (gl, typ) -> Cintf_val (gl, translate_te typ)
