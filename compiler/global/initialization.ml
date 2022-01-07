@@ -31,7 +31,6 @@
 (* the initial module *)
 
 open Rml_misc
-open Rml_ident
 open Global_ident
 open Def_types
 open Global

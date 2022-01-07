@@ -30,7 +30,6 @@
 
 open Rml_misc
 open Global_ident
-open Def_types
 open Global
 open Parse_ident
 open Def_modules
@@ -149,7 +148,7 @@ let start_compiling_interface modname =
   reset_opened_modules();
   List.iter open_module !default_used_modules;;
 
-let start_compiling_implementation modname intf =
+let start_compiling_implementation modname _intf =
   start_compiling_interface modname
 
 let compiled_module_name () =
