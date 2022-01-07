@@ -42,8 +42,8 @@ let rml_react x =
   Rmltop_global.unlock()
 
 
-let sampling_hook min () = ()
-let n_hook n () = ()
+let sampling_hook _min () = ()
+let n_hook _n () = ()
 let debug_hook () = ()
 
 let rml_exec boi_hook p =

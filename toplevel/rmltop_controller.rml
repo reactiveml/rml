@@ -23,7 +23,7 @@
 
 
 signal suspend, resume default () gather (fun () () -> ());;
-signal step default 1 gather (fun x y -> x);;
+signal step default 1 gather (fun x _y -> x);;
 
 let ref_to_sig ref_s s =
   match !ref_s with

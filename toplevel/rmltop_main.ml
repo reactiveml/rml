@@ -22,7 +22,7 @@
 (* created: 2005-10-25  *)
 
 let exec_machine_controller () =
-  let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> ())) in
+  let _ = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun _x -> ())) in
   let debut = ref 0.0 in
   let sleep = ref 0.0 in
   let react =
