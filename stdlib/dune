@@ -1,5 +1,6 @@
 (rule (target arg.rzi) (deps stdlib.rzi ../compiler/rmlc.exe) (mode (promote (until-clean))) (action (run ../compiler/rmlc.exe -c arg.rmli)))
 (rule (target buffer.rzi) (deps stdlib.rzi ../compiler/rmlc.exe) (mode (promote (until-clean))) (action (run ../compiler/rmlc.exe -c buffer.rmli)))
+(rule (target camlinternalBigarray.rzi) (deps stdlib.rzi ../compiler/rmlc.exe) (mode (promote (until-clean))) (action (run ../compiler/rmlc.exe -c camlinternalBigarray.rmli)))
 (rule (target complex.rzi) (deps stdlib.rzi ../compiler/rmlc.exe) (mode (promote (until-clean))) (action (run ../compiler/rmlc.exe -c complex.rmli)))
 (rule (target digest.rzi) (deps stdlib.rzi ../compiler/rmlc.exe) (mode (promote (until-clean))) (action (run ../compiler/rmlc.exe -c digest.rmli)))
 (rule (target filename.rzi) (deps stdlib.rzi ../compiler/rmlc.exe) (mode (promote (until-clean))) (action (run ../compiler/rmlc.exe -c filename.rmli)))
