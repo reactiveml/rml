@@ -36,7 +36,7 @@
 (rule (target rml_syntaxerr.ml) (action (copy parsing/rml_syntaxerr.ml rml_syntaxerr.ml)))
 (rule (target parse_printer.ml) (action (copy parsing/parse_printer.ml parse_printer.ml)))
 (rule (target location.ml) (action (copy parsing/location.ml location.ml)))
-(rule (target linenum.ml) (action (copy parsing/linenum.ml linenum.ml)))
+(rule (target linenum.mll) (action (copy parsing/linenum.mll linenum.mll)))
 (rule (target rml_parse.ml) (action (copy parsing/rml_parse.ml rml_parse.ml)))
 (rule (target rml_parser.mly) (action (copy parsing/rml_parser.mly rml_parser.mly)))
 (rule (target rml_lexer.mll) (action (copy parsing/rml_lexer.mll rml_lexer.mll)))
@@ -73,7 +73,7 @@
 (rule (target lucky_errors.ml) (action (copy external/lucky_errors.ml lucky_errors.ml)))
 
 (ocamllex
- (modules rml_lexer))
+ (modules rml_lexer linenum))
 
 (menhir
  (modules rml_parser))
