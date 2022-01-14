@@ -23,7 +23,7 @@
 
 (* $Id$ *)
 
-open Asttypes
+open Rml_asttypes
 open Reac_ast
 open Def_static
 

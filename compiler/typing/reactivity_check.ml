@@ -19,14 +19,14 @@
 
 (* file: reactivity_effects.ml *)
 
-open Misc
-open Asttypes
+open Rml_misc
+open Rml_asttypes
 open Reac_ast
 open Def_types
 
 (* Warnings *)
 let rec_warning expr k =
-  if !Misc.reactivity_warning then (
+  if !Rml_misc.reactivity_warning then (
     Format.fprintf !err_fmt
       "%aWarning: This expression may produce an instantaneous recursion.@."
       Location.print expr.expr_loc
@@ -34,7 +34,7 @@ let rec_warning expr k =
 (* (Types_printer.print_to_string Types_printer.print_reactivity k) *)
 
 let loop_warning expr k =
-  if !Misc.reactivity_warning then (
+  if !Rml_misc.reactivity_warning then (
     Format.fprintf !err_fmt
       "%aWarning: This expression may be an instantaneous loop.@."
       Location.print expr.expr_loc

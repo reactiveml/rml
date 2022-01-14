@@ -32,7 +32,7 @@
 open Format
 open Lexing
 open Parse_ast
-open Asttypes
+open Rml_asttypes
 open Location
 
 let fmt_position f l =

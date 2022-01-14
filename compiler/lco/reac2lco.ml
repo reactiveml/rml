@@ -25,13 +25,13 @@
 
 (* The translation of Reac to Lco *)
 
-open Asttypes
+open Rml_asttypes
 open Def_static
 open Reac_ast
 open Lco_ast
 open Global
 open Global_ident
-open Misc
+open Rml_misc
 
 
 let make_expr e loc =
@@ -74,7 +74,7 @@ let make_rmltop_instruction s =
   make_expr
     (Coexpr_global
        { gi = { qual = "Rmltop_global";
-		id = Ident.create Ident.gen_var s Ident.Internal };
+		id = Rml_ident.create Rml_ident.gen_var s Rml_ident.Internal };
 	 info = no_info(); })
     Location.none
 
@@ -605,15 +605,15 @@ and translate_proc_let =
 	  in
 	  let id_array =
 	    Array.init (List.length patt_expr_list)
-	      (fun i -> Ident.create Ident.gen_var ("v"^(string_of_int i))
-		  Ident.Internal)
+	      (fun i -> Rml_ident.create Rml_ident.gen_var ("v"^(string_of_int i))
+		  Rml_ident.Internal)
 	  in
 	  let par =
 	    Coproc_par
 	      (List.fold_right2
 		 (fun id (_, expr) expr_list ->
 		   let local_id =
-		     Ident.create Ident.gen_var "x" Ident.Internal
+		     Rml_ident.create Rml_ident.gen_var "x" Rml_ident.Internal
 		   in
 		   make_proc
 		     (Coproc_def_dyn

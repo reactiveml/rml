@@ -33,14 +33,14 @@
 
 type qualified_ident =
     { qual: string;
-      id: Ident.t }
+      id: Rml_ident.t }
 
 let same i1 i2 =
-  (Ident.same i1.id i2.id) && (i1.qual = i2.qual)
+  (Rml_ident.same i1.id i2.id) && (i1.qual = i2.qual)
 
-let name i = i.qual ^ "." ^ (Ident.name i.id)
+let name i = i.qual ^ "." ^ (Rml_ident.name i.id)
 
-let little_name i = Ident.name i.id
+let little_name i = Rml_ident.name i.id
 
 let print ppf i = Format.fprintf ppf "%s@? " (name i)
 

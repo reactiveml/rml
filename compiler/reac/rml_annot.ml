@@ -74,12 +74,12 @@ end) =
     let phrases = ref ([] : Location.t list)
 
     let record ti =
-      if !Misc.save_types && not (get_location ti).Location.loc_ghost then
+      if !Rml_misc.save_types && not (get_location ti).Location.loc_ghost then
 	type_info := ti :: !type_info
 
 
     let record_phrase loc =
-      if !Misc.save_types then phrases := loc :: !phrases
+      if !Rml_misc.save_types then phrases := loc :: !phrases
 
 
     (* comparison order:
@@ -152,7 +152,7 @@ let rec printtyp_reset_maybe loc =
 
 
     let dump filename =
-      if !Misc.save_types then begin
+      if !Rml_misc.save_types then begin
 	let info = get_info () in
 	let oc = open_out filename in
 	let pp = Format.formatter_of_out_channel oc in

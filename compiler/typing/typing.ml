@@ -31,16 +31,16 @@
 (* The type synthesizer *)
 
 open Def_types
-open Types
+open Rml_types
 open Reactivity_effects
 open Typing_errors
 open Initialization
-open Asttypes
+open Rml_asttypes
 open Global
 open Global_ident
 open Reac_ast
-open Misc
-open Annot
+open Rml_misc
+open Rml_annot
 
 let unify_expr expr expected_ty actual_ty =
   try
@@ -189,7 +189,7 @@ let non_gen ty = ignore (gen_ty false ty)
 
 
 (* Typing environment *)
-module Env = Symbol_table.Make (Ident)
+module Env = Symbol_table.Make (Rml_ident)
 
 let env_add l env =
   List.fold_left
@@ -379,22 +379,22 @@ let rec type_of_pattern global_env local_env patt ty =
 
   | Rpatt_var (Varpatt_global gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
-      then non_linear_pattern_err patt (Ident.name gl.gi.id);
+      then non_linear_pattern_err patt (Rml_ident.name gl.gi.id);
       gl.info <- Some { value_typ = forall [] [] ty };
       (gl::global_env, local_env)
   | Rpatt_var (Varpatt_local x) ->
       if List.mem_assoc x local_env
-      then non_linear_pattern_err patt (Ident.name x);
+      then non_linear_pattern_err patt (Rml_ident.name x);
       global_env, (x,ty)::local_env
 
   | Rpatt_alias (p,Varpatt_global gl) ->
       if List.exists (fun g -> g.gi.id = gl.gi.id) global_env
-      then non_linear_pattern_err patt (Ident.name gl.gi.id);
+      then non_linear_pattern_err patt (Rml_ident.name gl.gi.id);
       gl.info <- Some { value_typ = forall [] [] ty };
       type_of_pattern (gl::global_env) local_env p ty
   | Rpatt_alias (p,Varpatt_local x) ->
       if List.mem_assoc x local_env
-      then non_linear_pattern_err patt (Ident.name x);
+      then non_linear_pattern_err patt (Rml_ident.name x);
       type_of_pattern global_env ((x,ty)::local_env) p ty
 
   | Rpatt_constant (i) ->
@@ -441,7 +441,7 @@ let rec type_of_pattern global_env local_env patt ty =
 	    try
 	      List.find (fun gl -> (gl1.gi.id = gl.gi.id)) global_env2
 	    with
-	    | Not_found -> orpat_vars p2.patt_loc (Ident.name gl1.gi.id)
+	    | Not_found -> orpat_vars p2.patt_loc (Rml_ident.name gl1.gi.id)
 	  in
 	  unify_var p2.patt_loc
 	    (Global.info gl1).value_typ.ts_desc
@@ -453,7 +453,7 @@ let rec type_of_pattern global_env local_env patt ty =
 	    try
 	      List.find (fun (x,ty) -> (x1 = x)) local_env2
 	    with
-	    | Not_found -> orpat_vars p2.patt_loc (Ident.name x1)
+	    | Not_found -> orpat_vars p2.patt_loc (Rml_ident.name x1)
 	  in
 	  unify_var p2.patt_loc ty1 ty2)
 	local_env1;
@@ -1036,7 +1036,7 @@ and type_of_event_config env conf =
       List.iter
         (fun (x, _) ->
           if List.mem_assoc x loc_env1
-          then non_linear_config_err conf (Ident.name x))
+          then non_linear_config_err conf (Rml_ident.name x))
         loc_env2;
       loc_env1 @ loc_env2
 
@@ -1049,7 +1049,7 @@ and type_of_event_config env conf =
             try
               List.find (fun (x,ty) -> (x1 = x)) loc_env2
             with
-            | Not_found -> orconfig_vars c2.conf_loc (Ident.name x1)
+            | Not_found -> orconfig_vars c2.conf_loc (Rml_ident.name x1)
           in
           unify_var c2.conf_loc ty1 ty2)
         loc_env1;
@@ -1127,9 +1127,9 @@ let check_no_repeated_constructor loc l =
     match l with
       [] -> ()
     | ({ gi = name }, _) :: l ->
-	if List.mem name.id.Ident.id cont
-	then repeated_constructor_definition_err name.id.Ident.name loc
-	else checkrec (name.id.Ident.id :: cont) l
+	if List.mem name.id.Rml_ident.id cont
+	then repeated_constructor_definition_err name.id.Rml_ident.name loc
+	else checkrec (name.id.Rml_ident.id :: cont) l
   in
   checkrec [] l
 
@@ -1138,9 +1138,9 @@ let check_no_repeated_label loc l =
     match l with
       [] -> ()
     | ({ gi = name },_ , _) :: l ->
-	if List.mem name.id.Ident.id cont
-	then repeated_label_definition_err name.id.Ident.name loc
-	else checkrec (name.id.Ident.id :: cont) l
+	if List.mem name.id.Rml_ident.id cont
+	then repeated_label_definition_err name.id.Rml_ident.name loc
+	else checkrec (name.id.Rml_ident.id :: cont) l
   in
   checkrec [] l
 

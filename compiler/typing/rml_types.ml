@@ -30,7 +30,7 @@
 
 (* Basic operations over types *)
 
-open Misc
+open Rml_misc
 open Def_types
 open Reactivity_effects
 open Global
@@ -39,7 +39,7 @@ exception Unify
 
 
 (* generating fresh names *)
-let names = new Ident.name_generator
+let names = new Rml_ident.name_generator
 
 
 (* The current nesting level of lets *)

@@ -23,7 +23,7 @@
 
 (* $Id$ *)
 
-open Misc
+open Rml_misc
 open Reac_ast
 
 (* Printing of error messages during the "static" analysis *)
