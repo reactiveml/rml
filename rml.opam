@@ -16,7 +16,7 @@ install: [
 ]
 
 depends: [
-  "ocaml" {>= "4.13.0"}
+  "ocaml" {>= "4.09.0"}
   "dune" {>= "1.6.3"}
   "menhir"
   "alcotest" {with-test}
