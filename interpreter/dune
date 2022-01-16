@@ -1,0 +1,10 @@
+(library
+ (name rmllib)
+ (libraries threads)
+ (flags (:standard -rectypes))
+ (modules_without_implementation lco_interpreter lk_interpreter)
+ (modules :standard \ lk_threaded thread_implem))
+
+(install
+ (files rmllib.a)
+ (section lib))

@@ -1,0 +1,7 @@
+(rule (target await.ml) (deps (file await.rml) ../compiler/rmlc.exe) (action (run ../compiler/rmlc.exe await.rml)))
+
+
+(test
+ (name test)
+ (libraries alcotest rmllib)
+ (flags (:standard -rectypes)))

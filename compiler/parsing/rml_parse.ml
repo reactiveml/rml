@@ -79,7 +79,7 @@ let wrap parsing_fun lexbuf =
   | Rml_syntaxerr.Error _ as err ->
       if !Location.input_name = "" then maybe_skip_phrase lexbuf;
       raise err
-  | Parsing.Parse_error | Rml_syntaxerr.Escape_error ->
+  | Parsing.Parse_error | Rml_parser.Error | Rml_syntaxerr.Escape_error ->
       let loc = Location.curr lexbuf in
       if !Location.input_name = ""
       then maybe_skip_phrase lexbuf;

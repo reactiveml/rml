@@ -67,7 +67,7 @@ let curr lexbuf = {
   loc_end = lexbuf.lex_curr_p;
   loc_ghost = false
 };;
-
+(*
 let symbol_rloc () = {
   loc_start = Parsing.symbol_start_pos ();
   loc_end = Parsing.symbol_end_pos ();
@@ -84,6 +84,18 @@ let rhs_loc n = {
   loc_start = Parsing.rhs_start_pos n;
   loc_end = Parsing.rhs_end_pos n;
   loc_ghost = false;
+};;*)
+
+let loc_of_pos (ps, pe) = {
+  loc_start = ps;
+  loc_end = pe;
+  loc_ghost = false;
+};;
+
+let gloc_of_pos (ps, pe) = {
+    loc_start = ps;
+    loc_end = pe;
+    loc_ghost = true;
 };;
 
 let input_name = ref ""

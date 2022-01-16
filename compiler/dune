@@ -1,0 +1,87 @@
+(rule (target rmlc.ml) (action (copy main/rmlc.ml rmlc.ml)))
+(rule (target compiler.ml) (action (copy main/compiler.ml compiler.ml)))
+(rule (target rml_errors.ml) (action (copy main/rml_errors.ml rml_errors.ml)))
+(rule (target options.ml) (action (copy main/options.ml options.ml)))
+(rule (target configure.ml) (action (copy main/configure.ml configure.ml)))
+(rule (target interactive.ml) (action (copy main/interactive.ml interactive.ml)))
+
+(rule (target rml_misc.ml) (action (copy global/rml_misc.ml rml_misc.ml)))
+(rule (target version.ml) (action (copy global/version.ml version.ml)))
+(rule (target modules.ml) (action (copy global/modules.ml modules.ml)))
+(rule (target global_ident.ml) (action (copy global/global_ident.ml global_ident.ml)))
+(rule (target rml_ident.ml) (action (copy global/rml_ident.ml rml_ident.ml)))
+(rule (target rml_asttypes.ml) (action (copy global/rml_asttypes.ml rml_asttypes.ml)))
+(rule (target global.ml) (action (copy global/global.ml global.ml)))
+(rule (target def_modules.ml) (action (copy global/def_modules.ml def_modules.ml)))
+(rule (target rzi.ml) (deps ../configure-tools/embedrzi.exe (env_var RML_RECOMPILE_RZI)) (action (with-stdout-to rzi.ml (run ../configure-tools/embedrzi.exe ..))))
+(rule (target warnings.ml) (action (copy global/warnings.ml warnings.ml)))
+(rule (target symbol_table.ml) (action (copy global/symbol_table.ml symbol_table.ml)))
+(rule (target initialization.ml) (action (copy global/initialization.ml initialization.ml)))
+
+(rule (target def_types.ml) (action (copy typing/def_types.ml def_types.ml)))
+(rule (target reactivity_check.ml) (action (copy typing/reactivity_check.ml reactivity_check.ml)))
+(rule (target reactivity_effects.ml) (action (copy typing/reactivity_effects.ml reactivity_effects.ml)))
+(rule (target rml_types.ml) (action (copy typing/rml_types.ml rml_types.ml)))
+(rule (target types_printer.ml) (action (copy typing/types_printer.ml types_printer.ml)))
+(rule (target typing_errors.ml) (action (copy typing/typing_errors.ml typing_errors.ml)))
+(rule (target typing.ml) (action (copy typing/typing.ml typing.ml)))
+
+(rule (target def_static.ml) (action (copy static/def_static.ml def_static.ml)))
+(rule (target static_errors.ml) (action (copy static/static_errors.ml static_errors.ml)))
+(rule (target static_printer.ml) (action (copy static/static_printer.ml static_printer.ml)))
+(rule (target static.ml) (action (copy static/static.ml static.ml)))
+
+(rule (target parse_ident.ml) (action (copy parsing/parse_ident.ml parse_ident.ml)))
+(rule (target parse_ast.ml) (action (copy parsing/parse_ast.ml parse_ast.ml)))
+(rule (target rml_syntaxerr.ml) (action (copy parsing/rml_syntaxerr.ml rml_syntaxerr.ml)))
+(rule (target parse_printer.ml) (action (copy parsing/parse_printer.ml parse_printer.ml)))
+(rule (target location.ml) (action (copy parsing/location.ml location.ml)))
+(rule (target linenum.mll) (action (copy parsing/linenum.mll linenum.mll)))
+(rule (target rml_parse.ml) (action (copy parsing/rml_parse.ml rml_parse.ml)))
+(rule (target rml_parser.mly) (action (copy parsing/rml_parser.mly rml_parser.mly)))
+(rule (target rml_lexer.mll) (action (copy parsing/rml_lexer.mll rml_lexer.mll)))
+
+(rule (target binding_errors.ml) (action (copy reac/binding_errors.ml binding_errors.ml)))
+(rule (target parse2reac.ml) (action (copy reac/parse2reac.ml parse2reac.ml)))
+(rule (target reac_ast.ml) (action (copy reac/reac_ast.ml reac_ast.ml)))
+(rule (target reac_misc.ml) (action (copy reac/reac_misc.ml reac_misc.ml)))
+(rule (target reac2reac.ml) (action (copy reac/reac2reac.ml reac2reac.ml)))
+(rule (target rml_annot.ml) (action (copy reac/rml_annot.ml rml_annot.ml)))
+
+(rule (target reac_optimization.ml) (action (copy optimization/reac_optimization.ml reac_optimization.ml)))
+
+(rule (target instantaneous_loop.ml) (action (copy other_analysis/instantaneous_loop.ml instantaneous_loop.ml)))
+(rule (target wf_rec.ml) (action (copy other_analysis/wf_rec.ml wf_rec.ml)))
+
+(rule (target lk_ast.ml) (action (copy lk/lk_ast.ml lk_ast.ml)))
+(rule (target lk_misc.ml) (action (copy lk/lk_misc.ml lk_misc.ml)))
+(rule (target reac2lk.ml) (action (copy lk/reac2lk.ml reac2lk.ml)))
+
+(rule (target lco_ast.ml) (action (copy lco/lco_ast.ml lco_ast.ml)))
+(rule (target lco_misc.ml) (action (copy lco/lco_misc.ml lco_misc.ml)))
+(rule (target reac2lco.ml) (action (copy lco/reac2lco.ml reac2lco.ml)))
+
+(rule (target caml_ast.ml) (action (copy caml/caml_ast.ml caml_ast.ml)))
+(rule (target caml_misc.ml) (action (copy caml/caml_misc.ml caml_misc.ml)))
+(rule (target caml2caml.ml) (action (copy caml/caml2caml.ml caml2caml.ml)))
+(rule (target lco2caml.ml) (action (copy caml/lco2caml.ml lco2caml.ml)))
+(rule (target lk2caml.ml) (action (copy caml/lk2caml.ml lk2caml.ml)))
+(rule (target print_caml_src.ml) (action (copy caml/print_caml_src.ml print_caml_src.ml)))
+
+(rule (target external.ml) (action (copy external/external.ml external.ml)))
+(rule (target lucky.ml) (action (copy external/lucky.ml lucky.ml)))
+(rule (target lucky_errors.ml) (action (copy external/lucky_errors.ml lucky_errors.ml)))
+
+(ocamllex
+ (modules rml_lexer linenum))
+
+(menhir
+ (modules rml_parser))
+
+
+(executables
+ (names rmlc))
+
+(install
+  (files (rmlc.exe as rmlc))
+  (section bin))

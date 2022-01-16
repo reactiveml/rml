@@ -28,9 +28,4 @@ let () = List.iter
   stdlib_files
 in
 let () = Buffer.add_string buf "]" in
-let out = open_out_gen
-  [Open_creat; Open_wronly; Open_trunc]
-  0o640
-  (basedir // "compiler" // "global" // "rzi.ml")
-in
-Printf.fprintf out "%s\n" (Buffer.contents buf)
+Printf.fprintf Stdlib.stdout "%s\n" (Buffer.contents buf)
