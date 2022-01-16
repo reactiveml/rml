@@ -1,5 +1,7 @@
 # Makefile for ReactiveML
 
+include config
+
 build:
 	echo "(* This file is generated *)" > compiler/global/version.ml
 	echo "let version = \"$(VERSION)\"" >> compiler/global/version.ml
