@@ -19,7 +19,7 @@
 
 (* file: reac_optimization.ml *)
 
-open Asttypes
+open Rml_asttypes
 open Reac_ast
 open Def_types
 open Reac_misc
@@ -131,9 +131,9 @@ let for2loop_n expr =
 	    in
 	    minus.expr_static <- (Def_static.Process, Def_static.Static);
 	    minus.expr_type <-
-	      Types.arrow
+	      Rml_types.arrow
 		Initialization.type_int
-		(Types.arrow
+		(Rml_types.arrow
 		   Initialization.type_int
 		   Initialization.type_int);
             let e' =
@@ -157,9 +157,9 @@ let for2loop_n expr =
 	    in
 	    plus.expr_static <- (Def_static.Process, Def_static.Static);
 	    plus.expr_type <-
-	      Types.arrow
+	      Rml_types.arrow
 		Initialization.type_int
-		(Types.arrow
+		(Rml_types.arrow
 		   Initialization.type_int
 		   Initialization.type_int);
             let one =

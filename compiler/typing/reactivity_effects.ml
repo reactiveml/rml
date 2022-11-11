@@ -19,15 +19,15 @@
 
 (* file: reactivity_effects.ml *)
 
-open Misc
-open Asttypes
+open Rml_misc
+open Rml_asttypes
 open Reac_ast
 open Def_types
 
 exception React_Unify
 
 (* generating fresh names *)
-let names = new Ident.name_generator
+let names = new Rml_ident.name_generator
 
 (* The current nesting level of lets *)
 let reactivity_current_level = ref 0;;
@@ -400,7 +400,7 @@ let react_simplify =
   in
   fun k ->
     visited_list := [];
-    if !Misc.reactivity_simplify then simplify (react_effect_repr k)
+    if !Rml_misc.reactivity_simplify then simplify (react_effect_repr k)
     else react_effect_repr k
 
 let react_equal =

@@ -23,7 +23,7 @@
 
 (* $Id$ *)
 
-open Misc
+open Rml_misc
 
 (* add a file in the list of file to compile. *)
 let add_to_compile file =

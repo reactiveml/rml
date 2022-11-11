@@ -25,14 +25,14 @@
 
 (* Source to source transformations *)
 
-open Misc
-open Asttypes
+open Rml_misc
+open Rml_asttypes
 open Caml_ast
 open Caml_misc
 
 
 
-module Env = Symbol_table.Make (Ident)
+module Env = Symbol_table.Make (Rml_ident)
 
 (* Constant propagation *)
 let constant_propagation =

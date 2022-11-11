@@ -30,9 +30,9 @@
 
 (* Printing of error messages during typing *)
 
-open Misc
+open Rml_misc
 open Def_types
-open Types
+open Rml_types
 open Reac_ast
 
 (* type clash *)
@@ -58,7 +58,7 @@ let event_wrong_type_err evt actual_ty expected_ty =
   Format.fprintf !err_fmt
     "The event %s has type %a,\n\
     but is used with type %a.\n"
-    (Ident.name evt)
+    (Rml_ident.name evt)
     Types_printer.output actual_ty
     Types_printer.output expected_ty;
   raise Error
@@ -149,7 +149,7 @@ let unbound_global_ident_err gr loc =
 let unbound_ident_err n loc =
   Format.fprintf !err_fmt "%aThe name %s is unbound.\n"
     Location.print loc
-    (Ident.name n);
+    (Rml_ident.name n);
   raise Error
 
 let unbound_constructor_err c loc =

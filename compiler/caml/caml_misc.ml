@@ -25,12 +25,12 @@
 
 (* Functions on Caml AST *)
 
-open Asttypes
+open Rml_asttypes
 open Def_types
 open Caml_ast
 open Global
 open Global_ident
-open Misc
+open Rml_misc
 
 (* Building functions *)
 
@@ -58,7 +58,7 @@ let make_instruction s =
   make_expr
     (Cexpr_global
        { gi = { qual = !interpreter_module;
-		id = Ident.create Ident.gen_var s Ident.Internal };
+		id = Rml_ident.create Rml_ident.gen_var s Rml_ident.Internal };
 	 info = no_info(); })
     Location.none
 
@@ -66,7 +66,7 @@ let make_module_value mod_name val_name =
   make_expr
     (Cexpr_global
        { gi = { qual = mod_name;
-		id = Ident.create Ident.gen_var val_name Ident.Internal };
+		id = Rml_ident.create Rml_ident.gen_var val_name Rml_ident.Internal };
 	 info = no_info(); })
     Location.none
 
@@ -74,7 +74,7 @@ let make_module_value mod_name val_name =
 let make_rml_type s ty_list =
   make_te
     (Ctype_constr ({ gi = { qual = !interpreter_module;
-			    id = Ident.create Ident.gen_type s Ident.Type };
+			    id = Rml_ident.create Rml_ident.gen_type s Rml_ident.Type };
 		     info = no_info(); }, ty_list))
     Location.none
 
@@ -115,14 +115,14 @@ let make_raise_RML () =
        (make_expr
 	  (Cexpr_global
 	     { gi = { qual = stdlib_module;
-		      id = Ident.create Ident.gen_var "raise" Ident.Val_ML };
+		      id = Rml_ident.create Rml_ident.gen_var "raise" Rml_ident.Val_ML };
 	       info = no_info(); })
 	  Location.none,
 	[make_expr
 	   (Cexpr_construct
 	      ({ gi = { qual = !interpreter_module;
-			id = Ident.create Ident.gen_constr
-			  "RML" Ident.Internal };
+			id = Rml_ident.create Rml_ident.gen_constr
+			  "RML" Rml_ident.Internal };
 		 info = no_info(); },
 	       None))
 	   Location.none]))
@@ -185,7 +185,7 @@ let make_ref e =
        (make_expr
 	  (Cexpr_global
 	     { gi = { qual = "Stdlib";
-		      id = Ident.create Ident.gen_var "ref" Ident.Internal };
+		      id = Rml_ident.create Rml_ident.gen_var "ref" Rml_ident.Internal };
 	       info = no_info(); })
 	  Location.none,
 	[e]))
@@ -198,7 +198,7 @@ let deref vref =
        (make_expr
 	  (Cexpr_global
 	     { gi = { qual = "Stdlib";
-		      id = Ident.create Ident.gen_var "!" Ident.Internal };
+		      id = Rml_ident.create Rml_ident.gen_var "!" Rml_ident.Internal };
 	       info = no_info(); })
 	  Location.none,
 	[make_expr_var_local vref]))
@@ -211,7 +211,7 @@ let make_magic () =
     (make_expr
        (Cexpr_global
 	  { gi = { qual="Obj";
-		   id=Ident.create Ident.gen_var "magic" Ident.Internal };
+		   id=Rml_ident.create Rml_ident.gen_var "magic" Rml_ident.Internal };
 	    info = no_info(); })
        Location.none,
      [make_unit()])
@@ -223,7 +223,7 @@ let make_magic_expr () =
 let make_patt_none () =
   let none =
     { gi = { qual="Stdlib";
-             id=Ident.create Ident.gen_var "None" Ident.Internal; };
+             id=Rml_ident.create Rml_ident.gen_var "None" Rml_ident.Internal; };
       info = no_info(); }
   in
   make_patt (Cpatt_construct (none, None)) Location.none
@@ -233,7 +233,7 @@ let make_patt_none () =
 let make_patt_some p =
   let some =
     { gi = { qual="Stdlib";
-             id=Ident.create Ident.gen_var "Some" Ident.Internal; };
+             id=Rml_ident.create Rml_ident.gen_var "Some" Rml_ident.Internal; };
       info = no_info(); }
   in
   make_patt (Cpatt_construct (some, Some p)) Location.none
@@ -312,7 +312,7 @@ let rec make_dummy t =
 	    Cexpr_construct
 	      ({ gi =
 		 { qual = !interpreter_module;
-		   id = Ident.create Ident.gen_constr "RML" Ident.Internal };
+		   id = Rml_ident.create Rml_ident.gen_constr "RML" Rml_ident.Internal };
 		 info = no_info(); },
 	       None)
 

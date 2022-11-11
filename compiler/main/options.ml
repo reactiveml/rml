@@ -21,7 +21,7 @@
 (* created: 2006-08-07  *)
 (* author: Louis Mandel *)
 
-open Misc
+open Rml_misc
 open Configure
 
 let _ =
@@ -73,7 +73,7 @@ let _ =
     if !where then show_where ();
     if !with_thread then add_stdlib_thread ();
   with x ->
-    Errors.report_error Format.err_formatter x;
+    Rml_errors.report_error Format.err_formatter x;
     exit 2
 
 let _ =

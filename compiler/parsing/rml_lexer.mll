@@ -44,8 +44,8 @@
 
 {
 open Lexing
-open Misc
-open Parser
+open Rml_misc
+open Rml_parser
 
 type error =
   | Illegal_character of char

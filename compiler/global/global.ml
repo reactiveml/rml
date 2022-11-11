@@ -28,7 +28,7 @@
 
 (* $Id$ *)
 
-open Misc
+open Rml_misc
 
 (* values in the symbol table *)
 

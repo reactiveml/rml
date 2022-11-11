@@ -23,7 +23,7 @@
 
 (* $Id$ *)
 
-open Misc
+open Rml_misc
 open Parse_ast
 
 (* Printing of error messages about Lucky import *)

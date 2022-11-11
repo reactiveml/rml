@@ -30,10 +30,10 @@
 
 (** Printing [Caml] code *)
 
-open Misc
+open Rml_misc
 open Format
 open Caml_ast
-open Asttypes
+open Rml_asttypes
 open Global
 open Global_ident
 
@@ -128,18 +128,18 @@ let print_global ({ gi = {qual=q; id=n} } as gl) =
     begin
       pp_print_string !formatter !interpreter_module;
       pp_print_string !formatter ".";
-      print_name (Ident.name n)
+      print_name (Rml_ident.name n)
     end
   else if q = stdlib_module then
     (* special case for values imported from the standard library *)
-    print_stdlib (Ident.name n)
+    print_stdlib (Rml_ident.name n)
   else if q = !current_module || q = "" then
-    print_name (Ident.name n)
+    print_name (Rml_ident.name n)
   else
     begin
       pp_print_string !formatter q;
       pp_print_string !formatter ".";
-      print_name (Ident.name n)
+      print_name (Rml_ident.name n)
     end
 
 (** Prints a type variables *)
@@ -179,9 +179,9 @@ let rec print pri e =
   begin match e.cexpr_desc with
     Cexpr_constant(im) -> print_immediate im
   | Cexpr_global(gl) -> print_global gl
-  | Cexpr_local(s) -> print_name (Ident.unique_name s)
+  | Cexpr_local(s) -> print_name (Rml_ident.unique_name s)
   | Cexpr_construct(gl,None) -> print_global gl
-  | Cexpr_construct(gl,Some expr) when (Ident.name gl.gi.id = "::") ->
+  | Cexpr_construct(gl,Some expr) when (Rml_ident.name gl.gi.id = "::") ->
       begin
 	match expr.cexpr_desc with
 	| Cexpr_tuple [e1;e2] ->
@@ -345,7 +345,7 @@ let rec print pri e =
   | Cexpr_for (i,e1,e2,flag,e3) ->
       pp_print_string !formatter "for";
       pp_print_space !formatter ();
-      print_name (Ident.unique_name i);
+      print_name (Rml_ident.unique_name i);
       pp_print_string !formatter " = ";
       print (pri_e - 1) e1;
       pp_print_space !formatter ();
@@ -450,11 +450,11 @@ and print_pattern pri pat =
   begin match pat.cpatt_desc with
     Cpatt_constant(i) -> print_immediate i
   | Cpatt_var(Cvarpatt_local v) ->
-      print_name (Ident.unique_name v)
+      print_name (Rml_ident.unique_name v)
   | Cpatt_var(Cvarpatt_global gl) ->
       print_global gl
   | Cpatt_construct(gl, None) -> print_global gl
-  | Cpatt_construct(gl,Some patt) when (Ident.name gl.gi.id = "::") ->
+  | Cpatt_construct(gl,Some patt) when (Rml_ident.name gl.gi.id = "::") ->
       begin
 	match patt.cpatt_desc with
 	| Cpatt_tuple [p1;p2] ->
@@ -497,7 +497,7 @@ and print_pattern pri pat =
       pp_print_space !formatter ();
       begin
 	match s with
-	| Cvarpatt_local id -> print_name (Ident.unique_name id)
+	| Cvarpatt_local id -> print_name (Rml_ident.unique_name id)
 	| Cvarpatt_global gl -> print_global gl
       end;
       pp_print_string !formatter ")"

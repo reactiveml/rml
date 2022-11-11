@@ -30,8 +30,8 @@ open Caml_ast
 open Caml_misc
 open Global
 open Global_ident
-open Asttypes
-open Misc
+open Rml_asttypes
+open Rml_misc
 
 (* Version of the combinators generated *)
 type version =
@@ -344,7 +344,7 @@ let rec translate_ml e =
     | Kexpr_exec p ->
         let hook = make_rml_exec_hook () in
         Cexpr_apply
-          (make_module_value !Misc.rml_machine_module "rml_exec",
+          (make_module_value !Rml_misc.rml_machine_module "rml_exec",
            [hook;
             translate_ml p])
 
@@ -771,7 +771,7 @@ and translate_proc e =
 (* Tr(def x in k) =                                                      *)
 (*   fun v -> let x = v in k ()                                          *)
 (* ce n'est pas traduit par (fun x -> k ()) pour avoir la generalisation *)
-	let id = Ident.create Ident.gen_var "v" Ident.Internal in
+	let id = Rml_ident.create Rml_ident.gen_var "v" Rml_ident.Internal in
 	Cexpr_fun
 	  ([make_patt_var_local id],
 	   make_expr
@@ -788,7 +788,7 @@ and translate_proc e =
     | Kproc_def_and_dyn (patt_list, k) ->
 (* Tr(def x and y in k) =                                                *)
 (*   fun v -> let x,y = v in k ()                                        *)
-	let id = Ident.create Ident.gen_var "v" Ident.Internal in
+	let id = Rml_ident.create Rml_ident.gen_var "v" Rml_ident.Internal in
 	Cexpr_fun
 	  ([make_patt_var_local id],
 	   make_expr
