@@ -52,6 +52,9 @@ module Lk_interpreter: Lk_interpreter.S  =
 (* List of processes to execute in the current instant *)
     let current = ref ([]: current)
 
+(* List of waiting lists to empty at the end of instant *)
+    let to_wake_up = ref ([]: waiting ref list)
+
 (* End of instant flag *)
     let eoi = ref false
 

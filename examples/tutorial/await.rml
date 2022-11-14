@@ -6,4 +6,5 @@ print_endline "received";
 emit s2
 ||
 emit s1;
+pause;
 present s2 then print_endline "present" else print_endline "absent"

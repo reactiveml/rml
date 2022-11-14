@@ -64,5 +64,5 @@ clean :
 		$(FILE).tannot $(FILE).sannot
 
 realclean: clean
-	rm -f *~
+	rm -f *.output *~
 cleanall: realclean
